@@ -26,6 +26,7 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Display;
 use Xibo\Event\DisplayGroupLoadEvent;
+use Xibo\Event\RdmConnectorSendCommandEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayFactory;
@@ -2453,8 +2454,6 @@ class DisplayGroup extends Base
         // Are we a Display Specific Group? If so, then we should restrict the List of commands to those available.
         if ($displayGroup->isDisplaySpecific == 1) {
             $display = $this->displayFactory->getByDisplayGroupId($displayGroup->displayGroupId);
-//            throw new AccessDeniedException(__(json_encode($display[0])));
-
             $clientType = $display[0]->clientType;
 
             // Check the android subtype (i.e. Sony, DSDevices, etc.)
@@ -2534,7 +2533,13 @@ class DisplayGroup extends Base
         $command = $this->commandFactory->getById($sanitizedParams->getInt('commandId'));
         $displays = $this->displayFactory->getByDisplayGroupId($id);
 
-        $this->playerAction->sendAction($displays, (new CommandAction())->setCommandCode($command->code));
+        // If the command is for RDM connected displays, use the Portal API
+        if (!empty($displays[0]->rdmDeviceId)) {
+            $this->sendRdmCommand($displays[0]->rdmDeviceId, $command->command, $request->getParams());
+        } else {
+            // Use the default XMR actions
+            $this->playerAction->sendAction($displays, (new CommandAction())->setCommandCode($command->code));
+        }
 
         // Update the flag
         foreach ($displays as $display) {
@@ -3022,5 +3027,19 @@ class DisplayGroup extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Sends RDM Command
+     * @param int $displayId
+     * @param string $command
+     * @param array $params
+     * @return void
+     */
+    public function sendRdmCommand(int $displayId, string $command, array $params): void
+    {
+        $event = new RdmConnectorSendCommandEvent($displayId, $command, $params);
+
+        $this->getDispatcher()->dispatch($event, RdmConnectorSendCommandEvent::$NAME);
     }
 }

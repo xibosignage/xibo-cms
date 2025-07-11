@@ -27,6 +27,7 @@ use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Xibo\Event\RdmConnectorSendCommandEvent;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -67,7 +68,7 @@ class XiboRdmConnector implements ConnectorInterface
 
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): ConnectorInterface
     {
-        // TODO: Implement registerWithDispatcher() method.
+        $dispatcher->addListener(RdmConnectorSendCommandEvent::$NAME, [$this, 'onSendCommand']);
         return $this;
     }
 
@@ -304,6 +305,11 @@ class XiboRdmConnector implements ConnectorInterface
 
     /**
      * Get linked displays and devices
+     * @param SanitizerInterface $params
+     * @return array
+     * @throws GeneralException
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
      * @throws NotFoundException
      */
     public function getDisplaysAndDevices(SanitizerInterface $params): array
@@ -368,11 +374,213 @@ class XiboRdmConnector implements ConnectorInterface
     }
 
     /**
+     * Send RDM command
+     * @param $deviceId
+     * @param $command
+     * @param $params
+     * @throws GeneralException
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
+     */
+    public function sendRdmCommand($deviceId, $command, $params)
+    {
+        if (isset($params['commandId'])) {
+            unset($params['commandId']);
+        }
+
+        $url = $this->getServiceUrl() . '/rdm/' . $deviceId . '/' . strtolower($command);
+
+        try {
+            $response = $this->getClient()->post($url, [
+                'headers' => [
+                    'X-CMS-PSK-KEY' => $this->getSetting('cmsPsk')
+                ],
+                'json' => $params
+            ]);
+
+            $status = $response->getStatusCode();
+            $body   = $response->getBody();
+
+            $this->getLogger()->info('sendRdmCommand: ' . $command . ': ' . json_encode($params));
+
+            if ($status >= 400) {
+                throw new GeneralException('sendRdmCommand: ' . $status . ': ' . $body);
+            }
+        } catch (RequestException $e) {
+            $this->getLogger()->error('sendRdmCommand: e = ' . $e->getMessage());
+
+            if ($e->getResponse()->getStatusCode() === 401) {
+                $this->formError = __('Invalid Connector Key');
+
+                throw new InvalidArgumentException($this->formError, 'cmsPsk');
+            }
+        } catch (\Exception $e) {
+            $this->getLogger()->error('sendRdmCommand: e = ' . $e->getMessage());
+
+            $this->formError = __('Cannot contact the Xibo Portal, please try again shortly.');
+
+            throw new GeneralException($this->formError);
+        }
+    }
+
+    /**
+     * Get the current device screen ON/OFF settings
+     * @param int $deviceId
+     * @return mixed|null
+     * @throws GeneralException
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
+     */
+    public function getScreen(int $deviceId)
+    {
+        return $this->fetchSetting($deviceId, 'screen');
+    }
+
+    /**
+     * Get the current device screen rotation settings
+     * @param int $deviceId
+     * @return mixed|null
+     * @throws GeneralException
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
+     */
+    public function getRotation(int $deviceId)
+    {
+        return $this->fetchSetting($deviceId, 'rotate');
+    }
+
+    /**
+     * Get the current device mute settings
+     * @param int $deviceId
+     * @return mixed|null
+     * @throws GeneralException
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
+     */
+    public function getMute(int $deviceId)
+    {
+        return $this->fetchSetting($deviceId, 'mute');
+    }
+
+    /**
+     * Get the current device pro-mode settings
+     * @param int $deviceId
+     * @return mixed|null
+     * @throws GeneralException
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
+     */
+    public function getProMode(int $deviceId)
+    {
+        return $this->fetchSetting($deviceId, 'pro-mode');
+    }
+
+    /**
+     * Get the current device brightness settings
+     * @param int $deviceId
+     * @return mixed|null
+     * @throws GeneralException
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
+     */
+    public function getBrightness(int $deviceId)
+    {
+        return $this->fetchSetting($deviceId, 'brightness');
+    }
+
+    /**
+     * Get the current device power schedule settings
+     * @param int $deviceId
+     * @return mixed|null
+     * @throws GeneralException
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
+     */
+    public function getPowerSchedule(int $deviceId)
+    {
+        return $this->fetchSetting($deviceId, 'power-schedule');
+    }
+
+    /**
+     * Get screenshot
+     * @param int $deviceId
+     * @return mixed|null
+     * @throws GeneralException
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
+     */
+    public function getScreenshot(int $deviceId)
+    {
+        return $this->fetchSetting($deviceId, 'screenshot');
+    }
+
+    /**
+     * Helper function to fetch the device settings
+     * @param int $deviceId
+     * @param string $setting
+     * @param null $defaultValue
+     * @return mixed|void
+     * @throws GeneralException
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
+     */
+    private function fetchSetting(int $deviceId, string $setting, $defaultValue = null)
+    {
+        $cmsPsk = $this->getSetting('cmsPsk');
+
+        if (empty($cmsPsk)) {
+            throw new InvalidArgumentException(__('Connector Key cannot be empty'), 'cmsPsk');
+        }
+
+        $this->getLogger()->info('getSetting: Requesting ' . $setting . ' setting.');
+
+        try {
+            $response = $this->getClient()->get(
+                $this->getServiceUrl() . '/rdm/{$deviceId}/{$setting}',
+                [
+                    'headers' => [
+                        'X-CMS-PSK-KEY' => $cmsPsk
+                    ]
+                ]
+            );
+
+            $data = json_decode($response->getBody()->getContents(), true);
+
+            return $data['value'] ?? $defaultValue;
+        } catch (RequestException $e) {
+            $this->getLogger()->error('getSetting: e = ' . $e->getMessage());
+
+            if ($e->getResponse()->getStatusCode() === 401) {
+                $this->formError = __('Invalid Connector Key');
+
+                throw new InvalidArgumentException($this->formError, 'cmsPsk');
+            }
+        } catch (\Exception $e) {
+            $this->getLogger()->error('getSetting: e = ' . $e->getMessage());
+
+            $this->formError = __('Cannot contact the Xibo Portal, please try again shortly.');
+
+            throw new GeneralException($this->formError);
+        }
+    }
+
+    /**
      * Get the service url
      * @return string
      */
     private function getServiceUrl(): string
     {
         return $this->getSetting('serviceUrl', 'https://xibosignage.com');
+    }
+
+    /**
+     * @param RdmConnectorSendCommandEvent $event
+     * @param $name
+     * @param EventDispatcherInterface $dispatcher
+     * @return void
+     */
+    public function onSendCommand(RdmConnectorSendCommandEvent $event, $name, EventDispatcherInterface $dispatcher)
+    {
+        $this->sendRdmCommand($event->getDisplayId(), $event->getCommand(), $event->getParams());
     }
 }
