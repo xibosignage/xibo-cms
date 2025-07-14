@@ -66,14 +66,14 @@
                 {{ forms.dropdown("rotation", "single", title, "", options, "id", "value", helpText, "commandGroup") }}
 
                 {% set title %}{% trans "Options" %}{% endset %}
-                {% set powerScheduleOptions %}{% trans "Options" %}{% endset %}
+                {% set powerScheduleMode %}{% trans "Options" %}{% endset %}
                 {% set helpText %}{% trans "Set the power schedule to Off, or enable it for Daily or Weekly intervals" %}{% endset %}
                 {% set options = [
                     { id: "off", value: "Off" },
                     { id: "daily", value: "Daily" },
                     { id: "weekly", value: "Weekly" }
                 ] %}
-                {{ forms.dropdown("powerScheduleOptions", "single", title, "", options, "id", "value", helpText, "commandGroup") }}
+                {{ forms.dropdown("powerScheduleMode", "single", title, "", options, "id", "value", helpText, "commandGroup", "required") }}
 
                 {% set helpText %}{% trans "Use the drop-down to select which days of the week it should use the power schedule." %}{% endset %}
                 {% set monday %}{% trans "Monday" %}{% endset %}
@@ -84,23 +84,25 @@
                 {% set saturday %}{% trans "Saturday" %}{% endset %}
                 {% set sunday %}{% trans "Sunday" %}{% endset %}
                 {% set options = [
-                    { id: 1, name: monday },
-                    { id: 2, name: tuesday },
-                    { id: 3, name: wednesday },
-                    { id: 4, name: thursday },
-                    { id: 5, name: friday },
-                    { id: 6, name: saturday },
-                    { id: 7, name: sunday },
+                    { optionid: 'mon', option: monday },
+                    { optionid: 'tue', option: tuesday },
+                    { optionid: 'wed', option: wednesday },
+                    { optionid: 'thu', option: thursday },
+                    { optionid: 'fri', option: friday },
+                    { optionid: 'sat', option: saturday },
+                    { optionid: 'sun', option: sunday },
                 ] %}
-                {{ forms.dropdown("powerScheduleDays[]", "dropdownmulti", "", "", options, "id", "name", helpText, "power-schedule-days") }}
+                {{ forms.dropdown("powerScheduleDays[]", "dropdownmulti", title, "", options, "optionid", "option", helpText, "power-schedule-days", "required") }}
+
+                {{ forms.hidden("daysOfTheWeek") }}
 
                 {% set title %}{% trans "On Time" %}{% endset %}
                 {% set helpText %}{% trans "Enter the On Time schedule" %}{% endset %}
-                {{ forms.time("onTime", title, "00:00", helpText, "onTime") }}
+                {{ forms.time("onTime", title, "00:00", helpText, "onTime", "required") }}
 
                 {% set title %}{% trans "Off Time" %}{% endset %}
                 {% set helpText %}{% trans "Enter the Off Time schedule." %}{% endset %}
-                {{ forms.time("offTime", title, "00:00", helpText, "offTime") }}
+                {{ forms.time("offTime", title, "00:00", helpText, "offTime", "required") }}
             </form>
         </div>
     </div>
@@ -108,17 +110,46 @@
     <script type="text/javascript" nonce="{{ cspNonce }}">
         $(document).ready(function() {
             const commands = $('.commandGroup, .onTime, .offTime, .power-schedule-days');
+            const $powerSchedule = $('select[name="powerScheduleMode"]');
+            const $daysOfTheWeek = $('input[name="daysOfTheWeek"]');
+            const $powerScheduleDays = $('select[name="powerScheduleDays[]"]');
 
-            function hideAndDisableAll() {
+            // Hide and disable other command forms
+            function hideAndDisableCommands() {
                 commands.hide().find('input, select').prop('disabled', true);
             }
 
-            hideAndDisableAll();
+            // Reset the power schedule selection
+            function resetPowerSchedule() {
+                $powerSchedule.val('off');
+                $daysOfTheWeek.val('').prop('disabled', true);
+            }
+
+            // Show and hide additional power schedule options
+            function togglePowerScheduleDetails(mode) {
+                if (mode === 'off') {
+                    $('.onTime, .offTime, .power-schedule-days').hide();
+                } else {
+                    const isWeekly = (mode === 'weekly');
+                    $('.power-schedule-days').toggle(isWeekly);
+                    $powerScheduleDays.prop('disabled', !isWeekly);
+
+                    $('.onTime, .offTime').show().find('input').prop('disabled', false);
+                }
+            }
+
+            // Save daysOfTheWeek as a comma-separated value (i.e. mon,tue,wed)
+            function updateDaysOfTheWeek() {
+                const csv = $powerScheduleDays.val()?.join(',') || '';
+                $daysOfTheWeek.val(csv).prop('disabled', false);
+            }
+
+            hideAndDisableCommands();
 
             $('#commandId').on('change', function () {
                 const selectedValue = $(this).find('option:selected').text(); // Get the selected value
 
-                hideAndDisableAll();
+                hideAndDisableCommands();
 
                 let command;
 
@@ -140,30 +171,24 @@
                         command = $('input[name="brightness"]').closest('.form-group').show();
                         break;
                     case 'Power Schedule':
-                        command = $('select[name="powerScheduleOptions"]').closest('.form-group').show();
+                        command = $powerSchedule.closest('.form-group').show();
                         break;
                     default:
                         command = null;
                 }
 
                 if (command) {
+                    resetPowerSchedule();
                     command.show().find('input, select').prop('disabled', false);
                 }
             });
 
-            $('#powerScheduleOptions').on('change', function () {
-                const selectedValue = $(this).val(); // Get the selected value
-
-                if (selectedValue === 'off') {
-                    $('.onTime, .offTime, .power-schedule-days').hide();
-                } else {
-                    if (selectedValue === 'weekly') {
-                        $('.power-schedule-days').show();
-                    }
-
-                    $('.onTime, .offTime').show();
-                }
+            $powerSchedule.on('change', function () {
+                togglePowerScheduleDetails($(this).val());
             });
+
+            // Save daysOfTheWeek as a comma-separated value
+            $powerScheduleDays.on('change', updateDaysOfTheWeek);
         });
     </script>
 {% endblock %}
