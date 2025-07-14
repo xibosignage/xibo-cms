@@ -64,6 +64,12 @@ Bottombar.prototype.render = function(object, renderMultiple = true) {
         '';
   }
 
+  // In interactive mode, do nothing
+  if (app.interactiveMode || app.interactiveEditWidgetMode) {
+    this.DOMObject.html('');
+    return;
+  }
+
   if (multipleSelected) {
     // Render toolbar for multiple
     this.DOMObject.html(bottomBarViewerTemplate(
@@ -198,7 +204,17 @@ Bottombar.prototype.render = function(object, renderMultiple = true) {
 
   this.DOMObject.find('.properties-btn').on('click', function(e) {
     const buttonData = $(e.currentTarget).data();
-    object.editPropertyForm(
+    let targetObj = object;
+
+    if ($(e.currentTarget).hasClass('properties-widget')) {
+      targetObj = lD.getObjectByTypeAndId(
+        'widget',
+        'widget_' + object.regionId + '_' + object.widgetId,
+        'canvas',
+      );
+    }
+
+    targetObj.editPropertyForm(
       buttonData['property'],
       buttonData['propertyType'],
     );

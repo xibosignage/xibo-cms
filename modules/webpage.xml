@@ -39,9 +39,8 @@
             <helpText>The Location (URL) of the webpage</helpText>
             <default></default>
             <rule>
-                <test type="and">
+                <test>
                     <condition type="required"></condition>
-                    <condition type="uri"></condition>
                 </test>
             </rule>
         </property>

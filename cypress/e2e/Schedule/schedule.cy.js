@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -75,8 +75,9 @@ describe('Campaigns', function() {
     cy.get('.bootbox.modal')
       .should('be.visible') // essential: Ensure the modal is visible
       .then(() => {
+        // Displays are cleared no longer
         // Clear the display filter and select a specific display (display1)
-        cy.get('.select2-selection__clear > span').click();
+        // cy.get('.select2-selection__clear > span').click();
         cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection .select2-search__field')
           .type(display1)
           .should('have.value', display1);
@@ -156,8 +157,9 @@ describe('Campaigns', function() {
     cy.get('.bootbox.modal')
       .should('be.visible') // essential: Ensure the modal is visible
       .then(() => {
+        // Displays are cleared no longer
         // Clear the display filter and select a specific display (display1)
-        cy.get('.select2-selection__clear > span').click();
+        // cy.get('.select2-selection__clear > span').click();
         cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection .select2-search__field')
           .type(display1)
           .should('have.value', display1);
@@ -216,8 +218,9 @@ describe('Campaigns', function() {
     cy.get('.bootbox.modal')
       .should('be.visible') // essential: Ensure the modal is visible
       .then(() => {
+        // Displays are cleared no longer
         // Clear the display filter and select a specific display (display1)
-        cy.get('.select2-selection__clear > span').click();
+        // cy.get('.select2-selection__clear > span').click();
         cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection .select2-search__field')
           .type(display1)
           .should('have.value', display1);

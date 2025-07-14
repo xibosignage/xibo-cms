@@ -316,6 +316,7 @@ window.XiboInitialise = function(scope, options) {
         initialize: false,
         remote: {
           url: autoCompleteUrl,
+          cache: false,
           prepare: function(query, settings) {
             settings.data = {tag: query};
             return settings;
@@ -2612,26 +2613,17 @@ window.makePagedSelect = function(
       type: 'GET',
       data: dataObj,
     }).then(function(data) {
-      // Do we need to check if it's selected
-      let checkSelected = false;
-
       // If we have a custom data formatter
       if (
         dataFormatter &&
         typeof dataFormatter === 'function'
       ) {
         data = dataFormatter(data);
-        checkSelected = true;
       }
 
       // create the option and append to Select2
       data.data.forEach((object) => {
-        let isSelected = true;
-
-        // Check if it's selected if needed
-        if (checkSelected) {
-          isSelected = (initialValue == object[idProperty]);
-        }
+        const isSelected = (initialValue == object[idProperty]);
 
         // Only had if the option is selected
         if (isSelected) {

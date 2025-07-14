@@ -7,7 +7,8 @@
     "test": "cypress run --config screenshotsFolder=library/cypress/results,video=false --reporter junit --reporter-options 'mochaFile=library/cypress/results/results_cypress_[hash].xml,toConsole=true'",
     "cypress:open": "cypress open",
     "build": "webpack --mode=development",
-    "publish": "webpack --mode=production"
+    "publish": "webpack --mode=production",
+    "local": "webpack --env local --mode=development"
   },
   "directories": {
     "lib": "lib",
@@ -41,12 +42,14 @@
     "cypress": "^13.13.1",
     "eslint": "^9.8.0",
     "eslint-config-google": "^0.14.0",
+    "exports-loader": "^5.0.0",
     "file-loader": "^6.2.0",
     "globals": "^15.9.0",
     "handlebars-loader": "^1.7.3",
     "imports-loader": "^5.0.0",
     "less": "^4.2.0",
     "less-loader": "^12.2.0",
+    "mini-css-extract-plugin": "^2.9.2",
     "postcss-loader": "^8.1.1",
     "sass": "^1.77.8",
     "sass-loader": "^16.0.0",
@@ -105,6 +108,7 @@
     "jquery-ui": "~1.13.3",
     "jquery-validation": "~1.21.0",
     "jstree": "^3.3.16",
+    "leader-line": "^1.0.7",
     "leaflet": "^1.9.4",
     "leaflet-draw": "^1.0.4",
     "leaflet-easyprint": "^2.1.9",

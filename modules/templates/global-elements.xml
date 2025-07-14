@@ -221,9 +221,12 @@
             <hbs><![CDATA[
 <div class="global-elements-text"
     style="
+    display: -webkit-box;
     display: -webkit-flex;
     display: flex;
-    {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
+    -webkit-box-align: start;
+    -webkit-align-items: {{#if verticalAlign}}{{verticalAlign}}{{else}}flex-start{{/if}};
+    align-items: {{#if verticalAlign}}{{verticalAlign}}{{else}}flex-start{{/if}};
     {{#if fitToArea}}
         white-space: nowrap;
     {{else}}
@@ -239,6 +242,7 @@
     width: 100%; height: 100%;"
 >
 <div style="
+    width: 100%;
     {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
     {{#if useGradient}}
         {{parseJSON "gb" gradient}}
@@ -260,7 +264,8 @@
     {{/if}}
     {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
     {{#if textWrap}}
-        white-space: break-spaces;
+        white-space: pre-wrap;
+        word-break: break-word;
         {{#if justify}}
             text-align: justify;
         {{/if}}
@@ -269,6 +274,7 @@
     {{/if}}
 ">{{#unless escapeHtml}}{{{text}}}{{else}}{{text}}{{/unless}}</div>
 </div>
+
             ]]></hbs>
         <onTemplateRender><![CDATA[
 if(properties.fitToArea) {
@@ -496,7 +502,12 @@ if(properties.fitToArea) {
         {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
         {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
         {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
-        {{#if horizontalAlign}}justify-content: {{horizontalAlign}};{{/if}}
+        {{#if horizontalAlign}}justify-content: {{horizontalAlign}};{{/if}}        {{#if horizontalAlign}}
+            justify-content: {{horizontalAlign}};
+        {{/if}}
+        {{#eq horizontalAlign "flex-start"}}text-align: left;{{/eq}}
+        {{#eq horizontalAlign "center"}}text-align: center;{{/eq}}
+        {{#eq horizontalAlign "flex-end"}}text-align: right;{{/eq}}
     {{/if}}
     width: 100%; height: 100%;"
 >
@@ -521,7 +532,7 @@ style="
         {{#if fontColor}}color: {{fontColor}};{{/if}}
         {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
     {{/if}}
-    {{#if textWrap}}white-space: break-spaces;{{else}}white-space: nowrap;{{/if}}
+    {{#if textWrap}}white-space: pre-wrap;{{else}}white-space: nowrap;{{/if}}
 ">{{date}}</div>
 </div>
             ]]></hbs>
@@ -788,7 +799,12 @@ $(target).find('.date').each(function(_idx, dateEl){
     {{else}}
         {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
         {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
-        {{#if horizontalAlign}}justify-content: {{horizontalAlign}};{{/if}}
+        {{#if horizontalAlign}}justify-content: {{horizontalAlign}};{{/if}}        {{#if horizontalAlign}}
+            justify-content: {{horizontalAlign}};
+        {{/if}}
+        {{#eq horizontalAlign "flex-start"}}text-align: left;{{/eq}}
+        {{#eq horizontalAlign "center"}}text-align: center;{{/eq}}
+        {{#eq horizontalAlign "flex-end"}}text-align: right;{{/eq}}
     {{/if}}
     {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
     width: 100%; height: 100%;"
@@ -815,7 +831,7 @@ style="
         {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
     {{/if}}
     {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
-    {{#if textWrap}}white-space: break-spaces;{{else}}white-space: nowrap;{{/if}}
+    {{#if textWrap}}white-space: pre-wrap;{{else}}white-space: nowrap;{{/if}}
 "></div>
 </div>
             ]]></hbs>

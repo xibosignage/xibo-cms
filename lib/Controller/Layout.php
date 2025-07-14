@@ -436,10 +436,10 @@ class Layout extends Base
             );
         }
 
-        // Do we have an 'Enable Stats Collection?' checkbox?
+        // Do we have an 'Enable Layout Stats Collection?' checkbox?
         // If not, we fall back to the default Stats Collection setting.
         if (!$sanitizedParams->hasParam('enableStat')) {
-            $enableStat = $this->getConfig()->getSetting('DISPLAY_PROFILE_STATS_DEFAULT');
+            $enableStat = $this->getConfig()->getSetting('LAYOUT_STATS_ENABLED_DEFAULT');
         }
 
         // Set layout enableStat flag
@@ -3000,6 +3000,31 @@ class Layout extends Base
                 $draft = $this->layoutFactory->getByParentId($id);
                 $draft->publishDraft();
                 $draft->load();
+
+                // Make sure actions from all levels are valid before allowing publish
+                // Layout Actions
+                foreach ($draft->actions as $action) {
+                    $action->validate();
+                }
+
+                /** @var Region[] $allRegions */
+                $allRegions = array_merge($draft->regions, $draft->drawers);
+
+                // Region Actions
+                foreach ($allRegions as $region) {
+                    // Interactive Actions on Region
+                    foreach ($region->actions as $action) {
+                        $action->validate();
+                    }
+
+                    // Widget Actions
+                    foreach ($region->getPlaylist()->widgets as $widget) {
+                        // Interactive Actions on Widget
+                        foreach ($widget->actions as $action) {
+                            $action->validate();
+                        }
+                    }
+                }
 
                 // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
                 // error message

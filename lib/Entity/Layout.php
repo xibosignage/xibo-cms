@@ -2769,6 +2769,10 @@ class Layout implements \JsonSerializable
 
         // go through all imported actions on a Layout and replace the source/target Ids with the new ones
         foreach ($layoutActions as $action) {
+            // If the action targets the old layout ID, update it so the action now targets the new layout ID
+            if ($action->targetId == $action->layoutId) {
+                $action->targetId = $this->layoutId;
+            }
             $action->source = 'layout';
             $action->sourceId = $this->layoutId;
             $action->layoutId = $this->layoutId;
@@ -2801,6 +2805,10 @@ class Layout implements \JsonSerializable
 
         // go through all imported actions on a Region and replace the source/target Ids with the new ones
         foreach ($regionActions as $action) {
+            // If the action targets the old layout ID, update it so the action now targets the new layout ID
+            if ($action->targetId == $action->layoutId) {
+                $action->targetId = $this->layoutId;
+            }
             $action->source = 'region';
             $action->layoutId = $this->layoutId;
 
@@ -2835,6 +2843,10 @@ class Layout implements \JsonSerializable
 
         // go through all imported actions on a Widget and replace the source/target Ids with the new ones
         foreach ($widgetActions as $action) {
+            // If the action targets the old layout ID, update it so the action now targets the new layout ID
+            if ($action->targetId == $action->layoutId) {
+                $action->targetId = $this->layoutId;
+            }
             $action->source = 'widget';
             $action->layoutId = $this->layoutId;
 
@@ -2939,6 +2951,11 @@ class Layout implements \JsonSerializable
                 $action->layoutId = $newLayout->layoutId;
             }
 
+            // if action target (screen) was old layout, update with new id
+            if ($action->targetId === $originalLayout->layoutId && $action->target == 'screen') {
+                $action->targetId = $newLayout->layoutId;
+            }
+
             // if we had targetId (regionId) then switch it
             if ($action->targetId != null) {
                 foreach ($combinedRegionIds as $old => $new) {
@@ -2975,6 +2992,11 @@ class Layout implements \JsonSerializable
                 // switch layoutId
                 if ($action->layoutId === $originalLayout->layoutId) {
                     $action->layoutId = $newLayout->layoutId;
+                }
+
+                // if action target (screen) was old layout, update with new id
+                if ($action->targetId === $originalLayout->layoutId && $action->target == 'screen') {
+                    $action->targetId = $newLayout->layoutId;
                 }
 
                 // if we had targetId (regionId) then switch it
@@ -3024,6 +3046,11 @@ class Layout implements \JsonSerializable
                         $action->layoutId = $newLayout->layoutId;
                     }
 
+                    // if action target (screen) was old layout, update with new id
+                    if ($action->targetId === $originalLayout->layoutId && $action->target == 'screen') {
+                        $action->targetId = $newLayout->layoutId;
+                    }
+
                     // if we had targetId (regionId) then switch it
                     if ($action->targetId != null) {
                         foreach ($combinedRegionIds as $old => $new) {
@@ -3035,7 +3062,6 @@ class Layout implements \JsonSerializable
 
                     // switch Action widgetId
                     if ($action->widgetId != null) {
-
                         foreach ($combinedWidgetIds as $old => $new) {
                             if ($old == $action->widgetId && $action->actionType == 'navWidget') {
                                 $action->widgetId = $new;

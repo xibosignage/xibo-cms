@@ -49,10 +49,25 @@ describe('Playlists Admin', function() {
     cy.get('#playlists tbody tr:nth-child(1) td:nth-child(2)').contains('Cypress Test Playlist ' + testRun);
   });
 
+  it('should cancel adding a non-dynamic playlist', function() {
+    cy.visit('/playlist/view');
+
+    // Click on the Add Playlist button
+    cy.contains('Add Playlist').click();
+
+    cy.get('.modal input#name')
+      .type('Cypress Test Playlist ' + testRun);
+
+    // Click cancel
+    cy.get('#dialog_btn_1').click();
+
+    // Check if you are back to the view page
+    cy.url().should('include', '/playlist/view');
+  });
+
   it('should show a list of Playlists', function() {
     // Wait for playlist grid reload
-    cy.server();
-    cy.route('/playlist?draw=1&*').as('playlistGridLoad');
+    cy.intercept('/playlist?draw=1&*').as('playlistGridLoad');
 
     cy.visit('/playlist/view').then(function() {
       cy.wait('@playlistGridLoad');
@@ -63,8 +78,7 @@ describe('Playlists Admin', function() {
   it('selects multiple playlists and delete them', function() {
     // Create a new playlist and then search for it and delete it
     cy.createNonDynamicPlaylist('Cypress Test Playlist ' + testRun).then(() => {
-      cy.server();
-      cy.route('/playlist?draw=2&*').as('playlistGridLoad');
+      cy.intercept('/playlist?draw=2&*').as('playlistGridLoad');
 
       // Delete all test playlists
       cy.visit('/playlist/view');

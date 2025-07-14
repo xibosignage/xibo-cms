@@ -24,6 +24,11 @@
 
 {% block title %}{{ "Welcome"|trans }} | {% endblock %}
 
+{% block headContent %}
+    {# Add page source code bundle ( CSS ) #}
+    <link rel="stylesheet" href="{{ theme.rootUri() }}dist/pages/welcome-page.bundle.min.css?v={{ version }}&rev={{revision }}">
+{% endblock %}
+
 {% block pageContent %}
     <div id="top" class="welcome-page flex-column" style="background-image: url('{{ theme.rootUri() }}theme/default/img/vector-bg.png');">
         <div class="container-fluid" style="max-width: 1500px;">
@@ -31,12 +36,10 @@
                 <div class="header-text-content">
                     {% set productName = theme.getThemeConfig('theme_title') %}
                     <h2>{% trans %}Welcome to the {{productName}} CMS{% endtrans %}</h2>
-                    <p>{% trans %}The Content Management System (CMS) lets you create, manage, and update content. 
-                        You can upload images and videos, design layouts, schedule content timing and location, 
-                        and control the whole display network.{% endtrans %}</p>
+                    <p>{% trans %}The Content Management System (CMS) allows users to create, manage and update content to be shown on Displays. Upload images and videos, create layout designs, schedule content and manage the display network.{% endtrans %}</p>
                     <div class="d-flex" style="column-gap: 8px;">
                         <a href="{{ helpService.getLandingPage() }}" type="button" target="_blank"
-                           class="btn-rounded btn-orange">Documentation</a>
+                           class="btn-rounded btn-secondary">Documentation</a>
                         <a href="https://xibosignage.com/training" type="button" target="_blank"
                            class="btn-rounded btn-outlined">Training</a>
                     </div>
@@ -105,48 +108,73 @@
         var serviceCards = [
             {
                 title: '{% trans "Displays" %}',
-                text: 'Get started by installing one of our Players and entering the pairing code into the <a class="text-link">Displays page</a> so that you can show your content. If you don’t have a device to use as a Player you can preview and test scheduling in your web browser.',
+                text: 'Displays are managed from the CMS and control when and how content is shown. Get started by installing one of our Player App’s to start scheduling content to show on Displays.',
                 firstLink: '{{ url_for("display.view")}}',
-                secondLink: '{{ helpService.getLandingPage}}displays.html',
+                secondLink: '{{ helpService.getLandingPage}}what_is_a_display',
                 imageUrl: '{{ theme.rootUri() }}theme/default/img/onboarding/displays.png',
+                videoLinks: {
+                    link: '9H8Ct00qkqs',
+                    title: 'What is a Display?',
+                },
                 serviceId: 'displays',
                 featureFlag: "displays.view"
             },
             {
                 title: '{% trans "Existing Content" %}',
-                text: 'Do you already have content ready to show? Get started showing that in 2 easy steps. Upload any existing full-screen images or videos to the <a class="text-link">Media Library</a>, and then schedule those to be shown when you want on your display from the <a class="text-link">Schedule page</a>.',
+                text: 'Do you already have an image or video content ready to be shown? Upload your media and schedule to be shown full screen on Displays in a few easy steps.',
                 firstLink: '{{ url_for("library.view")}}',
                 secondLink: '{{ url_for("schedule.view")}}',
-                otherLink: '{{ helpService.getLandingPage }}media_library.html',
+                otherLink: '{{ helpService.getLandingPage }}showing_an_image_on_displays',
                 imageUrl: '{{ theme.rootUri() }}theme/default/img/onboarding/existing-content.png',
+                videoLinks: [
+                    {
+                        link: 'yYv0B0B9MIc',
+                        title: 'How to show an Image created outside of the CMS on Displays',
+                    }, {
+                        link: '1zZKaL-iUZo',
+                        title: 'How to show a single video on Displays',
+                    }
+                ],
                 serviceId: 'existing-content',
                 featureFlag: ["library.view", "layout.view"],
                 showLink: true
             },
             {
                 title: '{% trans "Playlists" %}',
-                text: 'If you’ve got lots of images or videos to show, then put them into a Playlist and then schedule the Playlist on your display for easier management.',
+                text: 'Create a ‘slideshow’ of content to be shown in sequence to schedule and show on your Displays.',
                 firstLink: '{{ url_for("playlist.view") }}',
-                secondLink: '{{ helpService.getLandingPage }}media_playlists.html',    
+                secondLink: '{{ helpService.getLandingPage }}showing_a_playlist_on_displays',    
                 imageUrl: '{{ theme.rootUri() }}theme/default/img/onboarding/playlists.png',
+                videoLinks: {
+                    link: 'Cch392voYic',
+                    title: 'How to create a Playlist and show on Displays',
+                },
                 serviceId: 'playlists',
                 featureFlag: ["library.view", "layout.view"]
             },
             {
                 title: '{% trans "Create Content" %}',
-                text: 'If you need to create more complex content, the Layout Editor is there to help you create something stunning. There are pre-designed templates that you can work from, or you can create something from scratch.',
+                text: 'Create your own eye catching Layout designs using a variety of tools available in the Layout Editor.',
                 firstLink: '{{ url_for("layout.view") }}',
-                secondLink: '{{ helpService.getLandingPage }}layouts_editor.html',
+                secondLink: '{{ helpService.getLandingPage }}layout_editor_overview',
                 imageUrl: '{{ theme.rootUri() }}theme/default/img/onboarding/create-content.png',
+                videoLinks: {
+                    link: 'Sh-5b8OJycE',
+                    title: 'Layout Editor Overview',
+                },
                 serviceId: 'create-content',
                 featureFlag: ["library.view", "layout.view"]
             },
             {
                 title: '{% trans "Schedule" %}',
-                text: 'You can mix and match between scheduling media items, layouts, and campaigns as you want. If you schedule multiple things at the same time, they’ll be shown one after the other.',
+                text: 'Once you have your content ready to be shown, use the Scheduling tools to ensure that your content is shown at the right place at the right time.',
                 firstLink: '{{ url_for("schedule.view") }}',
-                secondLink: '{{ helpService.getLandingPage }}scheduling_events.html',
+                secondLink: '{{ helpService.getLandingPage }}simple_scheduling',
                 imageUrl: '{{ theme.rootUri() }}theme/default/img/onboarding/schedule.png',
+                videoLinks: {
+                    link: 'QmAfUsSEOAk',
+                    title: 'Creating simple schedules to show content on Displays',
+                },
                 serviceId: 'schedule',
                 featureFlag: "schedule.view"
             }
@@ -169,23 +197,23 @@
         if (isXiboThemed) {
             othersCards.push({
                 title: '{% trans "Training" %}',
-                text: '{% trans "Self-paced online training videos designed to get you up and running with Xibo in no time." %}',
+                text: '{% trans "A collection of training videos to help new users get started." %}',
                 links: `<a href="https://xibosignage.com/training" target="_blank">{% trans "New User Training" %}</a>`,
                 iconName: "training"
             });
-        }
 
-        othersCards.push({
-            title: '{% trans "Help" %}',
-            text: '{% trans "We are here to help! All the support you’re looking for, at your fingertips." %}',
-            links: isXiboThemed ? `
-                <a href="https://xibosignage.com/install-upgrade#install" target="_blank">{% trans "Help Centre" %}</a>
-                <a href="https://community.xibo.org.uk" target="_blank">{% trans "Community" %}</a>
-            ` : '',
-            iconName: "help"
-        });
+            othersCards.push({
+                title: '{% trans "Help" %}',
+                text: '{% trans "We are here to help! All the support you’re looking for, at your fingertips." %}',
+                links: isXiboThemed ? `
+                    <a href="https://xibosignage.com/install-upgrade#install" target="_blank">{% trans "Help Centre" %}</a>
+                    <a href="https://community.xibo.org.uk" target="_blank">{% trans "Community" %}</a>
+                ` : '',
+                iconName: "help"
+            });
+        }
     </script>
 
-    {# Add page source code bundle ( JS and CSS ) #}
+    {# Add page source code bundle ( JS ) #}
     <script src="{{ theme.rootUri() }}dist/pages/welcome-page.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
 {% endblock %}

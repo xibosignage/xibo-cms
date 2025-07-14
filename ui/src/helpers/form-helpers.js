@@ -21,6 +21,7 @@ const templates = {
     require('../templates/form-helpers-menuboard-product.hbs'),
   editorRegionControls:
     require('../templates/forms/inputs/add-ons/richTextRegionControls.hbs'),
+  'php-date-format-table': require('../templates/php-date-format-table.hbs'),
 };
 
 const CKEDITOR_MIN_HEIGHT = 120;
@@ -662,7 +663,9 @@ const formHelpers = function() {
         region = this.namespace.mainRegion;
       } else if (this.namespace.selectedObject.type == 'widget') {
         const widget = this.namespace.selectedObject;
-        region = this.namespace.getObjectByTypeAndId('region', widget.regionId);
+        region = (widget.drawerWidget) ?
+          this.namespace.getObjectByTypeAndId('drawer') :
+          this.namespace.getObjectByTypeAndId('region', widget.regionId);
       } else if (this.namespace.selectedObject.type == 'region') {
         region =
           this.namespace.getObjectByTypeAndId(

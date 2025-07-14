@@ -380,7 +380,9 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                     // Check we have permission to delete this media
                     if (!$controller->getUser()->checkDeleteable($oldMedia)) {
-                        throw new AccessDeniedException();
+                        throw new AccessDeniedException(
+                            __('You do not have permission to delete the old version.')
+                        );
                     }
 
                     try {
