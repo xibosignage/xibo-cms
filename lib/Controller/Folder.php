@@ -200,8 +200,7 @@ class Folder extends Base
                 }
 
                 if (!$this->getUser()->checkViewable($child)) {
-                    $child->text = __('Private Folder');
-                    $child->type = 'disabled';
+                    continue;
                 }
 
                 if ($homeFolderId === $child->id) {
