@@ -160,6 +160,7 @@ class RssProvider implements WidgetProviderInterface
                 $article->link = $item->getUrl();
                 $article->date = Carbon::instance($item->getDate());
                 $article->publishedDate = Carbon::instance($item->getPublishedDate());
+                $article->categories = $item->getCategories();
 
                 // Body safe HTML
                 $article->content = $dataProvider->getSanitizer(['content' => $item->getContent()])

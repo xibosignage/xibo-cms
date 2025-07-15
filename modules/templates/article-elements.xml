@@ -140,4 +140,15 @@ if (
         <startWidth>480</startWidth>
         <startHeight>100</startHeight>
     </template>
+    <template>
+        <id>article_categories</id>
+        <extends override="text" with="data.categories">text</extends>
+        <title>Categories</title>
+        <type>element</type>
+        <dataType>article</dataType>
+        <icon>fas fa-icons</icon>
+        <canRotate>true</canRotate>
+        <startWidth>480</startWidth>
+        <startHeight>100</startHeight>
+    </template>
 </templates>
