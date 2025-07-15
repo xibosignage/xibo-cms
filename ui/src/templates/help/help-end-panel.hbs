@@ -1,0 +1,41 @@
+{{> components/help-header
+    title=trans.feedbackHeader
+    close=true
+}}
+<div class="list-group-padded-cards">
+    <div class="alert alert-success help-pane-alert">
+        <i class="fas fa-square-check"></i>
+        <span>{{trans.endPanelMessage}}</span>
+    </div>
+</div>
+
+{{#or helpLandingPageURL helpLinks.length}}
+    {{> components/help-header
+        title=trans.guides
+    }}
+
+    <div class="list-group-cards">
+        {{#each helpLinks}}
+            {{#or isAllowWhiteLabel ../isXiboThemed}}
+                <div class="list-group-card-container">
+                    {{> components/help-list-card
+                        title=this.title
+                        desc=this.summary
+                        url=this.url
+                        target="_blank"
+                    }}
+                </div>
+            {{/or}}
+        {{/each}}
+
+        {{#if helpLandingPageURL}}
+            <div class="list-group-card-container">
+                {{> components/help-list-card
+                    title=trans.visitManual
+                    url=helpLandingPageURL
+                    target="_blank"
+                }}
+            </div>
+        {{/if}}
+    </div>
+{{/or}}

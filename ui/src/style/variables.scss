@@ -8,6 +8,7 @@ $xibo-color-accent: #EB7857;
 
 //  Variants
 $xibo-color-primary-d60: #0E4694;
+$xibo-color-primary-d40: #125ABF;
 $xibo-color-primary-l60: #74ACFA;
 $xibo-color-primary-l30: #B9D6FC;
 $xibo-color-primary-l20: #dcedff;
@@ -32,6 +33,7 @@ $xibo-color-semantic-info: #5593BF;
 
 // Overlay
 $xibo-color-overlay: rgba(0, 0, 0, 0.6);
+$xibo-color-overlay-light: rgba(255, 255, 255, 0.6);
 
 // Specific
 $xibo-color-selected: $xibo-color-accent;
@@ -102,3 +104,4 @@ $viewer-bottom-bar-plus-border-height: calc($viewer-bottom-bar-height + $viewer-
 
 // Bootstrap
 $bootstrap-theme-main-color: #337ab7;
+$bootstrap-theme-error-color: #DC3545;

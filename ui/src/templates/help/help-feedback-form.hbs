@@ -1,0 +1,69 @@
+{{> components/help-header
+    back=true
+    title=trans.feedbackHeader
+    close=true
+}}
+
+<form class="help-pane-feedback-form" data-action="https://test.xibo.org.uk/api/cms/feedback" data-method="POST">
+    <div class="help-pane-feedback-form-title">{{trans.form.title}}</div>
+
+    {{> ../forms/inputs/text
+        id="feedback_form_name"
+        name="userName"
+        value=currentUserName
+        title=trans.form.name
+    }}
+    {{> ../forms/inputs/text
+        id="feedback_form_email"
+        name="email"
+        value=currentUserEmail
+        title=trans.form.email
+    }}
+    {{> ../forms/inputs/textArea
+        id="feedback_form_comments"
+        name="message"
+        title=trans.form.comments
+    }}
+    {{> ../forms/inputs/hidden
+        id="feedback_form_accountId"
+        name="accountId"
+        value=accountId
+    }}
+    {{> ../forms/inputs/hidden
+        id="feedback_form_pageUrl"
+        name="pageUrl"
+        value=pageURL
+    }}
+
+    <div class="form-group file-uploader-attachments">
+        <div class="control-label" for="feedback_form_attachments"><strong>{{trans.form.attachments}}</strong></div>
+        <input type="file" id="feedback_form_attachments" hidden multiple accept=".jpg,.jpeg,.png,.mov,.pdf">
+
+        <div class="uploads-area">
+            <div class="uploads-drop">
+                <i class="fas fa-upload"></i>
+                <div class="upload-text">
+                    <div class="msg-1">{{trans.form.uploadPlaceholder1}}</div>
+                    <div class="upload-text-browse">{{trans.form.uploadPlaceholder2}}</div>
+                </div>
+            </div>
+            <div class="uploads-file-info">
+                <div>{{trans.form.fileTypes}}</div>
+                <div>{{trans.form.maxSize}}</div>
+            </div>
+        </div>
+
+        <div class="help-pane-upload-files d-none"></div>
+    </div>
+
+    <div class="feedback-form-error d-none">
+        <div class="alert alert-danger help-pane-alert">
+            <i class="fas fa-triangle-exclamation"></i>
+            <span>{{trans.form.errors.email}}</span>
+        </div>
+    </div>
+
+    <button type="button" data-action="submit_feedback_form" class="btn btn-primary submit-form-btn">
+        {{trans.form.sendFeedback}}
+    </button>
+</form>

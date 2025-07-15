@@ -166,19 +166,24 @@ $timeline-step-height: 22px;
             .help-pane {
                 position: relative;
                 z-index: initial;
+                right: 40px;
                 
-                .help-pane-card {
-                    right: 40px;
+                .help-pane-container {
+                    right: 0px;
                     top: 30px;
                     position: absolute;
                     z-index: $playlist-editor-z-index-help-button;
                 }
             
-                .help-pane-icon {
-                    padding: 10px 2px;
-            
+                .help-pane-btn {
+                    width: 34px;
+                    height: 34px;
+                    position: absolute;
+                    left: 0px;
+                    margin: 4px;
+
                     i {
-                        font-size: 30px;
+                        font-size: 24px;
                     }
                 }
             }

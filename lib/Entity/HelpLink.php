@@ -30,7 +30,7 @@ class HelpLink implements \JsonSerializable
     public $title;
     public $summary;
     public $url;
-    public $isAllowWhitelabel;
+    public $isAllowWhiteLabel;
 
     /**
      * @param $array
@@ -40,7 +40,7 @@ class HelpLink implements \JsonSerializable
         $this->title = $array['title'] ?? '';
         $this->summary = $array['summary'] ?? '';
         $this->url = $array['url'] ?? '';
-        $this->isAllowWhitelabel = $array['isAllowWhitelabel'] ?? true;
+        $this->isAllowWhiteLabel = $array['isAllowWhiteLabel'] ?? true;
     }
 
     public function jsonSerialize(): array
@@ -49,7 +49,7 @@ class HelpLink implements \JsonSerializable
             'title' => $this->title,
             'summary' => $this->summary,
             'url' => $this->url,
-            'isAllowWhitelabel' => $this->isAllowWhitelabel,
+            'isAllowWhiteLabel' => $this->isAllowWhiteLabel,
         ];
     }
 }

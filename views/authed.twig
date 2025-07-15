@@ -106,34 +106,14 @@
     </div>
 
     {% set helpLinks = helpService.getLinksForPage(route) %}
-    {% set isXiboThemed = theme.getThemeConfig("app_name") == "Xibo" %}
-    {% if helpLinks|length > 0 %}
-        {# Hide in mobile view (sm/<768px)  #}
-        <div id="help-pane" class="d-none d-md-block help-pane">
-            <div class="card help-pane-card border-dark" style="display: none;">
-                <div class="card-header">{{ "Help"|trans }} <i class="close-icon fa fa-times"></i></div>
-                <ul class="list-group list-group-flush">
-                    {% for link in helpLinks %}
-                        {% if link.isAllowWhiteLabel or isXiboThemed %}
-                            <li class="list-group-item">
-                                <a href="{{ link.url }}" target="_blank">{{ link.title }}</a>
-                                {% if link.summary %}
-                                    <br/>
-                                    {{ link.summary|raw }}
-                                {% endif %}
-                            </li>
-                        {% endif %}
-                    {% endfor %}
-                </ul>
-                <div class="card-footer">
-                    <a href="{{ helpService.getLandingPage() }}" target="_blank">{{ "Visit the user manual"|trans }}</a>
-                </div>
-            </div>
-            <div class="help-pane-icon">
-                <i class="fa fa-question-circle"></i>
-            </div>
+    {# Hide in mobile view (sm/<768px)  #}
+    <div id="help-pane" class="d-none d-md-flex help-pane" data-help-links="{{ helpLinks|json_encode }}" data-url-help-landing-page={{ helpService.getLandingPage() }}>
+        <div class="help-pane-container" style="display: none;">
         </div>
-    {% endif %}
+        <div class="help-pane-btn">
+            <i class="fas fa-question"></i>
+        </div>
+    </div>
 {% endblock %}
 
 {% block javaScriptTemplates %}
