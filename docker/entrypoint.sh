@@ -296,6 +296,11 @@ then
       /bin/sed -i "s/tls_starttls .*$/tls_starttls off/" /etc/msmtprc
     fi
 
+    if [ "$CMS_SMTP_CHECK_TLS_CERTIFICATE" == "NO" ]
+    then
+      /bin/sed -i "s/tls .*$/tls_nocertcheck/" /etc/msmtprc
+    fi
+
     /bin/sed -i "s/maildomain .*$/maildomain $CMS_SMTP_REWRITE_DOMAIN/" /etc/msmtprc
     /bin/sed -i "s/domain .*$/domain $CMS_SMTP_HOSTNAME/" /etc/msmtprc
 
