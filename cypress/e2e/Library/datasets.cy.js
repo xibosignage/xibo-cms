@@ -45,6 +45,22 @@ describe('Datasets', function() {
     cy.contains('Added Cypress Test Dataset ' + testRun + '_1');
   });
 
+  it('should be able to cancel creating dataset', function() {
+    cy.visit('/dataset/view');
+
+    // Click on the Add Dataset button
+    cy.contains('Add DataSet').click();
+
+    cy.get('.modal input#dataSet')
+      .type('Cypress Test Dataset ' + testRun + '_1');
+
+    // Click cancel
+    cy.get('.modal #dialog_btn_1').click();
+
+    // Check if you are back to the view page
+    cy.url().should('include', '/dataset/view');
+  });
+
   it('searches and edit existing dataset', function() {
     // Create a new dataset and then search for it and delete it
     cy.createDataset('Cypress Test Dataset ' + testRun).then((id) => {
