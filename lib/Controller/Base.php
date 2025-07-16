@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -461,7 +461,7 @@ class Base
                     $size = $sanitizedParams->getInt('length', ['default' => 10]);
 
                     $linkHeader = '';
-                    $url = (new HttpsDetect())->getUrl() . $request->getUri()->getPath();
+                    $url = (new HttpsDetect())->getRootUrl() . $request->getUri()->getPath();
 
                     // Is there a next page?
                     if ($start + $size < $totalRows) {

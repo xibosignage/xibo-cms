@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -38,7 +38,6 @@ class LinkSigner
      * @param $itemId
      * @param string $storedAs
      * @param string|null $fileType
-     * @param string|null $suffix
      * @return string
      * @throws \Xibo\Support\Exception\NotFoundException
      */
@@ -51,7 +50,7 @@ class LinkSigner
         string $storedAs,
         string $fileType = null,
     ): string {
-        $xmdsRoot = (new HttpsDetect())->getUrl() . '/xmds.php';
+        $xmdsRoot = (new HttpsDetect())->getBaseUrl();
         $saveAsPath = $xmdsRoot
             . '?file=' . $storedAs
             . '&displayId=' . $display->displayId
