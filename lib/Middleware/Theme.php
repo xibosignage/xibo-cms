@@ -150,6 +150,8 @@ class Theme implements Middleware
         $view['revision'] = Environment::getGitCommit();
         $view['playerVersion'] = Environment::$PLAYER_SUPPORT;
         $view['isDevMode'] = Environment::isDevMode();
+        $view['accountId'] = defined('ACCOUNT_ID') ? constant('ACCOUNT_ID') : null;
+
         $samlSettings = $container->get('configService')->samlSettings;
         if (isset($samlSettings['workflow'])
             && isset($samlSettings['workflow']['slo'])

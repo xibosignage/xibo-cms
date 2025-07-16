@@ -1,5 +1,6 @@
 {# GLOBAL VARIABLES #}
 <script type="text/javascript" nonce="{{ cspNonce }}">
+    var appName = "{{theme.getThemeConfig("app_name")}}";
     var userPreferencesUrl = "{{ url_for("user.pref") }}";
 
     // TODO: Change this to a call to all route permissions ( something like currentUser.getRoutePermissions() )
@@ -40,6 +41,12 @@
     var libraryFontCSS = "{{ url_for("library.font.css") }}";
     var imageDownloadUrl = "{{ url_for("library.download", {id: ':id'}) }}?preview=1";
     var commandSearchUrl = "{{ url_for("command.search") }}";
+    var welcomeViewURL = "{{ url_for("welcome.view") }}";
+    var supportURL = '{{ theme.getThemeConfig("product_support_url", "https://community.xibo.org.uk/c/support") }}';
+    var isXiboThemed = (appName == "Xibo");
+    var accountId = "{{ accountId }}";
+    var currentUserName = "{{ currentUser.userName }}";
+    var currentUserEmail = "{{ currentUser.email }}";
 
     var dataTablesTemplate = "<'row'<'dataTables_folder col-sm-12 col-lg-5'><'col-sm-12 col-lg-7 text-right'<'d-inline-block mr-2'l><'dataTables_buttons d-inline-block'>>>" +
         "<'row'<'col-sm-12'tr>>" +
