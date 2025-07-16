@@ -142,3 +142,8 @@ require('corejs-typeahead/dist/typeahead.jquery.min.js');
 require('jstree/dist/jstree.min.js');
 require('jstree/dist/themes/default/style.min.css');
 
+// Leader Line
+import {LeaderLine}
+  from 'exports-loader?exports=LeaderLine!leader-line/leader-line.min.js';
+window.LeaderLine = LeaderLine;
+

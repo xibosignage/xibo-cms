@@ -23,8 +23,69 @@
 {% import "inline.twig" as inline %}
 {% set gridId = random() %}
 
-<script type="text/javascript" nonce="{{ cspNonce }}">
+<style>
+    .leader-line {
+      z-index: 1051;
+    }
 
+    .rdm-link-table .rdm-link-td {
+      width: 30px;
+    }
+
+    .rdm-link-table th.rdm-link-td {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .rdm-link-table td.rdm-link-td {
+      display: flex;
+      padding: 0.5rem;
+      cursor: pointer;
+    }
+
+    .rdm-link-table td.rdm-link-td.align-right {
+      justify-content: flex-end;
+    }
+
+    .rdm-link-table .rdm-connector-link {
+      width: 30px;
+      height: 30px;
+      margin-bottom: 0;
+      display: flex;
+      border: 2px solid #337ab7;
+      justify-content: center;
+      align-items: center;
+      border-radius: 50%;
+    }
+
+    .rdm-link-table .rdm-connector-link .inner-circle {
+      display:none;
+      width: 20px;
+      height: 20px;
+      background-color: #337ab7;
+      border-radius: 50%;
+    }
+
+    .rdm-link-table .rdm-link-td:hover {
+      background-color: #EFF7FF;
+    }
+
+    .rdm-link-table .rdm-link-td.rdm-selected {
+      outline: 2px solid #EB7857;
+      outline-offset: -2px;
+      background-color: #FFF7F5;
+    }
+
+    .rdm-link-table .rdm-link-td.rdm-linked .inner-circle {
+      display: block
+    }
+
+    .rdm-link-table .rdm-link-td.rdm-linked .fa-link {
+      display: none;
+    }
+</style>
+
+<script type="text/javascript" nonce="{{ cspNonce }}">
   // Buttons for Configure and Link Displays
   $(function() {
     $('#connectors').on('connectors.loaded', function() {
@@ -50,32 +111,58 @@
       animate: false,
       size: 'xl'
     });
+    var displayTable;
+    var $cmsDisplayTable = $('#unlinked-cms-display');
+    var selectedDisplay = {
+      id: '',
+      name: ''
+    };
+    var rdmConnectorLines = [];
+    var deviceTable;
+    var $rdmDeviceTable = $('#unlinked-rdm-devices');
+    var selectedDevice = {
+      id: '',
+      name: ''
+    };
+    var rdmLinks = [];
+    var linkedDeviceTable;
+
+
+    // Make sure we remove lines when closing modal
+    dialog.on('hidden.bs.modal', function () {
+      removeLinkedLines();
+    });
+
+    // Handle changing tabs
+    $(dialog).find('[data-toggle="tab"]').on('click', function (ev) {
+      var $tab = $(ev.currentTarget);
+      if($tab.attr('id') === 'unlinked-tab') {
+        linkedDeviceTable.ajax.reload();
+      } else {
+        removeLinkedLines();
+      }
+    });
 
     XiboInitialise('#{{ gridId }}');
 
     dialog.closest('.modal').addClass('rdm-modal');
 
     // Make the CMS Display Datatable
-    let displayTable;
-    let cmsDisplayTable = $('#unlinked-cms-display');
-    let selectedDisplay = {
-      id: '',
-      name: ''
-    };
-
-    displayTable = cmsDisplayTable.DataTable({
+    displayTable = $cmsDisplayTable.DataTable({
       language: dataTablesLanguage,
       dom: dataTablesTemplate,
       serverSide: false,
       stateSave: false,
       responsive: true,
       filter: false,
+      pageLength: 5,
+      lengthMenu: [5, 10, 25, 50],
       searchDelay: 3000,
-      order: [[ 0, 'asc']],
+      order: [[ 1, 'desc']],
       ajax: {
         url: '{{ url_for("display.search") }}',
         data: function (d) {
-          $.extend(d, $('#connector-display-filter').serializeObject(), {'cmsConnected': 0});
+          $.extend(d, $('#connector-display-filter').serializeObject());
         }
       },
       columns: [
@@ -84,64 +171,67 @@
         { data: 'manufacturer', responsivePriority: 1 },
         {
           data: null,
-          responsivePriority: 1,
+          responsivePriority: 0,
+          orderable: false,
+          className: 'rdm-link-td align-right',
+          width: '30px',
           render: function(data, type, row) {
-            return '<p id="cms_' + row.displayId + '" class="text-primary text-center mr-3 cms-link" ' +
-              'data-id="' + row.displayId + '" data-name="' + row.display + '" style="cursor: pointer;">'
-              + '<i class="fa fa-link mr-1" aria-hidden="true"></i> Link</p>';
+            return '<div id="cms_' + row.displayId + '" class="text-primary rdm-connector-link cms-link" ' +
+              'data-id="' + row.displayId + '" data-name="' + row.display + '">'
+              + '<i class="fas fa-link" aria-hidden="true"></i><div class="inner-circle"></div></div>';
           }
         },
       ],
+    }).on('draw.dt', function (e, settings, json, xhr) {
+      requestAnimationFrame(() => drawLinkedLines());
     });
 
     displayTable.on('draw', dataTableDraw);
     displayTable.on('processing.dt', dataTableProcessing);
 
     // Make the Account Device Datatable
-    let deviceTable;
-    let rdmDeviceTable = $('#unlinked-rdm-devices');
-    let selectedDevice = {
-      id: '',
-      name: ''
-    };
-
-    deviceTable = rdmDeviceTable.DataTable({
+    deviceTable = $rdmDeviceTable.DataTable({
       language: dataTablesLanguage,
       dom: dataTablesTemplate,
       serverSide: false,
       stateSave: false,
       responsive: true,
       filter: false,
+      pageLength: 5,
+      lengthMenu: [5, 10, 25, 50],
       searchDelay: 3000,
-      order: [[ 0, 'asc']],
+      order: [[ 2, 'desc']],
       ajax: {
         url: $rdmConnector.data('proxyUrl').replace(':method', 'getRdmDevices'),
         data: function(d) {
-          $.extend(d, $('#connector-device-filter').serializeObject(), {'cmsConnected': 0});
+          $.extend(d, $('#connector-device-filter').serializeObject());
         },
       },
       columns: [
         {
           data: null,
-          responsivePriority: 1,
+          responsivePriority: 0,
+          orderable: false,
+          className: 'rdm-link-td',
+          width: '30px',
           render: function(data, type, row) {
-            return '<p id="rdm_' + row.id + '" class="text-primary text-center rdm-link" ' +
-              'data-id="' + row.id + '" data-name="' + row.device + '" style="cursor: pointer;">' +
-              '<i class="fa fa-link" aria-hidden="true"></i> Link</p>';
+            return '<div id="rdm_' + row.id + '" class="text-primary rdm-connector-link rdm-link" ' +
+              'data-id="' + row.id + '" data-name="' + row.device + '">' +
+              '<i class="fas fa-link" aria-hidden="true"></i><div class="inner-circle"></div></div>';
           }
         },
         { data: 'device', responsivePriority: 1 },
         { data: 'id', responsivePriority: 1 },
         { data: 'type', responsivePriority: 1 },
       ],
+    }).on('draw.dt', function (e, settings, json, xhr) {
+      requestAnimationFrame(() => drawLinkedLines());
     });
 
     deviceTable.on('draw', dataTableDraw);
     deviceTable.on('processing.dt', dataTableProcessing);
 
     // Make the Linked Device Datatable
-    let linkedDeviceTable;
-
     linkedDeviceTable = $('#linked-cms-display').DataTable({
       language: dataTablesLanguage,
       dom: dataTablesTemplate,
@@ -172,14 +262,17 @@
         { data: 'id', responsivePriority: 1 },
         { data: 'type', responsivePriority: 1 },
       ],
+    }).on('xhr.dt', function (e, settings, json, xhr) {
+      rdmLinks = json.data;
+      drawLinkedLines();
     });
 
     linkedDeviceTable.on('draw', dataTableDraw);
     linkedDeviceTable.on('processing.dt', dataTableProcessing);
 
     // Hide filters
-    let deviceNameFilters = $('.linkedDeviceName, .linkedDeviceId');
-    let displayNameFilters = $('.linkedDisplayName, .linkedDisplayId');
+    var deviceNameFilters = $('.linkedDeviceName, .linkedDeviceId');
+    var displayNameFilters = $('.linkedDisplayName, .linkedDisplayId');
     deviceNameFilters.hide();
 
     function triggerFilter(selectedValue) {
@@ -213,35 +306,65 @@
     });
 
     // Manual linking
-    cmsDisplayTable.on('click', '.cms-link', function () {
-      selectedDisplay = {
-        id: $(this).data('id'),
-        name: $(this).data('name')
-      };
+    $cmsDisplayTable.on('click', '.rdm-link-td', function (ev) {
+      var $displayContainer = $(ev.currentTarget);
+      var $display =  $displayContainer.find('.cms-link');
 
-      // Validate selection
-      if (selectedDevice.id !== '') {
-        linkRdmDevice(selectedDisplay, selectedDevice)
+      // Check if it's already selected
+      if ($displayContainer.hasClass('rdm-selected')) {
+        resetSelection(true, false);
+        $displayContainer.removeClass('rdm-selected');
+      } else {
+        // Make sure we deselect all before
+        $displayContainer.parents('table').find('.rdm-selected')
+          .removeClass('rdm-selected');
+
+        selectedDisplay = {
+          id: $display.data('id'),
+          name: $display.data('name'),
+       };
+
+        $displayContainer.addClass('rdm-selected');
+
+        // Validate selection
+        if (selectedDevice.id !== '') {
+          linkRdmDevice(selectedDisplay, selectedDevice)
+        }
       }
     });
 
-    rdmDeviceTable.on('click', '.rdm-link', function () {
-      selectedDevice = {
-        id: $(this).data('id'),
-        name: $(this).data('name')
-      };
+    $rdmDeviceTable.on('click', '.rdm-link-td', function (ev) {
+      var $deviceContainer = $(ev.currentTarget);
+      var $device =  $deviceContainer.find('.rdm-link');
 
-      // Validate selection
-      if (selectedDisplay.id !== '') {
-        linkRdmDevice(selectedDisplay, selectedDevice)
+      // Check if it's already selected
+      if ($deviceContainer.hasClass('rdm-selected')) {
+        resetSelection(false, true);
+        $deviceContainer.removeClass('rdm-selected');
+      } else {
+        // Make sure we deselect all before
+        $deviceContainer.parents('table').find('.rdm-selected')
+          .removeClass('rdm-selected');
+
+        selectedDevice = {
+          id: $device.data('id'),
+          name: $device.data('name')
+        };
+
+        $deviceContainer.addClass('rdm-selected');
+
+        // Validate selection
+        if (selectedDisplay.id !== '') {
+          linkRdmDevice(selectedDisplay, selectedDevice)
+        }
       }
     });
 
     function linkRdmDevice(display, device) {
       // Adjust confirmation dialog modal z-index
-      adjustModalZIndex(1040);
+      adjustModalZIndex(1030);
 
-      const dialog = bootbox.dialog({
+      var dialog = bootbox.dialog({
         message: `<div class="text-center">Do you want to link<br>
                     <span style="display: inline-block; margin-top: 10px;"><strong>${display.name}</strong></span><br>
                     <span style="display: block; margin: 10px 0;">to</span><strong>${device.name}</strong>?</div>`,
@@ -253,6 +376,10 @@
             label: translations.cancel,
             className: 'btn-white btn-bb-cancel',
             callback: function(res) {
+              resetSelection();
+
+              linkedDeviceTable.ajax.reload();
+
               // Revert modal z-index changes
               adjustModalZIndex(1050)
             }
@@ -273,6 +400,7 @@
                   toastr.info('Link Successful!');
                   displayTable.ajax.reload();
                   deviceTable.ajax.reload();
+                  linkedDeviceTable.ajax.reload();
                 },
                 error: function(error) {
                   toastr.error('Failed to link device. Please try again.');
@@ -287,18 +415,87 @@
           }
         }
       }).attr('id', Date.now());
+
+      // Make sure the body knowing still knows we have a modal opened
+      dialog.on('hidden.bs.modal', function () {
+        if ($('.modal.show').length > 0) {
+          $('body').addClass('modal-open');
+        }
+      });
     }
 
-    function resetSelection() {
-      selectedDisplay.id = '';
-      selectedDisplay.name = '';
-      selectedDevice.id = '';
-      selectedDevice.name = '';
+    function resetSelection(display = true, device = true) {
+      if(display) {
+        selectedDisplay.id = '';
+        selectedDisplay.name = '';
+        $cmsDisplayTable.find('.rdm-selected').removeClass('rdm-selected');
+      }
+
+      if(device) {
+        selectedDevice.id = '';
+        selectedDevice.name = '';
+        $rdmDeviceTable.find('.rdm-selected').removeClass('rdm-selected');
+      }
     }
 
     // Adjust z-index for stacked modals
     function adjustModalZIndex(zIndex) {
       $('.rdm-modal').css('z-index', zIndex);
+      $('.leader-line').css('z-index', zIndex + 1);
+    }
+
+    function drawLinkedLines() {
+      // Wait for both tables to be loaded
+      var deviceProcessing = $cmsDisplayTable.find('.dataTables_empty').length > 0;
+      var displayProcessing = $rdmDeviceTable.find('.dataTables_empty').length > 0;
+
+      if (deviceProcessing || displayProcessing) {
+        setTimeout(() => drawLinkedLines(), 100);
+        return;
+      }
+
+      // Remove all lines first
+      removeLinkedLines();
+
+      // Remove all linked rows
+      $rdmDeviceTable.add($cmsDisplayTable).find('.rdm-linked').removeClass('rdm-linked')
+
+      // Create lines and mark rows as linked
+      rdmLinks.forEach((link) => {
+          // Get table rows to link
+          // TODO: These values are hardcoded (comment might be the real code), we need to get them from the proper link
+          var $targetDisplay = $cmsDisplayTable.find(`.cms-link[data-id=${3}]`) // $cmsDisplayTable.find(`.cms-link[data-id=${link.cmsDisplayId}]`);
+          var $targetDevice = $rdmDeviceTable.find(`.rdm-link[data-id=${3}]`); // $rdmDeviceTable.find(`.rdm-link[data-id=${link.deviceId}]`);
+
+          // If both elements exist, draw line
+          if($targetDisplay.length > 0 && $targetDevice.length > 0) {
+            // Mark rows as linked
+            $targetDisplay.parents('.rdm-link-td').addClass('rdm-linked');
+            $targetDevice.parents('.rdm-link-td').addClass('rdm-linked');
+
+            rdmConnectorLines.push(new LeaderLine(
+              $targetDisplay[0],
+              $targetDevice[0],
+              {
+                color: '#337AB7',
+                size: 3,
+                startSocket: 'right',
+                endSocket: 'left',
+                path: 'fluid',
+                startPlug: 'behind',
+                endPlug: 'behind',
+              },
+            ));
+          }
+      });
+    }
+
+    function removeLinkedLines() {
+      rdmConnectorLines.forEach((line) => {
+        line.remove();
+      });
+
+      rdmConnectorLines = [];
     }
   };
 
@@ -349,7 +546,7 @@
                               <!-- CMS DISPLAYS DATATABLE -->
                               <div class="XiboData">
                                   <table id="unlinked-cms-display"
-                                         class="table table-striped table-full-width"
+                                         class="table table-striped rdm-link-table table-full-width"
                                          style="width: 100%"
                                          data-state-preference-name="unlinked-cms-list-display" >
                                       <thead>
@@ -397,7 +594,7 @@
                               <!-- MY ACCOUNT DEVICES DATATABLE -->
                               <div class="XiboData">
                                   <table id="unlinked-rdm-devices"
-                                         class="table table-striped table-full-width"
+                                         class="table table-striped rdm-link-table table-full-width"
                                          style="width: 100%"
                                          data-state-preference-name="unlinked-rdm-devices" >
                                       <thead>
