@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -655,11 +655,11 @@ class Display implements \JsonSerializable
 
     /**
      * @return \Xibo\Entity\DisplayProfile
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function getDisplayProfile()
+    public function getDisplayProfile(): DisplayProfile
     {
         if ($this->_displayProfile === null) {
-
             try {
                 if ($this->displayProfileId == 0) {
                     // Load the default profile
@@ -668,16 +668,15 @@ class Display implements \JsonSerializable
                     // Load the specified profile
                     $displayProfile = $this->displayProfileFactory->getById($this->displayProfileId);
                 }
-            } catch (NotFoundException $e) {
-                $this->getLog()->error('Cannot get display profile');
-                $this->getLog()->debug($e->getTraceAsString());
+            } catch (NotFoundException) {
+                $this->getLog()->error('getDisplayProfile: Cannot get display profile, '
+                    . $this->clientType . ' not found.');
 
                 $displayProfile = $this->displayProfileFactory->getUnknownProfile($this->clientType);
             }
 
             // Set our display profile
             $this->_displayProfile = $displayProfile;
-
         }
 
         return $this->_displayProfile;
@@ -1368,7 +1367,7 @@ class Display implements \JsonSerializable
      * @return array
      * @throws NotFoundException
      */
-    private function setConfig($options = [])
+    private function setConfig(array $options = []): array
     {
         $options = array_merge([
             'displayOverride' => false
@@ -1378,7 +1377,11 @@ class Display implements \JsonSerializable
             $this->load();
 
             // Get the display profile
-            $displayProfile = $this->getDisplayProfile();
+            try {
+                $displayProfile = $this->getDisplayProfile();
+            } catch (NotFoundException) {
+                $displayProfile = $this->displayProfileFactory->getUnknownProfile($this->clientType);
+            }
 
             // Merge in any overrides we have on our display.
             $this->profileConfig = $displayProfile->getProfileConfig();

@@ -737,7 +737,7 @@ class Display extends Base
             try {
                 $defaultDisplayProfile = $this->displayProfileFactory->getDefaultByType($display->clientType);
                 $displayProfileName = $defaultDisplayProfile->name;
-            } catch (NotFoundException $e) {
+            } catch (NotFoundException) {
                 $this->getLog()->debug('No default Display Profile set for Display type ' . $display->clientType);
             }
 
@@ -2447,20 +2447,18 @@ class Display extends Base
 
     /**
      * Validate the display list
-     * @param array[Display] $displays
+     * @param \Xibo\Entity\Display[] $displays
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function validateDisplays($displays)
+    public function validateDisplays(array $displays): void
     {
         // Get the global time out (overrides the alert time out on the display if 0)
         $globalTimeout = $this->getConfig()->getSetting('MAINTENANCE_ALERT_TOUT') * 60;
-        $emailAlerts = ($this->getConfig()->getSetting("MAINTENANCE_EMAIL_ALERTS") == 1);
-        $alwaysAlert = ($this->getConfig()->getSetting("MAINTENANCE_ALWAYS_ALERT") == 1);
+        $emailAlerts = ($this->getConfig()->getSetting('MAINTENANCE_EMAIL_ALERTS') == 1);
+        $alwaysAlert = ($this->getConfig()->getSetting('MAINTENANCE_ALWAYS_ALERT') == 1);
 
         foreach ($displays as $display) {
-            /* @var \Xibo\Entity\Display $display */
-
             // Should we test against the collection interval or the preset alert timeout?
             if ($display->alertTimeout == 0 && $display->clientType != '') {
                 $timeoutToTestAgainst = ((double)$display->getSetting('collectInterval', $globalTimeout)) * 1.1;
@@ -2468,12 +2466,13 @@ class Display extends Base
                 $timeoutToTestAgainst = $globalTimeout;
             }
 
-            // Store the time out to test against
+            // Store the timeout to test against
             $timeOut = $display->lastAccessed + $timeoutToTestAgainst;
 
-            // If the last time we accessed is less than now minus the time out
+            // If the last time we accessed is less than now minus the timeout
             if ($timeOut < Carbon::now()->format('U')) {
-                $this->getLog()->debug('Timed out display. Last Accessed: ' . date('Y-m-d h:i:s', $display->lastAccessed) . '. Time out: ' . date('Y-m-d h:i:s', $timeOut));
+                $this->getLog()->debug('Timed out display. Last Accessed: '
+                    . date('Y-m-d h:i:s', $display->lastAccessed) . '. Time out: ' . date('Y-m-d h:i:s', $timeOut));
 
                 // Is this the first time this display has gone "off-line"
                 $displayOffline = ($display->loggedIn == 1);
@@ -2493,7 +2492,7 @@ class Display extends Base
                     $event->save();
                 }
 
-                $dayPartId = $display->getSetting('dayPartId', null, ['displayOverride' => true]);
+                $dayPartId = $display->getSetting('dayPartId');
                 $operatingHours = true;
 
                 if ($dayPartId !== null) {
@@ -2533,7 +2532,7 @@ class Display extends Base
                         } else {
                             $operatingHours = false;
                         }
-                    } catch (NotFoundException $e) {
+                    } catch (NotFoundException) {
                         $this->getLog()->debug(
                             'Unknown dayPartId set on Display Profile for displayId ' . $display->displayId
                         );
@@ -2566,16 +2565,19 @@ class Display extends Base
                         );
 
                         // Add in any displayNotificationGroups, with permissions
-                        foreach ($this->userGroupFactory->getDisplayNotificationGroups($display->displayGroupId) as $group) {
+                        foreach ($this->userGroupFactory
+                                     ->getDisplayNotificationGroups($display->displayGroupId) as $group) {
                             $notification->assignUserGroup($group);
                         }
 
                         $notification->save();
                     } else {
-                        $this->getLog()->info('Not sending email down alert for Display - ' . $display->display . ' we are outside of its operating hours');
+                        $this->getLog()->info('Not sending email down alert for Display - ' . $display->display
+                            . ' we are outside of its operating hours');
                     }
                 } elseif ($displayOffline) {
-                    $this->getLog()->info('Not sending an email for offline display - emailAlert = ' . $display->emailAlert . ', alwaysAlert = ' . $alwaysAlert);
+                    $this->getLog()->info('Not sending an email for offline display - emailAlert = '
+                        . $display->emailAlert . ', alwaysAlert = ' . $alwaysAlert);
                 }
             }
         }
