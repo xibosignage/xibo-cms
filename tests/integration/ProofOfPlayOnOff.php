@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -23,8 +23,8 @@
 namespace Xibo\Tests\Integration;
 
 use Xibo\Helper\Random;
-use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboImage;
+use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboLibrary;
 use Xibo\OAuth2\Client\Entity\XiboPlaylist;
 use Xibo\Tests\Helper\LayoutHelperTrait;
@@ -57,7 +57,7 @@ class ProofOfPlayOnOff extends LocalWebTestCase
     {
         parent::setup();
 
-        $this->getLogger()->debug('Setup test for ' . get_class() .' Test');
+        $this->getLogger()->debug('Setup test for ' . get_class($this) .' Test');
 
         // Create a Layout
         $this->layout = $this->createLayout();
@@ -91,7 +91,7 @@ class ProofOfPlayOnOff extends LocalWebTestCase
      */
     public function tearDown()
     {
-        $this->getLogger()->debug('Tear down for ' . get_class() . ' Test');
+        $this->getLogger()->debug('Tear down for ' . get_class($this) . ' Test');
 
         parent::tearDown();
 

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -387,7 +387,7 @@ class Region implements \JsonSerializable
         $this->getLog()->debug('Load Region with ' . json_encode($options));
 
         // Load permissions
-        $this->permissions = $this->permissionFactory->getByObjectId(get_class(), $this->regionId);
+        $this->permissions = $this->permissionFactory->getByObjectId(get_class($this), $this->regionId);
 
         // Get region options
         $this->regionOptions = $this->regionOptionFactory->getByRegionId($this->regionId);
