@@ -129,7 +129,7 @@ class XiboRdmConnector implements ConnectorInterface
      * @throws GuzzleException
      * @throws InvalidArgumentException
      */
-    private function setRdmDevices(array $displays, ?string $withCmsPsk): ?array
+    public function setRdmDevices(SanitizerInterface $displays, ?string $withCmsPsk = null): ?array
     {
         $cmsPsk = !empty($withCmsPsk) ? $withCmsPsk : $this->getSetting('cmsPsk');
 
@@ -144,9 +144,7 @@ class XiboRdmConnector implements ConnectorInterface
                 'headers' => [
                     'X-CMS-PSK-KEY' => $cmsPsk
                 ],
-                'query' => [
-                    'displays' => $displays
-                ]
+                'query' => json_encode(['displays' => $displays])
             ]);
 
             $devices = json_decode($request->getBody()->getContents(), true);
