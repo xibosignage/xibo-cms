@@ -15,6 +15,12 @@
 
 // Import commands.js using ES2015 syntax:
 import './commands';
+import './toolbarCommands';
+import './layoutCommands';
+import './playlistCommands';
+import './displayCommands';
+import './menuboardCommands';
+import './userCommands';
 
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
