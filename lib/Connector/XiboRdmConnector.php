@@ -129,7 +129,7 @@ class XiboRdmConnector implements ConnectorInterface
      * @throws GuzzleException
      * @throws InvalidArgumentException
      */
-    public function setRdmDevices(SanitizerInterface $displays, ?string $withCmsPsk = null): ?array
+    private function setRdmDevices(array $displays, ?string $withCmsPsk = null): ?array
     {
         $cmsPsk = !empty($withCmsPsk) ? $withCmsPsk : $this->getSetting('cmsPsk');
 
@@ -144,7 +144,9 @@ class XiboRdmConnector implements ConnectorInterface
                 'headers' => [
                     'X-CMS-PSK-KEY' => $cmsPsk
                 ],
-                'query' => json_encode(['displays' => $displays])
+                'json' => [
+                    'displays' => $displays
+                ]
             ]);
 
             $devices = json_decode($request->getBody()->getContents(), true);
@@ -152,8 +154,11 @@ class XiboRdmConnector implements ConnectorInterface
             // Save the rdmDeviceId of the displays
             foreach ($devices as $device) {
                 $cmsDisplay = $this->displayFactory->query(null, ['displayId' => $device['displayId']])[0];
-                $cmsDisplay->rdmDeviceId = $device['rdmDeviceId'];
-                $cmsDisplay->save();
+
+                if (!empty($cmsDisplay)) {
+                    $cmsDisplay->rdmDeviceId = $device['rdmDeviceId'];
+                    $cmsDisplay->save();
+                }
             }
         } catch (RequestException $e) {
             $this->getLogger()->error('getAvailableDevices: e = ' . $e->getMessage());
@@ -177,12 +182,13 @@ class XiboRdmConnector implements ConnectorInterface
     /**
      * Manual match - get the list of RDM devices from the Portal
      * @param SanitizerInterface $params
+     * @param bool $enableSearch
      * @return array|null
      * @throws GeneralException
      * @throws GuzzleException
      * @throws InvalidArgumentException
      */
-    public function getRdmDevices(SanitizerInterface $params, $enableSearch = true): ?array
+    public function getRdmDevices(SanitizerInterface $params, bool $enableSearch = true): ?array
     {
         $cmsPsk = $this->getSetting('cmsPsk');
 
@@ -245,28 +251,25 @@ class XiboRdmConnector implements ConnectorInterface
         try {
             $this->getLogger()->info('setRdmDevice: ' . json_encode($params));
 
-            $display = [
-                'displayId' => $params->getInt('displayId'),
-                'rdmDeviceId' => $params->getInt('rdmDeviceId'),
-            ];
-
             $response = $this->getClient()->post($this->getServiceUrl() . '/rdm/cms/connect/manual', [
                 'headers' => [
                     'X-CMS-PSK-KEY' => $this->getSetting('cmsPsk')
                 ],
                 'json' => [
-                    'display' => $display
+                    'displays' => $params->getArray('displays')
                 ]
             ]);
 
             if ($response->getStatusCode() === 204) {
                 // Save the rdmDeviceId of the displays
-                $cmsDisplay = $this->displayFactory->query(null, ['displayId' => $display['displayId']])[0];
-                $cmsDisplay->rdmDeviceId = $display['rdmDeviceId'];
-                $cmsDisplay->save();
+                foreach ($params->getArray('displays') as $display) {
+                    $cmsDisplay = $this->displayFactory->query(null, ['displayId' => $display['displayId']])[0];
 
-                $this->getLogger()->info('setRdmDevice: Linked device ID ' . $display['displayId'] .
-                    ' with display ID ' . $display['rdmDeviceId']);
+                    if (!empty($cmsDisplay)) {
+                        $cmsDisplay->rdmDeviceId = $display['rdmDeviceId'];
+                        $cmsDisplay->save();
+                    }
+                }
             }
         } catch (RequestException $e) {
             $this->getLogger()->error('setDevices: e = ' . $e->getMessage());
@@ -285,7 +288,7 @@ class XiboRdmConnector implements ConnectorInterface
      * Get the list of saved RDM displays in CMS for auto-connection
      * @throws NotFoundException
      */
-    public function getRdmDisplays(): array
+    private function getRdmDisplays(): array
     {
         $displays = array_map(function ($display) {
             return [

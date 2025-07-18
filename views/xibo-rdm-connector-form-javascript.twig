@@ -234,6 +234,8 @@
       stateSave: false,
       responsive: true,
       filter: false,
+      pageLength: 5,
+      lengthMenu: [5, 10, 25, 50],
       searchDelay: 3000,
       order: [[ 0, 'asc']],
       ajax: {
@@ -389,14 +391,16 @@
             className: 'btn-primary test btn-bb-link',
             callback: function(res) {
               $.ajax({
-                url: $rdmConnector.data('proxyUrl').replace(':method', 'setRdmDevices'),
+                url: $rdmConnector.data('proxyUrl').replace(':method', 'setRdmDevice'),
                 type: 'POST',
-                data: JSON.stringify([
-                  {
-                    displayId: display.id,
-                    rdmDeviceId: device.id
-                  }
-                ]),
+                data: JSON.stringify({
+                  displays: [
+                    {
+                      displayId: display.id,
+                      rdmDeviceId: device.id
+                    }
+                  ]
+                }),
                 contentType: 'application/json',
                 success: function(response) {
                   toastr.info('Link Successful!');
@@ -519,7 +523,7 @@
                               <form id="connector-display-filter" class="form-inline m-3">
                                   {% set title %}{% trans "Display Name" %}{% endset %}
                                   {{ inline.input("display", title) }}
-                                  {% set title %}{% trans "Type" %}{% endset %}
+
                                   {% set title %}{% trans "Type" %}{% endset %}
                                   {% set options = [
                                       { optionid: "", option: "All" },
@@ -529,8 +533,11 @@
                                       { optionid: "ChromeOS", option: "ChromeOS" },
                                   ] %}
                                   {{ inline.dropdown("displayType", "single", title, "", options, "optionid", "option", helpText) }}
+
                                   {% set title %}{% trans "ID" %}{% endset %}
                                   {{ inline.input("displayId", title) }}
+
+                                  {{ inline.hidden("cmsConnected", 0) }}
                               </form>
 
                               <!-- CMS DISPLAYS DATATABLE -->
@@ -568,6 +575,7 @@
                               <form id="connector-device-filter" class="form-inline m-3">
                                   {% set title %}{% trans "Device Name" %}{% endset %}
                                   {{ inline.input("deviceName", title) }}
+
                                   {% set title %}{% trans "Type" %}{% endset %}
                                   {% set options = [
                                     { optionid: "", option: "All" },
@@ -577,8 +585,11 @@
                                     { optionid: "ChromeOS", option: "ChromeOS" },
                                   ] %}
                                   {{ inline.dropdown("type", "single", title, "", options, "optionid", "option", helpText) }}
+
                                   {% set title %}{% trans "ID" %}{% endset %}
                                   {{ inline.input("id", title) }}
+
+                                  {{ inline.hidden("cmsConnected", 0) }}
                               </form>
 
                               <!-- MY ACCOUNT DEVICES DATATABLE -->
@@ -622,10 +633,13 @@
                                 { optionid: "myAccountDevices", option: "My Account Devices" },
                               ] %}
                               {{ inline.dropdown("sourceFilter", "single", title, "", options, "optionid", "option", helpText) }}
+
                               {% set title %}{% trans "Display Name" %}{% endset %}
                               {{ inline.input("display", title, '', '', 'linkedDisplayName') }}
+
                               {% set title %}{% trans "Device Name" %}{% endset %}
                               {{ inline.input("deviceName", title, '', '', 'linkedDeviceName') }}
+
                               {% set title %}{% trans "Type" %}{% endset %}
                               {% set options = [
                                 { optionid: "", option: "All" },
@@ -635,8 +649,10 @@
                                 { optionid: "ChromeOS", option: "ChromeOS" },
                               ] %}
                               {{ inline.dropdown("type", "single", title, "", options, "optionid", "option", helpText) }}
+
                               {% set title %}{% trans "ID" %}{% endset %}
                               {{ inline.input("displayId", title, '', '', 'linkedDisplayId') }}
+
                               {% set title %}{% trans "ID" %}{% endset %}
                               {{ inline.input("id", title, '', '', 'linkedDeviceId') }}
 
