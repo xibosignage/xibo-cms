@@ -1,7 +1,8 @@
-/*
- * Copyright (C) 2024 Xibo Signage Ltd
+{#
+/**
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  *
  * This file is part of Xibo.
  *
@@ -18,18 +19,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+#}
 
-// --- Add NPM Packages - JS ----
-import './public_path';
+{% extends "connector-form-edit.twig" %}
+{% import "forms.twig" as forms %}
 
-// Masonry
-window.Masonry = require('masonry-layout');
+{% block connectorFormFields %}
+    <h3>Xibo Remote Device Management</h3>
+    <p>Connect your CMS to Xibo Portal - My Account for Remote Device Management.</p>
 
-// images loaded
-const imagesLoaded = require('imagesloaded');
-// provide jQuery argument
-imagesLoaded.makeJQueryPlugin( window.$ );
+    <p>The Connector Key is needed to enable this connector.</p>
 
-// moveable
-window.Moveable = require('moveable/dist/moveable.min.js');
-window.Selecto = require('selecto/dist/selecto.min.js');
+    {% set title %}{% trans "Connector Key" %}{% endset %}
+    {% set helpText %}{% trans "Enter your Connector Key from My Account Portal." %}{% endset %}
+    {{ forms.input("cmsPsk", title, interface.getSetting("cmsPsk"), helpText) }}
+{% endblock %}

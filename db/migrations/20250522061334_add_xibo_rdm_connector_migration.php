@@ -1,7 +1,8 @@
+<?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - https://xibosignage.com
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  *
  * This file is part of Xibo.
  *
@@ -19,17 +20,22 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// --- Add NPM Packages - JS ----
-import './public_path';
+use Phinx\Migration\AbstractMigration;
 
-// Masonry
-window.Masonry = require('masonry-layout');
-
-// images loaded
-const imagesLoaded = require('imagesloaded');
-// provide jQuery argument
-imagesLoaded.makeJQueryPlugin( window.$ );
-
-// moveable
-window.Moveable = require('moveable/dist/moveable.min.js');
-window.Selecto = require('selecto/dist/selecto.min.js');
+/**
+ * Add a new connector (Xibo - RDM Connector) to connectors table
+ * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
+ */
+class AddXiboRdmConnectorMigration extends AbstractMigration
+{
+    public function change(): void
+    {
+        $this->table('connectors')
+            ->insert([
+                'className' => '\\Xibo\\Connector\\XiboRdmConnector',
+                'isEnabled' => 0,
+                'isVisible' => 1
+            ])
+            ->save();
+    }
+}
