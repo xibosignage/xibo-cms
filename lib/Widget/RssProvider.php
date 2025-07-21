@@ -155,8 +155,8 @@ class RssProvider implements WidgetProviderInterface
             foreach ($feedItems as $item) {
                 /* @var Item $item */
                 $article = new Article();
-                $article->title = $item->getTitle();
-                $article->author = $item->getAuthor();
+                $article->title = html_entity_decode($item->getTitle(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                $article->author = html_entity_decode($item->getAuthor(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
                 $article->link = $item->getUrl();
                 $article->date = Carbon::instance($item->getDate());
                 $article->publishedDate = Carbon::instance($item->getPublishedDate());
@@ -169,7 +169,11 @@ class RssProvider implements WidgetProviderInterface
 
                 // RSS doesn't support a summary/excerpt tag.
                 $descriptionTag = $item->getTag('description');
-                $article->summary = trim($descriptionTag ? strip_tags($descriptionTag[0]) : $article->content);
+                $article->summary = trim(
+                    $descriptionTag ?
+                        html_entity_decode(strip_tags($descriptionTag[0]), ENT_QUOTES | ENT_HTML5, 'UTF-8')
+                        : $article->content
+                );
 
                 // Do we have an image included?
                 $link = null;
