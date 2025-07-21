@@ -94,14 +94,8 @@ class RssProvider implements WidgetProviderInterface
                 Logger::enable();
             }
 
-            // Allowable attributes
+            // Client config
             $clientConfig = new Config();
-
-            // need a sensible way to set this
-            // https://github.com/fguillot/picoFeed/issues/196
-            //if ($dataProvider->getProperty('allowedAttributes') != null) {
-            //$clientConfig->setFilterWhitelistedTags(explode(',', $dataProvider->getProperty('allowedAttributes')));
-            //}
 
             // Get the feed parser
             $reader = new Reader($clientConfig);
