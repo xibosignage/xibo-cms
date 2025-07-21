@@ -131,11 +131,6 @@
                 </test>
             </visibility>
         </property>
-        <property id="allowedAttributes" type="text">
-            <title>Allowable Attributes</title>
-            <helpText>A comma separated list of attributes that should not be stripped from the incoming feed.</helpText>
-            <default></default>
-        </property>
         <property id="stripTags" type="text">
             <title>Strip Tags</title>
             <helpText>A comma separated list of HTML tags that should be stripped from the feed in addition to the default ones.</helpText>
