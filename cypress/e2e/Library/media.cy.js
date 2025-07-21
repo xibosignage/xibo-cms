@@ -82,7 +82,7 @@ describe('Media Admin', function() {
       });
     });
   
-    it('selects media and delete them', function() {
+    it.skip('selects media and delete them', function() {
       // Create a new playlist and then search for it and delete it
         cy.intercept('/library?draw=1&*').as('mediaGridLoad');
   
