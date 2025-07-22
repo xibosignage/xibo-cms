@@ -85,7 +85,7 @@
     "php-di/slim-bridge" : "3.3.*",
     "akrabat/ip-address-middleware" : "2.1.0",
     "selective/samesite-cookie": "0.3.0",
-    "nesbot/carbon": "2.66.*",
+    "nesbot/carbon": "2.72.*",
     "jmikola/geojson": "^1.0",
     "symfony/yaml": "5.4.*",
     "mjaschen/phpgeo": "^5.0"
