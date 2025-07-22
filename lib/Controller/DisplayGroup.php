@@ -3041,7 +3041,7 @@ class DisplayGroup extends Base
     }
 
     /**
-     * Sends RDM Command
+     * Checks display type
      * @param $display
      * @return string
      */
