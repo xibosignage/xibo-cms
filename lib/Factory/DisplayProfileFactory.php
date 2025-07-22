@@ -23,6 +23,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\DisplayProfile;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
@@ -116,13 +117,16 @@ class DisplayProfileFactory extends BaseFactory
      * @return DisplayProfile
      * @throws NotFoundException
      */
-    public function getUnknownProfile($clientType)
+    public function getUnknownProfile($clientType): DisplayProfile
     {
         $profile = $this->createEmpty();
         $profile->type = 'unknown';
         $profile->setClientType($clientType);
         $profile->isCustom = 0;
-        $profile->load();
+        $profile->config = [];
+        $profile->configDefault = [];
+        // We shoud not call load as it would be recursive due to unknown also being an unknown profile
+        // $profile->load();
         return $profile;
     }
 
@@ -430,7 +434,12 @@ class DisplayProfileFactory extends BaseFactory
         }
 
         if (!isset($config[$type])) {
-            $config[$type] = $this->getCustomProfileConfig($type);
+            try {
+                $config[$type] = $this->getCustomProfileConfig($type);
+            } catch (GeneralException $exception) {
+                $this->getLog()->error('loadForType: error with ' . $type . ', e = ' . $exception->getMessage());
+                $config[$type] = $this->getUnknownProfile($type)->getProfileConfig();
+            }
         }
 
         return $config[$type];
@@ -536,7 +545,11 @@ class DisplayProfileFactory extends BaseFactory
         return $profiles;
     }
 
-    public function getAvailableTypes()
+    /**
+     * Called by the Display Profile page and Add form
+     * @return array
+     */
+    public function getAvailableTypes(): array
     {
         // get distinct player types from the displayprofile table, this will include any custom profile types as well
         $dbTypes = $this->getStore()->select('SELECT DISTINCT type FROM `displayprofile` ORDER BY type', []);
