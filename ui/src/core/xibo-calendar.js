@@ -1109,7 +1109,7 @@ window.setupScheduleForm = function(dialog) {
 
   shareOfVoicePercentage.on('change paste keyup', function() {
     const percentage = shareOfVoicePercentage.val();
-    const conversion = Math.round((3600 * percentage) / 100);
+    const conversion = Math.round((3600 * Number(percentage)) / 100);
     shareOfVoice.val(conversion);
   });
 

@@ -185,9 +185,9 @@ window.XiboInitialise = function(scope, options) {
     const min = $input.attr('min');
 
     $input.on('blur', () => {
-      (max && $input.val() > max) &&
+      (max && Number($input.val()) > Number(max)) &&
         ($input.val(max).trigger('change'));
-      (min && $input.val() < min) &&
+      (min && Number($input.val()) < Number(min)) &&
         ($input.val(min).trigger('change'));
     });
   });
