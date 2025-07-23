@@ -66,7 +66,7 @@
       border-radius: 50%;
     }
 
-    .rdm-link-table .rdm-link-td:hover {
+    .rdm-link-table tbody  .rdm-link-td:hover {
       background-color: #EFF7FF;
     }
 
@@ -300,7 +300,7 @@
     });
 
     // Manual linking
-    $cmsDisplayTable.on('click', '.rdm-link-td', function (ev) {
+    $cmsDisplayTable.on('click', 'tbody  .rdm-link-td', function (ev) {
       var $displayContainer = $(ev.currentTarget);
       var $display =  $displayContainer.find('.cms-link');
 
@@ -330,7 +330,7 @@
       }
     });
 
-    $rdmDeviceTable.on('click', '.rdm-link-td', function (ev) {
+    $rdmDeviceTable.on('click', 'tbody .rdm-link-td', function (ev) {
       var $deviceContainer = $(ev.currentTarget);
       var $device =  $deviceContainer.find('.rdm-link');
 
@@ -601,7 +601,7 @@
                                       <thead>
                                       <tr>
                                           <th></th>
-                                          <th>{% trans "Display" %}</th>
+                                          <th>{% trans "Device" %}</th>
                                           <th>{% trans "ID" %}</th>
                                           <th>{% trans "Type" %}</th>
                                       </tr>
@@ -679,7 +679,7 @@
                                       <th>{% trans "ID" %}</th>
                                       <th>{% trans "Type" %}</th>
                                       <th>{% trans "Link" %}</th>
-                                      <th>{% trans "Display" %}</th>
+                                      <th>{% trans "Device" %}</th>
                                       <th>{% trans "ID" %}</th>
                                       <th>{% trans "Type" %}</th>
                                   </tr>
