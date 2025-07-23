@@ -1,5 +1,6 @@
+<?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -19,17 +20,19 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// --- Add NPM Packages - JS ----
-import './public_path';
+namespace Xibo\XMR;
 
-// Masonry
-window.Masonry = require('masonry-layout');
+class StatusAction extends PlayerAction
+{
+    public function __construct()
+    {
+        $this->setQos(5);
+    }
 
-// images loaded
-const imagesLoaded = require('imagesloaded');
-// provide jQuery argument
-imagesLoaded.makeJQueryPlugin( window.$ );
+    public function getMessage(): string
+    {
+        $this->action = 'status';
 
-// moveable
-window.Moveable = require('moveable/dist/moveable.min.js');
-window.Selecto = require('selecto/dist/selecto.min.js');
+        return $this->serializeToJson();
+    }
+}

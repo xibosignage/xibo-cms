@@ -33,6 +33,7 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Event\DisplayGroupLoadEvent;
+use Xibo\Event\RdmConnectorSendCommandEvent;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayEventFactory;
 use Xibo\Factory\DisplayFactory;
@@ -63,6 +64,7 @@ use Xibo\XMR\LicenceCheckAction;
 use Xibo\XMR\PurgeAllAction;
 use Xibo\XMR\RekeyAction;
 use Xibo\XMR\ScreenShotAction;
+use Xibo\XMR\StatusAction;
 
 /**
  * Class Display
@@ -305,7 +307,7 @@ class Display extends Base
         foreach ($this->store->select($sql, ['displayId' => $id, 'type' => 'P']) as $row) {
             $totalSize = $totalSize + $row['size'];
             $totalCount++;
-            
+
             if (intval($row['complete']) === 1) {
                 $completeSize = $completeSize + $row['size'];
                 $completeCount = $completeCount + 1;
@@ -505,6 +507,9 @@ class Display extends Base
             'xmrRegistered' => $parsedQueryParams->getInt('xmrRegistered'),
             'isPlayerSupported' => $parsedQueryParams->getInt('isPlayerSupported'),
             'displayGroupIds' => $parsedQueryParams->getIntArray('displayGroupIds'),
+            'displayType' => $parsedQueryParams->getString('displayType'),
+            'rdmDeviceId' => $parsedQueryParams->getInt('rdmDeviceId'),
+            'cmsConnected' => $parsedQueryParams->getInt('cmsConnected')
         ];
     }
 
@@ -654,6 +659,27 @@ class Display extends Base
      *       name="isPlayerSupported",
      *       in="query",
      *       description="Filter by whether the player is supported (1 or 0)",
+     *       type="integer",
+     *       required=false
+     *    ),
+     *  @SWG\Parameter(
+     *       name="displayType",
+     *       in="query",
+     *       description="Filter by displayType",
+     *       type="string",
+     *       required=false
+     *    ),
+     *  @SWG\Parameter(
+     *       name="rdmDeviceId",
+     *       in="query",
+     *       description="Filter by rdmDeviceId",
+     *       type="integer",
+     *       required=false
+     *    ),
+     *  @SWG\Parameter(
+     *       name="cmsConnected",
+     *       in="query",
+     *       description="Filter by whether the cms is connected (1 or 0)",
      *       type="integer",
      *       required=false
      *    ),
@@ -1037,28 +1063,31 @@ class Display extends Base
                 }
 
                 // Screen Shot
-                $display->buttons[] = [
-                    'id' => 'display_button_requestScreenShot',
-                    'url' => $this->urlFor($request, 'display.screenshot.form', ['id' => $display->displayId]),
-                    'text' => __('Request Screen Shot'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        ['name' => 'auto-submit', 'value' => true],
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'display.requestscreenshot',
-                                ['id' => $display->displayId]
-                            )
-                        ],
-                        ['name' => 'commit-method', 'value' => 'put'],
-                        ['name' => 'sort-group', 'value' => 3],
-                        ['name' => 'id', 'value' => 'display_button_requestScreenShot'],
-                        ['name' => 'text', 'value' => __('Request Screen Shot')],
-                        ['name' => 'rowtitle', 'value' => $display->display]
-                    ]
-                ];
+                // If it is a Sony display and not connected, hide the menu
+                if ($this->checkDisplayType($display) !== 'sony' || !empty($display->rdmDeviceId)) {
+                    $display->buttons[] = [
+                        'id' => 'display_button_requestScreenShot',
+                        'url' => $this->urlFor($request, 'display.screenshot.form', ['id' => $display->displayId]),
+                        'text' => __('Request Screen Shot'),
+                        'multi-select' => true,
+                        'dataAttributes' => [
+                            ['name' => 'auto-submit', 'value' => true],
+                            [
+                                'name' => 'commit-url',
+                                'value' => $this->urlFor(
+                                    $request,
+                                    'display.requestscreenshot',
+                                    ['id' => $display->displayId]
+                                )
+                            ],
+                            ['name' => 'commit-method', 'value' => 'put'],
+                            ['name' => 'sort-group', 'value' => 3],
+                            ['name' => 'id', 'value' => 'display_button_requestScreenShot'],
+                            ['name' => 'text', 'value' => __('Request Screen Shot')],
+                            ['name' => 'rowtitle', 'value' => $display->display]
+                        ]
+                    ];
+                }
 
                 // Collect Now
                 $display->buttons[] = [
@@ -2329,8 +2358,13 @@ class Display extends Base
         $display->screenShotRequested = 1;
         $display->save(['validate' => false, 'audit' => false]);
 
+        // if it is a sony display, pass it to the rdm route else, do this in the old way
         if (!empty($display->xmrChannel)) {
-            $this->playerAction->sendAction($display, new ScreenShotAction());
+            if ($this->checkDisplayType($display) === 'sony' && !empty($display->rdmDeviceId)) {
+                $this->sendRdmCommand($display->rdmDeviceId, 'screenshot', $request->getParams());
+            } else {
+                $this->playerAction->sendAction($display, new ScreenShotAction());
+            }
         }
 
         // Return
@@ -3182,5 +3216,40 @@ class Display extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Sends RDM Command
+     * @param int $displayId
+     * @param string $command
+     * @param array $params
+     * @return void
+     */
+    public function sendRdmCommand(int $displayId, string $command, array $params): void
+    {
+        $event = new RdmConnectorSendCommandEvent($displayId, $command, $params);
+
+        $this->getDispatcher()->dispatch($event, RdmConnectorSendCommandEvent::$NAME);
+    }
+
+    /**
+     * Checks display type
+     * @param $display
+     * @return string
+     */
+    private function checkDisplayType($display): string
+    {
+        $manufacturerModel = ($display->manufacturer ?? '') . ' ' . ($display->model ?? '');
+
+        // Set default to Android
+        $displayType = 'android';
+
+        if (preg_match('/sony|bravia/i', $manufacturerModel)) {
+            $displayType = 'sony';
+        } elseif (preg_match('/dsdevices/i', $manufacturerModel)) {
+            $displayType = 'dsDevices';
+        }
+
+        return $displayType;
     }
 }

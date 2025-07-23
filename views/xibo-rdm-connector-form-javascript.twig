@@ -1,0 +1,707 @@
+{#
+/**
+ * Copyright (C) 2025 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+{% import "inline.twig" as inline %}
+{% set gridId = random() %}
+
+<style>
+    .leader-line {
+      z-index: 1051;
+    }
+
+    .rdm-link-table .rdm-link-td {
+      width: 30px;
+    }
+
+    .rdm-link-table th.rdm-link-td {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .rdm-link-table td.rdm-link-td {
+      display: flex;
+      padding: 0.5rem;
+      cursor: pointer;
+    }
+
+    .rdm-link-table td.rdm-link-td.align-right {
+      justify-content: flex-end;
+    }
+
+    .rdm-link-table .rdm-connector-link {
+      width: 30px;
+      height: 30px;
+      margin-bottom: 0;
+      display: flex;
+      border: 2px solid #337ab7;
+      justify-content: center;
+      align-items: center;
+      border-radius: 50%;
+    }
+
+    .rdm-link-table .rdm-connector-link .inner-circle {
+      display:none;
+      width: 20px;
+      height: 20px;
+      background-color: #337ab7;
+      border-radius: 50%;
+    }
+
+    .rdm-link-table tbody  .rdm-link-td:hover {
+      background-color: #EFF7FF;
+    }
+
+    .rdm-link-table .rdm-link-td.rdm-selected {
+      outline: 2px solid #EB7857;
+      outline-offset: -2px;
+      background-color: #FFF7F5;
+    }
+
+    .rdm-link-table .rdm-link-td.rdm-linked .inner-circle {
+      display: block
+    }
+
+    .rdm-link-table .rdm-link-td.rdm-linked .fa-link {
+      display: none;
+    }
+</style>
+
+<script type="text/javascript" nonce="{{ cspNonce }}">
+  // Buttons for Configure and Link Displays
+  $(function() {
+    $('#connectors').on('connectors.loaded', function() {
+      var $rdmConnector = $('#connectors').find('div[data-connector-class-name-last="XiboRdmConnector"]');
+      var $button = $('<button class="btn btn-info" role="button">{% trans "Link Displays" %}</button>');
+
+      $button.on('click', function() {
+        rdmDisplayDialogOpen($rdmConnector);
+      });
+
+      $rdmConnector.find('.card-footer').append($button);
+    });
+  });
+
+  // RDM Connector Window
+  window.rdmDisplayDialogOpen = function($rdmConnector) {
+    bootbox.hideAll();
+    // Put the template into a modal.
+    var template = Handlebars.compile($('#connector-rdm-display').html());
+    var dialog = bootbox.dialog({
+      message: template({}),
+      title: '{{ "RDM Connector"|trans }}',
+      animate: false,
+      size: 'xl'
+    });
+    var displayTable;
+    var $cmsDisplayTable = $('#unlinked-cms-display');
+    var selectedDisplay = {
+      id: '',
+      name: ''
+    };
+    var rdmConnectorLines = [];
+    var deviceTable;
+    var $rdmDeviceTable = $('#unlinked-rdm-devices');
+    var selectedDevice = {
+      id: '',
+      name: ''
+    };
+    var linkedDeviceTable;
+
+
+    // Make sure we remove lines when closing modal
+    dialog.on('hidden.bs.modal', function () {
+      removeLinkedLines();
+    });
+
+    // Handle changing tabs
+    $(dialog).find('[data-toggle="tab"]').on('click', function (ev) {
+      var $tab = $(ev.currentTarget);
+      if($tab.attr('id') === 'unlinked-tab') {
+        linkedDeviceTable.ajax.reload();
+      } else {
+        removeLinkedLines();
+      }
+    });
+
+    XiboInitialise('#{{ gridId }}');
+
+    dialog.closest('.modal').addClass('rdm-modal');
+
+    // Make the CMS Display Datatable
+    displayTable = $cmsDisplayTable.DataTable({
+      language: dataTablesLanguage,
+      dom: dataTablesTemplate,
+      serverSide: false,
+      stateSave: false,
+      responsive: true,
+      filter: false,
+      pageLength: 5,
+      lengthMenu: [5, 10, 25, 50],
+      searchDelay: 3000,
+      order: [[ 1, 'desc']],
+      ajax: {
+        url: '{{ url_for("display.search") }}',
+        data: function (d) {
+          $.extend(d, $('#connector-display-filter').serializeObject());
+        }
+      },
+      columns: [
+        { data: 'display', responsivePriority: 1 },
+        { data: 'displayId', responsivePriority: 1 },
+        { data: 'manufacturer', responsivePriority: 1 },
+        {
+          data: null,
+          responsivePriority: 0,
+          orderable: false,
+          className: 'rdm-link-td align-right',
+          width: '30px',
+          render: function(data, type, row) {
+            return '<div id="cms_' + row.displayId + '" class="text-primary rdm-connector-link cms-link" ' +
+              'data-id="' + row.displayId + '" data-name="' + row.display + '">'
+              + '<i class="fas fa-link" aria-hidden="true"></i><div class="inner-circle"></div></div>';
+          }
+        },
+      ],
+    });
+
+    displayTable.on('draw', dataTableDraw);
+    displayTable.on('processing.dt', dataTableProcessing);
+
+    // Make the Account Device Datatable
+    deviceTable = $rdmDeviceTable.DataTable({
+      language: dataTablesLanguage,
+      dom: dataTablesTemplate,
+      serverSide: false,
+      stateSave: false,
+      responsive: true,
+      filter: false,
+      pageLength: 5,
+      lengthMenu: [5, 10, 25, 50],
+      searchDelay: 3000,
+      order: [[ 2, 'desc']],
+      ajax: {
+        url: $rdmConnector.data('proxyUrl').replace(':method', 'getRdmDevices'),
+        data: function(d) {
+          $.extend(d, $('#connector-device-filter').serializeObject());
+        },
+      },
+      columns: [
+        {
+          data: null,
+          responsivePriority: 0,
+          orderable: false,
+          className: 'rdm-link-td',
+          width: '30px',
+          render: function(data, type, row) {
+            return '<div id="rdm_' + row.id + '" class="text-primary rdm-connector-link rdm-link" ' +
+              'data-id="' + row.id + '" data-name="' + row.device + '">' +
+              '<i class="fas fa-link" aria-hidden="true"></i><div class="inner-circle"></div></div>';
+          }
+        },
+        { data: 'device', responsivePriority: 1 },
+        { data: 'id', responsivePriority: 1 },
+        { data: 'type', responsivePriority: 1 },
+      ],
+    });
+
+    deviceTable.on('draw', dataTableDraw);
+    deviceTable.on('processing.dt', dataTableProcessing);
+
+    // Make the Linked Device Datatable
+    linkedDeviceTable = $('#linked-cms-display').DataTable({
+      language: dataTablesLanguage,
+      dom: dataTablesTemplate,
+      serverSide: false,
+      stateSave: false,
+      responsive: true,
+      filter: false,
+      pageLength: 5,
+      lengthMenu: [5, 10, 25, 50],
+      searchDelay: 3000,
+      order: [[ 0, 'asc']],
+      ajax: {
+        url: $rdmConnector.data('proxyUrl').replace(':method', 'getDisplaysAndDevices'),
+        data: function (d) {
+          $.extend(d, $('#cms-display-filter').serializeObject());
+        }
+      },
+      columns: [
+        { data: 'display', responsivePriority: 1 },
+        { data: 'cmsDisplayId', responsivePriority: 1 },
+        { data: 'manufacturer', responsivePriority: 1 },
+        {
+          data: null,
+          responsivePriority: 1,
+          render: function(data, type, row) {
+            return '<i class="fa text-primary fa-link " aria-hidden="true"></i>';
+          }
+        },
+        { data: 'device', responsivePriority: 1 },
+        { data: 'id', responsivePriority: 1 },
+        { data: 'type', responsivePriority: 1 },
+      ],
+    });
+
+    linkedDeviceTable.on('draw', dataTableDraw);
+    linkedDeviceTable.on('processing.dt', dataTableProcessing);
+
+    // Hide filters
+    var deviceNameFilters = $('.linkedDeviceName, .linkedDeviceId');
+    var displayNameFilters = $('.linkedDisplayName, .linkedDisplayId');
+    deviceNameFilters.hide();
+
+    function triggerFilter(selectedValue) {
+      if (selectedValue === 'cmsDisplay') {
+        displayNameFilters.show();
+        deviceNameFilters.hide();
+      } else {
+        deviceNameFilters.show();
+        displayNameFilters.hide();
+      }
+    }
+
+    // Watch for filter input changes in CMS Display table
+    $('#connector-display-filter select, #connector-display-filter input').on('change', function(e) {
+      displayTable.ajax.reload();
+    });
+
+    // Watch for filter input changes in RDM Device table
+    $('#connector-device-filter select, #connector-device-filter input').on('change', function(e) {
+      deviceTable.ajax.reload();
+    });
+
+    // Watch for filter input changes in linked table
+    $('#cms-display-filter select#sourceFilter').on('change', function(e) {
+      triggerFilter($(this).val());
+      linkedDeviceTable.ajax.reload();
+    });
+
+    $('#cms-display-filter input, #cms-display-filter select#type').on('change', function(e) {
+      linkedDeviceTable.ajax.reload();
+    });
+
+    // Manual linking
+    $cmsDisplayTable.on('click', 'tbody  .rdm-link-td', function (ev) {
+      var $displayContainer = $(ev.currentTarget);
+      var $display =  $displayContainer.find('.cms-link');
+
+      // Check if it's already selected
+      if ($displayContainer.hasClass('rdm-selected')) {
+        resetSelection(true, false);
+        $displayContainer.removeClass('rdm-selected');
+      } else {
+        // Make sure we deselect all before
+        $displayContainer.parents('table').find('.rdm-selected')
+          .removeClass('rdm-selected');
+
+        selectedDisplay = {
+          id: $display.data('id'),
+          name: $display.data('name'),
+       };
+
+        $displayContainer.addClass('rdm-selected');
+
+        // Validate selection
+        if (selectedDevice.id !== '') {
+          drawLinkedLines(selectedDisplay.id, selectedDevice.id);
+
+          // Delay showing the modal dialog so the user can see the link line
+          setTimeout(() => linkRdmDevice(selectedDisplay, selectedDevice), 400);
+        }
+      }
+    });
+
+    $rdmDeviceTable.on('click', 'tbody .rdm-link-td', function (ev) {
+      var $deviceContainer = $(ev.currentTarget);
+      var $device =  $deviceContainer.find('.rdm-link');
+
+      // Check if it's already selected
+      if ($deviceContainer.hasClass('rdm-selected')) {
+        resetSelection(false, true);
+        $deviceContainer.removeClass('rdm-selected');
+      } else {
+        // Make sure we deselect all before
+        $deviceContainer.parents('table').find('.rdm-selected')
+          .removeClass('rdm-selected');
+
+        selectedDevice = {
+          id: $device.data('id'),
+          name: $device.data('name')
+        };
+
+        $deviceContainer.addClass('rdm-selected');
+
+        // Validate selection
+        if (selectedDisplay.id !== '') {
+          drawLinkedLines(selectedDisplay.id, selectedDevice.id);
+
+          // Delay showing the modal dialog so the user can see the link line
+          setTimeout(() => linkRdmDevice(selectedDisplay, selectedDevice), 400);
+        }
+      }
+    });
+
+    function linkRdmDevice(display, device) {
+      // Adjust confirmation dialog modal z-index
+      adjustModalZIndex(1030);
+
+      var dialog = bootbox.dialog({
+        message: `<div class="text-center">Do you want to link<br>
+                    <span style="display: inline-block; margin-top: 10px;"><strong>${display.name}</strong></span><br>
+                    <span style="display: block; margin: 10px 0;">to</span><strong>${device.name}</strong>?</div>`,
+        closeButton: false,
+        centerVertical: true,
+        size: 'small',
+        buttons: {
+          cancel: {
+            label: translations.cancel,
+            className: 'btn-white btn-bb-cancel',
+            callback: function(res) {
+              resetSelection();
+
+              removeLinkedLines();
+
+              linkedDeviceTable.ajax.reload();
+
+              // Revert modal z-index changes
+              adjustModalZIndex(1050)
+            }
+          },
+          link: {
+            label: translations.link,
+            className: 'btn-primary test btn-bb-link',
+            callback: function(res) {
+              $.ajax({
+                url: $rdmConnector.data('proxyUrl').replace(':method', 'setRdmDevice'),
+                type: 'POST',
+                data: JSON.stringify({
+                  displays: [
+                    {
+                      displayId: display.id,
+                      rdmDeviceId: device.id
+                    }
+                  ]
+                }),
+                contentType: 'application/json',
+                success: function(response) {
+                  toastr.info('Link Successful!');
+
+                  displayTable.ajax.reload();
+
+                  deviceTable.ajax.reload();
+
+                  linkedDeviceTable.ajax.reload();
+
+                  removeLinkedLines();
+                },
+                error: function(error) {
+                  toastr.error('Failed to link device. Please try again.');
+                }
+              });
+
+              resetSelection();
+
+              // Revert modal z-index changes
+              adjustModalZIndex(1050)
+            }
+          }
+        }
+      }).attr('id', Date.now());
+
+      // Make sure the body knowing still knows we have a modal opened
+      dialog.on('hidden.bs.modal', function () {
+        if ($('.modal.show').length > 0) {
+          $('body').addClass('modal-open');
+        }
+      });
+    }
+
+    function resetSelection(display = true, device = true) {
+      if (display) {
+        selectedDisplay.id = '';
+        selectedDisplay.name = '';
+        $cmsDisplayTable.find('.rdm-selected').removeClass('rdm-selected');
+      }
+
+      if (device) {
+        selectedDevice.id = '';
+        selectedDevice.name = '';
+        $rdmDeviceTable.find('.rdm-selected').removeClass('rdm-selected');
+      }
+    }
+
+    // Adjust z-index for stacked modals
+    function adjustModalZIndex(zIndex) {
+      $('.rdm-modal').css('z-index', zIndex);
+      $('.leader-line').css('z-index', zIndex + 1);
+    }
+
+    function drawLinkedLines(cmsDisplayId, rdmDeviceId) {
+      // Remove all lines first
+      removeLinkedLines();
+
+      // Create lines and mark rows as linked
+      var $targetDisplay = $cmsDisplayTable.find(`.cms-link[data-id=${cmsDisplayId}]`);
+      var $targetDevice = $rdmDeviceTable.find(`.rdm-link[data-id=${rdmDeviceId}]`);
+
+      $targetDisplay.parents('.rdm-link-td').addClass('rdm-linked');
+      $targetDevice.parents('.rdm-link-td').addClass('rdm-linked');
+
+      rdmConnectorLines.push(new LeaderLine(
+        $targetDisplay[0],
+        $targetDevice[0],
+        {
+          color: '#337AB7',
+          size: 3,
+          startSocket: 'right',
+          endSocket: 'left',
+          path: 'fluid',
+          startPlug: 'behind',
+          endPlug: 'behind',
+        },
+      ));
+    }
+
+    function removeLinkedLines() {
+      // Remove all linked rows
+      $rdmDeviceTable.add($cmsDisplayTable).find('.rdm-linked').removeClass('rdm-linked')
+
+      rdmConnectorLines.forEach((line) => {
+        line.remove();
+      });
+
+      rdmConnectorLines = [];
+    }
+  };
+
+</script>
+<script type="text/x-handlebars-template" id="connector-rdm-display">
+  <div class="XiboGrid" id="{{ gridId }}" data-grid-name="connector-rdm-display">
+      <!-- Card Header -->
+      <div class="card-header">
+          <ul class="nav nav-tabs card-header-tabs" role="tablist">
+              <li class="nav-item">
+                  <a class="nav-link active" id="unlinked-tab" data-toggle="tab" href="#unlinkedTab" role="tab"
+                     aria-controls="unlinkedTab" aria-selected="true">Unlinked</a>
+              </li>
+              <li class="nav-item">
+                  <a class="nav-link" id="linked-tab" data-toggle="tab" href="#linkedTab" role="tab"
+                     aria-controls="linkedTab" aria-selected="false">Linked</a>
+              </li>
+          </ul>
+      </div>
+
+      <!-- Card Body -->
+      <div class="card-body">
+          <div class="tab-content">
+
+              <!-- UNLINKED TAB-->
+              <div class="tab-pane active" id="unlinkedTab" role="tabpanel" aria-labelledby="unlinked-tab">
+                  <div class="row">
+                      <div class="XiboFilterCustom pb-0 mb-0 col-md-6 pr-lg-4">
+                          <div class="FilterDiv" id="connector-display-unlinked-table">
+                              <h5 class="m-3">{% trans "CMS Displays" %}</h5>
+                              <form id="connector-display-filter" class="form-inline m-3">
+                                  {% set title %}{% trans "Display Name" %}{% endset %}
+                                  {{ inline.input("display", title) }}
+
+                                  {% set title %}{% trans "Type" %}{% endset %}
+                                  {% set options = [
+                                      { optionid: "", option: "All" },
+                                      { optionid: "Sony Bravia", option: "Sony Bravia" },
+                                      { optionid: "DSDevices", option: "DSDevices" },
+                                      { optionid: "Windows", option: "Windows" },
+                                      { optionid: "ChromeOS", option: "ChromeOS" },
+                                  ] %}
+                                  {{ inline.dropdown("displayType", "single", title, "", options, "optionid", "option", helpText) }}
+
+                                  {% set title %}{% trans "ID" %}{% endset %}
+                                  {{ inline.input("displayId", title) }}
+
+                                  {{ inline.hidden("cmsConnected", 0) }}
+                              </form>
+
+                              <!-- CMS DISPLAYS DATATABLE -->
+                              <div class="XiboData">
+                                  <table id="unlinked-cms-display"
+                                         class="table table-striped rdm-link-table table-full-width"
+                                         style="width: 100%"
+                                         data-state-preference-name="unlinked-cms-list-display" >
+                                      <thead>
+                                      <tr>
+                                          <th>{% trans "Display" %}</th>
+                                          <th>{% trans "ID" %}</th>
+                                          <th>{% trans "Type" %}</th>
+                                          <th></th>
+                                      </tr>
+                                      </thead>
+                                      <tbody>
+                                      </tbody>
+                                      <tfoot>
+                                          <tr>
+                                              <th></th>
+                                              <th></th>
+                                              <th></th>
+                                              <th></th>
+                                          </tr>
+                                      </tfoot>
+                                  </table>
+                              </div>
+                          </div>
+                      </div>
+
+                      <div class="XiboFilterCustom pb-0 mb-0 col-md-6 pl-lg-4">
+                          <div class="FilterDiv" id="connector-device-unlinked-table">
+                              <h5 class="m-3">{% trans "My Account Devices" %}</h5>
+                              <form id="connector-device-filter" class="form-inline m-3">
+                                  {% set title %}{% trans "Device Name" %}{% endset %}
+                                  {{ inline.input("deviceName", title) }}
+
+                                  {% set title %}{% trans "Type" %}{% endset %}
+                                  {% set options = [
+                                    { optionid: "", option: "All" },
+                                    { optionid: "Sony Bravia", option: "Sony Bravia" },
+                                    { optionid: "DSDevices", option: "DSDevices" },
+                                    { optionid: "Windows", option: "Windows" },
+                                    { optionid: "ChromeOS", option: "ChromeOS" },
+                                  ] %}
+                                  {{ inline.dropdown("type", "single", title, "", options, "optionid", "option", helpText) }}
+
+                                  {% set title %}{% trans "ID" %}{% endset %}
+                                  {{ inline.input("id", title) }}
+
+                                  {{ inline.hidden("cmsConnected", 0) }}
+                              </form>
+
+                              <!-- MY ACCOUNT DEVICES DATATABLE -->
+                              <div class="XiboData">
+                                  <table id="unlinked-rdm-devices"
+                                         class="table table-striped rdm-link-table table-full-width"
+                                         style="width: 100%"
+                                         data-state-preference-name="unlinked-rdm-devices" >
+                                      <thead>
+                                      <tr>
+                                          <th></th>
+                                          <th>{% trans "Device" %}</th>
+                                          <th>{% trans "ID" %}</th>
+                                          <th>{% trans "Type" %}</th>
+                                      </tr>
+                                      </thead>
+                                      <tbody></tbody>
+                                      <tfoot>
+                                          <tr>
+                                              <th></th>
+                                              <th></th>
+                                              <th></th>
+                                              <th></th>
+                                          </tr>
+                                      </tfoot>
+                                  </table>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+
+              <!-- LINKED TAB-->
+              <div class="tab-pane show" id="linkedTab" role="tabpanel" aria-labelledby="linked-tab">
+                  <div class="XiboFilterCustom pb-0 mb-0">
+                      <div class="FilterDiv" id="connector-rdm-linked-table">
+                          <form id="cms-display-filter" class="form-inline mx-3">
+                              {% set title %}{% trans "Source" %}{% endset %}
+                              {% set options = [
+                                { optionid: "cmsDisplay", option: "CMS Displays" },
+                                { optionid: "myAccountDevices", option: "My Account Devices" },
+                              ] %}
+                              {{ inline.dropdown("sourceFilter", "single", title, "", options, "optionid", "option", helpText) }}
+
+                              {% set title %}{% trans "Display Name" %}{% endset %}
+                              {{ inline.input("display", title, '', '', 'linkedDisplayName') }}
+
+                              {% set title %}{% trans "Device Name" %}{% endset %}
+                              {{ inline.input("deviceName", title, '', '', 'linkedDeviceName') }}
+
+                              {% set title %}{% trans "Type" %}{% endset %}
+                              {% set options = [
+                                { optionid: "", option: "All" },
+                                { optionid: "Sony Bravia", option: "Sony Bravia" },
+                                { optionid: "DSDevices", option: "DSDevices" },
+                                { optionid: "Windows", option: "Windows" },
+                                { optionid: "ChromeOS", option: "ChromeOS" },
+                              ] %}
+                              {{ inline.dropdown("type", "single", title, "", options, "optionid", "option", helpText) }}
+
+                              {% set title %}{% trans "ID" %}{% endset %}
+                              {{ inline.input("displayId", title, '', '', 'linkedDisplayId') }}
+
+                              {% set title %}{% trans "ID" %}{% endset %}
+                              {{ inline.input("id", title, '', '', 'linkedDeviceId') }}
+
+                              {{ inline.hidden("cmsConnected", 1) }}
+                          </form>
+
+                          <!-- CMS DISPLAYS RDM DEVICES DATATABLE -->
+                          <div class="XiboData">
+                              <div class="row p-3">
+                                  <div class="col-md-6 p-0">
+                                      <h5>{% trans "CMS Displays" %}</h5>
+                                  </div>
+                                  <div class="col-md-6 p-0">
+                                      <h5>{% trans "My Account Devices" %}</h5>
+                                  </div>
+                              </div>
+                              <table id="linked-cms-display"
+                                     class="table table-striped table-full-width"
+                                     style="width: 100%"
+                                     data-state-preference-name="connector-rdm-linked-display" >
+                                  <thead>
+                                  <tr>
+                                      <th>{% trans "Display" %}</th>
+                                      <th>{% trans "ID" %}</th>
+                                      <th>{% trans "Type" %}</th>
+                                      <th>{% trans "Link" %}</th>
+                                      <th>{% trans "Device" %}</th>
+                                      <th>{% trans "ID" %}</th>
+                                      <th>{% trans "Type" %}</th>
+                                  </tr>
+                                  </thead>
+                                  <tbody></tbody>
+                                  <tfoot>
+                                      <tr>
+                                          <th></th>
+                                          <th></th>
+                                          <th></th>
+                                          <th></th>
+                                          <th></th>
+                                          <th></th>
+                                          <th></th>
+                                      </tr>
+                                  </tfoot>
+                              </table>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+</script>

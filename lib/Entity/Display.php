@@ -170,6 +170,12 @@ class Display implements \JsonSerializable
     public $display;
 
     /**
+     * @SWG\Property(description="The RDM Device ID")
+     * @var int
+     */
+    public $rdmDeviceId;
+
+    /**
      * @SWG\Property(description="The Description of this Display")
      * @var string
      */
@@ -1014,8 +1020,16 @@ class Display implements \JsonSerializable
     private function add()
     {
         $this->displayId = $this->getStore()->insert('
-            INSERT INTO display (display, auditingUntil, defaultlayoutid, license, licensed, lastAccessed, inc_schedule, email_alert, alert_timeout, clientAddress, xmrChannel, xmrPubKey, lastCommandSuccess, macAddress, lastChanged, lastWakeOnLanCommandSent, client_type, client_version, client_code, overrideConfig, newCmsAddress, newCmsKey, commercialLicence, lanIpAddress, syncGroupId, osVersion, osSdk, manufacturer, brand, model)
-              VALUES (:display, :auditingUntil, :defaultlayoutid, :license, :licensed, :lastAccessed, :inc_schedule, :email_alert, :alert_timeout, :clientAddress, :xmrChannel, :xmrPubKey, :lastCommandSuccess, :macAddress, :lastChanged, :lastWakeOnLanCommandSent, :clientType, :clientVersion, :clientCode, :overrideConfig, :newCmsAddress, :newCmsKey, :commercialLicence, :lanIpAddress, :syncGroupId, :osVersion, :osSdk, :manufacturer, :brand, :model)
+            INSERT INTO display (display, auditingUntil, defaultlayoutid, license, licensed, lastAccessed, inc_schedule,
+                email_alert, alert_timeout, clientAddress, xmrChannel, xmrPubKey, lastCommandSuccess, macAddress, 
+                lastChanged, lastWakeOnLanCommandSent, client_type, client_version, client_code, overrideConfig, 
+                newCmsAddress, newCmsKey, commercialLicence, lanIpAddress, syncGroupId, osVersion, osSdk, manufacturer, 
+                brand, model, rdmDeviceId)
+              VALUES (:display, :auditingUntil, :defaultlayoutid, :license, :licensed, :lastAccessed, :inc_schedule, 
+                :email_alert, :alert_timeout, :clientAddress, :xmrChannel, :xmrPubKey, :lastCommandSuccess, :macAddress, 
+                :lastChanged, :lastWakeOnLanCommandSent, :clientType, :clientVersion, :clientCode, :overrideConfig, 
+                :newCmsAddress, :newCmsKey, :commercialLicence, :lanIpAddress, :syncGroupId, :osVersion, :osSdk, 
+                :manufacturer, :brand, :model, :rdmDeviceId)
         ', [
             'display' => $this->display,
             'auditingUntil' => 0,
@@ -1047,6 +1061,7 @@ class Display implements \JsonSerializable
             'manufacturer' => $this->manufacturer,
             'brand' => $this->brand,
             'model' => $this->model,
+            'rdmDeviceId' => null
         ]);
 
 
@@ -1153,7 +1168,8 @@ class Display implements \JsonSerializable
                     `teamViewerSerial` = :teamViewerSerial,
                     `webkeySerial` = :webkeySerial,
                     `lanIpAddress` = :lanIpAddress,
-                    `syncGroupId` = :syncGroupId
+                    `syncGroupId` = :syncGroupId,
+                    rdmDeviceId = :rdmDeviceId
              WHERE displayid = :displayId
         ', [
             'display' => $this->display,
@@ -1217,6 +1233,7 @@ class Display implements \JsonSerializable
             'manufacturer' => $this->manufacturer,
             'brand' => $this->brand,
             'model' => $this->model,
+            'rdmDeviceId' => $this->rdmDeviceId
         ]);
 
         // Maintain the Display Group

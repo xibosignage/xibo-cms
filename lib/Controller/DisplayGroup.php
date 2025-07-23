@@ -26,6 +26,7 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Display;
 use Xibo\Event\DisplayGroupLoadEvent;
+use Xibo\Event\RdmConnectorSendCommandEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayFactory;
@@ -103,6 +104,9 @@ class DisplayGroup extends Base
 
     /** @var FolderFactory */
     private $folderFactory;
+
+    /** @ List of DSDevices specific-commands for RDM devices */
+    private const DSDEVICES_RDM_COMMANDS = ['REBOOT', 'SCREEN', 'SCREENSHOT', 'INSTALLOTA'];
 
     /**
      * Set common dependencies.
@@ -2453,7 +2457,14 @@ class DisplayGroup extends Base
         // Are we a Display Specific Group? If so, then we should restrict the List of commands to those available.
         if ($displayGroup->isDisplaySpecific == 1) {
             $display = $this->displayFactory->getByDisplayGroupId($displayGroup->displayGroupId);
-            $commands = $this->commandFactory->query(null, ['type' => $display[0]->clientType]);
+            $clientType = $display[0]->clientType;
+
+            // Check the android subtype (i.e. Sony, DSDevices, etc.)
+            if ($clientType == 'android') {
+                $clientType = $this->checkDisplayType($display[0]);
+            }
+
+            $commands = $this->commandFactory->query(null, ['type' => $clientType]);
         } else {
             $commands = $this->commandFactory->query();
         }
@@ -2519,7 +2530,13 @@ class DisplayGroup extends Base
         $command = $this->commandFactory->getById($sanitizedParams->getInt('commandId'));
         $displays = $this->displayFactory->getByDisplayGroupId($id);
 
-        $this->playerAction->sendAction($displays, (new CommandAction())->setCommandCode($command->code));
+        // If the command is for RDM connected displays, use the Portal API
+        if ($this->isRdmCommand($displays[0], $command)) {
+            $this->sendRdmCommand($displays[0]->rdmDeviceId, $command->command, $request->getParams());
+        } else {
+            // Use the default XMR actions
+            $this->playerAction->sendAction($displays, (new CommandAction())->setCommandCode($command->code));
+        }
 
         // Update the flag
         foreach ($displays as $display) {
@@ -3007,5 +3024,61 @@ class DisplayGroup extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Sends RDM Command
+     * @param int $displayId
+     * @param string $command
+     * @param array $params
+     * @return void
+     */
+    public function sendRdmCommand(int $displayId, string $command, array $params): void
+    {
+        $event = new RdmConnectorSendCommandEvent($displayId, $command, $params);
+
+        $this->getDispatcher()->dispatch($event, RdmConnectorSendCommandEvent::$NAME);
+    }
+
+    /**
+     * Checks display type
+     * @param $display
+     * @return string
+     */
+    private function checkDisplayType($display): string
+    {
+        $manufacturerModel = ($display->manufacturer ?? '') . ' ' . ($display->model ?? '');
+
+        // Set default to Android
+        $displayType = 'android';
+
+        if (preg_match('/sony|bravia/i', $manufacturerModel)) {
+            $displayType = 'sony';
+        } elseif (preg_match('/dsdevices/i', $manufacturerModel)) {
+            $displayType = 'dsDevices';
+        }
+
+        return $displayType;
+    }
+
+    /**
+     * Determine if the command should be sent via RDM
+     * @param $display
+     * @param $command
+     * @return bool
+     */
+    private function isRdmCommand($display, $command): bool
+    {
+        if (empty($display->rdmDeviceId)) {
+            return false;
+        }
+
+        $displayType = $this->checkDisplayType($display);
+
+        // For DSDevices, check if the command sent is in the list of DSDEVICES_RDM_COMMANDS
+        return (
+            $displayType === 'sony' ||
+            ($displayType === 'dsDevices' && in_array($command->code, DisplayGroup::DSDEVICES_RDM_COMMANDS))
+        );
     }
 }
