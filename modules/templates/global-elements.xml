@@ -235,9 +235,16 @@
         {{#if horizontalAlign}}
             justify-content: {{horizontalAlign}};
         {{/if}}
-        {{#eq horizontalAlign "flex-start"}}text-align: left;{{/eq}}
-        {{#eq horizontalAlign "center"}}text-align: center;{{/eq}}
-        {{#eq horizontalAlign "flex-end"}}text-align: right;{{/eq}}
+        {{#if justify}}
+            text-align: justify;
+            {{#eq horizontalAlign "flex-start"}}text-align-last: left;{{/eq}}
+            {{#eq horizontalAlign "center"}}text-align-last: center;{{/eq}}
+            {{#eq horizontalAlign "flex-end"}}text-align-last: right;{{/eq}}
+        {{else}}
+            {{#eq horizontalAlign "flex-start"}}text-align: left;{{/eq}}
+            {{#eq horizontalAlign "center"}}text-align: center;{{/eq}}
+            {{#eq horizontalAlign "flex-end"}}text-align: right;{{/eq}}
+        {{/if}}
     {{/if}}
     width: 100%; height: 100%;"
 >
