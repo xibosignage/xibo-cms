@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -187,7 +187,7 @@ class Property implements \JsonSerializable
      * @return \Xibo\Widget\Definition\Property
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
-    public function setDefaultByType(SanitizerInterface $params, string $key = null): Property
+    public function setDefaultByType(SanitizerInterface $params, ?string $key = null): Property
     {
         $this->default = $this->getByType($params, $key);
         return $this;
@@ -202,7 +202,7 @@ class Property implements \JsonSerializable
      */
     public function setValueByType(
         SanitizerInterface $params,
-        string $key = null,
+        ?string $key = null,
         bool $ignoreDefault = false
     ): Property {
         $value = $this->getByType($params, $key);
@@ -432,7 +432,7 @@ class Property implements \JsonSerializable
      * @return bool|float|int|string|null
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
-    private function getByType(SanitizerInterface $params, string $key = null)
+    private function getByType(SanitizerInterface $params, ?string $key = null)
     {
         $key = $key ?: $this->id;
 

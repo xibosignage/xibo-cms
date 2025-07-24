@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -42,7 +42,7 @@ class WebpageWidgetTest extends LocalWebTestCase
     {
         parent::setup();
 
-        $this->getLogger()->debug('Setup for ' . get_class() .' Test');
+        $this->getLogger()->debug('Setup for ' . get_class($this) .' Test');
 
         // Create a Layout
         $this->publishedLayout = $this->createLayout();
@@ -66,7 +66,7 @@ class WebpageWidgetTest extends LocalWebTestCase
 
         parent::tearDown();
 
-        $this->getLogger()->debug('Tear down for ' . get_class() .' Test');
+        $this->getLogger()->debug('Tear down for ' . get_class($this) .' Test');
     }
 
 	/**

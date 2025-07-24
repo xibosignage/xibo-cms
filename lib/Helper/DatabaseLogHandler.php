@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -57,7 +57,7 @@ class DatabaseLogHandler extends AbstractProcessingHandler
      *
      * @return int
      */
-    public function getLevel()
+    public function getLevel(): int
     {
         return $this->level;
     }
@@ -66,7 +66,7 @@ class DatabaseLogHandler extends AbstractProcessingHandler
      * @param int|string $level
      * @return $this|\Monolog\Handler\AbstractHandler
      */
-    public function setLevel($level)
+    public function setLevel($level): \Monolog\Handler\AbstractHandler
     {
         $this->level = Logger::toMonologLevel($level);
 
@@ -77,7 +77,7 @@ class DatabaseLogHandler extends AbstractProcessingHandler
      * @inheritDoc
      * @throws \Exception
      */
-    protected function write(array $record)
+    protected function write(array $record): void
     {
         if (self::$statement == null) {
             self::$pdo = PdoStorageService::newConnection('log');
@@ -159,7 +159,7 @@ class DatabaseLogHandler extends AbstractProcessingHandler
      *  and, we're then trying to get the same lock.
      * @param string $cutOff
      */
-    public static function tidyLogs($cutOff)
+    public static function tidyLogs(string $cutOff): void
     {
         try {
             if (self::$pdo === null) {
@@ -179,9 +179,8 @@ class DatabaseLogHandler extends AbstractProcessingHandler
 
                 // pause for a second
                 sleep(2);
-
             } while ($rowsDeleted > 0);
-
-        } catch (\PDOException $ignored) {}
+        } catch (\PDOException) {
+        }
     }
 }
