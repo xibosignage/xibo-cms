@@ -436,7 +436,8 @@ class User extends Base
      *      name="homePageId",
      *      in="formData",
      *      description="The homepage to use for this User",
-     *      type="integer",
+     *      type="string",
+     *      enum={"statusdashboard.view", "icondashboard.view", "mediamanager.view", "playlistdashboard.view"},
      *      required=true
      *   ),
      *  @SWG\Parameter(
@@ -578,7 +579,7 @@ class User extends Base
 
         // Are user home folders enabled? If not, use the default.
         if ($this->getUser()->featureEnabled('folder.userHome')) {
-            $user->homeFolderId = $sanitizedParams->getInt('homeFolderId');
+            $user->homeFolderId = $sanitizedParams->getInt('homeFolderId', ['default' => 1]);
         } else {
             $user->homeFolderId = 1;
         }
@@ -681,7 +682,8 @@ class User extends Base
      *      name="homePageId",
      *      in="formData",
      *      description="The homepage to use for this User",
-     *      type="integer",
+     *      type="string",
+     *      enum={"statusdashboard.view", "icondashboard.view", "mediamanager.view", "playlistdashboard.view"},
      *      required=true
      *   ),
      *  @SWG\Parameter(
@@ -833,7 +835,7 @@ class User extends Base
 
         // Are user home folders enabled? Don't change unless they are.
         if ($this->getUser()->featureEnabled('folder.userHome')) {
-            $user->homeFolderId = $sanitizedParams->getInt('homeFolderId');
+            $user->homeFolderId = $sanitizedParams->getInt('homeFolderId', ['default' => 1]);
         }
 
         // Some configuration is only avaialble to super admins.
