@@ -1610,12 +1610,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/dasgarner/picofeed.git",
-                "reference": "654bdfa1a03ed1a47b0e67305580b4f8b6f9a10d"
+                "reference": "74b7abb2cf71fac7d84710ab49e5733f758946ad"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dasgarner/picofeed/zipball/654bdfa1a03ed1a47b0e67305580b4f8b6f9a10d",
-                "reference": "654bdfa1a03ed1a47b0e67305580b4f8b6f9a10d",
+                "url": "https://api.github.com/repos/dasgarner/picofeed/zipball/74b7abb2cf71fac7d84710ab49e5733f758946ad",
+                "reference": "74b7abb2cf71fac7d84710ab49e5733f758946ad",
                 "shasum": ""
             },
             "require": {
@@ -1657,7 +1657,7 @@
             "support": {
                 "source": "https://github.com/dasgarner/picofeed/tree/westphal/php8"
             },
-            "time": "2023-09-22T11:49:47+00:00"
+            "time": "2025-07-30T08:56:47+00:00"
         },
         {
             "name": "intervention/image",

@@ -114,7 +114,7 @@ class State implements Middleware
 
         // Handle correctly outputting cache headers for AJAX requests
         // IE cache busting
-        if ($this->isAjax($request) && $request->getMethod() == 'GET' && $request->getAttribute('name') == 'web') {
+        if ($this->isAjax($request) && $request->getMethod() == 'GET' && $request->getAttribute('_entryPoint') == 'web') {
             $response = $response->withHeader('Cache-control', 'no-cache')
                      ->withHeader('Cache-control', 'no-store')
                      ->withHeader('Pragma', 'no-cache')

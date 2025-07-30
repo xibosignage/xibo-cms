@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -193,7 +193,7 @@ class Base
      */
     protected function isApi(Request $request)
     {
-        return ($request->getAttribute('name') != 'web');
+        return ($request->getAttribute('_entryPoint') != 'web');
     }
 
     /**
@@ -417,7 +417,7 @@ class Base
 
         // Don't envelope unless requested
         if ($request->getParam('envelope', 0) == 1
-            || $request->getAttribute('name') === 'test'
+            || $request->getAttribute('_entryPoint') === 'test'
         ) {
             // Envelope
             // append error bool
