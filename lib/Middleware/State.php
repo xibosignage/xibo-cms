@@ -178,7 +178,8 @@ class State implements Middleware
             '/playersoftware/{nonce}/sssp_config.xml',
             '/tfa',
             '/error',
-            '/notFound'
+            '/notFound',
+            '/public/thumbnail/{id}',
         ]));
 
         // Setup the translations for gettext

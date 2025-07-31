@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -346,12 +346,10 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/library/usage/layouts/{id}', ['\Xibo\Controller\Library','usageLayouts'])->setName('library.usage.layouts');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['library.view']));
 
-$app->get('/library/download/{id}', [
-    '\Xibo\Controller\Library', 'download'
-])->setName('library.download');
-$app->get('/library/thumbnail/{id}', [
-    '\Xibo\Controller\Library', 'thumbnail'
-])->setName('library.thumbnail');
+$app->get('/library/download/{id}', ['\Xibo\Controller\Library', 'download'])->setName('library.download');
+$app->get('/library/thumbnail/{id}', ['\Xibo\Controller\Library', 'thumbnail'])->setName('library.thumbnail');
+$app->get('/public/thumbnail/{id}', ['\Xibo\Controller\Library', 'thumbnailPublic'])
+    ->setName('library.public.thumbnail');
 
 $app->post('/library', ['\Xibo\Controller\Library','add'])->setName('library.add')
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['library.add', 'dashboard.playlist']));
