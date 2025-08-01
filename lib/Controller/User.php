@@ -918,6 +918,10 @@ class User extends Base
 
         $this->getLog()->debug('User saved, about to return.');
 
+        // Re-fetch the user before returning to ensure all fields are populated,
+        // especially those omitted in the edit request.
+        $user = $this->userFactory->getById($id);
+
         // Return
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $user->userName),
