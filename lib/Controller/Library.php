@@ -579,8 +579,13 @@ class Library extends Base
                         ]);
 
                         if ($isReturnPublicUrls) {
+                            // If we are coming from the API we should remove the /api part of the URL
+                            if ($this->isApi($request)) {
+                                $thumbnailUrl = str_replace('/api/', '/', $thumbnailUrl);
+                            }
+
                             // Sign the link.
-                            $thumbnailUrl .= '?' . LinkSigner::getSignature(
+                            $thumbnailUrl = $rootUrl . $thumbnailUrl . '?' . LinkSigner::getSignature(
                                 $rootUrl,
                                 $thumbnailUrl,
                                 time() + 3600,
