@@ -46,8 +46,9 @@
                         <li class="nav-item"><a class="nav-link" href="#tab_general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                         <li class="nav-item"><a class="nav-link" href="#tab_maint" role="tab" data-toggle="tab"><span>{% trans "Maintenance" %}</span></a></li>
                         <li class="nav-item"><a class="nav-link" href="#tab_network" role="tab" data-toggle="tab"><span>{% trans "Network" %}</span></a></li>
-                        <li class="nav-item"><a class="nav-link" href="#tab_permissions" role="tab" data-toggle="tab"><span>{% trans "Sharing" %}</span></a></li>
                         <li class="nav-item"><a class="nav-link" href="#tab_regional" role="tab" data-toggle="tab"><span>{% trans "Regional" %}</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab_schedule" role="tab" data-toggle="tab"><span>{% trans "Schedule" %}</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab_permissions" role="tab" data-toggle="tab"><span>{% trans "Sharing" %}</span></a></li>
                         <li class="nav-item"><a class="nav-link" href="#tab_troubleshooting" role="tab" data-toggle="tab"><span>{% trans "Troubleshooting" %}</span></a></li>
                         <li class="nav-item"><a class="nav-link" href="#tab_users" role="tab" data-toggle="tab"><span>{% trans "Users" %}</span></a></li>
                     </ul>
@@ -911,6 +912,25 @@
                                     {% else %}
                                         {{ forms.disabled("WHITELIST_LOAD_BALANCERS", title, theme.getSetting("WHITELIST_LOAD_BALANCERS"), helpText) }}
                                     {% endif %}
+                                {% endif %}
+                            </div>
+                            <div class="tab-pane" id="tab_schedule">
+                                {% if theme.isSettingVisible("SCHEDULE_WITH_GEO") %}
+                                    {% set title %}{% trans "Schedule with geo?" %}{% endset %}
+                                    {% set helpText %}{% trans "Should users geo in schedule?" %}{% endset %}
+                                    {{ forms.checkbox("SCHEDULE_WITH_GEO", title, theme.getSetting("SCHEDULE_WITH_GEO", 0), helpText, "", "", not theme.isSettingEditable("SCHEDULE_WITH_GEO")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("SCHEDULE_WITH_REMINDERS") %}
+                                    {% set title %}{% trans "Schedule with reminders?" %}{% endset %}
+                                    {% set helpText %}{% trans "Should users reminders in schedule?" %}{% endset %}
+                                    {{ forms.checkbox("SCHEDULE_WITH_REMINDERS", title, theme.getSetting("SCHEDULE_WITH_REMINDERS", 0), helpText, "", "", not theme.isSettingEditable("SCHEDULE_WITH_REMINDERS")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("SCHEDULE_WITH_CRITERIA") %}
+                                    {% set title %}{% trans "Schedule with criteria?" %}{% endset %}
+                                    {% set helpText %}{% trans "Should users criteria in schedule?" %}{% endset %}
+                                    {{ forms.checkbox("SCHEDULE_WITH_CRITERIA", title, theme.getSetting("SCHEDULE_WITH_CRITERIA", 0), helpText, "", "", not theme.isSettingEditable("SCHEDULE_WITH_CRITERIA")) }}
                                 {% endif %}
                             </div>
                             <div class="tab-pane" id="tab_permissions">

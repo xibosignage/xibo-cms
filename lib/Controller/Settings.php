@@ -643,6 +643,21 @@ class Settings extends Base
             $this->getConfig()->changeSetting('WHITELIST_LOAD_BALANCERS', $sanitizedParams->getString('WHITELIST_LOAD_BALANCERS'));
         }
 
+        if ($this->getConfig()->isSettingEditable('SCHEDULE_WITH_GEO')) {
+            $this->handleChangedSettings('SCHEDULE_WITH_GEO', $this->getConfig()->getSetting('SCHEDULE_WITH_GEO'), $sanitizedParams->getCheckbox('SCHEDULE_WITH_GEO'), $changedSettings);
+            $this->getConfig()->changeSetting('SCHEDULE_WITH_GEO', $sanitizedParams->getCheckbox('SCHEDULE_WITH_GEO'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('SCHEDULE_WITH_REMINDERS')) {
+            $this->handleChangedSettings('SCHEDULE_WITH_REMINDERS', $this->getConfig()->getSetting('SCHEDULE_WITH_REMINDERS'), $sanitizedParams->getCheckbox('SCHEDULE_WITH_REMINDERS'), $changedSettings);
+            $this->getConfig()->changeSetting('SCHEDULE_WITH_REMINDERS', $sanitizedParams->getCheckbox('SCHEDULE_WITH_REMINDERS'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('SCHEDULE_WITH_CRITERIA')) {
+            $this->handleChangedSettings('SCHEDULE_WITH_CRITERIA', $this->getConfig()->getSetting('SCHEDULE_WITH_CRITERIA'), $sanitizedParams->getCheckbox('SCHEDULE_WITH_CRITERIA'), $changedSettings);
+            $this->getConfig()->changeSetting('SCHEDULE_WITH_CRITERIA', $sanitizedParams->getCheckbox('SCHEDULE_WITH_CRITERIA'));
+        }
+
         if ($this->getConfig()->isSettingEditable('REGION_OPTIONS_COLOURING')) {
             $this->handleChangedSettings('REGION_OPTIONS_COLOURING', $this->getConfig()->getSetting('REGION_OPTIONS_COLOURING'), $sanitizedParams->getString('REGION_OPTIONS_COLOURING'), $changedSettings);
             $this->getConfig()->changeSetting('REGION_OPTIONS_COLOURING', $sanitizedParams->getString('REGION_OPTIONS_COLOURING'));

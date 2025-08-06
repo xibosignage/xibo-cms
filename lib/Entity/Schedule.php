@@ -2077,10 +2077,10 @@ class Schedule implements \JsonSerializable
     }
 
     /**
-     * Get an array of event types for the add/edit form
+     * Get an array of event types
      * @return array
      */
-    public static function getEventTypesForm(): array
+    public static function getEventTypes(): array
     {
         return [
             ['eventTypeId' => self::$LAYOUT_EVENT, 'eventTypeName' => __('Layout')],
@@ -2091,20 +2091,9 @@ class Schedule implements \JsonSerializable
             ['eventTypeId' => self::$ACTION_EVENT, 'eventTypeName' => __('Action')],
             ['eventTypeId' => self::$MEDIA_EVENT, 'eventTypeName' => __('Video/Image')],
             ['eventTypeId' => self::$PLAYLIST_EVENT, 'eventTypeName' => __('Playlist')],
+            ['eventTypeId' => self::$SYNC_EVENT, 'eventTypeName' => __('Synchronised Event')],
             ['eventTypeId' => self::$DATA_CONNECTOR_EVENT, 'eventTypeName' => __('Data Connector')],
         ];
-    }
-
-    /**
-     * Get an array of event types for the grid
-     * @return array
-     */
-    public static function getEventTypesGrid(): array
-    {
-        $events = self::getEventTypesForm();
-        $events[] = ['eventTypeId' => self::$SYNC_EVENT, 'eventTypeName' => __('Synchronised Event')];
-
-        return $events;
     }
 
     /**
