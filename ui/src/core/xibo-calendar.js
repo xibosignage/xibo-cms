@@ -1706,6 +1706,7 @@ const configReminderFields = function(dialog) {
 const processScheduleFormElements = function(el, dialog) {
   const fieldVal = el.val();
   const relativeTime = $('#relativeTime').is(':checked');
+  const isAddForm = $(dialog).find('form').is('#scheduleAddForm');
   let endTimeControlDisplay;
   let startTimeControlDisplay;
   let relativeTimeControlDisplay;
@@ -1788,6 +1789,10 @@ const processScheduleFormElements = function(el, dialog) {
         // Re-number step 3 and 4
         $('[href="#schedule-step-3"]', dialog).text(2);
         $('[href="#schedule-step-4"]', dialog).text(3);
+
+        // Clear display groups for other events to avoid clashing with
+        // display groups on sync group
+        $('[name="displayGroupIds[]"]', dialog).val('').trigger('change');
       } else {
         // Show step 2
         $('[href="#schedule-step-2"]', dialog).parent().show();
@@ -1795,6 +1800,11 @@ const processScheduleFormElements = function(el, dialog) {
         // Re-number step 3 and 4
         $('[href="#schedule-step-3"]', dialog).text(3);
         $('[href="#schedule-step-4"]', dialog).text(4);
+
+        // If event type is not sync event, clear sync group
+        // and clear sync layouts
+        $('#syncGroupId', dialog).val('').trigger('change');
+        $('#content-selector tbody', dialog).html('');
       }
 
       $('.sync-group-control', dialog).css('display', syncGroupDisplay);
@@ -1896,6 +1906,15 @@ const processScheduleFormElements = function(el, dialog) {
 
       // Set the search criteria
       $campaignSelect.data('searchIsLayoutSpecific', searchIsLayoutSpecific);
+
+      // If add form, we reset the steps > 1 to disabled
+      if (isAddForm) {
+        $('.stepwizard-step', dialog)
+          .find('[href="#schedule-step-2"], ' +
+            '[href="#schedule-step-3"], ' +
+            '[href="#schedule-step-4"]')
+          .attr('disabled', 'disabled');
+      }
 
       break;
 
