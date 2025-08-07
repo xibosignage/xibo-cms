@@ -2624,6 +2624,9 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
               const onHide = function(numUploads) {
                 if (numUploads > 0) {
                   getTemplateAndAdd();
+                } else {
+                  // Mark as item added to revolve promise
+                  itemAdded();
                 }
               };
 
