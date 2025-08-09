@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -73,8 +73,8 @@ class WidgetDownloader
     public function download(
         Media $media,
         Response $response,
-        string $contentType = null,
-        string $attachment = null
+        ?string $contentType = null,
+        ?string $attachment = null
     ): Response {
         $this->logger->debug('widgetDownloader::download: Download for mediaId ' . $media->mediaId);
 
@@ -141,7 +141,7 @@ class WidgetDownloader
     public function thumbnail(
         Media $media,
         Response $response,
-        string $errorThumb = null
+        ?string $errorThumb = null
     ): Response {
         // Our convention is to upload media covers in {mediaId}_{mediaType}cover.png
         // and then thumbnails in tn_{mediaId}_{mediaType}cover.png
@@ -176,6 +176,7 @@ class WidgetDownloader
                     // Correct cache
                     $regenerate = false;
                 }
+                $response = $response->withHeader('Content-Type', $img->mime());
             }
 
             if ($regenerate) {
@@ -195,15 +196,22 @@ class WidgetDownloader
                     $constraint->aspectRatio();
                 });
                 $img->save($thumbnailFilePath);
+                $response = $response->withHeader('Content-Type', $img->mime());
             }
 
             // Output Etag
             $response = HttpCacheProvider::withEtag($response, md5_file($thumbnailFilePath));
 
-            echo $img->encode();
+            $response->write($img->encode());
         } catch (\Exception) {
+            $this->logger->debug('thumbnail: exception raised.');
+
             if ($errorThumb !== null) {
-                echo Img::make($errorThumb)->encode();
+                $img = Img::make($errorThumb);
+                $response->write($img->encode());
+
+                // Output the mime type
+                $response = $response->withHeader('Content-Type', $img->mime());
             }
         }
 
@@ -223,7 +231,7 @@ class WidgetDownloader
         SanitizerInterface $params,
         string $filePath,
         Response $response,
-        string $errorThumb = null
+        ?string $errorThumb = null
     ): Response {
         // Image previews call for dynamically generated images as various sizes
         // for example a background image will stretch to the entire region
@@ -278,11 +286,15 @@ class WidgetDownloader
                 }
             }
 
-            echo $img->encode();
+            $response->write($img->encode());
             $response = HttpCacheProvider::withExpires($response, '+1 week');
+
+            $response = $response->withHeader('Content-Type', $img->mime());
         } catch (\Exception $e) {
             if ($errorThumb !== null) {
-                echo Img::make($errorThumb)->encode();
+                $img = Img::make($errorThumb);
+                $response->write($img->encode());
+                $response = $response->withHeader('Content-Type', $img->mime());
             } else {
                 $this->logger->error('Cannot parse image: ' . $e->getMessage());
                 throw new InvalidArgumentException(__('Cannot parse image.'), 'storedAs');

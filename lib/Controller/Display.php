@@ -2222,7 +2222,7 @@ class Display extends Base
         $file = 'screenshots/' . $id . '_screenshot.jpg';
 
         // File upload directory.. get this from the settings object
-        $library = $this->getConfig()->getSetting("LIBRARY_LOCATION");
+        $library = $this->getConfig()->getSetting('LIBRARY_LOCATION');
         $fileName = $library . $file;
 
         if (!file_exists($fileName)) {
@@ -2243,16 +2243,17 @@ class Display extends Base
         }
 
         // Cache headers
-        header("Cache-Control: no-store, no-cache, must-revalidate");
-        header("Pragma: no-cache");
-        header("Expires: 0");
+        header('Cache-Control: no-store, no-cache, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
 
         // Disable any buffering to prevent OOM errors.
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
 
-        echo $img->encode();
+        $response->write($img->encode());
+        $response = $response->withHeader('Content-Type', $img->mime());
         return $this->render($request, $response);
     }
 

@@ -1684,7 +1684,7 @@ class Library extends Base
             // Output a 1px image if we're not allowed to see the media.
             if (!$this->getUser()->checkViewable($media)) {
                 echo Img::make($this->getConfig()->uri('img/1x1.png', true))->encode();
-                return $this->render($request, $response);
+                return $this->render($request, $response->withHeader('Content-Type', 'image/png'));
             }
 
             // Various different behaviours for the different types of file.
