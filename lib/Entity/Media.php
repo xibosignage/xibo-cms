@@ -579,8 +579,7 @@ class Media implements \JsonSerializable
             if ((!empty($parentMedia->expires) && $parentMedia->expires < Carbon::now()->timestamp) ||
                 (!empty($this->expires) && $this->expires < Carbon::now()->timestamp)
             ) {
-                $parentMedia->deleteRecord();
-                $parentMedia->deleteFile();
+                $parentMedia->delete();
 
                 $auditMessage .= ' and deleted old revision';
                 $auditContext['deletedParentMediaId'] = $parentMedia->mediaId;
