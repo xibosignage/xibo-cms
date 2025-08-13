@@ -788,7 +788,6 @@ class Schedule extends Base
             'defaultLong' => $defaultLong,
             'eventTypes' => \Xibo\Entity\Schedule::getEventTypes(),
             'addForm' => true,
-            'isScheduleNow' => false,
             'relativeTime' => 0,
             'setDisplaysFromFilter' => true,
             'scheduleCriteria' => $criteria,
@@ -811,7 +810,9 @@ class Schedule extends Base
                 'mediaId' => (($from === 'Library') ? $id : null),
                 'playlistId' => (($from === 'Playlist') ? $id : null),
                 'readonlySelect' => !($from == 'DisplayGroup'),
-                'isScheduleNow' => true,
+                'hideEventType' => !($from == 'DisplayGroup'),
+                // If coming from display page, don't show syncEvent type
+                'eventTypes' => \Xibo\Entity\Schedule::getEventTypes((($from === 'DisplayGroup') ? [9] : [])),
                 'addForm' => true,
                 'relativeTime' => 1,
                 'setDisplaysFromFilter' => false,

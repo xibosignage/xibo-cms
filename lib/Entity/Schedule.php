@@ -2078,11 +2078,12 @@ class Schedule implements \JsonSerializable
 
     /**
      * Get an array of event types
+     * @param array $exclude Event type IDs to exclude
      * @return array
      */
-    public static function getEventTypes(): array
+    public static function getEventTypes(array $exclude = []): array
     {
-        return [
+        $eventTypes = [
             ['eventTypeId' => self::$LAYOUT_EVENT, 'eventTypeName' => __('Layout')],
             ['eventTypeId' => self::$COMMAND_EVENT, 'eventTypeName' => __('Command')],
             ['eventTypeId' => self::$OVERLAY_EVENT, 'eventTypeName' => __('Overlay Layout')],
@@ -2094,6 +2095,15 @@ class Schedule implements \JsonSerializable
             ['eventTypeId' => self::$SYNC_EVENT, 'eventTypeName' => __('Synchronised Event')],
             ['eventTypeId' => self::$DATA_CONNECTOR_EVENT, 'eventTypeName' => __('Data Connector')],
         ];
+
+        if (!empty($exclude)) {
+            $eventTypes = array_filter(
+                $eventTypes,
+                fn($type) => !in_array($type['eventTypeId'], $exclude, true)
+            );
+        }
+
+        return array_values($eventTypes);
     }
 
     /**

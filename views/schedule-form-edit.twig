@@ -56,7 +56,7 @@
                     </div>
                     <div class="stepwizard-step col-xs-3">
                         <a href="#schedule-step-4" type="button" class="btn btn-default btn-circle" {% if addForm %}disabled="disabled"{% endif %}>4</a>
-                        <p><small>{{ "Advanced"|trans }}</small></p>
+                        <p><small>{{ "Optional"|trans }}</small></p>
                     </div>
                 </div>
             </div>
@@ -91,9 +91,13 @@
 
                     {# Step 1 - Content #}
                     <div class="panel panel-default stepwizard-content" id="schedule-step-1" data-step="1" data-next="schedule-step-2">
-                        {% set title %}{% trans "Event Type" %}{% endset %}
-                        {% set helpText %}{% trans "Select the type of event to schedule" %}{% endset %}
-                        {{ forms.dropdown("eventTypeId", "single", title, event.eventTypeId, eventTypes, "eventTypeId", "eventTypeName", helpText) }}
+                        {% if hideEventType %}
+                            {{ forms.hidden("eventTypeId", event.eventTypeId) }}
+                        {% else %}
+                            {% set title %}{% trans "Event Type" %}{% endset %}
+                            {% set helpText %}{% trans "Select the type of event to schedule" %}{% endset %}
+                            {{ forms.dropdown("eventTypeId", "single", title, event.eventTypeId, eventTypes, "eventTypeId", "eventTypeName", helpText) }}
+                        {% endif %}
 
                         {# Campaign / Layout list. We want to build two arrays for us to use. #}
                         {% set attributes = [
@@ -219,7 +223,7 @@
                     </div>
 
                     {# Step 2 - Displays #}
-                    <div class="panel panel-default stepwizard-content" style="display:none;" id="schedule-step-2" data-step="2" {% if currentUser.featureEnabled("folder.view") %}data-next="schedule-step-3"{% else %}data-next="finished"{% endif %}>
+                    <div class="panel panel-default stepwizard-content" style="display:none;" id="schedule-step-2" data-step="2" data-next="schedule-step-3">
                         {% set title %}{% trans "Display" %}{% endset %}
                         {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
                         {% set attributes = [
@@ -254,6 +258,14 @@
                             </div>
                         </div>
 
+                        {% set title %}{% trans "Start Time" %}{% endset %}
+                        {% set helpText %}{% trans "Select the start time for this event" %}{% endset %}
+                        {{ forms.dateTime("fromDt", title, event.fromDt, helpText, "starttime-control", "required", "") }}
+
+                        {% set title %}{% trans "End Time" %}{% endset %}
+                        {% set helpText %}{% trans "Select the end time for this event" %}{% endset %}
+                        {{ forms.dateTime("toDt", title, event.toDt, helpText, "endtime-control", "required", "") }}
+
                         {% set title %}{% trans "Use Relative time?" %}{% endset %}
                         {% set helpText %}{% trans "Switch between relative time inputs and Date pickers for start and end time." %}{% endset %}
                         {{ forms.checkbox("relativeTime", title, relativeTime, helpText, 'relative-time-checkbox') }}
@@ -274,14 +286,6 @@
                         {% set messageSyncTimezone %}{% trans %}Your event will be scheduled from [fromDt] to [toDt] in the CMS timezone, please check this covers each of your Displays in their respective timezones.{% endtrans %}{% endset %}
                         <div class="alert alert-info scheduleNowMessage d-none relative-time-control" data-template-sync="{{ messageSyncTimezone }}" data-template-no-sync="{{ messageNoSyncTimezone }}"></div>
 
-                        {% set title %}{% trans "Start Time" %}{% endset %}
-                        {% set helpText %}{% trans "Select the start time for this event" %}{% endset %}
-                        {{ forms.dateTime("fromDt", title, event.fromDt, helpText, "starttime-control", "required", "") }}
-
-                        {% set title %}{% trans "End Time" %}{% endset %}
-                        {% set helpText %}{% trans "Select the end time for this event" %}{% endset %}
-                        {{ forms.dateTime("toDt", title, event.toDt, helpText, "endtime-control", "required", "") }}
-
                         <div class="form-group row interrupt-control">
                             <label class="col-sm-2 control-label" for="shareOfVoice" accesskey="">{% trans "Share of Voice" %}</label>
                             <div class="col-sm-5">
@@ -296,18 +300,18 @@
                         </div>
                     </div>
 
-                    {# Step 4 - Advanced #}
+                    {# Step 4 - Optional #}
                     <div class="panel panel-default stepwizard-content" style="display:none;" id="schedule-step-4" data-step="4" data-next="finished">
                         <ul class="nav nav-tabs" role="tablist">
                             <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                             <li class="nav-item repeats"><a class="nav-link" href="#repeats" role="tab" data-toggle="tab"><span>{% trans "Repeats" %}</span></a></li>
-                            {% if theme.getSetting('SCHEDULE_WITH_REMINDERS', 0) == 1 %}
+                            {% if currentUser.featureEnabled("schedule.reminders") %}
                                 <li class="nav-item reminders"><a class="nav-link" href="#reminders" role="tab" data-toggle="tab"><span>{% trans "Reminder" %}</span></a></li>
                             {% endif %}
-                            {% if theme.getSetting('SCHEDULE_WITH_GEO', 0) == 1 %}
+                            {% if currentUser.featureEnabled("schedule.geoLocation") %}
                                 <li class="nav-item geoSchedule"><a class="nav-link" href="#geoSchedule" role="tab" data-toggle="tab"><span>{% trans "Geo Location" %}</span></a></li>
                             {% endif %}
-                            {% if theme.getSetting('SCHEDULE_WITH_CRITERIA', 0) == 1 %}
+                            {% if currentUser.featureEnabled("schedule.criteria") %}
                                 <li class="nav-item criteria"><a class="nav-link" href="#tab-criteria" role="tab" data-toggle="tab"><span>{% trans "Criteria" %}</span></a></li>
                             {% endif %}
                         </ul>

@@ -1156,6 +1156,7 @@ lD.loadFormFromAPI = function(
           if (res.buttons[button] != 'XiboDialogClose()') {
             let buttonType = 'btn-white';
             let mainButtonAction = false;
+            let customClass = '';
 
             if (
               button === translations.save ||
@@ -1169,11 +1170,20 @@ lD.loadFormFromAPI = function(
 
             const url = res.buttons[button];
 
+            // For schedule add form, add class to save button
+            if (
+              res.data.addForm &&
+              res.callBack === 'setupScheduleForm' &&
+              button === translations.save
+            ) {
+              customClass = ' save-button';
+            }
+
             // Only add button if it's not in the buttons to remove list
             if (buttonsToRemove.indexOf(button) == -1) {
               generatedButtons[button] = {
                 label: button,
-                className: buttonType + ' btn-bb-' + button,
+                className: buttonType + ' btn-bb-' + button + customClass,
                 callback: function(ev) {
                   // Show loading cog
                   $(ev.currentTarget).append(

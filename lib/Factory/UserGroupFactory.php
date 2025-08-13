@@ -525,6 +525,21 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'scheduling',
                     'title' => __('Allow creation of Data Connector Schedules')
                 ],
+                'schedule.geoLocation' => [
+                    'feature' => 'schedule.geoLocation',
+                    'group' => 'scheduling',
+                    'title' => __('Geo Schedule - allow events to be location aware when scheduling')
+                ],
+                'schedule.reminders' => [
+                    'feature' => 'schedule.reminders',
+                    'group' => 'scheduling',
+                    'title' => __('Reminders - allow reminders to be added to events when scheduling')
+                ],
+                'schedule.criteria' => [
+                    'feature' => 'schedule.criteria',
+                    'group' => 'scheduling',
+                    'title' => __('Criteria - allow criteria to be set to determine when the event is active when scheduling')
+                ],
                 'daypart.view' => [
                     'feature' => 'daypart.view',
                     'group' => 'scheduling',
