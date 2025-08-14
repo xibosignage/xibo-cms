@@ -407,7 +407,7 @@ class DisplayGroup extends Base
                 $group->buttons[] = ['divider' => true];
 
                 $group->buttons[] = array(
-                    'id' => 'display_button_schedule',
+                    'id' => 'displaygroup_button_schedule',
                     'url' => $this->urlFor(
                         $request,
                         'schedule.add.form',
