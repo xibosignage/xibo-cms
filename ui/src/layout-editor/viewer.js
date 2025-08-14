@@ -5532,29 +5532,19 @@ Viewer.prototype.handleLayoutDock = function(actions) {
     self.getLayoutsWithCode(filter).then((layouts) => {
       const $results =
         $dockResults.find('.action-layout-dock-search-results');
+      const layoutNumStart = layouts.length;
 
       // Filter current layout and layouts added to recents
       layouts = layouts.filter(
         (layout) => {
-          return layout.layout != app.layout.name &&
-            !($recentsContainer
-              .find(
-                `.action-screen-recent[data-sub-type="layout-code"]` +
-                `[data-screen-id="${layout.code}"]`,
-              ).length > 0);
+          return !($recentsContainer
+            .find(
+              `.action-screen-recent[data-sub-type="layout-code"]` +
+              `[data-screen-id="${layout.code}"]`,
+            ).length > 0);
         });
 
-      // If no results, show message
-      if (
-        layouts.length === 0 &&
-        $results.find('.action-layout-dock-option').length === 0
-      ) {
-        $results.append(`<div class="error-message">
-          ${editorsTrans.actions.noResults}</div>`);
-      } else {
-        $results.find(`.error_message`)
-          .remove();
-      }
+      const layoutNumFilteredOut = (layoutNumStart - layouts.length);
 
       // Process each layout
       layouts.forEach((layout) => {
@@ -5583,12 +5573,34 @@ Viewer.prototype.handleLayoutDock = function(actions) {
         });
       });
 
+      // If we get less than 5 layouts, with at least one
+      // filtered, get another page
+      if (
+        layoutNumFilteredOut > 0 &&
+        $results.find('.action-layout-dock-option').length <= 5
+      ) {
+        populateSearchResultsDebounce(search, ++page);
+        return;
+      }
+
+      // If no results, show message
+      if (
+        layouts.length === 0 &&
+        $results.find('.action-layout-dock-option').length === 0
+      ) {
+        $results.append(
+          `<div class="error-message">${editorsTrans.actions.noResults}</div>`,
+        );
+      } else {
+        $results.find('.error-message').remove();
+      }
+
       // Handle lazy load on scroll
       $results.off('scroll').on('scroll', () => {
         if (
           $results.scrollTop() + $results.innerHeight() >=
           $results[0].scrollHeight &&
-          layouts.length > 0
+          layoutNumStart === numLayoutsSearch
         ) {
           populateSearchResultsDebounce(search, ++page);
         }
