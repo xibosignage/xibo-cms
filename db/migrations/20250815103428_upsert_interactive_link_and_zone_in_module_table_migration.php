@@ -30,26 +30,31 @@ class UpsertInteractiveLinkAndZoneInModuleTableMigration extends AbstractMigrati
 {
     public function change(): void
     {
-        foreach (['core-interactive-link', 'core-interactive-zone'] as $id) {
+        $ids = ['core-interactive-link', 'core-interactive-zone'];
+        $pdo = $this->getAdapter()->getConnection();
+
+        foreach ($ids as $id) {
+            // Safely quoted literal
+            $qid = $pdo->quote($id);
+
             // Check if the core-interactive-link and core-interactive-zone row exists
-            $row = $this->fetchRow("SELECT 1 FROM `module` WHERE `moduleId` = '$id'");
+            $row = $this->fetchRow('SELECT 1 FROM `module` WHERE `moduleId` = "'. $qid . '"');
 
             if (!$row) {
                 // Row does not exist, insert new row
-                $this->execute("
+                $this->execute('
                     INSERT INTO `module` (`moduleId`, `enabled`, `previewEnabled`, `defaultDuration`, `settings`)
-                    VALUES ('$id', '1', '1', '60', NULL)
-                ");
+                    VALUES (' . $qid . ', "1", "1", "60", NULL)
+                ');
             } else {
                 // Row exists, update existing row
-                $this->execute("
+                $this->execute('
                     UPDATE `module`
-                    SET `enabled` = '1',
-                        `previewEnabled` = '1',
-                        `defaultDuration` = '60',
+                    SET `enabled` = "1",
+                        `previewEnabled` = "1",
+                        `defaultDuration` = "60",
                         `settings` = NULL
-                    WHERE `moduleId` = '$id'
-                ");
+                    WHERE `moduleId` = "' . $qid . '"');
             }
         }
     }
