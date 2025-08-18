@@ -920,7 +920,7 @@ lD.welcomeScreen = function() {
         className: 'btn-success btn-bb-checkout',
         callback: function(res) {
           $(res.currentTarget)
-            .append('&nbsp;<i class="fa fa-cog fa-spin"></i>');
+            .append('<i class="fa fa-cog fa-spin ml-1"></i>');
 
           // Unselect objects ( select layout )
           lD.selectObject();
@@ -983,7 +983,7 @@ lD.showCheckoutScreen = function() {
         className: 'btn-success btn-bb-checkout',
         callback: function(res) {
           $(res.currentTarget)
-            .append('&nbsp;<i class="fa fa-cog fa-spin"></i>');
+            .append('<i class="fa fa-cog fa-spin ml-1"></i>');
 
           // Unselect objects ( select layout )
           lD.selectObject();
@@ -1175,19 +1175,31 @@ lD.loadFormFromAPI = function(
                 label: button,
                 className: buttonType + ' btn-bb-' + button,
                 callback: function(ev) {
-                  // Show loading cog
-                  $(ev.currentTarget).append(
-                    '&nbsp;<i class="fa fa-cog fa-spin"></i>',
-                  );
+                  const $btn = $(ev.currentTarget);
 
-                  // Call global function by the function name
-                  if (mainActionCallback != null && mainButtonAction) {
-                    eval(mainActionCallback);
+                  if (
+                    $btn.hasClass('disabled')
+                  ) {
+                    // Don't run method, and don't close modal
+                    return true;
                   } else {
-                    eval(url);
-                  }
+                    // Show loading cog
+                    $btn.append(
+                      '<i class="fa fa-cog fa-spin ml-1"></i>',
+                    );
 
-                  return false;
+                    // Call global function by the function name
+                    if (mainActionCallback != null && mainButtonAction) {
+                      eval(mainActionCallback);
+                    } else {
+                      eval(url);
+                    }
+
+                    // Disable button, and set timeout to re-enable
+                    $btn.addClass('disabled');
+
+                    return false;
+                  }
                 },
               };
             }
@@ -4843,7 +4855,7 @@ lD.showUnlockScreen = function() {
         className: 'btn-info btn-bb-unlock',
         callback: function(res) {
           $(res.currentTarget).append(
-            '&nbsp;<i class="fa fa-cog fa-spin"></i>',
+            '<i class="fa fa-cog fa-spin ml-1"></i>',
           );
 
           lD.unlockLayout();

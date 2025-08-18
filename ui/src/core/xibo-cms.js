@@ -2439,6 +2439,9 @@ window.SystemMessageInline = function(messageText, modal) {
   // Re-enabled any disabled buttons
   $(modal).find('.btn').removeClass('disabled');
 
+  // Remove loading from button if exist
+  $(modal).find('.btn i.fa-cog').remove();
+
   $('<div/>', {
     class: 'card bg-light p-3 text-danger col-sm-12 text-center form-error',
     html: messageText,
