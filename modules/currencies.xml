@@ -42,7 +42,7 @@
         </property>
         <property id="items" type="text">
             <title>Currencies</title>
-            <helpText>A comma separated list of Currency Acronyms/Abbreviations, e.g. GBP,USD,EUR. For the best results enter no more than 5 items.</helpText>
+            <helpText>A comma separated list of Currency Acronyms/Abbreviations, e.g. GBP,USD,EUR. For the best results enter no more than 5 items. Do not include the Base currency in this list.</helpText>
             <rule>
                 <test>
                     <condition type="required"></condition>

@@ -410,6 +410,18 @@ class AlphaVantageConnector implements ConnectorInterface
         // Parse items out into an array
         $items = array_map('trim', explode(',', $items));
 
+        // Ensure base isn't also in the items list (Currencies)
+        if (in_array($base, $items)) {
+            $this->getLogger()->error(
+                'Invalid Currencies: Base "' . $base . '" also included in Items for ' .
+                'Currencies Module with WidgetId ' . $dataProvider->getWidgetId()
+            );
+            throw new InvalidArgumentException(
+                __('Base currency must not be included in the Currencies list. Please remove it and try again.'),
+                'items'
+            );
+        }
+
         // Each item we want is a call to the results API
         try {
             foreach ($items as $currency) {
