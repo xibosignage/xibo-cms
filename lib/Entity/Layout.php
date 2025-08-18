@@ -1278,7 +1278,7 @@ class Layout implements \JsonSerializable
         if ($this->backgroundImageId != 0) {
             // Get stored as
             $media = $this->mediaFactory->getById($this->backgroundImageId);
-            if ($media->released === 1) {
+            if ($media->released === 0) {
                 $this->pushStatusMessage(sprintf(
                     __('%s set as the Layout background image is pending conversion'),
                     $media->name
@@ -1847,18 +1847,32 @@ class Layout implements \JsonSerializable
             }
 
             // Is this module file based? If so, check its released status
-            if ($module->regionSpecific == 0 && $widget->getPrimaryMediaId() != 0) {
-                $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
-                if ($media->released == 0) {
-                    throw new GeneralException(sprintf(
-                        __('%s is pending conversion'),
-                        $media->name
-                    ));
-                } else if ($media->released == 2) {
-                    throw new GeneralException(sprintf(
-                        __('%s is too large. Please ensure that none of the images in your layout are larger than your Resize Limit on their longest edge.'),//phpcs:ignore
-                        $media->name
-                    ));
+            // Only proceed if the widget has at least one primary media file attached
+            if ($widget->getPrimaryMediaId() != 0) {
+                // Get all primary media IDs for this widget (audio IDs are excluded)
+                $mediaIds = $widget->getPrimaryMedia();
+
+                // Inspect each media item individually to validate its released status
+                foreach ($mediaIds as $mediaId) {
+                    $media = $this->mediaFactory->getById($mediaId);
+                    if ($media->released == 0) {
+                        throw new GeneralException(sprintf(
+                            __('%s is pending conversion'),
+                            $media->name
+                        ));
+                    } else if ($media->released == 2) {
+                        if ($media->mediaType === 'image') {
+                            throw new GeneralException(sprintf(
+                                __('%s is too large. Please ensure that none of the images in your layout are larger than your Resize Limit on their longest edge.'),//phpcs:ignore
+                                $media->name
+                            ));
+                        } else {
+                            throw new GeneralException(sprintf(
+                                __('%s failed validation and cannot be published.'),
+                                $media->name
+                            ));
+                        }
+                    }
                 }
             }
 
