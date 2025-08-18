@@ -1693,17 +1693,17 @@ class Library extends Base
                     $params,
                     $media->storedAs,
                     $response,
-                    $this->getUser()->checkViewable($media),
+                    $this->getConfig()->uri('img/1x1.png', true),
                 );
             } else if ($module->type === 'video') {
                 $response = $downloader->imagePreview(
                     $params,
                     $media->mediaId . '_videocover.png',
                     $response,
-                    $this->getUser()->checkViewable($media),
+                    $this->getConfig()->uri('img/1x1.png', true),
                 );
             } else {
-                $response = $downloader->download($media, $response, $media->getMimeType());
+                $response = $downloader->download($media, $request, $response, $media->getMimeType());
             }
         } else {
             $this->getLog()->debug('download: not preview mode, expect a full download');
@@ -1713,7 +1713,7 @@ class Library extends Base
                 throw new AccessDeniedException();
             }
 
-            $response = $downloader->download($media, $response, null, $params->getString('attachment'));
+            $response = $downloader->download($media, $request, $response, null, $params->getString('attachment'));
         }
 
         return $this->render($request, $response);

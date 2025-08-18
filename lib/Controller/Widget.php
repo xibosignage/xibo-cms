@@ -1358,7 +1358,7 @@ class Widget extends Base
                 $this->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT', 6000)
             );
             $downloader->useLogger($this->getLog()->getLoggerInterface());
-            return $this->render($request, $downloader->download($media, $response));
+            return $this->render($request, $downloader->download($media, $request, $response));
         }
 
         if ($region->type === 'canvas') {
