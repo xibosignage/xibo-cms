@@ -151,6 +151,7 @@ class IcsProvider implements WidgetProviderInterface
                     $isAllDay = false;
 
                     // If dtstart has value DATE
+                    // (following RFC recommendations in https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.4 )
                     if (isset($event->dtstart_array[0])) {
                         // If it's a string
                         if (is_string($event->dtstart_array[0]) && strtoupper($event->dtstart_array[0]) === 'DATE') {

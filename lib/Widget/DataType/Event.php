@@ -52,7 +52,7 @@ class Event implements \JsonSerializable, DataTypeInterface
             'location' => $this->location,
             'startDate' => $this->startDate->format('c'),
             'endDate' => $this->endDate->format('c'),
-            'isAllDay'    => $this->isAllDay,
+            'isAllDay' => $this->isAllDay,
         ];
     }
 
