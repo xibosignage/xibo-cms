@@ -175,9 +175,9 @@ class SessionHistory implements ReportInterface
         // --------------------------
         // The report uses a custom range filter that automatically calculates the from/to dates
         // depending on the date range selected.
-        $fromDt = $sanitizedParams->getDate('fromDt');
-        $toDt = $sanitizedParams->getDate('toDt');
         $currentDate = Carbon::now()->startOfDay();
+        $fromDt = $sanitizedParams->getDate('fromDt') ?? $currentDate;
+        $toDt = $sanitizedParams->getDate('toDt') ?? Carbon::now();
 
         // If toDt is current date then make it current datetime
         if ($toDt->format('Y-m-d') == $currentDate->format('Y-m-d')) {
