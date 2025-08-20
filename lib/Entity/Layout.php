@@ -1457,15 +1457,10 @@ class Layout implements \JsonSerializable
                         'tempCyclePlaybackAverageDuration',
                         0
                     );
-
-                    // If this widget does not have a set duration, then we use the module default duration
                     if ($tempCyclePlaybackAverageDuration) {
                         $region->duration = $region->duration + $tempCyclePlaybackAverageDuration;
                     } else {
-                        $region->duration = $region->duration + (($widget->setDuration == 1)
-                            ? $widget->calculatedDuration
-                            : $module->defaultDuration
-                        );
+                        $region->duration = $region->duration + $widget->calculatedDuration;
                     }
 
                     // We also want to add any transition OUT duration
@@ -1504,7 +1499,12 @@ class Layout implements \JsonSerializable
                     ($widget->type === 'video' || $widget->type === 'audio')
                     && $widget->useDuration === 0
                 );
-                $mediaNode->setAttribute('duration', ($isEndDetectVideoWidget ? 0 : $widgetDuration));
+
+                // Get the max duration and set it as the media node duration
+                $mediaNode->setAttribute('duration', ($isEndDetectVideoWidget
+                    ? 0
+                    : max($region->duration, $widgetDuration))
+                );
                 $mediaNode->setAttribute('useDuration', $widget->useDuration);
                 $widgetActionNode = null;
 
