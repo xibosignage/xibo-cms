@@ -1459,7 +1459,6 @@ class Layout implements \JsonSerializable
 
                 // Layouts which only have Canvas with global elements
                 if ($region->type == 'canvas'
-                    && $regionLoop == 0
                     && $widget->type == 'global'
                     && $isCanvasOnlyRegion
                 ) {
