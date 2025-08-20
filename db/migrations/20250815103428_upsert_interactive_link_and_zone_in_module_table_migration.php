@@ -38,7 +38,7 @@ class UpsertInteractiveLinkAndZoneInModuleTableMigration extends AbstractMigrati
             $qid = $pdo->quote($id);
 
             // Check if the core-interactive-link and core-interactive-zone row exists
-            $row = $this->fetchRow('SELECT 1 FROM `module` WHERE `moduleId` = "'. $qid . '"');
+            $row = $this->fetchRow('SELECT 1 FROM `module` WHERE `moduleId` = ' . $qid);
 
             if (!$row) {
                 // Row does not exist, insert new row
