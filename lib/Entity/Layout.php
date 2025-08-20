@@ -1315,6 +1315,9 @@ class Layout implements \JsonSerializable
         // merge regions and drawers into one array and go through it.
         $allRegions = array_merge($this->regions, $this->drawers);
 
+        // Used to identify Layouts which only have Canvas with global elements
+        $isCanvasOnlyRegion = true;
+
         foreach ($allRegions as $region) {
             /* @var Region $region */
 
@@ -1371,10 +1374,13 @@ class Layout implements \JsonSerializable
             if ($region->type === 'canvas') {
                 $widget = null;
                 $widgetDuration = 0;
+
                 foreach ($region->getPlaylist()->setModuleFactory($this->moduleFactory)->widgets as $item) {
                     // Pull out the global widget, if we have one (we should)
                     if ($item->type === 'global') {
                         $widget = $item;
+                    } else {
+                        $isCanvasOnlyRegion = false;
                     }
 
                     // Get the highest duration.
@@ -1397,6 +1403,8 @@ class Layout implements \JsonSerializable
                     $widgets = [$widget];
                 }
             } else {
+                $isCanvasOnlyRegion = false;
+
                 $widgets = $region->getPlaylist()->setModuleFactory($this->moduleFactory)->expandWidgets();
             }
 
@@ -1447,6 +1455,16 @@ class Layout implements \JsonSerializable
                     // Make sure this Widget expires immediately so that the other Regions can be the leaders when
                     // it comes to expiring the Layout
                     $widgetDuration = Widget::$widgetMinDuration;
+                }
+
+                // Layouts which only have Canvas with global elements
+                if ($region->type == 'canvas'
+                    && $regionLoop == 0
+                    && $widget->type == 'global'
+                    && $isCanvasOnlyRegion
+                ) {
+                    $widget->calculatedDuration = 10;
+                    $widgetDuration = $widget->calculatedDuration;
                 }
 
                 if ($region->isDrawer === 0) {
