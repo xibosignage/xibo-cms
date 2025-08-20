@@ -1846,12 +1846,12 @@ class Layout implements \JsonSerializable
                 $widgetValidator->validate($module, $widget, 'status');
             }
 
-            // Is this module file based? If so, check its released status
-            // Only proceed if the widget has at least one primary media file attached
-            if ($widget->getPrimaryMediaId() != 0) {
-                // Get all primary media IDs for this widget (audio IDs are excluded)
-                $mediaIds = $widget->getPrimaryMedia();
+            // We need to make sure that all media in the widget have a valid release status
+            // Get all primary media IDs for this widget (audio IDs are excluded)
+            $mediaIds = $widget->getPrimaryMedia();
 
+            // Only validate if we actually have media IDs
+            if (!empty($mediaIds)) {
                 // Inspect each media item individually to validate its released status
                 foreach ($mediaIds as $mediaId) {
                     $media = $this->mediaFactory->getById($mediaId);
