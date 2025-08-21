@@ -49,8 +49,17 @@ class LinkSigner
         $itemId,
         string $storedAs,
         string $fileType = null,
+        bool $isRequestFromPwa = false,
     ): string {
+        // Start with the base url, which should correctly account for running with a CMS_ALIAS
         $xmdsRoot = (new HttpsDetect())->getBaseUrl();
+
+        // PWA requests resources via `/pwa/getResource`, but the link should be served from `/xmds.php`
+        if ($isRequestFromPwa) {
+            $xmdsRoot = str_replace('/pwa/getResource', '/xmds.php', $xmdsRoot);
+        }
+
+        // Build the rest of the URL
         $saveAsPath = $xmdsRoot
             . '?file=' . $storedAs
             . '&displayId=' . $display->displayId

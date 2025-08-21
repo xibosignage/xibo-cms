@@ -412,7 +412,9 @@ class WidgetDataProviderCache
                             $cdnUrl,
                             'M',
                             $value[1],
-                            $storedAs[$value[1]]
+                            $storedAs[$value[1]],
+                            null,
+                            true,
                         );
                     } else {
                         $url = $storedAs[$value[1]];
