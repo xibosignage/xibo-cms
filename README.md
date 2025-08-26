@@ -16,7 +16,7 @@ digital signage network, or single screen, open source and free to use.
 
 [![Licence](https://img.shields.io/github/license/xibosignage/xibo-cms)]()
 
-Copyright (C) 2006-2024 Xibo Signage Ltd and Contributors.
+Copyright (C) 2006-2025 Xibo Signage Ltd and Contributors.
 
 Xibo is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public
 License as published by the Free Software Foundation, either version 3 of the License, or any later version.
@@ -71,12 +71,11 @@ git clone git@github.com:<your_id>/xibo-cms.git xibo-cms
 
 We maintain the following branches. To contribute to Xibo please use the `develop` branch as your base.
 
-- kopff: Work in progress toward 4.2.x
-- develop: Bug fixes for 4.1.x
-- master: Currently 4.0
-- release40: Bug fixes for 4.0
+- develop: Bug fixes for 4.4.x
+- master: Currently 4.3
+- release42: Bug fixes for 4.2
 - release33: Bug fixes for 3.3
-- release23: Bug fixes for 2.3
+- release23: Archive of 2.3
 - release18: Archive of 1.8
 - release17: Archive of 1.7
 - release1.6.4: Archive of 1.6
