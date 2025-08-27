@@ -28,7 +28,7 @@
     <compatibilityClass>\Xibo\Widget\Compatibility\CurrenciesWidgetCompatibility</compatibilityClass>
     <type>currencies</type>
     <dataType>currency</dataType>
-    <dataCacheKey>%items%_%base%</dataCacheKey>
+    <dataCacheKey>%items%_%base%_%reverseConversion%</dataCacheKey>
     <fallbackData>1</fallbackData>
     <schemaVersion>2</schemaVersion>
     <assignable>1</assignable>
