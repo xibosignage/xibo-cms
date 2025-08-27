@@ -586,17 +586,6 @@
                                     {% endif %}
                                 {% endif %}
 
-                                {% if theme.isSettingVisible("PHONE_HOME_URL") %}
-                                    {% set title %}{% trans "Phone home URL" %}{% endset %}
-                                    {% set helpText %}{% trans "The URL to connect to to PHONE_HOME (if enabled)" %}{% endset %}
-
-                                    {% if theme.isSettingEditable("PHONE_HOME_URL") %}
-                                        {{ forms.input("PHONE_HOME_URL", title, theme.getSetting("PHONE_HOME_URL", "https://xibo.org.uk/api/stats/track"), helpText) }}
-                                    {% else %}
-                                        {{ forms.disabled("PHONE_HOME_URL", title, theme.getSetting("PHONE_HOME_URL", "https://xibo.org.uk/api/stats/track"), helpText) }}
-                                    {% endif %}
-                                {% endif %}
-
                                 {% if theme.isSettingVisible("SCHEDULE_LOOKAHEAD") %}
                                     {% set title %}{% trans "Send Schedule in advance?" %}{% endset %}
                                     {% set helpText %}{% trans "Should the CMS send future schedule information to Players?" %}{% endset %}
