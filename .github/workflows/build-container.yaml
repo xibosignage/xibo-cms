@@ -5,10 +5,9 @@ on:
     branches:
       - master
       - develop
-      - kopff
       - release23
       - release33
-      - release40
+      - release43
 
 jobs:
   build:
