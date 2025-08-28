@@ -1235,7 +1235,7 @@ window.setupScheduleForm = function(dialog) {
           }
         } else if (daypartIdVal != '2') {
           // Daypart
-          if ($fromDt === '') {
+          if ($fromDt.val() === '') {
             errorMessage = translations.schedule.stepWizard.error.timeStart;
             $fromDt.parents('.form-group').addClass('has-error');
             isValid = false;
@@ -1924,7 +1924,10 @@ const processScheduleFormElements = function(el, dialog) {
       endTimeControlDisplay =
         (meta.isCustom === 0 || relativeTime) ? 'none' : '';
       startTimeControlDisplay =
-        (meta.isAlways === 1 || relativeTime) ? 'none' : '';
+        (
+          meta.isAlways === 1 ||
+          (relativeTime && meta.isCustom === 1)
+        ) ? 'none' : '';
       const repeatsControlDisplay = (meta.isAlways === 1) ? 'none' : '';
       const reminderControlDisplay = (meta.isAlways === 1) ? 'none' : '';
       relativeTimeControlDisplay =
