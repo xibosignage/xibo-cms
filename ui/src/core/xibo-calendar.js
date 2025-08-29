@@ -1208,6 +1208,7 @@ window.setupScheduleForm = function(dialog) {
         const $toDt = $(dialog).find('#toDt');
         const $hours = $(dialog).find('#hours');
         const $minutes = $(dialog).find('#minutes');
+        const eventType = $(dialog).find('#eventTypeId').val();
 
         if (daypartIdVal === '1') {
           // Custom
@@ -1218,7 +1219,8 @@ window.setupScheduleForm = function(dialog) {
               isValid = false;
             }
 
-            if ($toDt.val() === '') {
+            // Command doesn't need end date
+            if ($toDt.val() === '' && eventType != 2) {
               errorMessage = translations.schedule.stepWizard.error.timeEnd;
               $toDt.parents('.form-group').addClass('has-error');
               isValid = false;
@@ -1922,7 +1924,11 @@ const processScheduleFormElements = function(el, dialog) {
       const meta = el.find('option[value=' + fieldVal + ']').data();
 
       endTimeControlDisplay =
-        (meta.isCustom === 0 || relativeTime) ? 'none' : '';
+        (
+          meta.isCustom === 0 ||
+          relativeTime ||
+          $('#eventTypeId', dialog).val() == 2
+        ) ? 'none' : '';
       startTimeControlDisplay =
         (
           meta.isAlways === 1 ||

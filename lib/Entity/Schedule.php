@@ -712,6 +712,16 @@ class Schedule implements \JsonSerializable
                 );
             }
 
+            if ($this->isCustomDayPart()) {
+                // validate the dates
+                if ($this->toDt <= $this->fromDt) {
+                    throw new InvalidArgumentException(
+                        __('Can not have an end time earlier than your start time'),
+                        'start/end'
+                    );
+                }
+            }
+
             if ($this->actionType === 'command') {
                 if (!v::intType()->notEmpty()->validate($this->commandId)) {
                     throw new InvalidArgumentException(__('Please select a Command for this event.'), 'commandId');
@@ -744,6 +754,17 @@ class Schedule implements \JsonSerializable
             if (!v::intType()->notEmpty()->validate($this->dataSetId)) {
                 throw new InvalidArgumentException(__('Please select a DataSet for this event.'), 'dataSetId');
             }
+
+            if ($this->isCustomDayPart()) {
+                // validate the dates
+                if ($this->toDt <= $this->fromDt) {
+                    throw new InvalidArgumentException(
+                        __('Can not have an end time earlier than your start time'),
+                        'start/end'
+                    );
+                }
+            }
+
             $this->campaignId = null;
         } else {
             // No event type selected
