@@ -32,9 +32,11 @@ use Slim\Http\ServerRequest;
 class HttpsDetect
 {
     /**
+     * Get the root of the web server
+     *  this should only be used if you're planning to append the path
      * @return string
      */
-    public function getUrl(): string
+    public function getRootUrl(): string
     {
         $url = $this->getScheme() . '://' . $this->getHost();
         if (($this->getScheme() === 'https' && $this->getPort() !== 443)
@@ -47,6 +49,17 @@ class HttpsDetect
     }
 
     /**
+     * @deprecated use getRootUrl
+     * @return string
+     */
+    public function getUrl(): string
+    {
+        return $this->getRootUrl();
+    }
+
+    /**
+     * Get the base URL for the instance
+     *  this should give us the CMS URL including alias and file
      * @param \Slim\Http\ServerRequest|null $request
      * @return string
      */
@@ -65,13 +78,23 @@ class HttpsDetect
         }
         // End Code Snippet
 
+        // The request URL should be everything after the host, i.e:
+        // /xmds.php?file=
+        // /xibo/xmds.php?file=
+        // /playersoftware
+        // /xibo/playersoftware
+        $requestUri = explode('?', htmlentities($_SERVER['REQUEST_URI'], ENT_QUOTES, 'UTF-8'));
+        $baseUrl = $this->getRootUrl() . '/' . ltrim($requestUri[0], '/');
+
         // We use the path, if provided, to remove any known path information
         // i.e. if we're running in a sub-folder we might be on /xibo/playersoftware
         // in which case we want to remove /playersoftware to get to /xibo which is the base path.
         $path = $request?->getUri()?->getPath() ?? '';
-        $request = explode('?', htmlentities($_SERVER['REQUEST_URI'], ENT_QUOTES, 'UTF-8'));
+        if (!empty($path)) {
+            $baseUrl = str_replace($path, '', $baseUrl);
+        }
 
-        return str_replace($path, '', $this->getUrl() . '/' . ltrim($request[0], '/'));
+        return $baseUrl;
     }
 
     /**

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -88,7 +88,7 @@ class LayoutLock implements Middleware
         $routeName = $route->getName();
 
         // skip for test suite
-        if ($request->getAttribute('name') === 'test' && $this->app->getContainer()->get('name') === 'test') {
+        if ($request->getAttribute('_entryPoint') === 'test' && $this->app->getContainer()->get('_entryPoint') === 'test') {
             return $handler->handle($request);
         }
 

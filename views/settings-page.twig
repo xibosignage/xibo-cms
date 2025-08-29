@@ -46,8 +46,8 @@
                         <li class="nav-item"><a class="nav-link" href="#tab_general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                         <li class="nav-item"><a class="nav-link" href="#tab_maint" role="tab" data-toggle="tab"><span>{% trans "Maintenance" %}</span></a></li>
                         <li class="nav-item"><a class="nav-link" href="#tab_network" role="tab" data-toggle="tab"><span>{% trans "Network" %}</span></a></li>
-                        <li class="nav-item"><a class="nav-link" href="#tab_permissions" role="tab" data-toggle="tab"><span>{% trans "Sharing" %}</span></a></li>
                         <li class="nav-item"><a class="nav-link" href="#tab_regional" role="tab" data-toggle="tab"><span>{% trans "Regional" %}</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab_permissions" role="tab" data-toggle="tab"><span>{% trans "Sharing" %}</span></a></li>
                         <li class="nav-item"><a class="nav-link" href="#tab_troubleshooting" role="tab" data-toggle="tab"><span>{% trans "Troubleshooting" %}</span></a></li>
                         <li class="nav-item"><a class="nav-link" href="#tab_users" role="tab" data-toggle="tab"><span>{% trans "Users" %}</span></a></li>
                     </ul>
@@ -583,17 +583,6 @@
                                         {{ forms.input("PHONE_HOME_DATE", title, theme.getSetting("PHONE_HOME_DATE"), helpText) }}
                                     {% else %}
                                         {{ forms.disabled("PHONE_HOME_DATE", title, theme.getSetting("PHONE_HOME_DATE"), helpText) }}
-                                    {% endif %}
-                                {% endif %}
-
-                                {% if theme.isSettingVisible("PHONE_HOME_URL") %}
-                                    {% set title %}{% trans "Phone home URL" %}{% endset %}
-                                    {% set helpText %}{% trans "The URL to connect to to PHONE_HOME (if enabled)" %}{% endset %}
-
-                                    {% if theme.isSettingEditable("PHONE_HOME_URL") %}
-                                        {{ forms.input("PHONE_HOME_URL", title, theme.getSetting("PHONE_HOME_URL", "https://xibo.org.uk/api/stats/track"), helpText) }}
-                                    {% else %}
-                                        {{ forms.disabled("PHONE_HOME_URL", title, theme.getSetting("PHONE_HOME_URL", "https://xibo.org.uk/api/stats/track"), helpText) }}
                                     {% endif %}
                                 {% endif %}
 

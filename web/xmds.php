@@ -60,7 +60,7 @@ $app->setBasePath($container->get('basePath'));
 
 // Mock a request
 $request = new Request(new ServerRequest('GET', $app->getBasePath()));
-$request = $request->withAttribute('name', 'xmds');
+$request = $request->withAttribute('_entryPoint', 'xmds');
 $container->set('name', 'xmds');
 
 // Start time of transaction (for logs)

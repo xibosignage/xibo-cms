@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,6 +23,7 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
+use Cron\CronExpression;
 use Illuminate\Support\Str;
 use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
@@ -109,37 +110,44 @@ class Task extends Base
 
             $task->setUnmatchedProperty('nextRunDt', $task->nextRunDate());
 
-            if ($this->isApi($request))
+            if ($this->isApi($request)) {
                 continue;
+            }
 
             $task->includeProperty('buttons');
 
             $task->buttons[] = array(
                 'id' => 'task_button_run.now',
-                'url' => $this->urlFor($request,'task.runNow.form', ['id' => $task->taskId]),
+                'url' => $this->urlFor($request, 'task.runNow.form', ['id' => $task->taskId]),
                 'text' => __('Run Now'),
                 'dataAttributes' => [
                     ['name' => 'auto-submit', 'value' => true],
-                    ['name' => 'commit-url', 'value' => $this->urlFor($request,'task.runNow', ['id' => $task->taskId])],
+                    [
+                        'name' => 'commit-url',
+                        'value' => $this->urlFor($request, 'task.runNow', ['id' => $task->taskId]),
+                    ],
                     ['name' => 'commit-method', 'value' => 'POST']
                 ]
             );
 
             // Don't show any edit buttons if the config is locked.
-            if ($this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') == 1 || $this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') == 'Checked')
+            if ($this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') == 1
+                || $this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') == 'Checked'
+            ) {
                 continue;
+            }
 
             // Edit Button
             $task->buttons[] = array(
                 'id' => 'task_button_edit',
-                'url' => $this->urlFor($request,'task.edit.form', ['id' => $task->taskId]),
+                'url' => $this->urlFor($request, 'task.edit.form', ['id' => $task->taskId]),
                 'text' => __('Edit')
             );
 
             // Delete Button
             $task->buttons[] = array(
                 'id' => 'task_button_delete',
-                'url' => $this->urlFor($request,'task.delete.form', ['id' => $task->taskId]),
+                'url' => $this->urlFor($request, 'task.delete.form', ['id' => $task->taskId]),
                 'text' => __('Delete')
             );
         }
@@ -524,7 +532,20 @@ class Task extends Base
                     continue;
                 }
 
-                $cron = \Cron\CronExpression::factory($task['schedule']);
+                try {
+                    $cron = new CronExpression($task['schedule']);
+                } catch (\Exception $e) {
+                    $this->getLog()->info('run: CRON syntax error for taskId  ' . $taskId
+                        . ', e: ' . $e->getMessage());
+
+                    // Try and take the first X characters instead.
+                    try {
+                        $cron = new CronExpression(substr($task['schedule'], 0, strlen($task['schedule']) - 2));
+                    } catch (\Exception) {
+                        $this->getLog()->error('run: cannot fix CRON syntax error  ' . $taskId);
+                        continue;
+                    }
+                }
 
                 // Is the next run date of this event earlier than now, or is the task set to runNow
                 $nextRunDt = $cron->getNextRunDate(\DateTime::createFromFormat('U', $task['lastRunDt']))

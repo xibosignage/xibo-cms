@@ -737,7 +737,7 @@ class Display extends Base
             try {
                 $defaultDisplayProfile = $this->displayProfileFactory->getDefaultByType($display->clientType);
                 $displayProfileName = $defaultDisplayProfile->name;
-            } catch (NotFoundException $e) {
+            } catch (NotFoundException) {
                 $this->getLog()->debug('No default Display Profile set for Display type ' . $display->clientType);
             }
 
@@ -1482,6 +1482,7 @@ class Display extends Base
             'displayTypes' => $displayTypes,
             'dayParts' => $dayparts,
             'languages' => $languages,
+            'isWolDisabled' => defined('ACCOUNT_ID'),
         ]);
 
         return $this->render($request, $response);
@@ -1854,11 +1855,6 @@ class Display extends Base
         $display->incSchedule = $sanitizedParams->getInt('incSchedule');
         $display->emailAlert = $sanitizedParams->getInt('emailAlert');
         $display->alertTimeout = $sanitizedParams->getCheckbox('alertTimeout');
-        $display->wakeOnLanEnabled = $sanitizedParams->getCheckbox('wakeOnLanEnabled');
-        $display->wakeOnLanTime = $sanitizedParams->getString('wakeOnLanTime');
-        $display->broadCastAddress = $sanitizedParams->getString('broadCastAddress');
-        $display->secureOn = $sanitizedParams->getString('secureOn');
-        $display->cidr = $sanitizedParams->getString('cidr');
         $display->latitude = $sanitizedParams->getDouble('latitude');
         $display->longitude = $sanitizedParams->getDouble('longitude');
         $display->timeZone = $sanitizedParams->getString('timeZone');
@@ -1876,6 +1872,19 @@ class Display extends Base
         $display->ref3 = $sanitizedParams->getString('ref3');
         $display->ref4 = $sanitizedParams->getString('ref4');
         $display->ref5 = $sanitizedParams->getString('ref5');
+
+        // Wake on Lan
+        if (defined('ACCOUNT_ID')) {
+            // WOL is not allowed on a Xibo Cloud CMS
+            // Force disable, but leave the other settings as they are.
+            $display->wakeOnLanEnabled = 0;
+        } else {
+            $display->wakeOnLanEnabled = $sanitizedParams->getCheckbox('wakeOnLanEnabled');
+            $display->wakeOnLanTime = $sanitizedParams->getString('wakeOnLanTime');
+            $display->broadCastAddress = $sanitizedParams->getString('broadCastAddress');
+            $display->secureOn = $sanitizedParams->getString('secureOn');
+            $display->cidr = $sanitizedParams->getString('cidr');
+        }
 
         // Get the display profile and use that to pull in any overrides
         // start with an empty config
@@ -2213,7 +2222,7 @@ class Display extends Base
         $file = 'screenshots/' . $id . '_screenshot.jpg';
 
         // File upload directory.. get this from the settings object
-        $library = $this->getConfig()->getSetting("LIBRARY_LOCATION");
+        $library = $this->getConfig()->getSetting('LIBRARY_LOCATION');
         $fileName = $library . $file;
 
         if (!file_exists($fileName)) {
@@ -2234,16 +2243,17 @@ class Display extends Base
         }
 
         // Cache headers
-        header("Cache-Control: no-store, no-cache, must-revalidate");
-        header("Pragma: no-cache");
-        header("Expires: 0");
+        header('Cache-Control: no-store, no-cache, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
 
         // Disable any buffering to prevent OOM errors.
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
 
-        echo $img->encode();
+        $response->write($img->encode());
+        $response = $response->withHeader('Content-Type', $img->mime());
         return $this->render($request, $response);
     }
 
@@ -2447,20 +2457,18 @@ class Display extends Base
 
     /**
      * Validate the display list
-     * @param array[Display] $displays
+     * @param \Xibo\Entity\Display[] $displays
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function validateDisplays($displays)
+    public function validateDisplays(array $displays): void
     {
         // Get the global time out (overrides the alert time out on the display if 0)
         $globalTimeout = $this->getConfig()->getSetting('MAINTENANCE_ALERT_TOUT') * 60;
-        $emailAlerts = ($this->getConfig()->getSetting("MAINTENANCE_EMAIL_ALERTS") == 1);
-        $alwaysAlert = ($this->getConfig()->getSetting("MAINTENANCE_ALWAYS_ALERT") == 1);
+        $emailAlerts = ($this->getConfig()->getSetting('MAINTENANCE_EMAIL_ALERTS') == 1);
+        $alwaysAlert = ($this->getConfig()->getSetting('MAINTENANCE_ALWAYS_ALERT') == 1);
 
         foreach ($displays as $display) {
-            /* @var \Xibo\Entity\Display $display */
-
             // Should we test against the collection interval or the preset alert timeout?
             if ($display->alertTimeout == 0 && $display->clientType != '') {
                 $timeoutToTestAgainst = ((double)$display->getSetting('collectInterval', $globalTimeout)) * 1.1;
@@ -2468,12 +2476,13 @@ class Display extends Base
                 $timeoutToTestAgainst = $globalTimeout;
             }
 
-            // Store the time out to test against
+            // Store the timeout to test against
             $timeOut = $display->lastAccessed + $timeoutToTestAgainst;
 
-            // If the last time we accessed is less than now minus the time out
+            // If the last time we accessed is less than now minus the timeout
             if ($timeOut < Carbon::now()->format('U')) {
-                $this->getLog()->debug('Timed out display. Last Accessed: ' . date('Y-m-d h:i:s', $display->lastAccessed) . '. Time out: ' . date('Y-m-d h:i:s', $timeOut));
+                $this->getLog()->debug('Timed out display. Last Accessed: '
+                    . date('Y-m-d h:i:s', $display->lastAccessed) . '. Time out: ' . date('Y-m-d h:i:s', $timeOut));
 
                 // Is this the first time this display has gone "off-line"
                 $displayOffline = ($display->loggedIn == 1);
@@ -2493,7 +2502,7 @@ class Display extends Base
                     $event->save();
                 }
 
-                $dayPartId = $display->getSetting('dayPartId', null, ['displayOverride' => true]);
+                $dayPartId = $display->getSetting('dayPartId');
                 $operatingHours = true;
 
                 if ($dayPartId !== null) {
@@ -2533,7 +2542,7 @@ class Display extends Base
                         } else {
                             $operatingHours = false;
                         }
-                    } catch (NotFoundException $e) {
+                    } catch (NotFoundException) {
                         $this->getLog()->debug(
                             'Unknown dayPartId set on Display Profile for displayId ' . $display->displayId
                         );
@@ -2566,16 +2575,19 @@ class Display extends Base
                         );
 
                         // Add in any displayNotificationGroups, with permissions
-                        foreach ($this->userGroupFactory->getDisplayNotificationGroups($display->displayGroupId) as $group) {
+                        foreach ($this->userGroupFactory
+                                     ->getDisplayNotificationGroups($display->displayGroupId) as $group) {
                             $notification->assignUserGroup($group);
                         }
 
                         $notification->save();
                     } else {
-                        $this->getLog()->info('Not sending email down alert for Display - ' . $display->display . ' we are outside of its operating hours');
+                        $this->getLog()->info('Not sending email down alert for Display - ' . $display->display
+                            . ' we are outside of its operating hours');
                     }
                 } elseif ($displayOffline) {
-                    $this->getLog()->info('Not sending an email for offline display - emailAlert = ' . $display->emailAlert . ', alwaysAlert = ' . $alwaysAlert);
+                    $this->getLog()->info('Not sending an email for offline display - emailAlert = '
+                        . $display->emailAlert . ', alwaysAlert = ' . $alwaysAlert);
                 }
             }
         }

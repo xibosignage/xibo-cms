@@ -1,0 +1,14 @@
+<div class="help-pane-upload-file">
+    <div class="help-pane-upload-file-preview">
+        {{#if thumbURL }}
+            <img src="{{thumbURL}}">
+        {{else}}
+            <i class="fas {{icon}}"></i>
+        {{/if}}
+    </div>
+    <div class="help-pane-upload-file-info">
+        <div class="help-pane-upload-file-name" title="{{name}}">{{name}}</div>
+        <div class="help-pane-upload-file-type">{{type}}</div>
+    </div>
+    <i class="remove-file-icon fas fa-close"></i>
+</div>

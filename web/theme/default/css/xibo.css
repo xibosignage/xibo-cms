@@ -1469,9 +1469,11 @@ div.dataTables_wrapper div.dataTables_info {
 }
 .stepwizard .btn.disabled, .stepwizard .btn[disabled], .stepwizard fieldset[disabled] .btn {
     opacity:1 !important;
-    color:#bbb;
-    background: white;
-    border: 1px solid #bbbbbb;
+    color:white;
+    background: #ccc;
+    border: 1px solid #ccc;
+    box-shadow: unset;
+    cursor: default;
 }
 .stepwizard-row:before {
     top: 14px;
@@ -1489,21 +1491,24 @@ div.dataTables_wrapper div.dataTables_info {
     position: relative;
 }
 .stepwizard .btn-circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 30px;
     height: 30px;
-    text-align: center;
-    padding: 6px 0;
     font-size: 12px;
-    line-height: 1.428571429;
     border-radius: 15px;
+    padding: 0;
 }
 .stepwizard .btn-default {
-    background: #bbbbbb;
-    border: 1px solid grey;
+    background: white;
+    color: #28a745;
+    border: 2px solid #28a745;
 }
 .stepwizard .btn-success {
     background: #28a745;
     border: 1px solid #28a745;
+    color: white;
 }
 .stepwizard-form .checkbox+.checkbox, .stepwizard-form .radio+.radio {
     margin-top: 8px;

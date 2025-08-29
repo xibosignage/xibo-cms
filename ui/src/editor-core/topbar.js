@@ -98,9 +98,18 @@ Topbar.prototype.render = function() {
     let buttonInactive = false;
 
     // Bind action to button
-    self.DOMObject.find('#' + button.id).click(
-      button.action,
-    );
+    self.DOMObject.find('#' + button.id).click((ev) => {
+      const $btn = $(ev.currentTarget);
+
+      if (
+        !$btn.hasClass('disabled') &&
+        typeof button.action === 'function'
+      ) {
+        button.action();
+        $btn.addClass('disabled');
+        setTimeout(() => $btn.removeClass('disabled'), 200);
+      }
+    });
 
     // If there is a inactiveCheck, use that function to switch button state
     if (button.inactiveCheck != undefined) {

@@ -712,6 +712,16 @@ class Schedule implements \JsonSerializable
                 );
             }
 
+            if ($this->isCustomDayPart()) {
+                // validate the dates
+                if ($this->toDt <= $this->fromDt) {
+                    throw new InvalidArgumentException(
+                        __('Can not have an end time earlier than your start time'),
+                        'start/end'
+                    );
+                }
+            }
+
             if ($this->actionType === 'command') {
                 if (!v::intType()->notEmpty()->validate($this->commandId)) {
                     throw new InvalidArgumentException(__('Please select a Command for this event.'), 'commandId');
@@ -744,6 +754,17 @@ class Schedule implements \JsonSerializable
             if (!v::intType()->notEmpty()->validate($this->dataSetId)) {
                 throw new InvalidArgumentException(__('Please select a DataSet for this event.'), 'dataSetId');
             }
+
+            if ($this->isCustomDayPart()) {
+                // validate the dates
+                if ($this->toDt <= $this->fromDt) {
+                    throw new InvalidArgumentException(
+                        __('Can not have an end time earlier than your start time'),
+                        'start/end'
+                    );
+                }
+            }
+
             $this->campaignId = null;
         } else {
             // No event type selected
@@ -2077,12 +2098,13 @@ class Schedule implements \JsonSerializable
     }
 
     /**
-     * Get an array of event types for the add/edit form
+     * Get an array of event types
+     * @param array $exclude Event type IDs to exclude
      * @return array
      */
-    public static function getEventTypesForm(): array
+    public static function getEventTypes(array $exclude = []): array
     {
-        return [
+        $eventTypes = [
             ['eventTypeId' => self::$LAYOUT_EVENT, 'eventTypeName' => __('Layout')],
             ['eventTypeId' => self::$COMMAND_EVENT, 'eventTypeName' => __('Command')],
             ['eventTypeId' => self::$OVERLAY_EVENT, 'eventTypeName' => __('Overlay Layout')],
@@ -2091,20 +2113,18 @@ class Schedule implements \JsonSerializable
             ['eventTypeId' => self::$ACTION_EVENT, 'eventTypeName' => __('Action')],
             ['eventTypeId' => self::$MEDIA_EVENT, 'eventTypeName' => __('Video/Image')],
             ['eventTypeId' => self::$PLAYLIST_EVENT, 'eventTypeName' => __('Playlist')],
+            ['eventTypeId' => self::$SYNC_EVENT, 'eventTypeName' => __('Synchronised Event')],
             ['eventTypeId' => self::$DATA_CONNECTOR_EVENT, 'eventTypeName' => __('Data Connector')],
         ];
-    }
 
-    /**
-     * Get an array of event types for the grid
-     * @return array
-     */
-    public static function getEventTypesGrid(): array
-    {
-        $events = self::getEventTypesForm();
-        $events[] = ['eventTypeId' => self::$SYNC_EVENT, 'eventTypeName' => __('Synchronised Event')];
+        if (!empty($exclude)) {
+            $eventTypes = array_filter(
+                $eventTypes,
+                fn($type) => !in_array($type['eventTypeId'], $exclude, true)
+            );
+        }
 
-        return $events;
+        return array_values($eventTypes);
     }
 
     /**

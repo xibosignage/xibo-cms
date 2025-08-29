@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -806,7 +806,7 @@ class Widget implements \JsonSerializable
         }
 
         // Load permissions
-        $this->permissions = $this->permissionFactory->getByObjectId(get_class(), $this->widgetId);
+        $this->permissions = $this->permissionFactory->getByObjectId(get_class($this), $this->widgetId);
 
         // Load the widget options
         $this->widgetOptions = $this->widgetOptionFactory->getByWidgetId($this->widgetId);

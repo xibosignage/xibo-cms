@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2022 Xibo Signage Ltd
+/*
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -81,10 +81,6 @@ class ApiAuthentication implements Middleware
                     $encryptionKey
                 );
 
-                // Default scope
-                // must be set before we enable any grant types.
-                $server->setDefaultScope('all');
-
                 // Grant Types
                 $server->enableGrantType(
                     new \League\OAuth2\Server\Grant\ClientCredentialsGrant(),
@@ -109,6 +105,6 @@ class ApiAuthentication implements Middleware
             }
         });
 
-        return $handler->handle($request->withAttribute('name', 'auth'));
+        return $handler->handle($request->withAttribute('_entryPoint', 'auth'));
     }
 }

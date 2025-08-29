@@ -376,7 +376,7 @@
 
 {% macro inputFullScreenSchedule(name, title, value, helpText, groupClass, idValue, validation, accessKey, readonly) %}
     <div class="form-group row input-full-screen-layout {{ groupClass }}">
-        <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <label class="col-sm-2 control-label" for="fullScreen-{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="col-sm-10">
             <div class="input-group">
                 <input class="form-control" type="text" id="fullScreen-{{ name }}" value="{{ value }}" {{ validation }} readonly />

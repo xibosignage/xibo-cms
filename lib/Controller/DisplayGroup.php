@@ -399,6 +399,24 @@ class DisplayGroup extends Base
                 ];
             }
 
+            // Schedule
+            if ($this->getUser()->featureEnabled('schedule.add')
+                && ($this->getUser()->checkEditable($group)
+                    || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1)
+            ) {
+                $group->buttons[] = ['divider' => true];
+
+                $group->buttons[] = array(
+                    'id' => 'displaygroup_button_schedule',
+                    'url' => $this->urlFor(
+                        $request,
+                        'schedule.add.form',
+                        ['id' => $group->displayGroupId, 'from' => 'DisplayGroup']
+                    ),
+                    'text' => __('Schedule')
+                );
+            }
+
             if ($this->getUser()->featureEnabled('displaygroup.modify')
                 && $this->getUser()->checkEditable($group)
             ) {

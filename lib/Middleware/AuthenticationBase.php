@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -49,7 +49,7 @@ abstract class AuthenticationBase implements Middleware, AuthenticationInterface
     public function process(Request $request, RequestHandler $handler): Response
     {
         // This Middleware protects the Web Route, so we update the request with that name
-        $request = $request->withAttribute('name', 'web');
+        $request = $request->withAttribute('_entryPoint', 'web');
 
         // Add any authentication specific request modifications
         $request = $this->addToRequest($request);

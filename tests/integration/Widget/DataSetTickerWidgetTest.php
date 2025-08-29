@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -52,7 +52,7 @@ class DataSetTickerWidgetTest extends LocalWebTestCase
     {
         parent::setup();
 
-        $this->getLogger()->debug('Setup for ' . get_class() .' Test');
+        $this->getLogger()->debug('Setup for ' . get_class($this) .' Test');
 
         // Add a DataSet
         $this->dataSet = (new XiboDataSet($this->getEntityProvider()))->create(Random::generateString(), 'Test');
@@ -86,7 +86,7 @@ class DataSetTickerWidgetTest extends LocalWebTestCase
 
         parent::tearDown();
 
-        $this->getLogger()->debug('Tear down for ' . get_class() .' Test');
+        $this->getLogger()->debug('Tear down for ' . get_class($this) .' Test');
     }
 
     /**
@@ -94,7 +94,7 @@ class DataSetTickerWidgetTest extends LocalWebTestCase
      */
     public function testEditDataset()
     {
-        $this->getLogger()->debug('testEdit ' . get_class() .' Test');
+        $this->getLogger()->debug('testEdit ' . get_class($this) .' Test');
 
         // Edit ticker
         $noDataMessage = 'no records found';

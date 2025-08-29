@@ -40,6 +40,9 @@ class Event implements \JsonSerializable, DataTypeInterface
     /** @var \Carbon\Carbon */
     public $endDate;
 
+    /** @var bool */
+    public $isAllDay = false;
+
     /** @inheritDoc */
     public function jsonSerialize(): array
     {
@@ -49,6 +52,7 @@ class Event implements \JsonSerializable, DataTypeInterface
             'location' => $this->location,
             'startDate' => $this->startDate->format('c'),
             'endDate' => $this->endDate->format('c'),
+            'isAllDay' => $this->isAllDay,
         ];
     }
 
@@ -62,7 +66,8 @@ class Event implements \JsonSerializable, DataTypeInterface
             ->addField('description', __('Description'), 'text')
             ->addField('location', __('Location'), 'text')
             ->addField('startDate', __('Start Date'), 'datetime')
-            ->addField('endDate', __('End Date'), 'datetime');
+            ->addField('endDate', __('End Date'), 'datetime')
+            ->addField('isAllDay', __('All Day Event'), 'boolean');
         return $dataType;
     }
 }

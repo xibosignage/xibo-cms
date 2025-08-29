@@ -5805,6 +5805,13 @@
                         "description": "Filter by Folder ID",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "isReturnPublicUrls",
+                        "in": "query",
+                        "description": "Should the thumbail URLs be authenticated S3 style public URL, default = false",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -10276,7 +10283,13 @@
                         "in": "formData",
                         "description": "The homepage to use for this User",
                         "required": true,
-                        "type": "integer"
+                        "type": "string",
+                        "enum": [
+                            "statusdashboard.view",
+                            "icondashboard.view",
+                            "mediamanager.view",
+                            "playlistdashboard.view"
+                        ]
                     },
                     {
                         "name": "libraryQuota",
@@ -10435,7 +10448,13 @@
                         "in": "formData",
                         "description": "The homepage to use for this User",
                         "required": true,
-                        "type": "integer"
+                        "type": "string",
+                        "enum": [
+                            "statusdashboard.view",
+                            "icondashboard.view",
+                            "mediamanager.view",
+                            "playlistdashboard.view"
+                        ]
                     },
                     {
                         "name": "libraryQuota",

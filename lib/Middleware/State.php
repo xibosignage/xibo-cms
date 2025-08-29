@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -114,7 +114,7 @@ class State implements Middleware
 
         // Handle correctly outputting cache headers for AJAX requests
         // IE cache busting
-        if ($this->isAjax($request) && $request->getMethod() == 'GET' && $request->getAttribute('name') == 'web') {
+        if ($this->isAjax($request) && $request->getMethod() == 'GET' && $request->getAttribute('_entryPoint') == 'web') {
             $response = $response->withHeader('Cache-control', 'no-cache')
                      ->withHeader('Cache-control', 'no-store')
                      ->withHeader('Pragma', 'no-cache')
@@ -178,7 +178,8 @@ class State implements Middleware
             '/playersoftware/{nonce}/sssp_config.xml',
             '/tfa',
             '/error',
-            '/notFound'
+            '/notFound',
+            '/public/thumbnail/{id}',
         ]));
 
         // Setup the translations for gettext
@@ -188,11 +189,19 @@ class State implements Middleware
         Carbon::setLocale(Translate::GetLocale(2));
 
         // Default timezone
-        date_default_timezone_set($container->get('configService')->getSetting("defaultTimezone"));
+        date_default_timezone_set($container->get('configService')->getSetting('defaultTimezone'));
 
         $container->set('session', function (ContainerInterface $container) use ($app) {
             if ($container->get('name') == 'web' || $container->get('name') == 'auth') {
-                return new Session($container->get('logService'));
+                $sessionHandler = new Session($container->get('logService'));
+
+                session_set_save_handler($sessionHandler, true);
+                register_shutdown_function('session_write_close');
+
+                // Start the session
+                session_cache_limiter(false);
+                session_start();
+                return $sessionHandler;
             } else {
                 return new NullSession();
             }

@@ -185,9 +185,9 @@ window.XiboInitialise = function(scope, options) {
     const min = $input.attr('min');
 
     $input.on('blur', () => {
-      (max && $input.val() > max) &&
+      (max && Number($input.val()) > Number(max)) &&
         ($input.val(max).trigger('change'));
-      (min && $input.val() < min) &&
+      (min && Number($input.val()) < Number(min)) &&
         ($input.val(min).trigger('change'));
     });
   });
@@ -2438,6 +2438,9 @@ window.SystemMessageInline = function(messageText, modal) {
 
   // Re-enabled any disabled buttons
   $(modal).find('.btn').removeClass('disabled');
+
+  // Remove loading from button if exist
+  $(modal).find('.btn i.fa-cog').remove();
 
   $('<div/>', {
     class: 'card bg-light p-3 text-danger col-sm-12 text-center form-error',

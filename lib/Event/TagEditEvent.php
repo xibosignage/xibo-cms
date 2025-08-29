@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -40,7 +40,7 @@ class TagEditEvent extends Event
      */
     private $newTag;
 
-    public function __construct(int $tagId, string $oldTag = null, string $newTag = null)
+    public function __construct(int $tagId, ?string $oldTag = null, ?string $newTag = null)
     {
         $this->tagId = $tagId;
         $this->oldTag = $oldTag;

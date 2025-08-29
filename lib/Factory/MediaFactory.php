@@ -583,7 +583,7 @@ class MediaFactory extends BaseFactory
 
         $body = ' FROM media ';
         $body .= '   LEFT OUTER JOIN media parentmedia ';
-        $body .= '   ON parentmedia.editedMediaId = media.mediaId ';
+        $body .= '   ON media.editedMediaId = parentmedia.mediaId ';
 
         // Media might be linked to the system user (userId 0)
         $body .= '   LEFT OUTER JOIN `user` ON `user`.userId = `media`.userId ';

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022-2023 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -180,7 +180,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
     {
         // Create a request for tests
         $request = new Request(new ServerRequest($method, $path, $headers));
-        $request = $request->withAttribute('name', $requestAttrVal);
+        $request = $request->withAttribute('_entryPoint', $requestAttrVal);
 
         // If we are using POST or PUT method then we expect to have Body provided, add it to the request
         if (in_array($method, ['POST', 'PUT']) && $body != null) {
@@ -217,7 +217,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
     {
         // Create a request for tests
         $request = new Request(new ServerRequest($method, $path, $headers, $body, '', $serverParams));
-        $request = $request->withAttribute('name', 'test');
+        $request = $request->withAttribute('_entryPoint', 'test');
 
         return $request;
     }

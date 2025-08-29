@@ -147,7 +147,46 @@ class IcsProvider implements WidgetProviderInterface
                     $this->getLog()->debug('Event: ' . $event->summary . ' with '
                         . $entry->startDate->format('c') . ' / ' . $entry->endDate->format('c'));
 
-                    if ($excludeAllDay && ($entry->endDate->diff($entry->startDate)->days >= 1)) {
+                    // Detect all day event
+                    $isAllDay = false;
+
+                    // If dtstart has value DATE
+                    // (following RFC recommendations in https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.4 )
+                    if (isset($event->dtstart_array[0])) {
+                        // If it's a string
+                        if (is_string($event->dtstart_array[0]) && strtoupper($event->dtstart_array[0]) === 'DATE') {
+                            $isAllDay = true;
+                        }
+
+                        // If it's an array
+                        if (is_array($event->dtstart_array[0]) &&
+                            isset($event->dtstart_array[0]['VALUE']) &&
+                            strtoupper($event->dtstart_array[0]['VALUE']) === 'DATE') {
+                            $isAllDay = true;
+                        }
+                    }
+
+                    // If MS extension flags it as all day
+                    if (isset($event->x_microsoft_cdo_alldayevent) &&
+                        is_string($event->x_microsoft_cdo_alldayevent) &&
+                        strtoupper($event->x_microsoft_cdo_alldayevent) === 'TRUE') {
+                        $isAllDay = true;
+                    }
+
+                    // Fallback: If both times are midnight and event is more than one day
+                    if (!$isAllDay) {
+                        $startAtMidnight = $entry->startDate->isStartOfDay();
+                        $endsAtMidnight = $entry->endDate->isStartOfDay();
+                        $diffDays = $entry->endDate->copy()->startOfDay()->diffInDays(
+                            $entry->startDate->copy()->startOfDay()
+                        );
+
+                        $isAllDay = $startAtMidnight && $endsAtMidnight && $diffDays >= 1;
+                    }
+
+                    $entry->isAllDay = $isAllDay;
+
+                    if ($excludeAllDay && $isAllDay) {
                         continue;
                     }
 

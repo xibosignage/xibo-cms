@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,10 +22,12 @@
 
 namespace Xibo\Widget\Render;
 
+use GuzzleHttp\Psr7\LimitStream;
 use GuzzleHttp\Psr7\Stream;
 use Intervention\Image\ImageManagerStatic as Img;
 use Psr\Log\LoggerInterface;
 use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Media;
 use Xibo\Helper\HttpCacheProvider;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -65,16 +67,18 @@ class WidgetDownloader
     /**
      * Return File
      * @param \Xibo\Entity\Media $media
+     * @param \Slim\Http\ServerRequest $request
      * @param \Slim\Http\Response $response
      * @param string|null $contentType An optional content type, if provided the attachment is ignored
      * @param string|null $attachment An optional attachment, defaults to the stored file name (storedAs)
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return \Slim\Http\Response
      */
     public function download(
         Media $media,
+        Request $request,
         Response $response,
-        string $contentType = null,
-        string $attachment = null
+        ?string $contentType = null,
+        ?string $attachment = null
     ): Response {
         $this->logger->debug('widgetDownloader::download: Download for mediaId ' . $media->mediaId);
 
@@ -85,7 +89,8 @@ class WidgetDownloader
 
         // Set some headers
         $headers = [];
-        $headers['Content-Length'] = filesize($libraryPath);
+        $fileSize = filesize($libraryPath);
+        $headers['Content-Length'] = $fileSize;
 
         // If we have been given a content type, then serve that to the browser.
         if ($contentType !== null) {
@@ -113,19 +118,43 @@ class WidgetDownloader
             $headers['X-Accel-Redirect'] = '/download/' . $media->storedAs;
         }
 
-        // Add the headers we've collected to our response
-        foreach ($headers as $header => $value) {
-            $response = $response->withHeader($header, $value);
-        }
-
         // Should we output the file via the application stack, or directly by reading the file.
         if ($this->sendFileMode == 'Off') {
             // Return the file with PHP
-            $response = $response->withBody(new Stream(fopen($libraryPath, 'r')));
+            $this->logger->debug('download: Returning Stream with response body, sendfile off.');
 
-            $this->logger->debug('Returning Stream with response body, sendfile off.');
+            $stream = new Stream(fopen($libraryPath, 'r'));
+            $start = 0;
+            $end = $fileSize - 1;
+
+            $rangeHeader = $request->getHeaderLine('Range');
+            if ($rangeHeader !== '') {
+                $this->logger->debug('download: Handling Range request, header: ' . $rangeHeader);
+
+                if (preg_match('/bytes=(\d+)-(\d*)/', $rangeHeader, $matches)) {
+                    $start = (int) $matches[1];
+                    $end = $matches[2] !== '' ? (int) $matches[2] : $end;
+                    if ($start > $end || $end >= $fileSize) {
+                        return $response
+                            ->withStatus(416)
+                            ->withHeader('Content-Range', 'bytes */' . $fileSize);
+                    }
+                }
+                $headers['Content-Range'] = 'bytes ' . $start . '-' . $end . '/' . $fileSize;
+                $headers['Content-Length'] = $end - $start + 1;
+                $response = $response
+                    ->withBody(new LimitStream($stream, $end - $start + 1, $start))
+                    ->withStatus(206);
+            } else {
+                $response = $response->withBody($stream);
+            }
         } else {
             $this->logger->debug('Using sendfile to return the file, only output headers.');
+        }
+
+        // Add the headers we've collected to our response
+        foreach ($headers as $header => $value) {
+            $response = $response->withHeader($header, $value);
         }
 
         return $response;
@@ -141,7 +170,7 @@ class WidgetDownloader
     public function thumbnail(
         Media $media,
         Response $response,
-        string $errorThumb = null
+        ?string $errorThumb = null
     ): Response {
         // Our convention is to upload media covers in {mediaId}_{mediaType}cover.png
         // and then thumbnails in tn_{mediaId}_{mediaType}cover.png
@@ -176,6 +205,7 @@ class WidgetDownloader
                     // Correct cache
                     $regenerate = false;
                 }
+                $response = $response->withHeader('Content-Type', $img->mime());
             }
 
             if ($regenerate) {
@@ -195,15 +225,22 @@ class WidgetDownloader
                     $constraint->aspectRatio();
                 });
                 $img->save($thumbnailFilePath);
+                $response = $response->withHeader('Content-Type', $img->mime());
             }
 
             // Output Etag
             $response = HttpCacheProvider::withEtag($response, md5_file($thumbnailFilePath));
 
-            echo $img->encode();
+            $response->write($img->encode());
         } catch (\Exception) {
+            $this->logger->debug('thumbnail: exception raised.');
+
             if ($errorThumb !== null) {
-                echo Img::make($errorThumb)->encode();
+                $img = Img::make($errorThumb);
+                $response->write($img->encode());
+
+                // Output the mime type
+                $response = $response->withHeader('Content-Type', $img->mime());
             }
         }
 
@@ -223,13 +260,18 @@ class WidgetDownloader
         SanitizerInterface $params,
         string $filePath,
         Response $response,
-        string $errorThumb = null
+        ?string $errorThumb = null
     ): Response {
         // Image previews call for dynamically generated images as various sizes
         // for example a background image will stretch to the entire region
         // an image widget may be aspect, fit or scale
         try {
             $filePath = $this->libraryLocation . $filePath;
+
+            // Does it exist?
+            if (!file_exists($filePath)) {
+                throw new NotFoundException(__('File not found'));
+            }
 
             // Check that our source image is not too large
             $imageInfo = getimagesize($filePath);
@@ -278,11 +320,15 @@ class WidgetDownloader
                 }
             }
 
-            echo $img->encode();
+            $response->write($img->encode());
             $response = HttpCacheProvider::withExpires($response, '+1 week');
+
+            $response = $response->withHeader('Content-Type', $img->mime());
         } catch (\Exception $e) {
             if ($errorThumb !== null) {
-                echo Img::make($errorThumb)->encode();
+                $img = Img::make($errorThumb);
+                $response->write($img->encode());
+                $response = $response->withHeader('Content-Type', $img->mime());
             } else {
                 $this->logger->error('Cannot parse image: ' . $e->getMessage());
                 throw new InvalidArgumentException(__('Cannot parse image.'), 'storedAs');

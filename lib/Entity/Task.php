@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -75,16 +75,27 @@ class Task implements \JsonSerializable
      * @return \DateTime|string
      * @throws \Exception
      */
-    public function nextRunDate()
+    public function nextRunDate(): \DateTime|string
     {
         try {
-            $cron = CronExpression::factory($this->schedule);
+            try {
+                $cron = new CronExpression($this->schedule);
+            } catch (\Exception $e) {
+                // Try and take the first X characters instead.
+                try {
+                    $cron = new CronExpression(substr($this->schedule, 0, strlen($this->schedule) - 2));
+                } catch (\Exception) {
+                    $this->getLog()->error('nextRunDate: cannot fix CRON syntax error  ' . $this->taskId);
+                    throw $e;
+                }
+            }
 
-            if ($this->lastRunDt == 0)
+            if ($this->lastRunDt == 0) {
                 return (new \DateTime())->format('U');
+            }
 
             return $cron->getNextRunDate(\DateTime::createFromFormat('U', $this->lastRunDt))->format('U');
-        } catch (\RuntimeException $e) {
+        } catch (\Exception) {
             $this->getLog()->error('Invalid CRON expression for TaskId ' . $this->taskId);
 
             $this->status = self::$STATUS_ERROR;
@@ -114,17 +125,30 @@ class Task implements \JsonSerializable
      * Validate
      * @throws InvalidArgumentException
      */
-    private function validate()
+    private function validate(): void
     {
         // Test the CRON expression
-        if (empty($this->schedule))
+        if (empty($this->schedule)) {
             throw new InvalidArgumentException(__('Please enter a CRON expression in the Schedule'), 'schedule');
+        }
 
         try {
-            $cron = CronExpression::factory($this->schedule);
+            $cron = new CronExpression($this->schedule);
             $cron->getNextRunDate();
-        } catch (\RuntimeException $e) {
-            throw new InvalidArgumentException(__('Invalid CRON expression in the Schedule'), 'schedule');
+        } catch (\Exception $e) {
+            $this->getLog()->info('run: CRON syntax error for taskId  ' . $this->taskId
+                . ', e: ' . $e->getMessage());
+
+            try {
+                $trimmed = substr($this->schedule, 0, strlen($this->schedule) - 2);
+                $cron = new CronExpression($trimmed);
+                $cron->getNextRunDate();
+            } catch (\Exception) {
+                throw new InvalidArgumentException(__('Invalid CRON expression in the Schedule'), 'schedule');
+            }
+
+            // Swap to the trimmed (and correct) schedule
+            $this->schedule = $trimmed;
         }
     }
 
@@ -132,9 +156,15 @@ class Task implements \JsonSerializable
      * Save
      * @throws InvalidArgumentException
      */
-    public function save()
+    public function save(array $options = []): void
     {
-        $this->validate();
+        $options = array_merge([
+            'validate' => true,
+        ], $options);
+
+        if ($options['validate']) {
+            $this->validate();
+        }
 
         if ($this->taskId == null) {
             $this->add();

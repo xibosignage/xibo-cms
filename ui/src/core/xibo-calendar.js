@@ -1067,7 +1067,278 @@ function updateConditionFieldToDefault(
  * Callback for the schedule form
  */
 window.setupScheduleForm = function(dialog) {
+  const $dialog = $(dialog);
   // console.log("Setup schedule form");
+
+  // Form steps
+  const stepWizard = $dialog.find('.stepwizard');
+  if (stepWizard.length > 0) {
+    // Form step validation
+    const validateStep = function(step) {
+      let isValid = true;
+      let errorMessage = '';
+
+      // Remove previous errors
+      $(dialog).find('.form-error').remove();
+      $(dialog).find('.form-group').removeClass('has-error');
+
+      if (step === 1) {
+        // Content
+        const eventType = Number($(dialog).find('#eventTypeId').val());
+
+        // Validate fields map for all that require
+        const validateMap = [
+          {
+            type: [1, 3, 4, 5],
+            fieldQuery: '#campaignId',
+            errorProperty: 'layout',
+          },
+          {
+            type: [2],
+            fieldQuery: '#commandId',
+            errorProperty: 'command',
+          },
+          {
+            type: [7],
+            fieldQuery: '#fullScreen-media',
+            errorProperty: 'videoImage',
+          },
+          {
+            type: [8],
+            fieldQuery: '#fullScreen-playlist',
+            errorProperty: 'playlist',
+          },
+          {
+            type: [10],
+            fieldQuery: '#dataSetId',
+            errorProperty: 'dataset',
+          },
+        ];
+
+        // Validate all fields that have the same type of validation
+        validateMap.forEach((val) => {
+          const fieldVal = $(dialog).find(val.fieldQuery).val();
+          if (
+            val.type.indexOf(eventType) != -1 &&
+            (fieldVal === '' || fieldVal === null)
+          ) {
+            errorMessage =
+              translations.schedule.stepWizard.error[val.errorProperty];
+            $(dialog).find(val.fieldQuery).parents('.form-group')
+              .addClass('has-error');
+            isValid = false;
+          }
+        });
+
+        // Special fields
+
+        // Sync- validate sync group field and layouts
+        if (eventType === 9) {
+          // Validate sync group
+          const syncGroupId = $(dialog).find('#syncGroupId').val();
+          if (syncGroupId == null || syncGroupId == '') {
+            errorMessage = translations.schedule.stepWizard.error.syncGroup;
+            $(dialog).find('#syncGroupId').parents('.form-group')
+              .addClass('has-error');
+            isValid = false;
+          } else {
+            // Validate layouts
+            $(dialog).find('#contentSelectorTable select.syncContentSelect')
+              .each((_idx, layout) => {
+                const layoutVal = $(layout).val();
+                if (layoutVal == null || layoutVal == '') {
+                  errorMessage =
+                    translations.schedule.stepWizard.error.syncGroupLayouts;
+                  $(layout).parents('.form-group.pagedSelect')
+                    .addClass('has-error');
+                  isValid = false;
+                }
+              });
+          }
+        }
+
+        // If event of action type, validate action field
+        if (eventType === 6) {
+          const $triggerCode = $(dialog).find('#actionTriggerCode');
+          const $actionType = $(dialog).find('#actionType');
+          const $actionLayoutCode = $(dialog).find('#actionLayoutCode');
+          const $actionCommand = $(dialog).find('#commandId');
+
+          if ($triggerCode.val() === '') {
+            errorMessage =
+              translations.schedule.stepWizard.error.actionTriggerCode;
+            $triggerCode.parents('.form-group').addClass('has-error');
+            isValid = false;
+          }
+
+          if (
+            $actionType.val() === 'navLayout' &&
+            $actionLayoutCode.val() === null
+          ) {
+            errorMessage =
+              translations.schedule.stepWizard.error.actionLayoutCode;
+            $actionLayoutCode.parents('.form-group').addClass('has-error');
+            isValid = false;
+          }
+
+          if (
+            $actionType.val() === 'command' &&
+            $actionCommand.val() === null
+          ) {
+            errorMessage =
+              translations.schedule.stepWizard.error.actionCommand;
+            $actionCommand.parents('.form-group').addClass('has-error');
+            isValid = false;
+          }
+        }
+      } else if (step === 2) {
+        // Displays
+        const $displays = $(dialog).find('[name="displayGroupIds[]"]');
+        if (!(Array.isArray($displays.val()) && $displays.val().length > 0)) {
+          errorMessage = translations.schedule.stepWizard.error.displays;
+          $displays.parents('.form-group').addClass('has-error');
+          isValid = false;
+        }
+      } else if (step === 3) {
+        // Time
+        const daypartIdVal = $(dialog).find('#dayPartId').val();
+        const relativeTimeChecked =
+          $(dialog).find('#relativeTime').is(':checked');
+        const $fromDt = $(dialog).find('#fromDt');
+        const $toDt = $(dialog).find('#toDt');
+        const $hours = $(dialog).find('#hours');
+        const $minutes = $(dialog).find('#minutes');
+        const eventType = $(dialog).find('#eventTypeId').val();
+
+        if (daypartIdVal === '1') {
+          // Custom
+          if (!relativeTimeChecked) {
+            if ($fromDt.val() === '') {
+              errorMessage = translations.schedule.stepWizard.error.timeStart;
+              $fromDt.parents('.form-group').addClass('has-error');
+              isValid = false;
+            }
+
+            // Command doesn't need end date
+            if ($toDt.val() === '' && eventType != 2) {
+              errorMessage = translations.schedule.stepWizard.error.timeEnd;
+              $toDt.parents('.form-group').addClass('has-error');
+              isValid = false;
+            }
+          } else {
+            // Relative time
+            if ($hours.val() === '' && $minutes.val() === '') {
+              errorMessage =
+                translations.schedule.stepWizard.error.relativeTime;
+              $hours.parents('.form-group').addClass('has-error');
+              $minutes.parents('.form-group').addClass('has-error');
+              isValid = false;
+            }
+          }
+        } else if (daypartIdVal != '2') {
+          // Daypart
+          if ($fromDt.val() === '') {
+            errorMessage = translations.schedule.stepWizard.error.timeStart;
+            $fromDt.parents('.form-group').addClass('has-error');
+            isValid = false;
+          }
+        }
+      }
+
+      // Show form error
+      if (!isValid) {
+        SystemMessageInline(errorMessage, dialog);
+      }
+
+      return isValid;
+    };
+
+    const $navListItems =
+      $dialog.find('div.stepwizard-row div.stepwizard-step a');
+    const $allWells = $dialog.find('.stepwizard-content');
+    const isAddForm = $dialog.find('form').is('#scheduleAddForm');
+    const $modalFooter = $dialog.find('.modal-footer');
+    const $saveButton = $dialog.find('.save-button');
+
+    $navListItems.on('click', function(e) {
+      e.preventDefault();
+      const $target = $($(e.currentTarget).attr('href'));
+      const $item = $(e.currentTarget);
+
+      if (!$item.attr('disabled') && !$item.hasClass('btn-success')) {
+        // Set all step links to inactive
+        $navListItems
+          .removeClass('btn-success')
+          .addClass('btn-default');
+
+        // Activate this specific one
+        $item.addClass('btn-success');
+
+        // Hide all the panels and show this specific one
+        $allWells.hide();
+        $target.show();
+        $target.find('input:eq(0)').focus();
+
+        // Set the active panel on the links
+        stepWizard.data('active', $target.prop('id'));
+
+        // Is the next action to finish?
+        // Only for add form
+        if (isAddForm) {
+          if ($target.data('next') === 'finished') {
+            $nextButton.hide();
+            $saveButton.show();
+          } else {
+            $nextButton.show();
+            $saveButton.hide();
+          }
+        }
+      }
+    });
+
+    const $deleteButton =
+      $('<a id="scheduleDeleteButton" class="btn btn-danger">')
+        .html(translations.schedule.stepWizard.delete)
+        .on('click', function(e) {
+          e.preventDefault();
+          XiboSwapDialog($(dialog).find('form').data('deleteUrl'));
+        });
+    $modalFooter.prepend($deleteButton);
+
+    const $nextButton =
+      $('<a id="schedule-steper-next-button" class="btn btn-primary">')
+        .html(translations.schedule.stepWizard.next)
+        .on('click', function(e) {
+          e.preventDefault();
+          const steps = $(dialog).find('.stepwizard');
+          const curStep = $(dialog).find('#' + steps.data('active'));
+          // If sync event and step 1, move to step 3
+          const nextStep =
+          (
+            $(curStep).data('step') === 1 &&
+            $('#eventTypeId', dialog).val() === '9'
+          ) ?
+            'schedule-step-3' :
+            curStep.data('next');
+          const nextStepWizard =
+            steps.find('a[href=\'#' + nextStep + '\']');
+
+          // Validate current step first
+          if (validateStep(curStep.data('step'))) {
+            nextStepWizard.removeAttr('disabled').trigger('click');
+          }
+        });
+    $modalFooter.append($nextButton);
+
+    if (isAddForm) {
+      // Hide save and delete button for add form
+      $saveButton.hide();
+      $deleteButton.hide();
+    } else {
+      // Hide next button for edit form
+      $nextButton.hide();
+    }
+  }
 
   // geo schedule
   const $geoAware = $('#isGeoAware');
@@ -1109,7 +1380,7 @@ window.setupScheduleForm = function(dialog) {
 
   shareOfVoicePercentage.on('change paste keyup', function() {
     const percentage = shareOfVoicePercentage.val();
-    const conversion = Math.round((3600 * percentage) / 100);
+    const conversion = Math.round((3600 * Number(percentage)) / 100);
     shareOfVoice.val(conversion);
   });
 
@@ -1222,7 +1493,7 @@ window.setupScheduleForm = function(dialog) {
 
   // Post processing on the schedule-edit form.
   const $scheduleEditForm =
-    $(dialog).find('#scheduleEditForm, #scheduleEditSyncForm');
+    $(dialog).find('#scheduleEditForm');
   if ($scheduleEditForm.length > 0) {
     // Add a button for duplicating this event
     let $button = $('<button>').addClass('btn btn-info')
@@ -1437,6 +1708,7 @@ const configReminderFields = function(dialog) {
 const processScheduleFormElements = function(el, dialog) {
   const fieldVal = el.val();
   const relativeTime = $('#relativeTime').is(':checked');
+  const isAddForm = $(dialog).find('form').is('#scheduleAddForm');
   let endTimeControlDisplay;
   let startTimeControlDisplay;
   let relativeTimeControlDisplay;
@@ -1478,13 +1750,14 @@ const processScheduleFormElements = function(el, dialog) {
           fieldVal == 6 ||
           fieldVal == 7 ||
           fieldVal == 8 ||
+          fieldVal == 9 ||
           fieldVal == 10
 
         ) ? 'none' : '';
       endTimeControlDisplay = (fieldVal == 2 || relativeTime) ? 'none' : '';
       startTimeControlDisplay = (relativeTime && fieldVal != 2) ? 'none' : '';
       const dayPartControlDisplay = (fieldVal == 2) ? 'none' : '';
-      let commandControlDisplay = (fieldVal == 2) ? '' : 'none';
+      const commandControlDisplay = (fieldVal == 2) ? '' : 'none';
       const interruptControlDisplay = (fieldVal == 4) ? '' : 'none';
       const actionControlDisplay = (fieldVal == 6) ? '' : 'none';
       const maxPlaysControlDisplay =
@@ -1497,6 +1770,8 @@ const processScheduleFormElements = function(el, dialog) {
         (fieldVal == 2 || !relativeTime) ? 'none' : '';
       relativeTimeCheckboxDisplay = (fieldVal == 2) ? 'none' : '';
       const dataConnectorDisplay = fieldVal == 10 ? '' : 'none';
+      const syncGroupDisplay = fieldVal == 9 ? '' : 'none';
+      const displayGroupDisplay = fieldVal == 9 ? 'none' : '';
 
       $('.layout-control', dialog).css('display', layoutControlDisplay);
       $('.endtime-control', dialog).css('display', endTimeControlDisplay);
@@ -1507,6 +1782,39 @@ const processScheduleFormElements = function(el, dialog) {
       $('.action-control', dialog).css('display', actionControlDisplay);
       $('.max-plays-control', dialog).css('display', maxPlaysControlDisplay);
       $('.media-control', dialog).css('display', mediaScheduleControlDisplay);
+
+      // Hide step 2 ( Displays for sync event )
+      if (fieldVal == 9) {
+        // Hide step 2
+        $('[href="#schedule-step-2"]', dialog).parent().hide();
+
+        // Re-number step 3 and 4
+        $('[href="#schedule-step-3"]', dialog).text(2);
+        $('[href="#schedule-step-4"]', dialog).text(3);
+
+        // Clear display groups for other events to avoid clashing with
+        // display groups on sync group
+        $('[name="displayGroupIds[]"]', dialog).val('').trigger('change');
+      } else {
+        // Show step 2
+        $('[href="#schedule-step-2"]', dialog).parent().show();
+
+        // Re-number step 3 and 4
+        $('[href="#schedule-step-3"]', dialog).text(3);
+        $('[href="#schedule-step-4"]', dialog).text(4);
+
+        // If event type is not sync event, clear sync group
+        // and clear sync layouts
+        $('#syncGroupId', dialog).val('').trigger('change');
+        $('#content-selector tbody', dialog).html('');
+      }
+
+      $('.sync-group-control', dialog).css('display', syncGroupDisplay);
+
+      if (fieldVal != 9 ) {
+        $('.sync-group-content-selector', dialog).css('display', 'none');
+      }
+      $('.display-group-control', dialog).css('display', displayGroupDisplay);
       $('.playlist-control', dialog)
         .css('display', playlistScheduleControlDisplay);
       $('.media-playlist-control', dialog).css(
@@ -1521,6 +1829,11 @@ const processScheduleFormElements = function(el, dialog) {
       // action event type
       if (fieldVal === 6) {
         $('.displayOrder-control', dialog).css('display', 'none');
+      }
+
+      // Hide preview if not needed
+      if ([1, 2, 3, 4, 5, 7, 8].indexOf(Number(fieldVal)) === -1) {
+        $('#previewButton', dialog).closest('.preview-button-container').hide();
       }
 
       // If the fieldVal is 2 (command)
@@ -1561,6 +1874,14 @@ const processScheduleFormElements = function(el, dialog) {
         // Load Layouts only
         searchIsLayoutSpecific = 1;
 
+        // If it was campaign field, reset dropdown
+        if (
+          $layoutControl.children('label').text() ===
+          $campaignSelect.data('transCampaign')
+        ) {
+          $layoutControl.find('#campaignId').val('').trigger('change');
+        }
+
         // Change Label and Help text when Layout event type is selected
         $layoutControl.children('label')
           .text($campaignSelect.data('transLayout'));
@@ -1569,6 +1890,14 @@ const processScheduleFormElements = function(el, dialog) {
       } else {
         // Load Campaigns only
         searchIsLayoutSpecific = 0;
+
+        // If it was a layout field, reset dropdown
+        if (
+          $layoutControl.children('label').text() ===
+          $campaignSelect.data('transLayout')
+        ) {
+          $layoutControl.find('#campaignId').val('').trigger('change');
+        }
 
         // Change Label and Help text when Campaign event type is selected
         $layoutControl.children('label')
@@ -1580,19 +1909,31 @@ const processScheduleFormElements = function(el, dialog) {
       // Set the search criteria
       $campaignSelect.data('searchIsLayoutSpecific', searchIsLayoutSpecific);
 
+      // If add form, we reset the steps > 1 to disabled
+      if (isAddForm) {
+        $('.stepwizard-step', dialog)
+          .find('[href="#schedule-step-2"], ' +
+            '[href="#schedule-step-3"], ' +
+            '[href="#schedule-step-4"]')
+          .attr('disabled', 'disabled');
+      }
+
       break;
 
     case 'dayPartId':
-      if (!el.is(':visible')) {
-        return;
-      }
-
       const meta = el.find('option[value=' + fieldVal + ']').data();
 
       endTimeControlDisplay =
-        (meta.isCustom === 0 || relativeTime) ? 'none' : '';
+        (
+          meta.isCustom === 0 ||
+          relativeTime ||
+          $('#eventTypeId', dialog).val() == 2
+        ) ? 'none' : '';
       startTimeControlDisplay =
-        (meta.isAlways === 1 || relativeTime) ? 'none' : '';
+        (
+          meta.isAlways === 1 ||
+          (relativeTime && meta.isCustom === 1)
+        ) ? 'none' : '';
       const repeatsControlDisplay = (meta.isAlways === 1) ? 'none' : '';
       const reminderControlDisplay = (meta.isAlways === 1) ? 'none' : '';
       relativeTimeControlDisplay =
@@ -1613,6 +1954,17 @@ const processScheduleFormElements = function(el, dialog) {
       $reminder.css('display', reminderControlDisplay);
       $relative.css('display', relativeTimeControlDisplay);
       $relativeCheckbox.css('display', relativeTimeCheckboxDisplay);
+
+      // If repeats and reminders tab are opened, revert to General if hidden
+      if (
+        meta.isAlways === 1 &&
+        (
+          $repeats.find('.nav-link.active') ||
+          $reminder.find('.nav-link.active')
+        )
+      ) {
+        $('li .nav-link[href="#general"]', dialog).tab('show');
+      }
 
       // Dayparts only show the start control
       if (meta.isAlways === 0 && meta.isCustom === 0) {
@@ -1664,10 +2016,10 @@ const processScheduleFormElements = function(el, dialog) {
 
       const layoutCodeControl =
         (fieldVal == 'navLayout' && el.is(':visible')) ? '' : 'none';
-      commandControlDisplay = (fieldVal == 'command') ? '' : 'none';
+      const commandControlDisplay2 = (fieldVal == 'command') ? '' : 'none';
 
       $('.layout-code-control', dialog).css('display', layoutCodeControl);
-      $('.command-control', dialog).css('display', commandControlDisplay);
+      $('.command-control', dialog).css('display', commandControlDisplay2);
 
       break;
     case 'relativeTime':
@@ -1709,6 +2061,13 @@ const processScheduleFormElements = function(el, dialog) {
 
       break;
   }
+
+  // If there's no more than 1 tab in step 4, hide tabs
+  $('#schedule-step-4', dialog).find('.nav-tabs').toggle(
+    $('#schedule-step-4', dialog).find('.nav-tabs li').filter((_idx, el) => {
+      return ($(el).css('display') != 'none');
+    }).length > 1,
+  );
 };
 
 const duplicateScheduledEvent = function($scheduleForm) {
@@ -1718,6 +2077,9 @@ const duplicateScheduledEvent = function($scheduleForm) {
 
   // Remove the duplicate button
   $('#scheduleDuplateButton').remove();
+
+  // Remove the delete button
+  $('#scheduleDeleteButton').remove();
 
   toastr.info($scheduleForm.data().duplicatedMessage);
 };
@@ -2295,6 +2657,7 @@ const setupSelectForSchedule = function(dialog) {
     }
   });
 
+  // Sync group
   $('#syncGroupId', dialog).on('select2:select', function(event) {
     const $target = $(event.currentTarget);
     const eventId =
@@ -2321,7 +2684,7 @@ const setupSelectForSchedule = function(dialog) {
             );
           }
           const $contentSelector = $('#content-selector');
-          $contentSelector.removeClass('d-none');
+          $contentSelector.show();
 
           dialog.find('#contentSelectorTable tbody')
             .html('').append(

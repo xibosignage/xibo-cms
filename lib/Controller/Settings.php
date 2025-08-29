@@ -475,11 +475,6 @@ class Settings extends Base
             $this->getConfig()->changeSetting('PHONE_HOME_DATE', $sanitizedParams->getInt('PHONE_HOME_DATE'));
         }
 
-        if ($this->getConfig()->isSettingEditable('PHONE_HOME_URL')) {
-            $this->handleChangedSettings('PHONE_HOME_URL', $this->getConfig()->getSetting('PHONE_HOME_URL'), $sanitizedParams->getString('PHONE_HOME_URL'), $changedSettings);
-            $this->getConfig()->changeSetting('PHONE_HOME_URL', $sanitizedParams->getString('PHONE_HOME_URL'));
-        }
-
         if ($this->getConfig()->isSettingEditable('SCHEDULE_LOOKAHEAD')) {
             $this->handleChangedSettings('SCHEDULE_LOOKAHEAD', $this->getConfig()->getSetting('SCHEDULE_LOOKAHEAD'), $sanitizedParams->getCheckbox('SCHEDULE_LOOKAHEAD'), $changedSettings);
             $this->getConfig()->changeSetting('SCHEDULE_LOOKAHEAD', $sanitizedParams->getCheckbox('SCHEDULE_LOOKAHEAD'));

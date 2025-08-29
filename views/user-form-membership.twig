@@ -57,7 +57,7 @@
                         <div class="FilterDiv card-body" id="Filter">
                             <form class="form-inline" id="userGroupMembersFilter">
                                 {% set title %}{% trans "Name" %}{% endset %}
-                                {{ inline.input("group", title) }}
+                                {{ inline.input("userGroup", title) }}
                                 {{ inline.hidden("userIdMember", user.userId) }}
                             </form>
                         </div>

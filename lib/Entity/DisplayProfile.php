@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -162,7 +162,7 @@ class DisplayProfile implements \JsonSerializable
      * @return mixed
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function getSetting($setting, $default = null, $fromDefault = false)
+    public function getSetting($setting, $default = null, $fromDefault = false): mixed
     {
         $this->load();
 
@@ -170,7 +170,7 @@ class DisplayProfile implements \JsonSerializable
 
         foreach ($configs as $config) {
             if ($config['name'] == $setting || $config['name'] == ucfirst($setting)) {
-                $default = array_key_exists('value', $config) ? $config['value'] : ((array_key_exists('default', $config)) ? $config['default'] : $default);
+                $default = $config['value'] ?? ($config['default'] ?? $default);
                 break;
             }
         }
@@ -247,7 +247,7 @@ class DisplayProfile implements \JsonSerializable
      * @param $override
      * @return array
      */
-    private function mergeConfigs($default, $override)
+    private function mergeConfigs($default, $override): array
     {
         foreach ($default as &$defaultItem) {
             for ($i = 0; $i < count($override); $i++) {
@@ -347,8 +347,11 @@ class DisplayProfile implements \JsonSerializable
      * @param array $options
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function load($options = [])
+    public function load($options = []): void
     {
+        $this->getLog()->debug('load: Loading display profile, type: ' . $this->clientType
+            . ' id: ' . $this->displayProfileId);
+
         $options = array_merge([
             'loadConfig' => true,
             'loadCommands' => true
@@ -360,8 +363,6 @@ class DisplayProfile implements \JsonSerializable
 
         // Load in our default config from this class, based on the client type we are
         $this->configDefault = $this->displayProfileFactory->loadForType($this->getClientType());
-
-        $this->getLog()->debug('Config Default is: ' . json_encode($this->configDefault, JSON_PRETTY_PRINT) . ' for ' . $this->getClientType());
 
         // Get our combined config
         $this->configCombined = [];
@@ -567,7 +568,7 @@ class DisplayProfile implements \JsonSerializable
     /**
      * @return array
      */
-    public function getProfileConfig()
+    public function getProfileConfig(): array
     {
         return $this->configCombined;
     }

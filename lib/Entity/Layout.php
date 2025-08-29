@@ -1101,9 +1101,9 @@ class Layout implements \JsonSerializable
 
         // Validation
         // Layout created from media follows the media character limit
-        if (empty($this->layout) || strlen($this->layout) > 50 || strlen($this->layout) < 1) {
+        if (empty($this->layout) || strlen($this->layout) > 100 || strlen($this->layout) < 1) {
             throw new InvalidArgumentException(
-                __('Layout Name must be between 1 and 50 characters'),
+                __('Layout Name must be between 1 and 100 characters'),
                 'name'
             );
         }
@@ -1278,7 +1278,7 @@ class Layout implements \JsonSerializable
         if ($this->backgroundImageId != 0) {
             // Get stored as
             $media = $this->mediaFactory->getById($this->backgroundImageId);
-            if ($media->released === 1) {
+            if ($media->released === 0) {
                 $this->pushStatusMessage(sprintf(
                     __('%s set as the Layout background image is pending conversion'),
                     $media->name
@@ -1314,6 +1314,9 @@ class Layout implements \JsonSerializable
 
         // merge regions and drawers into one array and go through it.
         $allRegions = array_merge($this->regions, $this->drawers);
+
+        // Used to identify Layouts which only have Canvas with global elements
+        $isCanvasOnlyRegion = true;
 
         foreach ($allRegions as $region) {
             /* @var Region $region */
@@ -1371,10 +1374,13 @@ class Layout implements \JsonSerializable
             if ($region->type === 'canvas') {
                 $widget = null;
                 $widgetDuration = 0;
+
                 foreach ($region->getPlaylist()->setModuleFactory($this->moduleFactory)->widgets as $item) {
                     // Pull out the global widget, if we have one (we should)
                     if ($item->type === 'global') {
                         $widget = $item;
+                    } else {
+                        $isCanvasOnlyRegion = false;
                     }
 
                     // Get the highest duration.
@@ -1397,6 +1403,8 @@ class Layout implements \JsonSerializable
                     $widgets = [$widget];
                 }
             } else {
+                $isCanvasOnlyRegion = false;
+
                 $widgets = $region->getPlaylist()->setModuleFactory($this->moduleFactory)->expandWidgets();
             }
 
@@ -1447,6 +1455,15 @@ class Layout implements \JsonSerializable
                     // Make sure this Widget expires immediately so that the other Regions can be the leaders when
                     // it comes to expiring the Layout
                     $widgetDuration = Widget::$widgetMinDuration;
+                }
+
+                // Layouts which only have Canvas with global elements
+                if ($region->type == 'canvas'
+                    && $widget->type == 'global'
+                    && $isCanvasOnlyRegion
+                ) {
+                    $widget->calculatedDuration = 10;
+                    $widgetDuration = $widget->calculatedDuration;
                 }
 
                 if ($region->isDrawer === 0) {
@@ -1846,19 +1863,33 @@ class Layout implements \JsonSerializable
                 $widgetValidator->validate($module, $widget, 'status');
             }
 
-            // Is this module file based? If so, check its released status
-            if ($module->regionSpecific == 0 && $widget->getPrimaryMediaId() != 0) {
-                $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
-                if ($media->released == 0) {
-                    throw new GeneralException(sprintf(
-                        __('%s is pending conversion'),
-                        $media->name
-                    ));
-                } else if ($media->released == 2) {
-                    throw new GeneralException(sprintf(
-                        __('%s is too large. Please ensure that none of the images in your layout are larger than your Resize Limit on their longest edge.'),//phpcs:ignore
-                        $media->name
-                    ));
+            // We need to make sure that all media in the widget have a valid release status
+            // Get all primary media IDs for this widget (audio IDs are excluded)
+            $mediaIds = $widget->getPrimaryMedia();
+
+            // Only validate if we actually have media IDs
+            if (!empty($mediaIds)) {
+                // Inspect each media item individually to validate its released status
+                foreach ($mediaIds as $mediaId) {
+                    $media = $this->mediaFactory->getById($mediaId);
+                    if ($media->released == 0) {
+                        throw new GeneralException(sprintf(
+                            __('%s is pending conversion'),
+                            $media->name
+                        ));
+                    } else if ($media->released == 2) {
+                        if ($media->mediaType === 'image') {
+                            throw new GeneralException(sprintf(
+                                __('%s is too large. Please ensure that none of the images in your layout are larger than your Resize Limit on their longest edge.'),//phpcs:ignore
+                                $media->name
+                            ));
+                        } else {
+                            throw new GeneralException(sprintf(
+                                __('%s failed validation and cannot be published.'),
+                                $media->name
+                            ));
+                        }
+                    }
                 }
             }
 

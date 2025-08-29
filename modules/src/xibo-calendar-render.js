@@ -266,14 +266,7 @@ jQuery.fn.extend({
       filteredEvents.forEach((event) => {
         const startDate = moment(event.startDate).startOf('date');
 
-        // Check if event is an all day
-        // (startDate 00:00 day 1, endDate 00:00 day after last day)
-        const allDayEvent =
-          moment(event.startDate).isSame(startDate) &&
-          moment(event.endDate).isSame(moment(event.endDate).startOf('date'));
-        event.allDay = allDayEvent;
-
-        const endDate = allDayEvent ?
+        const endDate = event.isAllDay ?
           moment(event.endDate).startOf('date').subtract(1, 'd') :
           moment(event.endDate).startOf('date');
 
@@ -325,7 +318,7 @@ jQuery.fn.extend({
       let eventDuration = 1;
 
       // Mark event as an all day
-      if (event.allDay) {
+      if (event.isAllDay) {
         $newEvent.addClass('all-day');
       }
 
@@ -340,7 +333,7 @@ jQuery.fn.extend({
         // Draw only on the first day of the event
         // or at the beggining of the weeks when it breaks
         if (currentDayOfEvent == 1 || weekDay == 1) {
-          if (currentDayOfEvent == 1 && !event.allDay) {
+          if (currentDayOfEvent == 1 && !event.isAllDay) {
             htmlToAdd =
               '<div class="event-time">' +
               moment(event.startDate).format(TIME_FORMAT) +
@@ -381,7 +374,7 @@ jQuery.fn.extend({
           '<div class="event-summary">' + event.summary + '</div>';
 
         // Mark event as an all day
-        if (event.allDay) {
+        if (event.isAllDay) {
           $newEvent.addClass('all-day');
         } else {
           htmlToAdd =
@@ -398,7 +391,7 @@ jQuery.fn.extend({
       }
 
       // All day or multi day events
-      if (eventTotalDays > 1 || event.allDay) {
+      if (eventTotalDays > 1 || event.isAllDay) {
         // If there's at least one daily event
         // enable the container in the calendar view
         $('.calendar-container').addClass('show-all-day-events');
@@ -748,7 +741,7 @@ jQuery.fn.extend({
         let htmlToAdd = '';
 
         // Add time
-        if (!event.allDay) {
+        if (!event.isAllDay) {
           if (currentDayOfEvent == 1) {
             htmlToAdd +=
               '<span class="event-start-time">' +
@@ -787,7 +780,7 @@ jQuery.fn.extend({
         $newEvent.html(htmlToAdd);
 
         // Append event to container
-        if (event.allDay) {
+        if (event.isAllDay) {
           $newEvent.prependTo($dayContainerEvents);
         } else {
           $newEvent.appendTo($dayContainerEvents);
@@ -800,15 +793,7 @@ jQuery.fn.extend({
       addEventsToCalendar = function(events) {
         events.forEach((event) => {
           const startDate = moment(event.startDate).startOf('date');
-
-          // Check if event is an all day
-          // (startDate 00:00 day 1, endDate 00:00 day after last day)
-          const allDayEvent =
-            moment(event.startDate).isSame(startDate) &&
-            moment(event.endDate).isSame(moment(event.endDate).startOf('date'));
-          event.allDay = allDayEvent;
-
-          const endDate = allDayEvent ?
+          const endDate = event.isAllDay ?
             moment(event.endDate).startOf('date').subtract(1, 'd') :
             moment(event.endDate).startOf('date');
 
@@ -1040,14 +1025,7 @@ jQuery.fn.extend({
         events.forEach((event) => {
           const startDate = moment(event.startDate).startOf('date');
 
-          // Check if event is an all day
-          // (startDate 00:00 day 1, endDate 00:00 day after last day)
-          const allDayEvent =
-            moment(event.startDate).isSame(startDate) &&
-            moment(event.endDate).isSame(moment(event.endDate).startOf('date'));
-          event.allDay = allDayEvent;
-
-          const endDate = allDayEvent ?
+          const endDate = event.isAllDay ?
             moment(event.endDate).startOf('date').subtract(1, 'd') :
             moment(event.endDate).startOf('date');
 
@@ -1261,14 +1239,7 @@ jQuery.fn.extend({
         events.forEach((event) => {
           const startDate = moment(event.startDate).startOf('date');
 
-          // Check if event is an all day
-          // (startDate 00:00 day 1, endDate 00:00 day after last day)
-          const allDayEvent =
-            moment(event.startDate).isSame(startDate) &&
-            moment(event.endDate).isSame(moment(event.endDate).startOf('date'));
-          event.allDay = allDayEvent;
-
-          const endDate = allDayEvent ?
+          const endDate = event.isAllDay ?
             moment(event.endDate).startOf('date').subtract(1, 'd') :
             moment(event.endDate).startOf('date');
 
@@ -1310,7 +1281,7 @@ jQuery.fn.extend({
         let eventDuration = 1;
 
         // Mark event as an all day
-        if (event.allDay) {
+        if (event.isAllDay) {
           $newEvent.addClass('all-day');
         }
 
@@ -1325,7 +1296,7 @@ jQuery.fn.extend({
           // Draw only on the first day of the event
           // or at the beggining of the weeks when it breaks
           if (currentDayOfEvent == 1 || weekDay == 1) {
-            if (currentDayOfEvent == 1 && !event.allDay) {
+            if (currentDayOfEvent == 1 && !event.isAllDay) {
               htmlToAdd =
                 '<span class="event-time">' +
                 moment(event.startDate).format(TIME_FORMAT) +
@@ -1366,7 +1337,7 @@ jQuery.fn.extend({
             '<span class="event-summary">' + event.summary + '</span>';
 
           // Mark event as an all day
-          if (event.allDay) {
+          if (event.isAllDay) {
             $newEvent.addClass('all-day');
           } else {
             htmlToAdd =

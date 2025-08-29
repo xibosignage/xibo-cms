@@ -743,7 +743,7 @@ class User implements \JsonSerializable, UserEntityInterface
         if (!v::alnum('_.-')->length(1, 50)->validate($this->userName) && !v::email()->validate($this->userName))
             throw new InvalidArgumentException(__('User name must be between 1 and 50 characters.'), 'userName');
 
-        if (!v::intType()->validate($this->libraryQuota))
+        if (!empty($this->libraryQuota) && !v::intType()->validate($this->libraryQuota))
             throw new InvalidArgumentException(__('Library Quota must be a whole number.'), 'libraryQuota');
 
         if (!empty($this->email) && !v::email()->validate($this->email))
@@ -967,7 +967,6 @@ class User implements \JsonSerializable, UserEntityInterface
         // This is essentially a dirty edit (i.e. we don't touch the group assignments)
         $group = $this->userGroupFactory->getById($this->groupId);
         $group->group = $this->userName;
-        $group->libraryQuota = $this->libraryQuota;
         $group->isSystemNotification = $this->isSystemNotification;
         $group->isDisplayNotification = $this->isDisplayNotification;
         $group->isCustomNotification = $this->isCustomNotification;
@@ -976,6 +975,13 @@ class User implements \JsonSerializable, UserEntityInterface
         $group->isLibraryNotification = $this->isLibraryNotification;
         $group->isReportNotification = $this->isReportNotification;
         $group->isScheduleNotification = $this->isScheduleNotification;
+
+        // Do not update libraryQuota unless explicitly provided.
+        // This preserves the current value instead of resetting it to null or 0.
+        if (!empty($this->libraryQuota)) {
+            $group->libraryQuota = $this->libraryQuota;
+        }
+
         $group->save(['linkUsers' => false]);
     }
 

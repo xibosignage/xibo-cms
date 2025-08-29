@@ -380,6 +380,7 @@ class WidgetHtmlRenderer
                         1,
                         'bundle.min.js',
                         'bundle',
+                        true,
                     );
                 } else {
                     $url = 'bundle.min.js';
@@ -399,6 +400,7 @@ class WidgetHtmlRenderer
                         1,
                         'fonts.css',
                         'fontCss',
+                        true,
                     );
                 } else {
                     $url = 'fonts.css';
@@ -446,7 +448,9 @@ class WidgetHtmlRenderer
                             $cdnUrl,
                             'M',
                             $value[1],
-                            $storedAs[$value[1]]
+                            $storedAs[$value[1]],
+                            null,
+                            true,
                         );
                     } else {
                         $url = $storedAs[$value[1]];
@@ -476,6 +480,7 @@ class WidgetHtmlRenderer
                             $asset->id,
                             $asset->getFilename(),
                             'asset',
+                            true,
                         );
                     } else {
                         $url = $asset->getFilename();
@@ -505,6 +510,7 @@ class WidgetHtmlRenderer
                                 $asset->id,
                                 $asset->getFilename(),
                                 'asset',
+                                true,
                             );
                         } else {
                             $url = $asset->getFilename();

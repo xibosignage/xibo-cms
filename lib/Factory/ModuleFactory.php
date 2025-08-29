@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -416,7 +416,18 @@ class ModuleFactory extends BaseFactory
     {
         $this->getLog()->debug('ModuleFactory: getValidExtensions');
         $filterBy = $this->getSanitizer($filterBy);
-        $typeFilter = $filterBy->getString('type');
+
+        // Do we allow media type changes?
+        $isAllowMediaTypeChange = $filterBy->getCheckbox('allowMediaTypeChange');
+
+        if ($isAllowMediaTypeChange) {
+            // Restrict to any file based media type (i.e. any valid extension)
+            $typeFilter = null;
+        } else {
+            // Restrict to type
+            $typeFilter = $filterBy->getString('type');
+        }
+
         $extensions = [];
         foreach ($this->load() as $module) {
             if ($typeFilter !== null && $module->type !== $typeFilter) {

@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2019 Xibo Signage Ltd
+/*
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -20,8 +20,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Twig;
+
 use Twig\Compiler;
 use Twig\Node\CheckToStringNode;
 use Twig\Node\Expression\AbstractExpression;
@@ -32,11 +32,19 @@ use Twig\Node\Expression\TempNameExpression;
 use Twig\Node\Node;
 use Twig\Node\PrintNode;
 
-
+/**
+ * Twig Extension for supporting gettext
+ */
 class TransNode extends Node
 {
-    public function __construct(Node $body, Node $plural = null, AbstractExpression $count = null, Node $notes = null, $lineno, $tag = null)
-    {
+    public function __construct(
+        ?Node $body,
+        ?Node $plural = null,
+        ?AbstractExpression $count = null,
+        ?Node $notes = null,
+        int $lineno = 0,
+        $tag = null
+    ) {
         $nodes = ['body' => $body];
         if (null !== $count) {
             $nodes['count'] = $count;

@@ -570,16 +570,28 @@ class Media implements \JsonSerializable
             'fileName' => $this->fileName,
         ];
 
-        // Should we bring back this items parent?
+        // Should we bring back this item's parent?
         try {
-            // Revert
             $parentMedia = $this->mediaFactory->getParentById($this->mediaId);
-            $parentMedia->isEdited = 0;
-            $parentMedia->parentId = null;
-            $parentMedia->save(['validate' => false, 'audit' => false]);
 
-            $auditMessage .= ' and reverted old revision';
-            $auditContext['revertedMediaId'] = $parentMedia->mediaId;
+            // If the parent media is expired, delete it directly
+            // Or if the current media is expired, delete the parent regardless of its own expiration
+            if ((!empty($parentMedia->expires) && $parentMedia->expires < Carbon::now()->timestamp) ||
+                (!empty($this->expires) && $this->expires < Carbon::now()->timestamp)
+            ) {
+                $parentMedia->delete();
+
+                $auditMessage .= ' and deleted old revision';
+                $auditContext['deletedParentMediaId'] = $parentMedia->mediaId;
+            } else {
+                // Otherwise, revert the parent media
+                $parentMedia->isEdited = 0;
+                $parentMedia->parentId = null;
+                $parentMedia->save(['validate' => false, 'audit' => false]);
+
+                $auditMessage .= ' and reverted old revision';
+                $auditContext['revertedMediaId'] = $parentMedia->mediaId;
+            }
         } catch (NotFoundException) {
             // No parent, this is fine.
         }

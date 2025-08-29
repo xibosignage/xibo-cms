@@ -920,7 +920,7 @@ lD.welcomeScreen = function() {
         className: 'btn-success btn-bb-checkout',
         callback: function(res) {
           $(res.currentTarget)
-            .append('&nbsp;<i class="fa fa-cog fa-spin"></i>');
+            .append('<i class="fa fa-cog fa-spin ml-1"></i>');
 
           // Unselect objects ( select layout )
           lD.selectObject();
@@ -983,7 +983,7 @@ lD.showCheckoutScreen = function() {
         className: 'btn-success btn-bb-checkout',
         callback: function(res) {
           $(res.currentTarget)
-            .append('&nbsp;<i class="fa fa-cog fa-spin"></i>');
+            .append('<i class="fa fa-cog fa-spin ml-1"></i>');
 
           // Unselect objects ( select layout )
           lD.selectObject();
@@ -1156,6 +1156,7 @@ lD.loadFormFromAPI = function(
           if (res.buttons[button] != 'XiboDialogClose()') {
             let buttonType = 'btn-white';
             let mainButtonAction = false;
+            let customClass = '';
 
             if (
               button === translations.save ||
@@ -1169,25 +1170,46 @@ lD.loadFormFromAPI = function(
 
             const url = res.buttons[button];
 
+            // For schedule add form, add class to save button
+            if (
+              res.data.addForm &&
+              res.callBack === 'setupScheduleForm' &&
+              button === translations.save
+            ) {
+              customClass = ' save-button';
+            }
+
             // Only add button if it's not in the buttons to remove list
             if (buttonsToRemove.indexOf(button) == -1) {
               generatedButtons[button] = {
                 label: button,
-                className: buttonType + ' btn-bb-' + button,
+                className: buttonType + ' btn-bb-' + button + customClass,
                 callback: function(ev) {
-                  // Show loading cog
-                  $(ev.currentTarget).append(
-                    '&nbsp;<i class="fa fa-cog fa-spin"></i>',
-                  );
+                  const $btn = $(ev.currentTarget);
 
-                  // Call global function by the function name
-                  if (mainActionCallback != null && mainButtonAction) {
-                    eval(mainActionCallback);
+                  if (
+                    $btn.hasClass('disabled')
+                  ) {
+                    // Don't run method, and don't close modal
+                    return true;
                   } else {
-                    eval(url);
-                  }
+                    // Show loading cog
+                    $btn.append(
+                      '<i class="fa fa-cog fa-spin ml-1"></i>',
+                    );
 
-                  return false;
+                    // Call global function by the function name
+                    if (mainActionCallback != null && mainButtonAction) {
+                      eval(mainActionCallback);
+                    } else {
+                      eval(url);
+                    }
+
+                    // Disable button, and set timeout to re-enable
+                    $btn.addClass('disabled');
+
+                    return false;
+                  }
                 },
               };
             }
@@ -2624,6 +2646,9 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
               const onHide = function(numUploads) {
                 if (numUploads > 0) {
                   getTemplateAndAdd();
+                } else {
+                  // Mark as item added to revolve promise
+                  itemAdded();
                 }
               };
 
@@ -4840,7 +4865,7 @@ lD.showUnlockScreen = function() {
         className: 'btn-info btn-bb-unlock',
         callback: function(res) {
           $(res.currentTarget).append(
-            '&nbsp;<i class="fa fa-cog fa-spin"></i>',
+            '<i class="fa fa-cog fa-spin ml-1"></i>',
           );
 
           lD.unlockLayout();

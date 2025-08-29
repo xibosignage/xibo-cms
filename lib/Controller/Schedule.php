@@ -156,7 +156,7 @@ class Schedule extends Base
         $data = [
             'defaultLat' => $defaultLat,
             'defaultLong' => $defaultLong,
-            'eventTypes' => \Xibo\Entity\Schedule::getEventTypesGrid(),
+            'eventTypes' => \Xibo\Entity\Schedule::getEventTypes(),
         ];
         
         // Render the Theme and output
@@ -355,7 +355,7 @@ class Schedule extends Base
             }
 
             // Event URL
-            $editUrlWeb = ($this->isSyncEvent($row->eventTypeId)) ? 'schedule.edit.sync.form' : 'schedule.edit.form';
+            $editUrlWeb = 'schedule.edit.form';
             $editUrl = ($this->isApi($request)) ? 'schedule.edit' : $editUrlWeb;
             $url = ($editable) ? $this->urlFor($request, $editUrl, ['id' => $row->eventId]) : '#';
 
@@ -551,9 +551,7 @@ class Schedule extends Base
             if (count($scheduleEvents) > 0) {
                 // Add the link to the schedule
                 if (!$this->isApi($request)) {
-                    $route = $event['eventTypeId'] == \Xibo\Entity\Schedule::$SYNC_EVENT
-                        ? 'schedule.edit.sync.form'
-                        : 'schedule.edit.form';
+                    $route = 'schedule.edit.form';
                     $schedule->setUnmatchedProperty(
                         'link',
                         $this->urlFor($request, $route, ['id' => $schedule->eventId])
@@ -788,8 +786,8 @@ class Schedule extends Base
             'reminders' => [],
             'defaultLat' => $defaultLat,
             'defaultLong' => $defaultLong,
-            'eventTypes' => \Xibo\Entity\Schedule::getEventTypesForm(),
-            'isScheduleNow' => false,
+            'eventTypes' => \Xibo\Entity\Schedule::getEventTypes(),
+            'addForm' => true,
             'relativeTime' => 0,
             'setDisplaysFromFilter' => true,
             'scheduleCriteria' => $criteria,
@@ -799,7 +797,9 @@ class Schedule extends Base
 
         if (!empty($from) && !empty($id)) {
             $formNowData = [
-                'eventTypeId' => $this->getEventTypeId($from),
+                'event' => [
+                    'eventTypeId' => $this->getEventTypeId($from),
+                ],
                 'campaign' => (
                     ($from == 'Campaign' || $from == 'Layout')
                     ? $this->campaignFactory->getById($id)
@@ -810,7 +810,10 @@ class Schedule extends Base
                 'mediaId' => (($from === 'Library') ? $id : null),
                 'playlistId' => (($from === 'Playlist') ? $id : null),
                 'readonlySelect' => !($from == 'DisplayGroup'),
-                'isScheduleNow' => true,
+                'hideEventType' => !($from == 'DisplayGroup'),
+                // If coming from display page, don't show syncEvent type
+                'eventTypes' => \Xibo\Entity\Schedule::getEventTypes((($from === 'DisplayGroup') ? [9] : [])),
+                'addForm' => true,
                 'relativeTime' => 1,
                 'setDisplaysFromFilter' => false,
             ];
@@ -818,7 +821,7 @@ class Schedule extends Base
 
         $formData = array_merge($addFormData, $formNowData);
 
-        $this->getState()->template = 'schedule-form-add';
+        $this->getState()->template = 'schedule-form-edit';
         $this->getState()->setData($formData);
 
         return $this->render($request, $response);
@@ -1399,13 +1402,14 @@ class Schedule extends Base
             'displayGroupIds' => array_map(function ($element) {
                 return $element->displayGroupId;
             }, $schedule->displayGroups),
+            'addForm' => false,
             'reminders' => $scheduleReminders,
             'defaultLat' => $defaultLat,
             'defaultLong' => $defaultLong,
             'recurringEvent' => $schedule->recurrenceType != '',
             'eventStart' => $eventStart,
             'eventEnd' => $eventEnd,
-            'eventTypes' => \Xibo\Entity\Schedule::getEventTypesForm(),
+            'eventTypes' => \Xibo\Entity\Schedule::getEventTypes(),
             'scheduleCriteria' => $criteria,
             'criteriaDefaultCondition' => $criteriaDefaultCondition
         ]);
@@ -2330,7 +2334,7 @@ class Schedule extends Base
                 $displayGroupList = '';
             }
 
-            $eventTypes = \Xibo\Entity\Schedule::getEventTypesGrid();
+            $eventTypes = \Xibo\Entity\Schedule::getEventTypes();
             foreach ($eventTypes as $eventType) {
                 if ($eventType['eventTypeId'] === $event->eventTypeId) {
                     $event->setUnmatchedProperty('eventTypeName', $eventType['eventTypeName']);
@@ -2453,9 +2457,7 @@ class Schedule extends Base
                     'id' => 'schedule_button_edit',
                     'url' => $this->urlFor(
                         $request,
-                        ($this->isSyncEvent($event->eventTypeId))
-                            ? 'schedule.edit.sync.form'
-                            : 'schedule.edit.form',
+                        'schedule.edit.form',
                         ['id' => $event->eventId]
                     ),
                     'dataAttributes' => [
@@ -2648,95 +2650,5 @@ class Schedule extends Base
     private function isSyncEvent($eventTypeId): int
     {
         return ($eventTypeId === \Xibo\Entity\Schedule::$SYNC_EVENT) ? 1 : 0;
-    }
-
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @return Response|ResponseInterface
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
-     * @throws NotFoundException
-     */
-    public function syncForm(Request $request, Response $response): Response|ResponseInterface
-    {
-        // get the default longitude and latitude from CMS options
-        $defaultLat = (float)$this->getConfig()->getSetting('DEFAULT_LAT');
-        $defaultLong = (float)$this->getConfig()->getSetting('DEFAULT_LONG');
-
-        $this->getState()->template = 'schedule-form-sync-add';
-        $this->getState()->setData([
-            'eventTypeId' => \Xibo\Entity\Schedule::$SYNC_EVENT,
-            'dayParts' => $this->dayPartFactory->allWithSystem(['isRetired' => 0]),
-            'defaultLat' => $defaultLat,
-            'defaultLong' => $defaultLong,
-            'reminders' => [],
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return Response|ResponseInterface
-     * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     */
-    public function syncEditForm(Request $request, Response $response, $id): Response|ResponseInterface
-    {
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-        // Recurring event start/end
-        $eventStart = $sanitizedParams->getInt('eventStart', ['default' => 1000]) / 1000;
-        $eventEnd = $sanitizedParams->getInt('eventEnd', ['default' => 1000]) / 1000;
-
-        $schedule = $this->scheduleFactory->getById($id);
-        $schedule->load();
-
-        if (!$this->isEventEditable($schedule)) {
-            throw new AccessDeniedException();
-        }
-
-        // Fix the event dates for display
-        if ($schedule->isAlwaysDayPart()) {
-            $schedule->fromDt = '';
-            $schedule->toDt = '';
-        } else {
-            $schedule->fromDt =
-                Carbon::createFromTimestamp($schedule->fromDt)->format(DateFormatHelper::getSystemFormat());
-            $schedule->toDt =
-                Carbon::createFromTimestamp($schedule->toDt)->format(DateFormatHelper::getSystemFormat());
-        }
-
-        if ($schedule->recurrenceRange != null) {
-            $schedule->recurrenceRange =
-                Carbon::createFromTimestamp($schedule->recurrenceRange)->format(DateFormatHelper::getSystemFormat());
-        }
-
-        // Get all reminders
-        $scheduleReminders = $this->scheduleReminderFactory->query(null, ['eventId' => $id]);
-
-        // get the default longitude and latitude from CMS options
-        $defaultLat = (float)$this->getConfig()->getSetting('DEFAULT_LAT');
-        $defaultLong = (float)$this->getConfig()->getSetting('DEFAULT_LONG');
-
-        $this->getState()->template = 'schedule-form-sync-edit';
-        $this->getState()->setData([
-            'eventTypeId' => \Xibo\Entity\Schedule::$SYNC_EVENT,
-            'event' => $schedule,
-            'dayParts' => $this->dayPartFactory->allWithSystem(['isRetired' => 0]),
-            'defaultLat' => $defaultLat,
-            'defaultLong' => $defaultLong,
-            'eventStart' => $eventStart,
-            'eventEnd' => $eventEnd,
-            'recurringEvent' => $schedule->recurrenceType != '',
-            'reminders' => $scheduleReminders,
-        ]);
-
-        return $this->render($request, $response);
     }
 }

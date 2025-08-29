@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -72,7 +72,7 @@ class ReportResult implements \JsonSerializable
         array $table = [],
         int   $recordsTotal = 0,
         array $chart = [],
-        string $error = null
+        ?string $error = null
     ) {
         $this->metadata = $metadata;
         $this->table = $table;

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -226,23 +226,29 @@ class Applications extends Base
         // if we have scopes in the request, make sure we only add the valid ones.
         // the default scope is all, if it's not set on the Application, $scopes will still be empty here.
         if ($authScopes !== null) {
-            $validScopes = $this->applicationScopeFactory->finalizeScopes($authScopes, $authParams->getGrantTypeId(), $client);
+            $validScopes = $this->applicationScopeFactory->finalizeScopes(
+                $authScopes,
+                $authParams->getGrantTypeId(),
+                $client
+            );
+
             // get all the valid scopes by their ID, we need to do this to present more details on the authorize form.
             foreach ($validScopes as $scope) {
                 $scopes[] = $this->applicationScopeFactory->getById($scope->getIdentifier());
             }
-        }
 
-        // if the request does not contain any valid scopes, default to all scopes assigned to this Application.
-        if (count($scopes) <= 0) {
-            $validScopes = $client->getScopes();
-            foreach ($validScopes as $scope) {
-                $scopes[] = $this->applicationScopeFactory->getById($scope->getIdentifier());
+            if (count($scopes) <= 0) {
+                throw new InvalidArgumentException(
+                    __('This application has not requested access to anything.'),
+                    'authParams'
+                );
             }
+
+            // update scopes in auth request in session to scopes we actually present for approval
+            $authParams->setScopes($validScopes);
         }
 
-        // update scopes in auth request in session to scopes we actually present for approval
-        $authParams->setScopes($validScopes);
+        // Reasert  the auth params.
         $this->session->set('authParams', $authParams);
 
         // Get, show page
@@ -295,9 +301,6 @@ class Applications extends Base
             ),
             new \DateInterval('PT1H')
         );
-
-        // Default scope
-        $server->setDefaultScope('all');
 
         // get oauth User Entity and set the UserId to the current web userId
         $authRequest->setUser($this->getUser());
