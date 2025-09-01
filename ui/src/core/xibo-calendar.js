@@ -1201,7 +1201,10 @@ window.setupScheduleForm = function(dialog) {
         }
       } else if (step === 3) {
         // Time
-        const daypartIdVal = $(dialog).find('#dayPartId').val();
+        const isCustom = $(dialog).find('#dayPartId :selected')
+          .data('isCustom') == 1;
+        const isAlways = $(dialog).find('#dayPartId :selected')
+          .data('isAlways') == 1;
         const relativeTimeChecked =
           $(dialog).find('#relativeTime').is(':checked');
         const $fromDt = $(dialog).find('#fromDt');
@@ -1210,7 +1213,7 @@ window.setupScheduleForm = function(dialog) {
         const $minutes = $(dialog).find('#minutes');
         const eventType = $(dialog).find('#eventTypeId').val();
 
-        if (daypartIdVal === '1') {
+        if (isCustom) {
           // Custom
           if (!relativeTimeChecked) {
             if ($fromDt.val() === '') {
@@ -1235,7 +1238,7 @@ window.setupScheduleForm = function(dialog) {
               isValid = false;
             }
           }
-        } else if (daypartIdVal != '2') {
+        } else if (!isAlways) {
           // Daypart
           if ($fromDt.val() === '') {
             errorMessage = translations.schedule.stepWizard.error.timeStart;
