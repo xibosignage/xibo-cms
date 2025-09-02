@@ -106,8 +106,15 @@
     </div>
 
     {% set helpLinks = helpService.getLinksForPage(route) %}
+    {% set faultViewEnabled = currentUser.featureEnabled("fault.view") %}
+
     {# Hide in mobile view (sm/<768px)  #}
-    <div id="help-pane" class="d-none d-md-flex help-pane" data-help-links="{{ helpLinks|json_encode }}" data-url-help-landing-page={{ helpService.getLandingPage() }}>
+    <div id="help-pane" class="d-none d-md-flex help-pane"
+        data-help-links="{{ helpLinks|json_encode }}"
+        data-url-help-landing-page={{ helpService.getLandingPage() }}
+        data-fault-view-enabled={{faultViewEnabled}}
+        data-fault-view-url={{ url_for("fault.view") }}
+    >
         <div class="help-pane-container" style="display: none;">
         </div>
         <div class="help-pane-btn">
