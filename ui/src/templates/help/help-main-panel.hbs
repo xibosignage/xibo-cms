@@ -43,18 +43,17 @@
     </div>
 {{/or}}
 
-{{> components/help-header
-    title=trans.resources
-}}
-<div class="list-group-padded-cards">
-    {{> components/help-card
-        title=trans.feedbackCardTitle
-        desc=trans.feedbackCardDesc
-        iconClass="fa-comments"
-        action="feedback_form"
+{{#if isXiboThemed }}
+    {{> components/help-header
+        title=trans.resources
     }}
-
-    {{#if isXiboThemed }}
+    <div class="list-group-padded-cards">
+        {{> components/help-card
+            title=trans.feedbackCardTitle
+            desc=trans.feedbackCardDesc
+            iconClass="fa-comments"
+            action="feedback_form"
+        }}
         {{> components/help-card
             title=trans.communityCardTitle
             desc=trans.communityCardDesc
@@ -69,5 +68,5 @@
             target="_blank"
             iconClass="fa-circle-play"
         }}
-    {{/if}}
-</div>
+    </div>
+{{/if}}
