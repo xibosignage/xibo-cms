@@ -20,7 +20,7 @@
  */
 
 
-describe('Xibo CMS - Interactive Actions Mode', () => {
+describe('Test IA: Toggle Mode On/Off ', () => {
   
   beforeEach(() => {
     cy.login();
