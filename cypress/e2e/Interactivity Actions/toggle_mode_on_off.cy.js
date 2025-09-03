@@ -20,7 +20,7 @@
  */
 
 
-describe('Test IA: Toggle Mode ON/OFF ', () => {
+describe('Test IA: Toggle Mode ON/OFF', () => {
   
   beforeEach(() => {
     cy.login();
