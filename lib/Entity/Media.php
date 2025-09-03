@@ -793,7 +793,7 @@ class Media implements \JsonSerializable
 
                 if (!@copy($this->fileName, $libraryFolder . $this->storedAs)) {
                     $this->getLog()->error(sprintf('Cannot copy %s to %s', $this->fileName, $libraryFolder . $this->storedAs));
-                    throw new ConfigurationException(__('Problem copying provided file into the Library Folder'));
+                    throw new ConfigurationException(__('This media has expired and cannot be replaced.'));
                 }
             }
         }
