@@ -119,7 +119,7 @@ if (isset($_GET['file'])) {
     $sendFileMode = $container->get('configService')->getSetting('SENDFILE_MODE');
 
     if ($sendFileMode == 'Off') {
-        $container->get('logService')->notice('HTTP GetFile request received but SendFile Mode is Off. Issuing 404');
+        $logger->notice('HTTP GetFile: request received but SendFile Mode is Off. Issuing 404');
         header('HTTP/1.0 404 Not Found');
         exit;
     }
@@ -127,6 +127,7 @@ if (isset($_GET['file'])) {
     // Check nonce, output appropriate headers, log bandwidth and stop.
     try {
         if (!isset($_REQUEST['displayId']) || !isset($_REQUEST['type']) || !isset($_REQUEST['itemId'])) {
+            $logger->error('HTTP GetFile: Missing params');
             throw new NotFoundException(__('Missing params'));
         }
 
@@ -134,6 +135,7 @@ if (isset($_GET['file'])) {
 
         // Has the URL expired
         if (time() > $_REQUEST['X-Amz-Expires']) {
+            $logger->error('HTTP GetFile: Access denied: Pre-signed S3 URL expired');
             throw new NotFoundException(__('Expired'));
         }
 
@@ -150,6 +152,7 @@ if (isset($_GET['file'])) {
         );
 
         if ($signature !== $calculatedSignature) {
+            $logger->error('HTTP GetFile: Invalid URL');
             throw new NotFoundException(__('Invalid URL'));
         }
 
@@ -161,6 +164,7 @@ if (isset($_GET['file'])) {
         if ($container->get('bandwidthFactory')->isBandwidthExceeded(
             $container->get('configService')->getSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB')
         )) {
+            $logger->error('HTTP GetFile: Bandwidth Exceeded');
             throw new \Xibo\Support\Exception\InstanceSuspendedException('Bandwidth Exceeded');
         }
 
@@ -170,6 +174,7 @@ if (isset($_GET['file'])) {
 
         // Check it is still authorised.
         if ($display->licensed == 0) {
+            $logger->error('HTTP GetFile: Display unauthorised');
             throw new NotFoundException(__('Display unauthorised'));
         }
 
@@ -180,6 +185,7 @@ if (isset($_GET['file'])) {
             $usage,
             $displayId
         )) {
+            $logger->error('HTTP GetFile: Bandwidth Exceeded for Display ID: ' . $displayId);
             throw new \Xibo\Support\Exception\InstanceSuspendedException('Bandwidth Exceeded');
         }
 
@@ -267,16 +273,16 @@ if (isset($_GET['file'])) {
             );
         }
     } catch (\Xibo\Support\Exception\NotFoundException|\Xibo\Support\Exception\ExpiredException $e) {
-        $logger->notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404. '
+        $logger->notice('HTTP GetFile: request received but unable to find XMDS Nonce. Issuing 404. '
             . $e->getMessage());
 
         // 404
         header('HTTP/1.0 404 Not Found');
     } catch (\Xibo\Support\Exception\InstanceSuspendedException $e) {
-        $logger->debug('Bandwidth exceeded');
+        $logger->debug('HTTP GetFile: Bandwidth exceeded');
         header('HTTP/1.0 403 Forbidden');
     } catch (\Exception $e) {
-        $logger->error('Unknown Error: ' . $e->getMessage());
+        $logger->error('HTTP GetFile: Unknown Error: ' . $e->getMessage());
         $logger->debug($e->getTraceAsString());
 
         // Issue a 500
