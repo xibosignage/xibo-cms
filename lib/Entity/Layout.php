@@ -1460,7 +1460,7 @@ class Layout implements \JsonSerializable
                     if ($tempCyclePlaybackAverageDuration) {
                         $region->duration = $region->duration + $tempCyclePlaybackAverageDuration;
                     } else {
-                        $region->duration = $region->duration + $widget->calculatedDuration;
+                        $region->duration = $region->duration + $widgetDuration;
                     }
 
                     // We also want to add any transition OUT duration
@@ -1500,11 +1500,7 @@ class Layout implements \JsonSerializable
                     && $widget->useDuration === 0
                 );
 
-                // Get the max duration and set it as the media node duration
-                $mediaNode->setAttribute('duration', ($isEndDetectVideoWidget
-                    ? 0
-                    : max($region->duration, $widgetDuration))
-                );
+                $mediaNode->setAttribute('duration', ($isEndDetectVideoWidget ? 0 : $widgetDuration));
                 $mediaNode->setAttribute('useDuration', $widget->useDuration);
                 $widgetActionNode = null;
 

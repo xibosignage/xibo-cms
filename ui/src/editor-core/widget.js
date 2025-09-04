@@ -279,6 +279,16 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
    * @return {number} - Widget duration in seconds
    */
   this.getDuration = function() {
+    // If this widget does not have a set duration, then use the region duration
+    if (this.useDuration !== 1 || this.duration == null) {
+      const app = this.editorObject;
+      const region = app.getObjectByTypeAndId('region', this.parent.regionId);
+
+      return (region && region.duration)
+        ? parseFloat(region.duration)
+        : parseFloat(this.calculatedDuration);
+    }
+
     return parseFloat(this.calculatedDuration);
   };
 
