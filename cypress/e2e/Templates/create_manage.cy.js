@@ -31,10 +31,10 @@ describe('Template creation and management', function() {
               
     });
 
-    // it('Prevent template creation without required fields', function() {
-    //     cy.get(SELECTORS.saveTemplate).should('be.visible').click()
-    //     cy.contains('Layout Name must be between 1 and 100 characters');
-    // });
+    it('Prevent template creation without required fields', function() {
+        cy.get(SELECTORS.saveTemplate).should('be.visible').click()
+        cy.contains('Layout Name must be between 1 and 100 characters');
+    });
 
     // it('Ensure users can successfully create a new template', function() {
     //     cy.contains('Add Template').click();  
