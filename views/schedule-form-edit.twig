@@ -109,7 +109,7 @@
                             { name: "data-trans-campaign-help-text", value: "Please select a Campaign for this Event to show"|trans },
                         ] %}
 
-                        {% set title %}{% trans "Layout" %}{% endset %}
+                        {% set title %}{% if fromCampaign %}{% trans "Campaign" %}{% else %}{% trans "Layout" %}{% endif %}{% endset %}
                         {% set helpText %}{% trans "Please select a Layout for this Event to show" %}{% endset %}
                         {{ forms.dropdown("campaignId", "single", title, event.campaignId, [campaign], "campaignId", "campaign", helpText, "layout-control", "", "", "", attributes, "", "", "", readonlySelect) }}
 

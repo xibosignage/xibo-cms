@@ -814,6 +814,7 @@ class Schedule extends Base
                 // If coming from display page, don't show syncEvent type
                 'eventTypes' => \Xibo\Entity\Schedule::getEventTypes((($from === 'DisplayGroup') ? [9] : [])),
                 'addForm' => true,
+                'fromCampaign' => ($from == 'Campaign'),
                 'relativeTime' => 1,
                 'setDisplaysFromFilter' => false,
             ];
