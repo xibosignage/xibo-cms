@@ -95,6 +95,7 @@ describe('Template creation and management', function() {
 
 /*
  * TO DOs:
- * 1. Add "No" flow for delete modal
+ * 1. Add "No" and "Retire" flow for delete modal
  * 2. Ensure duplicate template creation is not possible
+ * 3. Layout Editor: change background, etc.
  */
