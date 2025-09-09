@@ -19,10 +19,10 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-describe('Template creation and management', function() {
+describe('Template Test Suite', function () {
   let templateName = '';
 
-  beforeEach(function() {
+  beforeEach(function () {
     cy.login();
 
     templateName = 'Template No. ' + Cypress._.random(0, 1e9);
@@ -31,50 +31,53 @@ describe('Template creation and management', function() {
     cy.intercept('GET', '**/template*').as('templatesList');
     cy.visit('/template/view');
     cy.wait('@templatesList').its('response.statusCode').should('eq', 200);
+
+    // Open Add Template form
+    cy.contains('Add Template').click();
   });
 
-  it('Allows user to create, open, and delete a template', function() {
-    // Try to save without filling fields
-    cy.contains('Add Template').click();
+  it('Prevents saving incomplete template', function () {
     cy.get('#dialog_btn_2').should('be.visible').click();
     cy.contains('Layout Name must be between 1 and 100 characters').should('be.visible');
+  });
 
-    // Fill required fields and save
+  it('Creates a template, opens it, exits editor, searches, and deletes', function () {
+    // Create template
     cy.get('#name').clear().type(templateName);
     cy.get('#dialog_btn_2').should('be.visible').click();
-    cy.get('#layout-editor', { timeout: 10000 }).should('be.visible');
+    cy.get('#layout-editor').should('be.visible');
 
-    // Exit back to templates
+    // Exit editor and verify template was created
+    cy.get('#backBtn').click({ force: true });
+    cy.contains('td', templateName).should('exist');
+
+    // Reopen the newly created template
+    cy.contains('td', templateName)
+      .should('be.visible')
+      .parents('tr')
+      .within(() => {
+        cy.get('div[title="Row Menu"] button.dropdown-toggle').click({
+          force: true,
+        });
+        cy.get('a.layout_button_design').click({ force: true });
+      });
+    cy.get('#layout-editor').should('be.visible');
+
+    // Exit editor and assert landing page
     cy.get('#backBtn').click({ force: true });
     cy.contains('.widget-title', 'Templates').should('be.visible');
-    cy.wait('@templatesList').its('response.statusCode').should('eq', 200);
 
     // Search for the template
     cy.get('#template').clear().type(templateName);
     cy.wait('@templatesList');
 
-    // Open the newly created template
-    cy.contains('td', templateName, { timeout: 10000 })
-      .should('be.visible')
-      .parents('tr')
-      .within(() => {
-        cy.get('div[title="Row Menu"] button.dropdown-toggle').click({ force: true });
-        cy.get('a.layout_button_design').click({ force: true });
-      });
-    cy.get('#layout-editor', { timeout: 10000 }).should('be.visible');
-
-    // Exit again
-    cy.get('#backBtn').click({ force: true });
-    cy.contains('.widget-title', 'Templates').should('be.visible');
-    cy.wait('@templatesList').its('response.statusCode').should('eq', 200);
-
     // Delete the template
-    cy.contains('td', templateName, { timeout: 10000 })
+    cy.contains('td', templateName)
       .should('be.visible')
       .parents('tr')
       .within(() => {
-        cy.get('div[title="Row Menu"] button.dropdown-toggle').click({ force: true });
-        cy.get('a.layout_button_delete[data-commit-method="delete"]').click({ force: true });
+        cy.get('div[title="Row Menu"] button.dropdown-toggle').click({ force: true});
+        cy.get('a.layout_button_delete[data-commit-method="delete"]').click({force: true});
       });
 
     cy.get('#layoutDeleteForm').should('be.visible');
@@ -82,10 +85,9 @@ describe('Template creation and management', function() {
     cy.contains('Yes').click({ force: true });
 
     // Verify deletion
-    cy.contains('.dataTables_empty', 'No data available in table');
+    cy.contains('.dataTables_empty', 'No data available in table').should('be.visible');
   });
 });
-
 
 /*
  * TO DOs:
@@ -94,66 +96,3 @@ describe('Template creation and management', function() {
  * 3. Layout Editor: change background, etc. -- this should not be covered here
  * 4. Search for non-existing template
  */
-
-
-
-
-   // it('Visits the Template page and loads all existing Templates', function() {
-  //   cy.intercept('GET', '**/template*').as('templatesList');
-  //   cy.visit('/template/view');
-  //   cy.wait('@templatesList').its('response.statusCode').should('eq', 200);
-  // });
-
-  // it('Prevents template creation without required fields', function() {
-  //   cy.visit('/template/view');
-  //   cy.contains('Add Template').click();  
-  //   cy.get('#dialog_btn_2').should('be.visible').click(); // Click the SAVE button without input of required fields
-  //   cy.contains('Layout Name must be between 1 and 100 characters'); // Assert: It should not be valid and shows error message
-  // });
-
-
-  // it('Opens an existing template + Exits the editor', function() {
-  //   cy.intercept('GET', '**/template*').as('templatesList');
-  //   cy.visit('/template/view');
-  //   cy.wait('@templatesList').its('response.statusCode').should('eq', 200);
-
-  //   //Choose the template to be opened
-  //   cy.contains(testName, { timeout: 10000 })
-  //     .should('be.visible')
-  //     .parents('tr')
-  //     .within(() => { // This is the row menu specific only to the selected template
-  //       cy.get('div[title="Row Menu"] button.dropdown-toggle').click({ force: true });
-  //       cy.get('a.layout_button_design').click({ force: true });
-  //     });
-
-  //   cy.get('#layout-editor', { timeout: 10000 }).should('be.visible'); // Assert: Editor opens
-  //   cy.get('#backToLayoutEditorBtn').click({ force: true }); // Click on the Exit button to go back Template page
-  //   cy.visit('/template/view'); // Assert: Template page is visible
-  // });
-
-  // it('Searches and deletes a template', function() {
-  //   cy.intercept('GET', '**/template*').as('templatesList');
-  //   cy.visit('/template/view');
-  //   cy.wait('@templatesList').its('response.statusCode').should('eq', 200);
-
-  //   cy.get('#template')
-  //     .should('be.visible')
-  //     .clear()
-  //     .type(templateName);
-
-  //   cy.wait('@templatesList');
-
-  //   cy.contains(templateName, { timeout: 10000 })
-  //     .should('be.visible')     
-  //     .parents('tr')
-  //     .within(() => {
-  //       cy.get('div[title="Row Menu"] button.dropdown-toggle').click({ force: true });
-  //       cy.get('a.layout_button_delete[data-commit-method="delete"]').click({ force: true });
-  //     });
-
-  //   cy.get('#layoutDeleteForm').should('be.visible');
-  //   cy.contains('p', 'Are you sure you want to delete this item?').should('be.visible');
-  //   cy.contains('Yes').click({ force: true });
-
-  //   cy.contains('td.dtr-control', templateName).should('not.exist');
-  // });
