@@ -95,109 +95,50 @@
     var table;
     var chart;
 
-    table = $('#ssp-activity').DataTable({
-      language: dataTablesLanguage,
-      dom: dataTablesTemplate,
-      serverSide: false,
-      stateSave: false,
-      responsive: true,
-      filter: false,
-      searchDelay: 3000,
-      order: [[ 0, 'asc']],
-      ajax: {
-        url: $sspConnector.data('proxyUrl').replace(':method', 'activity'),
-        data: function (d) {
-          $.extend(d, $('#ssp-activity').closest('.XiboGrid').find('.FilterDiv form').serializeObject());
-        }
-      },
-      columns: [
-        {
-          data: 'scheduledAt',
-          responsivePriority: 1,
-          render: function(data, type) {
-            if (type !== 'display' && type !== 'export' || data == null) {
-              return data;
-            }
-            return moment(data).format(jsDateFormat);
-          },
-        },
-        { data: 'campaignId', responsivePriority: 1 },
-        { data: 'displayId', responsivePriority: 1 },
-        { data: 'isPlayed', responsivePriority: 1 },
-        { data: 'isErrored', responsivePriority: 1 },
-        { data: 'impressions', responsivePriority: 2 },
-        {
-          data: 'impressionDate',
-          responsivePriority: 10,
-          render: function(data, type) {
-            if (type !== 'display' && type !== 'export' || data == null) {
-              return data;
-            }
-            return moment(data).format(jsDateFormat);
-          },
-        },
-        { data: 'impressionActual', responsivePriority: 10 },
-        { data: 'errors', responsivePriority: 10 },
-        {
-          data: 'errorDate',
-          responsivePriority: 10,
-          render: function(data, type) {
-            if (type !== 'display' && type !== 'export' || data == null) {
-              return data;
-            }
-            return moment(data).format(jsDateFormat);
-          },
-        },
-        { data: 'errorCode', responsivePriority: 10 },
-      ],
+    // Disable the Apply button on initialization
+    let applyBtn = dialog.find('a[data-apply-button="true"]').addClass('disabled');
+    let displaySelect = dialog.find('select[name="displayId"]');
+    let formError = $('.form-error').hide();
 
-      initComplete: function(settings, json) {
-        let filteredData = filterData(json.data, filter);
+    // Enable the applyBtn when there's a display selected
+    displaySelect.on('change', function () {
+      let value = $(this).val();
 
-        drawSummaryTable(filteredData, filter);
-      },
+      applyBtn.toggleClass('disabled', !value);
 
-      footerCallback: function(row, data, start, end, display) {
-        var json = this.api().ajax.json();
-        if (json && json.stats) {
-           $(this.api().column(0).footer()).html(json.stats.scheduled || 0);
-           $(this.api().column(3).footer()).html(json.stats.played || 0);
-           $(this.api().column(4).footer()).html(json.stats.errored || 0);
-           $(this.api().column(5).footer()).html(json.stats.actualImpressions || 0);
-        }
-      },
-
-      drawCallback: function(settings) {
-        setTimeout(function() {
-          dialog.find('a[data-apply-button="true"]')
-           .removeClass('disabled')
-           .find('.saving').remove();
-        }, 300);
-      },
+      $('.alert-danger').toggle(!value);
     });
 
-    table.on('draw', dataTableDraw);
-    table.on('processing.dt', dataTableProcessing);
-    dataTableAddButtons(table, $('#ssp-activity_wrapper').find('.dataTables_buttons'));
-
     // Find the apply button
-    dialog.find('a[data-apply-button="true"]').on('click', function() {
+    applyBtn.on('click', function(e) {
+      if ($(this).hasClass('disabled')) {
+        e.preventDefault();
+        return;
+      }
+
       $(this).addClass('disabled').append('<span class="saving fa fa-cog fa-spin p-1"></span>');
-      table.ajax.reload(function(json) {
+
+      if (!table) {
+        initTable();
+      } else {
+        table.ajax.reload(function(json) {
           let filteredData = filterData(json.data, filter);
 
           drawSummaryTable(filteredData, filter);
-      }, true);
+        }, true);
+      }
     });
 
     // Watch for filter option changes in Summary tab
     dialog.find('select[name="campaignFilter"]').on('change', function(e) {
-      table.ajax.reload(function(json) {
-        filter = $(e.target).val();
-        let filteredData = filterData(json.data, filter);
+      if (displaySelect.val()) {
+        table.ajax.reload(function(json) {
+          filter = $(e.target).val();
+          let filteredData = filterData(json.data, filter);
 
-        drawSummaryTable(filteredData, filter);
-      }, true);
+          drawSummaryTable(filteredData, filter);
+        }, true);
+      }
     });
 
     // Parse activity log summary according to filter selected
@@ -206,12 +147,15 @@
 
       // Group the data according the filter selected
       let groups = summaryData.reduce((group, item) => {
-        if (filter === 'display') {
-          filterOption = item.displayId;
-        } else if (filter === 'hour') {
-          filterOption = `${moment(item.scheduledAt).format('YYYY-MM-DD HH')}:00`;
+        let hourKey = `${moment(item.scheduledAt).format('YYYY-MM-DD HH')}:00`;
+        let errorKey = item.errorCode || '';
+
+        if (filter === 'hour') {
+          filterOption = hourKey;
+        } else if (filter === 'errorCode') {
+          filterOption = errorKey;
         } else {
-          filterOption = `${moment(item.scheduledAt).format('YYYY-MM-DD HH')}:00 - ${item.displayId}`;
+          filterOption = `${hourKey} - ${errorKey}`;
         }
 
         if (!group[filterOption]) {
@@ -227,17 +171,17 @@
 
       // Aggregate the data
       let data = groupKeys.map(key => {
-        return groups[key].reduce((acc, {key, campaignId, scheduledAt, displayId, errors, isPlayed, isErrored, impressions, impressionActual}) => {
-          acc['key'] = key;
+        return groups[key].reduce((acc, {key, campaignId, scheduledAt, displayId, errors, isPlayed, isErrored, impressions, impressionActual, errorCode}) => {
+          acc['key'] = String(key);
           acc['errorCount'] = errors + (acc['errorCount'] || 0);
           acc['playCount'] = (isPlayed ? 1 : 0) + (acc['playCount'] || 0);
           acc['missesCount'] = (!isPlayed && !isErrored ? 1 : 0) + (acc['missesCount'] || 0);
           acc['impressions'] = impressions + (acc['impressions'] || 0);
           acc['impressionActual'] = impressionActual + (acc['impressionActual'] || 0);
           acc['campaignId'] = campaignId;
-          acc['displayId'] = displayId;
           acc['date'] = moment(scheduledAt).format('MM-DD-YYYY');
           acc['time'] = `${moment(scheduledAt).format('HH')}:00`;
+          acc['errorCode'] = errorCode;
 
           return acc;
         }, {});
@@ -266,6 +210,104 @@
       }
     }
 
+    function initTable() {
+      table = $('#ssp-activity').DataTable({
+        language: dataTablesLanguage,
+        dom: dataTablesTemplate,
+        serverSide: false,
+        stateSave: false,
+        responsive: true,
+        filter: false,
+        searchDelay: 3000,
+        order: [[ 0, 'asc']],
+        ajax: {
+          url: $sspConnector.data('proxyUrl').replace(':method', 'activity'),
+          data: function (d) {
+            $.extend(d, $('#ssp-activity').closest('.XiboGrid').find('.FilterDiv form').serializeObject());
+          },
+          dataSrc: function (json) {
+            if (json.success === false) {
+              formError.show().text(json.message);
+
+              return [];
+            }
+
+            formError.hide().text('');
+            return json.data || [];
+          }
+        },
+        columns: [
+          {
+            data: 'scheduledAt',
+            responsivePriority: 1,
+            render: function(data, type) {
+              if (type !== 'display' && type !== 'export' || data == null) {
+                return data;
+              }
+              return moment(data).format(jsDateFormat);
+            },
+          },
+          { data: 'campaignId', responsivePriority: 1 },
+          { data: 'displayId', responsivePriority: 1 },
+          { data: 'isPlayed', responsivePriority: 1 },
+          { data: 'isErrored', responsivePriority: 1 },
+          { data: 'impressions', responsivePriority: 2 },
+          {
+            data: 'impressionDate',
+            responsivePriority: 10,
+            render: function(data, type) {
+              if (type !== 'display' && type !== 'export' || data == null) {
+                return data;
+              }
+              return moment(data).format(jsDateFormat);
+            },
+          },
+          { data: 'impressionActual', responsivePriority: 10 },
+          { data: 'errors', responsivePriority: 10 },
+          {
+            data: 'errorDate',
+            responsivePriority: 10,
+            render: function(data, type) {
+              if (type !== 'display' && type !== 'export' || data == null) {
+                return data;
+              }
+              return moment(data).format(jsDateFormat);
+            },
+          },
+          { data: 'errorCode', responsivePriority: 10 },
+        ],
+
+        initComplete: function(settings, json) {
+          if (json && json.data) {
+            let filteredData = filterData(json.data, filter);
+            drawSummaryTable(filteredData, filter);
+          }
+        },
+
+        footerCallback: function(row, data, start, end, display) {
+          var json = this.api().ajax.json();
+          if (json && json.stats) {
+            $(this.api().column(0).footer()).html(json.stats.scheduled || 0);
+            $(this.api().column(3).footer()).html(json.stats.played || 0);
+            $(this.api().column(4).footer()).html(json.stats.errored || 0);
+            $(this.api().column(5).footer()).html(json.stats.actualImpressions || 0);
+          }
+        },
+
+        drawCallback: function(settings) {
+          setTimeout(function() {
+            dialog.find('a[data-apply-button="true"]')
+              .removeClass('disabled')
+              .find('.saving').remove();
+          }, 300);
+        },
+      });
+
+      table.on('draw', dataTableDraw);
+      table.on('processing.dt', dataTableProcessing);
+      dataTableAddButtons(table, $('#ssp-activity_wrapper').find('.dataTables_buttons'));
+    }
+
     function drawSummaryTable(filteredData, filter='hour') {
       let summaryTable = $('#ssp-activity-summary').dataTable({
         "bDestroy": true,
@@ -273,20 +315,20 @@
         columns: [
           { data: 'date', responsivePriority: 1 },
           { data: 'time', responsivePriority: 1 },
-          { data: 'displayId', responsivePriority: 1 },
           { data: 'campaignId', responsivePriority: 1 },
           { data: 'playCount', responsivePriority: 1 },
           { data: 'errorCount', responsivePriority: 1 },
           { data: 'missesCount', responsivePriority: 1 },
           { data: 'impressions', responsivePriority: 2 },
           { data: 'impressionActual', responsivePriority: 10 },
+          { data: 'errorCode', responsivePriority: 1 },
         ],
 
         initComplete: function () {
           if (filter === 'hour' ) {
-            // Hide Display ID column
-            $(this.api().column(2).visible(false));
-          } else if (filter === 'display') {
+            // Hide Error Code column
+            $(this.api().column(8).visible(false));
+          } else if (filter === 'errorCode') {
             // Hide date and hour
             $(this.api().column(0).visible(false));
             $(this.api().column(1).visible(false));
@@ -298,11 +340,11 @@
         footerCallback: function(row, data, start, end, display) {
             var json = filteredData.stats;
             if (filteredData) {
-                $(this.api().column(4).footer()).html(json.totalPlayCount || 0);
-                $(this.api().column(5).footer()).html(json.totalErrorCount || 0);
-                $(this.api().column(6).footer()).html(json.totalMissCount || 0);
-                $(this.api().column(7).footer()).html(json.totalImpressions || 0);
-                $(this.api().column(8).footer()).html(json.impressionActual || 0);
+                $(this.api().column(3).footer()).html(json.totalPlayCount || 0);
+                $(this.api().column(4).footer()).html(json.totalErrorCount || 0);
+                $(this.api().column(5).footer()).html(json.totalMissCount || 0);
+                $(this.api().column(6).footer()).html(json.totalImpressions || 0);
+                $(this.api().column(7).footer()).html(json.impressionActual || 0);
             }
         },
       });
@@ -358,7 +400,7 @@
                   {% set title %}{% trans "To Date" %}{% endset %}
                   {{ inline.dateTime("activityToDt", title, 'tomorrow'|date_modify('-1 minute')|date("Y-m-d H:i:s"), "", "activity-to-dt", "", "") }}
 
-                  {% set title %}{% trans "Display" %}{% endset %}
+                  {% set title %}{% trans "Display" %}<span class="text-danger">*</span>{% endset %}
                   {% set attributes = [
                       { name: "data-width", value: "200px" },
                       { name: "data-allow-clear", value: "true" },
@@ -382,6 +424,8 @@
                           <span>{% trans "Apply" %}</span>
                       </a>
                   </div>
+
+                  <div class="alert alert-danger my-1">Please select a display</div>
               </form>
           </div>
       </div>
@@ -410,9 +454,8 @@
                               {% set title %}{% trans "Filter Options" %}{% endset %}
                               {% set options = [
                                   { optionid: "hour", option: "Hour" },
-                                  { optionid: "display", option: "Display" },
-                                  { optionid: "hourdisplay", option: "Display and Hour" },
-
+                                  { optionid: "errorCode", option: "Error Code" },
+                                  { optionid: "hourerrorcode", option: "Hour and Error Code" },
                               ] %}
                               {{ inline.dropdown("campaignFilter", "single", title, "", options, "optionid", "option", helpText) }}
                               {{ forms.hidden("isDynamic", 1) }}
@@ -428,13 +471,13 @@
                                       <tr>
                                           <th>{% trans "Date" %}</th>
                                           <th>{% trans "Hour" %}</th>
-                                          <th>{% trans "Display ID" %}</th>
                                           <th>{% trans "Campaign" %}</th>
                                           <th>{% trans "Play Count" %}</th>
                                           <th>{% trans "Error Count" %}</th>
                                           <th>{% trans "Misses Count" %}</th>
                                           <th>{% trans "Impressions" %}</th>
                                           <th>{% trans "Impression Actual" %}</th>
+                                          <th>{% trans "Error Code" %}</th>
                                       </tr>
                                   </thead>
                                   <tbody>
@@ -510,5 +553,6 @@
               </div>
           </div>
       </div>
+      <div class="card bg-light p-3 text-danger col-sm-12 text-center form-error"></div>
   </div>
 </script>

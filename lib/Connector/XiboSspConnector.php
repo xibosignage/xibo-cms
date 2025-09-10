@@ -427,9 +427,14 @@ class XiboSspConnector implements ConnectorInterface
         $fromDt = $params->getDate('activityFromDt', [
             'default' => Carbon::now()->startOfHour()
         ]);
+
         $toDt = $params->getDate('activityToDt', [
             'default' => $fromDt->addHour()
         ]);
+
+        if ($params->getInt('displayId') == null) {
+            throw new GeneralException(__('Display ID is required'));
+        }
 
         // Call the api (override the timeout)
         try {
