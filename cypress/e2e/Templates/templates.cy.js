@@ -47,11 +47,11 @@ describe('Template Test Suite', function () {
     cy.get('#dialog_btn_2').should('be.visible').click();
     cy.get('#layout-editor').should('be.visible');
 
-    // Exit editor and verify template was created
+    // // Exit editor and verify template was created
     cy.get('#backBtn').click({ force: true });
     cy.contains('td', templateName).should('exist');
 
-    // Reopen the newly created template
+    // // Reopen the newly created template
     cy.contains('td', templateName)
       .should('be.visible')
       .parents('tr')
@@ -71,7 +71,7 @@ describe('Template Test Suite', function () {
     cy.get('#template').clear().type(templateName);
     cy.wait('@templatesList');
 
-    // Delete the template
+    // // Delete the template
     cy.contains('td', templateName)
       .should('be.visible')
       .parents('tr')
@@ -86,7 +86,18 @@ describe('Template Test Suite', function () {
 
     // Verify deletion
     cy.contains('.dataTables_empty', 'No data available in table').should('be.visible');
+
+    // Clear Filters
+    cy.get('a.clear-filter-btn').click();
+    cy.get('#template').should('have.value', '');
+    cy.wait('@templatesList');
+    cy.get('table').should('be.visible');
   });
+
+
+
+  
+
 });
 
 /*
@@ -95,4 +106,5 @@ describe('Template Test Suite', function () {
  * 2. Ensure duplicate template creation is not possible
  * 3. Layout Editor: change background, etc. -- this should not be covered here
  * 4. Search for non-existing template
+ * 5. Multiple Delete
  */
