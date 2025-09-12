@@ -5,7 +5,13 @@
 }}
 
 <form class="help-pane-feedback-form" data-action="https://xibosignage.com/api/cms/feedback" data-method="POST">
-    <div class="help-pane-feedback-form-title">{{trans.form.title}}</div>
+    
+    <div class="d-flex align-items-center">
+        <div class="help-pane-feedback-form-title">{{trans.form.title}}</div>
+        <div class="help-pane-feedback-privacy-info">
+            <i class="btn fa fa-info-circle text-info" data-toggle="popover" data-content="{{trans.form.privacyNotice}}"></i>
+        </div>
+    </div>
 
     {{> ../forms/inputs/text
         id="feedback_form_name"

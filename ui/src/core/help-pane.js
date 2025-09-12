@@ -46,6 +46,18 @@ $(function() {
         }),
       );
 
+      // Privacy info popover
+      $helpContainer.find('.help-pane-feedback-privacy-info > i')
+        .popover({
+          container: '.help-pane-container',
+          placement: 'top',
+          delay: {
+            show: 200,
+            hide: 50,
+          },
+          trigger: 'hover',
+        });
+
       handleFileUpload();
     } else {
       // Main or end panel
