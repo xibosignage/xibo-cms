@@ -56,7 +56,7 @@
     "ext-simplexml": "*",
     "ext-zip": "*",
     "akrabat/ip-address-middleware" : "2.6.*",
-    "apereo/phpcas": "1.6.*",
+    "apereo/phpcas": "dev-master#6ef19a1e636303bda2f05f46b08035d53a8b602d",
     "dragonmantank/cron-expression": "^3.4",
     "erusev/parsedown": "~1.5",
     "flynsarmy/slim-monolog": "~1.0",

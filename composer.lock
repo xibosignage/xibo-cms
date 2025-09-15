@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6f3229fc5b8a76553fbdefc4d5c475f5",
+    "content-hash": "1b0a1ab408c0e12615470dac96ed8422",
     "packages": [
         {
             "name": "akrabat/ip-address-middleware",
@@ -71,16 +71,16 @@
         },
         {
             "name": "apereo/phpcas",
-            "version": "1.6.1",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/apereo/phpCAS.git",
-                "reference": "c129708154852656aabb13d8606cd5b12dbbabac"
+                "reference": "6ef19a1e636303bda2f05f46b08035d53a8b602d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/apereo/phpCAS/zipball/c129708154852656aabb13d8606cd5b12dbbabac",
-                "reference": "c129708154852656aabb13d8606cd5b12dbbabac",
+                "url": "https://api.github.com/repos/apereo/phpCAS/zipball/6ef19a1e636303bda2f05f46b08035d53a8b602d",
+                "reference": "6ef19a1e636303bda2f05f46b08035d53a8b602d",
                 "shasum": ""
             },
             "require": {
@@ -94,6 +94,7 @@
                 "phpstan/phpstan": "^1.5",
                 "phpunit/phpunit": ">=7.5"
             },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -136,9 +137,9 @@
             ],
             "support": {
                 "issues": "https://github.com/apereo/phpCAS/issues",
-                "source": "https://github.com/apereo/phpCAS/tree/1.6.1"
+                "source": "https://github.com/apereo/phpCAS/tree/master"
             },
-            "time": "2023-02-19T19:52:35+00:00"
+            "time": "2024-06-29T15:51:32+00:00"
         },
         {
             "name": "cakephp/cache",
@@ -9165,6 +9166,7 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
+        "apereo/phpcas": 20,
         "infostars/picofeed": 20,
         "xibosignage/oauth2-xibo-cms": 20,
         "xibosignage/support": 20
