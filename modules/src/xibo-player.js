@@ -30,78 +30,87 @@ const XiboPlayer = function() {
    * @param {Object} currentWidget Widget object
    * @return {Promise<unknown>}
    */
-  this.getWidgetData = async function(currentWidget) {
+  this.getWidgetData = function(currentWidget) {
     // if we are a dataset type, then first check to see if there
     // is realtime data.
     console.debug('getWidgetData: ' + currentWidget.widgetId);
 
     let localData;
+
+    // wait for dataset fetch (resolve when its "done" fires)
+    let chain = Promise.resolve();
     if (currentWidget.properties?.dataSetId) {
-      await xiboIC.getData(currentWidget.properties?.dataSetId, {
-        done: (status, data) => {
-          localData = JSON.parse(data);
-        },
+      chain = new Promise(function(resolve) {
+        xiboIC.getData(currentWidget.properties?.dataSetId, {
+          done: (status, data) => {
+            localData = JSON.parse(data);
+            resolve();
+          },
+        });
       });
     }
 
-    return new Promise(function(resolve) {
-      // if we have data on the widget (for older players),
-      // or if we are not in preview and have empty data on Widget (like text)
-      // do not run ajax use that data instead
-      if (String(currentWidget.url) !== 'null') {
-        const ajaxOptions = {
-          method: 'GET',
-          url: currentWidget.url,
-        };
+    return chain.then(function() {
+      return new Promise(function(resolve) {
+        // if we have data on the widget (for older players),
+        // or if we are not in preview and have empty data on Widget (like text)
+        // do not run ajax use that data instead
+        if (String(currentWidget.url) !== 'null') {
+          const ajaxOptions = {
+            method: 'GET',
+            url: currentWidget.url,
+          };
 
-        // We include dataType for ChromeOS player consumer
-        if (window.location && window.location.pathname === '/pwa/') {
-          ajaxOptions.dataType = 'json';
-        }
+          // We include dataType for ChromeOS player consumer
+          if (window.location && window.location.pathname === '/pwa/') {
+            ajaxOptions.dataType = 'json';
+          }
 
-        // else get data from widget.url,
-        // this will be either getData for preview
-        // or new json file for v4 players
-        $.ajax(ajaxOptions).done(function(data) {
-          // The contents of the JSON file will be an object with data and meta
-          // add in local data.
+          // else get data from widget.url,
+          // this will be either getData for preview
+          // or new json file for v4 players
+          $.ajax(ajaxOptions).done(function(data) {
+            // The contents of the JSON file will be
+            // an object with data and meta
+            // add in local data.
+            if (localData) {
+              data.data = localData;
+            }
+
+            let widgetData = data;
+
+            if (typeof widgetData === 'string') {
+              widgetData = JSON.parse(data);
+            }
+
+            resolve({
+              ...widgetData,
+              isDataReady: true,
+            });
+          }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.error(jqXHR, textStatus, errorThrown);
+            resolve({
+              isDataReady: false,
+              error: jqXHR.status,
+              success: false,
+              data: jqXHR.responseJSON,
+            });
+          });
+        } else if (currentWidget.data?.data !== undefined) {
+          // This happens for v3 players where the data is already
+          // added to the HTML
           if (localData) {
-            data.data = localData;
+            currentWidget.data.data = localData;
           }
-
-          let widgetData = data;
-
-          if (typeof widgetData === 'string') {
-            widgetData = JSON.parse(data);
-          }
-
           resolve({
-            ...widgetData,
+            ...currentWidget.data,
             isDataReady: true,
           });
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-          console.error(jqXHR, textStatus, errorThrown);
-          resolve({
-            isDataReady: false,
-            error: jqXHR.status,
-            success: false,
-            data: jqXHR.responseJSON,
-          });
-        });
-      } else if (currentWidget.data?.data !== undefined) {
-        // This happens for v3 players where the data is already
-        // added to the HTML
-        if (localData) {
-          currentWidget.data.data = localData;
+        } else {
+          // This should be impossible.
+          resolve(null);
         }
-        resolve({
-          ...currentWidget.data,
-          isDataReady: true,
-        });
-      } else {
-        // This should be impossible.
-        resolve(null);
-      }
+      });
     });
   };
 

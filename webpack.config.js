@@ -317,6 +317,7 @@ const moduleConfig = function(env) {
                     version: '3.32',
                   },
                 ],
+                ['@babel/plugin-transform-for-of', {assumeArray: true}],
                 '@babel/plugin-transform-nullish-coalescing-operator',
                 '@babel/plugin-bugfix-v8-spread-' +
                 'parameters-in-optional-chaining',
