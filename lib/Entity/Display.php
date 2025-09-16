@@ -704,7 +704,7 @@ class Display implements \JsonSerializable
     public function isWebSocketXmrSupported(): bool
     {
         return $this->clientType === 'chromeOS'
-            || ($this->clientType === 'android' && $this->clientVersion >= 408);
+            || ($this->clientType === 'android' && $this->clientCode >= 408);
     }
 
     /**
