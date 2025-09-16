@@ -699,6 +699,15 @@ class Display implements \JsonSerializable
     }
 
     /**
+     * @return bool true is this display supports WebSocket XMR
+     */
+    public function isWebSocketXmrSupported(): bool
+    {
+        return $this->clientType === 'chromeOS'
+            || ($this->clientType === 'android' && $this->clientVersion >= 408);
+    }
+
+    /**
      * Is this display auditing?
      * return bool
      */

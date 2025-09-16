@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -99,7 +99,8 @@ class PlayerActionService implements PlayerActionServiceInterface
                 );
             }
 
-            if ($display->clientType !== 'chromeOS') {
+            // If we are using the old ZMQ XMR service, we also need to encrypt the message
+            if (!$display->isWebSocketXmrSupported()) {
                 // We also need a xmrPubKey
                 $isEncrypt = true;
 
