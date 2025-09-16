@@ -276,22 +276,18 @@
                     let api = this.api();
 
                     // Total over all pages
-                    let totalDuration = api.column(1).data().reduce(function (a, b) {
-                        return a + b;
-                    }, 0);
-                    let totalNumberPlays = api.column(2).data().reduce(function (a, b) {
-                        return a + b;
-                    }, 0);
-                    let totalDurationPage = api.column(1, { page: 'current'}).data().reduce(function (a, b) {
-                        return a + b;
-                    }, 0);
-                    let totalNumberPlaysPage = api.column(2, { page: 'current'}).data().reduce(function (a, b) {
-                        return a + b;
-                    }, 0);
+                    let totalDuration = api.column(1).data().map(Number).reduce((a, b) => a + b, 0);
+                    let totalNumberPlays = api.column(2).data().map(Number).reduce((a, b) => a + b, 0);
+                    let totalDurationPage = api.column(1, { page: 'current'}).data().map(Number)
+                        .reduce((a, b) => a + b, 0);
+                    let totalNumberPlaysPage = api.column(2, { page: 'current'}).data().map(Number)
+                        .reduce((a, b) => a + b, 0);
 
                     // Update footer
-                    $(api.column(1).footer()).html(totalDurationPage + ' (' + totalDuration + ' total)');
-                    $(api.column(2).footer()).html(Math.floor(totalNumberPlaysPage) + ' (' + Math.floor(totalNumberPlays) + ' total)');
+                    $(api.column(1).footer())
+                        .html(`${totalDurationPage} (${totalDuration} total)`);
+                    $(api.column(2).footer())
+                        .html(`${Math.floor(totalNumberPlaysPage)} (${Math.floor(totalNumberPlays)} total)`);
                 },
             });
 
