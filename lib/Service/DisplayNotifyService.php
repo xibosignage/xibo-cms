@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -162,20 +162,29 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
             $displayIdsRequiringActions
         );
 
-        foreach ($displays as $display) {
-            $stdObj = new \stdClass();
-            $stdObj->displayId = $display['displayId'];
-            $stdObj->xmrChannel = $display['xmrChannel'];
-            $stdObj->xmrPubKey = $display['xmrPubKey'];
-            $stdObj->display = $display['display'];
-            $stdObj->clientType = $display['clientType'];
+        foreach ($displays as $row) {
+            $display = new Display(
+                $this->store,
+                $this->log,
+                null,
+                $this->config,
+                null,
+                null,
+                null,
+                null,
+            );
+            $display->displayId = $row['displayId'];
+            $display->xmrChannel = $row['xmrChannel'];
+            $display->xmrPubKey = $row['xmrPubKey'];
+            $display->display = $row['display'];
+            $display->clientType = $row['clientType'];
 
             try {
-                $this->playerActionService->sendAction($stdObj, new CollectNowAction());
+                $this->playerActionService->sendAction($display, new CollectNowAction());
             } catch (\Exception $e) {
                 $this->log->notice(
                     'DisplayId ' .
-                    $display['displayId'] .
+                    $row['displayId'] .
                     ' Save would have triggered Player Action, but the action failed with message: ' . $e->getMessage()
                 );
             }
