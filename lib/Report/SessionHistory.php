@@ -168,20 +168,45 @@ class SessionHistory implements ReportInterface
             throw new AccessDeniedException();
         }
 
-        $currentDate = Carbon::now()->startOfDay();
-
         //
         // From and To Date Selection
         // --------------------------
         // The report uses a custom range filter that automatically calculates the from/to dates
         // depending on the date range selected.
-        $currentDate = Carbon::now()->startOfDay();
-        $fromDt = $sanitizedParams->getDate('fromDt') ?? $currentDate;
-        $toDt = $sanitizedParams->getDate('toDt') ?? Carbon::now();
+        $reportFilter = $sanitizedParams->getString('reportFilter');
 
-        // If toDt is current date then make it current datetime
-        if ($toDt->format('Y-m-d') == $currentDate->format('Y-m-d')) {
-            $toDt = Carbon::now();
+        // Use the current date as a helper
+        $now = Carbon::now();
+
+        // This calculation will be retained as it is used for scheduled reports
+        switch ($reportFilter) {
+            case 'yesterday':
+                $fromDt = $now->copy()->startOfDay()->subDay();
+                $toDt = $now->copy()->startOfDay();
+                break;
+
+            case 'lastweek':
+                $fromDt = $now->copy()->locale(Translate::GetLocale())->startOfWeek()->subWeek();
+                $toDt = $fromDt->copy()->addWeek();
+                break;
+
+            case 'lastmonth':
+                $fromDt = $now->copy()->startOfMonth()->subMonth();
+                $toDt = $fromDt->copy()->addMonth();
+                break;
+
+            case 'lastyear':
+                $fromDt = $now->copy()->startOfYear()->subYear();
+                $toDt = $fromDt->copy()->addYear();
+                break;
+
+            case '':
+            default:
+                // fromDt will always be from start of day ie 00:00
+                $fromDt = $sanitizedParams->getDate('fromDt') ?? $now->copy()->startOfDay();
+                $toDt = $sanitizedParams->getDate('toDt') ?? $now;
+
+                break;
         }
 
         $metadata = [
