@@ -572,7 +572,7 @@ class Library extends Base
                         $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
                         $renderThumbnail = file_exists($libraryLocation . $media->mediaId . '_videocover.png');
                     }
-                    
+
                     if ($renderThumbnail) {
                         $thumbnailUrl = $this->urlFor($request, $thumbnailRouteName, [
                             'id' => $media->mediaId,
@@ -1838,8 +1838,10 @@ class Library extends Base
 
         $this->getLog()->debug('thumbnailPublic: authorised for ' . $id);
 
+        $res = $this->thumbnail($request, $response, $id, true);
+
         // Pass to the thumbnail route
-        return $this->thumbnail($request, $response, $id, true);
+        return $res->withHeader('Access-Control-Allow-Origin', '*');
     }
 
     /**
