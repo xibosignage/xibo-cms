@@ -1727,8 +1727,23 @@ class Schedule extends Base
         $schedule->campaignId = $this->isFullScreenSchedule($schedule->eventTypeId)
             ? $sanitizedParams->getInt('fullScreenCampaignId')
             : $sanitizedParams->getInt('campaignId');
-        $schedule->displayOrder = $sanitizedParams->getInt('displayOrder', ['default' => 0]);
-        $schedule->isPriority = $sanitizedParams->getInt('isPriority', ['default' => 0]);
+
+        // displayOrder and isPriority: if present but empty (""): set to 0
+        // if missing from form: keep existing value (fallback to 0 if unset)
+        $params = $request->getParams();
+
+        $schedule->displayOrder = array_key_exists('displayOrder', $params)
+            ? ((trim((string)$params['displayOrder']) === '')
+                ? 0
+                : $sanitizedParams->getInt('displayOrder'))
+            : ($schedule->displayOrder ?? 0);
+
+        $schedule->isPriority = array_key_exists('isPriority', $params)
+            ? ((trim((string)$params['isPriority']) === '')
+                ? 0
+                : $sanitizedParams->getInt('isPriority'))
+            : ($schedule->isPriority ?? 0);
+
         $schedule->dayPartId = $sanitizedParams->getInt('dayPartId', ['default' => $schedule->dayPartId]);
         $schedule->syncTimezone = $sanitizedParams->getCheckbox('syncTimezone');
         $schedule->syncEvent = $this->isSyncEvent($schedule->eventTypeId);
