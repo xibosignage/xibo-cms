@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -24,6 +24,7 @@
 namespace Xibo\Factory;
 
 
+use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Bandwidth;
 use Xibo\Helper\ByteFormatter;
 
@@ -33,6 +34,10 @@ use Xibo\Helper\ByteFormatter;
  */
 class BandwidthFactory extends BaseFactory
 {
+    public function __construct(private readonly PoolInterface $pool)
+    {
+    }
+
     /**
      * @return Bandwidth
      */
@@ -61,17 +66,42 @@ class BandwidthFactory extends BaseFactory
 
     /**
      * Is the bandwidth limit exceeded
-     * @param string $limit the bandwidth limit to check against
+     * @param int $limit the bandwidth limit to check against
      * @param int $usage
-     * @param null $displayId
+     * @param int $displayId
      * @return bool
      */
-    public function isBandwidthExceeded($limit, &$usage = 0, $displayId = null)
+    public function isBandwidthExceeded(int $limit, int &$usage = 0, int $displayId = 0): bool
     {
         if ($limit <= 0) {
             return false;
         }
 
+        // Get from cache.
+        $cache = $this->pool->getItem('bandwidth_' . $displayId);
+        $usage = $cache->get();
+
+        if ($cache->isMiss() || $usage === null) {
+            // Get from the database
+            $usage = $this->getBandwidth($displayId);
+
+            // Save to the cache
+            $cache->set($usage);
+            $cache->setTTL(600);
+            $cache->save();
+        }
+
+        $this->getLog()->debug(sprintf(
+            'isBandwidthExceeded: Checking bandwidth usage %s against allowance %s',
+            ByteFormatter::format($usage),
+            ByteFormatter::format($limit * 1024)
+        ));
+
+        return ($usage >= ($limit * 1024));
+    }
+
+    private function getBandwidth(int $displayId): int
+    {
         try {
             $dbh = $this->getStore()->getConnection();
 
@@ -90,15 +120,10 @@ class BandwidthFactory extends BaseFactory
             $sth = $dbh->prepare($sql);
             $sth->execute($params);
 
-            $usage = $sth->fetchColumn(0);
-
-            $this->getLog()->debug(sprintf('Checking bandwidth usage %s against allowance %s ' , ByteFormatter::format($usage), ByteFormatter::format($limit * 1024)));
-
-            return ($usage >= ($limit * 1024));
-
+            return $sth->fetchColumn(0);
         } catch (\PDOException $e) {
-            $this->getLog()->error($e->getMessage());
-            return false;
+            $this->getLog()->error('getBandwidth: e = ' . $e->getMessage());
+            return 0;
         }
     }
 }

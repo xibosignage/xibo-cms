@@ -2771,7 +2771,7 @@ class Soap
 
         $this->display = $this->displayFactory->getById($displayId);
 
-        $xmdsLimit = $this->getConfig()->getSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
+        $xmdsLimit = intval($this->getConfig()->getSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB'));
         $displayBandwidthLimit = $this->display->bandwidthLimit;
 
         try {
