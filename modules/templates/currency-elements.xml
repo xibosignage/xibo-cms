@@ -110,6 +110,7 @@ if(properties.fitToArea) {
             </property>
             <property id="fitToArea" type="checkbox">
                 <title>Fit to selection</title>
+                <playerCompatibility android="v3 R303+" windows="v3 R302+" linux="TBC" webos="v4+" tizen="N/A">Supported on:</playerCompatibility>
                 <helpText>Fit to selected area instead of using the font size?</helpText>
                 <default>0</default>
             </property>
