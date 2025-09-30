@@ -2204,6 +2204,9 @@ PropertiesPanel.prototype.initPanelFields = function(
     },
   );
 
+  // Initialise popovers
+  self.DOMObject.find('[data-toggle="popover"]').popover();
+
   // Handle Auto Save
   // (only when working in the layout editor)
   // and if not using the interactive add widget mode

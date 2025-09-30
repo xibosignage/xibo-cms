@@ -1121,6 +1121,7 @@ $(target).find('img').xiboImageRender(properties);
             <property id="tip1Type" type="dropdown" mode="single">
                 <title>Tip1 Type</title>
                 <default>squared</default>
+                <playerCompatibility android="v3 R303+" windows="v3 R302+" webos="v6+" tizen="v6.5+" linux="TBC">Supported on:</playerCompatibility>
                 <options>
                     <option name="squared">Squared</option>
                     <option name="diamond">Diamond</option>
@@ -1132,6 +1133,7 @@ $(target).find('img').xiboImageRender(properties);
             <property id="tip2Type" type="dropdown" mode="single">
                 <title>Tip2 Type</title>
                 <default>squared</default>
+                <playerCompatibility android="v3 R303+" windows="v3 R302+" webos="v6+" tizen="v6.5+" linux="TBC">Supported on:</playerCompatibility>
                 <options>
                     <option name="squared">Squared</option>
                     <option name="diamond">Diamond</option>
