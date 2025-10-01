@@ -1315,11 +1315,6 @@ class Layout implements \JsonSerializable
         // merge regions and drawers into one array and go through it.
         $allRegions = array_merge($this->regions, $this->drawers);
 
-        // Used to identify layouts with canvas-only region and global elements without custom duration
-        // If there's more than 1 region, then we can assume that the layout doesn't have a canvas-only region
-        $isCanvasOnlyRegion = count($allRegions) <= 1;
-        $minLayoutDuration = 10;
-
         foreach ($allRegions as $region) {
             /* @var Region $region */
 
@@ -1382,16 +1377,6 @@ class Layout implements \JsonSerializable
                     if ($item->type === 'global') {
                         $widget = $item;
 
-                        // If this widget has a custom duration or if the current duration is already greater than
-                        // the minimum layout duration for canvas-only regions, then use that duration
-                        if ($widget->useDuration == 1
-                            || $widget->duration > $minLayoutDuration
-                            || $widget->calculatedDuration > $minLayoutDuration
-                        ) {
-                            $isCanvasOnlyRegion = false;
-                        }
-                    } else {
-                        $isCanvasOnlyRegion = false;
                     }
 
                     // Get the highest duration.
@@ -1414,8 +1399,6 @@ class Layout implements \JsonSerializable
                     $widgets = [$widget];
                 }
             } else {
-                $isCanvasOnlyRegion = false;
-
                 $widgets = $region->getPlaylist()->setModuleFactory($this->moduleFactory)->expandWidgets();
             }
 
@@ -1466,11 +1449,6 @@ class Layout implements \JsonSerializable
                     // Make sure this Widget expires immediately so that the other Regions can be the leaders when
                     // it comes to expiring the Layout
                     $widgetDuration = Widget::$widgetMinDuration;
-                }
-
-                // Special case for layouts with canvas-only region containing global elements without custom duration
-                if ($isCanvasOnlyRegion) {
-                    $widgetDuration = $minLayoutDuration;
                 }
 
                 if ($region->isDrawer === 0) {
