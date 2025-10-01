@@ -268,13 +268,18 @@ Layout.prototype.createDataStructure = function(data) {
         }
       }
 
-      // Set region duration
-      newRegion.duration = regionDuration;
-
       // If it's a canvas, save region as a canvas
       if (isCanvas) {
+        // For canvas, if region in data is longer than
+        // the longest widget, set as data instead
+        newRegion.duration =
+          Math.max(regionDuration ?? 0, data.regions[region]?.duration ?? 0);
+
         this.canvas = newRegion;
       } else {
+        // Set region duration
+        newRegion.duration = regionDuration;
+
         // Push Region to the Layout region array
         this.regions[newRegion.id] = newRegion;
       }
