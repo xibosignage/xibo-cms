@@ -91,6 +91,8 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
   // playlist id
   this.playlistId = data.playlistId;
 
+  this.useDuration = data.useDuration;
+
   // check if audio can be attached to it
   const typesThatCantHaveAudio = ['subplaylist'];
   this.canAttachAudio = !typesThatCantHaveAudio.includes(this.subType);
@@ -282,11 +284,13 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
     // If this widget does not have a set duration, then use the region duration
     if (this.useDuration !== 1 || this.duration == null) {
       const app = this.editorObject;
-      const region = app.getObjectByTypeAndId('region', this.parent.regionId);
+      const region = (this.parent.subType == 'canvas') ?
+        app.getObjectByTypeAndId('canvas') :
+        app.getObjectByTypeAndId('region', this.parent.regionId);
 
-      return (region && region.duration)
-        ? parseFloat(region.duration)
-        : parseFloat(this.calculatedDuration);
+      return (region && region.duration) ?
+        parseFloat(region.duration) :
+        parseFloat(this.calculatedDuration);
     }
 
     return parseFloat(this.calculatedDuration);
