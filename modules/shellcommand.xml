@@ -162,7 +162,7 @@
                     <condition field="useDuration" type="eq">1</condition>
                 </test>
             </visibility>
-            <playerCompatibility windows="only"></playerCompatibility>
+            <playerCompatibility android="" tizen="" webos="" chromeos="" linux=""></playerCompatibility>
         </property>
     </properties>
     <preview>

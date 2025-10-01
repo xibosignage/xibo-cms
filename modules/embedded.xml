@@ -45,7 +45,6 @@
             <title>Scale Content?</title>
             <helpText>Should the embedded content be scaled along with the layout?</helpText>
             <default>0</default>
-            <playerCompatibility windows="v2 R253+"></playerCompatibility>
         </property>
         <property id="isPreNavigate" type="checkbox" includeInXlf="true">
             <title>Preload?</title>

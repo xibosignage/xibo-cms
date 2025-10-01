@@ -48,7 +48,7 @@
             </property>
             <property id="fitToArea" type="checkbox">
                 <title>Fit to selection</title>
-                <playerCompatibility android="v3 R303+" windows="v3 R302+" linux="TBC" webos="v4+" tizen="N/A">Supported on:</playerCompatibility>
+                <playerCompatibility tizen=""></playerCompatibility>
                 <helpText>Fit to selected area instead of using the font size?</helpText>
                 <default>0</default>
             </property>
@@ -339,7 +339,7 @@ if(properties.fitToArea) {
             </property>
             <property id="fitToArea" type="checkbox">
                 <title>Fit to selection</title>
-                <playerCompatibility android="v3 R303+" windows="v3 R302+" linux="TBC" webos="v4+" tizen="N/A">Supported on:</playerCompatibility>
+                <playerCompatibility tizen=""></playerCompatibility>
                 <helpText>Fit to selected area instead of using the font size?</helpText>
                 <default>0</default>
             </property>
@@ -644,7 +644,7 @@ $(target).find('.date').each(function(_idx, dateEl){
             </property>
             <property id="fitToArea" type="checkbox">
                 <title>Fit to selection</title>
-                <playerCompatibility android="v3 R303+" windows="v3 R302+" linux="TBC" webos="v4+" tizen="N/A">Supported on:</playerCompatibility>
+                <playerCompatibility tizen=""></playerCompatibility>
                 <helpText>Fit to selected area instead of using the font size?</helpText>
                 <default>0</default>
             </property>
@@ -1124,7 +1124,7 @@ $(target).find('img').xiboImageRender(properties);
             <property id="tip1Type" type="dropdown" mode="single">
                 <title>Tip1 Type</title>
                 <default>squared</default>
-                <playerCompatibility android="v3 R303+" windows="v3 R302+" webos="v6+" tizen="v6.5+" linux="TBC">Supported on:</playerCompatibility>
+                <playerCompatibility tizen="" webos=""></playerCompatibility>
                 <options>
                     <option name="squared">Squared</option>
                     <option name="diamond">Diamond</option>
@@ -1136,7 +1136,7 @@ $(target).find('img').xiboImageRender(properties);
             <property id="tip2Type" type="dropdown" mode="single">
                 <title>Tip2 Type</title>
                 <default>squared</default>
-                <playerCompatibility android="v3 R303+" windows="v3 R302+" webos="v6+" tizen="v6.5+" linux="TBC">Supported on:</playerCompatibility>
+                <playerCompatibility tizen="" webos=""></playerCompatibility>
                 <options>
                     <option name="squared">Squared</option>
                     <option name="diamond">Diamond</option>

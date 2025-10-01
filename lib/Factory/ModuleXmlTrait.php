@@ -239,11 +239,24 @@ trait ModuleXmlTrait
                         /** @var \DOMElement $playerCompat */
                         $playerCompatibility = new PlayerCompatibility();
                         $playerCompatibility->message = $playerCompat->textContent;
-                        $playerCompatibility->windows = $playerCompat->getAttribute('windows');
-                        $playerCompatibility->android = $playerCompat->getAttribute('android');
-                        $playerCompatibility->linux = $playerCompat->getAttribute('linux');
-                        $playerCompatibility->webos = $playerCompat->getAttribute('webos');
-                        $playerCompatibility->tizen = $playerCompat->getAttribute('tizen');
+                        if ($playerCompat->hasAttribute('windows')) {
+                            $playerCompatibility->windows = $playerCompat->getAttribute('windows');
+                        }
+                        if ($playerCompat->hasAttribute('android')) {
+                            $playerCompatibility->android = $playerCompat->getAttribute('android');
+                        }
+                        if ($playerCompat->hasAttribute('linux')) {
+                            $playerCompatibility->linux = $playerCompat->getAttribute('linux');
+                        }
+                        if ($playerCompat->hasAttribute('webos')) {
+                            $playerCompatibility->webos = $playerCompat->getAttribute('webos');
+                        }
+                        if ($playerCompat->hasAttribute('tizen')) {
+                            $playerCompatibility->tizen = $playerCompat->getAttribute('tizen');
+                        }
+                        if ($playerCompat->hasAttribute('chromeos')) {
+                            $playerCompatibility->chromeos = $playerCompat->getAttribute('chromeos');
+                        }
                         $property->playerCompatibility = $playerCompatibility;
                     }
                 }

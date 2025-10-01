@@ -32,6 +32,7 @@ class PlayerCompatibility implements \JsonSerializable
     public $android;
     public $webos;
     public $tizen;
+    public $chromeos;
     public $message;
 
     /**
@@ -45,6 +46,7 @@ class PlayerCompatibility implements \JsonSerializable
             'android' => $this->android,
             'webos' => $this->webos,
             'tizen' => $this->tizen,
+            'chromeos' => $this->chromeos,
             'message' => $this->message,
         ];
     }

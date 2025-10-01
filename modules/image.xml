@@ -60,7 +60,6 @@
                 <option name="stretch">Stretch</option>
                 <option name="fit">Fit</option>
             </options>
-            <playerCompatibility android="v3 R304" windows="v3 R303" linux="TBC" webos="TBC" tizen="TBC">Fit supported from:</playerCompatibility>
         </property>
         <property id="alignId" type="dropdown" mode="single">
             <title>Horizontal Align</title>

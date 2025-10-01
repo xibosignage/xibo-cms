@@ -78,7 +78,6 @@
                 <option name="aspect">Aspect</option>
                 <option name="stretch">Stretch</option>
             </options>
-            <playerCompatibility windows="v2 R253+"></playerCompatibility>
         </property>
         <property id="mute" type="checkbox">
             <title>Mute?</title>

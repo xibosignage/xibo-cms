@@ -1,12 +1,16 @@
-<i class="fa fa-info-circle input-info tooltip-always-on"
+<i class="fa fa-warning input-warning tooltip-always-on"
     data-toggle="popover"
     data-trigger="hover"
     data-placement="left"
     data-html="true"
-    data-content='{{#if message }}<p>{{ message }}</p>{{/if}}<ul class="player-compatibility">
-    {{#if android }}<li><span class="fa fa-android"></span> {{ android }}</li>{{/if}}
-    {{#if linux }}<li><span class="fa fa-linux"></span> {{ linux }}</li>{{/if}}
-    {{#if tizen }}<li>Tizen: {{ tizen }}</li>{{/if}}
-    {{#if webos }}<li>webOS: {{ webos }}</li>{{/if}}
-    {{#if windows }}<li><span class="fa fa-windows"></span> {{ windows }}</li>{{/if}}</ul>'
->
+    data-content='<div class="player-compatibility-helper">
+    {{#if message }}<div class="message">{{ message }}</div>{{/if}}
+    <ul>
+        <li {{#neq android null}}class="unsupported"{{/neq}}><div class="os-icon-container"><img src="/dist/assets/players/android.png" alt="Android" class="os-icon"></div>{{#if android}}<span class="desc">{{ android }}</span>{{/if}}</li>
+        <li {{#neq linux null}}class="unsupported"{{/neq}}><div class="os-icon-container"><img src="/dist/assets/players/linux.png" alt="Linux" class="os-icon"></div>{{#if linux}}<span class="desc">{{ linux }}</span>{{/if}}</li>
+        <li {{#neq tizen null}}class="unsupported"{{/neq}}><div class="os-icon-container"><img src="/dist/assets/players/tizen.png" alt="Tizen" class="os-icon"></div>{{#if tizen}}<span class="desc">{{ tizen }}</span>{{/if}}</li>
+        <li {{#neq webos null}}class="unsupported"{{/neq}}><div class="os-icon-container"><img src="/dist/assets/players/webos.png" alt="webOS" class="os-icon"></div>{{#if webos}}<span class="desc">{{ webos }}</span>{{/if}}</li>
+        <li {{#neq windows null}}class="unsupported"{{/neq}}><div class="os-icon-container"><img src="/dist/assets/players/windows.png" alt="Windows" class="os-icon"></div>{{#if windows}}<span class="desc">{{ windows }}</span>{{/if}}</li>
+        <li {{#neq chromeos null}}class="unsupported"{{/neq}}><div class="os-icon-container"><img src="/dist/assets/players/chromeos.png" alt="ChromeOS" class="os-icon"></div>{{#if chromeos}}<span class="desc">{{ chromeos }}</span>{{/if}}</li>
+    </ul>
+</div>'>
