@@ -400,6 +400,8 @@ class WidgetSyncTask implements TaskInterface
         // 0 if the existing row is set to its current values.
         foreach ($displays as $display) {
             $shouldNotify = false;
+            $shouldNotifyDataUpdate = false;
+
             foreach ($mediaIds as $mediaId) {
                 try {
                     $affected = $this->store->update($sql, [
@@ -409,6 +411,10 @@ class WidgetSyncTask implements TaskInterface
 
                     if ($affected == 1) {
                         $shouldNotify = true;
+                    }
+
+                    if ($affected > 0) {
+                        $shouldNotifyDataUpdate = true;
                     }
                 } catch (\PDOException) {
                     // We link what we can, and log any failures.
@@ -426,8 +432,11 @@ class WidgetSyncTask implements TaskInterface
                     $this->displayFactory->getDisplayNotifyService()->collectLater()
                         ->notifyByDisplayId($display->displayId);
                 }
-                $this->displayFactory->getDisplayNotifyService()
-                    ->notifyDataUpdate($display, $widgetId);
+
+                if ($shouldNotify || $shouldNotifyDataUpdate) {
+                    $this->displayFactory->getDisplayNotifyService()
+                        ->notifyDataUpdate($display, $widgetId);
+                }
             } else {
                 $this->displayFactory->getDisplayNotifyService()->collectNow()
                     ->notifyByDisplayId($display->displayId);
