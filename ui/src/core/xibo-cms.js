@@ -662,7 +662,11 @@ window.XiboInitialise = function(scope, options) {
           $sectionContainer
             .off('click', '.http-key-value-remove')
             .on('click', '.http-key-value-remove', function(ev) {
+              const $formCheckInput = $(ev.currentTarget)
+                .parents('.request-section')
+                .find('.form-check-input');
               $(ev.currentTarget).parents('.http-key-value-element').remove();
+              updateKeyValueRawFields.bind($formCheckInput)(true);
               updateValue(type);
             });
 
@@ -827,7 +831,7 @@ window.XiboInitialise = function(scope, options) {
               if (requestOptions.headers != undefined) {
                 try {
                   requestOptions.headers =
-                    SON.parse(requestOptions.headers);
+                    JSON.parse(requestOptions.headers);
                 } catch (error) {
                   console.warn(error);
                   console.warn('Skip headers JSON parse!');
@@ -944,8 +948,8 @@ window.XiboInitialise = function(scope, options) {
                 '.http-key-value-container ' +
                 '.http-key-value-element',
               )
-              .each(function(ev) {
-                const $el = $(ev.currentTarget);
+              .each(function(_idx, el) {
+                const $el = $(el);
                 $el.removeClass('invalid');
                 let paramName = $el.find('.http-key').val();
                 let paramValue = $el.find('.http-value').val();
@@ -1087,8 +1091,8 @@ window.XiboInitialise = function(scope, options) {
           const extraValues = [];
 
           // Get values from input fields
-          $container.find('.intent-extra-element').each(function(ev) {
-            const $el = $(ev.currentTarget);
+          $container.find('.intent-extra-element').each(function(_idx, el) {
+            const $el = $(el);
             $el.removeClass('invalid');
             const extraName = $el.find('.extra-name').val();
             const extraType = $el.find('.extra-type').val();
