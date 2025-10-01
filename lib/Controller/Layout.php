@@ -1306,12 +1306,12 @@ class Layout extends Base
         }
 
         $layout->retired = 0;
+
         $layout->save([
             'saveLayout' => true,
             'saveRegions' => false,
             'saveTags' => false,
             'setBuildRequired' => false,
-            'notify' => false
         ]);
 
         // Return
