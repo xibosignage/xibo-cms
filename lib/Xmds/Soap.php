@@ -1346,19 +1346,9 @@ class Soap
 
                 $this->getLog()->debug(count($scheduleEvents) . ' events for eventId ' . $schedule->eventId);
 
-                // Does this event have any criteria?
-                $criteriaNodes = [];
+                // Load the whole schedule object if we have some events attached
                 if (count($scheduleEvents) > 0) {
                     $schedule->load(['loadDisplayGroups' => false]);
-
-                    foreach ($schedule->criteria as $scheduleCriteria) {
-                        $criteriaNode = $scheduleXml->createElement('criteria');
-                        $criteriaNode->setAttribute('metric', $scheduleCriteria->metric);
-                        $criteriaNode->setAttribute('condition', $scheduleCriteria->condition);
-                        $criteriaNode->setAttribute('type', $scheduleCriteria->type);
-                        $criteriaNode->textContent = $scheduleCriteria->value;
-                        $criteriaNodes[] = $criteriaNode;
-                    }
                 }
 
                 foreach ($scheduleEvents as $scheduleEvent) {
@@ -1390,6 +1380,18 @@ class Soap
                     $scheduleId = $row['eventId'];
                     $is_priority = $parsedRow->getInt('isPriority');
 
+                    // Criteria
+                    $criteriaNodes = [];
+                    foreach ($schedule->criteria as $scheduleCriteria) {
+                        $criteriaNode = $scheduleXml->createElement('criteria');
+                        $criteriaNode->setAttribute('metric', $scheduleCriteria->metric);
+                        $criteriaNode->setAttribute('condition', $scheduleCriteria->condition);
+                        $criteriaNode->setAttribute('type', $scheduleCriteria->type);
+                        $criteriaNode->textContent = $scheduleCriteria->value;
+                        $criteriaNodes[] = $criteriaNode;
+                    }
+
+                    // Handle event type
                     if ($eventTypeId == Schedule::$LAYOUT_EVENT ||
                         $eventTypeId == Schedule::$INTERRUPT_EVENT ||
                         $eventTypeId == Schedule::$CAMPAIGN_EVENT ||
