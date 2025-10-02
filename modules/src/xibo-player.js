@@ -37,13 +37,16 @@ const XiboPlayer = function() {
 
     let localData;
 
-    // wait for dataset fetch (resolve when its "done" fires)
+    // wait for dataset fetch (resolve when its "done" or "error" fires)
     let chain = Promise.resolve();
     if (currentWidget.properties?.dataSetId) {
       chain = new Promise(function(resolve) {
         xiboIC.getData(currentWidget.properties?.dataSetId, {
           done: (status, data) => {
             localData = JSON.parse(data);
+            resolve();
+          },
+          error: () => {
             resolve();
           },
         });
@@ -131,7 +134,7 @@ const XiboPlayer = function() {
 
     if (isDataWidget) {
       const {dataItems, showError, errorMessage} =
-          this.loadData(playerWidget, data);
+        this.loadData(playerWidget, data);
       widgetDataItems = dataItems;
       shouldShowError = showError;
       withErrorMessage = errorMessage;
@@ -194,17 +197,17 @@ const XiboPlayer = function() {
    */
   this.prepareWidgetElements = function(widgetElements, currentWidget) {
     const transformedElems =
-        this.composeElements(widgetElements, currentWidget);
+      this.composeElements(widgetElements, currentWidget);
 
     if (currentWidget.isDataExpected && widgetElements.length > 0) {
       const {minSlot, maxSlot} =
-          PlayerHelper.getMinAndMaxSlot(Object.values(transformedElems));
+        PlayerHelper.getMinAndMaxSlot(Object.values(transformedElems));
       // Compose data elements slots
       currentWidget.maxSlot = maxSlot;
       currentWidget.elements = transformedElems;
       currentWidget.metaElements = this.composeMetaElements(transformedElems);
       currentWidget.dataElements =
-          this.initSlots(transformedElems, minSlot, maxSlot);
+        this.initSlots(transformedElems, minSlot, maxSlot);
       currentWidget.pinnedSlots =
         PlayerHelper.getPinnedSlots(currentWidget.dataElements);
 
@@ -509,9 +512,9 @@ const XiboPlayer = function() {
             if (lastSlotFilled % maxSlot === 0) {
               lastSlotFilled = null;
             } else if (currentKey > maxSlot &&
-                nextSlot !== currentSlot &&
-                pinnedSlots.includes(nextSlot) &&
-                filledPinnedSlot.includes(nextSlot)
+              nextSlot !== currentSlot &&
+              pinnedSlots.includes(nextSlot) &&
+              filledPinnedSlot.includes(nextSlot)
             ) {
               // Next slot is a pinned slot and has been filled
               // So, current item must be passed to next non-pinned slot
@@ -549,25 +552,25 @@ const XiboPlayer = function() {
 
     if (minCount < maxCount) {
       const nonPinnedDataKeys =
-          Object.values(groupSlotsData).reduce((a, b) => {
-            if (!b.hasPinnedSlot) {
-              a = [...a, ...(b.dataKeys)];
-            } else {
-              if (b.dataKeys.length > 1) {
-                b.dataKeys.forEach(function(dataKey) {
-                  if (!pinnedSlots.includes(dataKey)) {
-                    a = [...a, dataKey];
-                  }
-                });
-              }
+        Object.values(groupSlotsData).reduce((a, b) => {
+          if (!b.hasPinnedSlot) {
+            a = [...a, ...(b.dataKeys)];
+          } else {
+            if (b.dataKeys.length > 1) {
+              b.dataKeys.forEach(function(dataKey) {
+                if (!pinnedSlots.includes(dataKey)) {
+                  a = [...a, dataKey];
+                }
+              });
             }
+          }
 
-            return a;
-          }, []).sort((a, b) => {
-            if (a < b) return -1;
-            if (a > b) return 1;
-            return 0;
-          });
+          return a;
+        }, []).sort((a, b) => {
+          if (a < b) return -1;
+          if (a > b) return 1;
+          return 0;
+        });
 
       Object.keys(groupSlotsData).forEach(function(slotIndex, slotKey) {
         const dataCount = dataCounts[slotIndex];
@@ -610,7 +613,7 @@ const XiboPlayer = function() {
     elemCopy.dataKeys = [];
 
     if (Object.keys(elemCopy).length > 0 &&
-        elemCopy.hasOwnProperty('properties')) {
+      elemCopy.hasOwnProperty('properties')) {
       delete elemCopy.properties;
     }
 
@@ -682,7 +685,7 @@ const XiboPlayer = function() {
         if (elemProps.hasOwnProperty(extendWith)) {
           elemCopy[elemCopy.dataOverride] = elemProps[extendWith];
           elemCopy.templateData[elemCopy.dataOverride] =
-              elemProps[extendWith];
+            elemProps[extendWith];
         }
       }
     }
@@ -694,7 +697,7 @@ const XiboPlayer = function() {
 
     // Check if element is extended and data is coming from meta
     if (elemCopy.isExtended && elemCopy.dataOverrideWith !== null &&
-        elemCopy.dataOverrideWith.includes('meta')) {
+      elemCopy.dataOverrideWith.includes('meta')) {
       elemCopy.dataInMeta = true;
     }
 
@@ -1470,18 +1473,18 @@ XiboPlayer.prototype.renderGlobalElements = function(currentWidget) {
           // Invoke groupItem onTemplateRender if present
           Promise.all(Array.from(elemObj.items).map(function(groupItem) {
             const itemID =
-            groupItem.uniqueID || groupItem.templateData?.uniqueID;
+              groupItem.uniqueID || groupItem.templateData?.uniqueID;
 
             // Call onTemplateRender
             // Handle the rendering of the template
             (groupItem.onTemplateRender() !== undefined) &&
-            groupItem.onTemplateRender()(
-              groupItem.elementId,
-              $content.find(`#${itemID}`).parent(),
-              {},
-              {groupItem, ...groupItem.templateData, data: {}},
-              meta,
-            );
+              groupItem.onTemplateRender()(
+                groupItem.elementId,
+                $content.find(`#${itemID}`).parent(),
+                {},
+                {groupItem, ...groupItem.templateData, data: {}},
+                meta,
+              );
           }));
         }
       } else {
@@ -1653,7 +1656,7 @@ XiboPlayer.prototype.loadElementFunctions = function(element, dataItem) {
       `onTemplateRender_${element.templateData.id}`
     ] === 'function') {
       onTemplateRender = window[`onTemplateRender_${element.templateData.id}`];
-    } else if (element.isExtended && typeof window [
+    } else if (element.isExtended && typeof window[
       `onTemplateRender_${element.dataOverride}`
     ] === 'function') {
       onTemplateRender = window[`onTemplateRender_${element.dataOverride}`];
@@ -1703,7 +1706,7 @@ XiboPlayer.prototype.onDataLoad = function(params) {
     );
 
     if (onDataLoadResult !== undefined &&
-        Object.keys(onDataLoadResult).length > 0
+      Object.keys(onDataLoadResult).length > 0
     ) {
       if ((onDataLoadResult ?? {}).hasOwnProperty('handled')) {
         onDataLoadResponse = {
@@ -1895,11 +1898,11 @@ XiboPlayer.prototype.onVisible = function(params) {
 XiboPlayer.prototype.saveTemplateDimensions = function($template) {
   if ($template && $template.length > 0) {
     $template.data('width') &&
-    (globalOptions.widgetDesignWidth = $template.data('width'));
+      (globalOptions.widgetDesignWidth = $template.data('width'));
     $template.data('height') &&
-    (globalOptions.widgetDesignHeight = $template.data('height'));
+      (globalOptions.widgetDesignHeight = $template.data('height'));
     $template.data('gap') &&
-    (globalOptions.widgetDesignGap = $template.data('gap'));
+      (globalOptions.widgetDesignGap = $template.data('gap'));
   }
 };
 
