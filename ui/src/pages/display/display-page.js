@@ -1239,7 +1239,7 @@ window.displayEditFormOpen = function(dialog) {
     // Reload select 2 with new value
     if (select2FixFlag) {
       // Restore select2 after value set
-      makePagedSelect($inputFields);
+      makePagedSelect($inputFields, $inputFields.parents('.bootbox-body'));
     }
 
     // Android dimensions init
