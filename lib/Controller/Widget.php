@@ -478,7 +478,12 @@ class Widget extends Base
 
         // Handle common parameters.
         $widget->useDuration = $params->getCheckbox('useDuration');
-        $widget->duration = $params->getInt('duration', ['default' => $module->defaultDuration]);
+
+        // If we enabled useDuration, then use the provided duration
+        $widget->duration = ($widget->useDuration == 1)
+            ? $params->getInt('duration', ['default' => $module->defaultDuration])
+            : $module->defaultDuration;
+
         $widget->setOptionValue('name', 'attrib', $params->getString('name'));
         $widget->setOptionValue('enableStat', 'attrib', $params->getString('enableStat'));
 
