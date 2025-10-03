@@ -40,7 +40,7 @@ class AnonymousUsageTask implements TaskInterface
 
     public function __construct()
     {
-        $this->url = 'https://xibosignage.com/api/stats/usage';
+        $this->url = 'https://api.xibosignage.com/api/stats/usage';
     }
 
     /** @inheritdoc */
