@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-26 11:29+0100\n"
+"POT-Creation-Date: 2025-10-03 10:50+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1506,7 +1506,7 @@ msgid "System"
 msgstr ""
 
 #: locale/moduletranslate.php:392
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3495
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3458
 #: cache/c0/c0eaac88ab4b5ef2a85a25c1eb154c6c.php:640
 msgid "Test"
 msgstr ""
@@ -1530,8 +1530,8 @@ msgstr ""
 #: cache/7a/7ace3caa387751a93bc12788dd3e868e.php:333
 #: cache/ea/ea74b92e70ae30b26f1bfa76dd4831ea.php:197
 #: cache/d6/d67f7c1643c930e6e9416cca58dbca0c.php:268
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3294
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3362
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3257
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3325
 #: cache/3b/3b6eaf64c218bf75a573540d24c29ae3.php:361
 #: cache/b2/b242b0ea0328919f86e7bbc8b15d11ae.php:293
 msgid "Alert"
@@ -1716,8 +1716,8 @@ msgstr ""
 #: cache/7a/7ace3caa387751a93bc12788dd3e868e.php:333
 #: cache/ea/ea74b92e70ae30b26f1bfa76dd4831ea.php:197
 #: cache/d6/d67f7c1643c930e6e9416cca58dbca0c.php:268
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3306
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3374
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3269
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3337
 #: cache/3b/3b6eaf64c218bf75a573540d24c29ae3.php:361
 #: cache/83/83bb1c5c0884298aa59fc23624c344db.php:51
 #: cache/83/83bb1c5c0884298aa59fc23624c344db.php:62
@@ -2175,7 +2175,7 @@ msgstr ""
 #: locale/moduletranslate.php:529 locale/moduletranslate.php:1187
 #: locale/moduletranslate.php:1435 locale/moduletranslate.php:2114
 #: locale/moduletranslate.php:2869 locale/moduletranslate.php:2982
-#: locale/dbtranslate.php:52 cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:872
+#: locale/dbtranslate.php:52 cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:876
 #: cache/ab/abd86a2b650eb5eb15adc42f8f2eedde.php:1358
 #: cache/ab/abd86a2b650eb5eb15adc42f8f2eedde.php:1588
 #: cache/ab/abd86a2b650eb5eb15adc42f8f2eedde.php:2274
@@ -2860,7 +2860,7 @@ msgstr ""
 #: cache/d6/d65647dc03c6485df9c4d3c7cebd6556.php:513
 #: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:434
 #: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:577
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:820
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:824
 #: cache/99/99685cb02a46ebebbfc067f158641951.php:174
 #: cache/c0/c0b497d04a31013bafc687f41bad47f2.php:121
 #: cache/c0/c0b497d04a31013bafc687f41bad47f2.php:305
@@ -3211,7 +3211,7 @@ msgid "Optional Stylesheet"
 msgstr ""
 
 #: locale/moduletranslate.php:976 locale/dbtranslate.php:54
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:864
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:868
 #: cache/ab/abd86a2b650eb5eb15adc42f8f2eedde.php:1374
 #: cache/ab/abd86a2b650eb5eb15adc42f8f2eedde.php:1592
 msgid "Video"
@@ -3782,7 +3782,7 @@ msgstr ""
 #: locale/moduletranslate.php:3149 locale/moduletranslate.php:3257
 #: locale/moduletranslate.php:3288 locale/moduletranslate.php:3449
 #: locale/moduletranslate.php:3486 locale/moduletranslate.php:3536
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3146
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3109
 #: cache/ab/abd86a2b650eb5eb15adc42f8f2eedde.php:2303
 #: cache/ab/abd86a2b650eb5eb15adc42f8f2eedde.php:2455
 #: cache/15/15895aad4f7efd6a8c70d32de3acade4.php:306
@@ -6199,7 +6199,7 @@ msgstr ""
 msgid "Audio - support varies depending on the client hardware"
 msgstr ""
 
-#: locale/dbtranslate.php:75 cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:868
+#: locale/dbtranslate.php:75 cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:872
 #: cache/ab/abd86a2b650eb5eb15adc42f8f2eedde.php:1608
 msgid "PDF"
 msgstr ""
@@ -6703,7 +6703,7 @@ msgstr ""
 #: cache/99/99685cb02a46ebebbfc067f158641951.php:86
 #: cache/1f/1fb3ca31aef0e3fe7b52bbfbb6a4af73.php:74
 #: cache/63/63b15102c208fae253c32c2f77313cc2.php:71
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3845
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3808
 #: cache/c0/c0eaac88ab4b5ef2a85a25c1eb154c6c.php:430
 #: cache/0b/0bf0c070de7a1159f73da487732bf8b3.php:80
 #: cache/0b/0bb72264cd242f2afd564859f6bf11f9.php:73
@@ -7195,7 +7195,7 @@ msgstr ""
 #: cache/54/54d064f129447f51389aeea4a056750e.php:131
 #: cache/6d/6dc471423786e616a29f282db9e7cdc1.php:77
 #: cache/8c/8ca51f739500f2043df1546fd7a7b9f9.php:83
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:962
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:970
 #: cache/ca/ca9b899371870f4435fd70e881698a42.php:71
 #: cache/a6/a68cd8fbba21a5d01d8df07d772babb8.php:376
 msgid "Next"
@@ -7411,9 +7411,9 @@ msgstr ""
 #: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1273
 #: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1334
 #: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1395
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2141
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2481
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3764
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2104
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2444
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3727
 #: cache/c0/c0b497d04a31013bafc687f41bad47f2.php:746
 #: cache/3b/3b6eaf64c218bf75a573540d24c29ae3.php:361
 #: cache/3b/3b6eaf64c218bf75a573540d24c29ae3.php:547
@@ -7436,8 +7436,8 @@ msgstr ""
 #: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1279
 #: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1340
 #: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1401
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2147
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3776
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2110
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3739
 #: cache/c0/c0b497d04a31013bafc687f41bad47f2.php:750
 #: cache/3b/3b6eaf64c218bf75a573540d24c29ae3.php:547
 #: cache/3b/3b6eaf64c218bf75a573540d24c29ae3.php:561
@@ -7588,7 +7588,7 @@ msgstr ""
 #: lib/Controller/Developer.php:183 lib/Controller/PlayerSoftware.php:164
 #: lib/Controller/PlayerSoftware.php:173 lib/Controller/Command.php:187
 #: lib/Controller/Command.php:196 lib/Controller/DataSetRss.php:171
-#: lib/Controller/Schedule.php:2472 lib/Controller/Schedule.php:2481
+#: lib/Controller/Schedule.php:2481 lib/Controller/Schedule.php:2490
 #: lib/Controller/UserGroup.php:165 lib/Controller/DayPart.php:162
 #: lib/Controller/DayPart.php:168
 msgid "Delete"
@@ -8169,7 +8169,7 @@ msgstr ""
 #: cache/2f/2f4b514d07e8843555073481f1971ef4.php:228
 #: cache/34/34a04f8db9b05cf9adcd43c5f51af74c.php:104
 #: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:126
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2894
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2857
 #: cache/c0/c0b497d04a31013bafc687f41bad47f2.php:328
 #: cache/c9/c94bec895bd9a3188079316f3633aef6.php:291
 #: cache/42/4224ff7432c1fc00e7bc2ab35b918dc1.php:151
@@ -8272,7 +8272,7 @@ msgstr ""
 #: cache/f5/f5a2c2f8b8f4e9220139a1c44da2c2f7.php:201
 #: cache/75/75c450b8caf31678df6c244b58a2926f.php:168
 #: cache/29/299995a3e8725ec4161753ab2dc1fd2f.php:258
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:824
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:828
 #: cache/c9/c94693e619e4bcb5dc34c0360ec23fb6.php:170
 #: lib/Controller/User.php:304
 msgid "Email"
@@ -10347,7 +10347,7 @@ msgid "Cancel upload"
 msgstr ""
 
 #: cache/2d/2dda3d21077534e0fe24b88c39f6d003.php:375
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:941
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:949
 #: cache/ab/abd86a2b650eb5eb15adc42f8f2eedde.php:318
 #: cache/ab/abd86a2b650eb5eb15adc42f8f2eedde.php:1857
 #: cache/3a/3aa37d24a7b61ab6ce560c96614351e5.php:307
@@ -10402,7 +10402,7 @@ msgstr ""
 #: cache/7a/7ace3caa387751a93bc12788dd3e868e.php:61
 #: cache/d6/d67f7c1643c930e6e9416cca58dbca0c.php:61
 #: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:122
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2347
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2310
 #: cache/3b/3b6eaf64c218bf75a573540d24c29ae3.php:61
 msgid "Network"
 msgstr ""
@@ -10410,7 +10410,7 @@ msgstr ""
 #: cache/7a/7ace3caa387751a93bc12788dd3e868e.php:69
 #: cache/d6/d67f7c1643c930e6e9416cca58dbca0c.php:69
 #: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:134
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3265
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3228
 #: cache/3b/3b6eaf64c218bf75a573540d24c29ae3.php:69
 #: cache/ac/acd2becdd62dc03267f16bd82bccca02.php:664
 msgid "Troubleshooting"
@@ -10767,7 +10767,7 @@ msgstr ""
 
 #: cache/7a/7ace3caa387751a93bc12788dd3e868e.php:208
 #: cache/d6/d67f7c1643c930e6e9416cca58dbca0c.php:185
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2773
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2736
 #: cache/3b/3b6eaf64c218bf75a573540d24c29ae3.php:254
 #: cache/b2/b242b0ea0328919f86e7bbc8b15d11ae.php:258
 msgid "Force HTTPS?"
@@ -10867,7 +10867,7 @@ msgstr ""
 #: cache/7a/7ace3caa387751a93bc12788dd3e868e.php:327
 #: cache/ea/ea74b92e70ae30b26f1bfa76dd4831ea.php:191
 #: cache/d6/d67f7c1643c930e6e9416cca58dbca0c.php:262
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3342
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3305
 #: cache/3b/3b6eaf64c218bf75a573540d24c29ae3.php:355
 #: cache/b2/b242b0ea0328919f86e7bbc8b15d11ae.php:287
 msgid "Log Level"
@@ -10884,8 +10884,8 @@ msgstr ""
 #: cache/7a/7ace3caa387751a93bc12788dd3e868e.php:333
 #: cache/ea/ea74b92e70ae30b26f1bfa76dd4831ea.php:197
 #: cache/d6/d67f7c1643c930e6e9416cca58dbca0c.php:268
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3288
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3356
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3251
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3319
 #: cache/3b/3b6eaf64c218bf75a573540d24c29ae3.php:361
 #: cache/b2/b242b0ea0328919f86e7bbc8b15d11ae.php:293
 msgid "Emergency"
@@ -10894,8 +10894,8 @@ msgstr ""
 #: cache/7a/7ace3caa387751a93bc12788dd3e868e.php:333
 #: cache/ea/ea74b92e70ae30b26f1bfa76dd4831ea.php:197
 #: cache/d6/d67f7c1643c930e6e9416cca58dbca0c.php:268
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3300
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3368
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3263
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3331
 #: cache/3b/3b6eaf64c218bf75a573540d24c29ae3.php:361
 #: cache/b2/b242b0ea0328919f86e7bbc8b15d11ae.php:293
 msgid "Critical"
@@ -11218,7 +11218,7 @@ msgstr ""
 #: cache/1e/1e61b9bdf05d56202929062eb1f56436.php:404
 #: cache/1e/1e61b9bdf05d56202929062eb1f56436.php:494
 #: cache/1e/1e61b9bdf05d56202929062eb1f56436.php:530
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:966
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:974
 msgid "Previous"
 msgstr ""
 
@@ -11390,7 +11390,7 @@ msgstr ""
 #: cache/29/297687b2c773bf74ed941cb3b052eed5.php:329
 #: cache/ee/ee7f02394a0676a9def91248a826e622.php:482
 #: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:138
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3526
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3489
 #: cache/b0/b0cc6380fa4d85f959aac58f62cbf429.php:122
 #: cache/8d/8dda87605cc543099df98448afa47ab0.php:173
 #: cache/ac/acd2becdd62dc03267f16bd82bccca02.php:123
@@ -11539,6 +11539,7 @@ msgid "Developer"
 msgstr ""
 
 #: cache/4d/4d58ff7fc00fb2d29f0e6a7b4c3fe36c.php:416
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:799
 msgid "Training"
 msgstr ""
 
@@ -11755,7 +11756,7 @@ msgstr ""
 
 #: cache/84/842455e3b8fa26bd84cea16e09a21f78.php:724
 #: cache/f8/f840b9a6fa76942cce9ab5ea1234b0b0.php:411
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3109
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3072
 #: cache/b0/b0cc6380fa4d85f959aac58f62cbf429.php:551
 msgid "Timezone"
 msgstr ""
@@ -12909,7 +12910,7 @@ msgstr ""
 
 #: cache/43/43ef97a63aab8b7a4bff59fc020ed2c6.php:128
 #: cache/43/43ef97a63aab8b7a4bff59fc020ed2c6.php:196
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3629
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3592
 #: cache/3b/3b4bef6c60897261edd71b8b1cbee730.php:170
 #: cache/b0/b0cc6380fa4d85f959aac58f62cbf429.php:120
 #: cache/4e/4ed6b91f3cc2f5fd9b57329b0162363b.php:216
@@ -13245,7 +13246,7 @@ msgstr ""
 
 #: cache/f8/f840b9a6fa76942cce9ab5ea1234b0b0.php:117
 #: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:118
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2118
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2081
 msgid "Maintenance"
 msgstr ""
 
@@ -14357,7 +14358,7 @@ msgstr ""
 #: lib/Controller/Display.php:839 lib/Controller/MenuBoardProduct.php:191
 #: lib/Controller/Developer.php:102 lib/Controller/PlayerSoftware.php:157
 #: lib/Controller/Command.php:178 lib/Controller/DataSetRss.php:163
-#: lib/Controller/Schedule.php:2466 lib/Controller/UserGroup.php:157
+#: lib/Controller/Schedule.php:2475 lib/Controller/UserGroup.php:157
 #: lib/Controller/DayPart.php:155
 msgid "Edit"
 msgstr ""
@@ -15059,7 +15060,7 @@ msgstr ""
 
 #: cache/29/297687b2c773bf74ed941cb3b052eed5.php:81
 #: cache/ee/ee7f02394a0676a9def91248a826e622.php:126
-#: lib/Controller/Playlist.php:1729 lib/Controller/Library.php:2229
+#: lib/Controller/Playlist.php:1729 lib/Controller/Library.php:2231
 #: lib/Controller/Layout.php:1793
 msgid "Design"
 msgstr ""
@@ -16569,12 +16570,8 @@ msgstr ""
 msgid "Connect and Grow"
 msgstr ""
 
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:799
-msgid "Youtube"
-msgstr ""
-
 #: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:803
-msgid "Watch tutorials"
+msgid "Access guides and tutorials"
 msgstr ""
 
 #: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:811
@@ -16582,131 +16579,141 @@ msgid "Thank you for leaving your feedback!"
 msgstr ""
 
 #: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:816
+msgid ""
+"The feedback you provide, along with your name and email address are used by "
+"Xibo to improve our products and services."
+msgstr ""
+
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:820
 msgid "We’d love to hear your thoughts"
 msgstr ""
 
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:828
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:832
 msgid "Comments and recommendations"
 msgstr ""
 
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:832
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:836
 msgid "Attachments (optional)"
 msgstr ""
 
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:836
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:840
 msgid "Drag and drop files or"
 msgstr ""
 
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:840
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:844
 msgid "Browse files"
 msgstr ""
 
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:844
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:848
 msgid "File types: .jpg, .png, .mov and .pdf"
 msgstr ""
 
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:848
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:852
 msgid "Max size: 15MB"
 msgstr ""
 
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:852
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:856
 msgid "Send feedback"
 msgstr ""
 
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:856
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:860
 msgid "Maximum file upload of 3 files."
 msgstr ""
 
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:860
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:864
 msgid "Remove one to add more."
 msgstr ""
 
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:877
-msgid "Please provide a valid name"
-msgstr ""
-
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:881
-msgid "Please provide a valid email"
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:880
+msgid "Reporting an issue?"
 msgstr ""
 
 #: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:885
-msgid "Please provide any comment or recommendation"
+msgid "Please provide a valid name"
 msgstr ""
 
 #: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:889
-msgid "Please fill all required fields"
+msgid "Please provide a valid email"
 msgstr ""
 
 #: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:893
-msgid "Something went wrong. Please try again"
+msgid "Please provide any comment or recommendation"
 msgstr ""
 
 #: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:897
-msgid "Maximum file number exceeded"
+msgid "Please fill all required fields"
 msgstr ""
 
 #: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:901
-msgid "Invalid file type"
+msgid "Something went wrong. Please try again"
 msgstr ""
 
 #: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:905
+msgid "Maximum file number exceeded"
+msgstr ""
+
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:909
+msgid "Invalid file type"
+msgstr ""
+
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:913
 #: lib/Factory/MediaFactory.php:279
 msgid "File too large"
 msgstr ""
 
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:915
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:923
 msgid "No data available in table"
 msgstr ""
 
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:919
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:927
 msgid "Showing _START_ to _END_ of _TOTAL_ entries"
 msgstr ""
 
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:923
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:931
 msgid "Showing 0 to 0 of 0 entries"
 msgstr ""
 
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:927
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:935
 msgid "(filtered from _MAX_ total entries)"
 msgstr ""
 
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:933
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:941
 msgid "Show _MENU_ entries"
 msgstr ""
 
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:937
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:945
 msgid "Loading..."
 msgstr ""
 
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:945
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:953
 msgid "Search:"
 msgstr ""
 
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:949
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:957
 msgid "No matching records found"
 msgstr ""
 
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:954
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:962
 msgid "First"
 msgstr ""
 
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:958
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:966
 msgid "Last"
 msgstr ""
 
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:972
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:980
 msgid ": activate to sort column ascending"
 msgstr ""
 
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:976
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:984
 msgid ": activate to sort column descending"
 msgstr ""
 
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:982
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:990
 msgid "Column visibility"
 msgstr ""
 
-#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:986
+#: cache/99/9946a81b9fd1d99c9329b1695ebb0032.php:994
 msgid "Print"
 msgstr ""
 
@@ -16741,7 +16748,7 @@ msgid "Defaults"
 msgstr ""
 
 #: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:130
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3063
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3026
 msgid "Regional"
 msgstr ""
 
@@ -17131,499 +17138,491 @@ msgid "The last time we PHONED_HOME in seconds since the epoch"
 msgstr ""
 
 #: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1810
-msgid "Phone home URL"
-msgstr ""
-
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1816
-msgid "The URL to connect to to PHONE_HOME (if enabled)"
-msgstr ""
-
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1847
 msgid "Send Schedule in advance?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1853
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1816
 msgid "Should the CMS send future schedule information to Players?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1872
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1835
 msgid "Send files in advance?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1878
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1841
 msgid ""
 "How many seconds in to the future should the calls to RequiredFiles look?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1909
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1872
 msgid "Allow Import?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1928
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1891
 msgid "Enable Library Tidy?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1947
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1910
 msgid "Status Dashboard Widget"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1953
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1916
 msgid "HTML to embed in an iframe on the Status Dashboard"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1984
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1947
 msgid "Defaults Imported?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1990
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1953
 msgid "Has the default layout been imported?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2009
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1972
 msgid "Enable Latest News?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2015
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1978
 msgid ""
 "Should the Dashboard show latest news? The address is provided by the theme."
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2034
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:1997
 msgid "Instance Suspended"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2040
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2003
 msgid "Is this instance suspended?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2059
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2022
 msgid "Latest News URL"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2065
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2028
 msgid "RSS/Atom Feed to be displayed on the Status Dashboard"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2096
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2059
 msgid "Show the Logo on report exports?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2102
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2065
 msgid ""
 "When exporting a saved report to PDF, should the logo be shown on the PDF?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2127
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2090
 msgid "Enable Maintenance?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2133
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2096
 msgid "Allow the maintenance script to run if it is called?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2153
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2116
 msgid "Protected"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2188
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2151
 msgid "Enable Email Alerts?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2194
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2157
 msgid "Global switch for email alerts to be sent"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2213
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2176
 msgid "Max Log Age"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2219
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2182
 msgid ""
 "Maximum age for log entries in days. Set to 0 to keep logs indefinitely."
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2250
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2213
 msgid "Max Statistics Age"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2256
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2219
 msgid ""
 "Maximum age for statistics entries in days. Entries older than this will not "
 "be processed and existing entries will be removed. Set to 0 to keep "
 "statistics indefinitely."
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2287
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2250
 msgid "Max Display Timeout"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2293
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2256
 msgid ""
 "How long in minutes after the last time a Player connects should we send an "
 "alert? Can be overridden on a per Player basis."
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2324
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2287
 msgid "Send repeat Display Timeouts"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2330
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2293
 msgid ""
 "Should the CMS send an email if a display is in an error state every time "
 "maintenance runs?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2356
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2319
 msgid "Admin email address"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2362
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2325
 msgid ""
 "This is the overall CMS adminstrator who will receive copies of all email "
 "notifications generated by the CMS."
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2393
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2356
 msgid "Sending email address"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2399
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2362
 msgid "Mail will be sent from this address"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2430
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2393
 msgid "Sending email name"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2436
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2399
 msgid "Mail will be sent under this name"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2467
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2430
 msgid "File download mode"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2473
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2436
 msgid ""
 "Should the CMS use Apache X-Sendfile, Nginx X-Accel, or PHP (Off) to return "
 "the files from the library?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2514
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2477
 msgid "Proxy URL"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2520
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2483
 msgid "The Proxy URL"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2551
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2514
 msgid "Proxy Port"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2557
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2520
 msgid "The Proxy Port"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2588
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2551
 msgid "Proxy Credentials"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2594
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2557
 msgid "The Authentication information for this proxy. username:password"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2625
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2588
 msgid "Proxy Exceptions"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2631
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2594
 msgid ""
 "Hosts and Keywords that should not be loaded via the Proxy Specified. These "
 "should be comma separated."
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2662
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2625
 msgid "CDN Address"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2668
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2631
 msgid "Content Delivery Network Address for serving file requests to Players"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2699
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2662
 msgid "Monthly bandwidth Limit"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2705
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2668
 msgid "XMDS Transfer Limit in KB/month"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2736
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2699
 msgid "Library Size Limit"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2742
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2705
 msgid "The Limit for the Library Size in KB"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2779
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2742
 msgid "Force the portal into HTTPS?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2798
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2761
 msgid "Enable STS?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2804
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2767
 msgid ""
 "Add STS to the response headers? Make sure you fully understand STS before "
 "turning it on as it will prevent access via HTTP after the first successful "
 "HTTPS connection."
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2823
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2786
 msgid "STS Time out"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2829
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2792
 msgid "The Time to Live (maxage) of the STS header expressed in seconds."
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2860
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2823
 msgid "Whitelist Load Balancers"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2866
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2829
 msgid ""
 "If the CMS is behind a load balancer, what are the load balancer IP "
 "addresses, comma delimited."
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2903
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2866
 msgid "Widget colouring in Playlist editor"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2911
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2874
 msgid "Media Colouring"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2917
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2880
 msgid "Sharing Colouring"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2951
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2914
 msgid "Schedule with view sharing?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2957
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2920
 msgid ""
 "Should users with View sharing on displays be allowed to schedule to them?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2974
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2937
 msgid "Show event Layout regardless of User permission?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2980
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2943
 msgid ""
 "If checked then the Schedule will show the Layout for existing events even "
 "if the logged in User does not have permission to see that Layout."
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2997
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2960
 msgid "Lock Task Config"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3003
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2966
 msgid "Is the task config locked? Useful for Service providers."
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3020
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2983
 msgid "Is the Transition config locked?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3026
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:2989
 msgid "Allow modifications to the transition configuration?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3043
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3006
 msgid "Allow saving in the root folder?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3049
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3012
 msgid ""
 "Users can use the top level folder to store content. Disable to force the "
 "use of folders."
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3072
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3035
 msgid "Default Language"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3078
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3041
 msgid "The default language to use"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3115
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3078
 msgid "Set the default timezone for the application"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3152
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3115
 msgid "The Date Format to use when displaying dates in the CMS."
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3191
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3154
 msgid "Detect language?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3197
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3160
 msgid "Detect the browser language?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3214
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3177
 msgid "Calendar Type"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3220
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3183
 msgid "Which Calendar Type should the CMS use?"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3228
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3191
 msgid "Gregorian"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3234
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3197
 msgid "Jalali"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3274
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3237
 msgid "Resting Log Level"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3280
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3243
 msgid ""
 "Set the level of the resting log level. The CMS will revert to this log "
 "level after an elevated period ends. In production systems \"error\" is "
 "recommended."
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3348
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3311
 msgid ""
 "Set the level of logging the CMS should record. In production systems "
 "\"error\" is recommended."
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3380
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3343
 msgid "Warning"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3386
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3349
 msgid "Notice"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3392
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3355
 msgid "Information"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3398
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3361
 msgid "Debug"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3438
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3401
 msgid "Elevate Log Until"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3444
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3407
 msgid "Elevate the log level until this date."
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3475
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3438
 msgid "Server Mode"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3481
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3444
 msgid ""
 "This should only be set if you want to display the maximum allowed error "
 "messaging through the user interface. <br /> Useful for capturing critical "
 "php errors and environment issues."
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3489
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3452
 msgid "Production"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3535
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3498
 msgid "System User"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3541
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3504
 msgid "The system User for this CMS"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3575
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3538
 msgid "Default User Group"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3581
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3544
 msgid "The default User Group for new Users"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3615
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3578
 msgid "Default User Type"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3621
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3584
 msgid ""
 "Sets the default user type selected when creating a user. We recommend that "
 "this is set to User"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3635
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3598
 msgid "Group Admin"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3641
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3604
 msgid "Super Admin"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3676
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3639
 msgid "Password Policy Regular Expression"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3682
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3645
 msgid "Regular Expression for password complexity, leave blank for no policy."
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3713
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3676
 msgid "Description of Password Policy"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3719
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3682
 msgid ""
 "A text description of this password policy will be shown to users if they "
 "enter a password that does not meet the policy requirements set above."
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3750
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3713
 msgid "Password Reminder"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3756
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3719
 msgid ""
 "Enable password reminder on CMS login page? Valid sending email address is "
 "required"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3770
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3733
 msgid "On except Admin"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3811
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3774
 msgid "Two Factor Issuer"
 msgstr ""
 
-#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3817
+#: cache/51/512a5a99da9d6137ff075d9f5fc3e17f.php:3780
 msgid ""
 "Name that should appear as Issuer when two factor authorisation is enabled"
 msgstr ""
@@ -18749,7 +18748,7 @@ msgstr ""
 
 #: cache/ec/ecc543a00f9a3a373b2b98cdddbbf0a4.php:126
 #: cache/ab/abd86a2b650eb5eb15adc42f8f2eedde.php:2048
-#: lib/Controller/Library.php:1819 web/xmds.php:137
+#: lib/Controller/Library.php:1819 web/xmds.php:139
 msgid "Expired"
 msgstr ""
 
@@ -22064,7 +22063,7 @@ msgstr ""
 msgid "Added %s"
 msgstr ""
 
-#: lib/Controller/Task.php:292 lib/Controller/Widget.php:595
+#: lib/Controller/Task.php:292 lib/Controller/Widget.php:600
 #: lib/Controller/DisplayGroup.php:1038 lib/Controller/DataSet.php:1029
 #: lib/Controller/DataSet.php:1091 lib/Controller/ScheduleReport.php:426
 #: lib/Controller/Notification.php:761 lib/Controller/Campaign.php:961
@@ -22087,7 +22086,7 @@ msgstr ""
 msgid "Edited %s"
 msgstr ""
 
-#: lib/Controller/Task.php:339 lib/Controller/Widget.php:680
+#: lib/Controller/Task.php:339 lib/Controller/Widget.php:685
 #: lib/Controller/DisplayGroup.php:1094 lib/Controller/DataSet.php:1181
 #: lib/Controller/ScheduleReport.php:464 lib/Controller/Notification.php:820
 #: lib/Controller/Campaign.php:1040 lib/Controller/SavedReport.php:283
@@ -22127,10 +22126,10 @@ msgid ""
 msgstr ""
 
 #: lib/Controller/Widget.php:193 lib/Controller/Widget.php:470
-#: lib/Controller/Widget.php:649 lib/Controller/Widget.php:811
-#: lib/Controller/Widget.php:980 lib/Controller/Widget.php:1073
-#: lib/Controller/Widget.php:1515 lib/Controller/Widget.php:1628
-#: lib/Controller/Widget.php:1716 lib/Controller/Playlist.php:1337
+#: lib/Controller/Widget.php:654 lib/Controller/Widget.php:816
+#: lib/Controller/Widget.php:985 lib/Controller/Widget.php:1078
+#: lib/Controller/Widget.php:1520 lib/Controller/Widget.php:1633
+#: lib/Controller/Widget.php:1721 lib/Controller/Playlist.php:1337
 #: lib/Controller/Playlist.php:1502 lib/Controller/Playlist.php:2033
 #: lib/Controller/Layout.php:749 lib/Controller/Layout.php:852
 #: lib/Controller/Layout.php:1135 lib/Controller/Region.php:201
@@ -22141,9 +22140,9 @@ msgid "This Layout is not a Draft, please checkout."
 msgstr ""
 
 #: lib/Controller/Widget.php:197 lib/Controller/Widget.php:474
-#: lib/Controller/Widget.php:653 lib/Controller/Widget.php:815
-#: lib/Controller/Widget.php:984 lib/Controller/Widget.php:1077
-#: lib/Controller/Widget.php:1519 lib/Controller/Playlist.php:1340
+#: lib/Controller/Widget.php:658 lib/Controller/Widget.php:820
+#: lib/Controller/Widget.php:989 lib/Controller/Widget.php:1082
+#: lib/Controller/Widget.php:1524 lib/Controller/Playlist.php:1340
 #: lib/Controller/Library.php:1204
 msgid ""
 "This Playlist is dynamically managed so cannot accept manual assignments."
@@ -22174,154 +22173,154 @@ msgid "Expecting a static template"
 msgstr ""
 
 #: lib/Controller/Widget.php:327 lib/Controller/Widget.php:462
-#: lib/Controller/Widget.php:708 lib/Controller/Widget.php:803
-#: lib/Controller/Widget.php:876 lib/Controller/Widget.php:972
-#: lib/Controller/Widget.php:1065 lib/Controller/Widget.php:1421
-#: lib/Controller/Widget.php:1507 lib/Controller/Widget.php:1620
-#: lib/Controller/Widget.php:1708 lib/Controller/WidgetData.php:76
+#: lib/Controller/Widget.php:713 lib/Controller/Widget.php:808
+#: lib/Controller/Widget.php:881 lib/Controller/Widget.php:977
+#: lib/Controller/Widget.php:1070 lib/Controller/Widget.php:1426
+#: lib/Controller/Widget.php:1512 lib/Controller/Widget.php:1625
+#: lib/Controller/Widget.php:1713 lib/Controller/WidgetData.php:76
 #: lib/Controller/WidgetData.php:129 lib/Controller/WidgetData.php:205
 #: lib/Controller/WidgetData.php:267 lib/Controller/WidgetData.php:345
 msgid "This Widget is not shared with you with edit permission"
 msgstr ""
 
-#: lib/Controller/Widget.php:497
+#: lib/Controller/Widget.php:502
 msgid "Duration needs to be a positive value"
 msgstr ""
 
-#: lib/Controller/Widget.php:502
+#: lib/Controller/Widget.php:507
 msgid "Duration must be lower than 526000"
 msgstr ""
 
-#: lib/Controller/Widget.php:513
+#: lib/Controller/Widget.php:518
 msgid "This widget uses elements and can not be changed to a static template"
 msgstr ""
 
-#: lib/Controller/Widget.php:524
+#: lib/Controller/Widget.php:529
 msgid "You can only change to another template of the same type"
 msgstr ""
 
-#: lib/Controller/Widget.php:577
+#: lib/Controller/Widget.php:582
 #, php-format
 msgid "Your library reference %d does not exist."
 msgstr ""
 
-#: lib/Controller/Widget.php:639
+#: lib/Controller/Widget.php:644
 msgid "This Widget is not shared with you with delete permission"
 msgstr ""
 
-#: lib/Controller/Widget.php:682
+#: lib/Controller/Widget.php:687
 msgid "Deleted Widget"
 msgstr ""
 
-#: lib/Controller/Widget.php:721 lib/Controller/Region.php:662
+#: lib/Controller/Widget.php:726 lib/Controller/Region.php:662
 #: lib/Connector/OpenWeatherMapConnector.php:689
 msgid "North"
 msgstr ""
 
-#: lib/Controller/Widget.php:722 lib/Controller/Region.php:663
+#: lib/Controller/Widget.php:727 lib/Controller/Region.php:663
 msgid "North East"
 msgstr ""
 
-#: lib/Controller/Widget.php:723 lib/Controller/Region.php:664
+#: lib/Controller/Widget.php:728 lib/Controller/Region.php:664
 #: lib/Connector/OpenWeatherMapConnector.php:691
 msgid "East"
 msgstr ""
 
-#: lib/Controller/Widget.php:724 lib/Controller/Region.php:665
+#: lib/Controller/Widget.php:729 lib/Controller/Region.php:665
 msgid "South East"
 msgstr ""
 
-#: lib/Controller/Widget.php:725 lib/Controller/Region.php:666
+#: lib/Controller/Widget.php:730 lib/Controller/Region.php:666
 #: lib/Connector/OpenWeatherMapConnector.php:693
 msgid "South"
 msgstr ""
 
-#: lib/Controller/Widget.php:726 lib/Controller/Region.php:667
+#: lib/Controller/Widget.php:731 lib/Controller/Region.php:667
 msgid "South West"
 msgstr ""
 
-#: lib/Controller/Widget.php:727 lib/Controller/Region.php:668
+#: lib/Controller/Widget.php:732 lib/Controller/Region.php:668
 #: lib/Connector/OpenWeatherMapConnector.php:695
 msgid "West"
 msgstr ""
 
-#: lib/Controller/Widget.php:728 lib/Controller/Region.php:669
+#: lib/Controller/Widget.php:733 lib/Controller/Region.php:669
 msgid "North West"
 msgstr ""
 
-#: lib/Controller/Widget.php:845
+#: lib/Controller/Widget.php:850
 msgid "Unknown transition type"
 msgstr ""
 
-#: lib/Controller/Widget.php:852
+#: lib/Controller/Widget.php:857
 msgid "Edited Transition"
 msgstr ""
 
-#: lib/Controller/Widget.php:882 lib/Controller/Widget.php:990
+#: lib/Controller/Widget.php:887 lib/Controller/Widget.php:995
 msgid ""
 "Audio cannot be attached to a Sub-Playlist Widget. Please attach it to the "
 "Widgets inside the Playlist"
 msgstr ""
 
-#: lib/Controller/Widget.php:1021
+#: lib/Controller/Widget.php:1026
 msgid "Edited Audio"
 msgstr ""
 
-#: lib/Controller/Widget.php:1090
+#: lib/Controller/Widget.php:1095
 msgid "Removed Audio"
 msgstr ""
 
-#: lib/Controller/Widget.php:1111 lib/Controller/Widget.php:1330
+#: lib/Controller/Widget.php:1116 lib/Controller/Widget.php:1335
 msgid "This Region is not shared with you"
 msgstr ""
 
-#: lib/Controller/Widget.php:1116 lib/Controller/Widget.php:1335
+#: lib/Controller/Widget.php:1121 lib/Controller/Widget.php:1340
 msgid "This Widget is not shared with you"
 msgstr ""
 
-#: lib/Controller/Widget.php:1276
+#: lib/Controller/Widget.php:1281
 msgid "No data providers configured"
 msgstr ""
 
-#: lib/Controller/Widget.php:1403
+#: lib/Controller/Widget.php:1408
 msgid "Problem rendering widget"
 msgstr ""
 
-#: lib/Controller/Widget.php:1571
+#: lib/Controller/Widget.php:1576
 msgid "Edited Expiry"
 msgstr ""
 
-#: lib/Controller/Widget.php:1635
+#: lib/Controller/Widget.php:1640
 msgid "You can only set a target region on a Widget in the drawer."
 msgstr ""
 
-#: lib/Controller/Widget.php:1659
+#: lib/Controller/Widget.php:1664
 msgid "Target region set"
 msgstr ""
 
-#: lib/Controller/Widget.php:1739
+#: lib/Controller/Widget.php:1744
 msgid "Invalid element JSON"
 msgstr ""
 
-#: lib/Controller/Widget.php:1745
+#: lib/Controller/Widget.php:1750
 msgid ""
 "At least one element is required for this Widget. Please delete it if you no "
 "longer need it."
 msgstr ""
 
-#: lib/Controller/Widget.php:1920
+#: lib/Controller/Widget.php:1925
 msgid "Saved elements"
 msgstr ""
 
-#: lib/Controller/Widget.php:1946
+#: lib/Controller/Widget.php:1951
 msgid "Please supply a propertyId"
 msgstr ""
 
-#: lib/Controller/Widget.php:2006
+#: lib/Controller/Widget.php:2011
 msgid "Please provide a widgetId"
 msgstr ""
 
-#: lib/Controller/Widget.php:2025
+#: lib/Controller/Widget.php:2030
 msgid "Widget does not have a data type"
 msgstr ""
 
@@ -22870,7 +22869,7 @@ msgstr ""
 msgid "Please provide an assetId"
 msgstr ""
 
-#: lib/Controller/Fault.php:109 lib/Entity/Layout.php:1972
+#: lib/Controller/Fault.php:109 lib/Entity/Layout.php:1958
 msgid "Can't create ZIP. Error Code: "
 msgstr ""
 
@@ -23002,7 +23001,7 @@ msgid ""
 "tab to define"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1220 lib/Controller/Library.php:2381
+#: lib/Controller/Playlist.php:1220 lib/Controller/Library.php:2383
 #: lib/Controller/Layout.php:2320 lib/Controller/Developer.php:632
 #, php-format
 msgid "Copied as %s"
@@ -23037,7 +23036,7 @@ msgstr ""
 msgid "Specified Playlist item is not in use."
 msgstr ""
 
-#: lib/Controller/Playlist.php:1740 lib/Controller/Library.php:2240
+#: lib/Controller/Playlist.php:1740 lib/Controller/Library.php:2242
 #: lib/Controller/Layout.php:1840
 msgid "Preview Layout"
 msgstr ""
@@ -23119,7 +23118,7 @@ msgid "This library item is in use."
 msgstr ""
 
 #: lib/Controller/Library.php:1230 lib/Controller/Library.php:1442
-#: lib/Controller/Library.php:2570
+#: lib/Controller/Library.php:2572
 msgid "Cannot set Expiry date in the past"
 msgstr ""
 
@@ -23136,88 +23135,88 @@ msgstr ""
 msgid "Cannot download region specific module"
 msgstr ""
 
-#: lib/Controller/Library.php:1836 web/xmds.php:153
+#: lib/Controller/Library.php:1836 web/xmds.php:156
 msgid "Invalid URL"
 msgstr ""
 
-#: lib/Controller/Library.php:1861
+#: lib/Controller/Library.php:1863
 msgid "Route is available through the API"
 msgstr ""
 
-#: lib/Controller/Library.php:1930 lib/Controller/Layout.php:2385
+#: lib/Controller/Library.php:1932 lib/Controller/Layout.php:2385
 msgid "No tags to assign"
 msgstr ""
 
-#: lib/Controller/Library.php:1941 lib/Controller/Layout.php:2396
+#: lib/Controller/Library.php:1943 lib/Controller/Layout.php:2396
 #, php-format
 msgid "Tagged %s"
 msgstr ""
 
-#: lib/Controller/Library.php:2004 lib/Controller/Layout.php:2461
+#: lib/Controller/Library.php:2006 lib/Controller/Layout.php:2461
 msgid "No tags to unassign"
 msgstr ""
 
-#: lib/Controller/Library.php:2015 lib/Controller/Layout.php:2471
+#: lib/Controller/Library.php:2017 lib/Controller/Layout.php:2471
 #, php-format
 msgid "Untagged %s"
 msgstr ""
 
-#: lib/Controller/Library.php:2162 lib/Controller/Library.php:2247
+#: lib/Controller/Library.php:2164 lib/Controller/Library.php:2249
 msgid "Specified Media item is not in use."
 msgstr ""
 
-#: lib/Controller/Library.php:2454 lib/Middleware/Theme.php:143
+#: lib/Controller/Library.php:2456 lib/Middleware/Theme.php:143
 #, php-format
 msgid "This form accepts files up to a maximum size of %s"
 msgstr ""
 
-#: lib/Controller/Library.php:2578
+#: lib/Controller/Library.php:2580
 msgid "Provided URL is invalid"
 msgstr ""
 
-#: lib/Controller/Library.php:2594
+#: lib/Controller/Library.php:2596
 #, php-format
 msgid "Extension %s is not supported."
 msgstr ""
 
-#: lib/Controller/Library.php:2619
+#: lib/Controller/Library.php:2621
 #, php-format
 msgid ""
 "Invalid Module type or extension. Module type %s does not allow for %s "
 "extension"
 msgstr ""
 
-#: lib/Controller/Library.php:2652
+#: lib/Controller/Library.php:2654
 msgid "Download rejected for an unknown reason."
 msgstr ""
 
-#: lib/Controller/Library.php:2656
+#: lib/Controller/Library.php:2658
 #, php-format
 msgid "Download rejected due to %s"
 msgstr ""
 
-#: lib/Controller/Library.php:2663
+#: lib/Controller/Library.php:2665
 msgid "Media upload from URL was successful"
 msgstr ""
 
-#: lib/Controller/Library.php:2708
+#: lib/Controller/Library.php:2710
 msgid "Invalid image data"
 msgstr ""
 
-#: lib/Controller/Library.php:2818
+#: lib/Controller/Library.php:2820
 #, php-format
 msgid "Media %s moved to Folder %s"
 msgstr ""
 
-#: lib/Controller/Library.php:2914
+#: lib/Controller/Library.php:2916
 msgid "Not configured by any active connector."
 msgstr ""
 
-#: lib/Controller/Library.php:2964
+#: lib/Controller/Library.php:2966
 msgid "Download failed"
 msgstr ""
 
-#: lib/Controller/Library.php:2973
+#: lib/Controller/Library.php:2975
 msgid "Imported"
 msgstr ""
 
@@ -23420,7 +23419,7 @@ msgid ""
 "This function is available only to User who originally locked this Layout."
 msgstr ""
 
-#: lib/Controller/Layout.php:3281 lib/Entity/Layout.php:2326
+#: lib/Controller/Layout.php:3281 lib/Entity/Layout.php:2312
 msgid "Empty Region"
 msgstr ""
 
@@ -23474,12 +23473,12 @@ msgid ""
 msgstr ""
 
 #: lib/Controller/CypressTest.php:160 lib/Controller/Schedule.php:1097
-#: lib/Controller/Schedule.php:1781
+#: lib/Controller/Schedule.php:1790
 msgid "Direct scheduling of an Ad Campaign is not allowed"
 msgstr ""
 
 #: lib/Controller/CypressTest.php:171 lib/Controller/Schedule.php:1108
-#: lib/Controller/Schedule.php:1810 lib/Entity/Schedule.php:690
+#: lib/Controller/Schedule.php:1819 lib/Entity/Schedule.php:690
 msgid "Share of Voice must be a whole number between 0 and 3600"
 msgstr ""
 
@@ -24025,7 +24024,7 @@ msgstr ""
 msgid "The longitude entered is not valid."
 msgstr ""
 
-#: lib/Controller/Settings.php:775
+#: lib/Controller/Settings.php:770
 msgid "Settings Updated"
 msgstr ""
 
@@ -24045,8 +24044,8 @@ msgstr ""
 msgid "Please use XMDS API"
 msgstr ""
 
-#: lib/Controller/Pwa.php:81 lib/Controller/Pwa.php:138 web/xmds.php:173
-#: web/xmds.php:360
+#: lib/Controller/Pwa.php:81 lib/Controller/Pwa.php:138 web/xmds.php:178
+#: web/xmds.php:366
 msgid "Display unauthorised"
 msgstr ""
 
@@ -24110,7 +24109,7 @@ msgid "%s scheduled on %s"
 msgstr ""
 
 #: lib/Controller/Schedule.php:334 lib/Controller/Schedule.php:592
-#: lib/Controller/Schedule.php:2359 lib/Entity/Schedule.php:1969
+#: lib/Controller/Schedule.php:2368 lib/Entity/Schedule.php:1969
 msgid "Private Item"
 msgstr ""
 
@@ -24124,33 +24123,33 @@ msgstr ""
 msgid ", Repeats every %s %s"
 msgstr ""
 
-#: lib/Controller/Schedule.php:1122 lib/Controller/Schedule.php:1824
+#: lib/Controller/Schedule.php:1122 lib/Controller/Schedule.php:1833
 msgid "Please select a DataSet"
 msgstr ""
 
-#: lib/Controller/Schedule.php:1173 lib/Controller/Schedule.php:1866
+#: lib/Controller/Schedule.php:1173 lib/Controller/Schedule.php:1875
 msgid "Please enter a from date"
 msgstr ""
 
-#: lib/Controller/Schedule.php:1501 lib/Controller/Schedule.php:2129
+#: lib/Controller/Schedule.php:1501 lib/Controller/Schedule.php:2138
 msgid "Deleted Event"
 msgstr ""
 
-#: lib/Controller/Schedule.php:1788
+#: lib/Controller/Schedule.php:1797
 msgid "Cannot schedule Layout as a Campaign, please select a Campaign instead."
 msgstr ""
 
-#: lib/Controller/Schedule.php:1798
+#: lib/Controller/Schedule.php:1807
 msgid ""
 "Cannot schedule Campaign in selected event type, please select a Layout "
 "instead."
 msgstr ""
 
-#: lib/Controller/Schedule.php:2048
+#: lib/Controller/Schedule.php:2057
 msgid "Edited Event"
 msgstr ""
 
-#: lib/Controller/Schedule.php:2532 lib/Factory/RequiredFileFactory.php:414
+#: lib/Controller/Schedule.php:2541 lib/Factory/RequiredFileFactory.php:414
 msgid "Unknown type"
 msgstr ""
 
@@ -24769,41 +24768,41 @@ msgid ""
 "edge. Please check the allowed Resize Limit in Administration -> Settings"
 msgstr ""
 
-#: lib/Entity/Layout.php:1877
+#: lib/Entity/Layout.php:1863
 #, php-format
 msgid "%s is pending conversion"
 msgstr ""
 
-#: lib/Entity/Layout.php:1883
+#: lib/Entity/Layout.php:1869
 #, php-format
 msgid ""
 "%s is too large. Please ensure that none of the images in your layout are "
 "larger than your Resize Limit on their longest edge."
 msgstr ""
 
-#: lib/Entity/Layout.php:1888
+#: lib/Entity/Layout.php:1874
 #, php-format
 msgid "%s failed validation and cannot be published."
 msgstr ""
 
-#: lib/Entity/Layout.php:1902
+#: lib/Entity/Layout.php:1888
 msgid "Misconfigured Playlist"
 msgstr ""
 
-#: lib/Entity/Layout.php:2315
+#: lib/Entity/Layout.php:2301
 #, php-format
 msgid "There is an error with this Layout: %s"
 msgstr ""
 
-#: lib/Entity/Layout.php:2394 lib/Entity/Layout.php:2523
+#: lib/Entity/Layout.php:2380 lib/Entity/Layout.php:2509
 msgid "Not a Draft"
 msgstr ""
 
-#: lib/Entity/Layout.php:2609
+#: lib/Entity/Layout.php:2595
 msgid "Draft Layouts must have a parent"
 msgstr ""
 
-#: lib/Entity/Layout.php:2745 lib/Listener/WidgetListener.php:199
+#: lib/Entity/Layout.php:2731 lib/Listener/WidgetListener.php:199
 msgid "Cannot add the same SubPlaylist twice."
 msgstr ""
 
@@ -26419,17 +26418,17 @@ msgid ""
 "Layout code."
 msgstr ""
 
-#: lib/Xmds/Soap.php:2639
+#: lib/Xmds/Soap.php:2641
 #, php-format
 msgid "Recovery for Display %s"
 msgstr ""
 
-#: lib/Xmds/Soap.php:2641
+#: lib/Xmds/Soap.php:2643
 #, php-format
 msgid "Display ID %d is now back online %s"
 msgstr ""
 
-#: lib/Xmds/Soap.php:2783
+#: lib/Xmds/Soap.php:2785
 msgid "Bandwidth allowance exceeded"
 msgstr ""
 
@@ -27478,11 +27477,11 @@ msgstr ""
 msgid "No match for event type"
 msgstr ""
 
-#: web/xmds.php:130
+#: web/xmds.php:131
 msgid "Missing params"
 msgstr ""
 
-#: web/xmds.php:398
+#: web/xmds.php:404
 msgid "Your client is not the correct version to communicate with this CMS."
 msgstr ""
 
