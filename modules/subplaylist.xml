@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~ Copyright (C) 2025 Xibo Signage Ltd
   ~
   ~ Xibo - Digital Signage - https://xibosignage.com
   ~
@@ -105,7 +105,7 @@
     <preview>
         <twig><![CDATA[
 <div style="text-align:center;">
-    <i alt="{{ "Sub-Playlist"|trans }} thumbnail" class="module-preview-icon fa fa-list-ol"></i>
+    <i alt="Sub-Playlist thumbnail" class="module-preview-icon fa fa-list-ol"></i>
     <br/>
     {% trans %}{{ countSubPlaylistWidgets }} Widgets / {{ calculatedDuration }} seconds{% endtrans %}
 </div>
