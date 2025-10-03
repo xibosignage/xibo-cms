@@ -29,6 +29,8 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Slim\Views\Twig;
+use Twig\Extension\SandboxExtension;
+use Twig\Sandbox\SecurityPolicy;
 use Xibo\Entity\Display;
 use Xibo\Entity\Module;
 use Xibo\Entity\ModuleTemplate;
@@ -120,13 +122,14 @@ class WidgetHtmlRenderer
         array $additionalContexts = []
     ): string {
         if ($module->previewEnabled == 1) {
+            $twigSandbox = $this->getTwigSandbox();
             $width = $params->getDouble('width', ['default' => 0]);
             $height = $params->getDouble('height', ['default' => 0]);
 
             if ($module->preview !== null) {
                 // Parse out our preview (which is always a stencil)
                 $module->decorateProperties($widget, true);
-                return $this->twig->fetchFromString(
+                return $twigSandbox->fetchFromString(
                     $module->preview->twig,
                     array_merge(
                         [
@@ -544,6 +547,9 @@ class WidgetHtmlRenderer
         array $widgets,
         array $moduleTemplates
     ): string {
+        // Build a Twig Sandbox
+        $twigSandbox = $this->getTwigSandbox();
+
         // Build up some data for twig
         $twig = [];
         $twig['widgetId'] = $widgetId;
@@ -709,14 +715,14 @@ class WidgetHtmlRenderer
                         $this->getLog()->debug('render: Static template to include: ' . $moduleTemplate->templateId);
                         if ($moduleTemplate->stencil !== null) {
                             if ($moduleTemplate->stencil->twig !== null) {
-                                $twig['twig'][] = $this->twig->fetchFromString(
+                                $twig['twig'][] = $twigSandbox->fetchFromString(
                                     $this->decorateTranslations($moduleTemplate->stencil->twig, $translator),
                                     $widgetData['templateProperties'],
                                 );
                             }
                             if ($moduleTemplate->stencil->style !== null) {
                                 $twig['style'][] = [
-                                    'content' => $this->twig->fetchFromString(
+                                    'content' => $twigSandbox->fetchFromString(
                                         $moduleTemplate->stencil->style,
                                         $widgetData['templateProperties'],
                                     ),
@@ -743,7 +749,7 @@ class WidgetHtmlRenderer
             if ($module->stencil !== null) {
                 // Stencils have access to any module properties
                 if ($module->stencil->twig !== null) {
-                    $twig['twig'][] = $this->twig->fetchFromString(
+                    $twig['twig'][] = $twigSandbox->fetchFromString(
                         $this->decorateTranslations($module->stencil->twig, null),
                         array_merge($modulePropertyValues, ['settings' => $module->getSettingsForOutput()]),
                     );
@@ -757,14 +763,14 @@ class WidgetHtmlRenderer
                     ];
                 }
                 if ($module->stencil->head !== null) {
-                    $twig['head'][] = $this->twig->fetchFromString(
+                    $twig['head'][] = $twigSandbox->fetchFromString(
                         $this->decorateTranslations($module->stencil->head, null),
                         $modulePropertyValues,
                     );
                 }
                 if ($module->stencil->style !== null) {
                     $twig['style'][] = [
-                        'content' => $this->twig->fetchFromString(
+                        'content' => $twigSandbox->fetchFromString(
                             $module->stencil->style,
                             $modulePropertyValues,
                         ),
@@ -1011,5 +1017,32 @@ class WidgetHtmlRenderer
             $this->logger->debug('HTML cache doesn\'t exist yet or cannot be deleted. '
                 . $unexpectedValueException->getMessage());
         }
+    }
+
+    /**
+     * Get a Twig Sandbox
+     * @return \Slim\Views\Twig
+     * @throws \Twig\Error\LoaderError
+     */
+    private function getTwigSandbox(): Twig
+    {
+        // Create a Twig Environment with a Sandbox
+        $sandbox = Twig::create([
+            PROJECT_ROOT . '/modules',
+            PROJECT_ROOT . '/custom',
+        ], [
+            'cache' => false,
+        ]);
+
+        // Configure a security policy
+        // Create a new security policy
+        $policy = new SecurityPolicy();
+        $policy->setAllowedTags(['if', 'for', 'set']);
+        $policy->setAllowedFilters(['escape', 'raw', 'url_decode']);
+
+        // Create a Sandbox
+        $sandbox->addExtension(new SandboxExtension($policy, true));
+
+        return $sandbox;
     }
 }
