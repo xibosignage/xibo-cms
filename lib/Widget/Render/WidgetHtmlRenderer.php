@@ -31,6 +31,7 @@ use Psr\Log\NullLogger;
 use Slim\Views\Twig;
 use Twig\Extension\SandboxExtension;
 use Twig\Sandbox\SecurityPolicy;
+use Twig\TwigFilter;
 use Xibo\Entity\Display;
 use Xibo\Entity\Module;
 use Xibo\Entity\ModuleTemplate;
@@ -1034,10 +1035,18 @@ class WidgetHtmlRenderer
             'cache' => false,
         ]);
 
+        // Add missing filter
+        $sandbox->getEnvironment()->addFilter(new TwigFilter('url_decode', 'urldecode'));
+
         // Configure a security policy
         // Create a new security policy
         $policy = new SecurityPolicy();
-        $policy->setAllowedTags(['if', 'for', 'set']);
+
+        // Allowed tags
+        // import is allowed for weather static templates which import a macro
+        $policy->setAllowedTags(['if', 'for', 'set', 'macro', 'import']);
+
+        // Allowed filters
         $policy->setAllowedFilters(['escape', 'raw', 'url_decode']);
 
         // Create a Sandbox
