@@ -374,26 +374,6 @@
     </div>
 {% endmacro %}
 
-{% macro inputFullScreenSchedule(name, title, value, helpText, groupClass, idValue, validation, accessKey, readonly) %}
-    <div class="form-group row input-full-screen-layout {{ groupClass }}">
-        <label class="col-sm-2 control-label" for="fullScreen-{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <div class="col-sm-10">
-            <div class="input-group">
-                <input class="form-control" type="text" id="fullScreen-{{ name }}" value="{{ value }}" {{ validation }} readonly />
-                <input type="hidden" id="fullScreen-{{ name }}Id" value="{{ idValue }}"/>
-                <div class="input-group-append input-group-addon">
-                    <button class="btn btn-outline-secondary full-screen-layout-form" type="button"
-                        id="fullScreenControl_{{ name }}"
-                        data-no-layout="{% trans "Choose" %}" data-has-layout="{% trans "Change" %}" data-readonly="{{ readonly }}">
-                        {% if idValue %}{% trans "Change" %}{% else %}{% trans "Choose" %}{% endif %}
-                    </button>
-                </div>
-            </div>
-            <small class="form-text text-muted">{{ helpText }}</small>
-        </div>
-    </div>
-{% endmacro %}
-
 {% macro dateRangeFilter(name, title, value, helpText, groupClass, validation, accessKey) %}
     <div class="form-group mr-1 mb-1 d-flex flex-row {{ groupClass }}">
         {% set today =  now | date_modify('today') | date("Y-m-d H:i:s") %}

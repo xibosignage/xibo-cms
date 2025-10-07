@@ -84,8 +84,6 @@
                     data-full-screen-url="{{ url_for('layout.add.full.screen.schedule') }}"
                     data-fetch-sync-displays="{{ url_for('syncgroup.fetch.displays', {id:':id'}) }}"
                     data-event-sync-group-id="{{ event.syncGroupId }}"
-                    data-library-get-url="{{ url_for("library.search") }}?fullScreenScheduleCheck=true&types[]=image&types[]=video"
-                    data-playlist-get-url="{{ url_for("playlist.search") }}?fullScreenScheduleCheck=true"
                     data-delete-url="{{ url_for("schedule.delete.form", {id: event.eventId}) }}"
                     data-set-displays-from-grid-filters="{{ setDisplaysFromFilter }}">
 
@@ -108,20 +106,41 @@
                             { name: "data-trans-campaign", value: "Campaign"|trans },
                             { name: "data-trans-campaign-help-text", value: "Please select a Campaign for this Event to show"|trans },
                         ] %}
-
                         {% set title %}{% if fromCampaign %}{% trans "Campaign" %}{% else %}{% trans "Layout" %}{% endif %}{% endset %}
                         {% set helpText %}{% trans "Please select a Layout for this Event to show" %}{% endset %}
                         {{ forms.dropdown("campaignId", "single", title, event.campaignId, [campaign], "campaignId", "campaign", helpText, "layout-control", "", "", "", attributes, "", "", "", readonlySelect) }}
 
+                        {# Image/Video #}
+                        {% set attributes = [
+                            { name: "data-width", value: "100%" },
+                            { name: "data-search-url", value: url_for('library.search') ~ "?fullScreenScheduleCheck=true&types[]=image&types[]=video" },
+                            { name: "data-search-term", value: "media" },
+                            { name: "data-id-property", value: "mediaId" },
+                            { name: "data-text-property", value: "name" },
+                            { name: "data-selected-property", value: "selected" },
+                            { name: "data-additional-property", value: "hasFullScreenLayout" },
+                            { name: "data-initial-key", value: "mediaId"},
+                            { name: "data-initial-value", value: (mediaId is not empty ? mediaId : event.getUnmatchedProperty("mediaId")) }
+                        ] %}
                         {% set title %}{% trans "Media" %}{% endset %}
                         {% set helpText %}{% trans "Select a Media file from the Library to use. The selected file will be shown full screen for this event." %}{% endset %}
-                        {{ forms.inputFullScreenSchedule('media', title, "", helpText, "media-control full-screen-control", (mediaId is not empty ? mediaId : event.getUnmatchedProperty("mediaId")), "", "", readonlySelect) }}
+                        {{ forms.dropdown("mediaId", "single", title, "", null, "mediaId", "name", helpText, "media-control full-screen-control pagedSelect", "", "d", "", attributes) }}
 
+                        {# Playlist #}
+                        {% set attributes = [
+                            { name: "data-width", value: "100%" },
+                            { name: "data-search-url", value: url_for("playlist.search") ~ "?fullScreenScheduleCheck=true" },
+                            { name: "data-search-term", value: "name" },
+                            { name: "data-id-property", value: "playlistId" },
+                            { name: "data-text-property", value: "name" },
+                            { name: "data-selected-property", value: "selected" },
+                            { name: "data-additional-property", value: "hasFullScreenLayout" },
+                            { name: "data-initial-key", value: "playlistId"},
+                            { name: "data-initial-value", value: (playlistId is not empty ? playlistId : event.getUnmatchedProperty("playlistId")) }
+                        ] %}
                         {% set title %}{% trans "Playlist" %}{% endset %}
                         {% set helpText %}{% trans "Select a Playlist to use. The selected playlist will be shown full screen for this event." %}{% endset %}
-                        {{ forms.inputFullScreenSchedule('playlist', title, "", helpText, "playlist-control full-screen-control", (playlistId is not empty ? playlistId : event.getUnmatchedProperty("playlistId")), "", "", readonlySelect) }}
-
-                        {{ forms.hidden('fullScreenCampaignId', event.getUnmatchedProperty("fullScreenCampaignId")) }}
+                        {{ forms.dropdown("playlistId", "single", title, "", null, "playlistId", "name", helpText, "playlist-control full-screen-control pagedSelect", "", "d", "", attributes) }}
 
                         <div style="{% if not (currentUser.featureEnabled('campaign.view') or currentUser.featureEnabled('layout.view')) %}display: none;{% endif %}">
                             <div class="form-group row preview-button-container">
@@ -321,6 +340,29 @@
                                 {% set helpText %}{% trans "Optional Name for this Event (1-50 characters)" %}{% endset %}
                                 {{ forms.input("name", title, event.name, helpText) }}
 
+                                {% set title %}{% trans "Duration in loop" %}{% endset %}
+                                {% set helpText %}{% trans "Set how long this item should be shown each time it appears in the schedule. Leave blank to use the Media Duration set in the Library." %}{% endset %}
+                                {{ forms.number("layoutDuration", title, event.layoutDuration, helpText, "media-control-option") }}
+
+                                {% set attributes = [
+                                    { name: "data-width", value: "100%" },
+                                    { name: "data-search-url", value: url_for("resolution.search") },
+                                    { name: "data-search-term", value: "media" },
+                                    { name: "data-id-property", value: "resolutionId" },
+                                    { name: "data-text-property", value: "resolution" },
+                                    { name: "data-additional-property", value: "hasFullScreenLayout" },
+                                    { name: "data-initial-key", value: "resolutionId"},
+                                    { name: "data-initial-value", value: event.resolutionId }
+                                ] %}
+                                {% set title %}{% trans "Resolution" %}{% endset %}
+                                {% set helpTextMedia %}{% trans "Optionally select a Resolution to use for the selected Media. Leave blank to match with an existing Resolution closest in size to the selected media." %}{% endset %}
+                                {% set helpTextPlaylist %}{% trans "Optionally select a Resolution to use for the selected Media. Leave blank to match with an existing Resolution closest in size to the selected media." %}{% endset %}
+                                {{ forms.dropdown("resolutionId", "single", title, "", null, "resolutionId", "resolution", helpTextMedia, "fs-control-option pagedSelect", "", "d", "", attributes) }}
+
+                                {% set title %}{% trans "Background Colour" %}{% endset %}
+                                {% set helpText %}{% trans "Optionally set a colour to use as a background for if the item selected does not fill the entire screen." %}{% endset %}
+                                {{ forms.colorPicker("backgroundColor", title, event.backgroundColor, helpText, "fs-control-option") }}
+
                                 {% set title %}{% trans "Display Order" %}{% endset %}
                                 {% set helpText %}{% trans "Please select the order this event should appear in relation to others when there is more than one event scheduled" %}{% endset %}
                                 {{ forms.number("displayOrder", title, event.displayOrder, helpText, 'displayOrder-control', "", "", "", "0") }}
@@ -351,7 +393,6 @@
                                         <div id="recurringInfo"></div>
                                     </div>
                                 {% endif %}
-
                             </div>
 
                             <div class="tab-pane" id="repeats">

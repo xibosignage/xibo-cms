@@ -1100,12 +1100,12 @@ window.setupScheduleForm = function(dialog) {
           },
           {
             type: [7],
-            fieldQuery: '#fullScreen-media',
+            fieldQuery: '#mediaId',
             errorProperty: 'videoImage',
           },
           {
             type: [8],
-            fieldQuery: '#fullScreen-playlist',
+            fieldQuery: '#playlistId',
             errorProperty: 'playlist',
           },
           {
@@ -2642,21 +2642,19 @@ const setupSelectForSchedule = function(dialog) {
   }
 
   $('#mediaId, #playlistId', dialog).on('select2:select', function(event) {
-    let hasFullScreenLayout = false;
-    if (event.params.data.data !== undefined) {
-      hasFullScreenLayout = event.params.data.data[0].hasFullScreenLayout;
-    } else if (event.params.data.hasFullScreenLayout !== undefined) {
-      hasFullScreenLayout = event.params.data.hasFullScreenLayout;
+    if (
+      $(event.currentTarget).attr('name') == 'mediaId' &&
+      event.currentTarget.val != ''
+    ) {
+      $('.media-control-option', dialog).css('display', '');
+    } else {
+      $('.media-control-option', dialog).css('display', 'none');
     }
 
-    if (hasFullScreenLayout) {
-      $('.no-full-screen-layout').css('display', 'none');
+    if (event.currentTarget.val != '') {
+      $('.fs-control-option', dialog).css('display', '');
     } else {
-      if ($(event.currentTarget).attr('id') === 'mediaId') {
-        $('.no-full-screen-layout').css('display', '');
-      } else {
-        $('.no-full-screen-layout.media-playlist-control').css('display', '');
-      }
+      $('.fs-control-option', dialog).css('display', 'none');
     }
   });
 

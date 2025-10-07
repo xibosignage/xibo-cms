@@ -11,13 +11,6 @@
     var tagGetByNameUrl = "{{ url_for("tag.getByName") }}";
     var tagEditMultipleUrl = "{{ url_for("tag.editMultiple", {type: '[type]'}) }}";
     var tagSearchUrl = "{{ url_for("tag.search") }}";
-
-    var fullscreenSchedule = {
-        urlForLibrarySearch: "{{ url_for("library.search") }}?fullScreenScheduleCheck=true&types[]=image&types[]=video",
-        urlForPlaylistSearch: "{{ url_for("playlist.search") }}?fullScreenScheduleCheck=true",
-        urlForResolutionSearch: "{{ url_for("resolution.search") }}",
-        urlForLayoutAddFullscreenSchedule: "{{ url_for("layout.add.full.screen.schedule") }}",
-    };
     var urlForLayoutSearch = "{{ url_for("layout.search") }}";
     var calendarType = "{{ settings.CALENDAR_TYPE }}";
     var language = "{{ translate.jsLocale }}";

@@ -100,8 +100,6 @@ window.templates = {
   schedule: {
     criteriaFields:
       require('./src/templates/schedule/schedule-criteria-fields.hbs'),
-    fullscreenSchedule:
-      require('./src/templates/schedule/fullscreen-schedule.hbs'),
     reminderEvent:
       require('./src/templates/schedule/reminder-event.hbs'),
   },
