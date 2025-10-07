@@ -1413,6 +1413,8 @@ class Layout implements \JsonSerializable
             }
 
             // Work out if we have any "lead regions", those are Widgets with a duration
+            $maxWidgetDurationInLayout = 1;
+
             foreach ($widgets as $widget) {
                 if (($widget->useDuration == 1 && $widget->type !== 'global')
                     || $countWidgets > 1
@@ -1421,6 +1423,11 @@ class Layout implements \JsonSerializable
                 ) {
                     $layoutCountRegionsWithDuration++;
                 }
+
+                $maxWidgetDurationInLayout = Max(
+                    ($widget->useDuration == 1 ? $widget->duration : $widget->calculatedDuration),
+                    $maxWidgetDurationInLayout
+                );
             }
 
             foreach ($widgets as $widget) {
@@ -1448,7 +1455,10 @@ class Layout implements \JsonSerializable
                 ) {
                     // Make sure this Widget expires immediately so that the other Regions can be the leaders when
                     // it comes to expiring the Layout
-                    $widgetDuration = Widget::$widgetMinDuration;
+                    // Only do this when the widget's default duration is not the max duration in layout
+                    if ($widgetDuration < $maxWidgetDurationInLayout) {
+                        $widgetDuration = Widget::$widgetMinDuration;
+                    }
                 }
 
                 if ($region->isDrawer === 0) {
