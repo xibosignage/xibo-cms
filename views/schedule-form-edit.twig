@@ -342,7 +342,7 @@
 
                                 {% set title %}{% trans "Duration in loop" %}{% endset %}
                                 {% set helpText %}{% trans "Set how long this item should be shown each time it appears in the schedule. Leave blank to use the Media Duration set in the Library." %}{% endset %}
-                                {{ forms.number("layoutDuration", title, event.layoutDuration, helpText, "media-control-option") }}
+                                {{ forms.number("layoutDuration", title, event.layoutDuration, helpText, "media-control-option hidden") }}
 
                                 {% set attributes = [
                                     { name: "data-width", value: "100%" },
@@ -357,11 +357,11 @@
                                 {% set title %}{% trans "Resolution" %}{% endset %}
                                 {% set helpTextMedia %}{% trans "Optionally select a Resolution to use for the selected Media. Leave blank to match with an existing Resolution closest in size to the selected media." %}{% endset %}
                                 {% set helpTextPlaylist %}{% trans "Optionally select a Resolution to use for the selected Media. Leave blank to match with an existing Resolution closest in size to the selected media." %}{% endset %}
-                                {{ forms.dropdown("resolutionId", "single", title, "", null, "resolutionId", "resolution", helpTextMedia, "fs-control-option pagedSelect", "", "d", "", attributes) }}
+                                {{ forms.dropdown("resolutionId", "single", title, "", null, "resolutionId", "resolution", helpTextMedia, "fs-control-option pagedSelect hidden", "", "d", "", attributes) }}
 
                                 {% set title %}{% trans "Background Colour" %}{% endset %}
                                 {% set helpText %}{% trans "Optionally set a colour to use as a background for if the item selected does not fill the entire screen." %}{% endset %}
-                                {{ forms.colorPicker("backgroundColor", title, event.backgroundColor, helpText, "fs-control-option") }}
+                                {{ forms.colorPicker("backgroundColor", title, event.backgroundColor, helpText, "fs-control-option hidden") }}
 
                                 {% set title %}{% trans "Display Order" %}{% endset %}
                                 {% set helpText %}{% trans "Please select the order this event should appear in relation to others when there is more than one event scheduled" %}{% endset %}

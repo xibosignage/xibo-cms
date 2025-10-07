@@ -1529,6 +1529,33 @@ window.setupScheduleForm = function(dialog) {
     $(dialog).find('#recurringInfo').prepend($button);
   }
 
+  // Fullscreen schedule fields
+  const updateFSFields = function() {
+    const eventType = $('#eventTypeId', dialog).val();
+    const mediaId = $('#mediaId', dialog).val();
+    const playlistId = $('#playlistId', dialog).val();
+
+    if (eventType == '7' && mediaId) {
+      // If media type, with media
+      // Show all FS controls
+      $('.media-control-option', dialog).removeClass('hidden');
+      $('.fs-control-option', dialog).removeClass('hidden');
+    } else if (eventType == '8' && playlistId) {
+      // If playlist type, with playlist
+      // Show playlist controls, but hide media ones
+      $('.fs-control-option', dialog).removeClass('hidden');
+      $('.media-control-option', dialog).addClass('hidden');
+    } else {
+      $('.media-control-option', dialog).addClass('hidden');
+      $('.fs-control-option', dialog).addClass('hidden');
+    }
+  };
+  // Update when changing target, or event type
+  $('#mediaId, #playlistId, #eventTypeId', dialog)
+    .on('select2:select, change', updateFSFields);
+  // Run on start
+  updateFSFields();
+
   configReminderFields($(dialog));
 };
 
@@ -2640,23 +2667,6 @@ const setupSelectForSchedule = function(dialog) {
       });
     }
   }
-
-  $('#mediaId, #playlistId', dialog).on('select2:select', function(event) {
-    if (
-      $(event.currentTarget).attr('name') == 'mediaId' &&
-      event.currentTarget.val != ''
-    ) {
-      $('.media-control-option', dialog).css('display', '');
-    } else {
-      $('.media-control-option', dialog).css('display', 'none');
-    }
-
-    if (event.currentTarget.val != '') {
-      $('.fs-control-option', dialog).css('display', '');
-    } else {
-      $('.fs-control-option', dialog).css('display', 'none');
-    }
-  });
 
   // Sync group
   $('#syncGroupId', dialog).on('select2:select', function(event) {
