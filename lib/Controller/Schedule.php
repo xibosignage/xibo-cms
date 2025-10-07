@@ -29,6 +29,7 @@ use Slim\Http\ServerRequest as Request;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Entity\ScheduleReminder;
 use Xibo\Event\ScheduleCriteriaRequestEvent;
+use Xibo\Event\LayoutDeleteEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DayPartFactory;
@@ -158,7 +159,7 @@ class Schedule extends Base
             'defaultLong' => $defaultLong,
             'eventTypes' => \Xibo\Entity\Schedule::getEventTypes(),
         ];
-        
+
         // Render the Theme and output
         $this->getState()->template = 'schedule-page';
         $this->getState()->setData($data);
@@ -700,7 +701,7 @@ class Schedule extends Base
                     $branch->getUnmatchedProperty('depth') . '-' .
                     $branch->getUnmatchedProperty('level')
                 );
-                
+
                 if ($branch->getUnmatchedProperty('depth') < 0 &&
                     $branch->displayGroupId != $eventDisplayGroup->displayGroupId
                 ) {
@@ -1380,7 +1381,7 @@ class Schedule extends Base
 
         if ($this->isFullScreenSchedule($schedule->eventTypeId)) {
             $schedule->setUnmatchedProperty('fullScreenCampaignId', $schedule->campaignId);
-            
+
             if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$MEDIA_EVENT) {
                 $schedule->setUnmatchedProperty(
                     'mediaId',
@@ -1720,6 +1721,8 @@ class Schedule extends Base
         $embed = ($sanitizedParams->getString('embed') != null) ? explode(',', $sanitizedParams->getString('embed')) : [];
 
         $schedule = $this->scheduleFactory->getById($id);
+        $oldSchedule = clone $schedule;
+
         $schedule->load([
             'loadScheduleReminders' => in_array('scheduleReminders', $embed),
         ]);
@@ -2057,6 +2060,17 @@ class Schedule extends Base
             }
         }
 
+        // Old layout cleanup
+        // Do this only if media or its properties changed or if we switched from an FS event to a non-FS event
+        // and the old layout isn’t used elsewhere
+        $campaignChanged = $schedule->campaignId != $oldSchedule->campaignId;
+        $fsEventChanged = $this->isFullScreenSchedule($oldSchedule->eventTypeId)
+            && !$this->isFullScreenSchedule($schedule->eventTypeId);
+
+        if (($this->isFullScreenSchedule($schedule->eventTypeId) && $campaignChanged) || $fsEventChanged) {
+            $this->doFsLayoutCleanup($oldSchedule);
+        }
+
         // Return
         $this->getState()->hydrate([
             'message' => __('Edited Event'),
@@ -2131,6 +2145,11 @@ class Schedule extends Base
 
         if (!$this->isEventEditable($schedule)) {
             throw new AccessDeniedException();
+        }
+
+        // Is this layout being used by any other events?
+        if ($this->isFullScreenSchedule($schedule->eventTypeId)) {
+            $this->doFsLayoutCleanup($schedule, true);
         }
 
         $schedule
@@ -2353,7 +2372,7 @@ class Schedule extends Base
 
             $event->setUnmatchedProperty('displayGroupList', $displayGroupList);
             $event->setUnmatchedProperty('recurringEvent', !empty($event->recurrenceType));
-            
+
             if ($this->isSyncEvent($event->eventTypeId)) {
                 $event->setUnmatchedProperty(
                     'displayGroupList',
@@ -2660,5 +2679,24 @@ class Schedule extends Base
     private function isSyncEvent($eventTypeId): int
     {
         return ($eventTypeId === \Xibo\Entity\Schedule::$SYNC_EVENT) ? 1 : 0;
+    }
+
+    /**
+     * Deletes unused full screen layouts
+     * @param $schedule
+     * @param bool $isDelete
+     * @throws NotFoundException
+     */
+    private function doFsLayoutCleanup($schedule, bool $isDelete = false): void
+    {
+        // Is this layout being used in another event?
+        $events = $this->scheduleFactory->getByCampaignId($schedule->campaignId);
+
+        // When deleting an event, we need to check if it's the only event using that layout
+        if (empty($events) || (count($events) === 1 && $isDelete)) {
+            $layout = $this->layoutFactory->getByCampaignId($schedule->campaignId);
+            $event = new LayoutDeleteEvent($layout[0]);
+            $this->getDispatcher()->dispatch($event, LayoutDeleteEvent::$NAME);
+        }
     }
 }

@@ -3497,6 +3497,8 @@ class Layout extends Base
         $media = null;
         $playlist = null;
         $playlistItems = [];
+        $resolutionId = $params->getInt('resolutionId');
+        $backgroundColor = $params->getString('backgroundColor');
 
         if (empty($params->getInt('id'))) {
             throw new InvalidArgumentException(sprintf(__('Please select %s'), ucfirst($type)));
@@ -3513,19 +3515,6 @@ class Layout extends Base
             $layoutExists = $this->layoutFactory->getLinkedFullScreenLayout('playlist', $playlist->playlistId);
         }
 
-        if (!empty($layoutExists)) {
-            // Return
-            $this->getState()->hydrate([
-                'httpStatus' => 200,
-                'message' => sprintf(__('Fetched %s'), $layoutExists->layout),
-                'data' => $layoutExists
-            ]);
-
-            return $this->render($request, $response);
-        }
-
-        $resolutionId = $params->getInt('resolutionId');
-
         if (empty($resolutionId)) {
             if ($type === 'media') {
                 $resolutionId = $this->resolutionFactory->getClosestMatchingResolution(
@@ -3537,6 +3526,40 @@ class Layout extends Base
                     1920,
                     1080
                 )->resolutionId;
+            }
+        }
+
+        $module = $this->moduleFactory->getByType($type === 'media' ? $media->mediaType : 'subplaylist');
+
+        // Determine the duration
+        // if we have a duration provided, then use it, otherwise use the duration recorded on the
+        // library item/playlist already
+        $itemDuration = $params->getInt(
+            'layoutDuration',
+            ['default' => $type === 'media' ? $media->duration : $playlist->duration]
+        );
+
+        // If the library item duration (or provided duration) is 0, then default to the Module Default
+        // Duration as configured in settings.
+        $itemDuration = ($itemDuration == 0) ? $module->defaultDuration : $itemDuration;
+
+        // Does this layout have the same properties as the existing one?
+        if (!empty($layoutExists)) {
+            $currentLayout = [
+                'duration' => $itemDuration,
+                'backgroundColor' => $backgroundColor,
+                'resolutionId' => $resolutionId
+            ];
+
+            if ($this->hasLayoutWithSameProperties($layoutExists, $currentLayout)) {
+                // Return
+                $this->getState()->hydrate([
+                    'httpStatus' => 200,
+                    'message' => sprintf(__('Fetched %s'), $layoutExists->layout),
+                    'data' => $layoutExists
+                ]);
+
+                return $this->render($request, $response);
             }
         }
 
@@ -3552,8 +3575,8 @@ class Layout extends Base
             false
         );
 
-        if (!empty($params->getString('backgroundColor'))) {
-            $layout->backgroundColor = $params->getString('backgroundColor');
+        if (!empty($backgroundColor)) {
+            $layout->backgroundColor = $backgroundColor;
         }
 
         $this->layoutFactory->addRegion(
@@ -3576,21 +3599,6 @@ class Layout extends Base
         $draft = $this->layoutFactory->checkoutLayout($layout);
 
         $region = $draft->regions[0];
-
-        // Create a module
-        $module = $this->moduleFactory->getByType($type === 'media' ? $media->mediaType : 'subplaylist');
-
-        // Determine the duration
-        // if we have a duration provided, then use it, otherwise use the duration recorded on the
-        // library item/playlist already
-        $itemDuration = $params->getInt(
-            'layoutDuration',
-            ['default' => $type === 'media' ? $media->duration : $playlist->duration]
-        );
-
-        // If the library item duration (or provided duration) is 0, then default to the Module Default
-        // Duration as configured in settings.
-        $itemDuration = ($itemDuration == 0) ? $module->defaultDuration : $itemDuration;
 
         // Create a widget
         $widget = $this->widgetFactory->create(
@@ -3652,5 +3660,23 @@ class Layout extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Does a layout with the same properties already exist?
+     * @param $existingLayout
+     * @param $currentLayout
+     * @return bool
+     * @throws NotFoundException
+     */
+    private function hasLayoutWithSameProperties($existingLayout, $currentLayout): bool
+    {
+        $currentLayoutDimension = $this->resolutionFactory->getById($currentLayout['resolutionId']);
+
+        return ($existingLayout->backgroundColor == $currentLayout['backgroundColor']
+            && $existingLayout->duration == $currentLayout['duration']
+            && $existingLayout->height == $currentLayoutDimension->height
+            && $existingLayout->width == $currentLayoutDimension->width
+        );
     }
 }
