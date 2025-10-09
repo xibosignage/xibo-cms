@@ -1076,9 +1076,7 @@ class Schedule extends Base
         $schedule = $this->scheduleFactory->createEmpty();
         $schedule->userId = $this->getUser()->userId;
         $schedule->eventTypeId = $sanitizedParams->getInt('eventTypeId');
-        $schedule->campaignId = $this->isFullScreenSchedule($schedule->eventTypeId)
-                ? $sanitizedParams->getInt('fullScreenCampaignId')
-                : $sanitizedParams->getInt('campaignId');
+        $schedule->campaignId = $sanitizedParams->getInt('campaignId');
         $schedule->commandId = $sanitizedParams->getInt('commandId');
         $schedule->displayOrder = $sanitizedParams->getInt('displayOrder', ['default' => 0]);
         $schedule->isPriority = $sanitizedParams->getInt('isPriority', ['default' => 0]);
@@ -1130,6 +1128,30 @@ class Schedule extends Base
                 }
             ]);
             $schedule->dataSetParams = $sanitizedParams->getString('dataSetParams');
+        }
+
+        // Set create fullscreen layout for media/playlist events
+        if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$MEDIA_EVENT
+            || $schedule->eventTypeId === \Xibo\Entity\Schedule::$PLAYLIST_EVENT
+        ) {
+            $type = $schedule->eventTypeId === \Xibo\Entity\Schedule::$MEDIA_EVENT ? 'media' : 'playlist';
+            $id = $type == 'media'
+                ? $sanitizedParams->getInt('mediaId')
+                : $sanitizedParams->getInt('playlistId');
+
+            $this->getLog()->error('Layout editor current bg. ' . json_encode($sanitizedParams->getString('backgroundColor')));
+            $this->getLog()->error('Layout editor current duration. ' . json_encode($sanitizedParams->getInt('layoutDuration')));
+
+            $fsLayout = $this->layoutFactory->createFullScreenLayout(
+                $type,
+                $id,
+                $sanitizedParams->getInt('resolutionId'),
+                $sanitizedParams->getString('backgroundColor'),
+                $sanitizedParams->getInt('layoutDuration'),
+            );
+
+            $schedule->campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($fsLayout['data']->layoutId);
+            $schedule->parentCampaignId = $schedule->campaignId;
         }
 
         // API request can provide an array of coordinates or valid GeoJSON, handle both cases here.

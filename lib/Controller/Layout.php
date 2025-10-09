@@ -3494,189 +3494,30 @@ class Layout extends Base
     {
         $params = $this->getSanitizer($request->getParams());
         $type = $params->getString('type');
-        $media = null;
-        $playlist = null;
-        $playlistItems = [];
+        $id = $params->getInt('id');
         $resolutionId = $params->getInt('resolutionId');
         $backgroundColor = $params->getString('backgroundColor');
+        $duration = $params->getInt('layoutDuration');
 
-        if (empty($params->getInt('id'))) {
+        if (empty($id)) {
             throw new InvalidArgumentException(sprintf(__('Please select %s'), ucfirst($type)));
         }
 
-        if ($type === 'media') {
-            $media = $this->mediaFactory->getById($params->getInt('id'));
-            // do we already have a full screen layout with this media?
-            $layoutExists = $this->layoutFactory->getLinkedFullScreenLayout('media', $media->mediaId);
-        } else if ($type === 'playlist') {
-            $playlist = $this->playlistFactory->getById($params->getInt('id'));
-            $playlist->load();
-            // do we already have a full screen layout with this playlist?
-            $layoutExists = $this->layoutFactory->getLinkedFullScreenLayout('playlist', $playlist->playlistId);
-        }
-
-        if (empty($resolutionId)) {
-            if ($type === 'media') {
-                $resolutionId = $this->resolutionFactory->getClosestMatchingResolution(
-                    $media->width,
-                    $media->height
-                )->resolutionId;
-            } else if ($type === 'playlist') {
-                $resolutionId = $this->resolutionFactory->getClosestMatchingResolution(
-                    1920,
-                    1080
-                )->resolutionId;
-            }
-        }
-
-        $module = $this->moduleFactory->getByType($type === 'media' ? $media->mediaType : 'subplaylist');
-
-        // Determine the duration
-        // if we have a duration provided, then use it, otherwise use the duration recorded on the
-        // library item/playlist already
-        $itemDuration = $params->getInt(
-            'layoutDuration',
-            ['default' => $type === 'media' ? $media->duration : $playlist->duration]
-        );
-
-        // If the library item duration (or provided duration) is 0, then default to the Module Default
-        // Duration as configured in settings.
-        $itemDuration = ($itemDuration == 0) ? $module->defaultDuration : $itemDuration;
-
-        // Does this layout have the same properties as the existing one?
-        if (!empty($layoutExists)) {
-            $currentLayout = [
-                'duration' => $itemDuration,
-                'backgroundColor' => $backgroundColor,
-                'resolutionId' => $resolutionId
-            ];
-
-            if ($this->hasLayoutWithSameProperties($layoutExists, $currentLayout)) {
-                // Return
-                $this->getState()->hydrate([
-                    'httpStatus' => 200,
-                    'message' => sprintf(__('Fetched %s'), $layoutExists->layout),
-                    'data' => $layoutExists
-                ]);
-
-                return $this->render($request, $response);
-            }
-        }
-
-        $layout = $this->layoutFactory->createFromResolution(
+        $layoutData = $this->layoutFactory->createFullScreenLayout(
+            $type,
+            $id,
             $resolutionId,
-            $this->getUser()->userId,
-            $type . '_' .
-            ($type === 'media' ? $media->name : $playlist->name) .
-            '_' . ($type === 'media' ? $media->mediaId : $playlist->playlistId),
-            'Full Screen Layout created from ' . ($type === 'media' ? $media->name : $playlist->name),
-            '',
-            null,
-            false
+            $backgroundColor,
+            $duration
         );
-
-        if (!empty($backgroundColor)) {
-            $layout->backgroundColor = $backgroundColor;
-        }
-
-        $this->layoutFactory->addRegion(
-            $layout,
-            $type === 'media' ? 'frame' : 'playlist',
-            $layout->width,
-            $layout->height,
-            0,
-            0
-        );
-
-        $layout->setUnmatchedProperty('type', $type);
-        $layout->autoApplyTransitions = 0;
-        $layout->schemaVersion = Environment::$XLF_VERSION;
-        $layout->folderId = ($type === 'media') ? $media->folderId : $playlist->folderId;
-
-        // Media files have their own validation so we can skip
-        $layout->save(['validate' => false]);
-
-        $draft = $this->layoutFactory->checkoutLayout($layout);
-
-        $region = $draft->regions[0];
-
-        // Create a widget
-        $widget = $this->widgetFactory->create(
-            $this->getUser()->userId,
-            $region->getPlaylist()->playlistId,
-            $type === 'media' ? $media->mediaType : 'subplaylist',
-            $itemDuration,
-            $module->schemaVersion
-        );
-
-        if ($type === 'playlist') {
-            // save here, simulate add Widget
-            // next save (with playlist) will edit and save the Widget and dispatch event that manages closure table.
-            $widget->save();
-            $item = new SubPlaylistItem();
-            $item->rowNo = 1;
-            $item->playlistId = $playlist->playlistId;
-            $item->spotFill = 'repeat';
-            $item->spotLength =  '';
-            $item->spots = '';
-
-            $playlistItems[] = $item;
-            $widget->setOptionValue('subPlaylists', 'attrib', json_encode($playlistItems));
-        } else {
-            $widget->useDuration = 1;
-            $widget->assignMedia($media->mediaId);
-        }
-
-        // Calculate the duration
-        $widget->calculateDuration($module);
-
-        // Set loop for media items with custom duration
-        if ($type === 'media' && $media->mediaType === 'video' && $itemDuration > $media->duration) {
-            $widget->setOptionValue('loop', 'attrib', 1);
-            $widget->save();
-        }
-
-        // Assign the widget to the playlist
-        $region->getPlaylist()->assignWidget($widget);
-        // Save the playlist
-        $region->getPlaylist()->save();
-        $region->save();
-
-        // look up the record in the database
-        // as we do not set modifiedDt on the object on save.
-        $draft = $this->layoutFactory->getByParentId($layout->layoutId);
-        $draft->publishDraft();
-        $draft->load();
-
-        // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
-        // error message
-        $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
 
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 200,
-            'message' => sprintf(__('Created %s'), $draft->layout),
-            'data' => $draft
+            'message' => $layoutData['message'],
+            'data' => $layoutData['data']
         ]);
 
         return $this->render($request, $response);
-    }
-
-    /**
-     * Does a layout with the same properties already exist?
-     * @param $existingLayout
-     * @param $currentLayout
-     * @return bool
-     * @throws NotFoundException
-     */
-    private function hasLayoutWithSameProperties($existingLayout, $currentLayout): bool
-    {
-        $currentLayoutDimension = $this->resolutionFactory->getById($currentLayout['resolutionId']);
-
-        return ($existingLayout->backgroundColor == $currentLayout['backgroundColor']
-            && $existingLayout->duration == $currentLayout['duration']
-            && $existingLayout->height == $currentLayoutDimension->height
-            && $existingLayout->width == $currentLayoutDimension->width
-        );
     }
 }
