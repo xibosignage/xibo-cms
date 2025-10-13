@@ -1397,21 +1397,22 @@ class Schedule extends Base
 
         if ($this->isFullScreenSchedule($schedule->eventTypeId)) {
             $schedule->setUnmatchedProperty('fullScreenCampaignId', $schedule->campaignId);
-            $id = null;
-            $type = 'media';
 
             if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$MEDIA_EVENT) {
-                $id = $this->layoutFactory->getLinkedFullScreenMediaId($schedule->campaignId);
-
-                $schedule->setUnmatchedProperty('mediaId', $id);
+                $schedule->setUnmatchedProperty(
+                    'mediaId',
+                    $this->layoutFactory->getLinkedFullScreenMediaId($schedule->campaignId)
+                );
             } else if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$PLAYLIST_EVENT) {
-                $type = 'playlist';
-                $id = $this->layoutFactory->getLinkedFullScreenPlaylistId($schedule->campaignId);
-
-                $schedule->setUnmatchedProperty('playlistId', $id);
+                $schedule->setUnmatchedProperty(
+                    'playlistId',
+                    $this->layoutFactory->getLinkedFullScreenPlaylistId($schedule->campaignId)
+                );
             }
 
-            $fsLayout = $this->layoutFactory->getLinkedFullScreenLayout($type, $id);
+            $fsLayout = $this->layoutFactory->getById(
+                $this->campaignFactory->getLinkedLayouts($schedule->campaignId)[0]->layoutId
+            );
 
             // Set the layout properties
             $schedule->backgroundColor = $fsLayout->backgroundColor;

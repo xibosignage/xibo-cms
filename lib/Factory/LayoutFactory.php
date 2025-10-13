@@ -3194,7 +3194,11 @@ class LayoutFactory extends BaseFactory
         // Determine the duration
         // if we have a duration provided, then use it, otherwise use the duration recorded on the
         // library item/playlist already
-        $itemDuration = $duration ?? ($type === 'media' ? $media->duration : $playlist->duration);
+        $itemDuration = $duration;
+
+        if (empty($itemDuration)) {
+            $itemDuration = ($type === 'media' ? $media->duration : $playlist->duration);
+        }
 
         // If the library item duration (or provided duration) is 0, then default to the Module Default
         // Duration as configured in settings.
@@ -3202,6 +3206,7 @@ class LayoutFactory extends BaseFactory
 
         // Do we have an existing layout with the same properties as the current one?
         $currentLayoutDimension = $this->resolutionFactory->getById($resolutionId);
+
         if (empty($backgroundColor)) {
             $backgroundColor = '#000';
         }
