@@ -43,7 +43,7 @@ const XiboPlayer = function() {
       chain = new Promise(function(resolve) {
         xiboIC.getData(currentWidget.properties?.dataSetId, {
           done: (status, data) => {
-            localData = JSON.parse(data);
+            localData = data ? JSON.parse(data) : null;
             resolve();
           },
           error: () => {
