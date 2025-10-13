@@ -3212,7 +3212,6 @@ class LayoutFactory extends BaseFactory
         }
 
         $currentLayoutProperties = [
-            'duration' => $itemDuration,
             'backgroundColor' => $backgroundColor,
             'height' => $currentLayoutDimension->height,
             'width' => $currentLayoutDimension->width
@@ -3220,10 +3219,18 @@ class LayoutFactory extends BaseFactory
 
         if ($type === 'media') {
             // do we already have a full screen layout with this media?
-            $layoutExists = $this->getLinkedFullScreenLayout('media', $media->mediaId, $currentLayoutProperties);
+            $layoutExists = $this->getLinkedFullScreenLayout(
+                'media',
+                $media->mediaId,
+                array_merge($currentLayoutProperties, ['duration' => $itemDuration])
+            );
         } else if ($type === 'playlist') {
             // do we already have a full screen layout with this playlist?
-            $layoutExists = $this->getLinkedFullScreenLayout('playlist', $playlist->playlistId, $currentLayoutProperties);
+            $layoutExists = $this->getLinkedFullScreenLayout(
+                'playlist',
+                $playlist->playlistId,
+                $currentLayoutProperties
+            );
         }
 
         if (!empty($layoutExists)) {
