@@ -3202,6 +3202,9 @@ class LayoutFactory extends BaseFactory
 
         // Do we have an existing layout with the same properties as the current one?
         $currentLayoutDimension = $this->resolutionFactory->getById($resolutionId);
+        if (empty($backgroundColor)) {
+            $backgroundColor = '#000';
+        }
 
         $currentLayoutProperties = [
             'duration' => $itemDuration,
@@ -3320,6 +3323,17 @@ class LayoutFactory extends BaseFactory
             'message' => sprintf(__('Created %s'), $draft->layout),
             'data' => $draft
         ];
+    }
+
+    /**
+     * Get the layout resolutionId
+     * @params $layout
+     * @throws NotFoundException
+     * @throws GeneralException
+     */
+    public function getLayoutResolutionId($layout)
+    {
+        return $this->resolutionFactory->getClosestMatchingResolution($layout->width, $layout->height);
     }
 
     // </editor-fold>
