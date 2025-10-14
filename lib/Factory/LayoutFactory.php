@@ -241,7 +241,7 @@ class LayoutFactory extends BaseFactory
         $layout->layout = $name;
         $layout->description = $description;
         $layout->backgroundzIndex = 0;
-        $layout->backgroundColor = '#000';
+        $layout->backgroundColor = '#000000';
         $layout->code = $code;
 
         // Set the owner
@@ -3208,7 +3208,7 @@ class LayoutFactory extends BaseFactory
         $currentLayoutDimension = $this->resolutionFactory->getById($resolutionId);
 
         if (empty($backgroundColor)) {
-            $backgroundColor = '#000';
+            $backgroundColor = '#000000';
         }
 
         $currentLayoutProperties = [

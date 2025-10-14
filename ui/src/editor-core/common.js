@@ -187,7 +187,7 @@ module.exports = {
       .select2('destroy');
 
     // Colorpicker
-    $container.find('.colorpicker-element').colorpicker('destroy');
+    $container.find('.colorpicker-form-element').colorpicker('destroy');
 
     // JqueryUI
     $container.is('.ui-droppable') && $container.droppable('destroy');

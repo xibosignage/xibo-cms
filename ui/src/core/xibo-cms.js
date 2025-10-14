@@ -292,10 +292,10 @@ window.XiboInitialise = function(scope, options) {
   });
 
   // Colour picker
-  $(scope + ' .colorpicker-input:not(.colorpicker-element)')
+  $(scope + ' .colorpicker-input:not(.colorpicker-form-element)')
     .each(function(_i, el) {
       $(el).colorpicker({
-        container: $(el).parent(),
+        container: $(el).find('.picker-container')
       });
     });
 

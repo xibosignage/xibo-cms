@@ -2102,7 +2102,7 @@ window.forms = {
 
     // Colour picker
     findElements(
-      '.colorpicker-input.colorpicker-element',
+      '.colorpicker-input.colorpicker-form-element',
       target,
     ).each(function(_k, el) {
       // Init the colour picker
@@ -2137,7 +2137,7 @@ window.forms = {
       target,
     ).each(function(_k, el) {
       // Init the colour pickers
-      $(el).find('.colorpicker-input.colorpicker-element').colorpicker({
+      $(el).find('.colorpicker-input.colorpicker-form-element').colorpicker({
         container: $(el).find('.picker-container'),
         align: 'left',
         format: ($(el).data('colorFormat') !== undefined) ?
