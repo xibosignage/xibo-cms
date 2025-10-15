@@ -127,7 +127,7 @@
                             { name: "data-selected-property", value: "selected" },
                             { name: "data-additional-property", value: "hasFullScreenLayout" },
                             { name: "data-initial-key", value: "mediaId"},
-                            { name: "data-initial-value", value: (event.mediaId is not empty ? event.mediaId : event.getUnmatchedProperty("mediaId")) }
+                            { name: "data-initial-value", value: (mediaId is not empty ? mediaId : event.getUnmatchedProperty("mediaId")) }
                         ] %}
                         {% set title %}{% trans "Media" %}{% endset %}
                         {% set helpText %}{% trans "Select a Media file from the Library to use. The selected file will be shown full screen for this event." %}{% endset %}
@@ -143,7 +143,7 @@
                             { name: "data-selected-property", value: "selected" },
                             { name: "data-additional-property", value: "hasFullScreenLayout" },
                             { name: "data-initial-key", value: "playlistId"},
-                            { name: "data-initial-value", value: (event.playlistId is not empty ? event.playlistId : event.getUnmatchedProperty("playlistId")) }
+                            { name: "data-initial-value", value: (playlistId is not empty ? playlistId : event.getUnmatchedProperty("playlistId")) }
                         ] %}
                         {% set title %}{% trans "Playlist" %}{% endset %}
                         {% set helpText %}{% trans "Select a Playlist to use. The selected playlist will be shown full screen for this event." %}{% endset %}
