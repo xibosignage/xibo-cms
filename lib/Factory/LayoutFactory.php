@@ -3224,7 +3224,7 @@ class LayoutFactory extends BaseFactory
         $currentLayoutDimension = $this->resolutionFactory->getById($resolutionId);
 
         if (empty($backgroundColor)) {
-            $backgroundColor = '#000';
+            $backgroundColor = '#000000';
         }
 
         $currentLayoutProperties = [
