@@ -2382,8 +2382,24 @@ class LayoutFactory extends BaseFactory
 
         // Layout Background Color
         if ($parsedFilter->getString('backgroundColor') !== null) {
-            $body .= " AND layout.backgroundColor = :backgroundColor ";
+            $bgConvertedHex = $parsedFilter->getString('backgroundColor');
+
+            // Handle both shorthand and normal hex values
+            if (preg_match('/^#?([0-9a-fA-F]{3})$/', $bgConvertedHex, $matches)) {
+                // Convert shorthand hex to normal hex (i.e. #000 -> #000000)
+                $bgConvertedHex = '#' . preg_replace('/(.)/', '$1$1', $matches[1]);
+            } else {
+                // Convert normal hex to shorthand hex (i.e. #000000 -> #000)
+                $bgConvertedHex = preg_replace(
+                    '/^#?([0-9a-fA-F])\1([0-9a-fA-F])\2([0-9a-fA-F])\3$/',
+                    '#$1$2$3',
+                    $bgConvertedHex
+                );
+            }
+
+            $body .= " AND (layout.backgroundColor = :backgroundColor OR layout.backgroundColor = :bgConvertedHex) ";
             $params['backgroundColor'] = $parsedFilter->getString('backgroundColor');
+            $params['bgConvertedHex'] = $bgConvertedHex;
         }
 
         // Layout Height
@@ -3208,7 +3224,7 @@ class LayoutFactory extends BaseFactory
         $currentLayoutDimension = $this->resolutionFactory->getById($resolutionId);
 
         if (empty($backgroundColor)) {
-            $backgroundColor = '#000000';
+            $backgroundColor = '#000';
         }
 
         $currentLayoutProperties = [

@@ -1410,6 +1410,7 @@ class Schedule extends Base
                 );
             }
 
+            // Get the associated fullscreen layout
             $fsLayout = $this->layoutFactory->getById(
                 $this->campaignFactory->getLinkedLayouts($schedule->campaignId)[0]->layoutId
             );
