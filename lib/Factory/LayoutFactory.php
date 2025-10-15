@@ -623,9 +623,7 @@ class LayoutFactory extends BaseFactory
                     INNER JOIN lkplaylistplaylist
                         ON `lkplaylistplaylist`.parentId = `playlist`.playlistId
                     INNER JOIN widget
-                        ON `widget`.playlistId = `lkplaylistplaylist`.childId
-                    INNER JOIN lkwidgetmedia
-                        ON `widget`.widgetId = `lkwidgetmedia`.widgetId        
+                        ON `widget`.playlistId = `lkplaylistplaylist`.childId     
                     INNER JOIN `lkcampaignlayout` lkcl
                             ON lkcl.layoutid = region.layoutid
                             AND lkcl.CampaignID = :campaignId',
