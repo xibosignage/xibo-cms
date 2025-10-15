@@ -1077,7 +1077,9 @@ class Schedule extends Base
         $schedule = $this->scheduleFactory->createEmpty();
         $schedule->userId = $this->getUser()->userId;
         $schedule->eventTypeId = $sanitizedParams->getInt('eventTypeId');
-        $schedule->campaignId = $sanitizedParams->getInt('campaignId');
+        $schedule->campaignId = $this->isFullScreenSchedule($schedule->eventTypeId)
+            ? $sanitizedParams->getInt('fullScreenCampaignId')
+            : $sanitizedParams->getInt('campaignId');
         $schedule->commandId = $sanitizedParams->getInt('commandId');
         $schedule->displayOrder = $sanitizedParams->getInt('displayOrder', ['default' => 0]);
         $schedule->isPriority = $sanitizedParams->getInt('isPriority', ['default' => 0]);
@@ -1758,7 +1760,9 @@ class Schedule extends Base
         }
 
         $schedule->eventTypeId = $sanitizedParams->getInt('eventTypeId');
-        $schedule->campaignId = $sanitizedParams->getInt('campaignId');
+        $schedule->campaignId = $this->isFullScreenSchedule($schedule->eventTypeId)
+            ? $sanitizedParams->getInt('fullScreenCampaignId')
+            : $sanitizedParams->getInt('campaignId');
         // displayOrder and isPriority: if present but empty (""): set to 0
         // if missing from form: keep existing value (fallback to 0 if unset)
         $schedule->displayOrder = $sanitizedParams->hasParam('displayOrder')

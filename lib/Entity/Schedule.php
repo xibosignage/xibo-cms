@@ -354,18 +354,6 @@ class Schedule implements \JsonSerializable
     public $name;
 
     /**
-     * @SWG\Property(description="The mediaId of this Fullscreen Scheduled Event")
-     * @var int
-     */
-    public int $mediaId;
-
-    /**
-     * @SWG\Property(description="The playlistId of this Fullscreen Scheduled Event")
-     * @var int
-     */
-    public int $playlistId;
-
-    /**
      * @SWG\Property(description="The resolutionId of this Fullscreen Scheduled Event")
      * @var int
      */
