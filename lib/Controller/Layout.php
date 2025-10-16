@@ -362,7 +362,7 @@ class Layout extends Base
         $name = $sanitizedParams->getString('name');
         $description = $sanitizedParams->getString('description');
         $enableStat = $sanitizedParams->getCheckbox('enableStat');
-        $autoApplyTransitions = $this->getConfig()->getSetting('DEFAULT_TRANSITION_AUTO_APPLY');
+        $autoApplyTransitions = (int)$this->getConfig()->getSetting('DEFAULT_TRANSITION_AUTO_APPLY');
         $code = $sanitizedParams->getString('code', ['defaultOnEmptyString' => true]);
 
         // Folders
@@ -439,7 +439,7 @@ class Layout extends Base
         // Do we have an 'Enable Layout Stats Collection?' checkbox?
         // If not, we fall back to the default Stats Collection setting.
         if (!$sanitizedParams->hasParam('enableStat')) {
-            $enableStat = $this->getConfig()->getSetting('LAYOUT_STATS_ENABLED_DEFAULT');
+            $enableStat = (int)$this->getConfig()->getSetting('LAYOUT_STATS_ENABLED_DEFAULT');
         }
 
         // Set layout enableStat flag
