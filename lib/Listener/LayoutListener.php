@@ -28,7 +28,6 @@ use Xibo\Entity\Region;
 use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Event\LayoutOwnerChangeEvent;
 use Xibo\Event\LayoutSharingChangeEvent;
-use Xibo\Event\LayoutDeleteEvent;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\MediaFullLoadEvent;
 use Xibo\Event\PlaylistDeleteEvent;
@@ -74,7 +73,6 @@ class LayoutListener
         $dispatcher->addListener(PlaylistDeleteEvent::$NAME, [$this, 'onPlaylistDelete']);
         $dispatcher->addListener(LayoutSharingChangeEvent::$NAME, [$this, 'onLayoutSharingChange']);
         $dispatcher->addListener(RegionAddedEvent::$NAME, [$this, 'onRegionAdded']);
-        $dispatcher->addListener(LayoutDeleteEvent::$NAME, [$this, 'onLayoutDelete']);
 
         return $this;
     }
@@ -269,22 +267,6 @@ class LayoutListener
                 $new->objectId = $event->getRegion()->getId();
                 $new->save();
             }
-        }
-    }
-
-    /**
-     * @param LayoutDeleteEvent $event
-     * @return void
-     * @throws GeneralException
-     */
-    public function onLayoutDelete(LayoutDeleteEvent $event): void
-    {
-        $layout = $event->getLayout();
-
-        $layout = $this->layoutFactory->getById($layout->layoutId);
-
-        if (!empty($layout)) {
-            $layout->delete();
         }
     }
 }

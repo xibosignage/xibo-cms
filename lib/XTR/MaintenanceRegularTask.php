@@ -42,6 +42,7 @@ use Xibo\Helper\Status;
 use Xibo\Helper\WakeOnLan;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class MaintenanceRegularTask
@@ -131,6 +132,8 @@ class MaintenanceRegularTask implements TaskInterface
         $this->assessDynamicDisplayGroups();
 
         $this->tidyAdCampaignSchedules();
+
+        $this->tidyUnusedFullScreenLayout();
 
         // Dispatch an event so that consumers can hook into regular maintenance.
         $event = new MaintenanceRegularEvent();
@@ -648,5 +651,35 @@ class MaintenanceRegularTask implements TaskInterface
         } catch (GuzzleException | \Exception $e) {
             $this->log->error('assertXmrKey: failed. E = ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Deletes unused full screen layouts
+     * @throws NotFoundException
+     * @throws GeneralException
+     */
+    private function tidyUnusedFullScreenLayout(): void
+    {
+        $this->runMessage .= '## ' . __('Tidy Unused FullScreen Layout') . PHP_EOL;
+        Profiler::start('RegularMaintenance::tidyUnusedFullScreenLayout', $this->log);
+        $count = 0;
+
+        foreach ($this->layoutFactory->query(null, [
+            'filterLayoutStatusId' => 3,
+            'isFullScreenCampaign' => 1
+        ]) as $layout) {
+            $count++;
+
+            $this->log->debug('tidyUnusedFullScreenLayout : Found unused fullscreen layout ID '
+                . $layout->layoutId . ' deleting');
+
+            $layout->delete();
+        }
+
+        $this->log->debug('tidyUnusedFullScreenLayout : Deleted ' . $count . ' layouts');
+
+        Profiler::end('RegularMaintenance::tidyUnusedFullScreenLayout', $this->log);
+
+        $this->runMessage .= ' - Done ' . $count . PHP_EOL . PHP_EOL;
     }
 }

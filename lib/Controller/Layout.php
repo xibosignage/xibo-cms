@@ -3503,6 +3503,11 @@ class Layout extends Base
             throw new InvalidArgumentException(sprintf(__('Please select %s'), ucfirst($type)));
         }
 
+        // We only create fullscreen layout from media files or playlist
+        if (!in_array($type, ['media', 'playlist'], true)) {
+            throw new InvalidArgumentException(__('Invalid type'));
+        }
+
         $layoutData = $this->layoutFactory->createFullScreenLayout(
             $type,
             $id,
@@ -3514,8 +3519,8 @@ class Layout extends Base
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 200,
-            'message' => $layoutData['message'],
-            'data' => $layoutData['data']
+            'message' => sprintf(__('Created %s'), $layoutData->layout),
+            'data' => $layoutData
         ]);
 
         return $this->render($request, $response);

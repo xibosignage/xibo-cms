@@ -2631,7 +2631,10 @@ class LayoutFactory extends BaseFactory
             }
         }
 
-        if ($parsedFilter->getString('campaignType') != '') {
+        // Get the fullscreen media or playlist layout
+        if ($parsedFilter->getInt('isFullScreenCampaign', ['default' => -1]) == 1) {
+            $body .= ' AND campaign.type IN ("media", "playlist") ';
+        } else if ($parsedFilter->getString('campaignType') != '') {
             $body .= ' AND campaign.type = :type ';
             $params['type'] = $parsedFilter->getString('campaignType');
         }
@@ -3174,7 +3177,7 @@ class LayoutFactory extends BaseFactory
      * @throws NotFoundException
      * @throws GeneralException
      */
-    public function createFullScreenLayout($type, $id, $resolutionId, $backgroundColor, $duration): array
+    public function createFullScreenLayout($type, $id, $resolutionId, $backgroundColor, $duration): Layout
     {
         $media = null;
         $playlist = null;
@@ -3247,10 +3250,7 @@ class LayoutFactory extends BaseFactory
 
         if (!empty($layoutExists)) {
             // Return
-            return [
-                'message' => sprintf(__('Fetched %s'), $layoutExists->layout),
-                'data' => $layoutExists
-            ];
+            return $layoutExists;
         }
 
         $layout = $this->createFromResolution(
@@ -3343,10 +3343,7 @@ class LayoutFactory extends BaseFactory
         $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
 
         // Return
-        return [
-            'message' => sprintf(__('Created %s'), $draft->layout),
-            'data' => $draft
-        ];
+        return $draft;
     }
 
     /**
