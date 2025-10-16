@@ -3508,7 +3508,7 @@ class Layout extends Base
             throw new InvalidArgumentException(__('Invalid type'));
         }
 
-        $layoutData = $this->layoutFactory->createFullScreenLayout(
+        $fullscreenLayout = $this->layoutFactory->createFullScreenLayout(
             $type,
             $id,
             $resolutionId,
@@ -3519,8 +3519,8 @@ class Layout extends Base
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 200,
-            'message' => sprintf(__('Created %s'), $layoutData->layout),
-            'data' => $layoutData
+            'message' => sprintf(__('Created %s'), $fullscreenLayout->layout),
+            'data' => $fullscreenLayout
         ]);
 
         return $this->render($request, $response);

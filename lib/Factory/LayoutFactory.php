@@ -34,7 +34,6 @@ use Xibo\Entity\Region;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\Environment;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\DuplicateEntityException;
@@ -3234,23 +3233,23 @@ class LayoutFactory extends BaseFactory
 
         if ($type === 'media') {
             // do we already have a full screen layout with this media?
-            $layoutExists = $this->getLinkedFullScreenLayout(
+            $existingFullscreenLayout = $this->getLinkedFullScreenLayout(
                 'media',
                 $media->mediaId,
                 array_merge($currentLayoutProperties, ['duration' => $itemDuration])
             );
         } else if ($type === 'playlist') {
             // do we already have a full screen layout with this playlist?
-            $layoutExists = $this->getLinkedFullScreenLayout(
+            $existingFullscreenLayout = $this->getLinkedFullScreenLayout(
                 'playlist',
                 $playlist->playlistId,
                 $currentLayoutProperties
             );
         }
 
-        if (!empty($layoutExists)) {
+        if (!empty($existingFullscreenLayout)) {
             // Return
-            return $layoutExists;
+            return $existingFullscreenLayout;
         }
 
         $layout = $this->createFromResolution(

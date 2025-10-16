@@ -37,7 +37,6 @@ use Xibo\Event\UserDeleteEvent;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Storage\StorageServiceInterface;
-use Xibo\Support\Exception\GeneralException;
 
 /**
  * Layout events
