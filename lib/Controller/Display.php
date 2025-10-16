@@ -726,8 +726,6 @@ class Display extends Base
                 $display->auditingUntil = ($display->auditingUntil == 0)
                     ? 0
                     : Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
-                $display->storageAvailableSpace = ByteFormatter::format($display->storageAvailableSpace);
-                $display->storageTotalSpace = ByteFormatter::format($display->storageTotalSpace);
                 continue;
             }
 
