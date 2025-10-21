@@ -274,35 +274,40 @@ class CapConnector implements ConnectorInterface, EmergencyAlertInterface
             // Retrieve all <area> elements within the current <info> element
             $areaNodes = $this->infoNode->getElementsByTagName('area');
 
-            // Iterate through each <area> element
-            foreach ($areaNodes as $areaNode) {
-                $this->areaNode = $areaNode;
+            if (empty($areaNodes->length)) {
+                // If we don't have <area> elements, then provide CAP without the Area
+                $dataProvider->addItem($cap);
+            } else {
+                // Iterate through each <area> element
+                foreach ($areaNodes as $areaNode) {
+                    $this->areaNode = $areaNode;
 
-                $circle = $this->getAreaData('circle');
-                $polygon = $this->getAreaData('polygon');
-                $cap['areaDesc'] = $this->getAreaData('areaDesc');
+                    $circle = $this->getAreaData('circle');
+                    $polygon = $this->getAreaData('polygon');
+                    $cap['areaDesc'] = $this->getAreaData('areaDesc');
 
-                // Check if the area-specific filter is enabled
-                if ($config['isAreaSpecific']) {
-                    if ($circle || $polygon) {
-                        // Get the current display coordinates
-                        $displayLatitude = $dataProvider->getDisplayLatitude();
-                        $displayLongitude = $dataProvider->getDisplayLongitude();
+                    // Check if the area-specific filter is enabled
+                    if ($config['isAreaSpecific']) {
+                        if ($circle || $polygon) {
+                            // Get the current display coordinates
+                            $displayLatitude = $dataProvider->getDisplayLatitude();
+                            $displayLongitude = $dataProvider->getDisplayLongitude();
 
-                        // Retrieve area coordinates (circle or polygon) from CAP XML
-                        $areaCoordinates = $this->getAreaCoordinates();
+                            // Retrieve area coordinates (circle or polygon) from CAP XML
+                            $areaCoordinates = $this->getAreaCoordinates();
 
-                        // Check if display coordinates matches the CAP alert area
-                        if ($this->isWithinArea($displayLatitude, $displayLongitude, $areaCoordinates)) {
+                            // Check if display coordinates matches the CAP alert area
+                            if ($this->isWithinArea($displayLatitude, $displayLongitude, $areaCoordinates)) {
+                                $dataProvider->addItem($cap);
+                            }
+                        } else {
+                            // Provide CAP data if no coordinate/s is provided
                             $dataProvider->addItem($cap);
                         }
                     } else {
-                        // Provide CAP data if no coordinate/s is provided
+                        // Provide CAP data if area-specific filter is disabled
                         $dataProvider->addItem($cap);
                     }
-                } else {
-                    // Provide CAP data if area-specific filter is disabled
-                    $dataProvider->addItem($cap);
                 }
             }
         }
