@@ -894,6 +894,19 @@ class DataSet implements \JsonSerializable
             }
         }
 
+        // Does this dataset have existing columns?
+        // Additional pre-checking for column headings when copying existing datasets
+        if (!empty($this->columns)) {
+            foreach ($this->columns as $column) {
+                if (!v::stringType()->notEmpty()->noWhitespace()->validate($column->heading)) {
+                    throw new InvalidArgumentException(__(
+                        'Cannot copy this Dataset due to invalid column headings. Please remove any spaces.'),
+                        'dataSet'
+                    );
+                }
+            }
+        }
+
         try {
             $existing = $this->dataSetFactory->getByName($this->dataSet, $this->userId);
 
