@@ -335,6 +335,24 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('xmrNetworkAddress', $sanitizedParams->getString('xmrNetworkAddress'), $ownConfig, $config);
                 }
 
+                if ($sanitizedParams->hasParam('xmrWebSocketAddress')) {
+                    $this->handleChangedSettings(
+                        'xmrWebSocketAddress',
+                        ($ownConfig)
+                            ? $displayProfile->getSetting('xmrWebSocketAddress')
+                            : $display->getSetting('xmrWebSocketAddress'),
+                        $sanitizedParams->getString('xmrWebSocketAddress'),
+                        $changedSettings
+                    );
+                    $displayProfile->setSetting(
+                        'xmrWebSocketAddress',
+                        $sanitizedParams->getString('xmrWebSocketAddress'),
+
+                        $ownConfig,
+                        $config
+                    );
+                }
+
                 if ($sanitizedParams->hasParam('dayPartId')) {
                     $this->handleChangedSettings('dayPartId', ($ownConfig) ? $displayProfile->getSetting('dayPartId') : $display->getSetting('dayPartId'), $sanitizedParams->getInt('dayPartId'), $changedSettings);
                     $displayProfile->setSetting('dayPartId', $sanitizedParams->getInt('dayPartId'), $ownConfig, $config);
@@ -540,6 +558,24 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('xmrNetworkAddress', $sanitizedParams->getString('xmrNetworkAddress'), $ownConfig, $config);
                 }
 
+                if ($sanitizedParams->hasParam('xmrWebSocketAddress')) {
+                    $this->handleChangedSettings(
+                        'xmrWebSocketAddress',
+                        ($ownConfig)
+                            ? $displayProfile->getSetting('xmrWebSocketAddress')
+                            : $display->getSetting('xmrWebSocketAddress'),
+                        $sanitizedParams->getString('xmrWebSocketAddress'),
+                        $changedSettings
+                    );
+                    $displayProfile->setSetting(
+                        'xmrWebSocketAddress',
+                        $sanitizedParams->getString('xmrWebSocketAddress'),
+
+                        $ownConfig,
+                        $config
+                    );
+                }
+
                 if ($sanitizedParams->hasParam('statsEnabled')) {
                     $this->handleChangedSettings('statsEnabled', ($ownConfig) ? $displayProfile->getSetting('statsEnabled') : $display->getSetting('statsEnabled'), $sanitizedParams->getCheckbox('statsEnabled'), $changedSettings);
                     $displayProfile->setSetting('statsEnabled', $sanitizedParams->getCheckbox('statsEnabled'), $ownConfig, $config);
@@ -695,6 +731,24 @@ trait DisplayProfileConfigFields
                 if ($sanitizedParams->hasParam('xmrNetworkAddress')) {
                     $this->handleChangedSettings('xmrNetworkAddress',($ownConfig) ? $displayProfile->getSetting('xmrNetworkAddress') : $display->getSetting('xmrNetworkAddress'), $sanitizedParams->getString('xmrNetworkAddress'), $changedSettings);
                     $displayProfile->setSetting('xmrNetworkAddress', $sanitizedParams->getString('xmrNetworkAddress'), $ownConfig, $config);
+                }
+
+                if ($sanitizedParams->hasParam('xmrWebSocketAddress')) {
+                    $this->handleChangedSettings(
+                        'xmrWebSocketAddress',
+                        ($ownConfig)
+                            ? $displayProfile->getSetting('xmrWebSocketAddress')
+                            : $display->getSetting('xmrWebSocketAddress'),
+                        $sanitizedParams->getString('xmrWebSocketAddress'),
+                        $changedSettings
+                    );
+                    $displayProfile->setSetting(
+                        'xmrWebSocketAddress',
+                        $sanitizedParams->getString('xmrWebSocketAddress'),
+
+                        $ownConfig,
+                        $config
+                    );
                 }
 
                 if ($sanitizedParams->hasParam('statsEnabled')) {
@@ -946,6 +1000,24 @@ trait DisplayProfileConfigFields
                 if ($sanitizedParams->hasParam('xmrNetworkAddress')) {
                     $this->handleChangedSettings('xmrNetworkAddress',($ownConfig) ? $displayProfile->getSetting('xmrNetworkAddress') : $display->getSetting('xmrNetworkAddress'), $sanitizedParams->getString('xmrNetworkAddress'), $changedSettings);
                     $displayProfile->setSetting('xmrNetworkAddress', $sanitizedParams->getString('xmrNetworkAddress'), $ownConfig, $config);
+                }
+
+                if ($sanitizedParams->hasParam('xmrWebSocketAddress')) {
+                    $this->handleChangedSettings(
+                        'xmrWebSocketAddress',
+                        ($ownConfig)
+                            ? $displayProfile->getSetting('xmrWebSocketAddress')
+                            : $display->getSetting('xmrWebSocketAddress'),
+                        $sanitizedParams->getString('xmrWebSocketAddress'),
+                        $changedSettings
+                    );
+                    $displayProfile->setSetting(
+                        'xmrWebSocketAddress',
+                        $sanitizedParams->getString('xmrWebSocketAddress'),
+
+                        $ownConfig,
+                        $config
+                    );
                 }
 
                 if ($sanitizedParams->hasParam('statsEnabled')) {
