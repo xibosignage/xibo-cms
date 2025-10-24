@@ -85,7 +85,7 @@ class FontFactory extends BaseFactory
             )
         );
 
-        $font->fileName = preg_replace('/[^-.\w]/', '-', $fileName);
+        $font->fileName = $this->getFileName($fileName);
         $font->size = filesize($file);
         $font->md5 = md5_file($file);
         return $font;
@@ -202,5 +202,28 @@ class FontFactory extends BaseFactory
         }
 
         return $entries;
+    }
+
+    /**
+     * Gets the filename
+     * @param $fileName
+     * @return string
+     */
+    private function getFileName($fileName): string
+    {
+        // Get the filename
+        $baseName = preg_replace('/[^-.\w]/', '-', pathinfo($fileName, PATHINFO_FILENAME));
+        $extension = pathinfo($fileName, PATHINFO_EXTENSION);
+
+        $newFileName = $baseName . ($extension ? '.' . $extension : '');
+        $counter = 1;
+
+        // Check for duplicates and add a count suffix in the filename (i.e.(1), (2), etc)
+        while ($this->query(null, ['fileName' => $newFileName])) {
+            $newFileName = $baseName . "($counter)" . ($extension ? '.' . $extension : '');
+            $counter++;
+        }
+
+        return $newFileName;
     }
 }
