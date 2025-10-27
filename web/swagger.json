@@ -8717,7 +8717,9 @@
                     "schedule"
                 ],
                 "summary": "Generates the calendar that we draw events on",
+                "deprecated": true,
                 "operationId": "scheduleCalendarData",
+                "description": "⚠️ This endpoint is deprecated and will be removed in version 5.0.",
                 "parameters": [
                     {
                         "name": "displayGroupIds",
@@ -11922,7 +11924,6 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "WidgetDataOrder"
                             }
                         }
                     }

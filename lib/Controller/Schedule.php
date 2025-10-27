@@ -169,7 +169,7 @@ class Schedule extends Base
 
     /**
      * Generates the calendar that we draw events on
-     *
+     * @deprecated - Deprecated API: This endpoint will be removed in v5.0
      * @SWG\Get(
      *  path="/schedule/data/events",
      *  operationId="scheduleCalendarData",
@@ -215,7 +215,15 @@ class Schedule extends Base
      */
     public function eventData(Request $request, Response $response)
     {
-        $response = $response->withHeader('Content-Type', 'application/json');
+        $response = $response
+            ->withHeader('Content-Type', 'application/json')
+            ->withHeader(
+            'Warning',
+            '299 - "Deprecated API: /schedule/data/events will be removed in v5.0"'
+        );
+
+        $this->getLog()->error('Deprecated API called: /schedule/data/events');
+
         $this->setNoOutput();
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
