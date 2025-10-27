@@ -48,7 +48,8 @@ class FontFactory extends BaseFactory
             $this->getStore(),
             $this->getLog(),
             $this->getDispatcher(),
-            $this->config
+            $this->config,
+            $this
         );
     }
 
@@ -85,9 +86,10 @@ class FontFactory extends BaseFactory
             )
         );
 
-        $font->fileName = $this->getFileName($fileName);
+        $font->fileName = preg_replace('/[^-.\w]/', '-', $fileName);
         $font->size = filesize($file);
         $font->md5 = md5_file($file);
+
         return $font;
     }
 
@@ -178,6 +180,11 @@ class FontFactory extends BaseFactory
             $params['fileName'] = $sanitizedFilter->getString('fileName');
         }
 
+        if ($sanitizedFilter->getString('md5') != null) {
+            $body .= ' AND `fonts`.md5 = :md5 ';
+            $params['md5'] = $sanitizedFilter->getString('md5');
+        }
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder)) {
@@ -202,28 +209,5 @@ class FontFactory extends BaseFactory
         }
 
         return $entries;
-    }
-
-    /**
-     * Gets the filename
-     * @param $fileName
-     * @return string
-     */
-    private function getFileName($fileName): string
-    {
-        // Get the filename
-        $baseName = preg_replace('/[^-.\w]/', '-', pathinfo($fileName, PATHINFO_FILENAME));
-        $extension = pathinfo($fileName, PATHINFO_EXTENSION);
-
-        $newFileName = $baseName . ($extension ? '.' . $extension : '');
-        $counter = 1;
-
-        // Check for duplicates and add a count suffix in the filename (i.e.(1), (2), etc)
-        while ($this->query(null, ['fileName' => $newFileName])) {
-            $newFileName = $baseName . "($counter)" . ($extension ? '.' . $extension : '');
-            $counter++;
-        }
-
-        return $newFileName;
     }
 }

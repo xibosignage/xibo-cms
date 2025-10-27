@@ -28,6 +28,8 @@ use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Factory\FontFactory;
+use Xibo\Support\Exception\DuplicateEntityException;
 
 /**
  * Class Font
@@ -95,15 +97,19 @@ class Font
     /** @var ConfigServiceInterface */
     private $config;
 
+    /** @var  FontFactory */
+    private $fontFactory;
+
     /**
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param EventDispatcherInterface $dispatcher
      */
-    public function __construct($store, $log, $dispatcher, $config)
+    public function __construct($store, $log, $dispatcher, $config, $fontFactory)
     {
         $this->setCommonDependencies($store, $log, $dispatcher);
         $this->config = $config;
+        $this->fontFactory = $fontFactory;
     }
 
     public function getFilePath()
@@ -111,8 +117,17 @@ class Font
         return $this->config->getSetting('LIBRARY_LOCATION') . 'fonts/' . $this->fileName;
     }
 
-    public function save()
+    /**
+     * @throws DuplicateEntityException
+     */
+    public function save($options = [])
     {
+        $options = array_merge($options, ['validate' => true]);
+
+        if ($options['validate']) {
+            $this->validate();
+        }
+
         if ($this->id === null || $this->id === 0) {
             $this->add();
 
@@ -165,6 +180,29 @@ class Font
 
         if (file_exists($libraryLocation . 'fonts/' . $this->fileName)) {
             unlink($libraryLocation . 'fonts/' . $this->fileName);
+        }
+    }
+
+    /**
+     * Ensures no duplicate fonts are created
+     *
+     * @throws DuplicateEntityException
+     */
+    private function validate(): void
+    {
+        // Prevents uploading the same file under a different name
+        if ($this->fontFactory->query(null, ['md5' => $this->md5])) {
+            throw new DuplicateEntityException(__('This font file already exists in the library.'));
+        }
+
+        // Keeps unique file storage
+        if ($this->fontFactory->query(null, ['fileName' => $this->fileName])) {
+            throw new DuplicateEntityException(__('Similar font filename already exists in the library.'));
+        }
+
+        // Prevents multiple fonts with same name in UI
+        if ($this->fontFactory->query(null, ['name' => $this->name])) {
+            throw new DuplicateEntityException(__('Similar font name already exists in the library.'));
         }
     }
 }
