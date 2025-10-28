@@ -8717,9 +8717,8 @@
                     "schedule"
                 ],
                 "summary": "Generates the calendar that we draw events on",
-                "deprecated": true,
+                "description": "\u26a0\ufe0f This endpoint is deprecated and will be removed in v5.0.",
                 "operationId": "scheduleCalendarData",
-                "description": "⚠️ This endpoint is deprecated and will be removed in version 5.0.",
                 "parameters": [
                     {
                         "name": "displayGroupIds",
@@ -8756,7 +8755,8 @@
                             }
                         }
                     }
-                }
+                },
+                "deprecated": true
             }
         },
         "/schedule/{displayGroupId}/events": {

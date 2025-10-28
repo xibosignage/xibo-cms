@@ -173,7 +173,9 @@ class Schedule extends Base
      * @SWG\Get(
      *  path="/schedule/data/events",
      *  operationId="scheduleCalendarData",
+     *  description="⚠️ This endpoint is deprecated and will be removed in v5.0.",
      *  tags={"schedule"},
+     *  deprecated=true,
      *  @SWG\Parameter(
      *      name="displayGroupIds",
      *      description="The DisplayGroupIds to return the schedule for. [-1] for All.",
