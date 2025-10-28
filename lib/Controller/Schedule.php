@@ -216,7 +216,6 @@ class Schedule extends Base
     public function eventData(Request $request, Response $response)
     {
         $response = $response
-            ->withHeader('Content-Type', 'application/json')
             ->withHeader(
             'Warning',
             '299 - "Deprecated API: /schedule/data/events will be removed in v5.0"'
