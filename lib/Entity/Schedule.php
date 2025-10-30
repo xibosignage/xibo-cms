@@ -938,21 +938,15 @@ class Schedule implements \JsonSerializable
 
         // Notify
         if ($options['notify']) {
-            // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
-            if ($this->inScheduleLookAhead()) {
-                $this->getLog()->debug(
-                    'Schedule changing is within the schedule look ahead, will notify '
-                    . count($this->displayGroups) . ' display groups'
-                );
-                foreach ($this->displayGroups as $displayGroup) {
-                    /* @var DisplayGroup $displayGroup */
-                    $this
-                        ->getDisplayNotifyService()
-                        ->collectNow()
-                        ->notifyByDisplayGroupId($displayGroup->displayGroupId);
-                }
-            } else {
-                $this->getLog()->debug('Schedule changing is not within the schedule look ahead');
+            // Notify affected displays to clear display cache
+            $this->getLog()->debug('Event update: Will notify ' . count($this->displayGroups) . ' display groups');
+
+            foreach ($this->displayGroups as $displayGroup) {
+                /* @var DisplayGroup $displayGroup */
+                $this
+                    ->getDisplayNotifyService()
+                    ->collectNow()
+                    ->notifyByDisplayGroupId($displayGroup->displayGroupId);
             }
         }
 
@@ -1016,12 +1010,10 @@ class Schedule implements \JsonSerializable
 
         // Notify
         if ($options['notify']) {
-            // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
-            if ($this->inScheduleLookAhead() && $this->displayNotifyService !== null) {
-                $this->getLog()->debug(
-                    'Schedule changing is within the schedule look ahead, will notify '
-                    . count($notify) . ' display groups'
-                );
+            // Notify affected displays to clear display cache
+            if ($this->displayNotifyService !== null) {
+                $this->getLog()->debug('Event delete: Will notify ' . count($notify) . ' display groups');
+
                 foreach ($notify as $displayGroup) {
                     /* @var DisplayGroup $displayGroup */
                     $this
@@ -1029,7 +1021,7 @@ class Schedule implements \JsonSerializable
                         ->collectNow()
                         ->notifyByDisplayGroupId($displayGroup->displayGroupId);
                 }
-            } else if ($this->displayNotifyService === null) {
+            } else {
                 $this->getLog()->info('Notify disabled, dependencies not set');
             }
         } else {
