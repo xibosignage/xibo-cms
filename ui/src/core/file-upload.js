@@ -394,8 +394,6 @@ function saveVideoCoverImage(data) {
     // get mediaId from results (finished upload)
     thumbnailData['mediaId'] = results.mediaId;
 
-    console.log('Saving cover for', results.fileName, videoImageCovers[results.fileName]);
-
     // get the base64 image we captured and stored for this file name
     thumbnailData['image'] = videoImageCovers[results.fileName];
 
