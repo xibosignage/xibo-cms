@@ -1933,7 +1933,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
           $mediaContent.masonry('layout');
 
           // Show more button
-          if (res.data.length > 0) {
+          if (res.data.length === requestLength) {
             if ($mediaContent.parent().find('.show-more').length == 0) {
               const $showMoreBtn =
                 $('<button class="btn btn-block btn-white show-more">' +
@@ -1945,7 +1945,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
                 loadData(false);
               });
             }
-          } else {
+          } else if (res.data.length === 0) {
             toastr.info(
               toolbarTrans.noShowMore,
               null,
@@ -2630,7 +2630,7 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
             $content.masonry('layout');
 
             // Show more button
-            if (response.data.length > 0) {
+            if (response.data.length === requestLength) {
               if ($content.parent().find('.show-more').length == 0) {
                 const $showMoreBtn =
                   $('<button class="btn btn-block btn-white show-more">' +
@@ -2642,7 +2642,7 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
                   loadData(false);
                 });
               }
-            } else {
+            } else if (response.data.length === 0) {
               toastr.info(
                 toolbarTrans.noShowMore,
                 null,
@@ -2873,7 +2873,7 @@ Toolbar.prototype.playlistsContentPopulate = function(menu) {
           $content.find('.toolbar-card').removeClass('hide-content');
 
           // Show more button
-          if (response.data.length > 0) {
+          if (response.data.length === requestLength) {
             if ($content.parent().find('.show-more').length == 0) {
               const $showMoreBtn =
                 $('<button class="btn btn-block btn-white show-more">' +
@@ -2885,7 +2885,7 @@ Toolbar.prototype.playlistsContentPopulate = function(menu) {
                 loadData(false);
               });
             }
-          } else {
+          } else if (response.data.length === 0) {
             toastr.info(
               toolbarTrans.noShowMore,
               null,
