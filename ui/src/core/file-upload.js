@@ -322,35 +322,47 @@ function handleVideoCoverImage(e, data) {
   // wait a little bit for the preview to be in the form
   const checkExist = setInterval(function() {
     if ($('.preview').find('video').length) {
+      let allVideoPreviewsExist = true;
+
       // iterate through our files, check if we have videos
       // if we do, then set params on video object,
       // convert 2nd second of the video to an image
       // and register onseeked and onpause events
-      Array.from(files).forEach(function(file, index) {
-        if (!file.error && file.type.includes('video') && file.preview) {
-          video = file.preview;
-          video.name = file.name;
-          video.setAttribute('id', file.name);
-          video.preload = 'metadata';
-          video.onseeked = createImage;
-          video.onpause = createImage;
-          // set current time to trigger event
-          // and create the cover image
-          video.currentTime = 2;
+      Array.from(files).forEach(file => {
+        if (file.error || !file.type.includes('video')) {
+          return;
         }
+
+        if (!file.preview) {
+          allVideoPreviewsExist = false;
+          return;
+        }
+
+        video = file.preview;
+        video.name = file.name;
+        video.setAttribute('id', file.name);
+        video.preload = 'metadata';
+        video.onseeked = createImage;
+        video.onpause = createImage;
+        // set current time to trigger event
+        // and create the cover image
+        video.currentTime = 2;
       });
 
-      // show help text describing this feature.
-      const helpText = translations.videoImageCoverHelpText;
-      const $helpTextSelector = $('.template-upload video:first')
-        .closest('tr')
-        .find('td span.info');
-      $helpTextSelector.empty();
-      $helpTextSelector.append(helpText);
+      // Clear interval when all previews exist
+      if (allVideoPreviewsExist) {
+        // show help text describing this feature.
+        const helpText = translations.videoImageCoverHelpText;
+        const $helpTextSelector = $('.template-upload video:first')
+          .closest('tr')
+          .find('td span.info');
+        $helpTextSelector.empty();
+        $helpTextSelector.append(helpText);
 
-      clearInterval(checkExist);
+        clearInterval(checkExist);
+      }
     }
-  }, 100);
+  }, 200);
 }
 
 function createImage() {
@@ -381,6 +393,8 @@ function saveVideoCoverImage(data) {
   if (results.mediaType === 'video') {
     // get mediaId from results (finished upload)
     thumbnailData['mediaId'] = results.mediaId;
+
+    console.log('Saving cover for', results.fileName, videoImageCovers[results.fileName]);
 
     // get the base64 image we captured and stored for this file name
     thumbnailData['image'] = videoImageCovers[results.fileName];
