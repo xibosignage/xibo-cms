@@ -171,8 +171,17 @@ class FontFactory extends BaseFactory
         }
 
         if ($sanitizedFilter->getString('name') != null) {
-            $body .= ' AND `fonts`.name = :name ';
-            $params['name'] = $sanitizedFilter->getString('name');
+            $terms = explode(',', $sanitizedFilter->getString('name'));
+            $logicalOperator = $sanitizedFilter->getString('logicalOperatorName', ['default' => 'OR']);
+            $this->nameFilter(
+                'fonts',
+                'name',
+                $terms,
+                $body,
+                $params,
+                ($sanitizedFilter->getCheckbox('useRegexForName') == 1),
+                $logicalOperator
+            );
         }
 
         if ($sanitizedFilter->getString('fileName') != null) {
