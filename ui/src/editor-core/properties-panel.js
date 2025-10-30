@@ -304,11 +304,11 @@ PropertiesPanel.prototype.save = function(
             },
           );
         } else if (target.type === 'layout') {
-          // Update resolution id
-          app.layout.resolutionId = resolutionId;
-
           // Update layout
           app.layout.updateData(data.data);
+
+          // Update resolution id
+          app.layout.resolutionId = resolutionId;
 
           // Render top bar to update layout changes
           app.topbar.render();

@@ -198,18 +198,18 @@ LayerManager.prototype.createStructure = function() {
       duration: parseDuration(canvas.duration),
       layers: canvasObject.subLayers,
     });
+  }
 
-    // If we have a background image for the layout
-    // Add it to structure
-    if (
-      self.parent.layout.backgroundImage &&
-      self.parent.layout.backgroundzIndex != null
-    ) {
-      addToLayerStructure(self.parent.layout.backgroundzIndex, {
-        type: 'layoutBackground',
-        name: 'Layout Background',
-      });
-    }
+  // If we have a background image for the layout
+  // Add it to structure
+  if (
+    self.parent.layout.backgroundImage &&
+    self.parent.layout.backgroundzIndex != null
+  ) {
+    addToLayerStructure(self.parent.layout.backgroundzIndex, {
+      type: 'layoutBackground',
+      name: 'Layout Background',
+    });
   }
 
   // Get static widgets and playlists
