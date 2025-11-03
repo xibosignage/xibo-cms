@@ -553,7 +553,7 @@ class Schedule implements \JsonSerializable
         $currentDate->startOfDay();
 
         // Is the event updated to a past date?
-        $isEventUpdateToPastDate = ($this->toDt <= $this->getOriginalValue('toDt'));
+        $isEventUpdatedToPastDate = ($this->toDt <= $this->getOriginalValue('toDt'));
 
         // Test dates
         if ($this->recurrenceType != '') {
@@ -571,7 +571,7 @@ class Schedule implements \JsonSerializable
             // only test the from date.
             $this->getLog()->debug('Checking look ahead based from date ' . $currentDate->toRssString());
             return ($this->fromDt >= $currentDate->format('U') && $this->fromDt <= $rfLookAhead->format('U'));
-        } else if ($isEventUpdateToPastDate) {
+        } else if ($isEventUpdatedToPastDate) {
             // Check if the event was updated to a past date
             // We only need to check the toDt
             $this->getLog()->debug('Checking look ahead based based on previous event details');
