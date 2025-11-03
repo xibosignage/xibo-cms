@@ -535,10 +535,11 @@ class Schedule implements \JsonSerializable
 
     /**
      * Are the provided dates within the schedule look ahead
+     * @param $originalEvent
      * @return bool
      * @throws GeneralException
      */
-    private function inScheduleLookAhead()
+    private function inScheduleLookAhead($originalEvent = null): bool
     {
         if ($this->isAlwaysDayPart()) {
             return true;
@@ -551,6 +552,9 @@ class Schedule implements \JsonSerializable
 
         // Dial current date back to the start of the day
         $currentDate->startOfDay();
+
+        // Is the event updated to a past date?
+        $isEventInPast = ($originalEvent !== null && $this->toDt <= $originalEvent['toDt']);
 
         // Test dates
         if ($this->recurrenceType != '') {
@@ -568,6 +572,12 @@ class Schedule implements \JsonSerializable
             // only test the from date.
             $this->getLog()->debug('Checking look ahead based from date ' . $currentDate->toRssString());
             return ($this->fromDt >= $currentDate->format('U') && $this->fromDt <= $rfLookAhead->format('U'));
+        } else if ($isEventInPast) {
+            // Check if the event was updated to a past date
+            // We only need to check the toDt
+            $this->getLog()->debug('Checking look ahead based based on previous event details');
+
+            return ($originalEvent['toDt'] >= $currentDate->format('U'));
         } else {
             // Compare the event dates
             $this->getLog()->debug(
@@ -880,6 +890,8 @@ class Schedule implements \JsonSerializable
             $this->validate();
         }
 
+        $originalEvent = $this->getOriginalEventDetails();
+
         // Handle "always" day parts
         if ($this->isAlwaysDayPart()) {
             $this->fromDt = self::$DATE_MIN;
@@ -938,15 +950,22 @@ class Schedule implements \JsonSerializable
 
         // Notify
         if ($options['notify']) {
-            // Notify affected displays to clear display cache
-            $this->getLog()->debug('Event update: Will notify ' . count($this->displayGroups) . ' display groups');
-
-            foreach ($this->displayGroups as $displayGroup) {
-                /* @var DisplayGroup $displayGroup */
-                $this
-                    ->getDisplayNotifyService()
-                    ->collectNow()
-                    ->notifyByDisplayGroupId($displayGroup->displayGroupId);
+            // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
+            // Or if the scheduled event was updated to a past date
+            if ($this->inScheduleLookAhead($originalEvent)) {
+                $this->getLog()->debug(
+                    'Schedule changing is within the schedule look ahead, will notify '
+                    . count($this->displayGroups) . ' display groups'
+                );
+                foreach ($this->displayGroups as $displayGroup) {
+                    /* @var DisplayGroup $displayGroup */
+                    $this
+                        ->getDisplayNotifyService()
+                        ->collectNow()
+                        ->notifyByDisplayGroupId($displayGroup->displayGroupId);
+                }
+            } else {
+                $this->getLog()->debug('Schedule changing is not within the schedule look ahead');
             }
         }
 
@@ -1010,10 +1029,12 @@ class Schedule implements \JsonSerializable
 
         // Notify
         if ($options['notify']) {
-            // Notify affected displays to clear display cache
-            if ($this->displayNotifyService !== null) {
-                $this->getLog()->debug('Event delete: Will notify ' . count($notify) . ' display groups');
-
+            // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
+            if ($this->inScheduleLookAhead() && $this->displayNotifyService !== null) {
+                $this->getLog()->debug(
+                    'Schedule changing is within the schedule look ahead, will notify '
+                    . count($notify) . ' display groups'
+                );
                 foreach ($notify as $displayGroup) {
                     /* @var DisplayGroup $displayGroup */
                     $this
@@ -1021,7 +1042,7 @@ class Schedule implements \JsonSerializable
                         ->collectNow()
                         ->notifyByDisplayGroupId($displayGroup->displayGroupId);
                 }
-            } else {
+            } else if ($this->displayNotifyService === null) {
                 $this->getLog()->info('Notify disabled, dependencies not set');
             }
         } else {
@@ -2168,5 +2189,16 @@ class Schedule implements \JsonSerializable
                 'layoutId' => $sanitizer->getInt('layoutId_' . $display->displayId)
             ]);
         }
+    }
+
+    /**
+     * Get the original event details
+     * @return array
+     */
+    private function getOriginalEventDetails(): array
+    {
+        return $this->getStore()->select('SELECT * FROM `schedule` WHERE eventId = :eventId', [
+            'eventId' => $this->eventId,
+        ])[0];
     }
 }
