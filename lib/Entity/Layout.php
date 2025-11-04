@@ -2926,10 +2926,11 @@ class Layout implements \JsonSerializable
      *
      * @param Layout $newLayout
      * @param Layout $originalLayout
+     * @param bool $validate
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function copyActions(Layout $newLayout, Layout $originalLayout)
+    public function copyActions(Layout $newLayout, Layout $originalLayout, bool $validate = true)
     {
         $oldRegionIds = [];
         $newRegionIds = [];
@@ -3000,7 +3001,8 @@ class Layout implements \JsonSerializable
                     }
                 }
             }
-            $action->save();
+
+            $action->save(['validate' => $validate]);
         }
 
         // Region Actions
@@ -3045,7 +3047,7 @@ class Layout implements \JsonSerializable
                     }
                 }
 
-                $action->save();
+                $action->save(['validate' => $validate]);
             }
 
             // Widget Actions
@@ -3096,7 +3098,7 @@ class Layout implements \JsonSerializable
                         }
                     }
 
-                    $action->save();
+                    $action->save(['validate' => $validate]);
                 }
             }
         }

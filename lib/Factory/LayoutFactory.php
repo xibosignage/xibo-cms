@@ -2822,7 +2822,9 @@ class LayoutFactory extends BaseFactory
 
         /** @var Region[] $allRegions */
         $allRegions = array_merge($draft->regions, $draft->drawers);
-        $draft->copyActions($draft, $layout);
+
+        // Skip the action validation on checkout
+        $draft->copyActions($draft, $layout, false);
 
         // Permissions && Sub-Playlists
         // Layout level permissions are managed on the Campaign entity, so we do not need to worry about that
