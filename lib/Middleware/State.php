@@ -189,7 +189,7 @@ class State implements Middleware
         Carbon::setLocale(Translate::GetLocale(2));
 
         // Default timezone
-        $defaultTimezone = $container->get('configService')->getSetting('defaultTimezone');
+        $defaultTimezone = $container->get('configService')->getSetting('defaultTimezone') ?? 'UTC';
 
         date_default_timezone_set($defaultTimezone);
 
