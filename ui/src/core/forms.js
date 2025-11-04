@@ -2601,7 +2601,9 @@ window.forms = {
             }
 
             // Text to be inserted
-            const text = '[' + value + ']';
+            const text = (snippetMode === 'media') ?
+              '[[mediaId=' + value + ']]' :
+              '[' + value + ']';
 
             // Check if there is a CKEditor instance
             const ckeditorInstance = formHelpers
@@ -2671,16 +2673,18 @@ window.forms = {
               return;
             }
 
-            // Text to be inserted
-            const textURL = urlsForApi.library.download.url.replace(
-              ':id',
-              value,
-            );
-            const text = '<img alt="" src="' + textURL + '?preview=1" />';
-
             // Check if there is a CKEditor instance
             const ckeditorInstance = formHelpers
               .getCKEditorInstance('input_' + targetId + '_' + targetFieldId);
+
+            // Text to be inserted
+            const textURL = (ckeditorInstance) ?
+              urlsForApi.library.download.url.replace(
+                ':id',
+                value,
+              ) + '?preview=1' :
+              '[[mediaId=' + value + ']]';
+            const text = '<img alt="" src="' + textURL + '" />';
 
             if (ckeditorInstance) {
               // CKEditor

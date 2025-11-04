@@ -511,7 +511,7 @@ const formHelpers = function() {
 
           // If we have initial value, set it
           if (initialValue) {
-            newConfig.initialData = initialValue;
+            newConfig.initialData = self.convertLibraryReferences(initialValue);
           }
         } else {
           createEditor =
@@ -888,7 +888,9 @@ const formHelpers = function() {
                 ckeditorInstance &&
                 value !== undefined
               ) {
-                const text = '[' + value + ']';
+                const text = (snippetMode === 'media') ?
+                  '[[mediaId=' + value + ']]' :
+                  '[' + value + ']';
 
                 formHelpers.insertToCKEditor(
                   'input_' + targetId + '_' + targetFieldId,
@@ -1127,7 +1129,7 @@ const formHelpers = function() {
     let data = editor.getData();
 
     data = data.replace(regex, function(match, group1) {
-      return '[' + group1 + ']';
+      return '[[mediaId=' + group1 + ']]';
     });
 
     // Update text field with the new data
@@ -2407,16 +2409,15 @@ const formHelpers = function() {
   };
 
   /**
-   *  We need to convert any library references [123] to their
+   *  We need to convert any library references [[mediaId=123]] to their
    * full URL counterparts we leave well alone non-library references.
    * @param {string} data - Data string to be processed
    * @return {string} - Processed data string
    */
   this.convertLibraryReferences = function(data) {
-    const regex = /\[[0-9]+]/gi;
+    const regex = /\[\[mediaId=([0-9]+)]]/gi;
 
-    data = data.replace(regex, function(match) {
-      const inner = match.replace(']', '').replace('[', '');
+    data = data.replace(regex, function(match, inner) {
       return CKEDITOR_DEFAULT_CONFIG.imageDownloadUrl.replace(':id', inner);
     });
 
@@ -2437,8 +2438,8 @@ const formHelpers = function() {
 
     const urlSplit = CKEDITOR_DEFAULT_CONFIG.imageDownloadUrl.split(':id');
 
-    data = data.replaceAll(urlSplit[0], '[');
-    data = data.replaceAll(urlSplit[1], ']');
+    data = data.replaceAll(urlSplit[0], '[[mediaId=');
+    data = data.replaceAll(urlSplit[1], ']]');
 
     return data;
   };
