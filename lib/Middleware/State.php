@@ -193,9 +193,6 @@ class State implements Middleware
 
         date_default_timezone_set($defaultTimezone);
 
-        // Update logger containers to use the CMS default timezone
-        $container->get('logger')->setTimezone(new \DateTimeZone($defaultTimezone));
-
         $container->set('session', function (ContainerInterface $container) use ($app) {
             if ($container->get('name') == 'web' || $container->get('name') == 'auth') {
                 $sessionHandler = new Session($container->get('logService'));
@@ -272,6 +269,10 @@ class State implements Middleware
             $container->get('logService')->setLevel($level);
         }
 
+
+        // Update logger containers to use the CMS default timezone
+        $container->get('logger')->setTimezone(new \DateTimeZone($defaultTimezone));
+
         // Configure any extra log handlers
         // we do these last so that they can provide their own log levels independent of the system settings
         if ($container->get('configService')->logHandlers != null && is_array($container->get('configService')->logHandlers)) {
@@ -289,15 +290,6 @@ class State implements Middleware
                 $container->get('logger')->pushProcessor($processor);
             }
         }
-
-        if ($container->get('configService')->logProcessors != null && is_array($container->get('configService')->logProcessors)) {
-            $container->get('logService')->debug('Configuring %d additional log processors from Config', count($container->get('configService')->logProcessors));
-            foreach ($container->get('configService')->logProcessors as $processor) {
-                $container->get('logger')
-                    ->setTimezone(new \DateTimeZone($container->get('configService')->getSetting('defaultTimezone')));
-            }
-        }
-
 
         // Add additional validation rules
         Factory::setDefaultInstance(
