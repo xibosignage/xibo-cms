@@ -406,11 +406,8 @@ try {
 
     // logProcessor
     // Get the default time zone based on the CMS settings and add a fallback value
-    $defaultTimezone = $container->get('configService')->getSetting('defaultTimezone') ?? 'UTC';
     $logProcessor = new \Xibo\Xmds\LogProcessor($container->get('logger'), $uidProcessor->getUid());
-    $container->get('logger')
-        ->pushProcessor($logProcessor)
-        ->setTimezone(new \DateTimeZone($defaultTimezone));
+    $container->get('logger')->pushProcessor($logProcessor);
 
     // Create a SoapServer
     // explicitly define caching.
