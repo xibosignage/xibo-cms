@@ -71,6 +71,15 @@
     min-height: 600px;
 }
 
+.agenda-view-modal .modal-title {
+    display: inline-flex;
+}
+
+.agenda-view-modal .agenda-view-loading {
+    height: 15px;
+    margin: 6px 0px 0px 6px;
+}
+
 .agenda-table {
     margin-bottom: 20px;
     background-color: #fff;

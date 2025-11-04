@@ -114,10 +114,8 @@ $(function() {
         const filterData = $('#schedule-grid').closest('.XiboGrid')
           .find('.FilterDiv form').serializeObject();
 
-        // We are managing paging on the client
-        // So we had a large number to lenght to return all results
-        d.start = 0;
-        d.length = 999999;
+        // Disable paging on the back-end
+        d.disablePaging = 1;
 
         $.extend(d, filterData);
       },
@@ -508,5 +506,17 @@ $(function() {
   // Refresh grid button
   $('#refreshGrid').on('click', function() {
     table.ajax.reload();
+  });
+
+  // When closing a modal on this page, reload table
+  // (to reflect possible changes)
+  // except for the agenda view modal
+  $(document).on('hidden.bs.modal', '.modal', function(e) {
+    if (
+      $(e.target).hasClass('bootbox') &&
+      !$(e.target).hasClass('agenda-view-modal')
+    ) {
+      table.ajax.reload();
+    }
   });
 });

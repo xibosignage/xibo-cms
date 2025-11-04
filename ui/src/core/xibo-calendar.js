@@ -510,62 +510,185 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
       moment(sourceEv.recurrenceRange * 1000) :
       moment('9999-12-31'); // Infinity
 
-    let currentMoment = originalStart.clone();
+    const unitMap =
+      {Minute: 'm', Hour: 'h', Day: 'd', Month: 'M', Year: 'y'};
 
-    while (
-      currentMoment.isBefore(moment(viewEndMs)) &&
-      currentMoment.isBefore(rangeEnd)
-    ) {
-      const isWeekly = sourceEv.recurrenceType === 'Week' &&
-        sourceEv.recurrenceRepeatsOn;
+    // Check if events repeat more than once a day
+    // so we can optimize them
+    const isMinuteRepeat = sourceEv.recurrenceType === 'Minute';
+    const isHourRepeat = sourceEv.recurrenceType === 'Hour';
 
-      if (isWeekly) {
-        const days = sourceEv.recurrenceRepeatsOn.split(',').map(Number);
-        const weekStart = currentMoment.clone().startOf('isoWeek');
+    const isHighFrequency =
+      (isMinuteRepeat && interval < 1440) ||
+      (isHourRepeat && interval < 24);
 
-        for (let i = 0; i < 7; i++) {
-          const dayInWeek = weekStart.clone().add(i, 'days');
-          if (!days.includes(dayInWeek.isoWeekday())) continue;
+    // If frequency is high (minute or hour), only generate one day
+    // for the monthly view
+    if (isHighFrequency && calendar.options.view === 'month') {
+      let currentDayIter = originalStart.clone().startOf('day');
 
-          const occStart = dayInWeek.set({
-            hour: originalStart.hour(),
-            minute: originalStart.minute(),
-            second: originalStart.second(),
-          });
+      // Find the first valid day
+      if (currentDayIter.isBefore(moment(viewStartMs).startOf('day'))) {
+        currentDayIter = moment(viewStartMs).startOf('day');
+      }
 
-          if (occStart.isAfter(originalStart) && occStart.isBefore(rangeEnd)) {
+      // Loop day by day
+      while (
+        currentDayIter.isBefore(moment(viewEndMs)) &&
+        currentDayIter.isBefore(rangeEnd)
+      ) {
+        // Find the time of the first event on this day
+        let eventMoment = currentDayIter.clone().set({
+          hour: originalStart.hour(),
+          minute: originalStart.minute(),
+          second: originalStart.second(),
+        });
+
+        if (eventMoment.isBefore(originalStart)) {
+          eventMoment = originalStart.clone();
+        }
+
+        if (
+          eventMoment.isSame(currentDayIter, 'day') &&
+          eventMoment.isBefore(rangeEnd)
+        ) {
+          const startMs = eventMoment.unix() * 1000;
+          const endMs = (eventMoment.unix() + duration.asSeconds()) * 1000;
+
+          if (startMs < viewEndMs && endMs > viewStartMs) {
             const clone = deepClone(sourceEv);
-            clone.fromDt = occStart.unix();
-            clone.toDt = occStart.clone().add(duration).unix();
+            clone.fromDt = eventMoment.unix();
+            clone.toDt = eventMoment.clone().add(duration).unix();
+            clone.isHighFrequency = true;
             generated.push(clone);
           }
         }
 
-        currentMoment.add(interval, 'weeks');
-        continue;
+        // Advance one day
+        currentDayIter.add(1, 'day');
       }
+      return generated;
+    } else {
+      // Generate normal occurrences
+      let currentMoment = originalStart.clone();
 
-      const unitMap =
-        {Minute: 'm', Hour: 'h', Day: 'd', Month: 'M', Year: 'y'};
-      const next = currentMoment.clone()
-        .add(interval, unitMap[sourceEv.recurrenceType]);
+      while (
+        currentMoment.isBefore(moment(viewEndMs)) &&
+        currentMoment.isBefore(rangeEnd)
+      ) {
+        const isWeekly = sourceEv.recurrenceType === 'Week' &&
+          sourceEv.recurrenceRepeatsOn;
 
-      if (!next || next.isSameOrBefore(currentMoment)) break;
+        if (isWeekly) {
+          const days = sourceEv.recurrenceRepeatsOn.split(',').map(Number);
+          const weekStart = currentMoment.clone().startOf('isoWeek');
 
-      currentMoment = next;
+          for (let i = 0; i < 7; i++) {
+            const dayInWeek = weekStart.clone().add(i, 'days');
+            if (!days.includes(dayInWeek.isoWeekday())) continue;
 
-      if (currentMoment.isBefore(rangeEnd)) {
-        const clone = deepClone(sourceEv);
-        clone.fromDt = currentMoment.unix();
-        clone.toDt = currentMoment.clone().add(duration).unix();
-        generated.push(clone);
+            const occStart = dayInWeek.set({
+              hour: originalStart.hour(),
+              minute: originalStart.minute(),
+              second: originalStart.second(),
+            });
+
+            if (
+              occStart.isAfter(originalStart) &&
+              occStart.isBefore(rangeEnd)
+            ) {
+              const clone = deepClone(sourceEv);
+              clone.fromDt = occStart.unix();
+              clone.toDt = occStart.clone().add(duration).unix();
+              generated.push(clone);
+            }
+          }
+
+          currentMoment.add(interval, 'weeks');
+          continue;
+        }
+
+        let nextMoment;
+        let eventMoment;
+        let isValidOccurrence = true;
+
+        if (sourceEv.recurrenceType === 'Month') {
+          const nextMonthBase = currentMoment.clone().add(interval, 'M');
+
+          if (sourceEv.recurrenceMonthlyRepeatsOn === 1) {
+            // Repeat on the same weekday of the same original nth week
+            const startOfMonth = originalStart.clone().startOf('month');
+            const weekNumber = originalStart.diff(startOfMonth, 'weeks') + 1;
+            const originalWeekday = originalStart.isoWeekday();
+
+            const firstDayOfNextMonth = nextMonthBase.clone().startOf('month');
+            const firstDayWeekday = firstDayOfNextMonth.isoWeekday();
+
+            const offset = (originalWeekday - firstDayWeekday + 7) % 7;
+
+            // Calculate the nth ocorrence
+            eventMoment = firstDayOfNextMonth
+              .clone()
+              .add(offset, 'days')
+              .add(weekNumber - 1, 'weeks')
+              .set({ // set same time
+                hour: originalStart.hour(),
+                minute: originalStart.minute(),
+                second: originalStart.second(),
+              });
+
+            // If the new date is after the target month, skip it
+            if (eventMoment.month() !== nextMonthBase.month()) {
+              isValidOccurrence = false;
+
+              // Don't use the spilled-over date
+              // nextMoment is a simple month advance
+              const originalDay = originalStart.date();
+              nextMoment = nextMonthBase;
+              const maxDay = nextMoment.daysInMonth();
+              nextMoment.date(Math.min(originalDay, maxDay));
+            } else {
+              // It's valid. The event date is also the next loop date.
+              nextMoment = eventMoment.clone();
+            }
+          } else {
+            // Repeat on the same day of the month
+            const originalDay = originalStart.date();
+            nextMoment = nextMonthBase;
+
+            // Clamp to the last valid day of the month if needed
+            const maxDay = nextMoment.daysInMonth();
+            nextMoment.date(Math.min(originalDay, maxDay));
+            eventMoment = nextMoment.clone();
+          }
+        } else {
+          nextMoment = currentMoment.clone()
+            .add(interval, unitMap[sourceEv.recurrenceType]);
+
+          if (!nextMoment || nextMoment.isSameOrBefore(currentMoment)) {
+            break;
+          }
+          eventMoment = nextMoment.clone();
+        }
+
+        currentMoment = nextMoment;
+
+        if (eventMoment.isBefore(rangeEnd) && isValidOccurrence) {
+          const clone = deepClone(sourceEv);
+          clone.fromDt = eventMoment.unix();
+          clone.toDt = eventMoment.clone().add(duration).unix();
+          generated.push(clone);
+        }
       }
+      return generated;
     }
-    return generated;
   };
 
+  // Generate schedule events array
   scheduleEvents.forEach((sourceEv) => {
     allOccurrences.push(sourceEv);
+
+    // If it's a recurring event, also generate recurrences
     if (sourceEv.recurringEvent) {
       allOccurrences.push(...generateRecurrences(sourceEv));
     }
@@ -580,12 +703,13 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
     const eventUrl = editButton ?
       editButton.url :
       `/schedule/form/edit/${rawEv.eventId}`;
-    const titleText = translations.schedule.calendar.eventOnDisplay
-      .replace(':event', rawEv.parentCampaignName || rawEv.campaign)
-      .replace(
-        ':display',
-        rawEv.displayGroupList || rawEv.displayGroups[0].displayGroup,
-      );
+    const titleText = ((rawEv.name) ? '"' + rawEv.name + '" - ' : '') +
+      translations.schedule.calendar.eventOnDisplay
+        .replace(':event', rawEv.parentCampaignName || rawEv.campaign)
+        .replace(
+          ':display',
+          rawEv.displayGroupList || rawEv.displayGroups[0].displayGroup,
+        );
 
     return {
       id: rawEv.eventId,
@@ -604,13 +728,61 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
     };
   };
 
-  return allOccurrences
-    .filter((ev) => {
-      const startMs = ev.fromDt * 1000;
-      const endMs = ev.toDt * 1000;
-      return startMs < viewEndMs && endMs > viewStartMs;
-    })
-    .map(formatCalendarEvent);
+  // Filter events for the current view
+  const filteredOccurrences = allOccurrences.filter((ev) => {
+    const startMs = ev.fromDt * 1000;
+    const endMs = ev.toDt * 1000;
+    return startMs < viewEndMs && endMs > viewStartMs;
+  });
+
+  // Group events by day
+  const groupedEvents = new Map();
+  filteredOccurrences.forEach((ev) => {
+    const dayKey = moment(ev.fromDt * 1000).startOf('day').format('YYYY-MM-DD');
+    // Group by the original eventId and the day
+    const groupKey = `${ev.eventId}-${dayKey}`;
+
+    if (!groupedEvents.has(groupKey)) {
+      groupedEvents.set(groupKey, []);
+    }
+    groupedEvents.get(groupKey).push(ev);
+  });
+
+  // Add only 1 occurrence per day of the same event group
+  const finalEvents = [];
+  for (const eventsOnDay of groupedEvents.values()) {
+    // Get the first event of the group
+    const rawEv = eventsOnDay[0];
+    if (!rawEv) {
+      continue;
+    }
+
+    const hasMultiple = eventsOnDay.length > 1;
+    const isHighFrequency = rawEv.isHighFrequency;
+
+    // Format just the first event
+    const formattedEvent = formatCalendarEvent(rawEv);
+
+    // If there are multiple events for this day AND it's a recurring event
+    if (hasMultiple || isHighFrequency && rawEv.recurringEvent) {
+      try {
+        formattedEvent.title += ' - ' +
+          translations.schedule.calendar.eventDescripiton
+            .replace('${recurrenceDetail}', rawEv.recurrenceDetail)
+            .replace('${recurrenceType}', rawEv.recurrenceType.toLowerCase())
+            .replace(
+              '${recurrenceTypeExtra}',
+              (rawEv.recurrenceDetail > 1) ? 's' : '');
+      } catch (e) {
+        console.error('Error generating recurrence description:', e, rawEv);
+      }
+    }
+
+    // Add only the first formatted event
+    finalEvents.push(formattedEvent);
+  }
+
+  return finalEvents;
 }
 
 // Creates a readonly text input for display and a hidden input for submission.
@@ -1827,7 +1999,8 @@ const openAgendaModal = function(date) {
 
   // Create modal
   const dialog = bootbox.dialog({
-    title: translations.schedule.calendar.agendaView,
+    title: `<span class="agenda-modal-title">
+      ${translations.schedule.calendar.agendaView}</span>`,
     message: `<div id="agendaCalendar"></div>`,
     className: 'agenda-view-modal',
     closeButton: true,
@@ -1839,6 +2012,23 @@ const openAgendaModal = function(date) {
     },
   }).attr('data-test', 'agendaViewModal');
 
+  const showLoading = function() {
+    const $modalTitle = $('.agenda-view-modal .modal-title');
+    const $loading = $(`<span class="fa fa-spin fa-cog agenda-view-loading">
+      </span>`);
+
+    // Show loading on modal title if exists
+    if ($modalTitle.length > 0) {
+      $modalTitle.append($loading);
+    } else {
+      $('.agenda-view-modal #agendaCalendar').append($loading);
+    }
+  };
+
+  const hideLoading = function() {
+    $('.agenda-view-modal .agenda-view-loading').remove();
+  };
+
   // Destroy calendar on close
   dialog.on('hidden.bs.modal', function() {
     window.agendaCalendar = null;
@@ -1848,73 +2038,6 @@ const openAgendaModal = function(date) {
 
   if (($('.agenda-view-modal #agendaCalendar').length > 0)) {
     const calendarOptions = $('#CalendarContainer').data();
-
-    // Add filters
-    $('.agenda-view-modal .modal-body').prepend(
-      templates.calendar.agendaFilter({
-        trans: translations.schedule.calendar.agendaFilters,
-        defaultLat: calendarOptions.defaultLat,
-        defaultLong: calendarOptions.defaultLong,
-      }),
-    );
-
-    // Location filter init
-    const $map = $('.cal-event-location-map #geoFilterAgendaMap');
-
-    // Get location button
-    $('#getLocation').off('click.getLoc').on('click.getLoc', function(ev) {
-      const $self = $(ev.currentTarget);
-
-      // Disable button
-      $self.prop('disabled', true);
-
-      navigator.geolocation.getCurrentPosition(function(location) { // success
-        // Populate location fields
-        $('#geoLatitude').val(location.coords.latitude).trigger('change');
-        $('#geoLongitude').val(location.coords.longitude).trigger('change');
-
-        // Reenable button
-        $self.prop('disabled', false);
-
-        // Redraw map
-        generateFilterGeoMap();
-      }, function error(err) { // error
-        console.warn('ERROR(' + err.code + '): ' + err.message);
-
-        // Reenable button
-        $self.prop('disabled', false);
-      }, { // options
-        enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 0,
-      });
-    });
-
-    // Location map button
-    $('#toggleMap').off('click.toggleMap').on('click.toggleMap', function() {
-      $map.toggleClass('d-none');
-
-      if (!$map.hasClass('d-none')) {
-        generateFilterGeoMap();
-      }
-    });
-
-    // Clear location button
-    $('#clearLocation').off('click.genMap').on('click.genMap', function() {
-      // Populate location fields
-      $('#geoLatitude').val('').trigger('change');
-      $('#geoLongitude').val('').trigger('change');
-
-      if (!$map.hasClass('d-none')) {
-        generateFilterGeoMap();
-      }
-    });
-
-    // Change events reloads the calendar view and map
-    $('#geoLatitude, #geoLongitude, #showTimeline').off('change.agendaFilter')
-      .on('change.agendaFilter', _.debounce(function() {
-        agendaCalendar.view();
-      }, 400));
 
     // Calendar options
     const options = {
@@ -2119,9 +2242,10 @@ const openAgendaModal = function(date) {
           agendaEvents['results'] = {};
         }
 
-        $('#calendar-progress').addClass('show');
+        // Show loading
+        showLoading();
 
-        // 3 - make request to get the data for the events
+        // Make request to get the data for the events
         window.getJsonRequestControl = $.getJSON(url, params)
           .done(function(data) {
             let noEvents = true;
@@ -2167,8 +2291,6 @@ const openAgendaModal = function(date) {
               agendaEvents['errorMessage'] = 'no_events';
             }
 
-            $('#calendar-progress').removeClass('show');
-
             if (done != undefined) {
               done();
             }
@@ -2176,6 +2298,15 @@ const openAgendaModal = function(date) {
             agendaCalendar._render();
 
             getJsonRequestControl = null;
+
+            // Turn Layout table into datatable
+            $('.agenda-table-layouts').DataTable({
+              searching: false,
+              destroy: true,
+            });
+
+            // Remove loading
+            hideLoading();
           })
           .fail(function(res) {
             // Deal with the failed request
@@ -2189,29 +2320,17 @@ const openAgendaModal = function(date) {
 
             agendaCalendar._render();
 
-            $('#calendar-progress').removeClass('show');
+            // Remove loading
+            hideLoading();
           });
-      },
-      onAfterEventsLoad: function(events) {
-        // When agenda panel is ready, turn tables into datatables with paging
-        $('.agenda-panel').ready(function() {
-          $('.agenda-table-layouts').DataTable({
-            searching: false,
-            destroy: true,
-          });
-        });
-
-        if (!events) {
-          return;
-        }
       },
       onAfterViewLoad: function(view) {
         if (
           typeof this.getTitle === 'function' &&
           $('.agenda-view-modal .modal-title .day-title').length === 0
         ) {
-          $('.agenda-view-modal .modal-title').append(
-            `<span class="day-title"> - ${this.getTitle()}</span>`,
+          $('.agenda-view-modal .agenda-modal-title').append(
+            `<span class="day-title ml-2">- ${this.getTitle()}</span>`,
           );
         }
       },
@@ -2222,21 +2341,82 @@ const openAgendaModal = function(date) {
     agendaCalendar = $('.agenda-view-modal #agendaCalendar')
       .calendar(options);
 
-    // Add filter
-    $('.agenda-view-modal #agendaCalendar .card with-nav-tabs')
-      .prepend(templates.calendar.agendaFilter({
-        defaultLat: typeof defaultLat != 'undefined' ? defaultLat : 0,
-        defaultLong: typeof defaultLong != 'undefined' ? defaultLong : 0,
+    // Add filters
+    $('.agenda-view-modal .modal-body').prepend(
+      templates.calendar.agendaFilter({
         trans: translations.schedule.calendar.agendaFilters,
-      }));
+        defaultLat: calendarOptions.defaultLat,
+        defaultLong: calendarOptions.defaultLong,
+      }),
+    );
+
+    // Location filter init
+    const $map = $('.cal-event-location-map #geoFilterAgendaMap');
+
+    // Get location button
+    $('#getLocation').off('click.getLoc').on('click.getLoc', function(ev) {
+      const $self = $(ev.currentTarget);
+
+      // Disable button
+      $self.prop('disabled', true);
+
+      navigator.geolocation.getCurrentPosition(function(location) { // success
+        // Populate location fields
+        $('#geoLatitude').val(location.coords.latitude).trigger('change');
+        $('#geoLongitude').val(location.coords.longitude).trigger('change');
+
+        // Reenable button
+        $self.prop('disabled', false);
+
+        // Redraw map
+        generateFilterGeoMap();
+      }, function error(err) { // error
+        console.warn('ERROR(' + err.code + '): ' + err.message);
+
+        // Reenable button
+        $self.prop('disabled', false);
+      }, { // options
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0,
+      });
+    });
+
+    // Location map button
+    $('#toggleMap').off('click.toggleMap').on('click.toggleMap', function() {
+      $map.toggleClass('d-none');
+
+      if (!$map.hasClass('d-none')) {
+        generateFilterGeoMap();
+      }
+    });
+
+    // Clear location button
+    $('#clearLocation').off('click.genMap').on('click.genMap', function() {
+      // Populate location fields
+      $('#geoLatitude').val('').trigger('change');
+      $('#geoLongitude').val('').trigger('change');
+
+      if (!$map.hasClass('d-none')) {
+        generateFilterGeoMap();
+      }
+    });
+
+    // Change events reloads the calendar view and map
+    $('#geoLatitude, #geoLongitude, #showTimeline').off('change.agendaFilter')
+      .on('change.agendaFilter', _.debounce(function() {
+        agendaCalendar.view();
+      }, 400));
 
     // Set event when clicking on a tab, to refresh the view
     $('.cal-context')
       .off('click.agenda')
-      .on('click.agenda', 'a[data-toggle="tab"]', function(e) {
-        $('.cal-context').data().selectedTab = $(e.currentTarget).data('id');
-        agendaCalendar.view();
-      })
+      .on('click.agenda', '.nav-item:not(.active) a[data-toggle="tab"]',
+        function(e) {
+          $('.cal-context').data().selectedTab = $(e.currentTarget).data('id');
+          agendaCalendar.view();
+        },
+      )
       // When selecting a layout row, create a Breadcrumb Trail
       // and select the correspondent Display Group(s) and the Campaign(s)
       .on('click.agenda', 'tbody tr', function(e) {
