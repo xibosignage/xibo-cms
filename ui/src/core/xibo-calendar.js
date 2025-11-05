@@ -470,9 +470,17 @@ $(function() {
 
           if ($('#range').val() == 'custom') {
             const dateFormat = 'HH:mm D MMMM YYYY';
-            title = translations.schedule.calendar.customFromTo
-              .replace(':from', moment($('#fromDt').val()).format(dateFormat))
-              .replace(':to', moment($('#toDt').val()).format(dateFormat));
+            const fromDate = ($('#fromDt').val()) ?
+              moment($('#fromDt').val()).format(dateFormat) :
+              translations.schedule.calendar.customFromToAlways;
+            const toDate = ($('#toDt').val()) ?
+              moment($('#toDt').val()).format(dateFormat) :
+              translations.schedule.calendar.customFromToAlways;
+            title = (!$('#fromDt').val() && !$('#toDt').val()) ?
+              translations.schedule.calendar.customFromToAlways :
+              translations.schedule.calendar.customFromTo
+                .replace(':from', fromDate)
+                .replace(':to', toDate);
           }
           $('h1.page-header').text(title);
         }

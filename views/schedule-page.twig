@@ -164,14 +164,10 @@
 
                                     {% set title %}{% trans "Only show schedules which appear on all filtered displays/groups?" %}{% endset %}
                                     {% set label %}{% trans "Shared Schedule?" %}{% endset %}
-                                    <div class="form-group mr-1 mb-1">
-                                        <label class="control-label mr-1" title="{{ title }}" for="sharedSchedule" accesskey="">{{ label }}</label>
-                                        <div>
-                                            <div class="input-group" style="height: 34px">
-                                                <div class="input-group-text h-100">
-                                                    <input title="{{ title }}" type="checkbox" id="sharedSchedule" name="sharedSchedule">
-                                                </div>
-                                            </div>
+                                    <div class="form-group ml-2 mr-3 mb-1">
+                                        <div class="form-check">
+                                            <input title="{{ title }}" class="form-check-input" type="checkbox" id="sharedSchedule" name="sharedSchedule">
+                                            <label class="form-check-label" title="{{ title }}" for="sharedSchedule" accesskey="">{{ label }}</label>
                                         </div>
                                     </div>
 

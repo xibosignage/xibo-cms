@@ -451,6 +451,17 @@ $(function() {
   $('.XiboSchedule .card-header-tabs .nav-item .nav-link')
     .on('shown.bs.tab', function(ev) {
       const tabData = $(ev.currentTarget).data();
+
+      // If we change to calendar view, and were using custom dates
+      // select month in the Range
+      if (
+        tabData.scheduleView === 'calendar' &&
+        tabData.calendarView === 'month' &&
+        $('#schedule-filter #range').val() === 'custom'
+      ) {
+        $('#schedule-filter #range').val('month').trigger('change');
+      }
+
       changeCalendarView(tabData.calendarView);
       changeRangeVisibility(tabData.scheduleView === 'grid');
 
