@@ -431,6 +431,19 @@ $(function() {
   );
 
   function changeCalendarView(calendarView = null) {
+    // If we are in calendar view, and using custom dates
+    // select month in the Range
+    if (
+      $('.XiboSchedule .card-header-tabs .nav-item .nav-link.active')
+        .data().scheduleView === 'calendar' &&
+      $('#schedule-filter #range').val() === 'custom'
+    ) {
+      $('#schedule-filter #range').val('month').trigger('change');
+
+      // Stop here, trigger above will call this method again
+      return;
+    }
+
     if (calendarView && calendarView != calendar.options.view) {
       // Reload calendar with tab view
       calendar.view(calendarView);
@@ -452,16 +465,6 @@ $(function() {
     .on('shown.bs.tab', function(ev) {
       const tabData = $(ev.currentTarget).data();
 
-      // If we change to calendar view, and were using custom dates
-      // select month in the Range
-      if (
-        tabData.scheduleView === 'calendar' &&
-        tabData.calendarView === 'month' &&
-        $('#schedule-filter #range').val() === 'custom'
-      ) {
-        $('#schedule-filter #range').val('month').trigger('change');
-      }
-
       changeCalendarView(tabData.calendarView);
       changeRangeVisibility(tabData.scheduleView === 'grid');
 
@@ -480,7 +483,7 @@ $(function() {
     });
 
   // On range change, change calendar view
-  $('#schedule-filter #range').on('change', (ev) => {
+  $('#schedule-filter #range').on('change', (_ev) => {
     changeCalendarView();
   });
 
