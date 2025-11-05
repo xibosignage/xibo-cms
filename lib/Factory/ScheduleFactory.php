@@ -658,10 +658,6 @@ class ScheduleFactory extends BaseFactory
             }
         }
 
-        $this->getLog()->debug('>>>');
-        $this->getLog()->debug($parsedFilter->getInt('futureSchedulesFrom'));
-        $this->getLog()->debug($parsedFilter->getInt('futureSchedulesTo'));
-
        // Future schedules FROM a date?
         if ($parsedFilter->getInt('futureSchedulesFrom') !== null
             && $parsedFilter->getInt('futureSchedulesTo') === null
@@ -704,8 +700,6 @@ class ScheduleFactory extends BaseFactory
             $body .= ' AND `schedule`.fromDt < :futureSchedulesTo ';
             $params['futureSchedulesTo'] = $parsedFilter->getInt('futureSchedulesTo');
         }
-
-        $this->getLog()->debug(json_encode($params));
 
         // Restrict to mediaId - meaning layout schedules of which the layouts contain the selected mediaId
         if ($parsedFilter->getInt('mediaId') !== null) {
