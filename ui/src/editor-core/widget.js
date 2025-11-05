@@ -939,11 +939,10 @@ Widget.prototype.saveElements = function(
             app.viewer.selectObject();
           }
 
-          // Refresh layer manager
-          app.viewer.layerManager.render();
-
-          // Remove canvas from viewer
-          app.viewer.DOMObject.find('.designer-region-canvas').remove();
+          // Reload data and editor
+          app.reloadData(app.layout, {
+            refreshEditor: true,
+          });
         });
     } else if (removeCurrentWidget) {
       // Remove widget
