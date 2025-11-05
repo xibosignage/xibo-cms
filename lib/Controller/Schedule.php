@@ -2405,7 +2405,6 @@ class Schedule extends Base
                 'logicalOperatorName' => $params->getString('logicalOperatorName'),
                 'directSchedule' => $params->getCheckbox('directSchedule'),
                 'sharedSchedule' => $params->getCheckbox('sharedSchedule'),
-                'disablePaging' => $params->getInt('disablePaging'),
                 'gridFilter' => 1,
             ], $params)
         );

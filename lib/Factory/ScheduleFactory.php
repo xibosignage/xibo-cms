@@ -767,7 +767,7 @@ class ScheduleFactory extends BaseFactory
 
         // Paging
         $limit = '';
-        if ($parsedFilter->getInt('disablePaging') != 1 && $parsedFilter->hasParam('start') && $parsedFilter->hasParam('length')) {
+        if ($parsedFilter->hasParam('start') && $parsedFilter->hasParam('length')) {
             $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0])
                 . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
         }

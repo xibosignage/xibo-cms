@@ -45,10 +45,11 @@ trait DataTablesDotNetTrait
         }
 
         // Handle filtering
-        $filter = [
-            'start' => $sanitizedRequestParams->getInt('start', ['default' => 0]),
-            'length' => $sanitizedRequestParams->getInt('length', ['default' => 10])
-        ];
+        $filter = [];
+        if ($sanitizedRequestParams->getInt('disablePaging') != 1) {
+            $filter['start'] = $sanitizedRequestParams->getInt('start', ['default' => 0]);
+            $filter['length'] = $sanitizedRequestParams->getInt('length', ['default' => 10]);
+        }
 
         $search = $sanitizedRequestParams->getArray('search', ['default' => []]);
         if (is_array($search) && isset($search['value'])) {
