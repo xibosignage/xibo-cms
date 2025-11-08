@@ -875,3 +875,7 @@ $app->group('', function (RouteCollectorProxy $group) {
 $app->group('', function (RouteCollectorProxy $group) {
     $group->post('/schedule/sync/add', ['\Xibo\Controller\Schedule', 'syncAdd'])->setName('schedule.add.sync');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['schedule.sync']));
+
+// Quick Switcher
+$app->get('/quickswitcher/search', ['\\Xibo\\Controller\\QuickSwitcher', 'search'])
+    ->setName('quickswitcher.search');
