@@ -119,13 +119,6 @@ class PixabayConnector implements ConnectorInterface
                 'safesearch' => 'true'
             ];
 
-            // Now we handle any other search
-            if ($event->getOrientation() === 'landscape') {
-                $query['orientation'] = 'horizontal';
-            } else if ($event->getOrientation() === 'portrait') {
-                $query['orientation'] = 'vertical';
-            }
-
             if (!empty($event->getSearch())) {
                 $query['q'] = urlencode($event->getSearch());
             }
@@ -136,8 +129,18 @@ class PixabayConnector implements ConnectorInterface
             }
 
             $type = $event->getTypes()[0];
+
             if (!in_array($type, ['image', 'video'])) {
                 return;
+            }
+
+            // If type is image, then add the orientation query
+            if ($type === 'image') {
+                if ($event->getOrientation() === 'landscape') {
+                    $query['orientation'] = 'horizontal';
+                } else if ($event->getOrientation() === 'portrait') {
+                    $query['orientation'] = 'vertical';
+                }
             }
 
             // Pixabay require a 24-hour cache of each result set.

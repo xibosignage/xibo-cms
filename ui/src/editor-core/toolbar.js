@@ -1771,7 +1771,17 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
 
     // Filter by provider if exists
     if (self.menuItems[menu].provider) {
-      filter.provider = self.menuItems[menu].provider;
+      const currentMenu = self.menuItems[menu];
+
+      filter.provider = currentMenu.provider;
+
+      // For pixabay, we need to hide the orientation filter for videos
+      if (currentMenu.provider === 'pixabay') {
+        self.DOMObject
+          .find(`#content-${menu} .media-search-form #input-orientation`)
+          .closest('.form-group')
+          .toggle(currentMenu.filters.type.value !== 'video');
+      }
     }
 
     $.ajax({
