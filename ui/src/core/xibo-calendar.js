@@ -1355,22 +1355,39 @@ window.setupScheduleForm = function(dialog) {
     const eventType = $('#eventTypeId', dialog).val();
     const mediaId = $('#mediaId', dialog).val();
     const playlistId = $('#playlistId', dialog).val();
+    let isFS = false;
 
     if (eventType == '7' && mediaId) {
       // If media type, with media
       // Show all FS controls
       $('.media-control-option', dialog).removeClass('hidden');
       $('.fs-control-option', dialog).removeClass('hidden');
+      isFS = true;
     } else if (eventType == '8' && playlistId) {
       // If playlist type, with playlist
       // Show playlist controls, but hide media ones
       $('.fs-control-option', dialog).removeClass('hidden');
       $('.media-control-option', dialog).addClass('hidden');
+      isFS = true;
     } else {
       $('.media-control-option', dialog).addClass('hidden');
       $('.fs-control-option', dialog).addClass('hidden');
     }
+
+    // If we are opening a FS form, go to step 2
+    if (
+      isFS &&
+      $(dialog).find('form').data('openStep-2') === 1
+    ) {
+      // Open second step
+      $(dialog).find('a[href="#schedule-step-2"]')
+        .removeAttr('disabled').trigger('click');
+
+      // Set data for opening step 2 as false
+      $(dialog).find('form').data('openStep-2', 0);
+    }
   };
+
   // Update when changing target, or event type
   $('#mediaId, #playlistId, #eventTypeId', dialog)
     .on('select2:select, change', updateFSFields);
