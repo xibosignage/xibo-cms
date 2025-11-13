@@ -313,10 +313,10 @@ class AnonymousUsageTask implements TaskInterface
     private function getDateSinceLastUserLogin(): string|null
     {
         $cmsTimezone = $this->getConfig()->getSetting('defaultTimezone');
-        $latestUserLoginDate = $this->runQuery('
-            SELECT MAX(`startTime`) AS startTime FROM `session_history` WHERE `userId` IS NOT NULL AND `userId` <> 0',
+        $latestUserLoginDate = $this->runQuery(
+            'SELECT MAX(`lastAccessed`) AS lastAccessed FROM `user`',
             [],
-            'startTime'
+            'lastAccessed'
         );
 
         return $latestUserLoginDate
