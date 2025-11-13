@@ -2515,6 +2515,31 @@ const formHelpers = function() {
 
     return null;
   };
+
+  /**
+   * Convert key code to readable format
+   * @param {object} container - Form object
+   * @return {object|null} errors
+   */
+  this.formatKeyCodeToReadableFormat = function(code) {
+    if (!code) {
+      return '';
+    };
+
+    if (code.startsWith('Key')) {
+      return code.slice(3);
+    }
+
+    if (code.startsWith('Digit')) {
+      return code.slice(5);
+    }
+
+    if (code.startsWith('Numpad')) {
+      return code.slice(6);
+    }
+
+    return code;
+  };
 };
 
 

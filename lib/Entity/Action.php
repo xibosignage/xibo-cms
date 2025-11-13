@@ -194,7 +194,11 @@ class Action implements \JsonSerializable
             throw new InvalidArgumentException(__('Please provide trigger code'), 'triggerCode');
         }
 
-        if (!in_array($this->triggerType, ['touch', 'webhook'])) {
+        if ($this->triggerType === 'keyPress' && $this->triggerCode === null) {
+            throw new InvalidArgumentException(__('Please provide trigger key'), 'triggerKey');
+        }
+
+        if (!in_array($this->triggerType, ['touch', 'webhook', 'keyPress'])) {
             throw new InvalidArgumentException(__('Invalid trigger type'), 'triggerType');
         }
 

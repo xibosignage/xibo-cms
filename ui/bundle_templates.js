@@ -31,6 +31,7 @@ window.templates = {
     divider: require('./src/templates/forms/inputs/divider.hbs'),
     buttonSwitch: require('./src/templates/forms/inputs/buttonSwitch.hbs'),
     custom: require('./src/templates/forms/inputs/custom.hbs'),
+    keyCapture: require('./src/templates/forms/inputs/keyCapture.hbs'),
     datasetSelector:
       require('./src/templates/forms/inputs/datasetSelector.hbs'),
     menuBoardSelector:

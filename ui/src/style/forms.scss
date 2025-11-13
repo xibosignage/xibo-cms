@@ -804,6 +804,50 @@ select[readonly].select2-hidden-accessible + .select2-container .select2-selecti
     }
 }
 
+// Key capture input
+
+.key-capture-input {
+    .key-capture-input-wrapper {
+        position: relative;
+
+        .key-capture-area {
+            cursor: pointer;
+            caret-color: transparent;
+            width: 100%;
+            height: 38px;
+            padding: 8px 10px;
+            border: 1px solid $xibo-color-neutral-600;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        .key-capture-area:focus {
+            border-color: $bootstrap-theme-input-border-color;
+            outline: none;
+            box-shadow: inset 0 1px 1px $bootstrap-theme-input-box-shadow-color-1, 0 0 8px $bootstrap-theme-input-box-shadow-color-2;
+            
+        }
+
+        .clear-key-button {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 0;
+            padding: 12px;
+            cursor: pointer;
+        }
+    }
+
+    .key-capture-error {
+        display: none;
+        color: $bootstrap-theme-error-color;
+        font-size: 0.9rem;
+        height: 1.2em;
+        margin-top: 5px;
+    }
+}
+
 // Colour gradient
 .color-gradient {
     background-color: $xibo-color-primary-l5;

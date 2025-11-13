@@ -2,9 +2,10 @@
     {{> forms/inputs/hidden value=actionType id="actionType"}}
     {{> forms/inputs/dropdown value=actionTypeHelper title=trans.actionType id="actionTypeHelper" customClass="action-form-input" options=actionTypeOptions optionsTitle="title" optionsValue="name"}}
 
-    {{> forms/inputs/dropdown id="triggerType" value=triggerType title=trans.triggerType customClass="action-edit-form-trigger action-form-input" options=(arr (obj name="touch" title=trans.touch) (obj name="webhook" title=trans.webhook)) optionsTitle="title" optionsValue="name" helpText=trans.triggerTypeHelpText }}
+    {{> forms/inputs/dropdown id="triggerType" value=triggerType title=trans.triggerType customClass="action-edit-form-trigger action-form-input" options=(arr (obj name="touch" title=trans.touch) (obj name="webhook" title=trans.webhook) (obj name="keyPress" title=trans.keyPress)) optionsTitle="title" optionsValue="name" helpText=trans.triggerTypeHelpText }}
     {{> forms/inputs/text id="triggerCode" value=triggerCode title=trans.triggerCode customClass="action-form-input" helpText=trans.triggerCodeHelpText visibility='{ "field": "triggerType", "type": "eq", "value": "webhook" }' }}
-
+    {{> forms/inputs/keyCapture id="triggerKey" target="triggerCode" title=trans.triggerKey customClass="action-form-input" helpText=trans.triggerKeyHelpText visibility='{ "field": "triggerType", "type": "eq", "value": "keyPress" }' }}
+    
     {{> forms/inputs/hidden id="source" value=source }}
     {{> forms/inputs/dropdown id="sourceId" value=sourceId title=trans.triggerTarget customClass='action-edit-form-trigger action-form-input' options=(arr (obj name="" title="")) optionsTitle="title" optionsValue="name" helpText=trans.triggerTargetHelpText }}
 

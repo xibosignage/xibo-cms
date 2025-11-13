@@ -16,6 +16,13 @@
         </div>
     {{/eq}}
 
+    {{#eq triggerType "keyPress"}}
+        <div class="action-group">
+            <div class="action-label">{{trans.triggerKey}}</div>
+            <div class="action-value">{{triggerCodeFormatted}}</div>
+        </div>
+    {{/eq}}
+
     {{#if sourceId}}
         <div class="action-group">
             <div class="action-label">{{trans.triggerTarget}}</div>

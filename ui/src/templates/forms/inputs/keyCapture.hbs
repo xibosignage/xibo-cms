@@ -1,0 +1,19 @@
+<div class="form-group xibo-form-input key-capture-input {{customClass}}"
+    {{#if visibility}}data-visibility="{{visibility}}"{{/if}}
+    {{#if dependsOn}}data-depends-on="{{dependsOn}}"{{/if}}
+    {{#if isRequired}}data-is-required="{{isRequired}}"{{/if}}
+    data-capture-target-id="{{target}}"
+>
+    <label for="input_{{id}}" class="control-label"><strong>{{title}}</strong></label>
+    <div class="input-info-container">
+        {{#if helpText}}
+            {{>add-ons/helpText helpText=helpText}}
+        {{/if}}
+    </div>
+    <div class="key-capture-input-wrapper">
+        <input type="text" class="key-capture-area" id="input_{{id}}">
+        <span class="clear-key-button fas fa-times" title="{{trans.clearKey}}"></span>
+    </div>
+
+    <div class="key-capture-error"></div>
+</div>

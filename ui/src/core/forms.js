@@ -2999,6 +2999,112 @@ window.forms = {
       });
     });
 
+    // Key capture
+    findElements(
+      '.key-capture-input',
+      target,
+    ).each(function(_k, el) {
+      const $target = $(container)
+        .find('#input_' + $(el).data('captureTargetId'));
+      const $input = $(el).find('.key-capture-area');
+      const $error = $(el).find('.key-capture-error');
+      const $clear = $(el).find('.clear-key-button');
+      const allowedKeyCodes = [
+        // Letters
+        'KeyA', 'KeyB', 'KeyC', 'KeyD', 'KeyE', 'KeyF', 'KeyG',
+        'KeyH', 'KeyI', 'KeyJ', 'KeyK', 'KeyL', 'KeyM', 'KeyN',
+        'KeyO', 'KeyP', 'KeyQ', 'KeyR', 'KeyS', 'KeyT', 'KeyU',
+        'KeyV', 'KeyW', 'KeyX', 'KeyY', 'KeyZ',
+        // Top-Row Numbers
+        'Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5',
+        'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Digit0',
+        // Numpad Numbers
+        'Numpad1', 'Numpad2', 'Numpad3', 'Numpad4', 'Numpad5',
+        'Numpad6', 'Numpad7', 'Numpad8', 'Numpad9', 'Numpad0',
+        // Special Keys
+        'Enter', 'Backspace', 'Space', 'Delete',
+      ];
+
+      // Save inital placeholder text
+      const initialText =
+        propertiesPanelTrans.keyCapture.clickToSetKey;
+
+      const resetField = function(triggerBlur = true) {
+        // Get back to initial placeholder
+        $input.attr('placeholder', initialText);
+
+        // Unset value
+        $target.val('');
+
+        // Hide clear button
+        $clear.hide();
+
+        // Unfocus field
+        (triggerBlur) && $input.trigger('blur');
+
+        // Clear error
+        $error.html('').hide();
+      };
+
+      const setValue = function(value = '', triggerBlur = true) {
+        // If no value, reset field
+        if (value === '') {
+          resetField(triggerBlur);
+        } else if (!allowedKeyCodes.includes(value)) {
+          $error.html(
+            propertiesPanelTrans.keyCapture.codeNotAllowed
+              .replace(':code', value),
+          ).show();
+        } else {
+          // Set target
+          $target.val(value);
+
+          // Show key on capture
+          $input.attr(
+            'placeholder',
+            formHelpers.formatKeyCodeToReadableFormat(value),
+          );
+
+          // Show clear button
+          $clear.show();
+
+          // Clear error
+          $error.html('').hide();
+
+          // Unfocus field
+          (triggerBlur) && $input.trigger('blur');
+        }
+      };
+
+      $input.on('focus', (ev) => {
+        $input.attr('placeholder', propertiesPanelTrans.keyCapture.pressAKey);
+
+        // Clear error
+        $error.html('').hide();
+
+        // Hide clear button
+        $clear.hide();
+      });
+
+      $input.on('blur', (ev) => {
+        // Set value on blur
+        setValue($target.val(), false);
+      });
+
+      $input.on('keydown', (ev) => {
+        ev.preventDefault();
+
+        // Set value to target
+        setValue(ev.code);
+      });
+
+      // Handle click to reset
+      $clear.on('click', resetField);
+
+      // On start, set value
+      setValue($target.val());
+    });
+
     let countExec = 0;
     // Stocks symbol search
     // Initialize tags input for properties panel with connectorProperties field

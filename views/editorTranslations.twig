@@ -185,6 +185,7 @@
                     targetHelpText: "{{ "If your Widget is a Shell Command you can select to target 'Screen' to run the command without affecting any Zones. For all other Widgets select 'Zone' as target." |trans }}",
                     touch: "{{ "Touch/Click" |trans }}",
                     webhook: "{{ "Web hook" |trans }}",
+                    keyPress: "{{ "Key Press" |trans }}",
                     addAction: "{{ "Add an Action" |trans }}",
                     editAction: "{{ "Edit" |trans }}",
                     saveAction: "{{ "Save" |trans }}",
@@ -204,6 +205,8 @@
                     triggerTypeHelpText: "{{ "How should the Player listen for this Action to be triggered?" |trans }}",
                     triggerCode: "{{ "Trigger Code" |trans }}",
                     triggerCodeHelpText: "{{ "If this Action is triggered by a Web Hook then this Trigger Code must be present in the URL `trigger=` parameter." |trans }}",
+                    triggerKey: "{{ "Trigger Key" |trans }}",
+                    triggerKeyHelpText: "{{ "Choose the keyboard key that will act as the trigger" |trans }}",
                     triggerTarget: "{{ "Trigger" |trans }}",
                     triggerTargetHelpText: "{{ "Select the target for the Trigger" |trans }}",
                     layoutCode: "{{ "Layout Code" |trans }}",
@@ -312,7 +315,13 @@
                     gradientTypeRadial: "{{ "Radial" |trans }}",
                     gradientTypeLinear: "{{ "Linear" |trans }}",
                     gradientAngle: "{{ "Angle" |trans }}",
-                }
+                },
+                keyCapture: {
+                    clickToSetKey: "{{ "Click to set key" |trans }}",
+                    pressAKey: "{{ "Press a key..." |trans }}",
+                    codeNotAllowed: "{{ ":code is not allowed!" |trans }}",
+                    clearKey: "{{ "Clear key" |trans }}",
+                },
             };
 
             var toolbarTrans = {
