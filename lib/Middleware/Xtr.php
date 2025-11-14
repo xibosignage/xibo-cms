@@ -1,7 +1,8 @@
 <?php
 /*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2020 Spring Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -27,6 +28,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
+use Xibo\Support\Exception\InstanceSuspendedException;
 
 /**
  * Class Xtr
@@ -50,12 +52,19 @@ class Xtr implements Middleware
      * @param RequestHandler $handler
      * @return Response
      * @throws \Twig\Error\LoaderError
+     * @throws \Xibo\Support\Exception\InstanceSuspendedException
      */
     public function process(Request $request, RequestHandler $handler): Response
     {
         // Inject our Theme into the Twig View (if it exists)
         $app = $this->app;
         $container = $app->getContainer();
+
+        // Check to see if the instance has been suspended, if so call the special route
+        $instanceSuspended = $container->get('configService')->getSetting('INSTANCE_SUSPENDED');
+        if ($instanceSuspended == 'yes' || $instanceSuspended == 'partial') {
+            throw new InstanceSuspendedException();
+        }
 
         $container->get('configService')->loadTheme();
         $view = $container->get('view');
@@ -66,7 +75,11 @@ class Xtr implements Middleware
 
         // Does this theme provide an alternative view path?
         if ($container->get('configService')->getThemeConfig('view_path') != '') {
-            $twig->prependPath(Str::replaceFirst('..', PROJECT_ROOT, $container->get('configService')->getThemeConfig('view_path')));
+            $twig->prependPath(Str::replaceFirst(
+                '..',
+                PROJECT_ROOT,
+                $container->get('configService')->getThemeConfig('view_path'),
+            ));
         }
 
         // Call Next

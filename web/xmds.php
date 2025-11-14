@@ -83,6 +83,15 @@ $startTime = microtime(true);
 
 // Configure
 $container->get('configService')->setDependencies($container->get('store'), '/');
+
+// Check to see if the instance has been suspended
+$instanceSuspended = $container->get('configService')->getSetting('INSTANCE_SUSPENDED');
+if ($instanceSuspended == 'yes' || $instanceSuspended == 'partial') {
+    header('HTTP/1.0 503 Service Unavailable');
+    die('CMS suspended');
+}
+
+// Load the theme
 $container->get('configService')->loadTheme();
 
 // Register Middleware Dispatchers

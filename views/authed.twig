@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020-2024 Xibo Signage Ltd
+ * Copyright (C) 2020-2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -93,6 +93,11 @@
                 <div class="row">
                     <div class="col-sm-12">
                         {% block actionMenu %}{% endblock %}
+
+                        {% if settings.INSTANCE_SUSPENDED == "partial" %}
+                            <div class="alert alert-warning">{{ "CMS suspended. Displays will showed cached content. Please contact your administrator."|trans }}</div>
+                        {% endif %}
+
                         {% block pageContent %}{% endblock %}
                     </div>
                 </div>

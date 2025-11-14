@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -511,8 +511,8 @@ class Settings extends Base
         }
 
         if ($this->getConfig()->isSettingEditable('INSTANCE_SUSPENDED')) {
-            $this->handleChangedSettings('INSTANCE_SUSPENDED', $this->getConfig()->getSetting('INSTANCE_SUSPENDED'), $sanitizedParams->getCheckbox('INSTANCE_SUSPENDED'), $changedSettings);
-            $this->getConfig()->changeSetting('INSTANCE_SUSPENDED', $sanitizedParams->getCheckbox('INSTANCE_SUSPENDED'));
+            $this->handleChangedSettings('INSTANCE_SUSPENDED', $this->getConfig()->getSetting('INSTANCE_SUSPENDED'), $sanitizedParams->getString('INSTANCE_SUSPENDED'), $changedSettings);
+            $this->getConfig()->changeSetting('INSTANCE_SUSPENDED', $sanitizedParams->getString('INSTANCE_SUSPENDED'));
         }
 
         if ($this->getConfig()->isSettingEditable('LATEST_NEWS_URL')) {

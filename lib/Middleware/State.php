@@ -75,7 +75,7 @@ class State implements Middleware
         $request = State::setState($app, $request);
 
         // Check to see if the instance has been suspended, if so call the special route
-        if ($container->get('configService')->getSetting('INSTANCE_SUSPENDED') == 1) {
+        if ($container->get('configService')->getSetting('INSTANCE_SUSPENDED') == 'yes') {
             throw new InstanceSuspendedException();
         }
 
