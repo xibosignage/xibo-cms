@@ -3254,12 +3254,14 @@ window.forms = {
      * @param {object} baseObject - The base object
      * @param {string} targetId - The target id
      * @param {boolean} isTopLevel - Is the target parent top level
+     * @param {boolean} isFormGroup - Should we hide the form-group
      */
   setConditions: function(
     container,
     baseObject,
     targetId,
     isTopLevel = true,
+    isFormGroup = false,
   ) {
     $(container).find('.xibo-form-input[data-visibility]')
       .each(function(_idx, el) {
@@ -3341,10 +3343,10 @@ window.forms = {
             }
 
             // If the test is true, show the element
-            if (testResult) {
-              $testContainer.show();
+            if (isFormGroup) {
+              $testContainer.closest('.form-group').toggle(testResult)
             } else {
-              $testContainer.hide();
+              $testContainer.toggle(testResult)
             }
           };
 

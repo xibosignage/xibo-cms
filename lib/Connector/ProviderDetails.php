@@ -34,6 +34,7 @@ class ProviderDetails implements \JsonSerializable
     public $iconUrl;
     public $backgroundColor;
     public $mediaTypes;
+    public $filters;
 
     public function jsonSerialize(): array
     {
@@ -44,7 +45,8 @@ class ProviderDetails implements \JsonSerializable
             'logoUrl' => $this->logoUrl,
             'iconUrl' => $this->iconUrl,
             'backgroundColor' => $this->backgroundColor,
-            'mediaTypes' => $this->mediaTypes
+            'mediaTypes' => $this->mediaTypes,
+            'filters' => $this->filters
         ];
     }
 }

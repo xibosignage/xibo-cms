@@ -686,26 +686,7 @@ Toolbar.prototype.init = function(
               .providerTitle.replace('%obj%', provider.id),
             itemIcon: provider.iconUrl,
             contentType: 'media',
-            filters: {
-              name: {
-                value: '',
-                key: 'media',
-              },
-              type: {
-                value: '',
-                hideDefault: true,
-                values: provider.mediaTypes.map((media) => {
-                  return {
-                    name: toolbarTrans.libraryTypes[media],
-                    type: media,
-                    disabled: false,
-                  };
-                }),
-              },
-              orientation: {
-                value: '',
-              },
-            },
+            filters: self.loadProviderFilters(provider.filters),
             state: '',
             itemCount: 0,
           });
@@ -1753,6 +1734,24 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
       filter.types = self.moduleListOtherFiltered.map((el) => el.type);
     }
 
+    // If this is from a provider, we may need to update the filters
+    if (self.menuItems[menu].provider && self.menuItems[menu].filters) {
+      const filterList = self.menuItems[menu].filters;
+
+      // Does this filter have visibility conditions?
+      Object.values(filterList).forEach((filter) => {
+        if (filter.hasOwnProperty('visibility')) {
+          forms.setConditions(
+            `#content-${menu} .toolbar-search-form`,
+            filterList,
+            filter.visibility.field,
+            false,
+            true
+          );
+        }
+      });
+    }
+
     // Manage request length
     const requestLength = 15;
 
@@ -1771,17 +1770,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
 
     // Filter by provider if exists
     if (self.menuItems[menu].provider) {
-      const currentMenu = self.menuItems[menu];
-
-      filter.provider = currentMenu.provider;
-
-      // For pixabay, we need to hide the orientation filter for videos
-      if (currentMenu.provider === 'pixabay') {
-        self.DOMObject
-          .find(`#content-${menu} .media-search-form #input-orientation`)
-          .closest('.form-group')
-          .toggle(currentMenu.filters.type.value !== 'video');
-      }
+      filter.provider = self.menuItems[menu].provider;
     }
 
     $.ajax({
@@ -3723,6 +3712,49 @@ Toolbar.prototype.getMenuIdFromType = function(
   type,
 ) {
   return this.menuItems.findIndex((item) => item.name === type);
+};
+
+/**
+ * Load provider filters
+ * @param filters
+ */
+Toolbar.prototype.loadProviderFilters = function(
+  filters
+){
+  // Does this provider have custom filters?
+  if (!filters || filters.length === 0) {
+    return {}
+  }
+
+  const filterList = {};
+
+  filters.forEach((filter) => {
+    const key = filter.name || filter.label;
+
+    // Decorate the filter
+    const baseFilter = filter;
+
+    baseFilter.value = filter?.value || '';
+
+    // Add translations
+    if (filter.type === 'dropdown') {
+      baseFilter.hideDefault = filter?.hideDefault || true;
+      baseFilter.values = filter.options.map((option) => ({
+        name: toolbarTrans.libraryTypes[option.value],
+        type: option.value,
+        disabled: option?.disabled || false,
+      }));
+    }
+
+    // Convert visibility to JSON to be able to add to handlebars
+    if (filter.visibility) {
+      baseFilter.visibilityCondition = JSON.stringify(filter.visibility);
+    }
+
+    filterList[key] = baseFilter;
+  });
+
+  return filterList;
 };
 
 module.exports = Toolbar;
