@@ -154,7 +154,7 @@ window.XiboInitialise = function(scope, options) {
     .on('mouseenter', function(ev) {
       const formUrl = $(ev.currentTarget).attr('href');
 
-      XiboHoverRender(formUrl, e.pageX, e.pageY);
+      XiboHoverRender(formUrl, env.pageX, env.pageY);
 
       return false;
     }).on('mouseleave', function() {
@@ -853,7 +853,7 @@ window.XiboInitialise = function(scope, options) {
 
                       bodyElements.forEach((element) => {
                         const elementSplit = element.split('=');
-                        if (elementSplit.length = 2) {
+                        if (elementSplit.length == 2) {
                           newParsedElements[elementSplit[0]] = elementSplit[1];
                         }
                       });
@@ -1702,7 +1702,7 @@ window.XiboMultiSelectFormRender = function(button) {
         formOpenCallback = $button.data().formCallback;
 
         // If form needs confirmation
-        formConfirm = $button.data().formConfirm;
+        let formConfirm = $button.data().formConfirm;
       }
     }
   });
