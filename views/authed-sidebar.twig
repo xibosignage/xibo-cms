@@ -3,30 +3,30 @@
         <li class="sidebar-main"><a href="{{ url_for("home") }}">{% trans "Dashboard" %}</a></li>
 
         {% if currentUser.featureEnabled("schedule.view") %}
-            <li class="sidebar-list"><a href="{{ url_for("schedule.view") }}"><i class="fa-solid fa-calendar-days"></i> {% trans "Schedule" %}</a></li>
+            <li class="sidebar-list"><a href="{{ url_for("schedule.view") }}">{% trans "Schedule" %}</a></li>
         {% endif %}
 
         {% if currentUser.featureEnabled("daypart.view") %}
-            <li class="sidebar-list"><a href="{{ url_for("daypart.view") }}"><i class="fa-solid fa-clock"></i> {% trans "Dayparting" %}</a></li>
+            <li class="sidebar-list"><a href="{{ url_for("daypart.view") }}">{% trans "Dayparting" %}</a></li>
         {% endif %}
 
         {% set countViewable = currentUser.featureEnabledCount(["campaign.view", "layout.view", "template.view", "resolution.view"]) %}
         {% if countViewable > 0 %}
             <li class="sidebar-title"><a>{% trans "Design" %}</a></li>
             {% if currentUser.featureEnabled("campaign.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("campaign.view") }}"><i class="fa-solid fa-bullhorn"></i> {% trans "Campaigns" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("campaign.view") }}">{% trans "Campaigns" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("layout.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("layout.view") }}"><i class="fa-solid fa-object-group"></i> {% trans "Layouts" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("layout.view") }}">{% trans "Layouts" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("template.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("template.view") }}"><i class="fa-solid fa-layer-group"></i> {% trans "Templates" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("template.view") }}">{% trans "Templates" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("resolution.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("resolution.view") }}"><i class="fa-solid fa-arrows-up-down-left-right"></i> {% trans "Resolutions" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("resolution.view") }}">{% trans "Resolutions" %}</a></li>
             {% endif %}
         {% endif %}
 
@@ -34,19 +34,19 @@
         {% if countViewable > 0 %}
             <li class="sidebar-title"><a>{% trans "Library" %}</a></li>
             {% if currentUser.featureEnabled("playlist.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("playlist.view") }}"><i class="fa-solid fa-list"></i> {% trans "Playlists" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("playlist.view") }}">{% trans "Playlists" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("library.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("library.view") }}"><i class="fa-solid fa-photo-film"></i> {% trans "Media" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("library.view") }}">{% trans "Media" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("dataset.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("dataset.view") }}"><i class="fa-solid fa-table"></i> {% trans "DataSets" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("dataset.view") }}">{% trans "DataSets" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("menuBoard.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("menuBoard.view") }}"><i class="fa-solid fa-utensils"></i> {% trans "Menu Boards" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("menuBoard.view") }}">{% trans "Menu Boards" %}</a></li>
             {% endif %}
         {% endif %}
 
@@ -54,27 +54,27 @@
         {% if countViewable > 0 %}
             <li class="sidebar-title"><a>{% trans "Displays" %}</a></li>
             {% if currentUser.featureEnabled("displays.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("display.view") }}"><i class="fa-solid fa-tv"></i> {% trans "Displays" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("display.view") }}">{% trans "Displays" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("displaygroup.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("displaygroup.view") }}"><i class="fa-solid fa-layer-group"></i> {% trans "Display Groups" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("displaygroup.view") }}">{% trans "Display Groups" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("display.syncView") %}
-                <li class="sidebar-list"><a href="{{ url_for("syncgroup.view") }}"><i class="fa-solid fa-arrows-rotate"></i> {% trans "Sync Groups" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("syncgroup.view") }}">{% trans "Sync Groups" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("displayprofile.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("displayprofile.view") }}"><i class="fa-solid fa-sliders"></i> {% trans "Display Settings" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("displayprofile.view") }}">{% trans "Display Settings" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("playersoftware.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("playersoftware.view") }}"><i class="fa-solid fa-code-branch"></i> {% trans "Player Versions" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("playersoftware.view") }}">{% trans "Player Versions" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("command.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("command.view") }}"><i class="fa-solid fa-terminal"></i> {% trans "Commands" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("command.view") }}">{% trans "Commands" %}</a></li>
             {% endif %}
         {% endif %}
 
@@ -89,43 +89,43 @@
             <li class="sidebar-title"><a>{% trans "Administration" %}</a></li>
 
             {% if userMenuViewable %}
-                <li class="sidebar-list"><a href="{{ url_for("user.view") }}"><i class="fa-solid fa-user"></i> {% trans "Users" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("user.view") }}">{% trans "Users" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("usergroup.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("group.view") }}"><i class="fa-solid fa-users"></i> {% trans "User Groups" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("group.view") }}">{% trans "User Groups" %}</a></li>
             {% endif %}
 
             {% if currentUser.isSuperAdmin() %}
-                <li class="sidebar-list"><a href="{{ url_for("admin.view") }}"><i class="fa-solid fa-gear"></i> {% trans "Settings" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("admin.view") }}">{% trans "Settings" %}</a></li>
             {% endif %}
 
             {% if currentUser.isSuperAdmin() %}
-                <li class="sidebar-list"><a href="{{ url_for("application.view") }}"><i class="fa-solid fa-cubes"></i> {% trans "Applications" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("application.view") }}">{% trans "Applications" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("module.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("module.view") }}"><i class="fa-solid fa-puzzle-piece"></i> {% trans "Modules" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("module.view") }}">{% trans "Modules" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("transition.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("transition.view") }}"><i class="fa-solid fa-right-left"></i> {% trans "Transitions" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("transition.view") }}">{% trans "Transitions" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("task.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("task.view") }}"><i class="fa-solid fa-list-check"></i> {% trans "Tasks" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("task.view") }}">{% trans "Tasks" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("tag.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("tag.view") }}"><i class="fa-solid fa-tags"></i> {% trans "Tags" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("tag.view") }}">{% trans "Tags" %}</a></li>
             {% endif %}
 
             {% if currentUser.isSuperAdmin() %}
-                <li class="sidebar-list"><a href="{{ url_for("folders.view") }}"><i class="fa-solid fa-folder"></i> {% trans "Folders" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("folders.view") }}">{% trans "Folders" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("font.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("font.view") }}"><i class="fa-solid fa-font"></i> {% trans "Fonts" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("font.view") }}">{% trans "Fonts" %}</a></li>
             {% endif %}
         {% endif %}
 
@@ -135,15 +135,15 @@
             <li class="sidebar-title"><a>{% trans "Reporting" %}</a></li>
 
             {% if currentUser.featureEnabled("report.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("report.view") }}"><i class="fa-solid fa-file-lines"></i> {% trans "All Reports" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("report.view") }}">{% trans "All Reports" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("report.scheduling") %}
-                <li class="sidebar-list"><a href="{{ url_for("reportschedule.view") }}"><i class="fa-solid fa-calendar-check"></i> {% trans "Report Schedules" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("reportschedule.view") }}">{% trans "Report Schedules" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("report.saving") %}
-                <li class="sidebar-list"><a href="{{ url_for("savedreport.view") }}"><i class="fa-solid fa-floppy-disk"></i> {% trans "Saved Reports" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("savedreport.view") }}">{% trans "Saved Reports" %}</a></li>
             {% endif %}
 
         {% endif %}
@@ -153,19 +153,19 @@
             <li class="sidebar-title"><a>{% trans "Advanced" %}</a></li>
 
             {% if currentUser.featureEnabled("log.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("log.view") }}"><i class="fa-solid fa-file-waveform"></i> {% trans "Log" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("log.view") }}">{% trans "Log" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("sessions.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("sessions.view") }}"><i class="fa-solid fa-user-clock"></i> {% trans "Sessions" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("sessions.view") }}">{% trans "Sessions" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("auditlog.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("auditlog.view") }}"><i class="fa-solid fa-shield-halved"></i> {% trans "Audit Trail" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("auditlog.view") }}">{% trans "Audit Trail" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("fault.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("fault.view") }}"><i class="fa-solid fa-triangle-exclamation"></i> {% trans "Report Fault" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("fault.view") }}">{% trans "Report Fault" %}</a></li>
             {% endif %}
         {% endif %}
 
@@ -174,7 +174,7 @@
             <li class="sidebar-title"><a>{% trans "Developer" %}</a></li>
 
             {% if currentUser.featureEnabled("developer.edit") %}
-                <li class="sidebar-list"><a href="{{ url_for("developer.templates.view") }}"><i class="fa-solid fa-file-code"></i> {% trans "Module Templates" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("developer.templates.view") }}">{% trans "Module Templates" %}</a></li>
             {% endif %}
         {% endif %}
     </ul>
