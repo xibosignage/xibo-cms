@@ -68,6 +68,7 @@
                 {% if addForm %}
                     method="post"
                     action="{{ url_for("schedule.add") }}"
+                    data-open-step-2="{{ hideEventType }}"
                 {% else %}
                     method="put"
                     action="{{ url_for("schedule.edit", {id: event.eventId}) }}"
