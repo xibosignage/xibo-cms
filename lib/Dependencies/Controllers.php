@@ -642,6 +642,18 @@ class Controllers
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
+            '\Xibo\Controller\QuickSwitcher' => function (ContainerInterface $c) {
+                $controller = new \Xibo\Controller\QuickSwitcher(
+                    $c->get('layoutFactory'),
+                    $c->get('mediaFactory'),
+                    $c->get('displayFactory'),
+                    $c->get('playlistFactory'),
+                    $c->get('campaignFactory'),
+                    $c->get('folderFactory')
+                );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
+            },
         ];
     }
 }
