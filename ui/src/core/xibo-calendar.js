@@ -1082,8 +1082,13 @@ window.setupScheduleForm = function(dialog) {
     const $allWells = $dialog.find('.stepwizard-content');
     const isAddForm = $dialog.find('form').is('#scheduleAddForm');
     const $modalFooter = $dialog.find('.modal-footer');
-    const $saveButton = $dialog.find('.save-button');
 
+    // Add button areas to footer
+    $modalFooter.addClass('justify-content-between')
+      .append(`<div class="modal-footer-left schedule-modal-footer"></div>
+        <div class="modal-footer-right schedule-modal-footer"></div>`);
+
+    // Handle button navigation
     $navListItems.on('click', function(e) {
       e.preventDefault();
       const $target = $($(e.currentTarget).attr('href'));
@@ -1106,28 +1111,44 @@ window.setupScheduleForm = function(dialog) {
         // Set the active panel on the links
         stepWizard.data('active', $target.prop('id'));
 
-        // Is the next action to finish?
-        // Only for add form
-        if (isAddForm) {
-          if ($target.data('next') === 'finished') {
-            $nextButton.hide();
-            $saveButton.show();
-          } else {
-            $nextButton.show();
-            $saveButton.hide();
-          }
+        // Show and hide buttons
+        const isFirstStep = ($target.data('previous') === 'start');
+        const isLastStep = ($target.data('next') === 'finished');
+
+        $nextButton.toggle(!isLastStep);
+        $previousButton.toggle(!isFirstStep);
+
+        // Save button handling for add form
+        // Show save when we get to step 2
+        if (
+          isAddForm && $target.data('step') > 1 ||
+          !isAddForm
+        ) {
+          $saveButton.show();
         }
       }
     });
 
-    const $deleteButton =
-      $('<a id="scheduleDeleteButton" class="btn btn-danger">')
-        .html(translations.schedule.stepWizard.delete)
+    const $previousButton =
+      $('<a id="schedule-steper-previous-button" class="btn btn-white">')
+        .html(translations.schedule.stepWizard.previous)
+        .css('display', 'none')
         .on('click', function(e) {
           e.preventDefault();
-          XiboSwapDialog($(dialog).find('form').data('deleteUrl'));
+          const steps = $(dialog).find('.stepwizard');
+          const curStep = $(dialog).find('#' + steps.data('active'));
+          // If sync event and step 3, move to step 1
+          const previousStep =
+            (
+              $(curStep).data('step') === 3 &&
+              $('#eventTypeId', dialog).val() === '9'
+            ) ?
+              'schedule-step-1' :
+              curStep.data('previous');
+
+          steps.find('a[href=\'#' + previousStep + '\']').trigger('click');
         });
-    $modalFooter.prepend($deleteButton);
+    $modalFooter.find('.modal-footer-left').append($previousButton);
 
     const $nextButton =
       $('<a id="schedule-steper-next-button" class="btn btn-primary">')
@@ -1152,15 +1173,24 @@ window.setupScheduleForm = function(dialog) {
             nextStepWizard.removeAttr('disabled').trigger('click');
           }
         });
-    $modalFooter.append($nextButton);
+    $modalFooter.find('.modal-footer-right').append($nextButton);
+
+    const $saveButton =
+      $('<a id="schedule-save-button" class="btn btn-success">')
+        .html(
+          (isAddForm) ?
+            translations.schedule.stepWizard.finish :
+            translations.schedule.stepWizard.save,
+        )
+        .on('click', function(e) {
+          e.preventDefault();
+          beforeSubmitScheduleForm($dialog.find('form'));
+        });
+    $modalFooter.find('.modal-footer-right').append($saveButton);
 
     if (isAddForm) {
       // Hide save and delete button for add form
       $saveButton.hide();
-      $deleteButton.hide();
-    } else {
-      // Hide next button for edit form
-      $nextButton.hide();
     }
   }
 
@@ -1320,14 +1350,14 @@ window.setupScheduleForm = function(dialog) {
     $(dialog).find('#scheduleEditForm');
   if ($scheduleEditForm.length > 0) {
     // Add a button for duplicating this event
-    let $button = $('<button>').addClass('btn btn-info')
-      .attr('id', 'scheduleDuplateButton')
+    let $button = $('<button>').addClass('btn btn-white')
+      .attr('id', 'scheduleDuplicateButton')
       .html(translations.duplicate)
       .on('click', function() {
         duplicateScheduledEvent($scheduleEditForm);
       });
 
-    $(dialog).find('.modal-footer').prepend($button);
+    $(dialog).find('.modal-footer .modal-footer-right').prepend($button);
 
     // Update the date/times for this event in the correct format.
     $scheduleEditForm.find('#instanceStartDate').html(
@@ -1943,11 +1973,13 @@ const duplicateScheduledEvent = function($scheduleForm) {
   $scheduleForm.attr('action', $scheduleForm.data().addUrl)
     .attr('method', 'post');
 
-  // Remove the duplicate button
-  $('#scheduleDuplateButton').remove();
+  // Change Save button to Add
+  $scheduleForm.parents('.modal-content')
+    .find('#schedule-save-button')
+    .html(translations.schedule.stepWizard.finish);
 
-  // Remove the delete button
-  $('#scheduleDeleteButton').remove();
+  // Remove the duplicate button
+  $('#scheduleDuplicateButton').remove();
 
   toastr.info($scheduleForm.data().duplicatedMessage);
 };

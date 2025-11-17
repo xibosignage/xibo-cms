@@ -1671,6 +1671,12 @@ div.dataTables_wrapper div.dataTables_info {
     border-radius: 2px;
 }
 
+/* Schedule form footer */
+.modal-footer .schedule-modal-footer {
+    gap: 0.5rem;
+    display: inline-flex;
+}
+
 /* Reminder Events and Schedule Criteria */
 .reminder-event-row, .schedule-criteria-row {
     display: inline-flex !important;

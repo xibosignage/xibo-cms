@@ -31,11 +31,6 @@
 
 {% set formId %}{% if addForm %}scheduleAddForm{% else %}scheduleEditForm{% endif %}{% endset %}
 
-{% block formButtons %}
-    {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, beforeSubmitScheduleForm($("#{{formId}}"))
-{% endblock %}
-
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
@@ -89,7 +84,7 @@
                     data-set-displays-from-grid-filters="{{ setDisplaysFromFilter }}">
 
                     {# Step 1 - Content #}
-                    <div class="panel panel-default stepwizard-content" id="schedule-step-1" data-step="1" data-next="schedule-step-2">
+                    <div class="panel panel-default stepwizard-content" id="schedule-step-1" data-step="1" data-next="schedule-step-2" data-previous="start">
                         {% if hideEventType %}
                             {{ forms.hidden("eventTypeId", event.eventTypeId) }}
                         {% else %}
@@ -250,7 +245,7 @@
                     </div>
 
                     {# Step 2 - Displays #}
-                    <div class="panel panel-default stepwizard-content" style="display:none;" id="schedule-step-2" data-step="2" data-next="schedule-step-3">
+                    <div class="panel panel-default stepwizard-content" style="display:none;" id="schedule-step-2" data-step="2" data-next="schedule-step-3" data-previous="schedule-step-1">
                         {% set title %}{% trans "Display" %}{% endset %}
                         {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
                         {% set attributes = [
@@ -267,7 +262,7 @@
                     </div>
 
                     {# Step 3 - Time #}
-                    <div class="panel panel-default stepwizard-content" style="display:none;" id="schedule-step-3" data-step="3" data-next="schedule-step-4">
+                    <div class="panel panel-default stepwizard-content" style="display:none;" id="schedule-step-3" data-step="3" data-next="schedule-step-4" data-previous="schedule-step-2">
                         {% set title %}{% trans "Dayparting" %}{% endset %}
                         {% set helpText %}{% trans "Select the dayparting information for this event. To set your own times select custom and to have the event run constantly select Always." %}{% endset %}
                         <div class="form-group row day-part-control">
@@ -275,7 +270,7 @@
                             <div class="col-sm-10">
                                 <select class="form-control" name="dayPartId" id="dayPartId">
                                     {% for dayPart in dayParts %}
-                                        <option {% if dayPart.dayPartId == event.dayPartId or (not event.dayPartId and dayPart.isCustom == 1) %}selected{% endif %}
+                                        <option {% if dayPart.dayPartId == event.dayPartId or (not event.dayPartId and dayPart.isCustom == 2) %}selected{% endif %}
                                                 value="{{ dayPart.dayPartId }}"
                                                 data-is-always="{{ dayPart.isAlways }}"
                                                 data-is-custom="{{ dayPart.isCustom }}">{{ dayPart.name }}</option>
@@ -328,7 +323,7 @@
                     </div>
 
                     {# Step 4 - Optional #}
-                    <div class="panel panel-default stepwizard-content" style="display:none;" id="schedule-step-4" data-step="4" data-next="finished">
+                    <div class="panel panel-default stepwizard-content" style="display:none;" id="schedule-step-4" data-step="4" data-next="finished" data-previous="schedule-step-3">
                         <ul class="nav nav-tabs" role="tablist">
                             <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                             <li class="nav-item repeats"><a class="nav-link" href="#repeats" role="tab" data-toggle="tab"><span>{% trans "Repeats" %}</span></a></li>
