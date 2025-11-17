@@ -259,29 +259,36 @@ $(function() {
     const calendarOptions = $('#CalendarContainer').data();
 
     // Callback function to navigate to calendar date with the date picker
-    const navigateToCalendarDate = function() {
+    const navigateToCalendarDate = function(highlightDate = null) {
       if (calendar != undefined) {
         const selectedDate =
           moment(moment($('#fromDt').val()).format(systemDateFormat));
+
         // Add event to the picker to update the calendar
         // only if the selected date is valid
         if (selectedDate.isValid()) {
           calendar.navigate('date', selectedDate);
+
+          // Add date to highlight to calendar container
+          // and if the calendar view is visible
+          (
+            highlightDate &&
+            $('.XiboSchedule .card-header-tabs .nav-item .nav-link.active')
+              .data().scheduleView === 'calendar'
+          ) &&
+            $('#CalendarContainer').data('openDateAfterLoad', highlightDate);
         }
       }
     };
 
     const navigateToCalendarDatePicker = function() {
-      calendar.navigate(
-        'date',
-        moment($('#dateInput input[data-input]').val()),
-      );
-
       updateRangeFilter(
         $('#range'),
         $('#fromDt'),
         $('#toDt'),
-        navigateToCalendarDate,
+        () => {
+          navigateToCalendarDate($('#dateInput input[data-input]').val());
+        },
         {date: $('#dateInput input[data-input]').val()},
       );
     };
@@ -330,7 +337,22 @@ $(function() {
       systemDateFormat,
       jsDateOnlyFormat,
       pickerOptions,
-      navigateToCalendarDatePicker,
+      () => {
+        const activeView =
+          $('.XiboSchedule .card-header-tabs .nav-item .nav-link.active')
+            .data().scheduleView;
+
+        if (activeView === 'grid') {
+          // If we're in grid, change grid view to day
+          $('#range').val('day');
+
+          // Also change calendar view to day
+          // to update description
+          calendar.options.view = 'day';
+        }
+
+        navigateToCalendarDatePicker();
+      },
       false, // clear button
     );
 
@@ -469,24 +491,57 @@ $(function() {
           let title = this.getTitle();
 
           if ($('#range').val() == 'custom') {
-            const dateFormat = 'HH:mm D MMMM YYYY';
+            const dateFormat = translations.schedule.calendar.openDateFormat;
             const fromDate = ($('#fromDt').val()) ?
               moment($('#fromDt').val()).format(dateFormat) :
               translations.schedule.calendar.customFromToAlways;
             const toDate = ($('#toDt').val()) ?
               moment($('#toDt').val()).format(dateFormat) :
               translations.schedule.calendar.customFromToAlways;
-            title = (!$('#fromDt').val() && !$('#toDt').val()) ?
-              translations.schedule.calendar.customFromToAlways :
-              translations.schedule.calendar.customFromTo
+
+            if (!$('#fromDt').val() && !$('#toDt').val()) {
+              title = translations.schedule.calendar.customFromToAlways;
+            } else if (!$('#toDt').val()) {
+              title = translations.schedule.calendar.customAfter
+                .replace(':from', fromDate);
+            } else if (!$('#fromDt').val()) {
+              title = translations.schedule.calendar.customBefore
+                .replace(':to', toDate);
+            } else {
+              title = translations.schedule.calendar.customFromTo
                 .replace(':from', fromDate)
                 .replace(':to', toDate);
+            }
           }
           $('h1.page-header').text(title);
         }
 
         $('.btn-group button').removeClass('active');
         $('button[data-calendar-view="' + view + '"]').addClass('active');
+
+        // If there's a day to be highlighted
+        // Click on the respective day
+        if ($('#CalendarContainer').data('openDateAfterLoad')) {
+          const date = $('#CalendarContainer').data('openDateAfterLoad');
+          const dateFormatted = moment(date).format('YYYY-MM-DD');
+          const $day = $('#CalendarContainer')
+            .find(
+              '.cal-month-day-number[data-cal-date=' + dateFormatted + ']')
+            .parent();
+
+          // Click to open day drawer
+          // if drawer not opened
+          if (
+            $day.length > 0 &&
+            !$('#CalendarContainer #cal-slide-box').is(':visible')
+          ) {
+            // Trigger mouseneter and click to open
+            $day.trigger('mouseenter').trigger('click');
+
+            // Clear date
+            $('#CalendarContainer').data('openDateAfterLoad', '');
+          }
+        }
       },
       language: calendarLanguage,
     };

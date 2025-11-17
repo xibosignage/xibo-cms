@@ -4,12 +4,12 @@
         <!-- Tab Panel -->
         <% if (typeof agenda.displayGroupList != 'undefined' && agenda.displayGroupList.length > 1) { %>
             <div class="card-heading">
-                    <ul class="nav nav-tabs">
+                    <ul class="nav nav-tabs flex-nowrap w-100" style="overflow:auto hidden;">
                         <% _.each(agenda.displayGroupList, function(displayGroup){ %>
                             <% if (displayGroup['id'] == agenda.selectedDisplayGroup) { %>
-                                <li class="nav-item active">
+                                <li class="nav-item flex-shrink-0 active" <% if (agenda.displayGroupList.length > 10) { %>style="order: -1;" <% }; %>>
                             <% } else { %>
-                                <li class="nav-item">
+                                <li class="nav-item flex-shrink-0">
                             <% }; %>
                             
                                 <%
