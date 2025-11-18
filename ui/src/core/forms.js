@@ -3344,9 +3344,9 @@ window.forms = {
 
             // If the test is true, show the element
             if (isFormGroup) {
-              $testContainer.closest('.form-group').toggle(testResult)
+              $testContainer.closest('.form-group').toggle(testResult);
             } else {
-              $testContainer.toggle(testResult)
+              $testContainer.toggle(testResult);
             }
           };
 

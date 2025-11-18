@@ -1746,7 +1746,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
             filterList,
             filter.visibility.field,
             false,
-            true
+            true,
           );
         }
       });
@@ -3719,11 +3719,11 @@ Toolbar.prototype.getMenuIdFromType = function(
  * @param filters
  */
 Toolbar.prototype.loadProviderFilters = function(
-  filters
-){
+  filters,
+) {
   // Does this provider have custom filters?
   if (!filters || filters.length === 0) {
-    return {}
+    return {};
   }
 
   const filterList = {};
@@ -3740,7 +3740,7 @@ Toolbar.prototype.loadProviderFilters = function(
     if (filter.type === 'dropdown') {
       baseFilter.hideDefault = filter?.hideDefault || true;
       baseFilter.values = filter.options.map((option) => ({
-        name: toolbarTrans.libraryTypes[option.value],
+        name: toolbarTrans.libraryTypes[option.value] || option.name,
         type: option.value,
         disabled: option?.disabled || false,
       }));
