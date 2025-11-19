@@ -97,8 +97,11 @@ class LayoutUploadHandler extends BlueImpUploadHandler
             if (!empty($layout->getUnmatchedProperty('thumbnail'))) {
                 rename($layout->getUnmatchedProperty('thumbnail'), $layout->getThumbnailUri());
             }
+
             $layout->managePlaylistClosureTable();
-            $layout->manageActions();
+
+            // When importing a layout, skip action validation
+            $layout->manageActions(false);
 
             // Handle widget data
             $fallback = $layout->getUnmatchedProperty('fallback');

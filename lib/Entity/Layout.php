@@ -1376,7 +1376,6 @@ class Layout implements \JsonSerializable
                     // Pull out the global widget, if we have one (we should)
                     if ($item->type === 'global') {
                         $widget = $item;
-
                     }
 
                     // Get the highest duration.
@@ -2760,11 +2759,11 @@ class Layout implements \JsonSerializable
 
     /**
      * This function will adjust the Action sourceId and targetId in all relevant objects in our imported Layout
-     *
+     * @param bool $validate
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function manageActions()
+    public function manageActions(bool $validate = true): void
     {
         $oldRegionIds = [];
         $newRegionIds = [];
@@ -2824,7 +2823,7 @@ class Layout implements \JsonSerializable
                 }
             }
 
-            $action->save();
+            $action->save(['validate' => $validate]);
         }
 
         // Actions with Region
@@ -2862,7 +2861,7 @@ class Layout implements \JsonSerializable
                 }
             }
 
-            $action->save();
+            $action->save(['validate' => $validate]);
         }
 
         // Actions with Widget
@@ -2902,7 +2901,7 @@ class Layout implements \JsonSerializable
                 }
             }
 
-            $action->save();
+            $action->save(['validate' => $validate]);
         }
 
         // Make sure we update targetRegionId in Drawer Widgets.
