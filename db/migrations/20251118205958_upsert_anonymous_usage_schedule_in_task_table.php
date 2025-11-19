@@ -44,10 +44,10 @@ class UpsertAnonymousUsageScheduleInTaskTable extends AbstractMigration
         $schedule = $myMinute . ' ' . $myHour . ' * * *';
 
         if (!$row) {
-            $this->execute("
+            $this->execute('
                 INSERT INTO `task` (`name`, `class`, `options`, `schedule`, `isActive`, `configFile`)
                 VALUES (:name, :class, :options, :schedule, :isActive, :configFile)
-            ", [
+            ', [
                 'name' => 'Anonymous Usage Reporting',
                 'class' => '\\Xibo\\XTR\\AnonymousUsageTask',
                 'options' => '[]',
@@ -57,11 +57,11 @@ class UpsertAnonymousUsageScheduleInTaskTable extends AbstractMigration
             ]);
         } else {
             // Row exists, update existing row
-            $this->execute("
+            $this->execute('
                 UPDATE `task`
                 SET `schedule` = :schedule
                 WHERE `name` = :name
-            ", [
+            ', [
                 'schedule' => $schedule,
                 'name' => 'Anonymous Usage Reporting'
             ]);
