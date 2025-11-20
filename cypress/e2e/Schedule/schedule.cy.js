@@ -47,7 +47,6 @@ describe('Schedule Events', function() {
 
   // TC-01
   it('should schedule an event layout that has no priority, no recurrence', function() {
-    cy.intercept('GET', '/schedule?draw=2*').as('scheduleLoad');
     cy.intercept('GET', '/schedule/form/add?*').as('scheduleAddForm');
 
     // Set up intercepts with aliases
@@ -95,7 +94,7 @@ describe('Schedule Events', function() {
         cy.get('.modal .modal-footer').contains('Next').click();
         cy.get('.modal-content [name="name"]').type('Always - Layout Event');
 
-        cy.get('.modal .modal-footer').contains('Save').click();
+        cy.get('.modal .modal-footer').contains('Finish').click();
 
         cy.contains('Added Event');
       });
@@ -105,7 +104,6 @@ describe('Schedule Events', function() {
     cy.contains('Clear Filters').should('be.visible').click();
 
     cy.get('#DisplayList + span .select2-selection').click();
-    cy.wait('@scheduleLoad');
 
     // Type the display name
     cy.get('.select2-container--open textarea[type="search"]').type(display1);
@@ -127,7 +125,6 @@ describe('Schedule Events', function() {
 
   // relies on TC-01
   it('should edit a scheduled event', function() {
-    cy.intercept('GET', '/schedule?draw=2*').as('scheduleLoad');
     cy.intercept('GET', '/schedule/form/add?*').as('scheduleAddForm');
 
     // Set up intercepts with aliases
@@ -152,7 +149,6 @@ describe('Schedule Events', function() {
     cy.contains('Clear Filters').should('be.visible').click();
 
     cy.get('#DisplayList + span .select2-selection').click();
-    cy.wait('@scheduleLoad');
 
     // Type the display name
     cy.get('.select2-container--open textarea[type="search"]').type(display1);
@@ -200,7 +196,6 @@ describe('Schedule Events', function() {
   });
 
   it('should schedule an event campaign that has no priority, no recurrence', function() {
-    cy.intercept('GET', '/schedule?draw=2*').as('scheduleLoad');
     cy.intercept('GET', '/schedule/form/add?*').as('scheduleAddForm');
 
     // Set up intercepts with aliases
@@ -248,7 +243,7 @@ describe('Schedule Events', function() {
         cy.get('.modal .modal-footer').contains('Next').click();
         cy.get('.modal-content [name="name"]').type('Always - Campaign Event');
 
-        cy.get('.modal .modal-footer').contains('Save').click();
+        cy.get('.modal .modal-footer').contains('Finish').click();
 
         cy.contains('Added Event');
       });
@@ -258,7 +253,6 @@ describe('Schedule Events', function() {
     cy.contains('Clear Filters').should('be.visible').click();
 
     cy.get('#DisplayList + span .select2-selection').click();
-    cy.wait('@scheduleLoad');
 
     // Type the display name
     cy.get('.select2-container--open textarea[type="search"]').type(display1);
@@ -276,7 +270,6 @@ describe('Schedule Events', function() {
   });
 
   it('should schedule an event command layout that has no priority, no recurrence', function() {
-    cy.intercept('GET', '/schedule?draw=2*').as('scheduleLoad');
     cy.intercept('GET', '/schedule/form/add?*').as('scheduleAddForm');
     cy.intercept({
       url: '/displaygroup?*',
@@ -317,12 +310,11 @@ describe('Schedule Events', function() {
         cy.get('.modal .modal-footer').contains('Next').click();
         cy.get('.modal-content [name="name"]').type('Custom - Command Event');
 
-        cy.get('.modal .modal-footer').contains('Save').click();
+        cy.get('.modal .modal-footer').contains('Finish').click();
       });
   });
 
   it('should schedule an event overlay layout that has no priority, no recurrence', function() {
-    cy.intercept('GET', '/schedule?draw=2*').as('scheduleLoad');
     cy.intercept('GET', '/schedule/form/add?*').as('scheduleAddForm');
     cy.intercept({
       url: '/displaygroup?*',
@@ -355,6 +347,10 @@ describe('Schedule Events', function() {
 
         // Click Next and check toast message
         cy.get('.modal .modal-footer').contains('Next').click();
+
+        // Select daypart - custom
+        cy.get('#dayPartId').select('Custom');
+
 
         cy.get('.starttime-control > .col-sm-10 > .input-group > .flatpickr-wrapper > .datePickerHelper')
           .click() // Open the picker
@@ -390,7 +386,7 @@ describe('Schedule Events', function() {
         cy.get('.modal .modal-footer').contains('Next').click();
         cy.get('.modal-content [name="name"]').type('Custom - Overlay Event');
 
-        cy.get('.modal .modal-footer').contains('Save').click();
+        cy.get('.modal .modal-footer').contains('Finish').click();
       });
   });
 });
