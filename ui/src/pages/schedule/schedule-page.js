@@ -436,7 +436,7 @@ $(function() {
     if (
       $('.XiboSchedule .card-header-tabs .nav-item .nav-link.active')
         .data().scheduleView === 'calendar' &&
-      $('#schedule-filter #range').val() === 'custom'
+      $('#schedule-filter #range').val() != 'month'
     ) {
       $('#schedule-filter #range').val('month').trigger('change');
 

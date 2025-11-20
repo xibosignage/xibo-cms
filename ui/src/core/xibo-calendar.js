@@ -523,7 +523,8 @@ $(function() {
         // Click on the respective day
         if ($('#CalendarContainer').data('openDateAfterLoad')) {
           const date = $('#CalendarContainer').data('openDateAfterLoad');
-          const dateFormatted = moment(date).format('YYYY-MM-DD');
+          const dateFormatted = moment(date, systemDateFormat)
+            .format('YYYY-MM-DD');
           const $day = $('#CalendarContainer')
             .find(
               '.cal-month-day-number[data-cal-date=' + dateFormatted + ']')
@@ -784,8 +785,9 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
       editable: rawEv.isEditable,
       event: rawEv,
       scheduleEvent: {
-        fromDt: moment(startMs).format(jsDateFormat),
-        toDt: moment(endMs).format(jsDateFormat),
+        // Format with default format to match calendar.js
+        fromDt: moment(startMs).format('YYYY-MM-DD HH:mm:ss'),
+        toDt: moment(endMs).format('YYYY-MM-DD HH:mm:ss'),
       },
       recurringEvent: rawEv.recurringEvent,
     };
@@ -801,7 +803,8 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
   // Group events by day
   const groupedEvents = new Map();
   filteredOccurrences.forEach((ev) => {
-    const dayKey = moment(ev.fromDt * 1000).startOf('day').format('YYYY-MM-DD');
+    const dayKey = moment(ev.fromDt * 1000).startOf('day')
+      .format(jsDateOnlyFormat);
     // Group by the original eventId and the day
     const groupKey = `${ev.eventId}-${dayKey}`;
 
