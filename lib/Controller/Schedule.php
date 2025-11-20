@@ -813,6 +813,8 @@ class Schedule extends Base
      */
     public function addForm(Request $request, Response $response, ?string $from, ?int $id): Response|ResponseInterface
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
         // get the default longitude and latitude from CMS options
         $defaultLat = (float)$this->getConfig()->getSetting('DEFAULT_LAT');
         $defaultLong = (float)$this->getConfig()->getSetting('DEFAULT_LONG');
@@ -853,8 +855,12 @@ class Schedule extends Base
                 'displayGroupIds' => (($from == 'DisplayGroup') ? [$id] : [0]),
                 'mediaId' => (($from === 'Library') ? $id : null),
                 'playlistId' => (($from === 'Playlist') ? $id : null),
-                'readonlySelect' => !($from == 'DisplayGroup'),
+                // Lock for layout editor only
+                'readonlySelect' => ($from == 'Layout' && $sanitizedParams->getString('fromLayoutEditor') === '1'),
+                // Hide event type, except for Display Groups
                 'hideEventType' => !($from == 'DisplayGroup'),
+                // Skip first step, except for Display Groups
+                'skipFirstStep' => !($from == 'DisplayGroup'),
                 // If coming from display page, don't show syncEvent type
                 'eventTypes' => \Xibo\Entity\Schedule::getEventTypes((($from === 'DisplayGroup') ? [9] : [])),
                 'addForm' => true,

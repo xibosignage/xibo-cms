@@ -1126,11 +1126,18 @@ lD.loadFormFromAPI = function(
   // Load form the API
   const linkToAPI = urlsForApi.layout[type];
 
+  const isScheduleForm = (type === 'schedule');
+
   let requestPath = linkToAPI.url;
 
   // Replace ID
   if (id != null) {
     requestPath = requestPath.replace(':id', id);
+  }
+
+  // If schedule, send type
+  if (isScheduleForm) {
+    requestPath += '?fromLayoutEditor=1';
   }
 
   // Create dialog
@@ -1143,12 +1150,15 @@ lD.loadFormFromAPI = function(
   }).done(function(res) {
     if (res.success) {
       // Create buttons
-      const generatedButtons = {
-        cancel: {
+      const generatedButtons = {};
+
+      // Don't add cancel button for schedule form
+      if (!isScheduleForm) {
+        generatedButtons['cancel'] ={
           label: translations.cancel,
           className: 'btn-white',
-        },
-      };
+        };
+      }
 
       // Get buttons from form
       for (const button in res.buttons) {
@@ -3376,7 +3386,6 @@ lD.getObjectByTypeAndId = function(type, id, auxId) {
 
     // Verify that the region exists before checking the unique id
     targetObject = lD.layout.regions[id];
-
   } else if (type === 'drawer') {
     targetObject = lD.layout.drawer;
   } else if (type === 'canvas') {

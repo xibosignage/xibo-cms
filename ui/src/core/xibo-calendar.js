@@ -1081,7 +1081,11 @@ window.setupScheduleForm = function(dialog) {
       $dialog.find('div.stepwizard-row div.stepwizard-step a');
     const $allWells = $dialog.find('.stepwizard-content');
     const isAddForm = $dialog.find('form').is('#scheduleAddForm');
-    const $modalFooter = $dialog.find('.modal-footer');
+    const $modalFooter =
+      ($dialog.find('.modal-footer').length > 0) ?
+        $dialog.find('.modal-footer') :
+        $('<div class="modal-footer"></div>')
+          .appendTo($dialog.find('.modal-content'));
 
     // Add button areas to footer
     $modalFooter.addClass('justify-content-between')
@@ -1385,20 +1389,17 @@ window.setupScheduleForm = function(dialog) {
     const eventType = $('#eventTypeId', dialog).val();
     const mediaId = $('#mediaId', dialog).val();
     const playlistId = $('#playlistId', dialog).val();
-    let isFS = false;
 
     if (eventType == '7' && mediaId) {
       // If media type, with media
       // Show all FS controls
       $('.media-control-option', dialog).removeClass('hidden');
       $('.fs-control-option', dialog).removeClass('hidden');
-      isFS = true;
     } else if (eventType == '8' && playlistId) {
       // If playlist type, with playlist
       // Show playlist controls, but hide media ones
       $('.fs-control-option', dialog).removeClass('hidden');
       $('.media-control-option', dialog).addClass('hidden');
-      isFS = true;
     } else {
       $('.media-control-option', dialog).addClass('hidden');
       $('.fs-control-option', dialog).addClass('hidden');
@@ -1406,7 +1407,6 @@ window.setupScheduleForm = function(dialog) {
 
     // If we are opening a FS form, go to step 2
     if (
-      isFS &&
       $(dialog).find('form').data('openStep-2') === 1
     ) {
       // Open second step
