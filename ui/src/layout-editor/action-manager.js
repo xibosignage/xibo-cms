@@ -44,6 +44,7 @@ ActionManager.prototype.getAllActions = function(layoutId) {
       dataType: 'json',
       data: {
         layoutId: layoutId,
+        disablePaging: 1,
       },
     }).done(function(res) {
       // Add actions to array
