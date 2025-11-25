@@ -4913,7 +4913,7 @@ Viewer.prototype.addActionLine = function(
       const layout = layouts[0];
       // Make sure it's the same layout
       // if so, add to recents
-      (target.id === layout.code) &&
+      (layout && target.id === layout.code) &&
         self.addLayoutToRecents({
           code: layout.code,
           name: layout.layout,
@@ -5311,7 +5311,7 @@ Viewer.prototype.updateActionLineTargets = function(
       const layout = layouts[0];
       // Make sure it's the same layout
       // if so, add to recents
-      (target.id === layout.code) &&
+      (layout && target.id === layout.code) &&
         self.addLayoutToRecents({
           code: layout.code,
           name: layout.layout,
@@ -5495,7 +5495,6 @@ Viewer.prototype.highlightAction = function(
  */
 Viewer.prototype.handleLayoutDock = function(actions) {
   const self = this;
-  const app = self.parent;
   const recentLayouts = new Set();
   const numLayoutsSearch = 10;
   const promiseArray = [];
@@ -5633,7 +5632,7 @@ Viewer.prototype.handleLayoutDock = function(actions) {
           const layout = layouts[0];
           // Make sure it's the same layout
           // if so, add to recents
-          (code === layout.code) &&
+          (layout && code === layout.code) &&
             self.addLayoutToRecents({
               code: layout.code,
               name: layout.layout,
