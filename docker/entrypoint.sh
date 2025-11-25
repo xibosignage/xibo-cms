@@ -157,7 +157,8 @@ then
     echo "We will upgrade it, take a backup"
 
     # We're going to run an upgrade. Make a database backup
-    mysqldump -h $MYSQL_HOST -P $MYSQL_PORT -u $MYSQL_USER -p$MYSQL_PASSWORD --hex-blob $MYSQL_DATABASE | gzip > /var/www/backup/db-$(date +"%Y-%m-%d_%H-%M-%S").sql.gz
+    mysqldump -h $MYSQL_HOST -P $MYSQL_PORT -u $MYSQL_USER -p$MYSQL_PASSWORD \
+      --hex-blob --no-tablespaces $MYSQL_DATABASE | gzip > /var/www/backup/db-$(date +"%Y-%m-%d_%H-%M-%S").sql.gz
 
     # Drop app cache on upgrade
     rm -rf /var/www/cms/cache/*
