@@ -2601,9 +2601,7 @@ window.forms = {
             }
 
             // Text to be inserted
-            const text = (snippetMode === 'media') ?
-              '[[mediaId=' + value + ']]' :
-              '[' + value + ']';
+            const text = '[' + value + ']';
 
             // Check if there is a CKEditor instance
             const ckeditorInstance = formHelpers
@@ -2683,7 +2681,7 @@ window.forms = {
                 ':id',
                 value,
               ) + '?preview=1' :
-              '[[mediaId=' + value + ']]';
+              '[' + value + ']';
             const text = '<img alt="" src="' + textURL + '" />';
 
             if (ckeditorInstance) {
@@ -2701,6 +2699,8 @@ window.forms = {
                 previousText.substring(0, cursorPosition) +
                 text +
                 previousText.substring(cursorPosition));
+
+              $targetField.trigger('change');
             }
           },
         );

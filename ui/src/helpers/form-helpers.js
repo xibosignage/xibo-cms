@@ -509,9 +509,13 @@ const formHelpers = function() {
 
           const initialValue = $newTarget.val();
 
+          const allowLibRefs = $(target).data('allowLibRefs');
+
           // If we have initial value, set it
           if (initialValue) {
-            newConfig.initialData = self.convertLibraryReferences(initialValue);
+            newConfig.initialData = (allowLibRefs) ?
+              self.convertLibraryReferences(initialValue) :
+              initialValue;
           }
         } else {
           createEditor =
@@ -563,6 +567,8 @@ const formHelpers = function() {
     const $target = (inline) ?
       $(dialog).find('#' + textAreaId).siblings('.rich-text-editor') :
       $(dialog).find('#' + textAreaId);
+
+    const allowLibRefs = $target.data('allowLibRefs');
 
     // Return promise
     return new Promise((resolve, reject) => {
@@ -864,7 +870,7 @@ const formHelpers = function() {
               '</span></span>';
           }
 
-          self.setCKEditorData(editorInstance, data);
+          self.setCKEditorData(editorInstance, data, allowLibRefs);
 
           if (focusOnBuild) {
             editorInstance.focus();
@@ -888,9 +894,7 @@ const formHelpers = function() {
                 ckeditorInstance &&
                 value !== undefined
               ) {
-                const text = (snippetMode === 'media') ?
-                  '[[mediaId=' + value + ']]' :
-                  '[' + value + ']';
+                const text = '[' + value + ']';
 
                 formHelpers.insertToCKEditor(
                   'input_' + targetId + '_' + targetFieldId,
@@ -1095,10 +1099,13 @@ const formHelpers = function() {
    * Parse Editor data to turn media path into library tags
    * @param {string} editor - CKEditor instance to update
    * @param {string} data - A function to run after data update
+   * @param {boolean} convertLibRefs - Convert library references?
    */
-  this.setCKEditorData = function(editor, data) {
+  this.setCKEditorData = function(editor, data, convertLibRefs = true) {
     // Handle initial template set up
-    data = this.convertLibraryReferences(data);
+    data = (convertLibRefs) ?
+      this.convertLibraryReferences(data) :
+      data;
 
     editor.setData(data);
   };
@@ -1126,11 +1133,15 @@ const formHelpers = function() {
         .replace(':id', '([0-9]+)'), 'g',
       );
 
+    const allowLibRefs = $(editor.sourceElement).data('allowLibRefs');
+
     let data = editor.getData();
 
-    data = data.replace(regex, function(match, group1) {
-      return '[[mediaId=' + group1 + ']]';
-    });
+    if (allowLibRefs) {
+      data = data.replace(regex, function(match, group1) {
+        return '[' + group1 + ']';
+      });
+    }
 
     // Update text field with the new data
     // ( to avoid the setData delay on save )
@@ -1228,10 +1239,10 @@ const formHelpers = function() {
         callback !== null &&
         typeof callback === 'function'
       ) {
-        self.setCKEditorData(editorInstance, data);
+        self.setCKEditorData(editorInstance, data, allowLibRefs);
         callback();
       } else {
-        self.setCKEditorData(editor, data);
+        self.setCKEditorData(editor, data, allowLibRefs);
       }
     } else {
       // Still call callback
@@ -2409,15 +2420,16 @@ const formHelpers = function() {
   };
 
   /**
-   *  We need to convert any library references [[mediaId=123]] to their
+   *  We need to convert any library references [123] to their
    * full URL counterparts we leave well alone non-library references.
    * @param {string} data - Data string to be processed
    * @return {string} - Processed data string
    */
   this.convertLibraryReferences = function(data) {
-    const regex = /\[\[mediaId=([0-9]+)]]/gi;
+    const regex = /\[[0-9]+]/gi;
 
-    data = data.replace(regex, function(match, inner) {
+    data = data.replace(regex, function(match) {
+      const inner = match.replace(']', '').replace('[', '');
       return CKEDITOR_DEFAULT_CONFIG.imageDownloadUrl.replace(':id', inner);
     });
 
@@ -2438,8 +2450,8 @@ const formHelpers = function() {
 
     const urlSplit = CKEDITOR_DEFAULT_CONFIG.imageDownloadUrl.split(':id');
 
-    data = data.replaceAll(urlSplit[0], '[[mediaId=');
-    data = data.replaceAll(urlSplit[1], ']]');
+    data = data.replaceAll(urlSplit[0], '[');
+    data = data.replaceAll(urlSplit[1], ']');
 
     return data;
   };

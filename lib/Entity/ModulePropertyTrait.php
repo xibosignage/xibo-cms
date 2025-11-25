@@ -137,7 +137,7 @@ trait ModulePropertyTrait
                     preg_match_all('/\[(.*?)\]/', $value, $matches);
                     foreach ($matches[1] as $match) {
                         // We ignore non-numbers and zero/negative integers
-                        if (is_numeric($match) && intval($match) <= 0) {
+                        if (is_numeric($match) && intval($match) > 0) {
                             $value = str_replace(
                                 '[' . $match . ']',
                                 '[[mediaId=' . $match . ']]',
