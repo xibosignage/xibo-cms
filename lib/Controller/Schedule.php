@@ -1829,6 +1829,7 @@ class Schedule extends Base
         $schedule->displayGroups = [];
         $schedule->isGeoAware = $sanitizedParams->getCheckbox('isGeoAware');
         $schedule->maxPlaysPerHour = $sanitizedParams->getInt('maxPlaysPerHour', ['default' => 0]);
+        $schedule->syncGroupId = $sanitizedParams->getInt('syncGroupId');
         $schedule->name = $sanitizedParams->getString('name');
         $schedule->modifiedBy = $this->getUser()->getId();
 

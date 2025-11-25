@@ -769,7 +769,9 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
       `/schedule/form/edit/${rawEv.eventId}`;
     const titleText = ((rawEv.name) ? '"' + rawEv.name + '" - ' : '') +
       translations.schedule.calendar.eventOnDisplay
-        .replace(':event', rawEv.parentCampaignName || rawEv.campaign)
+        .replace(':event', rawEv.parentCampaignName ||
+          rawEv.campaign ||
+          rawEv.syncType)
         .replace(
           ':display',
           rawEv.displayGroupList || rawEv.displayGroups[0].displayGroup,
