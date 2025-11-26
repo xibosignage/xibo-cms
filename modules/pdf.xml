@@ -44,6 +44,9 @@
             <title>Duration is per page</title>
             <helpText>The duration specified is per page otherwise it is per document.</helpText>
         </property>
+        <property type="message">
+            <title>Not supported on Tizen and webOS players.</title>
+        </property>
     </properties>
     <stencil>
         <twig><![CDATA[
