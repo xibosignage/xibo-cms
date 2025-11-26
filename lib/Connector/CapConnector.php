@@ -120,78 +120,83 @@ class CapConnector implements ConnectorInterface, EmergencyAlertInterface
      */
     public function onDataRequest(WidgetDataRequestEvent $event): void
     {
-        if ($event->getDataProvider()->getDataSource() === 'emergency-alert') {
-            $event->stopPropagation();
+        if ($event->getDataProvider()->getDataSource() !== 'emergency-alert') {
+            return;
+        }
 
-            try {
-                // check if CAP URL is present
-                if (empty($event->getDataProvider()->getProperty('emergencyAlertUri'))) {
-                    $this->getLogger()->debug('onDataRequest: Emergency alert not configured.');
-                    $event->getDataProvider()->addError(__('Missing CAP URL'));
-                    return;
-                }
+        $event->stopPropagation();
 
-                // Set cache expiry date to 3 minutes from now
-                $cacheExpire = Carbon::now()->addMinutes(3);
-
-                // Fetch the CAP XML content from the given URL
-                $xmlContent = $this->fetchCapAlertFromUrl($event->getDataProvider(), $cacheExpire);
-
-                if ($xmlContent) {
-                    // Initialize DOMDocument and load the XML content
-                    $this->capXML = new DOMDocument();
-                    $this->capXML->loadXML($xmlContent);
-
-                    // Process and initialize CAP data
-                    $this->processCapData($event->getDataProvider());
-
-                    // Initialize update interval
-                    $updateIntervalMinute = $event->getDataProvider()->getProperty('updateInterval');
-
-                    // Convert the $updateIntervalMinute to seconds
-                    $updateInterval = $updateIntervalMinute * 60;
-
-                    // If we've got data, then set our cache period.
-                    $event->getDataProvider()->setCacheTtl($updateInterval);
-                    $event->getDataProvider()->setIsHandled();
-
-                    $capStatus = $this->getCapXmlData('status');
-                    $category = $this->getCapXmlData('category');
-                } else {
-                    $capStatus = 'No Alerts';
-                    $category = '';
-                }
-
-                // initialize status for schedule criteria push message
-                if ($capStatus == 'Actual') {
-                    $status = self::ACTUAL_ALERT;
-                } elseif ($capStatus == 'No Alerts') {
-                    $status = self::NO_ALERT;
-                } else {
-                    $status = self::TEST_ALERT;
-                }
-
-                $this->getLogger()->debug('Schedule criteria push message: status = ' . $status
-                    . ', category = ' . $category);
-
-                // Set schedule criteria update
-                $action = new ScheduleCriteriaUpdateAction();
-                $action->setCriteriaUpdates([
-                    ['metric' => 'emergency_alert_status', 'value' => $status, 'ttl' => 60],
-                    ['metric' => 'emergency_alert_category', 'value' => $category, 'ttl' => 60]
-                ]);
-
-                // Initialize the display
-                $displayId = $event->getDataProvider()->getDisplayId();
-                $display = $this->displayFactory->getById($displayId);
-
-                // Criteria push message
-                $this->getPlayerActionService()->sendAction($display, $action);
-            } catch (Exception $exception) {
-                $this->getLogger()
-                    ->error('onDataRequest: Failed to get results. e = ' . $exception->getMessage());
-                $event->getDataProvider()->addError(__('Unable to get Common Alerting Protocol (CAP) results.'));
+        try {
+            // check if CAP URL is present
+            if (empty($event->getDataProvider()->getProperty('emergencyAlertUri'))) {
+                $this->getLogger()->debug('onDataRequest: Emergency alert not configured.');
+                $event->getDataProvider()->addError(__('Missing CAP URL'));
+                return;
             }
+
+            // Set cache expiry date to 3 minutes from now
+            $cacheExpire = Carbon::now()->addMinutes(3);
+
+            // Fetch the CAP XML content from the given URL
+            $xmlContent = $this->fetchCapAlertFromUrl($event->getDataProvider(), $cacheExpire);
+
+            if ($xmlContent) {
+                // Initialize DOMDocument and load the XML content
+                $this->capXML = new DOMDocument();
+                $this->capXML->loadXML($xmlContent);
+
+                // Process and initialize CAP data
+                $this->processCapData($event->getDataProvider());
+
+                // Initialize update interval
+                $updateIntervalMinute = $event->getDataProvider()->getProperty('updateInterval');
+
+                // Convert the $updateIntervalMinute to seconds
+                $updateInterval = $updateIntervalMinute * 60;
+
+                // If we've got data, then set our cache period.
+                $event->getDataProvider()->setCacheTtl($updateInterval);
+                $event->getDataProvider()->setIsHandled();
+
+                $capStatus = $this->getCapXmlData('status');
+                $category = $this->getCapXmlData('category');
+            } else {
+                $capStatus = 'No Alerts';
+                $category = '';
+            }
+
+            // initialize status for schedule criteria push message
+            if ($capStatus == 'Actual') {
+                $status = self::ACTUAL_ALERT;
+            } elseif ($capStatus == 'No Alerts') {
+                $status = self::NO_ALERT;
+            } else {
+                $status = self::TEST_ALERT;
+            }
+
+            $this->getLogger()->debug('Schedule criteria push message: status = ' . $status
+                . ', category = ' . $category);
+
+            // Set ttl expiry to 180s since widget sync task runs every 180s and add a bit of buffer
+            $ttl = max($updateInterval ?? 180, 180) + 60;
+
+            // Set schedule criteria update
+            $action = new ScheduleCriteriaUpdateAction();
+            $action->setCriteriaUpdates([
+                ['metric' => 'emergency_alert_status', 'value' => $status, 'ttl' => $ttl],
+                ['metric' => 'emergency_alert_category', 'value' => $category, 'ttl' => $ttl]
+            ]);
+
+            // Initialize the display
+            $displayId = $event->getDataProvider()->getDisplayId();
+            $display = $this->displayFactory->getById($displayId);
+
+            // Criteria push message
+            $this->getPlayerActionService()->sendAction($display, $action);
+        } catch (Exception $exception) {
+            $this->getLogger()
+                ->error('onDataRequest: Failed to get results. e = ' . $exception->getMessage());
+            $event->getDataProvider()->addError(__('Unable to get Common Alerting Protocol (CAP) results.'));
         }
     }
 
