@@ -321,7 +321,30 @@ class Login extends Base
 
             // Body
             $mail->isHTML(true);
-            $mail->Body = $this->generateEmailBody($mail->Subject, '<p>' . __('You are receiving this email because a password reminder was requested for your account. If you did not make this request, please report this email to your administrator immediately.') . '</p><a href="' . $link . '">' . __('Reset Password') . '</a>');
+
+            // We need to specify the style for the pw reset button since mailers usually ignore bootstrap classes
+            $linkButton = '<a href="' . $link . '"
+                    style="
+                        display: inline-block;
+                        padding: 8px 15px;
+                        font-size: 15px;
+                        color: #FFFFFF;
+                        background-color: #428BCA;
+                        text-decoration: none;
+                        border-radius: 5px;
+                    ">
+                    ' . __('Reset Password') . '
+                </a>';
+
+            $mail->Body = $this->generateEmailBody(
+                $mail->Subject,
+                '<p>' . __('You are receiving this email because a password reminder was requested for your account. 
+                If you did not make this request, please report this email to your administrator immediately.') . '</p>'
+                . $linkButton
+                . '<p style="margin-top:10px; font-size:14px; color:#555555;">'
+                . __('If the button does not work, copy and paste the following URL into your browser:')
+                . '<br><a href="' . $link . '">' . $link . '</a></p>'
+            );
 
             if (!$mail->send()) {
                 throw new ConfigurationException('Unable to send password reminder to ' . $user->email);
