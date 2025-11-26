@@ -928,7 +928,7 @@ class Schedule extends Base
      *  @SWG\Parameter(
      *      name="fullScreenCampaignId",
      *      in="formData",
-     *      description="For Media or Playlist eventyType. The Layout specific Campaign ID to use for this Event.
+     *      description="For Media or Playlist event Type. The Layout specific Campaign ID to use for this Event.
      * This needs to be the Layout created with layout/fullscreen function",
      *      type="integer",
      *      required=false
@@ -937,6 +937,13 @@ class Schedule extends Base
      *      name="commandId",
      *      in="formData",
      *      description="The Command ID to use for this Event.",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="mediaId",
+     *      in="formData",
+     *      description="The Media ID to use for this Event.",
      *      type="integer",
      *      required=false
      *  ),
@@ -1185,6 +1192,13 @@ class Schedule extends Base
         if ($this->isFullScreenSchedule($schedule->eventTypeId)) {
             $type = $schedule->eventTypeId === \Xibo\Entity\Schedule::$MEDIA_EVENT ? 'media' : 'playlist';
             $id = ($type === 'media') ? $sanitizedParams->getInt('mediaId') : $sanitizedParams->getInt('playlistId');
+
+            if (!$id) {
+                throw new InvalidArgumentException(
+                    __(ucfirst($type) . 'Id is required when scheduling ' . $type . ' events.'),
+                    $type . 'Id'
+                );
+            }
 
             $fsLayout = $this->layoutFactory->createFullScreenLayout(
                 $type,
@@ -1633,6 +1647,13 @@ class Schedule extends Base
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="mediaId",
+     *      in="formData",
+     *      description="The Media ID to use for this Event.",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
      *      name="displayOrder",
      *      in="formData",
      *      description="The display order for this event. ",
@@ -1925,6 +1946,13 @@ class Schedule extends Base
         if ($this->isFullScreenSchedule($schedule->eventTypeId)) {
             $type = $schedule->eventTypeId === \Xibo\Entity\Schedule::$MEDIA_EVENT ? 'media' : 'playlist';
             $id = ($type === 'media') ? $sanitizedParams->getInt('mediaId') : $sanitizedParams->getInt('playlistId');
+
+            if (!$id) {
+                throw new InvalidArgumentException(
+                    __(ucfirst($type) . 'Id is required when scheduling ' . $type . ' events.'),
+                    $type . 'Id'
+                );
+            }
 
             // Create a full screen layout for this event
             $fsLayout = $this->layoutFactory->createFullScreenLayout(

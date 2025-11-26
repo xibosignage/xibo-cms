@@ -8887,7 +8887,7 @@
                     {
                         "name": "fullScreenCampaignId",
                         "in": "formData",
-                        "description": "For Media or Playlist eventyType. The Layout specific Campaign ID to use for this Event.\r\n     * This needs to be the Layout created with layout/fullscreen function",
+                        "description": "For Media or Playlist event Type. The Layout specific Campaign ID to use for this Event.\r\n     * This needs to be the Layout created with layout/fullscreen function",
                         "required": false,
                         "type": "integer"
                     },
@@ -8895,6 +8895,13 @@
                         "name": "commandId",
                         "in": "formData",
                         "description": "The Command ID to use for this Event.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "mediaId",
+                        "in": "formData",
+                        "description": "The Media ID to use for this Event.",
                         "required": false,
                         "type": "integer"
                     },
@@ -9138,6 +9145,13 @@
                         "name": "commandId",
                         "in": "formData",
                         "description": "The Command ID to use for this Event.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "mediaId",
+                        "in": "formData",
+                        "description": "The Media ID to use for this Event.",
                         "required": false,
                         "type": "integer"
                     },
