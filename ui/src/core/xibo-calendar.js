@@ -1178,9 +1178,13 @@ window.setupScheduleForm = function(dialog) {
         $previousButton.toggle(!isFirstStep);
 
         // Save button handling for add form
-        // Show save when we get to step 2
+        // Show save when we get to step 2 if not command
+        // For command, show on step 3
+        const isCommand = $dialog.find('#eventTypeId').val() === '2';
+        const showOnStep = (isCommand) ? 3 : 2;
+
         if (
-          isAddForm && $target.data('step') > 1 ||
+          isAddForm && $target.data('step') >= showOnStep ||
           !isAddForm
         ) {
           $saveButton.show();
@@ -1813,6 +1817,11 @@ const processScheduleFormElements = function(el, dialog) {
         // Set the repeats/reminders tabs to visible.
         $('li.repeats', dialog).css('display', 'block');
         $('li.reminders', dialog).css('display', 'block');
+
+        // Also hide the finish button if start date is not defined
+        if ($(dialog).find('#fromDt').val() === '') {
+          $(dialog).find('#schedule-save-button').hide();
+        }
       }
 
       // Call function for the daypart ID
