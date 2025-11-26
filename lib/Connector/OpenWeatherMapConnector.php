@@ -666,6 +666,9 @@ class OpenWeatherMapConnector implements ConnectorInterface
         // Initialize Open Weather Schedule Criteria parameters
         $event->addType('weather', __('Weather'))
             ->addMetric('weather_condition', __('Weather Condition'))
+                ->addCondition([
+                    'eq' => __('Equal to')
+                ])
                 ->addValues('dropdown', [
                     'thunderstorm' => __('Thunderstorm'),
                     'drizzle' => __('Drizzle'),
@@ -675,16 +678,54 @@ class OpenWeatherMapConnector implements ConnectorInterface
                     'clouds' => __('Clouds')
                 ])
             ->addMetric('weather_temp_imperial', __('Temperature (Imperial)'))
+                ->addCondition([
+                    'lt' => __('Less than'),
+                    'lte' => __('Less than or equal to'),
+                    'eq' => __('Equal to'),
+                    'gte' => __('Greater than or equal to'),
+                    'gt' => __('Greater than')
+                ])
                 ->addValues('number', [])
             ->addMetric('weather_temp_metric', __('Temperature (Metric)'))
+                ->addCondition([
+                    'lt' => __('Less than'),
+                    'lte' => __('Less than or equal to'),
+                    'eq' => __('Equal to'),
+                    'gte' => __('Greater than or equal to'),
+                    'gt' => __('Greater than')
+                ])
                 ->addValues('number', [])
             ->addMetric('weather_feels_like_imperial', __('Apparent Temperature (Imperial)'))
+                ->addCondition([
+                    'lt' => __('Less than'),
+                    'lte' => __('Less than or equal to'),
+                    'eq' => __('Equal to'),
+                    'gte' => __('Greater than or equal to'),
+                    'gt' => __('Greater than')
+                ])
                 ->addValues('number', [])
             ->addMetric('weather_feels_like_metric', __('Apparent Temperature (Metric)'))
+                ->addCondition([
+                    'lt' => __('Less than'),
+                    'lte' => __('Less than or equal to'),
+                    'eq' => __('Equal to'),
+                    'gte' => __('Greater than or equal to'),
+                    'gt' => __('Greater than')
+                ])
                 ->addValues('number', [])
             ->addMetric('weather_wind_speed', __('Wind Speed'))
+                ->addCondition([
+                    'lt' => __('Less than'),
+                    'lte' => __('Less than or equal to'),
+                    'eq' => __('Equal to'),
+                    'gte' => __('Greater than or equal to'),
+                    'gt' => __('Greater than')
+                ])
                 ->addValues('number', [])
             ->addMetric('weather_wind_direction', __('Wind Direction'))
+                ->addCondition([
+                    'eq' => __('Equal to')
+                ])
                 ->addValues('dropdown', [
                     'N' => __('North'),
                     'NE' => __('Northeast'),
@@ -696,12 +737,40 @@ class OpenWeatherMapConnector implements ConnectorInterface
                     'NW' => __('Northwest'),
                 ])
             ->addMetric('weather_wind_degrees', __('Wind Direction (degrees)'))
+                ->addCondition([
+                    'lt' => __('Less than'),
+                    'lte' => __('Less than or equal to'),
+                    'eq' => __('Equal to'),
+                    'gte' => __('Greater than or equal to'),
+                    'gt' => __('Greater than')
+                ])
                 ->addValues('number', [])
             ->addMetric('weather_humidity', __('Humidity (Percent)'))
+                ->addCondition([
+                    'lt' => __('Less than'),
+                    'lte' => __('Less than or equal to'),
+                    'eq' => __('Equal to'),
+                    'gte' => __('Greater than or equal to'),
+                    'gt' => __('Greater than')
+                ])
                 ->addValues('number', [])
             ->addMetric('weather_pressure', __('Pressure'))
+                ->addCondition([
+                    'lt' => __('Less than'),
+                    'lte' => __('Less than or equal to'),
+                    'eq' => __('Equal to'),
+                    'gte' => __('Greater than or equal to'),
+                    'gt' => __('Greater than')
+                ])
                 ->addValues('number', [])
             ->addMetric('weather_visibility', __('Visibility (meters)'))
+                ->addCondition([
+                    'lt' => __('Less than'),
+                    'lte' => __('Less than or equal to'),
+                    'eq' => __('Equal to'),
+                    'gte' => __('Greater than or equal to'),
+                    'gt' => __('Greater than')
+                ])
                 ->addValues('number', []);
     }
 
