@@ -21,7 +21,7 @@
 <templates>
     <template>
         <id>article_title</id>
-        <extends override="text" with="data.title">text</extends>
+        <extends override="text" with="data.title" escapeHtml="false">text</extends>
         <title>Title</title>
         <type>element</type>
         <dataType>article</dataType>
@@ -32,7 +32,7 @@
     </template>
     <template>
         <id>article_summary</id>
-        <extends override="text" with="data.summary">text</extends>
+        <extends override="text" with="data.summary" escapeHtml="false">text</extends>
         <title>Summary</title>
         <type>element</type>
         <dataType>article</dataType>
