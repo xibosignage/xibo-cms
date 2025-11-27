@@ -182,6 +182,9 @@ class CapConnector implements ConnectorInterface, EmergencyAlertInterface
 
             // Set schedule criteria update
             $action = new ScheduleCriteriaUpdateAction();
+
+            // Adjust the QOS value lower than the data update QOS to ensure it arrives first
+            $action->setQos(3);
             $action->setCriteriaUpdates([
                 ['metric' => 'emergency_alert_status', 'value' => $status, 'ttl' => $ttl],
                 ['metric' => 'emergency_alert_category', 'value' => $category, 'ttl' => $ttl]
