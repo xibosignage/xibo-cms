@@ -1195,8 +1195,7 @@ class Schedule extends Base
 
             if (!$id) {
                 throw new InvalidArgumentException(
-                    __(ucfirst($type) . 'Id is required when scheduling ' . $type . ' events.'),
-                    $type . 'Id'
+                    sprintf('%sId is required when scheduling %s events.', ucfirst($type), $type)
                 );
             }
 
@@ -1949,8 +1948,7 @@ class Schedule extends Base
 
             if (!$id) {
                 throw new InvalidArgumentException(
-                    __(ucfirst($type) . 'Id is required when scheduling ' . $type . ' events.'),
-                    $type . 'Id'
+                    sprintf('%sId is required when scheduling %s events.', ucfirst($type), $type)
                 );
             }
 
