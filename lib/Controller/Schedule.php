@@ -219,9 +219,9 @@ class Schedule extends Base
     {
         $response = $response
             ->withHeader(
-            'Warning',
-            '299 - "Deprecated API: /schedule/data/events will be removed in v5.0"'
-        );
+                'Warning',
+                '299 - "Deprecated API: /schedule/data/events will be removed in v5.0"'
+            );
 
         $this->getLog()->error('Deprecated API called: /schedule/data/events');
 
