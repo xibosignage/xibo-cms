@@ -124,16 +124,19 @@ class WidgetSyncTask implements TaskInterface
                         $widgetInterface = $module->getWidgetProviderOrNull();
 
                         // Is the cache key display specific?
-                        $cacheKey = $widgetInterface?->getDataCacheKey($module->createDataProvider($widget));
+                        $dataProvider = $module->createDataProvider($widget);
+                        $cacheKey = $widgetInterface?->getDataCacheKey($dataProvider);
+
                         if ($cacheKey === null) {
                             $cacheKey = $module->dataCacheKey;
                         }
 
                         // Refresh the cache if needed.
                         $isDisplaySpecific = str_contains($cacheKey, '%displayId%')
-                            || str_contains($cacheKey, '%useDisplayLocation%');
+                            || (str_contains($cacheKey, '%useDisplayLocation%')
+                                && $dataProvider->getProperty('useDisplayLocation') == 1);
 
-                        // We're either assigning all media to all displays, or we're assigning then one by one
+                        // We're either assigning all media to all displays, or we're assigning them one by one
                         if ($isDisplaySpecific) {
                             $this->getLogger()->debug('widgetSyncTask: cache is display specific');
 
