@@ -56,11 +56,13 @@
             {% set xlrOptions = previewOptions|merge({inPreview: true}) %}
             (function($){
                 $(document).ready(function(){
-                    var xiboLayoutRenderer = new XiboLayoutRenderer({{ layoutObj|json_encode()|raw }}, {{ xlrOptions|json_encode()|raw }});
+                    var xiboLayoutRenderer = new XiboLayoutRenderer({{ layoutObj|json_encode()|raw }}, [], {{ xlrOptions|json_encode()|raw }});
     
                     xiboLayoutRenderer.init().then(function(xlr) {
                       xlr.playSchedules(xlr);
                     });
+
+                    window.xlr = xiboLayoutRenderer;
                 });
             }(window.jQuery));
         </script>
