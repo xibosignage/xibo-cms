@@ -754,6 +754,18 @@ class Layout extends Base
         $layout->backgroundzIndex = $sanitizedParams->getInt('backgroundzIndex');
         $layout->autoApplyTransitions = $sanitizedParams->getCheckbox('autoApplyTransitions');
 
+        // Check the status of the media file
+        if ($layout->backgroundImageId) {
+            $media = $this->mediaFactory->getById($layout->backgroundImageId);
+
+            if ($media->mediaType === 'image' && $media->released === 2) {
+                throw new GeneralException(sprintf(
+                    __('%s is too large. Please ensure that none of the images in your layout are larger than your Resize Limit on their longest edge.'),//phpcs:ignore
+                    $media->name
+                ));
+            }
+        }
+
         // Resolution
         $saveRegions = false;
         $resolution = $this->resolutionFactory->getById($sanitizedParams->getInt('resolutionId'));

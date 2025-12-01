@@ -1693,7 +1693,7 @@ class Library extends Base
                     $params,
                     $media->storedAs,
                     $response,
-                    $this->getConfig()->uri('img/1x1.png', true),
+                    $this->getConfig()->uri('img/error.png', true),
                 );
             } else if ($module->type === 'video') {
                 $response = $downloader->imagePreview(
