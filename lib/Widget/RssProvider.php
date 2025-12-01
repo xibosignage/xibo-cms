@@ -154,16 +154,29 @@ class RssProvider implements WidgetProviderInterface
                 $article->link = $item->getUrl();
                 $article->date = Carbon::instance($item->getDate());
                 $article->publishedDate = Carbon::instance($item->getPublishedDate());
+                $content = $item->getContent();
+
+                // RSS doesn't support a summary/excerpt tag.
+                $descriptionTag = $item->getTag('description');
+                $summary = $descriptionTag ? $descriptionTag[0] : $content;
+
+                if ($dataProvider->getProperty('decodeHtml') == 1) {
+                    $content = htmlspecialchars_decode($content);
+                }
+
+                if ($dataProvider->getProperty('decodeEntities') == '1') {
+                    $article->title = strip_tags(html_entity_decode($article->title));
+                    $content = html_entity_decode($content);
+                    $summary = html_entity_decode($summary);
+                }
 
                 // Body safe HTML
-                $article->content = $dataProvider->getSanitizer(['content' => $item->getContent()])
+                $article->content = $dataProvider->getSanitizer(['content' => $content])
                     ->getHtml('content', [
                         'htmlSanitizerConfig' => $sanitizer
                     ]);
 
-                // RSS doesn't support a summary/excerpt tag.
-                $descriptionTag = $item->getTag('description');
-                $article->summary = trim($descriptionTag ? strip_tags($descriptionTag[0]) : $article->content);
+                $article->summary = trim(strip_tags($summary));
 
                 // Do we have an image included?
                 $link = null;
@@ -179,10 +192,6 @@ class RssProvider implements WidgetProviderInterface
                     $article->image = $dataProvider->addImage('ticker_' . md5($link), $link, $expiresImage);
                 } else {
                     $this->getLog()->debug('fetchData: no image found for image tag using ' . $imageTag);
-                }
-
-                if ($dataProvider->getProperty('decodeHtml') == 1) {
-                    $article->content = htmlspecialchars_decode($article->content);
                 }
 
                 // Add the article.
