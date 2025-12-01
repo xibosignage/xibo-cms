@@ -759,8 +759,8 @@ class Layout extends Base
             $media = $this->mediaFactory->getById($layout->backgroundImageId);
 
             if ($media->mediaType === 'image' && $media->released === 2) {
-                throw new GeneralException(sprintf(
-                    __('%s is too large. Please ensure that none of the images in your layout are larger than your Resize Limit on their longest edge.'),//phpcs:ignore
+                throw new InvalidArgumentException(sprintf(
+                    __('%s set as the layout background image is too large. Please ensure that none of the images in your layout are larger than your Resize Limit on their longest edge.'),//phpcs:ignore
                     $media->name
                 ));
             }
