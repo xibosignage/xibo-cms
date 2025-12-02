@@ -1305,6 +1305,34 @@ window.initJsTreeAjax = function(
         }
       }
 
+      // Ensure the folder tree reflects the folderId from the URL (if provided),
+      // overriding any saved jsTree state/local storage when a user navigates
+      // directly to a view?folderId=XYZ URL.
+      if (!isForm) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const folderIdFromUrl = urlParams.get('folderId');
+
+        if (folderIdFromUrl) {
+          const tree = $(container).jstree(true);
+
+          if (tree && tree.get_node(folderIdFromUrl)) {
+            // Scope everything to the same XiboGrid as this tree
+            const $grid = $(container).closest('.XiboGrid');
+            const $folderIdInput = $grid.find('.XiboFilter form #folderId');
+
+            // Run after jsTree has finished restoring its own state
+            setTimeout(() => {
+              tree.deselect_all();
+              tree.select_node(folderIdFromUrl);
+
+              if ($folderIdInput.length) {
+                $folderIdInput.val(folderIdFromUrl).trigger('change');
+              }
+            }, 0);
+          }
+        }
+      }
+
       if (onReady && onReady instanceof Function) {
         onReady($(container).jstree(true), $(container));
       }
