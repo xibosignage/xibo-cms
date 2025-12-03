@@ -87,7 +87,7 @@ $container->get('configService')->setDependencies($container->get('store'), '/')
 // Check to see if the instance has been suspended
 $instanceSuspended = $container->get('configService')->getSetting('INSTANCE_SUSPENDED');
 if ($instanceSuspended == 'yes' || $instanceSuspended == 'partial') {
-    header('HTTP/1.0 503 Service Unavailable');
+    header('HTTP/1.0 403 Forbidden');
     die('CMS suspended');
 }
 
