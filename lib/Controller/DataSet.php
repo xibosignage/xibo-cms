@@ -681,9 +681,13 @@ class DataSet extends Base
         $dataSetColumn->dataSetColumnTypeId = 1;
         $dataSetColumn->dataTypeId = 1;
 
-        // Add column, real time and data connector settings when we are not routing through the API
+        // Add Column
+        // only when we are not routing through the API
         if (!$this->isApi($request)) {
             $dataSet->assignColumn($dataSetColumn);
+        }
+
+        if ($this->getUser()->featureEnabled('dataset.realtime')) {
             $dataSet->isRealTime = $sanitizedParams->getCheckbox('isRealTime');
             $dataSet->dataConnectorSource = $sanitizedParams->getString('dataConnectorSource');
         }
@@ -994,8 +998,7 @@ class DataSet extends Base
             $dataSet->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
         }
 
-        // Update real time option when we are not routing through API
-        if (!$this->isApi($request)) {
+        if ($this->getUser()->featureEnabled('dataset.realtime')) {
             $dataSet->isRealTime = $sanitizedParams->getCheckbox('isRealTime');
             $dataSet->dataConnectorSource = $sanitizedParams->getString('dataConnectorSource');
         }
