@@ -1,6 +1,6 @@
 {#
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -171,15 +171,24 @@
           $scriptParams.val(localStorage.getItem('dataSetRealtimeTestParams'));
 
           // Output the iframe containing the window
-          $script.html('<iframe src="{{ url_for("dataSet.dataConnector.test", {id: dataSet.dataSetId}) }}" />');
+          $script.html('<iframe sandbox="allow-scripts" src="{{ url_for("dataSet.dataConnector.test", {id: dataSet.dataSetId}) }}" />');
 
           // Window message to receive data and logs.
+          window.addEventListener('message', function(event) {
+            receiveData(event.data.type, event.data);
+          });
+
+          // Receive data function
           window.receiveData = function(type, data) {
             if (type === 'loaded') {
               console.debug('Script loaded');
-              $script.find('iframe')[0].contentWindow.xiboDC.initialise({{ dataSet.dataSetId }}, $scriptParams.val());
+              $script.find('iframe')[0].contentWindow.postMessage({
+                type: 'init',
+                id: {{ dataSet.dataSetId }},
+                params: $scriptParams.val()
+              }, '*');
             } else if (type === 'log') {
-              $logs.prepend('[' + moment().format('YY-MM-DD HH:mm:ss') + '] ' + data + '\n');
+              $logs.prepend('[' + moment().format('YY-MM-DD HH:mm:ss') + '] ' + data.data + '\n');
             } else if (type === 'set') {
               // Update the table
               // if the dataKey matches my connector's DataSetId, then render out a table
@@ -225,9 +234,9 @@
               channel.postMessage({type: 'xiboDC_data', dataKey: data.dataKey, data: data.data});
             } else if (type === 'notify') {
               // Log
-              $logs.prepend('[' + moment().format('YY-MM-DD HH:mm:ss') + '] Notify for ' + data + '\n');
+              $logs.prepend('[' + moment().format('YY-MM-DD HH:mm:ss') + '] Notify for ' + data.dataKey + '\n');
 
-              channel.postMessage({type: "xiboDC_notify", dataKey: data});
+              channel.postMessage({type: "xiboDC_notify", dataKey: data.dataKey});
             } else if (type === 'criteria') {
               // Schedule criteria, update in the table.
               criteria[data.dataKey] = data.data;
@@ -238,34 +247,16 @@
             }
           }
 
-          window.makeRequest = function (path, {type, headers, data, done, error} = {}) {
-            $.ajax('{{ url_for("dataSet.dataConnector.request", {id: dataSet.dataSetId}) }}', {
-              data: {
-                url: path,
-                method: type,
-                headers: headers,
-                body: data
-              },
-              success: function(data, textStatus, jqXHR) {
-                if (typeof(done) == 'function') {
-                  done(jqXHR.status, data);
-                }
-              },
-              error: function(jqXHR, textStatus, errorThrown) {
-                if (typeof(done) == 'function') {
-                  error(jqXHR.status, jqXHR.responseText);
-                }
-              }
-            });
-          }
-
           // Refresh the iframe.
           window.onSubmitCallback = function(xhr, form) {
-            $script.find('iframe')[0].contentWindow.location.reload();
+            $script.find('iframe').remove();
+            $script.html('<iframe sandbox="allow-scripts" src="{{ url_for("dataSet.dataConnector.test", {id: dataSet.dataSetId}) }}" />');
           }
 
           $scriptParams.on('change', function() {
-            $script.find('iframe')[0].contentWindow.xiboDC.initialise({{ dataSet.dataSetId }}, $scriptParams.val());
+            $script.find('iframe').remove();
+            $script.html('<iframe sandbox="allow-scripts" src="{{ url_for("dataSet.dataConnector.test", {id: dataSet.dataSetId}) }}" />');
+
             localStorage.setItem('dataSetRealtimeTestParams', $scriptParams.val());
           });
         });

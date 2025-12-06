@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -21,9 +21,6 @@
  */
 namespace Xibo\Controller;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
-use Illuminate\Support\Str;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Event\DataConnectorScriptRequestEvent;
@@ -1919,72 +1916,5 @@ class DataSet extends Base
         ]);
 
         return $this->render($request, $response);
-    }
-
-    /**
-     * Real-time data script test
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return Response
-     * @throws GeneralException
-     */
-    public function dataConnectorRequest(Request $request, Response $response, $id): Response
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-
-        $params = $this->getSanitizer($request->getParams());
-        $url = $params->getString('url');
-        $method = $params->getString('method', ['default' => 'GET']);
-        $headers = $params->getArray('headers');
-        $body = $params->getArray('body');
-
-        // Verify that the requested URL appears in the script somewhere.
-        $script = $dataSet->getScript();
-
-        if (!Str::contains($script, $url)) {
-            throw new InvalidArgumentException(__('URL not found in data connector script'), 'url');
-        }
-
-        // Make the request
-        $options = [];
-        if (is_array($headers)) {
-            $options['headers'] = $headers;
-        }
-
-        if ($method === 'GET') {
-            $options['query'] = $body;
-        } else {
-            $options['body'] = $body;
-        }
-
-        $this->getLog()->debug('dataConnectorRequest: making request with options ' . var_export($options, true));
-
-        // Use guzzle to make the request
-        try {
-            $client = new Client();
-            $remoteResponse = $client->request($method, $url, $options);
-
-            // Format the response
-            $response->getBody()->write($remoteResponse->getBody()->getContents());
-            $response = $response->withAddedHeader('Content-Type', $remoteResponse->getHeader('Content-Type')[0]);
-            $response = $response->withStatus($remoteResponse->getStatusCode());
-        } catch (RequestException $exception) {
-            $this->getLog()->error('dataConnectorRequest: error with request: ' . $exception->getMessage());
-
-            if ($exception->hasResponse()) {
-                $remoteResponse = $exception->getResponse();
-                $response = $response->withStatus($remoteResponse->getStatusCode());
-                $response->getBody()->write($remoteResponse->getBody()->getContents());
-            } else {
-                $response = $response->withStatus(500);
-            }
-        }
-
-        return $response;
     }
 }
