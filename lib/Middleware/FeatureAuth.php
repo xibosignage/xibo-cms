@@ -76,7 +76,7 @@ class FeatureAuth implements MiddlewareInterface
             }
         }
 
-        throw new AccessDeniedException(__('Feature not enabled'), __('This feature has not been enabled for your user.'));
+        throw new AccessDeniedException(__('Feature is disabled'), __('This feature has been disabled for your user.'));
     }
 
     /**
