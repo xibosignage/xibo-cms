@@ -1074,9 +1074,12 @@ class DataSet extends Base
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($dataSet)
-            || !$this->getUser()->featureEnabled('dataset.data')) {
-            throw new AccessDeniedException(__('Feature is disabled'));
+        if (!$this->getUser()->checkEditable($dataSet)) {
+            throw new AccessDeniedException();
+        }
+
+        if (!$this->getUser()->featureEnabled('dataset.data')) {
+            throw new AccessDeniedException(__('Feature not enabled'));
         }
 
         if ($dataSet->isRealTime === 1) {
@@ -1870,9 +1873,12 @@ class DataSet extends Base
     {
         $dataSet = $this->dataSetFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($dataSet)
-            || !$this->getUser()->featureEnabled('dataset.data')) {
-            throw new AccessDeniedException(__('Feature is disabled'));
+        if (!$this->getUser()->checkEditable($dataSet)) {
+            throw new AccessDeniedException();
+        }
+
+        if (!$this->getUser()->featureEnabled('dataset.data')) {
+            throw new AccessDeniedException(__('Feature not enabled'));
         }
 
         $dataSet->load();
