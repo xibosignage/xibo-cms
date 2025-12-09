@@ -78,7 +78,7 @@
     "mpdf/mpdf": "v8.1.*",
     "nesbot/carbon": "^2.73.0",
     "nyholm/psr7": "^1.8",
-    "onelogin/php-saml": "4.1.*",
+    "onelogin/php-saml": "4.3.*",
     "phenx/php-font-lib": "^0.5.0",
     "php-di/php-di": "7.0.*",
     "php-di/slim-bridge": "3.4.*",
