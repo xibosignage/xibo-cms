@@ -474,7 +474,7 @@ class Notification extends Base
         $options = [
             'userId' => $this->getUser()->userId,
             'controller' => $this,
-            'accept_file_types' => '/\.jpg|.jpeg|.png|.bmp|.gif|.zip|.pdf/i'
+            'accept_file_types' => '/\.(jpg|jpeg|png|bmp|gif|zip|pdf)$/i'
         ];
 
         // Output handled by UploadHandler
