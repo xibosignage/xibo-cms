@@ -575,7 +575,7 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
       moment('9999-12-31'); // Infinity
 
     const unitMap =
-      {Minute: 'm', Hour: 'h', Day: 'd', Month: 'M', Year: 'y'};
+      {Minute: 'm', Hour: 'h', Day: 'd', Week: 'w', Month: 'M', Year: 'y'};
 
     // Check if events repeat more than once a day
     // so we can optimize them
@@ -585,6 +585,29 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
     const isHighFrequency =
       (isMinuteRepeat && interval < 1440) ||
       (isHourRepeat && interval < 24);
+
+    const scheduleExclusions = sourceEv.scheduleExclusions || [];
+
+    const addIfValid = function(startUnix, endUnix) {
+      const isBlocked =
+        scheduleExclusions.length > 0 && scheduleExclusions.some((ex) =>
+          ex.fromDt === startUnix && ex.toDt === endUnix,
+        );
+
+      if (!isBlocked) {
+        const clone = deepClone(sourceEv);
+        clone.fromDt = startUnix;
+        clone.displayFromDt = moment(startUnix * 1000).format(systemDateFormat);
+        clone.toDt = endUnix;
+        clone.displayToDt = moment(endUnix * 1000).format(systemDateFormat);
+
+        if (isHighFrequency) {
+          clone.isHighFrequency = true;
+        }
+
+        generated.push(clone);
+      }
+    };
 
     // If frequency is high (minute or hour), only generate one day
     // for the monthly view
@@ -616,35 +639,84 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
           eventMoment.isSame(currentDayIter, 'day') &&
           eventMoment.isBefore(rangeEnd)
         ) {
-          const startMs = eventMoment.unix() * 1000;
-          const endMs = (eventMoment.unix() + duration.asSeconds()) * 1000;
+          let exclude = true;
+          let fromDate = eventMoment.unix();
+          let toDate = eventMoment.unix() + duration.asSeconds();
+          const endOfDayUnix = moment(currentDayIter).endOf('day').unix();
+          const recurUnit = sourceEv.recurrenceType.toLowerCase();
+          const recurAmount = sourceEv.recurrenceDetail;
 
-          if (startMs < viewEndMs && endMs > viewStartMs) {
-            const clone = deepClone(sourceEv);
-            clone.fromDt = eventMoment.unix();
-            clone.toDt = eventMoment.clone().add(duration).unix();
-            clone.isHighFrequency = true;
-            generated.push(clone);
+          // Check if we have exclusion list
+          if (scheduleExclusions.length === 0) {
+            exclude = false;
+          } else {
+            let foundOcc = false;
+            // We have exclusion list
+            // find the first available occurrence if exists
+            while (
+              !foundOcc &&
+              fromDate <= endOfDayUnix
+            ) {
+              const isExcluded = scheduleExclusions.some((exclusion) =>
+                exclusion.fromDt === fromDate &&
+                exclusion.toDt === toDate,
+              );
+
+              if (isExcluded) {
+                const nextSlot =
+                  moment.unix(fromDate).add(recurAmount, recurUnit);
+                fromDate = nextSlot.unix();
+                toDate = fromDate + duration.asSeconds();
+              } else {
+                foundOcc = true;
+                exclude = false;
+              }
+            }
+          }
+
+          if (
+            !exclude &&
+            (fromDate * 1000) < viewEndMs && (toDate * 1000) > viewStartMs
+          ) {
+            addIfValid(fromDate, toDate);
           }
         }
 
         // Advance one day
         currentDayIter.add(1, 'day');
       }
+
       return generated;
     } else {
       // Generate normal occurrences
       let currentMoment = originalStart.clone();
 
+      const hasRepeatsOn = sourceEv.recurrenceRepeatsOn &&
+        String(sourceEv.recurrenceRepeatsOn).length > 0;
+      const isComplexWeekly = sourceEv.recurrenceType === 'Week' &&
+        hasRepeatsOn;
+
+      // If it's not a complex week recurrence, add first day
+      if (!isComplexWeekly) {
+        const sTime = currentMoment.unix();
+        const eTime = currentMoment.clone().add(duration).unix();
+
+        if (
+          currentMoment.isBefore(rangeEnd) &&
+          (sTime * 1000) < viewEndMs && (eTime * 1000) > viewStartMs
+        ) {
+          addIfValid(sTime, eTime);
+        }
+      }
+
       while (
         currentMoment.isBefore(moment(viewEndMs)) &&
         currentMoment.isBefore(rangeEnd)
       ) {
-        const isWeekly = sourceEv.recurrenceType === 'Week' &&
-          sourceEv.recurrenceRepeatsOn;
-
-        if (isWeekly) {
-          const days = sourceEv.recurrenceRepeatsOn.split(',').map(Number);
+        // Weekly complex calculation
+        if (isComplexWeekly) {
+          const days = String(sourceEv.recurrenceRepeatsOn)
+            .split(',').map(Number);
           const weekStart = currentMoment.clone().startOf('isoWeek');
 
           for (let i = 0; i < 7; i++) {
@@ -661,10 +733,10 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
               occStart.isAfter(originalStart) &&
               occStart.isBefore(rangeEnd)
             ) {
-              const clone = deepClone(sourceEv);
-              clone.fromDt = occStart.unix();
-              clone.toDt = occStart.clone().add(duration).unix();
-              generated.push(clone);
+              addIfValid(
+                occStart.unix(),
+                occStart.clone().add(duration).unix(),
+              );
             }
           }
 
@@ -685,7 +757,8 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
             const weekNumber = originalStart.diff(startOfMonth, 'weeks') + 1;
             const originalWeekday = originalStart.isoWeekday();
 
-            const firstDayOfNextMonth = nextMonthBase.clone().startOf('month');
+            const firstDayOfNextMonth =
+              nextMonthBase.clone().startOf('month');
             const firstDayWeekday = firstDayOfNextMonth.isoWeekday();
 
             const offset = (originalWeekday - firstDayWeekday + 7) % 7;
@@ -737,24 +810,30 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
 
         currentMoment = nextMoment;
 
-        if (eventMoment.isBefore(rangeEnd) && isValidOccurrence) {
-          const clone = deepClone(sourceEv);
-          clone.fromDt = eventMoment.unix();
-          clone.toDt = eventMoment.clone().add(duration).unix();
-          generated.push(clone);
+        if (
+          eventMoment &&
+          eventMoment.isBefore(rangeEnd) &&
+          isValidOccurrence
+        ) {
+          addIfValid(
+            eventMoment.unix(),
+            eventMoment.clone().add(duration).unix(),
+          );
         }
       }
+
       return generated;
     }
   };
 
   // Generate schedule events array
   scheduleEvents.forEach((sourceEv) => {
-    allOccurrences.push(sourceEv);
-
-    // If it's a recurring event, also generate recurrences
+    // If it's a recurring event, generate and add recurrences
     if (sourceEv.recurringEvent) {
       allOccurrences.push(...generateRecurrences(sourceEv));
+    } else {
+      // Add original event
+      allOccurrences.push(sourceEv);
     }
   });
 

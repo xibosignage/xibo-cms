@@ -242,6 +242,21 @@
                         {% set title %}{% trans "Data Connector Parameters" %}{% endset %}
                         {% set helpText %}{% trans "Optionally provide any parameters to be used by the Data Connector." %}{% endset %}
                         {{ forms.input("dataSetParams", title, event.dataSetParams, helpText, 'data-connector-control') }}
+
+                        {% if recurringEvent %}
+                            <div class="card p-3 mb-3 bg-light text-primary text-center form-error">
+                                <p>This is an instance of a scheduled recurring event:
+                                    <span class="fa fa-info-circle"
+                                        data-toggle="popover"
+                                        data-trigger="hover"
+                                        data-placement="bottom"
+                                        data-content="{% trans "Editing the Start and or End date/time will create a new Recurring Event across the Schedule. Any previously deleted instances of this event will be recreated with edits made here." %}"></span></p>
+                                <p>
+                                    Starting from <span class="text-warning"><b id="instanceStartDate">-</b></span> to <span class="text-warning"><b id="instanceEndDate">-</b></span>
+                                </p>
+                                <div id="recurringInfo"></div>
+                            </div>
+                        {% endif %}
                     </div>
 
                     {# Step 2 - Displays #}
@@ -381,21 +396,6 @@
                                 {% set title %}{% trans "Run at CMS Time?" %}{% endset %}
                                 {% set helpText %}{% trans "When selected, your event will run according to the timezone set on the CMS, otherwise the event will run at Display local time" %}{% endset %}
                                 {{ forms.checkbox("syncTimezone", title, event.syncTimezone, helpText) }}
-
-                                {% if recurringEvent %}
-                                    <div class="card p-3 mb-3 bg-light text-primary text-center form-error">
-                                        <p>This is an instance of a scheduled recurring event:
-                                            <span class="fa fa-info-circle"
-                                                data-toggle="popover"
-                                                data-trigger="hover"
-                                                data-placement="bottom"
-                                                data-content="{% trans "Editing the Start and or End date/time will create a new Recurring Event across the Schedule. Any previously deleted instances of this event will be recreated with edits made here." %}"></span></p>
-                                        <p>
-                                            Starting from <span class="text-warning"><b id="instanceStartDate">-</b></span> to <span class="text-warning"><b id="instanceEndDate">-</b></span>
-                                        </p>
-                                        <div id="recurringInfo"></div>
-                                    </div>
-                                {% endif %}
                             </div>
 
                             <div class="tab-pane" id="repeats">

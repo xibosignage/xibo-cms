@@ -2554,6 +2554,11 @@ class Schedule extends Base
                         !empty($repeatsUntil) ? ' until ' . $repeatsUntil : ''
                     ))
                 );
+
+                $event->setUnmatchedProperty(
+                    'scheduleExclusions',
+                    $this->scheduleExclusionFactory->query(null, ['eventId' => $event->eventId])
+                );
             } else {
                 $event->setUnmatchedProperty('recurringEventDescription', '');
             }
