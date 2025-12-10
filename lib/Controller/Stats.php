@@ -319,7 +319,7 @@ class Stats extends Base
 
         $fromDt = $sanitizedQueryParams->getDate('fromDt', ['default' => Carbon::now()->subDay()]);
         $toDt = $sanitizedQueryParams->getDate('toDt', ['default' => Carbon::now()]);
-        $type = strtolower($sanitizedQueryParams->getString('type'));
+        $type = strtolower($sanitizedQueryParams->getString('type', ['default' => '']));
 
         $displayId = $sanitizedQueryParams->getInt('displayId');
         $displays = $sanitizedQueryParams->getIntArray('displayIds', ['default' => []]);
@@ -433,17 +433,17 @@ class Stats extends Base
             // Display tags
             $tagFilter = $resultSet->getTagFilterFromRow($row);
             if (in_array('displayTags', $embed)) {
-                $entry['displayTags'] = $tagFilter['dg'] ?? [];
+                $entry['displayTags'] = $tagFilter->dg ?? [];
             }
 
             // Layout tags
             if (in_array('layoutTags', $embed)) {
-                $entry['layoutTags'] = $tagFilter['layout'] ?? [];
+                $entry['layoutTags'] = $tagFilter->layout ?? [];
             }
 
             // Media tags
             if (in_array('mediaTags', $embed)) {
-                $entry['mediaTags'] = $tagFilter['media'] ?? [];
+                $entry['mediaTags'] = $tagFilter->media ?? [];
             }
 
             $rows[] = $entry;
@@ -501,7 +501,7 @@ class Stats extends Base
         $joinType = ($this->getUser()->isSuperAdmin()) ? 'LEFT OUTER JOIN' : 'INNER JOIN';
 
         $SQL .= ' FROM `bandwidth` ' .
-                $joinType . ' `display`
+            $joinType . ' `display`
                 ON display.displayid = bandwidth.displayid AND display.displayId IN (' . implode(',', $displayIds) . ') ';
 
         if ($displayId != 0)
