@@ -215,12 +215,15 @@ class AnonymousUsageTask implements TaskInterface
             $timeZone,
         );
         $data['countOfPlaylistsUpdatedLastTwentyFour'] =
-            $this->runQuery('SELECT COUNT(*) AS countOf FROM `playlist` WHERE `modifiedDt` > :recently', [
-                'recently' => $last24Hours,
-            ]);
+            $this->runQuery(
+                'SELECT COUNT(*) AS countOf FROM `playlist` WHERE `regionId` IS NULL AND `modifiedDt` > :recently',
+                [
+                    'recently' => $last24Hours,
+                ],
+            );
         $data['dateSinceLastPlaylistUpdate'] = $this->getTimestampFromMysqlDateTime(
             $this->runQuery(
-                'SELECT MAX(`modifiedDt`) AS modifiedDt FROM `playlist`',
+                'SELECT MAX(`modifiedDt`) AS modifiedDt FROM `playlist` WHERE `regionId` IS NULL',
                 [],
                 'modifiedDt'
             ),
