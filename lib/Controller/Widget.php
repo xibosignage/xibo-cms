@@ -40,6 +40,7 @@ use Xibo\Factory\WidgetAudioFactory;
 use Xibo\Factory\WidgetDataFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Middleware\TokenAuthMiddleware;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
@@ -1330,16 +1331,13 @@ class Widget extends Base
     {
         $this->setNoOutput();
 
+        if ($request->getAttribute('authedViaToken') !== true) {
+            throw new AccessDeniedException();
+        }
+
+        // Load requested objects
         $region = $this->regionFactory->getById($regionId);
-        if (!$this->getUser()->checkViewable($region)) {
-            throw new AccessDeniedException(__('This Region is not shared with you'));
-        }
-
         $widget = $this->widgetFactory->loadByWidgetId($id);
-        if (!$this->getUser()->checkViewable($widget)) {
-            throw new AccessDeniedException(__('This Widget is not shared with you'));
-        }
-
         $module = $this->moduleFactory->getByType($widget->type);
 
         // 3 options
@@ -1392,11 +1390,17 @@ class Widget extends Base
             );
 
             if (!empty($resource)) {
+                $encryptionKey = $this->getConfig()->getApiKeyDetails()['encryptionKey'];
                 $resource = $renderer->decorateForPreview(
                     $region,
                     $resource,
-                    function (string $route, array $data, array $params = []) use ($request) {
-                        return $this->urlFor($request, $route, $data, $params);
+                    function (string $route, array $data, array $params = []) use ($request, $encryptionKey) {
+                        return TokenAuthMiddleware::sign(
+                            $request,
+                            $this->urlFor($request, $route, $data, $params),
+                            time() + 3600,
+                            $encryptionKey,
+                        );
                     },
                     $request,
                 );

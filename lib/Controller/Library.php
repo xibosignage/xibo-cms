@@ -55,9 +55,8 @@ use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
-use Xibo\Helper\HttpsDetect;
-use Xibo\Helper\LinkSigner;
 use Xibo\Helper\XiboUploadHandler;
+use Xibo\Middleware\TokenAuthMiddleware;
 use Xibo\Service\MediaService;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -525,10 +524,7 @@ class Library extends Base
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
 
         // Variables used for link signing
-        $isReturnPublicUrls = $parsedQueryParams->getCheckbox('isReturnPublicUrls') == 1;
-        $thumbnailRouteName = $isReturnPublicUrls ? 'library.public.thumbnail' : 'library.thumbnail';
-        $encryptionKey = $this->getConfig()->getApiKeyDetails()['encryptionKey'];
-        $rootUrl = (new HttpsDetect())->getUrl();
+        $isReturnPublicUrls = $parsedQueryParams->getCheckbox('isReturnPublicUrls') == 0;
 
         // Construct the SQL
         $mediaList = $this->mediaFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter([
@@ -574,23 +570,18 @@ class Library extends Base
                     }
 
                     if ($renderThumbnail) {
-                        $thumbnailUrl = $this->urlFor($request, $thumbnailRouteName, [
-                            'id' => $media->mediaId,
-                        ]);
-
                         if ($isReturnPublicUrls) {
-                            // If we are coming from the API we should remove the /api part of the URL
-                            if ($this->isApi($request)) {
-                                $thumbnailUrl = str_replace('/api/', '/', $thumbnailUrl);
-                            }
-
                             // Sign the link.
-                            $thumbnailUrl = $rootUrl . $thumbnailUrl . '?' . LinkSigner::getSignature(
-                                $rootUrl,
-                                $thumbnailUrl,
+                            $thumbnailUrl = TokenAuthMiddleware::sign(
+                                $request,
+                                '/preview/library/thumbnail/' . $media->mediaId,
                                 time() + 3600,
-                                $encryptionKey,
+                                $this->getConfig()->getApiKeyDetails()['encryptionKey'],
                             );
+                        } else {
+                            $thumbnailUrl = $this->urlFor($request, 'library.thumbnail', [
+                                'id' => $media->mediaId,
+                            ]);
                         }
 
                         $media->setUnmatchedProperty('thumbnail', $thumbnailUrl);
@@ -1760,7 +1751,7 @@ class Library extends Base
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function thumbnail(Request $request, Response $response, $id, bool $isForceGrantAccess = false)
+    public function thumbnail(Request $request, Response $response, $id)
     {
         $this->setNoOutput();
 
@@ -1775,7 +1766,7 @@ class Library extends Base
             . '. Media is a ' . $media->mediaType);
 
         // Permissions.
-        if (!$this->getUser()->checkViewable($media) && !$isForceGrantAccess) {
+        if (!$this->getUser()->checkViewable($media) && $request->getAttribute('authedViaToken') !== true) {
             // Output a 1px image if we're not allowed to see the media.
             echo Img::make($this->getConfig()->uri('img/1x1.png', true))->encode();
             return $this->render($request, $response);
@@ -1796,52 +1787,6 @@ class Library extends Base
         );
 
         return $this->render($request, $response);
-    }
-
-    /**
-     * Public Thumbnail
-     *  this is an unauthenticated route (publicRoutes)
-     *  we need to authenticate using the S3 link signing
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Slim\Http\Response
-     * @throws \Xibo\Support\Exception\AccessDeniedException
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function thumbnailPublic(Request $request, Response $response, $id): Response
-    {
-        // Authenticate.
-        $params = $this->getSanitizer($request->getParams());
-
-        // Has the URL expired
-        if (time() > $params->getInt('X-Amz-Expires')) {
-            throw new AccessDeniedException(__('Expired'));
-        }
-
-        // Validate the URL.
-        $encryptionKey = $this->getConfig()->getApiKeyDetails()['encryptionKey'];
-        $signature = $params->getString('X-Amz-Signature');
-
-        $calculatedSignature = \Xibo\Helper\LinkSigner::getSignature(
-            (new HttpsDetect())->getUrl(),
-            $request->getUri()->getPath(),
-            $params->getInt('X-Amz-Expires'),
-            $encryptionKey,
-            $params->getString('X-Amz-Date'),
-            true,
-        );
-
-        if ($signature !== $calculatedSignature) {
-            throw new AccessDeniedException(__('Invalid URL'));
-        }
-
-        $this->getLog()->debug('thumbnailPublic: authorised for ' . $id);
-
-        $res = $this->thumbnail($request, $response, $id, true);
-
-        // Pass to the thumbnail route
-        return $res->withHeader('Access-Control-Allow-Origin', '*');
     }
 
     /**

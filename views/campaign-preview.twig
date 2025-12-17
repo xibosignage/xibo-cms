@@ -91,7 +91,7 @@
         (function($){
           $(document).ready(function(){
             {% for extendedLayout in extendedLayouts %}
-                var iframe = $('<iframe>', {
+                var iframe = $('<iframe sandbox="allow-scripts">', {
                     src: '{{ url_for("layout.preview", {id: extendedLayout.layout.layoutId}) }}', // URL to load in the iframe
                     id: 'player_frame_{{extendedLayout.layout.layoutId}}',
                     frameborder: 0,

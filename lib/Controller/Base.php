@@ -193,7 +193,10 @@ class Base
      */
     protected function isApi(Request $request)
     {
-        return ($request->getAttribute('_entryPoint') != 'web');
+        return (
+            $request->getAttribute('_entryPoint') != 'web'
+            && $request->getAttribute('_entryPoint') != 'preview'
+        );
     }
 
     /**

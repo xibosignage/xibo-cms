@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -2858,7 +2858,7 @@ window.createMiniLayoutPreview = function(previewUrl) {
   // Create base template for preview content
   const previewTemplate =
     Handlebars.compile(
-      '<iframe scrolling="no" src="{{url}}" width="{{width}}px" ' +
+      '<iframe scrolling="no" sandbox="allow-scripts" src="{{url}}" width="{{width}}px" ' +
       'height="{{height}}px" style="border:0;"></iframe>');
 
   // Clean all selected elements

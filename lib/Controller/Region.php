@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -32,6 +32,7 @@ use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Middleware\TokenAuthMiddleware;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
@@ -627,14 +628,18 @@ class Region extends Base
                     $region,
                     $widget,
                     $sanitizedQuery,
-                    $this->urlFor(
+                    TokenAuthMiddleware::sign(
                         $request,
-                        'library.download',
-                        [
-                            'regionId' => $region->regionId,
-                            'id' => $widget->getPrimaryMedia()[0] ?? null
-                        ]
-                    ) . '?preview=1',
+                        '/preview/playlist/widget/resource/' . $region->regionId . '/' . $widget->widgetId,
+                        time() + 3600,
+                        $this->getConfig()->getApiKeyDetails()['encryptionKey'],
+                    ) . '&preview=1',
+                    TokenAuthMiddleware::sign(
+                        $request,
+                        '/preview/library/download/' . ($widget->getPrimaryMedia()[0] ?? null),
+                        time() + 3600,
+                        $this->getConfig()->getApiKeyDetails()['encryptionKey'],
+                    ) . '&preview=1',
                     $additionalContexts
                 );
             $this->getState()->extra['countOfWidgets'] = $countWidgets;

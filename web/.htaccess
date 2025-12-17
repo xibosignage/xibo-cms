@@ -22,6 +22,11 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_URI} ^/install/.*$
 RewriteRule ^ install/index.php [QSA,L]
 
+# preview
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_URI} ^/preview/.*$
+RewriteRule ^ preview/index.php [QSA,L]
+
 # pwa
 RewriteCond %{REQUEST_URI} ^/pwa/getResource.*$
 RewriteRule ^ pwa/index.php [QSA,L]

@@ -48,11 +48,11 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetDataFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\Environment;
 use Xibo\Helper\LayoutUploadHandler;
 use Xibo\Helper\Profiler;
 use Xibo\Helper\SendFile;
 use Xibo\Helper\Status;
+use Xibo\Middleware\TokenAuthMiddleware;
 use Xibo\Service\MediaService;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -60,7 +60,6 @@ use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Widget\Render\WidgetDownloader;
-use Xibo\Widget\SubPlaylistItem;
 
 /**
  * Class Layout
@@ -1848,7 +1847,12 @@ class Layout extends Base
                     'external' => true,
                     'url' => '#',
                     'onclick' => 'createMiniLayoutPreview',
-                    'onclickParam' => $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]),
+                    'onclickParam' => TokenAuthMiddleware::sign(
+                        $request,
+                        '/preview/layout/preview/' . $layout->layoutId,
+                        time() + 3600,
+                        $this->getConfig()->getApiKeyDetails()['encryptionKey'],
+                    ),
                     'text' => __('Preview Layout')
                 );
 
@@ -1859,7 +1863,12 @@ class Layout extends Base
                         'external' => true,
                         'url' => '#',
                         'onclick' => 'createMiniLayoutPreview',
-                        'onclickParam' => $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]) . '?isPreviewDraft=true',
+                        'onclickParam' => TokenAuthMiddleware::sign(
+                            $request,
+                            '/preview/layout/preview/' . $layout->layoutId . '?isPreviewDraft=true',
+                            time() + 3600,
+                            $this->getConfig()->getApiKeyDetails()['encryptionKey'],
+                        ),
                         'text' => __('Preview Draft Layout')
                     );
                 }

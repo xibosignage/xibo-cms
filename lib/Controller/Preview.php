@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -68,9 +68,7 @@ class Preview extends Base
             $layout = $this->layoutFactory->getById($id);
         }
 
-        if (!$this->getUser()->checkViewable($layout)
-            || !$this->getUser()->featureEnabled(['layout.view', 'playlist.view', 'campaign.view'])
-        ) {
+        if ($request->getAttribute('authedViaToken') !== true) {
             throw new AccessDeniedException();
         }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -3952,18 +3952,12 @@ Viewer.prototype.updateRegionContent = function(
 
   // Check if iframe exists, and is loaded
   if ($iframe.length) {
-    // If iframe globalOptions are not loaded
-    // wait for the iframe to load
-    if (!$iframe[0].contentWindow.window.globalOptions) {
-      // Wait for the iframe to load and update it
-      $iframe[0].onload = function() {
-        $iframe.data('notFirstCall', true);
+    // The iframe will message us when it is loaded.
+    window.addEventListener('message', function(event) {
+      if (event.data.type === 'loaded') {
         updateIframe($iframe);
-      };
-    } else {
-      // Update iframe
-      updateIframe($iframe);
-    }
+      }
+    });
   }
 
   // Process image and video/playlist thumbs

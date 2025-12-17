@@ -137,13 +137,7 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/layout/xlf/{id}', ['\Xibo\Controller\Preview', 'getXlf'])->setName('layout.getXlf');
     $group->get('/layout/background/{id}', ['\Xibo\Controller\Layout', 'downloadBackground'])->setName('layout.download.background');
     $group->get('/layout/thumbnail/{id}', ['\Xibo\Controller\Layout', 'downloadThumbnail'])->setName('layout.download.thumbnail');
-    $group->get('/layout/playerBundle', ['\Xibo\Controller\Preview', 'playerBundle'])->setName('layout.preview.bundle');
-    $group->get('/connector/widget/preview', ['\Xibo\Controller\Connector', 'connectorPreview'])->setName('layout.preview.connector');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.view', 'template.view']));
-
-$app->get('/layout/preview/{id}', ['\Xibo\Controller\Preview', 'show'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.view', 'template.view', 'campaign.view']))
-    ->setName('layout.preview');
 
 // forms
 $app->get('/layout/form/add', ['\Xibo\Controller\Layout','addForm'])
@@ -189,15 +183,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 
     // Designer
     $group->get('/playlist/form/library/assign/{id}', ['\Xibo\Controller\Playlist','libraryAssignForm'])->setName('playlist.library.assign.form');
-
-    // Outputs
-    $group->get('/playlist/widget/resource/{regionId}[/{id}]', [
-        '\Xibo\Controller\Widget', 'getResource'
-    ])->setName('module.getResource');
-
-    $group->get('/playlist/widget/data/{regionId}/{id}', [
-        '\Xibo\Controller\Widget', 'getData'
-    ])->setName('module.getData');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify']));
 
 $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
@@ -574,6 +559,9 @@ $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/module/form/settings/{id}', ['\Xibo\Controller\Module','settingsForm'])
         ->setName('module.settings.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['module.view']));
+
+$app->get('/module/asset/{assetId}', ['\Xibo\Controller\Module', 'assetDownload'])
+    ->setName('module.asset.download');
 
 //
 // Developer

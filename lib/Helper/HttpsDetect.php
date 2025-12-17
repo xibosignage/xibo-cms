@@ -23,7 +23,7 @@
 
 namespace Xibo\Helper;
 
-use Slim\Http\ServerRequest;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Class HttpsDetect
@@ -60,10 +60,10 @@ class HttpsDetect
     /**
      * Get the base URL for the instance
      *  this should give us the CMS URL including alias and file
-     * @param \Slim\Http\ServerRequest|null $request
+     * @param \Psr\Http\Message\ServerRequestInterface|null $request
      * @return string
      */
-    public function getBaseUrl(?ServerRequest $request = null): string
+    public function getBaseUrl(?ServerRequestInterface $request = null): string
     {
         // Check REQUEST_URI is set. IIS doesn't set it, so we need to build it
         // Attribution:
