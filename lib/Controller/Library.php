@@ -524,7 +524,7 @@ class Library extends Base
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
 
         // Variables used for link signing
-        $isReturnPublicUrls = $parsedQueryParams->getCheckbox('isReturnPublicUrls') == 0;
+        $isReturnPublicUrls = $parsedQueryParams->getCheckbox('isReturnPublicUrls') == 1;
 
         // Construct the SQL
         $mediaList = $this->mediaFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter([

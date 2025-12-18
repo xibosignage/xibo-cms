@@ -23,6 +23,7 @@
 namespace Xibo\Middleware;
 
 use Illuminate\Support\Str;
+use Lcobucci\JWT\Validation\RequiredConstraintsViolated;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -30,6 +31,7 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\LinkSigner;
+use Xibo\Service\JwtServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
@@ -55,6 +57,8 @@ class TokenAuthMiddleware implements MiddlewareInterface
      * @param \Psr\Http\Message\ServerRequestInterface $request
      * @param \Psr\Http\Server\RequestHandlerInterface $handler
      * @return \Psr\Http\Message\ResponseInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Psr\Container\NotFoundExceptionInterface
      * @throws \Xibo\Support\Exception\AccessDeniedException
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
@@ -66,31 +70,51 @@ class TokenAuthMiddleware implements MiddlewareInterface
         // Check the link.
         $params = $this->getSanitizer($request->getParams());
 
-        // Has the URL expired
-        if (time() > $params->getInt('X-Amz-Expires')) {
-            throw new AccessDeniedException(__('Expired'));
-        }
+        // Are we a JWT?
+        $previewToken = $request->getHeader('X-PREVIEW-JWT')[0] ?? null;
+        $jwt = $params->getString('jwt', ['default' => $previewToken]);
+        if (!empty($jwt)) {
+            // Yes, validate the JWT
+            try {
+                // Parse the token and assert its valid
+                $token = $this->getJwtService()->validateJwt($jwt);
 
-        // Validate the URL.
-        $signature = $params->getString('X-Amz-Signature');
+                // Check claims.
+                if (!$token->hasBeenIssuedBy('Preview')) {
+                    throw new AccessDeniedException(__('Invalid URL'));
+                }
+            } catch (RequiredConstraintsViolated) {
+                throw new AccessDeniedException(__('Invalid'));
+            }
+        } else {
+            // AMZ Link
+            // Has the URL expired
+            if (time() > $params->getInt('X-Amz-Expires')) {
+                throw new AccessDeniedException(__('Expired'));
+            }
 
-        $calculatedSignature = \Xibo\Helper\LinkSigner::getSignature(
-            (new HttpsDetect())->getRootUrl(),
-            $request->getUri()->getPath(),
-            $params->getInt('X-Amz-Expires'),
-            $this->encryptionKey,
-            $params->getString('X-Amz-Date'),
-            true,
-        );
+            // Validate the URL.
+            $signature = $params->getString('X-Amz-Signature');
 
-        if ($signature !== $calculatedSignature) {
-            throw new AccessDeniedException(__('Invalid URL'));
+            $calculatedSignature = \Xibo\Helper\LinkSigner::getSignature(
+                (new HttpsDetect())->getRootUrl(),
+                $request->getUri()->getPath(),
+                $params->getInt('X-Amz-Expires'),
+                $this->encryptionKey,
+                $params->getString('X-Amz-Date'),
+                true,
+            );
+
+            if ($signature !== $calculatedSignature) {
+                throw new AccessDeniedException(__('Invalid URL'));
+            }
         }
 
         // Authed via a token
         $request = $request
             ->withAttribute('_entryPoint', 'preview')
-            ->withAttribute('authedViaToken', true);
+            ->withAttribute('authedViaToken', true)
+            ->withAttribute('authedToken', $token ?? null);
 
         // Add a CORS header
         return $handler->handle($request)->withHeader('Access-Control-Allow-Origin', '*');
@@ -133,5 +157,15 @@ class TokenAuthMiddleware implements MiddlewareInterface
     private function getSanitizer($getParams): SanitizerInterface
     {
         return $this->container->get('sanitizerService')->getSanitizer($getParams);
+    }
+
+    /**
+     * @return \Xibo\Service\JwtServiceInterface
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Psr\Container\NotFoundExceptionInterface
+     */
+    private function getJwtService(): JwtServiceInterface
+    {
+        return $this->container->get('jwtService');
     }
 }

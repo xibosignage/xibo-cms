@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -253,6 +253,7 @@ class Controllers
                     $c->get('widgetFactory'),
                     $c->get('widgetDataFactory'),
                     $c->get('playlistFactory'),
+                    $c->get('jwtService'),
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
@@ -429,7 +430,8 @@ class Controllers
                     $c->get('widgetFactory'),
                     $c->get('transitionFactory'),
                     $c->get('moduleFactory'),
-                    $c->get('layoutFactory')
+                    $c->get('layoutFactory'),
+                    $c->get('jwtService'),
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;

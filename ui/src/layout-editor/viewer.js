@@ -2606,6 +2606,7 @@ Viewer.prototype.playPreview = function(dimensions) {
     url: requestPath,
     width: dimensions.width,
     height: dimensions.height,
+    previewJwt: previewJwt,
   });
 
   // Clear temp data

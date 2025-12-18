@@ -1112,16 +1112,26 @@ class Widget extends Base
      */
     public function getData(Request $request, Response $response, $regionId, $id)
     {
+        if ($request->getAttribute('authedViaToken') !== true) {
+            throw new AccessDeniedException();
+        }
+
+        /** @var \Lcobucci\JWT\Token $token */
+        $token = $request->getAttribute('authedToken');
+        if (empty($token)) {
+            throw new AccessDeniedException();
+        }
+
+        // Get the region
         $region = $this->regionFactory->getById($regionId);
-        if (!$this->getUser()->checkViewable($region)) {
-            throw new AccessDeniedException(__('This Region is not shared with you'));
+
+        // Check the token allows access to this layout.
+        if (!$token->isPermittedFor('layout') || !$token->isIdentifiedBy($region->layoutId)) {
+            throw new AccessDeniedException();
         }
 
+        // Get the other objects
         $widget = $this->widgetFactory->loadByWidgetId($id);
-        if (!$this->getUser()->checkViewable($widget)) {
-            throw new AccessDeniedException(__('This Widget is not shared with you'));
-        }
-
         $module = $this->moduleFactory->getByType($widget->type);
 
         // This is always a preview
@@ -1335,8 +1345,21 @@ class Widget extends Base
             throw new AccessDeniedException();
         }
 
-        // Load requested objects
+        /** @var \Lcobucci\JWT\Token $token */
+        $token = $request->getAttribute('authedToken');
+        if (empty($token)) {
+            throw new AccessDeniedException();
+        }
+
+        // Get the region
         $region = $this->regionFactory->getById($regionId);
+
+        // Check the token allows access to this layout.
+        if (!$token->isPermittedFor('layout') || !$token->isIdentifiedBy($region->layoutId)) {
+            throw new AccessDeniedException();
+        }
+
+        // Get the other objects
         $widget = $this->widgetFactory->loadByWidgetId($id);
         $module = $this->moduleFactory->getByType($widget->type);
 

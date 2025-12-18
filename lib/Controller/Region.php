@@ -33,6 +33,7 @@ use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Middleware\TokenAuthMiddleware;
+use Xibo\Service\JwtServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
@@ -81,7 +82,8 @@ class Region extends Base
         $widgetFactory,
         $transitionFactory,
         $moduleFactory,
-        $layoutFactory
+        $layoutFactory,
+        private readonly JwtServiceInterface $jwtService,
     ) {
         $this->regionFactory = $regionFactory;
         $this->widgetFactory = $widgetFactory;
@@ -628,12 +630,15 @@ class Region extends Base
                     $region,
                     $widget,
                     $sanitizedQuery,
-                    TokenAuthMiddleware::sign(
-                        $request,
-                        '/preview/playlist/widget/resource/' . $region->regionId . '/' . $widget->widgetId,
-                        time() + 3600,
-                        $this->getConfig()->getApiKeyDetails()['encryptionKey'],
-                    ) . '&preview=1',
+                    '/preview/playlist/widget/resource/' . $region->regionId . '/' . $widget->widgetId
+                        . '?preview=1&jwt='
+                        . $this->jwtService->generateJwt(
+                            'Preview',
+                            'layout',
+                            $region->layoutId,
+                            '/preview/playlist/widget/resource/' . $region->regionId . '/' . $widget->widgetId,
+                            3600,
+                        )->toString(),
                     TokenAuthMiddleware::sign(
                         $request,
                         '/preview/library/download/' . ($widget->getPrimaryMedia()[0] ?? null),

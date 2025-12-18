@@ -52,7 +52,7 @@ use Xibo\Helper\LayoutUploadHandler;
 use Xibo\Helper\Profiler;
 use Xibo\Helper\SendFile;
 use Xibo\Helper\Status;
-use Xibo\Middleware\TokenAuthMiddleware;
+use Xibo\Service\JwtServiceInterface;
 use Xibo\Service\MediaService;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -156,6 +156,7 @@ class Layout extends Base
         WidgetFactory $widgetFactory,
         private readonly WidgetDataFactory $widgetDataFactory,
         PlaylistFactory $playlistFactory,
+        private readonly JwtServiceInterface $jwtService,
     ) {
         $this->session = $session;
         $this->userFactory = $userFactory;
@@ -223,8 +224,9 @@ class Layout extends Base
         $layout = $this->layoutFactory->loadById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException();
+        }
 
         // Get the parent layout if it's editable
         if ($layout->isEditable()) {
@@ -239,10 +241,15 @@ class Layout extends Base
             } else {
                 $resolution = $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
             }
-        } catch (NotFoundException $notFoundException) {
-            $this->getLog()->info('Layout Editor with an unknown resolution, we will create it with name: ' . $layout->width . ' x ' . $layout->height);
+        } catch (NotFoundException) {
+            $this->getLog()->info('Layout Editor with an unknown resolution, we will create it with name: '
+                . $layout->width . ' x ' . $layout->height);
 
-            $resolution = $this->resolutionFactory->create($layout->width . ' x ' . $layout->height, (int)$layout->width, (int)$layout->height);
+            $resolution = $this->resolutionFactory->create(
+                $layout->width . ' x ' . $layout->height,
+                (int)$layout->width,
+                (int)$layout->height
+            );
             $resolution->userId = $this->userFactory->getSystemUser()->userId;
             $resolution->save();
         }
@@ -267,6 +274,13 @@ class Layout extends Base
             ]),
             'modules' => $moduleFactory->getAssignableModules(),
             'timeZones' => $timeZones,
+            'previewJwt' => $this->jwtService->generateJwt(
+                'Preview',
+                'layout',
+                $layout->layoutId,
+                '/preview/layout/preview/' . $layout->layoutId,
+                3600,
+            )->toString(),
         ];
 
         // Call the render the template
@@ -1842,17 +1856,20 @@ class Layout extends Base
 
             // Preview
             if ($this->getUser()->featureEnabled('layout.view')) {
+                $jwt = $this->jwtService->generateJwt(
+                    'Preview',
+                    'layout',
+                    $layout->layoutId,
+                    '/preview/layout/preview/' . $layout->layoutId,
+                    3600,
+                )->toString();
+
                 $layout->buttons[] = array(
                     'id' => 'layout_button_preview',
                     'external' => true,
                     'url' => '#',
                     'onclick' => 'createMiniLayoutPreview',
-                    'onclickParam' => TokenAuthMiddleware::sign(
-                        $request,
-                        '/preview/layout/preview/' . $layout->layoutId,
-                        time() + 3600,
-                        $this->getConfig()->getApiKeyDetails()['encryptionKey'],
-                    ),
+                    'onclickParam' => '/preview/layout/preview/' . $layout->layoutId . '?jwt=' . $jwt,
                     'text' => __('Preview Layout')
                 );
 
@@ -1863,12 +1880,8 @@ class Layout extends Base
                         'external' => true,
                         'url' => '#',
                         'onclick' => 'createMiniLayoutPreview',
-                        'onclickParam' => TokenAuthMiddleware::sign(
-                            $request,
-                            '/preview/layout/preview/' . $layout->layoutId . '?isPreviewDraft=true',
-                            time() + 3600,
-                            $this->getConfig()->getApiKeyDetails()['encryptionKey'],
-                        ),
+                        'onclickParam' => '/preview/layout/preview/' . $layout->layoutId . '?jwt=' . $jwt
+                            . '&isPreviewDraft=true',
                         'text' => __('Preview Draft Layout')
                     );
                 }
