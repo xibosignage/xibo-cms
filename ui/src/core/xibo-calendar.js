@@ -21,9 +21,13 @@
 
 // Global calendar object
 window.calendar = undefined;
+window.calendarEnabled = false;
 window.calendarEvents = [];
+window.calendarNeedsUpdate = true;
+window.scheduleEvents = [];
 window.agendaCalendar = undefined;
 window.agendaEvents = [];
+window.getEventsRequestControl = null;
 window.getJsonRequestControl = null;
 let mymap;
 let mymapmarker;
@@ -361,7 +365,7 @@ $(function() {
       time_start: '00:00',
       time_end: '00:00',
       events_source: function() {
-        return calendarEvents;
+        return window.calendarEvents;
       },
       view: 'month',
       tmpl_path: function(name) {
@@ -382,21 +386,115 @@ $(function() {
       },
       tmpl_cache: true,
       onBeforeEventsLoad: function(done) {
-        if (typeof scheduleEvents === 'undefined') {
-          console.log('Events not loaded, stop here!');
+        const self = this;
+
+        // Load calendar events with pages of X events
+        const NUM_CALENDAR_EVENTS = 50;
+
+        // If calendar isn't ready
+        // abort
+        if (!window.calendarEnabled) {
           return;
         }
 
-        // Generate calendar events
-        window.calendarEvents = generateCalendarEvents(
-          scheduleEvents,
-          this.options.position.start.getTime(),
-          this.options.position.end.getTime(),
-        );
-
-        if (done != undefined) {
-          done();
+        // If there's an active request
+        // abort it and start fresh
+        if (window.getEventsRequestControl) {
+          window.getEventsRequestControl.abort();
+          window.getEventsRequestControl = null;
         }
+
+        // Reset calendar events
+        // and schedule events
+        window.calendarEvents = [];
+        window.scheduleEvents = [];
+
+        const refreshCalendarUI = () => {
+          if (typeof done === 'function') {
+            done();
+          }
+
+          if (typeof self._render === 'function') {
+            self._render();
+          }
+        };
+
+        // Initial render
+        refreshCalendarUI();
+
+        const filterData = $('#schedule-grid').closest('.XiboGrid')
+          .find('.FilterDiv form').serializeObject();
+
+        const fetchPage = (page) => {
+          const startIdx = page * NUM_CALENDAR_EVENTS;
+
+          window.getEventsRequestControl = $.getJSON(
+            scheduleSearchUrl,
+            params = $.extend({
+              start: startIdx,
+              length: NUM_CALENDAR_EVENTS,
+            }, filterData),
+          ).done(function(data) {
+            window.scheduleEvents = data.data;
+
+            // Clear calendar events
+            const newEvents = generateCalendarEvents(
+              window.scheduleEvents,
+              self.options.position.start.getTime(),
+              self.options.position.end.getTime(),
+            );
+
+            // Add to calendar events
+            window.calendarEvents = window.calendarEvents.concat(newEvents);
+
+            // Render calendar only on the first page to indicate progress
+            if (page===0) {
+              refreshCalendarUI();
+            }
+
+            // Check if we have more record to fetch
+            const totalRecords = parseInt(data.recordsFiltered);
+            const nextStart = (page + 1) * NUM_CALENDAR_EVENTS;
+
+            if (nextStart < totalRecords) {
+              // Go to next page
+              fetchPage(page + 1);
+            } else {
+              // Cycle finished
+              window.getEventsRequestControl = null;
+
+              // Render calendar at the end of all requests
+              refreshCalendarUI();
+
+              // Mark calendar as not need updating
+              window.calendarNeedsUpdate = false;
+
+              // Hide loading
+              $('#calendar-progress').removeClass('show');
+              $('.XiboSchedule #calendar-view').removeClass('loading');
+            }
+          }).fail(function(jqXHR, textStatus, errorThrown) {
+            // Handle failure
+            if (textStatus === 'abort') {
+              console.debug('Abort get events request.');
+            } else {
+              console.error('Request failed:', textStatus, errorThrown);
+
+              window.getEventsRequestControl = null;
+            }
+
+            // Hide loading
+            $('#calendar-progress').removeClass('show');
+            $('.XiboSchedule #calendar-view').removeClass('loading');
+          });
+        };
+
+        // Show loading
+        $('#calendar-progress').addClass('show');
+        $('.XiboSchedule #calendar-view').addClass('loading');
+
+        // Start with first page
+        fetchPage(0);
       },
       onAfterEventsLoad: function(events) {
         if (!events) {
@@ -404,6 +502,12 @@ $(function() {
         }
       },
       onAfterViewLoad: function(view) {
+        // If calendar isn't ready
+        // abort
+        if (!window.calendarEnabled) {
+          return;
+        }
+
         // Sync the date of the date picker to the current calendar date
         if (
           this.options.position.start != undefined &&
@@ -488,32 +592,7 @@ $(function() {
         });
 
         if (typeof this.getTitle === 'function') {
-          let title = this.getTitle();
-
-          if ($('#range').val() == 'custom') {
-            const dateFormat = translations.schedule.calendar.openDateFormat;
-            const fromDate = ($('#fromDt').val()) ?
-              moment($('#fromDt').val()).format(dateFormat) :
-              translations.schedule.calendar.customFromToAlways;
-            const toDate = ($('#toDt').val()) ?
-              moment($('#toDt').val()).format(dateFormat) :
-              translations.schedule.calendar.customFromToAlways;
-
-            if (!$('#fromDt').val() && !$('#toDt').val()) {
-              title = translations.schedule.calendar.customFromToAlways;
-            } else if (!$('#toDt').val()) {
-              title = translations.schedule.calendar.customAfter
-                .replace(':from', fromDate);
-            } else if (!$('#fromDt').val()) {
-              title = translations.schedule.calendar.customBefore
-                .replace(':to', toDate);
-            } else {
-              title = translations.schedule.calendar.customFromTo
-                .replace(':from', fromDate)
-                .replace(':to', toDate);
-            }
-          }
-          $('h1.page-header').text(title);
+          $('h1.page-header').text(this.getTitle());
         }
 
         $('.btn-group button').removeClass('active');
@@ -551,7 +630,6 @@ $(function() {
     calendar = $('#Calendar').calendar(options);
   }
 });
-
 
 // Generate all calendar events ( and reccurent events )
 // based on schedule events
@@ -1028,7 +1106,6 @@ function updateConditionFieldToDefault(
  */
 window.setupScheduleForm = function(dialog) {
   const $dialog = $(dialog);
-  // console.log("Setup schedule form");
 
   // Form steps
   const stepWizard = $dialog.find('.stepwizard');
@@ -1482,8 +1559,10 @@ window.setupScheduleForm = function(dialog) {
             calendar.options['clearCache'] = true;
             // Make sure we remove mini layout preview
             destroyMiniLayoutPreview();
-            // Reload the Calendar
-            calendar.view();
+            // Reload the view
+            if (typeof window.debouncedUpdateScheduleView === 'function') {
+              window.debouncedUpdateScheduleView();
+            }
           }
         },
       });
@@ -1679,7 +1758,6 @@ const configReminderFields = function(dialog) {
     return;
   }
 
-  // console.log(reminderFields.data().reminders.length);
   if (reminderFields.data().reminders.length == 0) {
     // Add a template row
     const context = {
@@ -1760,8 +1838,6 @@ const processScheduleFormElements = function(el, dialog) {
 
   switch (el.attr('id')) {
     case 'recurrenceType':
-      // console.log('Process: recurrenceType, val = ' + fieldVal);
-
       const repeatControlGroupDisplay = (fieldVal == '') ? 'none' : '';
       const repeatControlGroupWeekDisplay = (fieldVal != 'Week') ? 'none' : '';
       const repeatControlGroupMonthDisplay =
@@ -1783,8 +1859,6 @@ const processScheduleFormElements = function(el, dialog) {
       break;
 
     case 'eventTypeId':
-      // console.log('Process: eventTypeId, val = ' + fieldVal);
-
       const layoutControlDisplay =
         (
           fieldVal == 2 ||
@@ -1889,7 +1963,6 @@ const processScheduleFormElements = function(el, dialog) {
           }
         });
 
-        // console.log('Setting dayPartId to custom: ' + customDayPartId);
         $dayPartId.val(customDayPartId);
 
         $startTime = $('.starttime-control', dialog);
@@ -2277,7 +2350,6 @@ const openAgendaModal = function(date) {
         }
 
         const $calendarErrorMessage = $('#calendar-error-message');
-        const agendaCalendar = this;
 
         // Show time slider on agenda view and call
         // the calendar view on slide stop event
@@ -2320,7 +2392,7 @@ const openAgendaModal = function(date) {
             return moment().startOf('day').minute(value).format(jsTimeFormat);
           },
         }).off('slideStop').on('slideStop', function(ev) {
-          agendaCalendar.view();
+          window.agendaCalendar.view();
         });
 
         $('.time-picker-step-btn').off('click.agenda')
@@ -2329,11 +2401,12 @@ const openAgendaModal = function(date) {
               'setValue',
               $timePicker.slider('getValue') + $(ev.currentTarget).data('step'),
             );
-            agendaCalendar.view();
+            window.agendaCalendar.view();
           });
 
         // Get selected display groups
-        let selectedDisplayGroup = $('.cal-context').data().selectedTab;
+        let selectedDisplayGroup =
+          $('#agendaCalendar.cal-context').data().selectedTab;
         const displayGroupsList = [];
         let chooseAllDisplays = false;
 
@@ -2366,7 +2439,7 @@ const openAgendaModal = function(date) {
         // If there are no selected displays
         // use displays from events
         if (displayGroupsList.length === 0) {
-          scheduleEvents.forEach((ev) => {
+          window.scheduleEvents.forEach((ev) => {
             ev.displayGroups.forEach((dp) => {
               if (!displayGroupsList.find(
                 (dpl) => dpl.id == dp.displayGroupId)
@@ -2500,9 +2573,9 @@ const openAgendaModal = function(date) {
               done();
             }
 
-            agendaCalendar._render();
+            window.agendaCalendar._render();
 
-            getJsonRequestControl = null;
+            window.getJsonRequestControl = null;
 
             // Turn Layout table into datatable
             $('.agenda-table-layouts').DataTable({
@@ -2543,7 +2616,7 @@ const openAgendaModal = function(date) {
     };
 
     options.type = calendarOptions.calendarType;
-    agendaCalendar = $('.agenda-view-modal #agendaCalendar')
+    window.agendaCalendar = $('.agenda-view-modal #agendaCalendar')
       .calendar(options);
 
     // Add filters
@@ -2610,16 +2683,17 @@ const openAgendaModal = function(date) {
     // Change events reloads the calendar view and map
     $('#geoLatitude, #geoLongitude, #showTimeline').off('change.agendaFilter')
       .on('change.agendaFilter', _.debounce(function() {
-        agendaCalendar.view();
+        window.agendaCalendar.view();
       }, 400));
 
+    const $calContext = $('#agendaCalendar.cal-context');
     // Set event when clicking on a tab, to refresh the view
-    $('.cal-context')
+    $calContext
       .off('click.agenda')
       .on('click.agenda', '.nav-item:not(.active) a[data-toggle="tab"]',
         function(e) {
-          $('.cal-context').data().selectedTab = $(e.currentTarget).data('id');
-          agendaCalendar.view();
+          $calContext.data().selectedTab = $(e.currentTarget).data('id');
+          window.agendaCalendar.view();
         },
       )
       // When selecting a layout row, create a Breadcrumb Trail
@@ -2630,8 +2704,8 @@ const openAgendaModal = function(date) {
 
         // Clean all selected elements
         $('.cal-event-breadcrumb-trail').hide();
-        $('.cal-context tbody tr').removeClass('selected');
-        $('.cal-context tbody tr').removeClass('selected-linked');
+        $calContext.find('tbody tr').removeClass('selected');
+        $calContext.find('tbody tr').removeClass('selected-linked');
 
         // Remove previous layout preview
         destroyMiniLayoutPreview();
@@ -2651,7 +2725,7 @@ const openAgendaModal = function(date) {
 
           // Get the template and render it on the div
           $('.cal-event-breadcrumb-trail #content').append(
-            agendaCalendar._breadcrumbTrail(
+            window.agendaCalendar._breadcrumbTrail(
               $self.data('elemId'),
               agendaEvents,
               $self.data('eventId'),
