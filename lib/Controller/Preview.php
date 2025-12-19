@@ -24,6 +24,7 @@ namespace Xibo\Controller;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\LayoutFactory;
+use Xibo\Service\JwtServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 
 /**
@@ -41,7 +42,7 @@ class Preview extends Base
      * Set common dependencies.
      * @param LayoutFactory $layoutFactory
      */
-    public function __construct($layoutFactory)
+    public function __construct($layoutFactory, private readonly JwtServiceInterface $jwtService)
     {
         $this->layoutFactory = $layoutFactory;
     }
@@ -89,7 +90,14 @@ class Preview extends Base
                 'layoutBackgroundDownloadUrl' => $this->urlFor($request, 'layout.download.background', ['id' => ':id']),
                 'loaderUrl' => $this->getConfig()->uri('img/loader.gif'),
                 'layoutPreviewUrl' => $this->urlFor($request, 'layout.preview', ['id' => '[layoutCode]'])
-            ]
+            ],
+            'previewJwt' => $this->jwtService->generateJwt(
+                'Preview',
+                'layout',
+                $layout->layoutId,
+                '/preview/layout/preview/' . $layout->layoutId,
+                3600,
+            )->toString(),
         ]);
 
         return $this->render($request, $response);

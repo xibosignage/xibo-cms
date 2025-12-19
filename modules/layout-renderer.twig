@@ -36,7 +36,6 @@
         {# Import JS bundle from dist #}
         <script src="{{ theme.rootUri() }}dist/preview.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
         <script type="text/javascript" nonce="{{ cspNonce }}">
-
             var previewTranslations = {};
             // Translations we want always available
             {% autoescape "js" %}
@@ -53,7 +52,7 @@
             {% endautoescape %}
 
             {% set layoutObj = [{layoutId: layout.layoutId }] %}
-            {% set xlrOptions = previewOptions|merge({inPreview: true}) %}
+            {% set xlrOptions = previewOptions|merge({inPreview: true, previewJwt: previewJwt}) %}
             (function($){
                 $(document).ready(function(){
                     var xiboLayoutRenderer = new XiboLayoutRenderer({{ layoutObj|json_encode()|raw }}, [], {{ xlrOptions|json_encode()|raw }});

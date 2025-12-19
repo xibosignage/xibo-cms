@@ -411,7 +411,8 @@ class Controllers
             },
             '\Xibo\Controller\Preview' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Preview(
-                    $c->get('layoutFactory')
+                    $c->get('layoutFactory'),
+                    $c->get('jwtService'),
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
