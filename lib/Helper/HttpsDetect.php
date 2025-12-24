@@ -162,7 +162,7 @@ class HttpsDetect
         $whiteListLoadBalancers = $config->getSetting('WHITELIST_LOAD_BALANCERS');
         $originIp = $_SERVER['REMOTE_ADDR'] ?? '';
         $forwardedProtoHttps = (
-            strtolower($request->getHeaderLine('HTTP_X_FORWARDED_PROTO')) === 'https'
+            strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'
             && $originIp != ''
             && (
                 $whiteListLoadBalancers === '' || in_array($originIp, explode(',', $whiteListLoadBalancers))
