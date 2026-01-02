@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -44,6 +44,7 @@ use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
+use Xibo\Twig\TransExtension;
 
 /**
  * Class responsible for rendering out a widgets HTML, caching it if necessary
@@ -1038,13 +1039,16 @@ class WidgetHtmlRenderer
         // Add missing filter
         $sandbox->getEnvironment()->addFilter(new TwigFilter('url_decode', 'urldecode'));
 
+        // Add the trans extention (some previews have translations)
+        $sandbox->addExtension(new TransExtension());
+
         // Configure a security policy
         // Create a new security policy
         $policy = new SecurityPolicy();
 
         // Allowed tags
         // import is allowed for weather static templates which import a macro
-        $policy->setAllowedTags(['if', 'for', 'set', 'macro', 'import']);
+        $policy->setAllowedTags(['if', 'for', 'set', 'macro', 'import', 'trans']);
 
         // Allowed filters
         $policy->setAllowedFilters(['escape', 'raw', 'url_decode']);
