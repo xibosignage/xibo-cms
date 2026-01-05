@@ -267,7 +267,9 @@ window.XiboInitialise = function(scope, options) {
     if (anchor !== undefined && anchor !== '') {
       makePagedSelect($target, $(anchor));
     } else if (inModal) {
-      makePagedSelect($target, $(scope).find('.modal-body'));
+      const $modalBody = $(scope).find('.modal-body');
+
+      makePagedSelect($target, $modalBody.length ? $modalBody : $(scope));
     } else {
       makePagedSelect($target, $('body'));
     }
@@ -295,7 +297,7 @@ window.XiboInitialise = function(scope, options) {
   $(scope + ' .colorpicker-input:not(.colorpicker-form-element)')
     .each(function(_i, el) {
       $(el).colorpicker({
-        container: $(el).find('.picker-container')
+        container: $(el).find('.picker-container'),
       });
     });
 
@@ -1702,8 +1704,8 @@ window.XiboMultiSelectFormRender = function(button) {
         // so use the form open hook if one has been provided.
         formOpenCallback = $button.data().formCallback;
 
-      // If form needs confirmation
-      formConfirm = $button.data().formConfirm;
+        // If form needs confirmation
+        formConfirm = $button.data().formConfirm;
       }
     }
   });
