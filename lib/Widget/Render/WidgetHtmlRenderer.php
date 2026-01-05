@@ -313,23 +313,26 @@ class WidgetHtmlRenderer
                 if (Str::startsWith($match, 'mediaId')) {
                     $params['type'] = 'image';
                 }
+                $url = $urlFor('library.download', $params);
                 $output = str_replace(
                     '[[' . $match . ']]',
-                    $urlFor('library.download', $params) . '&preview=1',
+                    $url . (Str::contains($url, '?') ? '&' : '?') . 'preview=1',
                     $output
                 );
             } else if (Str::startsWith($match, 'assetId')) {
                 $value = explode('=', $match);
+                $url = $urlFor('module.asset.download', ['assetId' => $value[1]]);
                 $output = str_replace(
                     '[[' . $match . ']]',
-                    $urlFor('module.asset.download', ['assetId' => $value[1]]) . '&preview=1',
+                    $url . (Str::contains($url, '?') ? '&' : '?') . 'preview=1',
                     $output
                 );
             } else if (Str::startsWith($match, 'assetAlias')) {
                 $value = explode('=', $match);
+                $url = $urlFor('module.asset.download', ['assetId' => $value[1]]);
                 $output = str_replace(
                     '[[' . $match . ']]',
-                    $urlFor('module.asset.download', ['assetId' => $value[1]]) . '&preview=1&isAlias=1',
+                    $url . (Str::contains($url, '?') ? '&' : '?') . 'preview=1&isAlias=1',
                     $output
                 );
             }

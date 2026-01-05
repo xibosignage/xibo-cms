@@ -87,6 +87,7 @@ $app->add(new \Xibo\Middleware\Csp($app->getContainer()));
 $app->add(TwigMiddleware::createFromContainer($app));
 $app->addRoutingMiddleware();
 $app->add(new \Xibo\Middleware\TrailingSlashMiddleware($app));
+$app->add(new \Xibo\Middleware\CorsPreviewMiddleware());
 
 // Add Error Middleware
 $errorMiddleware = $app->addErrorMiddleware(
@@ -98,6 +99,11 @@ $errorMiddleware->setDefaultErrorHandler(\Xibo\Middleware\Handlers::webErrorHand
 
 // Application routes
 // ------------------
+// CORS
+$app->options('/{routes:.+}', function ($request, $response) {
+    return $response;
+});
+
 // Private ones
 $app->group('/', function () use ($app) {
     $app->get('/layout/preview/{id}', ['\Xibo\Controller\Preview', 'show'])
@@ -106,16 +112,12 @@ $app->group('/', function () use ($app) {
         ->setName('layout.getXlf');
     $app->get('/connector/widget/preview', ['\Xibo\Controller\Connector', 'connectorPreview'])
         ->setName('layout.preview.connector');
-    $app->get('/module/asset/{assetId}', ['\Xibo\Controller\Module', 'assetDownload'])
-        ->setName('module.asset.download');
     $app->get('/playlist/widget/resource/{regionId}[/{id}]', ['\Xibo\Controller\Widget', 'getResource'])
         ->setName('module.getResource');
     $app->get('/playlist/widget/data/{regionId}/{id}', ['\Xibo\Controller\Widget', 'getData'])
         ->setName('module.getData');
     $app->get('/fonts/fontcss', ['\Xibo\Controller\Font','fontCss'])
         ->setName('library.font.css');
-    $app->get('/fonts/download/{id}', ['\Xibo\Controller\Font', 'download'])
-        ->setName('font.download');
     $app->get('/library/download/{id}', ['\Xibo\Controller\Library', 'download'])
         ->setName('library.download');
     $app->get('/library/thumbnail/{id}', ['\Xibo\Controller\Library', 'thumbnail'])
@@ -123,8 +125,14 @@ $app->group('/', function () use ($app) {
 })->addMiddleware(new \Xibo\Middleware\TokenAuthMiddleware($app->getContainer()));
 
 // Public ones
-$app->get('/layout/playerBundle', ['\Xibo\Controller\Preview', 'playerBundle'])
-    ->setName('layout.preview.bundle');
+$app->group('/', function () use ($app) {
+    $app->get('/layout/playerBundle', ['\Xibo\Controller\Preview', 'playerBundle'])
+        ->setName('layout.preview.bundle');
+    $app->get('/module/asset/{assetId}', ['\Xibo\Controller\Module', 'assetDownload'])
+        ->setName('module.asset.download');
+    $app->get('/fonts/download/{id}', ['\Xibo\Controller\Font', 'download'])
+        ->setName('font.download');
+});
 
 // Run App
 try {

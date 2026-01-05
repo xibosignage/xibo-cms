@@ -119,10 +119,8 @@ class TokenAuthMiddleware implements MiddlewareInterface
             throw new NotFoundException();
         }
 
-        // Add a CORS header
-        return $handler->handle($request
-            ->withAttribute('_entryPoint', 'preview')
-            ->withHeader('Access-Control-Allow-Origin', '*'));
+        // Handled
+        return $handler->handle($request);
     }
 
     /**
