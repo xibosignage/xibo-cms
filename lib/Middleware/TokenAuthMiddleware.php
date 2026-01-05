@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -83,6 +83,9 @@ class TokenAuthMiddleware implements MiddlewareInterface
                 if (!$token->hasBeenIssuedBy('Preview')) {
                     throw new AccessDeniedException(__('Invalid URL'));
                 }
+
+                // We are authenticated via an auth token (e.g. whole resource access)
+                $request = $request->withAttribute('authedToken', $token);
             } catch (RequiredConstraintsViolated) {
                 throw new AccessDeniedException(__('Invalid'));
             }
@@ -108,16 +111,15 @@ class TokenAuthMiddleware implements MiddlewareInterface
             if ($signature !== $calculatedSignature) {
                 throw new AccessDeniedException(__('Invalid URL'));
             }
+
+            // We are authenticated via the token (e.g. single file access)
+            $request = $request->withAttribute('authedViaToken', true);
         }
 
-        // Authed via a token
-        $request = $request
-            ->withAttribute('_entryPoint', 'preview')
-            ->withAttribute('authedViaToken', true)
-            ->withAttribute('authedToken', $token ?? null);
-
         // Add a CORS header
-        return $handler->handle($request)->withHeader('Access-Control-Allow-Origin', '*');
+        return $handler->handle($request
+            ->withAttribute('_entryPoint', 'preview')
+            ->withHeader('Access-Control-Allow-Origin', '*'));
     }
 
     /**

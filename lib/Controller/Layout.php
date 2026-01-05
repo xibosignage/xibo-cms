@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -48,6 +48,7 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetDataFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\LayoutUploadHandler;
 use Xibo\Helper\Profiler;
 use Xibo\Helper\SendFile;
@@ -1578,6 +1579,7 @@ class Layout extends Base
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
         // Should we parse the description into markdown
         $showDescriptionId = $parsedQueryParams->getInt('showDescriptionId');
+        $baseUrl = (new HttpsDetect())->getBaseUrl($request);
 
         // We might need to embed some extra content into the response if the "Show Description"
         // is set to media listing
@@ -1869,7 +1871,7 @@ class Layout extends Base
                     'external' => true,
                     'url' => '#',
                     'onclick' => 'createMiniLayoutPreview',
-                    'onclickParam' => '/preview/layout/preview/' . $layout->layoutId . '?jwt=' . $jwt,
+                    'onclickParam' => $baseUrl . '/preview/layout/preview/' . $layout->layoutId . '?jwt=' . $jwt,
                     'text' => __('Preview Layout')
                 );
 
@@ -1880,7 +1882,7 @@ class Layout extends Base
                         'external' => true,
                         'url' => '#',
                         'onclick' => 'createMiniLayoutPreview',
-                        'onclickParam' => '/preview/layout/preview/' . $layout->layoutId . '?jwt=' . $jwt
+                        'onclickParam' => $baseUrl . '/preview/layout/preview/' . $layout->layoutId . '?jwt=' . $jwt
                             . '&isPreviewDraft=true',
                         'text' => __('Preview Draft Layout')
                     );

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -1673,7 +1673,7 @@ class Library extends Base
             $this->getLog()->debug('download: preview mode, seeing if we can output an image/video');
 
             // Output a 1px image if we're not allowed to see the media.
-            if (!$this->getUser()->checkViewable($media)) {
+            if (!$this->getUser()->checkViewable($media) && $request->getAttribute('authedViaToken') !== true) {
                 echo Img::make($this->getConfig()->uri('img/1x1.png', true))->encode();
                 return $this->render($request, $response->withHeader('Content-Type', 'image/png'));
             }
@@ -1700,7 +1700,7 @@ class Library extends Base
             $this->getLog()->debug('download: not preview mode, expect a full download');
 
             // We are not a preview, and therefore we ought to check sharing before we download
-            if (!$this->getUser()->checkViewable($media)) {
+            if (!$this->getUser()->checkViewable($media) && $request->getAttribute('authedViaToken') !== true) {
                 throw new AccessDeniedException();
             }
 

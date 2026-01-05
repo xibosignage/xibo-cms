@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -104,8 +104,6 @@ $app->group('/', function () use ($app) {
         ->setName('layout.preview');
     $app->get('/layout/xlf/{id}', ['\Xibo\Controller\Preview', 'getXlf'])
         ->setName('layout.getXlf');
-    $app->get('/layout/background/{id}', ['\Xibo\Controller\Layout', 'downloadBackground'])
-        ->setName('layout.download.background');
     $app->get('/connector/widget/preview', ['\Xibo\Controller\Connector', 'connectorPreview'])
         ->setName('layout.preview.connector');
     $app->get('/module/asset/{assetId}', ['\Xibo\Controller\Module', 'assetDownload'])

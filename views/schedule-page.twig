@@ -315,7 +315,7 @@
     <script type="text/javascript" nonce="{{ cspNonce }}">
         {# JS variables #}
         var scheduleRecurrenceDeleteUrl = "{{ url_for("schedule.recurrence.delete.form", {id:':id'}) }}";
-        var layoutPreviewUrl = "{{ url_for("layout.preview", {id: ':id'}) }}";
+        var layoutPreviewUrl = "{{ theme.rootUri() }}preview/layout/preview/:id";
         var scheduleSearchUrl = "{{ url_for("schedule.search") }}";
         var userAgendaViewEnabled = "{{ currentUser.featureEnabled('schedule.agenda') }}";
 

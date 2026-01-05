@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -69,7 +69,14 @@ class Preview extends Base
             $layout = $this->layoutFactory->getById($id);
         }
 
-        if ($request->getAttribute('authedViaToken') !== true) {
+        /** @var \Lcobucci\JWT\Token $token */
+        $token = $request->getAttribute('authedToken');
+        if (empty($token)) {
+            throw new AccessDeniedException();
+        }
+
+        // Check the token allows access to this layout.
+        if (!$token->isPermittedFor('layout') || !$token->isIdentifiedBy($layout->layoutId)) {
             throw new AccessDeniedException();
         }
 
@@ -84,12 +91,12 @@ class Preview extends Base
             'previewOptions' => [
                 'getXlfUrl' => $this->urlFor($request, 'layout.getXlf', ['id' => $layout->layoutId]),
                 'getResourceUrl' => $this->urlFor($request, 'module.getResource', [
-                    'regionId' => ':regionId', 'id' => ':id'
+                    'regionId' => ':regionId',
+                    'id' => ':id',
                 ]),
                 'libraryDownloadUrl' => $this->urlFor($request, 'library.download', ['id' => ':id']),
-                'layoutBackgroundDownloadUrl' => $this->urlFor($request, 'layout.download.background', ['id' => ':id']),
                 'loaderUrl' => $this->getConfig()->uri('img/loader.gif'),
-                'layoutPreviewUrl' => $this->urlFor($request, 'layout.preview', ['id' => '[layoutCode]'])
+                'layoutPreviewUrl' => $this->urlFor($request, 'layout.preview', ['id' => '[layoutCode]']),
             ],
             'previewJwt' => $this->jwtService->generateJwt(
                 'Preview',

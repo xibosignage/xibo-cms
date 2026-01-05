@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -1112,10 +1112,6 @@ class Widget extends Base
      */
     public function getData(Request $request, Response $response, $regionId, $id)
     {
-        if ($request->getAttribute('authedViaToken') !== true) {
-            throw new AccessDeniedException();
-        }
-
         /** @var \Lcobucci\JWT\Token $token */
         $token = $request->getAttribute('authedToken');
         if (empty($token)) {
@@ -1340,10 +1336,6 @@ class Widget extends Base
     public function getResource(Request $request, Response $response, $regionId, $id)
     {
         $this->setNoOutput();
-
-        if ($request->getAttribute('authedViaToken') !== true) {
-            throw new AccessDeniedException();
-        }
 
         /** @var \Lcobucci\JWT\Token $token */
         $token = $request->getAttribute('authedToken');
