@@ -3918,10 +3918,18 @@ Viewer.prototype.updateRegionContent = function(
   changed = false,
 ) {
   const $container = this.DOMObject.find(`#${region.id}`);
+  const $iframe = $container.find('iframe');
+  let hasInitialized = false;
 
   // Update iframe
-  const updateIframe = function($iframe) {
-    $iframe.css({
+  const updateIframe = function($targetIframe) {
+    // Prevent double update
+    if (hasInitialized) {
+      return false;
+    }
+    hasInitialized = true;
+
+    $targetIframe.css({
       width: region.scaledDimensions.width,
       height: region.scaledDimensions.height,
     });
@@ -3935,29 +3943,51 @@ Viewer.prototype.updateRegionContent = function(
 
     // Check if it's the first call
     // If it is, send a flag to pause effects on start
-    if (!$iframe.data('notFirstCall')) {
-      $iframe.data('notFirstCall', true);
+    if (!$targetIframe.data('notFirstCall')) {
+      $targetIframe.data('notFirstCall', true);
       options.pauseEffectOnStart = true;
     }
 
     // We need to recalculate the scale inside of the iframe
-    $iframe[0].contentWindow
-      .postMessage({
-        method: 'renderContent',
-        options: options,
-      }, '*');
+    $targetIframe[0].contentWindow.postMessage({
+      method: 'renderContent',
+      options: options,
+    }, '*');
   };
-
-  // Get iframe
-  const $iframe = $container.find('iframe');
 
   // Check if iframe exists, and is loaded
   if ($iframe.length) {
-    // The iframe will message us when it is loaded.
-    window.addEventListener('message', function(event) {
-      if (event.data.type === 'loaded') {
+    const rawIframe = $iframe[0];
+
+    // Clean up previous listeners
+    if (rawIframe._loadedMessageHandler) {
+      window.removeEventListener('message', rawIframe._loadedMessageHandler);
+      rawIframe._loadedMessageHandler = null;
+    }
+
+
+    // Define the new message handler
+    const messageHandler = (event) => {
+      // Only accept messages from OUR iframe
+      if (
+        event.source === rawIframe.contentWindow &&
+        event.data.type === 'loaded'
+      ) {
+        // Cleanup handler
+        window.removeEventListener('message', messageHandler);
+        rawIframe._loadedMessageHandler = null;
+
         updateIframe($iframe);
       }
+    };
+
+    // Attach handler and store reference
+    rawIframe._loadedMessageHandler = messageHandler;
+    window.addEventListener('message', messageHandler);
+
+    // Fallback - if we missed the message event
+    $iframe.off('load.viewerUpdate').on('load.viewerUpdate', function() {
+      updateIframe($iframe);
     });
   }
 
@@ -3968,6 +3998,7 @@ Viewer.prototype.updateRegionContent = function(
       '[data-type="widget_video"], ' +
       '[data-type="playlist"]',
     );
+
   if ($imageContainer.length) {
     const $image = $imageContainer.find('img');
 
