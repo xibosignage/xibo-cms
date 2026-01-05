@@ -23,7 +23,6 @@
 namespace Xibo\Middleware;
 
 use Illuminate\Support\Str;
-use Lcobucci\JWT\Validation\RequiredConstraintsViolated;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -33,6 +32,7 @@ use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\LinkSigner;
 use Xibo\Service\JwtServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
@@ -60,6 +60,7 @@ class TokenAuthMiddleware implements MiddlewareInterface
      * @throws \Psr\Container\ContainerExceptionInterface
      * @throws \Psr\Container\NotFoundExceptionInterface
      * @throws \Xibo\Support\Exception\AccessDeniedException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
@@ -86,10 +87,10 @@ class TokenAuthMiddleware implements MiddlewareInterface
 
                 // We are authenticated via an auth token (e.g. whole resource access)
                 $request = $request->withAttribute('authedToken', $token);
-            } catch (RequiredConstraintsViolated) {
+            } catch (\Exception) {
                 throw new AccessDeniedException(__('Invalid'));
             }
-        } else {
+        } else if ($params->hasParam('X-Amz-Signature')) {
             // AMZ Link
             // Has the URL expired
             if (time() > $params->getInt('X-Amz-Expires')) {
@@ -114,6 +115,8 @@ class TokenAuthMiddleware implements MiddlewareInterface
 
             // We are authenticated via the token (e.g. single file access)
             $request = $request->withAttribute('authedViaToken', true);
+        } else {
+            throw new NotFoundException();
         }
 
         // Add a CORS header
