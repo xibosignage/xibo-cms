@@ -193,7 +193,17 @@ class Base
      */
     protected function isApi(Request $request)
     {
-        return ($request->getAttribute('_entryPoint') != 'web');
+        return ($request->getAttribute('_entryPoint') == 'api');
+    }
+
+    /**
+     * Is this a JSON?
+     * @param Request $request
+     * @return bool
+     */
+    protected function isJson(Request $request)
+    {
+        return ($request->getAttribute('_entryPoint') == 'json');
     }
 
     /**

@@ -530,8 +530,11 @@ class Library extends Base
         $encryptionKey = $this->getConfig()->getApiKeyDetails()['encryptionKey'];
         $rootUrl = (new HttpsDetect())->getUrl();
 
+        // Sorting
+        $mediaSortQuery = $this->gridRenderSort($parsedQueryParams, $this->isJson($request));
+
         // Construct the SQL
-        $mediaList = $this->mediaFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter([
+        $mediaList = $this->mediaFactory->query($mediaSortQuery, $this->gridRenderFilter([
             'mediaId' => $parsedQueryParams->getInt('mediaId'),
             'name' => $parsedQueryParams->getString('media'),
             'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),

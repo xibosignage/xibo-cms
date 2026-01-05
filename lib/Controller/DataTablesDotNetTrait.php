@@ -69,7 +69,7 @@ trait DataTablesDotNetTrait
      * @param SanitizerInterface|array $sanitizedRequestParams
      * @return array
      */
-    protected function gridRenderSort($sanitizedRequestParams)
+    protected function gridRenderSort($sanitizedRequestParams, $isJson = false)
     {
         if ($sanitizedRequestParams instanceof SanitizerInterface) {
             $columns = $sanitizedRequestParams->getArray('columns');
@@ -79,8 +79,15 @@ trait DataTablesDotNetTrait
             $order = $sanitizedRequestParams['order'] ?? null;
         }
 
-        if ($columns === null
-            || !is_array($columns)
+        if ($isJson) {
+            $colName = $sanitizedRequestParams->getString('sortBy') ?? 'name';
+            $dir = $sanitizedRequestParams->getString('sortDir') ?? null;
+
+            $columns = [['name' => $colName, 'data' => $colName]];
+            $order = [['column' => 0, 'dir' => $dir]];
+        }
+
+        if (!is_array($columns)
             || count($columns) <= 0
             || $order === null
             || !is_array($order)
