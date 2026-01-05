@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -32,6 +32,7 @@ use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\HttpsDetect;
 use Xibo\Middleware\TokenAuthMiddleware;
 use Xibo\Service\JwtServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -623,6 +624,7 @@ class Region extends Base
 
             // Output a preview
             $module = $this->moduleFactory->getByType($widget->type);
+            $baseUrl = (new HttpsDetect())->getBaseUrl($request);
             $this->getState()->html = $this->moduleFactory
                 ->createWidgetHtmlRenderer()
                 ->preview(
@@ -630,13 +632,13 @@ class Region extends Base
                     $region,
                     $widget,
                     $sanitizedQuery,
-                    '/preview/playlist/widget/resource/' . $region->regionId . '/' . $widget->widgetId
+                    $baseUrl . '/preview/playlist/widget/resource/' . $region->regionId . '/' . $widget->widgetId
                         . '?preview=1&jwt='
                         . $this->jwtService->generateJwt(
                             'Preview',
                             'layout',
                             $region->layoutId,
-                            '/preview/playlist/widget/resource/' . $region->regionId . '/' . $widget->widgetId,
+                            '/preview/layout/preview/' . $region->layoutId,
                             3600,
                         )->toString(),
                     TokenAuthMiddleware::sign(

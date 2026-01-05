@@ -1409,13 +1409,17 @@ class Widget extends Base
                 $resource = $renderer->decorateForPreview(
                     $region,
                     $resource,
-                    function (string $route, array $data, array $params = []) use ($request, $encryptionKey) {
-                        return TokenAuthMiddleware::sign(
-                            $request,
-                            $this->urlFor($request, $route, $data, $params),
-                            time() + 3600,
-                            $encryptionKey,
-                        );
+                    function (string $route, array $data, array $params = []) use ($request, $encryptionKey, $token) {
+                        if ($route === 'layout.preview.bundle' || $route === 'module.getData') {
+                            return $this->urlFor($request, $route, $data, $params);
+                        } else {
+                            return TokenAuthMiddleware::sign(
+                                $request,
+                                $this->urlFor($request, $route, $data, $params),
+                                time() + 3600,
+                                $encryptionKey,
+                            );
+                        }
                     },
                     $request,
                 );

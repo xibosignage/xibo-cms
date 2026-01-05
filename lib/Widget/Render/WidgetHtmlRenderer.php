@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -315,21 +315,21 @@ class WidgetHtmlRenderer
                 }
                 $output = str_replace(
                     '[[' . $match . ']]',
-                    $urlFor('library.download', $params) . '?preview=1',
+                    $urlFor('library.download', $params) . '&preview=1',
                     $output
                 );
             } else if (Str::startsWith($match, 'assetId')) {
                 $value = explode('=', $match);
                 $output = str_replace(
                     '[[' . $match . ']]',
-                    $urlFor('module.asset.download', ['assetId' => $value[1]]) . '?preview=1',
+                    $urlFor('module.asset.download', ['assetId' => $value[1]]) . '&preview=1',
                     $output
                 );
             } else if (Str::startsWith($match, 'assetAlias')) {
                 $value = explode('=', $match);
                 $output = str_replace(
                     '[[' . $match . ']]',
-                    $urlFor('module.asset.download', ['assetId' => $value[1]]) . '?preview=1&isAlias=1',
+                    $urlFor('module.asset.download', ['assetId' => $value[1]]) . '&preview=1&isAlias=1',
                     $output
                 );
             }
