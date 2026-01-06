@@ -34,7 +34,7 @@ class CorsPreviewMiddleware implements MiddlewareInterface
 {
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $response = $handler->handle($request);
+        $response = $handler->handle($request->withAttribute('_entryPoint', 'preview'));
 
         // Is CORS required?
         if ($request->getHeaderLine('Sec-Fetch-Site') === 'cross-site') {

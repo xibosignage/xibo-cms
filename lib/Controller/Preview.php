@@ -126,7 +126,15 @@ class Preview extends Base
     {
         $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($id));
         try {
-            if (!$this->getUser()->checkViewable($layout)) {
+            /** @var \Lcobucci\JWT\Token $token */
+            $token = $request->getAttribute('authedToken');
+            if (!$this->getUser()->checkViewable($layout) && empty($token)) {
+                throw new AccessDeniedException();
+            }
+
+            if (!empty($token)
+                && (!$token->isPermittedFor('layout') || !$token->isIdentifiedBy($layout->layoutId))
+            ) {
                 throw new AccessDeniedException();
             }
 

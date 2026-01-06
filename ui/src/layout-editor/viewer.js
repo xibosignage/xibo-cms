@@ -3989,6 +3989,11 @@ Viewer.prototype.updateRegionContent = function(
     $iframe.off('load.viewerUpdate').on('load.viewerUpdate', function() {
       updateIframe($iframe);
     });
+
+    // Iframe was loaded already, always update
+    if ($iframe.data('notFirstCall')) {
+      updateIframe($iframe);
+    }
   }
 
   // Process image and video/playlist thumbs

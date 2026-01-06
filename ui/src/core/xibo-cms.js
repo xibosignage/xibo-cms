@@ -295,7 +295,7 @@ window.XiboInitialise = function(scope, options) {
   $(scope + ' .colorpicker-input:not(.colorpicker-form-element)')
     .each(function(_i, el) {
       $(el).colorpicker({
-        container: $(el).find('.picker-container')
+        container: $(el).find('.picker-container'),
       });
     });
 
@@ -1702,8 +1702,8 @@ window.XiboMultiSelectFormRender = function(button) {
         // so use the form open hook if one has been provided.
         formOpenCallback = $button.data().formCallback;
 
-      // If form needs confirmation
-      formConfirm = $button.data().formConfirm;
+        // If form needs confirmation
+        formConfirm = $button.data().formConfirm;
       }
     }
   });
@@ -2858,8 +2858,8 @@ window.createMiniLayoutPreview = function(previewUrl) {
   // Create base template for preview content
   const previewTemplate =
     Handlebars.compile(
-      '<iframe scrolling="no" sandbox="allow-scripts" src="{{url}}" width="{{width}}px" ' +
-      'height="{{height}}px" style="border:0;"></iframe>');
+      '<iframe scrolling="no" sandbox="allow-scripts" src="{{url}}" ' +
+      'width="{{width}}px height="{{height}}px" style="border:0;"></iframe>');
 
   // Clean all selected elements
   $layoutPreviewContent.html('');
