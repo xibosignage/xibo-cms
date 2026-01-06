@@ -936,7 +936,7 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
 
     return {
       id: rawEv.eventId,
-      title: titleText,
+      title: titleText.replace(/"/g, '&quot;'),
       url: eventUrl,
       start: startMs,
       end: endMs,

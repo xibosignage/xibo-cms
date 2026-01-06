@@ -1255,6 +1255,7 @@ if(!String.prototype.formatNum) {
                 var data = {
                     eventStart: eventStart,
                     eventEnd: eventEnd,
+									 	isRecurringInstance: 1,
                 };
                 XiboFormRender($(this), data);
             } else {

@@ -243,7 +243,7 @@
                         {% set helpText %}{% trans "Optionally provide any parameters to be used by the Data Connector." %}{% endset %}
                         {{ forms.input("dataSetParams", title, event.dataSetParams, helpText, 'data-connector-control') }}
 
-                        {% if recurringEvent %}
+                        {% if showRecurringInstance %}
                             <div class="card p-3 mb-3 bg-light text-primary text-center form-error">
                                 <p>This is an instance of a scheduled recurring event:
                                     <span class="fa fa-info-circle"

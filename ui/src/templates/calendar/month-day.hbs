@@ -6,7 +6,7 @@
     <% } %>
 
     <% if (events.length > 0) { %>
-    <div class="events-list" data-cal-start="<%= start %>" data-cal-end="<%= end %>">
+    <div class="events-list d-flex flex-wrap" data-cal-start="<%= start %>" data-cal-end="<%= end %>">
         <% _.each(events, function(event) { %>
         <%
         var title = event.title;

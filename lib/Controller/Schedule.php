@@ -1416,6 +1416,8 @@ class Schedule extends Base
         $eventStart = $sanitizedParams->getInt('eventStart', ['default' => 1000]) / 1000;
         $eventEnd = $sanitizedParams->getInt('eventEnd', ['default' => 1000]) / 1000;
 
+        $showRecurringInstance = $sanitizedParams->getInt('isRecurringInstance', ['default' => 0]) === 1;
+
         $schedule = $this->scheduleFactory->getById($id);
         $schedule->load();
 
@@ -1498,6 +1500,7 @@ class Schedule extends Base
             'defaultLat' => $defaultLat,
             'defaultLong' => $defaultLong,
             'recurringEvent' => $schedule->recurrenceType != '',
+            'showRecurringInstance' => $showRecurringInstance,
             'eventStart' => $eventStart,
             'eventEnd' => $eventEnd,
             'eventTypes' => \Xibo\Entity\Schedule::getEventTypes(),
