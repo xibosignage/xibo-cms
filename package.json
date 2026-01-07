@@ -68,7 +68,7 @@
     "@mapbox/leaflet-pip": "^1.1.0",
     "@popperjs/core": "^2.11.8",
     "@ssddanbrown/codemirror-lang-twig": "^1.0.0",
-    "@xibosignage/xibo-layout-renderer": "git+https://github.com/xibosignage/xibo-layout-renderer.git#6e7a3dbc3a500d64662665b2dc360c81bce70b2d",
+    "@xibosignage/xibo-layout-renderer": "git+https://github.com/xibosignage/xibo-layout-renderer.git#489fa304f64fcd461f4b35549bc5ccf741d9f6af",
     "@xiechao/codemirror-lang-handlebars": "^1.0.4",
     "ajax-bootstrap-select": "^1.4.5",
     "blueimp-file-upload": "^10.32.0",
@@ -128,6 +128,6 @@
     "selecto": "^1.26.3",
     "toastr": "~2.1.4",
     "underscore": "^1.13.7",
-    "xibo-interactive-control": "git+https://github.com/xibosignage/xibo-interactive-control.git#44ad744a5a2a0af9e7fcdb828dbdbeff45cc40f0"
+    "xibo-interactive-control": "git+https://github.com/xibosignage/xibo-interactive-control.git#675ce4ac297625d7d94d4b867002693a234f4e84"
   }
 }
