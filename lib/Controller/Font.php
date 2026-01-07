@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -29,6 +29,7 @@ use Stash\Invalidation;
 use Xibo\Factory\FontFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\HttpCacheProvider;
+use Xibo\Middleware\TokenAuthMiddleware;
 use Xibo\Service\DownloadService;
 use Xibo\Service\MediaService;
 use Xibo\Service\MediaServiceInterface;
@@ -570,6 +571,30 @@ class Font extends Base
         } else {
             $this->getLog()->debug('local font css file served from cache ');
             $localCss = $cacheItem->get();
+        }
+
+        // TODO: can this have a JWT added to the font download links?
+        if ($request->getAttribute('_entryPoint') === 'preview') {
+            // Update each link.
+            // Pattern breakdown:
+            // url\(        : Matches the literal 'url('
+            // (['"]?)      : Group 1 - Matches optional single or double quotes
+            // (.*?)        : Group 2 - Matches the actual URL (non-greedy)
+            // \1           : Matches the same quote found in Group 1
+            // \)           : Matches the literal ')'
+            $localCss = preg_replace_callback('/url\(([\'"]?)(.*?)\1\)/i', function ($matches) use ($request) {
+                // $matches[0] is the full match: url('/fonts/download/1')
+                // $matches[1] is the quote used: '
+                // $matches[2] is the URL content: /fonts/download/1
+                $url = $matches[2];
+
+                return 'url(\'' . TokenAuthMiddleware::sign(
+                    $request,
+                    '/preview' . $url,
+                    time() + 86400,
+                    $this->getConfig()->getApiKeyDetails()['encryptionKey'],
+                ) . '\')';
+            }, $localCss);
         }
 
         // Return the CSS to the browser as a file

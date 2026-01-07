@@ -83,7 +83,7 @@ $app->add(new \Xibo\Middleware\Log($app));
 $app->add(new \Xibo\Middleware\State($app));
 $app->add(new \Xibo\Middleware\Storage($app));
 $app->add(new \Xibo\Middleware\Xmr($app));
-$app->add(new \Xibo\Middleware\Csp($app->getContainer()));
+$app->add(new \Xibo\Middleware\Csp($app->getContainer(), false));
 $app->add(TwigMiddleware::createFromContainer($app));
 $app->addRoutingMiddleware();
 $app->add(new \Xibo\Middleware\TrailingSlashMiddleware($app));
@@ -118,6 +118,10 @@ $app->group('/', function () use ($app) {
         ->setName('module.getData');
     $app->get('/fonts/fontcss', ['\Xibo\Controller\Font','fontCss'])
         ->setName('library.font.css');
+    $app->get('/fonts/download/{id}', ['\Xibo\Controller\Font', 'download'])
+        ->setName('font.download');
+    $app->get('/layout/background/{id}', ['\Xibo\Controller\Layout', 'downloadBackground'])
+        ->setName('layout.download.background');
     $app->get('/library/download/{id}', ['\Xibo\Controller\Library', 'download'])
         ->setName('library.download');
     $app->get('/library/thumbnail/{id}', ['\Xibo\Controller\Library', 'thumbnail'])
@@ -130,8 +134,6 @@ $app->group('/', function () use ($app) {
         ->setName('layout.preview.bundle');
     $app->get('/module/asset/{assetId}', ['\Xibo\Controller\Module', 'assetDownload'])
         ->setName('module.asset.download');
-    $app->get('/fonts/download/{id}', ['\Xibo\Controller\Font', 'download'])
-        ->setName('font.download');
 });
 
 // Run App

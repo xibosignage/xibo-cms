@@ -24,6 +24,7 @@ namespace Xibo\Controller;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\LayoutFactory;
+use Xibo\Middleware\TokenAuthMiddleware;
 use Xibo\Service\JwtServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 
@@ -89,12 +90,17 @@ class Preview extends Base
         $this->getState()->setData([
             'layout' => $layout,
             'previewOptions' => [
-                'getXlfUrl' => $this->urlFor($request, 'layout.getXlf', ['id' => $layout->layoutId]),
+                'xlfUrl' => $this->urlFor($request, 'layout.getXlf', ['id' => $layout->layoutId]),
                 'getResourceUrl' => $this->urlFor($request, 'module.getResource', [
                     'regionId' => ':regionId',
                     'id' => ':id',
                 ]),
-                'libraryDownloadUrl' => $this->urlFor($request, 'library.download', ['id' => ':id']),
+                'layoutBackgroundDownloadUrl' => TokenAuthMiddleware::sign(
+                    $request,
+                    '/preview/layout/background/' . $layout->layoutId,
+                    time() + 3600,
+                    $this->getConfig()->getApiKeyDetails()['encryptionKey'],
+                ),
                 'loaderUrl' => $this->getConfig()->uri('img/loader.gif'),
                 'layoutPreviewUrl' => $this->urlFor($request, 'layout.preview', ['id' => '[layoutCode]']),
             ],

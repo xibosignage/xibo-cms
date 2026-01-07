@@ -2778,7 +2778,7 @@ class Layout extends Base
 
         $layout = $this->layoutFactory->getById($id);
 
-        if (!$this->getUser()->checkViewable($layout)) {
+        if (!$this->getUser()->checkViewable($layout) && $request->getAttribute('authedViaToken') !== true) {
             throw new AccessDeniedException();
         }
 

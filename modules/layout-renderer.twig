@@ -52,7 +52,7 @@
             {% endautoescape %}
 
             {% set layoutObj = [{layoutId: layout.layoutId }] %}
-            {% set xlrOptions = previewOptions|merge({inPreview: true, previewJwt: previewJwt}) %}
+            {% set xlrOptions = previewOptions|merge({inPreview: true, previewJwt: previewJwt, platform: "CMS"}) %}
             (function($){
                 $(document).ready(function(){
                     var xiboLayoutRenderer = new XiboLayoutRenderer({{ layoutObj|json_encode()|raw }}, [], {{ xlrOptions|json_encode()|raw }});
