@@ -110,8 +110,6 @@ $app->group('/', function () use ($app) {
         ->setName('layout.preview');
     $app->get('/layout/xlf/{id}', ['\Xibo\Controller\Preview', 'getXlf'])
         ->setName('layout.getXlf');
-    $app->get('/connector/widget/preview', ['\Xibo\Controller\Connector', 'connectorPreview'])
-        ->setName('layout.preview.connector');
     $app->get('/playlist/widget/resource/{regionId}[/{id}]', ['\Xibo\Controller\Widget', 'getResource'])
         ->setName('module.getResource');
     $app->get('/playlist/widget/data/{regionId}/{id}', ['\Xibo\Controller\Widget', 'getData'])
@@ -134,6 +132,8 @@ $app->group('/', function () use ($app) {
         ->setName('layout.preview.bundle');
     $app->get('/module/asset/{assetId}', ['\Xibo\Controller\Module', 'assetDownload'])
         ->setName('module.asset.download');
+    $app->get('/connector/widget/preview', ['\Xibo\Controller\Connector', 'connectorPreview'])
+        ->setName('layout.preview.connector');
 });
 
 // Run App
