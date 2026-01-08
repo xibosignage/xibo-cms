@@ -1500,7 +1500,7 @@ class Schedule extends Base
             'defaultLat' => $defaultLat,
             'defaultLong' => $defaultLong,
             'recurringEvent' => $schedule->recurrenceType != '',
-            'showRecurringInstance' => $showRecurringInstance,
+            'showRecurringInstance' => $showRecurringInstance && $schedule->recurrenceType,
             'eventStart' => $eventStart,
             'eventEnd' => $eventEnd,
             'eventTypes' => \Xibo\Entity\Schedule::getEventTypes(),
