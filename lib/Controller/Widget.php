@@ -1410,11 +1410,11 @@ class Widget extends Base
                     $region,
                     $resource,
                     function (string $route, array $data, array $params = []) use ($request, $encryptionKey, $token) {
-                        if ($route === 'layout.preview.bundle'
-                            || $route === 'module.asset.download'
-                            || $route === 'module.getData'
-                        ) {
+                        if ($route === 'layout.preview.bundle' || $route === 'module.asset.download') {
                             return $this->urlFor($request, $route, $data, $params);
+                        } else if ($route === 'module.getData') {
+                            // Append the JWT to the URL
+                            return $this->urlFor($request, $route, $data, $params) . '?jwt=' . $token->toString();
                         } else {
                             return TokenAuthMiddleware::sign(
                                 $request,
