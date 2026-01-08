@@ -1410,12 +1410,11 @@ class Widget extends Base
                     $region,
                     $resource,
                     function (string $route, array $data, array $params = []) use ($request, $encryptionKey, $token) {
-                        if ($route === 'layout.preview.bundle' || $route === 'module.asset.download') {
+                        if ($route === 'layout.preview.bundle'
+                            || $route === 'module.asset.download'
+                            || $route === 'module.getData'
+                        ) {
                             return $this->urlFor($request, $route, $data, $params);
-                        } else if ($route === 'module.getData') {
-                            // TODO: once XLR has been modified to include the JWT in the header, this should be moved
-                            //  up to the condition above.
-                            return $this->urlFor($request, $route, $data, $params) . '?jwt=' . $token->toString();
                         } else {
                             return TokenAuthMiddleware::sign(
                                 $request,
