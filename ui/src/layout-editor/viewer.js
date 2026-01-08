@@ -3919,16 +3919,9 @@ Viewer.prototype.updateRegionContent = function(
 ) {
   const $container = this.DOMObject.find(`#${region.id}`);
   const $iframe = $container.find('iframe');
-  let hasInitialized = false;
 
   // Update iframe
   const updateIframe = function($targetIframe) {
-    // Prevent double update
-    if (hasInitialized) {
-      return false;
-    }
-    hasInitialized = true;
-
     $targetIframe.css({
       width: region.scaledDimensions.width,
       height: region.scaledDimensions.height,
