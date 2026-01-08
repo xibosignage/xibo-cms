@@ -3942,10 +3942,12 @@ Viewer.prototype.updateRegionContent = function(
     }
 
     // We need to recalculate the scale inside of the iframe
-    $targetIframe[0].contentWindow.postMessage({
-      method: 'renderContent',
-      options: options,
-    }, '*');
+    if ($targetIframe[0].contentWindow) {
+      $targetIframe[0].contentWindow.postMessage({
+        method: 'renderContent',
+        options: options,
+      }, '*');
+    }
   };
 
   // Check if iframe exists, and is loaded
@@ -3970,6 +3972,8 @@ Viewer.prototype.updateRegionContent = function(
         window.removeEventListener('message', messageHandler);
         rawIframe._loadedMessageHandler = null;
 
+        $iframe.data('notFirstCall', false);
+
         updateIframe($iframe);
       }
     };
@@ -3980,13 +3984,14 @@ Viewer.prototype.updateRegionContent = function(
 
     // Fallback - if we missed the message event
     $iframe.off('load.viewerUpdate').on('load.viewerUpdate', function() {
+      $iframe.data('notFirstCall', false);
       updateIframe($iframe);
     });
 
-    // Iframe was loaded already, always update
-    if ($iframe.data('notFirstCall')) {
-      updateIframe($iframe);
-    }
+    // Always try to update, even if the frame isn't loaded yet
+    // we check there for iframe content not being available
+    // with $targetIframe[0].contentWindow
+    updateIframe($iframe);
   }
 
   // Process image and video/playlist thumbs
