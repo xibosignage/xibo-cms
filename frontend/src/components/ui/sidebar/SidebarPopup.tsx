@@ -1,0 +1,69 @@
+import { NavLink, useLocation } from 'react-router-dom';
+import { AppRoute } from '@/config/appRoutes';
+import { useTranslation } from 'react-i18next';
+
+interface SidebarPopupProps {
+  route: AppRoute;
+  isCollapsed: boolean;
+}
+
+export function SidebarPopup({ route, isCollapsed }: SidebarPopupProps) {
+  const { t } = useTranslation();
+  const location = useLocation();
+
+  return (
+    <>
+      {isCollapsed && (
+        <div
+          className="pointer-events-none absolute top-0 opacity-0 hidden 
+          group-hover:opacity-100 group-hover:block transition-opacity duration-200 -right-[200px] z-50"
+        >
+          <div className="pointer-events-auto *:min-w-[200px] text-white bg-xibo-blue-800 rounded-e-md shadow-lg">
+            {/* Parent label */}
+            <a
+              href={!route.subLinks ? route.externalURL || route.path : ''}
+              className={`block px-4 py-2 font-[14px] bg-white/10 ${route.subLinks ? 'pointer-events-none' : 'cursor-pointer'}`}
+            >
+              {t(route.labelKey)}
+            </a>
+
+            {route.subLinks && (
+              <div className="flex flex-col w-full px-6 py-2 bg-black/10 border-white/20">
+                {route.subLinks.map((sub) => {
+                  const isSubActive =
+                    location.pathname === `/${route.path}/${sub.path}` ||
+                    location.pathname === `/${sub.path}`;
+
+                  return sub.externalURL ? (
+                    <a
+                      key={sub.labelKey}
+                      href={sub.externalURL}
+                      className={`text-sm px-3 py-2 rounded transition-colors hover:bg-white/10 ${
+                        isSubActive ? 'text-white bg-white/10' : 'text-xibo-blue-100'
+                      }`}
+                    >
+                      {t(sub.labelKey)}
+                    </a>
+                  ) : (
+                    <NavLink
+                      key={sub.path}
+                      // TODO: Update path once routes are fixed
+                      to={sub.path}
+                      className={({ isActive }) =>
+                        `text-sm px-3 py-2 rounded transition-colors hover:bg-white/10 ${
+                          isActive ? 'text-white bg-white/10' : 'text-xibo-blue-100'
+                        }`
+                      }
+                    >
+                      {t(sub.labelKey)}
+                    </NavLink>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
