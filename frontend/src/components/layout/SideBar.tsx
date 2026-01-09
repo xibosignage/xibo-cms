@@ -1,61 +1,80 @@
 import { useTranslation } from 'react-i18next';
-import { NavLink } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 import { APP_ROUTES } from '@/config/appRoutes';
+import { ChevronLeftSquare, ChevronRightSquare, X } from 'lucide-react';
+
+import logo from '@/assets/xibo-logo.svg';
+import favIcon from '@/assets/xibo-logo-icon.svg';
+import { useEffect, useState } from 'react';
+import { SidebarItem } from '../ui/sidebar/SidebarItem';
+import { hasActiveChild, isRouteActive } from '@/hooks/sidebar';
+import { SidebarPopup } from '../ui/sidebar/SidebarPopup';
+import { SidebarSubLinks } from '../ui/sidebar/SidebarSublinks';
+import { SidebarHeader } from '../ui/sidebar/SidebarHeader';
 
 interface SidebarMenuProps {
   isCollapsed: boolean;
   toggleSidebar: () => void;
+  closeMobileDrawer?: () => void;
 }
 
-export default function SidebarMenu({ isCollapsed, toggleSidebar }: SidebarMenuProps) {
+export default function SidebarMenu({
+  isCollapsed,
+  toggleSidebar,
+  closeMobileDrawer,
+}: SidebarMenuProps) {
   const { t } = useTranslation();
+  const location = useLocation();
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
 
-  const activeClasses =
-    'font-medium ml-4 flex flex-row gap-1.5 text-white dark:text-black focus:outline-hidden';
-  const inactiveClasses =
-    'font-medium ml-4 flex flex-row gap-1.5 text-gray-500 hover:text-gray-400 focus:outline-hidden focus:text-gray-400 dark:text-neutral-400 dark:hover:text-neutral-500 dark:focus:text-neutral-500';
+  useEffect(() => {
+    APP_ROUTES.forEach((route) => {
+      if (route.subLinks?.some((sub) => location.pathname === `/${sub.path}`)) {
+        setOpenMenu(route.path);
+      }
+    });
+  }, [location.pathname]);
+
+  const toggleMenu = (path: string) => {
+    setOpenMenu((prev) => (prev === path ? null : path));
+  };
 
   return (
-    <div className="flex flex-col gap-2">
-      {/* Collapse button */}
-      <div className="p-4 mt-auto">
-        <button
-          onClick={toggleSidebar}
-          className={`flex w-full items-center justify-center p-2 rounded-lg hover:bg-xibo-blue-600 hover:dark:bg-orange-400 transition-colors
-            ${isCollapsed ? '' : 'justify-start'}
-          `}
-        >
-          {isCollapsed ? '>' : '<'}
-
-          {!isCollapsed && <span className="ml-3 text-sm font-medium">Collapse</span>}
-        </button>
-      </div>
-
+    <div className={`flex flex-col gap-5 py-5  ${isCollapsed ? 'px-0' : 'p-5'}`}>
+      <SidebarHeader
+        isCollapsed={isCollapsed}
+        toggleSidebar={toggleSidebar}
+        closeMobileDrawer={closeMobileDrawer}
+      />
       {/* Routes */}
-      {APP_ROUTES.map((route) => {
-        const label = !isCollapsed ? t(route.labelKey) : null;
-
-        if (!route.externalURL) {
+      <div className={`flex flex-col gap-y-2 ${isCollapsed ? 'items-center' : 'items-start'}`}>
+        {APP_ROUTES.map((route, index) => {
+          const label = !isCollapsed ? t(route.labelKey) : null;
+          const isOpen = openMenu === route.path;
+          const isActive = isRouteActive(route, location.pathname);
+          const isChildActive = hasActiveChild(route, location.pathname);
           return (
-            <NavLink
-              key={route.path}
-              to={route.path}
-              className={({ isActive }) => (isActive ? activeClasses : inactiveClasses)}
+            <div
+              key={`${route.labelKey}-${index}`}
+              className="relative group flex flex-col w-full items-center overflow-visible"
             >
-              <route.icon className="pr-2" size={30} />
-              {label}
-            </NavLink>
+              <SidebarItem
+                route={route}
+                isCollapsed={isCollapsed}
+                isOpen={isOpen}
+                isActive={isActive}
+                label={label}
+                toggleMenu={toggleMenu}
+              />
+              {/* Popup Hover */}
+              <SidebarPopup route={route} isCollapsed={isCollapsed} />
+              {/* Sublinks */}
+              <SidebarSubLinks isCollapsed={isCollapsed} isOpen={isOpen} route={route} />
+            </div>
           );
-        } else {
-          return (
-            <a href={route.externalURL} className={inactiveClasses}>
-              <route.icon className="pr-2" size={30} />
-              {label}
-            </a>
-          );
-        }
-      })}
+        })}
+      </div>
     </div>
   );
 }

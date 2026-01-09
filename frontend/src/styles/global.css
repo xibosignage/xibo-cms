@@ -41,3 +41,9 @@ html, body, #root { height: 100%; }
     --color-xibo-seasalt: #F7F7F7;
     --color-xibo-white: #FFFFFF;
 }
+
+@layer components {
+    .nav_link {
+        @apply font-medium text-[14px] flex items-center flex-row ;
+    }
+}

@@ -3,12 +3,14 @@ import { matchPath } from 'react-router-dom';
 
 import { APP_ROUTES } from '@/config/appRoutes';
 import { logout } from '@/lib/logout';
+import { Menu } from 'lucide-react';
 
 interface TopNavProps {
   pathName: string;
+  onToggleMobileDrawer: () => void;
 }
 
-export default function TopNav({ pathName }: TopNavProps) {
+export default function TopNav({ pathName, onToggleMobileDrawer: onToggleSidebar }: TopNavProps) {
   const { t } = useTranslation();
 
   const activeRoute = APP_ROUTES.find((route) =>
@@ -31,6 +33,13 @@ export default function TopNav({ pathName }: TopNavProps) {
             {t('Logout')}
           </button>
         </div>
+        <button
+          type="button"
+          onClick={onToggleSidebar}
+          className="md:hidden inline-flex items-center justify-center rounded-md p-1.5 text-xibo-blue-600 outline outline-xibo-blue-600"
+        >
+          <Menu size={14} />
+        </button>
       </nav>
     </header>
   );
