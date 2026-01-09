@@ -1,8 +1,6 @@
-import type { ComponentType } from 'react';
 import {
   type LucideIcon,
   LayoutDashboard,
-  Image,
   Settings,
   Palette,
   Library,
@@ -13,6 +11,7 @@ import {
   FileLineChart,
   CalendarDays,
 } from 'lucide-react';
+import type { ComponentType } from 'react';
 
 export interface AppRoute {
   path: string;
@@ -29,12 +28,6 @@ export const APP_ROUTES: AppRoute[] = [
     labelKey: 'Dashboard',
     icon: LayoutDashboard,
     externalURL: '/statusdashboard',
-  },
-  {
-    path: 'media',
-    labelKey: 'Media',
-    icon: Image,
-    lazy: () => import('@/pages/Media/Media').then((m) => ({ Component: m.default })),
   },
   {
     path: 'schedule',
@@ -93,7 +86,7 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'media',
         labelKey: 'Media',
-        lazy: () => import('@/pages/Media/Media').then((m) => ({ Component: m.default })),
+        lazy: () => import('@/pages/Library/Media/Media').then((m) => ({ Component: m.default })),
       },
       {
         path: 'datasets',

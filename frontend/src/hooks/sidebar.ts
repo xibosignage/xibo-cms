@@ -1,4 +1,4 @@
-import { AppRoute } from '@/config/appRoutes';
+import type { AppRoute } from '@/config/appRoutes';
 
 export function isRouteActive(route: AppRoute, pathname: string): boolean {
   if (pathname === `/${route.path}`) return true;
@@ -7,11 +7,5 @@ export function isRouteActive(route: AppRoute, pathname: string): boolean {
     route.subLinks?.some(
       (sub) => pathname === `/${sub.path}` || pathname === `/${route.path}/${sub.path}`,
     ) ?? false
-  );
-}
-
-export function hasActiveChild(route: AppRoute, pathname: string) {
-  return route.subLinks?.some(
-    (sub) => pathname === `/${sub.path}` || pathname === `/${route.path}/${sub.path}`,
   );
 }

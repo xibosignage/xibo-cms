@@ -1,17 +1,14 @@
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 
-import { APP_ROUTES } from '@/config/appRoutes';
-import { ChevronLeftSquare, ChevronRightSquare, X } from 'lucide-react';
-
-import logo from '@/assets/xibo-logo.svg';
-import favIcon from '@/assets/xibo-logo-icon.svg';
-import { useEffect, useState } from 'react';
+import { SidebarHeader } from '../ui/sidebar/SidebarHeader';
 import { SidebarItem } from '../ui/sidebar/SidebarItem';
-import { hasActiveChild, isRouteActive } from '@/hooks/sidebar';
 import { SidebarPopup } from '../ui/sidebar/SidebarPopup';
 import { SidebarSubLinks } from '../ui/sidebar/SidebarSublinks';
-import { SidebarHeader } from '../ui/sidebar/SidebarHeader';
+
+import { APP_ROUTES } from '@/config/appRoutes';
+import { isRouteActive } from '@/hooks/sidebar';
 
 interface SidebarMenuProps {
   isCollapsed: boolean;
@@ -30,7 +27,13 @@ export default function SidebarMenu({
 
   useEffect(() => {
     APP_ROUTES.forEach((route) => {
-      if (route.subLinks?.some((sub) => location.pathname === `/${sub.path}`)) {
+      // Check if any sublink matches the current location
+      if (
+        route.subLinks?.some((sub) => {
+          const fullPath = `/${route.path}/${sub.path}`;
+          return location.pathname === fullPath || location.pathname.startsWith(`${fullPath}/`);
+        })
+      ) {
         setOpenMenu(route.path);
       }
     });
@@ -53,7 +56,6 @@ export default function SidebarMenu({
           const label = !isCollapsed ? t(route.labelKey) : null;
           const isOpen = openMenu === route.path;
           const isActive = isRouteActive(route, location.pathname);
-          const isChildActive = hasActiveChild(route, location.pathname);
           return (
             <div
               key={`${route.labelKey}-${index}`}

@@ -1,6 +1,7 @@
 import { ChevronLeftSquare, ChevronRightSquare, X } from 'lucide-react';
-import logo from '@/assets/xibo-logo.svg';
+
 import favIcon from '@/assets/xibo-logo-icon.svg';
+import logo from '@/assets/xibo-logo.svg';
 
 interface Props {
   isCollapsed: boolean;

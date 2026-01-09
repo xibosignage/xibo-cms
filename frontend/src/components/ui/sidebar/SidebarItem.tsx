@@ -1,6 +1,7 @@
-import { NavLink } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
-import { AppRoute } from '@/config/appRoutes';
+import { NavLink } from 'react-router-dom';
+
+import type { AppRoute } from '@/config/appRoutes';
 
 interface SidebarItemProps {
   route: AppRoute;

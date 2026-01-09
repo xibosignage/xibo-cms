@@ -1,6 +1,7 @@
-import { NavLink, useLocation } from 'react-router-dom';
-import { AppRoute } from '@/config/appRoutes';
 import { useTranslation } from 'react-i18next';
+import { NavLink, useLocation } from 'react-router-dom';
+
+import type { AppRoute } from '@/config/appRoutes';
 
 interface SidebarSubLinksProps {
   route: AppRoute;
@@ -22,6 +23,7 @@ export function SidebarSubLinks({ route, isOpen, isCollapsed }: SidebarSubLinksP
         >
           <div className="flex flex-col w-full px-6 py-2 bg-black/10 border-y-2 border-white/20">
             {route.subLinks.map((sub) => {
+              const fullPath = `/${route.path}/${sub.path}`;
               const isSubActive =
                 location.pathname === `/${route.path}/${sub.path}` ||
                 location.pathname === `/${sub.path}`;
@@ -39,8 +41,7 @@ export function SidebarSubLinks({ route, isOpen, isCollapsed }: SidebarSubLinksP
               ) : (
                 <NavLink
                   key={sub.path}
-                  // TODO: Update path once routes are fixed
-                  to={sub.path}
+                  to={fullPath}
                   className={({ isActive }) =>
                     `text-sm px-3 py-2 rounded transition-colors hover:bg-white/10 ${
                       isActive ? 'text-white bg-white/10' : 'text-xibo-blue-100'
