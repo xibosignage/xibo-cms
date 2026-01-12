@@ -1,80 +1,117 @@
 import { useState, useRef, useEffect } from 'react';
-// import { useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
-type RowWithLayout = {
-  layoutId: string;
-  layout?: string;
-};
+interface RowActionsProps<TData> {
+  row: TData;
+  onEdit?: (row: TData) => void;
+  onDelete?: (row: TData) => void;
+}
 
-type RowActionsProps<T extends object> = {
-  row: T;
-};
-
-export default function RowActions<T extends object>({ row }: RowActionsProps<T>) {
+export default function RowActions<TData>({ row, onEdit, onDelete }: RowActionsProps<TData>) {
   const [open, setOpen] = useState(false);
-  // const navigate = useNavigate();
+  const [coords, setCoords] = useState({ top: 0, left: 0 });
+
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
   const { t } = useTranslation();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(target) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(target)
+      ) {
         setOpen(false);
       }
     }
+
+    function handleScroll() {
+      if (open) {
+        setOpen(false);
+      }
+    }
+
     document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('scroll', handleScroll, true);
+    window.addEventListener('resize', handleScroll);
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('scroll', handleScroll, true);
+      window.removeEventListener('resize', handleScroll);
     };
-  }, []);
+  }, [open]);
 
-  function isLayoutRow(obj: unknown): obj is RowWithLayout {
-    return typeof obj === 'object' && obj !== null && 'layoutId' in obj;
-  }
-
-  const handleDesign = () => {
-    if (isLayoutRow(row)) {
-      window.location.href = `http://localhost:80/layout/designer/${row.layoutId}`;
-      // navigate(`/layouts/${row.layoutId}/edit`);
+  const toggleOpen = () => {
+    if (!open && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setCoords({
+        top: rect.bottom + 4,
+        left: rect.right - 144,
+      });
     }
+    setOpen(!open);
+  };
+
+  const handleEdit = () => {
+    if (onEdit) onEdit(row);
     setOpen(false);
   };
 
   const handleDelete = () => {
-    if (isLayoutRow(row) && row.layout) {
-      if (confirm(`Are you sure you want to delete layout "${row.layout}"?`)) {
-        console.log('Delete layout:', row.layoutId);
-      }
-    }
+    if (onDelete) onDelete(row);
     setOpen(false);
   };
 
   return (
-    <div className="relative inline-block text-left" ref={dropdownRef}>
+    <div className="relative inline-block text-left">
       <button
-        onClick={() => setOpen(!open)}
-        className="text-gray-500 hover:text-gray-700 px-4 cursor-pointer"
+        ref={buttonRef}
+        onClick={toggleOpen}
+        className="text-gray-500 hover:text-gray-700 px-4 cursor-pointer focus:outline-none"
       >
         ⋮
       </button>
 
-      {open && (
-        <div className="absolute right-0 mt-2 w-36 bg-white border rounded shadow-lg z-10">
-          <button
-            onClick={handleDesign}
-            className="flex items-center w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+      {open &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            style={{
+              top: coords.top,
+              left: coords.left,
+            }}
+            className="fixed w-36 bg-white border border-gray-200 rounded shadow-lg z-100 overflow-hidden animate-in fade-in zoom-in-95 duration-100"
           >
-            {t('Edit')}
-          </button>
-          <button
-            onClick={handleDelete}
-            className="flex items-center w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100"
-          >
-            {t('Delete')}
-          </button>
-        </div>
-      )}
+            {onEdit ? (
+              <button
+                onClick={handleEdit}
+                className="flex items-center w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-700"
+              >
+                {t('Edit')}
+              </button>
+            ) : null}
+
+            {onDelete ? (
+              <button
+                onClick={handleDelete}
+                className="flex items-center w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100"
+              >
+                {t('Delete')}
+              </button>
+            ) : null}
+
+            {!onEdit && !onDelete && (
+              <div className="px-4 py-2 text-sm text-gray-400 italic">{t('No actions')}</div>
+            )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
