@@ -14,9 +14,11 @@
     "i18n:convert": "tsx scripts/convertMoToJson.ts"
   },
   "dependencies": {
+    "@tanstack/react-table": "^8.21.3",
     "axios": "^1.11.0",
     "i18next": "^25.4.0",
     "lucide-react": "^0.555.0",
+    "papaparse": "^5.5.3",
     "preline": "^3.2.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
