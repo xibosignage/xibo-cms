@@ -34,9 +34,7 @@ export default function PageWrapper({ title, actions, children }: Props) {
           {actions}
         </div>
       )}
-      <div className="rounded-2xl p-4 shadow-sm text-gray-900 dark:bg-gray-900 dark:text-gray-50">
-        {children}
-      </div>
+      <div className="p-4 shadow-sm text-gray-900">{children}</div>
     </section>
   );
 }

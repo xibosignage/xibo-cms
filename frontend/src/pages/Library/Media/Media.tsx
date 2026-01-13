@@ -18,7 +18,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
 .*/
-
 import {
   type ColumnDef,
   type SortingState,
@@ -26,14 +25,45 @@ import {
   type OnChangeFn,
   type RowSelectionState,
 } from '@tanstack/react-table';
+import {
+  Check,
+  X,
+  Search,
+  Filter,
+  Folder,
+  Plus,
+  Edit,
+  Download,
+  CopyCheck,
+  UserPlus2,
+  CalendarClock,
+  FolderInput,
+  Info,
+  Trash2,
+} from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { DataTable } from '@/components/ui/DataTable';
-import RowActions from '@/components/ui/RowActions';
+import { DataTable } from '@/components/ui/table/DataTable';
+import { Media as MediaCell, Text, Status, Actions, Tags } from '@/components/ui/table/TableCells';
 import { useDebounce } from '@/hooks/useDebounce';
 import { fetchMedia } from '@/services/mediaApi';
 import type { MediaRow } from '@/types/media';
+
+interface ApiTag {
+  tagId: number;
+  tag: string;
+}
+
+type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
+
+const formatDuration = (seconds: number) => {
+  if (!seconds) {
+    return '-';
+  }
+
+  return new Date(seconds * 1000).toISOString().slice(11, 19);
+};
 
 export default function Media() {
   const { t } = useTranslation();
@@ -47,10 +77,8 @@ export default function Media() {
     pageIndex: 0,
     pageSize: 10,
   });
-
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
-
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   const debouncedFilter = useDebounce(globalFilter, 500);
@@ -63,11 +91,9 @@ export default function Media() {
     setPagination((prev) => {
       const newPagination =
         typeof updaterOrValue === 'function' ? updaterOrValue(prev) : updaterOrValue;
-
       if (newPagination.pageSize !== prev.pageSize) {
         return { ...newPagination, pageIndex: 0 };
       }
-
       return newPagination;
     });
   };
@@ -91,7 +117,6 @@ export default function Media() {
         });
 
         setData(result.rows || []);
-
         setRowSelection({});
 
         const totalPages = Math.ceil(result.totalCount / pagination.pageSize);
@@ -111,6 +136,26 @@ export default function Media() {
     return () => controller.abort();
   }, [pagination, sorting, debouncedFilter]);
 
+  const handleDelete = () => {
+    const selectedItems = Object.keys(rowSelection)
+      .map((index) => data[Number(index)])
+      .filter((item): item is MediaRow => item !== undefined);
+
+    if (selectedItems.length === 0) {
+      return;
+    }
+
+    const message = `${t('Are you sure you want to delete these items?')}\n(${selectedItems.length} selected)`;
+
+    if (window.confirm(message)) {
+      console.log(
+        'Deleting items:',
+        selectedItems.map((i) => i.mediaId),
+      );
+      setRowSelection({});
+    }
+  };
+
   const columns = useMemo<ColumnDef<MediaRow>[]>(
     () => [
       {
@@ -121,8 +166,7 @@ export default function Media() {
               type="checkbox"
               checked={table.getIsAllPageRowsSelected()}
               onChange={(e) => table.toggleAllPageRowsSelected(!!e.target.checked)}
-              aria-label={t('Select all')}
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="shrink-0 mt-0.5 border-gray-200 text-gray-600 focus:ring-gray-500 disabled:opacity-50 disabled:pointer-events-none"
             />
           </div>
         ),
@@ -132,101 +176,250 @@ export default function Media() {
               type="checkbox"
               checked={row.getIsSelected()}
               onChange={(e) => row.toggleSelected(!!e.target.checked)}
-              aria-label={t('Select row')}
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="shrink-0 mt-0.5 border-gray-200 text-gray-600 focus:ring-gray-500 disabled:opacity-50 disabled:pointer-events-none"
             />
           </div>
         ),
         enableSorting: false,
         enableHiding: false,
-        size: 50,
+        size: 55,
       },
       {
         accessorKey: 'mediaId',
         header: t('ID'),
         size: 80,
-      },
-      {
-        accessorKey: 'name',
-        header: t('Name'),
-        size: 200,
+        cell: (info) => <Text className="font-mono text-xs">{info.getValue<number>()}</Text>,
       },
       {
         accessorKey: 'thumbnail',
         header: t('Thumbnail'),
         size: 100,
-        cell: ({ row }) => {
-          const thumb = row.original.thumbnail;
-          const name = row.original.name;
-
-          if (!thumb) {
-            return (
-              <div className="h-12 w-12 rounded-md bg-gray-100 flex items-center justify-center text-gray-400 text-xs">
-                N/A
-              </div>
-            );
-          }
-
-          return (
-            <div className="h-12 w-12 overflow-hidden rounded-md border bg-white">
-              <img
-                src={thumb}
-                alt={name ?? 'thumbnail'}
-                className="h-full w-full object-cover"
-                loading="lazy"
-                onError={(e) => (e.currentTarget.style.visibility = 'hidden')}
-              />
-            </div>
-          );
-        },
+        enableSorting: false,
+        cell: (info) => (
+          <MediaCell
+            id={info.row.original.mediaId}
+            thumb={info.row.original.thumbnail}
+            alt={info.row.original.name}
+            mediaType={(info.row.original.mediaType as MediaType) || 'other'}
+          />
+        ),
+      },
+      {
+        accessorKey: 'name',
+        header: t('Name'),
+        size: 250,
+        enableHiding: false,
+        cell: (info) => <Text>{info.getValue<string>()}</Text>,
       },
       {
         accessorKey: 'mediaType',
         header: t('Type'),
         size: 100,
+        cell: (info) => <Status label={info.getValue() as string} type="neutral" />,
+      },
+      {
+        accessorKey: 'tags',
+        header: t('Tags'),
+        size: 200,
+        cell: (info) => {
+          const tags = info.getValue<ApiTag[]>() || [];
+          const formattedTags = tags.map((tag) => ({
+            id: tag.tagId,
+            label: tag.tag,
+          }));
+          return <Tags tags={formattedTags} />;
+        },
+      },
+      {
+        id: 'formattedDuration',
+        accessorKey: 'duration',
+        header: t('Duration'),
+        size: 100,
+        cell: (info) => <Text>{formatDuration(info.getValue<number>())}</Text>,
+      },
+      {
+        id: 'durationSeconds',
+        accessorKey: 'duration',
+        header: t('Duration (s)'),
+        size: 100,
+        cell: (info) => <Text>{info.getValue<number>()}</Text>,
+      },
+      {
+        accessorKey: 'fileSizeFormatted',
+        header: t('Size'),
+        size: 100,
+        cell: (info) => <Text>{info.getValue<string>()}</Text>,
+      },
+      {
+        accessorKey: 'fileSize',
+        header: t('Size (bytes)'),
+        size: 120,
+        cell: (info) => (
+          <Text className="font-mono text-xs">{info.getValue<number>().toLocaleString()}</Text>
+        ),
+      },
+      {
+        id: 'resolution',
+        header: t('Resolution'),
+        size: 120,
+        accessorFn: (row) => {
+          if (row.width && row.height) return `${row.width}x${row.height}`;
+          return '';
+        },
+        cell: (info) => <Text>{info.getValue<string>() || '-'}</Text>,
       },
       {
         accessorKey: 'owner',
         header: t('Owner'),
         size: 150,
+        cell: (info) => <Text>{info.getValue<string>()}</Text>,
       },
       {
-        accessorKey: 'valid',
-        header: t('Valid'),
+        accessorKey: 'groupsWithPermissions',
+        header: t('Sharing'),
+        size: 150,
+        cell: (info) => {
+          const groups = info.getValue() as string;
+          return <Text className="italic text-gray-500">{groups || t('Private')}</Text>;
+        },
+      },
+      {
+        accessorKey: 'revised',
+        header: t('Revised'),
         size: 80,
-        cell: ({ getValue }) => {
-          const isValid = getValue<boolean>();
-          return isValid ? (
-            <span className="text-green-600 font-bold" aria-label={t('Valid')}>
-              ✔
-            </span>
+        cell: (info) => <Text>{info.getValue<number>()}</Text>,
+      },
+      {
+        accessorKey: 'released',
+        header: t('Released'),
+        size: 100,
+        cell: (info) => {
+          const isReleased = info.getValue() === 1;
+          return isReleased ? (
+            <Check className="w-4 h-4 text-green-600" />
           ) : (
-            <span className="text-red-600 font-bold" aria-label={t('Invalid')}>
-              ✘
-            </span>
+            <X className="w-4 h-4 text-gray-400" />
           );
         },
       },
       {
+        accessorKey: 'fileName',
+        header: t('File Name'),
+        size: 200,
+        cell: (info) => (
+          <Text className="truncate" title={info.getValue() as string}>
+            {info.getValue<string>()}
+          </Text>
+        ),
+      },
+      {
+        accessorKey: 'enableStat',
+        header: t('Stats?'),
+        size: 100,
+        cell: (info) => <Status label={info.getValue() as string} type="neutral" />,
+      },
+      {
         accessorKey: 'createdDt',
         header: t('Created'),
-        size: 150,
+        size: 180,
+        cell: (info) => <Text subtext="Date">{info.getValue<string>()}</Text>,
+      },
+      {
+        accessorKey: 'modifiedDt',
+        header: t('Modified'),
+        size: 180,
+        cell: (info) => <Text subtext="Date">{info.getValue<string>()}</Text>,
+      },
+      {
+        accessorKey: 'expires',
+        header: t('Expires'),
+        size: 180,
+        cell: (info) => {
+          const val = info.getValue() as number;
+          if (val === 0) return <span className="text-gray-400">-</span>;
+          return <Text>{val}</Text>;
+        },
       },
       {
         id: 'actions',
-        size: 60,
+        header: '',
+        size: 140,
+        enableHiding: false,
         cell: ({ row }) => (
-          <RowActions
-            row={row.original}
-            onEdit={(media) => {
-              console.log('Edit media:', media.mediaId);
-              // Implement edit logic or navigation here
-            }}
-            onDelete={(media) => {
-              if (confirm(t('Are you sure you want to delete this media?', { name: media.name }))) {
-                console.log('Delete media:', media.mediaId);
-              }
-            }}
+          <Actions
+            row={row}
+            actions={[
+              // Quick Actions
+              {
+                label: t('Edit'),
+                icon: <Edit className="w-4 h-4" />,
+                onClick: (data) => console.log('Edit', data.mediaId),
+                isQuickAction: true,
+              },
+              {
+                label: t('Download'),
+                icon: <Download className="w-4 h-4" />,
+                onClick: (data) => console.log('Download', data.mediaId),
+                isQuickAction: true,
+              },
+
+              // Dropdown Menu Actions
+              {
+                label: t('Edit'),
+                icon: <Edit className="w-4 h-4" />,
+                onClick: (data) => console.log('Edit', data.mediaId),
+              },
+              {
+                label: t('Make a Copy'),
+                icon: <CopyCheck className="w-4 h-4" />,
+                onClick: (data) => console.log('Make a Copy', data.mediaId),
+              },
+              {
+                label: t('Move'),
+                icon: <FolderInput className="w-4 h-4" />,
+                onClick: (data) => console.log('Move', data.mediaId),
+              },
+              {
+                label: t('Share'),
+                icon: <UserPlus2 className="w-4 h-4" />,
+                onClick: (data) => console.log('Share', data.mediaId),
+              },
+              {
+                label: t('Download'),
+                icon: <Download className="w-4 h-4" />,
+                onClick: (data) => console.log('Download', data.mediaId),
+              },
+              {
+                label: t('Schedule'),
+                icon: <CalendarClock className="w-4 h-4" />,
+                onClick: (data) => console.log('Schedule', data.mediaId),
+              },
+              {
+                label: t('Details'),
+                icon: <Info className="w-4 h-4" />,
+                onClick: (data) => console.log('Details', data.mediaId),
+              },
+              {
+                isSeparator: true,
+              },
+              {
+                label: t('Enable Stats Collection'),
+                onClick: (data) => console.log('Enable Stats', data.mediaId),
+              },
+              {
+                label: t('Usage Report'),
+                onClick: (data) => console.log('Usage Report', data.mediaId),
+              },
+              {
+                isSeparator: true,
+              },
+              {
+                label: t('Delete'),
+                icon: <Trash2 className="w-4 h-4" />,
+                onClick: handleDelete,
+                variant: 'danger',
+              },
+            ]}
           />
         ),
       },
@@ -234,34 +427,70 @@ export default function Media() {
     [t],
   );
 
-  const handleDelete = () => {
-    const selectedItems = Object.keys(rowSelection)
-      .map((index) => data[Number(index)])
-      .filter((item): item is MediaRow => item !== undefined);
-
-    if (selectedItems.length === 0) {
-      return;
-    }
-
-    const itemList = selectedItems.map((item) => `• ${item.name} (ID: ${item.mediaId})`).join('\n');
-
-    const message = `${t('Are you sure you want to delete these items?')}\n\n${itemList}`;
-
-    if (window.confirm(message)) {
-      console.log(
-        'Deleting items:',
-        selectedItems.map((i) => i.mediaId),
-      );
-
-      // Clear selection
-      setRowSelection({});
-    }
-  };
-
   return (
-    <section className="space-y-4 p-4">
+    <section className="space-y-4 p-4 md:p-6 min-h-screen">
+      {/* TODO: Navigation tabs & Buttons */}
+      <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4 pb-2">
+        {/* TODO: Navigation tabs */}
+        <nav className="-mb-px flex space-x-6 overflow-x-auto" aria-label="Tabs">
+          {['Playlists', 'Media', 'Datasets', 'MenuBoards'].map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={`py-2 px-1 inline-flex items-center gap-x-2 border-b-2 whitespace-nowrap focus:outline-none transition-colors ${
+                tab === 'Media'
+                  ? 'text-gray-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300'
+              }`}
+              aria-current={tab === 'Media' ? 'page' : undefined}
+            >
+              {t(tab)}
+            </button>
+          ))}
+        </nav>
+
+        {/* TODO: Buttons */}
+        <div className="flex items-center gap-2 mb-2 md:mb-0">
+          <button className="py-2 px-4 inline-flex justify-center items-center gap-2 border border-transparent bg-gray-600 text-white hover:bg-gray-700 transition-all">
+            <Plus className="w-4 h-4" />
+            {t('Add Media')}
+          </button>
+        </div>
+      </div>
+
+      {/* TODO: Folder control & Filters */}
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+        {/* TODO: Folder Control */}
+        <div className="w-full md:w-auto">
+          <button className="py-2 px-3 w-full md:w-auto inline-flex justify-center md:justify-start items-center gap-x-2 border border-gray-200 bg-white text-gray-800 hover:bg-gray-50">
+            <Folder className="w-4 h-4 text-gray-500 fill-gray-100" />
+            {t('Folders')}
+          </button>
+        </div>
+
+        {/* TODO: Filters */}
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          {/* Search */}
+          <div className="relative w-full md:w-64">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <Search className="w-4 h-4 text-gray-400" />
+            </div>
+            <input
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              placeholder={t('Search media...')}
+              className="py-2 px-3 pl-10 block w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none"
+            />
+          </div>
+
+          {/* Inline filter button */}
+          <button className="p-2 inline-flex justify-center items-center gap-2 border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 transition-all shrink-0">
+            <Filter className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
       {error && (
-        <div className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
+        <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
           {error}
         </div>
       )}
@@ -280,13 +509,29 @@ export default function Media() {
         rowSelection={rowSelection}
         onRowSelectionChange={setRowSelection}
         columnPinning={{
-          left: ['select', 'mediaId'],
+          left: ['select'],
           right: ['actions'],
+        }}
+        initialState={{
+          columnVisibility: {
+            mediaId: false,
+            durationSeconds: false,
+            fileSize: false,
+            createdDt: false,
+            modifiedDt: false,
+            groupsWithPermissions: false,
+            revised: false,
+            released: false,
+            fileName: false,
+            expires: false,
+            enableStat: false,
+            owner: false,
+          },
         }}
         selectionActions={
           <button
             onClick={handleDelete}
-            className="text-xs bg-white border border-blue-300 text-blue-700 hover:bg-blue-50 px-3 py-1.5 rounded shadow-sm font-medium transition-colors"
+            className="py-1.5 px-3 inline-flex items-center gap-x-2 border border-gray-200 bg-white text-red-600 hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
           >
             {t('Delete Selected')}
           </button>

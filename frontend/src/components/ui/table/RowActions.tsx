@@ -17,19 +17,29 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
-.*/
+ */
 
+import { MoreVertical } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
-interface RowActionsProps<TData> {
-  row: TData;
-  onEdit?: (row: TData) => void;
-  onDelete?: (row: TData) => void;
+export interface RowAction<TData> {
+  label?: string;
+  onClick?: (row: TData) => void;
+  icon?: ReactNode;
+  variant?: 'default' | 'danger';
+  isSeparator?: boolean;
+  isQuickAction?: boolean;
 }
 
-export default function RowActions<TData>({ row, onEdit, onDelete }: RowActionsProps<TData>) {
+interface RowActionsProps<TData> {
+  row: TData;
+  actions: RowAction<TData>[];
+}
+
+export default function RowActions<TData>({ row, actions }: RowActionsProps<TData>) {
   const [open, setOpen] = useState(false);
   const [coords, setCoords] = useState({ top: 0, left: 0 });
 
@@ -38,6 +48,7 @@ export default function RowActions<TData>({ row, onEdit, onDelete }: RowActionsP
 
   const { t } = useTranslation();
 
+  // Close on click outside or scroll
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as Node;
@@ -52,9 +63,7 @@ export default function RowActions<TData>({ row, onEdit, onDelete }: RowActionsP
     }
 
     function handleScroll() {
-      if (open) {
-        setOpen(false);
-      }
+      if (open) setOpen(false);
     }
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -68,35 +77,31 @@ export default function RowActions<TData>({ row, onEdit, onDelete }: RowActionsP
     };
   }, [open]);
 
-  const toggleOpen = () => {
+  const toggleOpen = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!open && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       setCoords({
-        top: rect.bottom + 4,
-        left: rect.right - 144,
+        top: rect.bottom + 2,
+        left: rect.right - 180,
       });
     }
     setOpen(!open);
   };
 
-  const handleEdit = () => {
-    if (onEdit) onEdit(row);
-    setOpen(false);
-  };
-
-  const handleDelete = () => {
-    if (onDelete) onDelete(row);
-    setOpen(false);
-  };
+  if (!actions || actions.length === 0) {
+    return null;
+  }
 
   return (
     <div className="relative inline-block text-left">
       <button
         ref={buttonRef}
         onClick={toggleOpen}
-        className="text-gray-500 hover:text-gray-700 px-4 cursor-pointer focus:outline-none"
+        className="p-1.5 text-gray-500 hover:bg-gray-100 focus:outline-none transition-colors"
+        aria-label={t('More actions')}
       >
-        ⋮
+        <MoreVertical className="w-4 h-4" />
       </button>
 
       {open &&
@@ -107,29 +112,38 @@ export default function RowActions<TData>({ row, onEdit, onDelete }: RowActionsP
               top: coords.top,
               left: coords.left,
             }}
-            className="fixed w-36 bg-white border border-gray-200 rounded shadow-lg z-100 overflow-hidden animate-in fade-in zoom-in-95 duration-100"
+            className="fixed w-[180px] bg-white shadow-xl z-9999 overflow-hidden animate-in fade-in zoom-in-95 duration-100"
           >
-            {onEdit ? (
-              <button
-                onClick={handleEdit}
-                className="flex items-center w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-700"
-              >
-                {t('Edit')}
-              </button>
-            ) : null}
+            <div className="py-1">
+              {actions.map((action, idx) => {
+                if (action.isSeparator) {
+                  return <div key={idx} className="my-1 h-px bg-gray-100" role="separator" />;
+                }
 
-            {onDelete ? (
-              <button
-                onClick={handleDelete}
-                className="flex items-center w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100"
-              >
-                {t('Delete')}
-              </button>
-            ) : null}
-
-            {!onEdit && !onDelete && (
-              <div className="px-4 py-2 text-sm text-gray-400 italic">{t('No actions')}</div>
-            )}
+                return (
+                  <button
+                    key={idx}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (action.onClick) action.onClick(row);
+                      setOpen(false);
+                    }}
+                    className={`flex items-center w-full text-left px-4 py-2 text-sm transition-colors text-gray-700 ${
+                      action.variant === 'danger'
+                        ? 'text-red-600 hover:bg-red-50'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    {action.icon && (
+                      <span className="mr-2 w-4 h-4 flex items-center justify-center">
+                        {action.icon}
+                      </span>
+                    )}
+                    {action.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>,
           document.body,
         )}
