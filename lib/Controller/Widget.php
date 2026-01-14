@@ -1311,11 +1311,17 @@ class Widget extends Base
         }
 
         // Decorate for output.
+        $encryptionKey = $this->getConfig()->getApiKeyDetails()['encryptionKey'];
         $data = $widgetDataProviderCache->decorateForPreview(
             $dataProvider->getData(),
-            function (string $route, array $data, array $params = []) use ($request) {
-                return $this->urlFor($request, $route, $data, $params);
-            }
+            function (string $route, array $data, array $params = []) use ($request, $encryptionKey) {
+                return TokenAuthMiddleware::sign(
+                    $request,
+                    $this->urlFor($request, $route, $data, $params),
+                    time() + 3600,
+                    $encryptionKey,
+                );
+            },
         );
 
         return $response->withJson([

@@ -95,7 +95,7 @@ $errorMiddleware = $app->addErrorMiddleware(
     true,
     true
 );
-$errorMiddleware->setDefaultErrorHandler(\Xibo\Middleware\Handlers::webErrorHandler($container));
+$errorMiddleware->setDefaultErrorHandler(\Xibo\Middleware\Handlers::webErrorHandler($container, true));
 
 // Application routes
 // ------------------
