@@ -2861,7 +2861,7 @@ window.createMiniLayoutPreview = function(previewUrl) {
   const previewTemplate =
     Handlebars.compile(
       '<iframe scrolling="no" sandbox="allow-scripts" src="{{url}}" ' +
-      'width="{{width}}px height="{{height}}px" style="border:0;"></iframe>');
+      'width="{{width}}px" height="{{height}}px" style="border:0;"></iframe>');
 
   // Clean all selected elements
   $layoutPreviewContent.html('');
@@ -2897,10 +2897,10 @@ window.createMiniLayoutPreview = function(previewUrl) {
 
     // Change icon based on size state
     $(ev.currentTarget).toggleClass(
-      'fa-arrow-circle-down', $layoutPreview.hasClass('large'),
+      'fa-minus-square', $layoutPreview.hasClass('large'),
     );
     $(ev.currentTarget).toggleClass(
-      'fa-arrow-circle-up', !$layoutPreview.hasClass('large'),
+      'fa-plus-square', !$layoutPreview.hasClass('large'),
     );
     // Re-show play button
     $layoutPreview.find('#playBtn').show();

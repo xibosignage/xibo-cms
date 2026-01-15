@@ -795,6 +795,7 @@ if(!String.prototype.formatNum) {
 					layoutId: event.layoutId,
 					layoutName: layout.layout,
 					layoutStatus: layout.status,
+					previewToken: layout.previewJwt,
 					eventFromDt: moment(event.fromDt, "X").tz ? moment(event.fromDt, "X").tz(timezone).format(jsDateFormat) : moment(event.fromDt, "X").format(jsDateFormat),
 					eventToDt: moment(event.toDt, "X").tz ? moment(event.toDt, "X").tz(timezone).format(jsDateFormat) : moment(event.toDt, "X").format(jsDateFormat),
 					eventDayPartId: event.dayPartId,

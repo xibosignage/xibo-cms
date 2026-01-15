@@ -2734,7 +2734,8 @@ const openAgendaModal = function(date) {
 
           // Create mini layout preview
           createMiniLayoutPreview(
-            layoutPreviewUrl.replace(':id', $self.data('elemId')),
+            layoutPreviewUrl.replace(':id', $self.data('elemId')) +
+              '?jwt=' + $self.data('elemToken'),
           );
 
           // Initialize container for the Schedule modal handling

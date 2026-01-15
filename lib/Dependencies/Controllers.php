@@ -496,7 +496,8 @@ class Controllers
                     $c->get('scheduleReminderFactory'),
                     $c->get('scheduleExclusionFactory'),
                     $c->get('syncGroupFactory'),
-                    $c->get('scheduleCriteriaFactory')
+                    $c->get('scheduleCriteriaFactory'),
+                    $c->get('jwtService'),
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
