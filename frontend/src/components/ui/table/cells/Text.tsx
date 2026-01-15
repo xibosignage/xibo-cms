@@ -19,14 +19,19 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
 .*/
 
-export interface MediaRow {
-  mediaId: number;
-  name: string;
-  thumbnail: string;
-  mediaType: string;
-  createdDt: string;
-  owner: string;
-  width?: number;
-  height?: number;
-  valid: boolean;
+import React from 'react';
+
+interface TextProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
+  subtext?: string;
+  className?: string;
+}
+
+export function Text({ children, subtext, className = '', ...props }: TextProps) {
+  return (
+    <div className={`flex flex-col ${className}`} {...props}>
+      <span className="text-gray-800">{children}</span>
+      {subtext && <span className="text-gray-500">{subtext}</span>}
+    </div>
+  );
 }

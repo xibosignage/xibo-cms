@@ -19,14 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
 .*/
 
-export interface MediaRow {
-  mediaId: number;
-  name: string;
-  thumbnail: string;
-  mediaType: string;
-  createdDt: string;
-  owner: string;
-  width?: number;
-  height?: number;
-  valid: boolean;
-}
+export { Actions } from './cells/Actions';
+export { Media } from './cells/Media';
+export { Status } from './cells/Status';
+export { Tags } from './cells/Tags';
+export { Text } from './cells/Text';

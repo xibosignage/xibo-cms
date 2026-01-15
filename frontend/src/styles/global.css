@@ -1,43 +1,74 @@
-@import "tailwindcss";
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+.*/
+
+@import 'tailwindcss';
 
 /* Preline UI (v4 way) */
-@import "preline/variants.css";
+@import 'preline/variants.css';
 @source "./node_modules/preline/dist/*.js";
 @plugin "@tailwindcss/forms";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* App-wide tweaks */
-html, body, #root { height: 100%; }
+html,
+body,
+#root {
+  height: 100%;
+}
 
 /* Custom colours */
 @theme {
-    --color-xibo-blue-50: #E1F0FF;
-    --color-xibo-blue-100: #BCD5FF;
-    --color-xibo-blue-200: #9EBFFF;
-    --color-xibo-blue-300: #80A9FF;
-    --color-xibo-blue-400: #6194FF;
-    --color-xibo-blue-500: #3F7FFF;
-    --color-xibo-blue-600: #0E70F6;
-    --color-xibo-blue-700: #0059D3;
-    --color-xibo-blue-800: #0042AE;
-    --color-xibo-blue-900: #02266C;
-    --color-xibo-blue-950: #001338;
+  --color-xibo-blue-50: #e1f0ff;
+  --color-xibo-blue-100: #bcd5ff;
+  --color-xibo-blue-200: #9ebfff;
+  --color-xibo-blue-300: #80a9ff;
+  --color-xibo-blue-400: #6194ff;
+  --color-xibo-blue-500: #3f7fff;
+  --color-xibo-blue-600: #0e70f6;
+  --color-xibo-blue-700: #0059d3;
+  --color-xibo-blue-800: #0042ae;
+  --color-xibo-blue-900: #02266c;
+  --color-xibo-blue-950: #001338;
 
-    --color-xibo-burnt-sienna-50: #FFE7D0;
-    --color-xibo-burnt-sienna-100: #FFCAAA;
-    --color-xibo-burnt-sienna-200: #FBB193;
-    --color-xibo-burnt-sienna-300: #FB9879;
-    --color-xibo-burnt-sienna-400: #F38869;
-    --color-xibo-burnt-sienna-500: #EB7857;
-    --color-xibo-burnt-sienna-600: #D46647;
-    --color-xibo-burnt-sienna-700: #BB5235;
-    --color-xibo-burnt-sienna-800: #9B3A21;
-    --color-xibo-burnt-sienna-900: #7A2510;
-    --color-xibo-burnt-sienna-950: #581400;
+  --color-xibo-burnt-sienna-50: #ffe7d0;
+  --color-xibo-burnt-sienna-100: #ffcaaa;
+  --color-xibo-burnt-sienna-200: #fbb193;
+  --color-xibo-burnt-sienna-300: #fb9879;
+  --color-xibo-burnt-sienna-400: #f38869;
+  --color-xibo-burnt-sienna-500: #eb7857;
+  --color-xibo-burnt-sienna-600: #d46647;
+  --color-xibo-burnt-sienna-700: #bb5235;
+  --color-xibo-burnt-sienna-800: #9b3a21;
+  --color-xibo-burnt-sienna-900: #7a2510;
+  --color-xibo-burnt-sienna-950: #581400;
 
-    --color-xibo-black: #000;
-    --color-xibo-grey: #484848;
-    --color-xibo-seasalt: #F7F7F7;
-    --color-xibo-white: #FFFFFF;
+  --color-xibo-black: #000;
+  --color-xibo-grey: #484848;
+  --color-xibo-seasalt: #f7f7f7;
+  --color-xibo-white: #ffffff;
+}
+
+@layer components {
+  .nav_link {
+    @apply font-medium text-[14px] flex items-center flex-row;
+  }
 }

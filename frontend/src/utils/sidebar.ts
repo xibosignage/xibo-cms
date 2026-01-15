@@ -19,14 +19,14 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
 .*/
 
-export interface MediaRow {
-  mediaId: number;
-  name: string;
-  thumbnail: string;
-  mediaType: string;
-  createdDt: string;
-  owner: string;
-  width?: number;
-  height?: number;
-  valid: boolean;
+import type { AppRoute } from '@/config/appRoutes';
+
+export function isRouteActive(route: AppRoute, pathname: string): boolean {
+  if (pathname === `/${route.path}`) return true;
+
+  return (
+    route.subLinks?.some(
+      (sub) => pathname === `/${sub.path}` || pathname === `/${route.path}/${sub.path}`,
+    ) ?? false
+  );
 }

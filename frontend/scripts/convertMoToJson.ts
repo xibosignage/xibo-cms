@@ -1,4 +1,24 @@
-// frontend/scripts/i18n.ts
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+.*/
+
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,7 +28,6 @@ import * as gettextParser from 'gettext-parser';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Paths (relative to frontend/scripts)
 const inputDir = path.resolve(__dirname, '../../locale');
 const outputRoot = path.resolve(__dirname, '../public/locale');
 const outputLangDir = path.join(outputRoot, 'langs');
@@ -27,7 +46,11 @@ function convertMoToJson() {
     const domain = parsed.translations[''] || {};
 
     for (const key of Object.keys(domain)) {
-      if (!key) continue; // skip header
+      // Skip header
+      if (!key) {
+        continue;
+      }
+
       const entry = domain[key];
       const val = entry?.msgstr?.[0];
       if (val) {
