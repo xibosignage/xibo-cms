@@ -502,6 +502,29 @@ class Library extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="sortBy",
+     *      in="query",
+     *      description="Specifies which field the results are sorted by. Used together with sortDir",
+     *      @SWG\Schema(
+     *          type="string",
+     *          enum={
+     *              "mediaId", "name", "type", "duration", "fileSize", "owner", "sharing", "released", "fileName",
+     *              "enableStat", "createdAt", "modifiedDt", "expires", "revised", "formattedDuration",
+     *              "durationSeconds", "fileSizeFormatted", "mediaType", "resolution"
+     *          }
+     *      )
+     *  ),
+     *  @SWG\Parameter(
+     *      name="sortDir",
+     *      in="query",
+     *      description="Sort direction",
+     *      required=false,
+     *      @SWG\Schema(
+     *          type="string",
+     *          enum={"asc", "desc"},
+     *      )
+     *  ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
