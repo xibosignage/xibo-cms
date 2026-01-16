@@ -31,7 +31,6 @@ import {
   Search,
   Filter,
   Folder,
-  Plus,
   Edit,
   Download,
   CopyCheck,
@@ -40,10 +39,14 @@ import {
   FolderInput,
   Info,
   Trash2,
+  FilterX,
 } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import Button from '@/components/ui/Button';
+import FilterInputs from '@/components/ui/media/FilterInputs';
+import MediaTopbar from '@/components/ui/media/MediaTopNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { Media as MediaCell, Text, Status, Actions, Tags } from '@/components/ui/table/TableCells';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -55,7 +58,18 @@ interface ApiTag {
   tag: string;
 }
 
+export interface FilterInput {
+  type: string;
+  owner: string;
+  userGroup: string;
+  orientation: string;
+  retired: string;
+  lastModified: string;
+}
+
 type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
+
+const MEDIA_NAV = ['Playlists', 'Media', 'Datasets', 'Menu Boards'];
 
 const formatDuration = (seconds: number) => {
   if (!seconds) {
@@ -80,8 +94,19 @@ export default function Media() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [activeTab, setActiveTab] = useState('Media');
+  const [openFilter, setOpenFilter] = useState(false);
 
   const debouncedFilter = useDebounce(globalFilter, 500);
+
+  const [filterInputs, setFilterInput] = useState<FilterInput>({
+    type: '',
+    owner: '',
+    userGroup: '',
+    orientation: '',
+    retired: '',
+    lastModified: '',
+  });
 
   useEffect(() => {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
@@ -427,37 +452,75 @@ export default function Media() {
     [t],
   );
 
+  function renderTabContent(tab: string) {
+    switch (tab) {
+      case 'Playlists':
+        return <div>Under Construction</div>;
+      case 'Media':
+        return (
+          <DataTable
+            columns={columns}
+            data={data}
+            pageCount={pageCount}
+            pagination={pagination}
+            onPaginationChange={handlePaginationChange}
+            sorting={sorting}
+            onSortingChange={setSorting}
+            globalFilter={globalFilter}
+            onGlobalFilterChange={setGlobalFilter}
+            loading={loading}
+            rowSelection={rowSelection}
+            onRowSelectionChange={setRowSelection}
+            columnPinning={{
+              left: ['select'],
+              right: ['actions'],
+            }}
+            initialState={{
+              columnVisibility: {
+                mediaId: false,
+                durationSeconds: false,
+                fileSize: false,
+                createdDt: false,
+                modifiedDt: false,
+                groupsWithPermissions: false,
+                revised: false,
+                released: false,
+                fileName: false,
+                expires: false,
+                enableStat: false,
+                owner: false,
+              },
+            }}
+            selectionActions={
+              <button
+                onClick={handleDelete}
+                className="py-1.5 px-3 inline-flex items-center gap-x-2 border border-gray-200 bg-white text-red-600 hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
+              >
+                {t('Delete Selected')}
+              </button>
+            }
+          />
+        );
+      case 'Datasets':
+        return <div>Under Construction</div>;
+      case 'Menu Boards':
+        return <div>Under Construction</div>;
+      default:
+        return null;
+    }
+  }
+
+  const handleFilterChange = (name: string, value: string) => {
+    setFilterInput((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   return (
-    <section className="space-y-4 p-4 md:p-6 min-h-screen">
+    <section className="md:space-y-4 space-y-0 min-h-screen">
       {/* TODO: Navigation tabs & Buttons */}
-      <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4 pb-2">
-        {/* TODO: Navigation tabs */}
-        <nav className="-mb-px flex space-x-6 overflow-x-auto" aria-label="Tabs">
-          {['Playlists', 'Media', 'Datasets', 'MenuBoards'].map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              className={`py-2 px-1 inline-flex items-center gap-x-2 border-b-2 whitespace-nowrap focus:outline-none transition-colors ${
-                tab === 'Media'
-                  ? 'text-gray-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300'
-              }`}
-              aria-current={tab === 'Media' ? 'page' : undefined}
-            >
-              {t(tab)}
-            </button>
-          ))}
-        </nav>
-
-        {/* TODO: Buttons */}
-        <div className="flex items-center gap-2 mb-2 md:mb-0">
-          <button className="py-2 px-4 inline-flex justify-center items-center gap-2 border border-transparent bg-gray-600 text-white hover:bg-gray-700 transition-all">
-            <Plus className="w-4 h-4" />
-            {t('Add Media')}
-          </button>
-        </div>
-      </div>
-
+      <MediaTopbar activeTab={activeTab} onTabClick={setActiveTab} navigation={MEDIA_NAV} />
       {/* TODO: Folder control & Filters */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         {/* TODO: Folder Control */}
@@ -469,74 +532,40 @@ export default function Media() {
         </div>
 
         {/* TODO: Filters */}
-        <div className="flex items-center gap-2 w-full md:w-auto">
+        <div className="flex items-center gap-2 md:w-auto w-full">
           {/* Search */}
-          <div className="relative w-full md:w-64">
+          <div className="relative flex-1 flex">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
               <Search className="w-4 h-4 text-gray-400" />
             </div>
             <input
+              name="search"
               value={globalFilter}
               onChange={(e) => setGlobalFilter(e.target.value)}
               placeholder={t('Search media...')}
-              className="py-2 px-3 pl-10 block w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none"
+              className="py-2 px-3 pl-10 block h-[45px] bg-gray-100 rounded-lg md:w-[365px] w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none"
             />
           </div>
-
           {/* Inline filter button */}
-          <button className="p-2 inline-flex justify-center items-center gap-2 border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 transition-all shrink-0">
-            <Filter className="w-4 h-4" />
-          </button>
+          <Button
+            icon={!openFilter ? Filter : FilterX}
+            variant="secondary"
+            onClick={() => setOpenFilter((prev) => !prev)}
+            removeTextOnMobile
+            className="aspect-square center"
+          >
+            {t('Filters')}
+          </Button>
         </div>
       </div>
+      {/* Filter Input Fields */}
+      <FilterInputs onChange={handleFilterChange} open={openFilter} values={filterInputs} />
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
           {error}
         </div>
       )}
-
-      <DataTable
-        columns={columns}
-        data={data}
-        pageCount={pageCount}
-        pagination={pagination}
-        onPaginationChange={handlePaginationChange}
-        sorting={sorting}
-        onSortingChange={setSorting}
-        globalFilter={globalFilter}
-        onGlobalFilterChange={setGlobalFilter}
-        loading={loading}
-        rowSelection={rowSelection}
-        onRowSelectionChange={setRowSelection}
-        columnPinning={{
-          left: ['select'],
-          right: ['actions'],
-        }}
-        initialState={{
-          columnVisibility: {
-            mediaId: false,
-            durationSeconds: false,
-            fileSize: false,
-            createdDt: false,
-            modifiedDt: false,
-            groupsWithPermissions: false,
-            revised: false,
-            released: false,
-            fileName: false,
-            expires: false,
-            enableStat: false,
-            owner: false,
-          },
-        }}
-        selectionActions={
-          <button
-            onClick={handleDelete}
-            className="py-1.5 px-3 inline-flex items-center gap-x-2 border border-gray-200 bg-white text-red-600 hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
-          >
-            {t('Delete Selected')}
-          </button>
-        }
-      />
+      {renderTabContent(activeTab)}
     </section>
   );
 }

@@ -19,48 +19,71 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
 .*/
 
-import { Menu } from 'lucide-react';
+import { Bell, Menu } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { matchPath } from 'react-router-dom';
 
 import { APP_ROUTES } from '@/config/appRoutes';
-import { logout } from '@/lib/logout';
 
 interface TopNavProps {
   pathName: string;
   onToggleMobileDrawer: () => void;
 }
 
+function findActiveRoute(pathname: string) {
+  for (const route of APP_ROUTES) {
+    // Match top-level route
+    if (matchPath({ path: `/${route.path}`, end: false }, pathname)) {
+      return route;
+    }
+
+    // Match sub-routes
+    if (route.subLinks) {
+      for (const sub of route.subLinks) {
+        if (matchPath({ path: `/${route.path}/${sub.path}`, end: false }, pathname)) {
+          return sub;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
 export default function TopNav({ pathName, onToggleMobileDrawer: onToggleSidebar }: TopNavProps) {
   const { t } = useTranslation();
 
-  const activeRoute = APP_ROUTES.find((route) =>
-    matchPath({ path: route.path, end: true }, pathName),
-  );
-
-  const pageTitle = activeRoute ? activeRoute.labelKey : 'Dashboard';
+  const activeRoute = findActiveRoute(pathName);
+  const pageTitle = activeRoute?.labelKey ?? 'Dashboard';
 
   return (
     <header className="sticky top-0 w-full px-5 py-4 bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
-      <nav className="flex flex-row align-middle justify-between">
-        <div className="flex align-middle h-6 font-semibold">{t(pageTitle)}</div>
-
-        <div className="flex flex-row gap-3">
+      <nav className="flex flex-row h-[38px] items-center justify-between">
+        <div className="flex align-middle font-semibold text-[16px]">{t(pageTitle)}</div>
+        <div className="center gap-x-2">
+          <div className="center gap-x-3 relative h-[38px] w-[38px]">
+            <button>
+              <Bell size={16} className="text-xibo-blue-600" />
+            </button>
+            {/* TODO: Update real badge data */}
+            <div className="w-[18px] h-[18px] bg-xibo-blue-600 rounded-full text-[10px] text-white absolute top-0 right-0 flex items-center justify-center">
+              2
+            </div>
+          </div>
+          {/* TODO: Update with real user's initial */}
+          <div className="h-[38px] w-[38px] center sm:flex hidden">
+            <div className="bg-xibo-blue-300 h-[26px] w-[26px] text-[12px] center rounded-full text-xibo-blue-800 font-semibold">
+              WA
+            </div>
+          </div>
           <button
             type="button"
-            onClick={logout}
-            className="inline-flex items-center cursor-pointer gap-x-2 text-sm font-semibold rounded-lg text-gray-800 hover:text-blue-600 focus:outline-hidden focus:text-blue-600 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:hover:text-white/70 dark:focus:text-white/70"
+            onClick={onToggleSidebar}
+            className="md:hidden center rounded-md p-1.5 text-xibo-blue-600 outline outline-xibo-blue-600"
           >
-            {t('Logout')}
+            <Menu size={14} />
           </button>
         </div>
-        <button
-          type="button"
-          onClick={onToggleSidebar}
-          className="md:hidden inline-flex items-center justify-center rounded-md p-1.5 text-xibo-blue-600 outline outline-xibo-blue-600"
-        >
-          <Menu size={14} />
-        </button>
       </nav>
     </header>
   );
