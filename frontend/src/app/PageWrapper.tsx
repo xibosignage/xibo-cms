@@ -34,7 +34,7 @@ export default function PageWrapper({ title, actions, children }: Props) {
           {actions}
         </div>
       )}
-      <div className="p-4 shadow-sm text-gray-900">{children}</div>
+      <div className="px-5 shadow-sm text-gray-900">{children}</div>
     </section>
   );
 }

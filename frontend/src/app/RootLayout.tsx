@@ -67,7 +67,7 @@ export default function RootLayout() {
           pathName={pathname}
           onToggleMobileDrawer={() => setOpenMobileDrawer(!openMobileDrawer)}
         />
-        <main className="flex-1 overflow-y-auto p-4 bg-white dark:bg-black">
+        <main className="flex-1 overflow-y-auto bg-white dark:bg-black">
           <Outlet />
         </main>
       </div>
