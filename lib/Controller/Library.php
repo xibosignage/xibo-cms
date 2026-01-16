@@ -671,6 +671,11 @@ class Library extends Base
 
             $media->buttons = [];
 
+            // Skip the buttons for now and do it once routing is updated
+            if ($this->isJson($request)) {
+                continue;
+            }
+
             // Buttons
             if ($this->getUser()->featureEnabled('library.modify')
                 && $user->checkEditable($media)
@@ -699,8 +704,8 @@ class Library extends Base
                         'dataAttributes' => [
                             [
                                 'name' => 'commit-url', 'value' => $this->urlFor($request, 'library.selectfolder', [
-                                    'id' => $media->mediaId
-                                ])
+                                'id' => $media->mediaId
+                            ])
                             ],
                             ['name' => 'commit-method', 'value' => 'put'],
                             ['name' => 'id', 'value' => 'library_button_selectfolder'],

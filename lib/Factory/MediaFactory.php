@@ -520,25 +520,11 @@ class MediaFactory extends BaseFactory
 
         if ($sortOrder === null) {
             $sortOrder = ['name'];
+        } else {
+            $sortOrder = $this->buildSortQuery($sanitizedFilter->getString('sortBy'), $sanitizedFilter->getString('sortDir'));
         }
-
-        $newSortOrder = [];
-        foreach ($sortOrder as $sort) {
-            if ($sort == '`revised`') {
-                $newSortOrder[] = '`parentId`';
-                continue;
-            }
-
-            if ($sort == '`revised` DESC') {
-                $newSortOrder[] = '`parentId` DESC';
-                continue;
-            }
-            $newSortOrder[] = $sort;
-        }
-        $sortOrder = $newSortOrder;
 
         $entries = [];
-
         $params = [];
         $select = '
             SELECT `media`.mediaId,
@@ -1010,5 +996,54 @@ class MediaFactory extends BaseFactory
         }
 
         return $entries;
+    }
+
+    /**
+     * Sanitize and build the sort query
+     * @param string|null $sortBy
+     * @param string|null $sortDir
+     * @return array|null
+     */
+    private function buildSortQuery(?string $sortBy, ?string $sortDir = null): ?array
+    {
+        $allowedColumns = [
+            'mediaId', 'name', 'type', 'duration', 'fileSize', 'owner',
+            'sharing', 'released', 'fileName', 'enableStat',
+            'createdDt', 'modifiedDt', 'expires'
+        ];
+
+        $columnMapping = [];
+
+        foreach ($allowedColumns as $col) {
+            $columnMapping[$col] = '`' . $col . '`';
+        }
+
+        $columnMapping += [
+            'revised'           => '`parentId`',
+            'formattedDuration' => '`duration`',
+            'durationSeconds'   => '`duration`',
+            'fileSizeFormatted' => '`fileSize`',
+            'mediaType'         => 'media.`type`',
+            'resolution'        => '(media.`width` * media.`height`)'
+        ];
+
+        $sortByList  = array_map('trim', explode(',', $sortBy ?: 'name'));
+        $sortDirList = array_map('trim', explode(',', $sortDir ?: 'asc'));
+
+        $order = [];
+
+        foreach ($sortByList as $i => $colName) {
+            if (!isset($columnMapping[$colName])) {
+                continue;
+            }
+
+            $dir = (isset($sortDirList[$i]) && strtolower($sortDirList[$i]) === 'desc')
+                ? ' DESC'
+                : ' ASC';
+
+            $order[] = $columnMapping[$colName] . $dir;
+        }
+
+        return $order ?? null;
     }
 }

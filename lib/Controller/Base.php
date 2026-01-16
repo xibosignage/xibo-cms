@@ -22,6 +22,7 @@
 
 namespace Xibo\Controller;
 use Carbon\Carbon;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
@@ -233,7 +234,7 @@ class Base
      * End the controller execution, calling render
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws ControllerNotImplemented if the controller is not implemented correctly
      * @throws GeneralException
      */
@@ -263,6 +264,20 @@ class Base
                 'recordsFiltered' => $recordsFiltered,
                 'data' => $data
             ];
+        }
+
+        // JSON Request
+        if ($this->isJson($request)) {
+            $this->getState()->setData([
+                'grid' => $grid,
+                'success' => $state->success,
+                'status' => $state->httpStatus,
+                'message' => $state->message,
+                'id' => $state->id,
+                'data' => $data
+            ]);
+
+            return $this->renderJsonResponse($request, $response->withStatus($state->httpStatus));
         }
 
         // API Request
@@ -314,14 +329,16 @@ class Base
                 throw new GeneralException(__('Unable to view this page'));
             }
         }
+
         $this->rendered = true;
+
         return $response;
     }
 
     /**
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws ControllerNotImplemented
      * @throws GeneralException
      */
@@ -411,7 +428,7 @@ class Base
     /**
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      */
     public function renderApiResponse(Request $request, Response $response)
     {
@@ -489,6 +506,64 @@ class Base
         }
 
         return $response->withJson($data);
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return ResponseInterface|Response
+     */
+    public function renderJsonResponse(Request $request, Response $response): Response|ResponseInterface
+    {
+        $data = $this->getState()->getData();
+
+        $response = $response->withStatus($data['status']);
+
+        if (!$data['success']) {
+            $data = [
+                'error' => [
+                    'message' => $data['message'],
+                    'code' => $data['status'],
+                    'data' => $data['data']
+                ]
+            ];
+
+            return $response->withJson($data);
+        }
+
+        if (!$data['grid']) {
+            return $response->withJson($data['data']);
+        }
+
+        // Total Number of Rows
+        $totalRows = $data['data']['recordsTotal'];
+
+        // Set some headers indicating our next/previous pages
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $start = $sanitizedParams->getInt('start', ['default' => 0]);
+        $size = $sanitizedParams->getInt('length', ['default' => 10]);
+
+        $linkHeader = '';
+        $url = (new HttpsDetect())->getRootUrl() . $request->getUri()->getPath();
+
+        // Is there a next page?
+        if ($start + $size < $totalRows) {
+            $linkHeader .= '<' . $url . '?start=' . ($start + $size) . '&length=' . $size . '>; rel="next", ';
+        }
+
+        // Is there a previous page?
+        if ($start > 0) {
+            $linkHeader .= '<' . $url . '?start=' . ($start - $size) . '&length=' . $size . '>; rel="prev", ';
+        }
+
+        // The first page
+        $linkHeader .= '<' . $url . '?start=0&length=' . $size . '>; rel="first"';
+
+        $response = $response
+            ->withHeader('X-Total-Count', $totalRows)
+            ->withHeader('Link', $linkHeader);
+
+        return $response->withJson($data['data']['data']);
     }
 
     /**
