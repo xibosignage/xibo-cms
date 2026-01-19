@@ -24,7 +24,8 @@ import { twMerge } from 'tailwind-merge';
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'primary' | 'secondary' | 'tertiary' | 'link';
-  icon?: LucideIcon;
+  leftIcon?: LucideIcon;
+  rightIcon?: LucideIcon;
   removeTextOnMobile?: boolean;
   ariaLabel?: string;
 };
@@ -33,20 +34,22 @@ const buttonVariant: Record<NonNullable<ButtonProps['variant']>, string> = {
   primary: 'text-white bg-xibo-blue-600 hover:bg-xibo-blue-700 focus:ring-4',
   secondary:
     'text-xibo-blue-600 border border-xibo-blue-600 bg-white hover:border-xibo-blue-800 hover:text-xibo-blue-800',
-  tertiary: 'text-xibo-blue-600 bg-gray-50 hover:bg-gray-100 hover:text-xibo-blue-800',
+  tertiary: 'p-2 text-xibo-blue-600 bg-gray-50 hover:bg-gray-100 hover:text-xibo-blue-800',
   link: 'text-xibo-blue-600 underline hover:text-xibo-blue-800 bg-transparent',
 };
 
 const baseClasses =
-  'p-2 rounded-lg gap-2 text-sm text-center tracking-[150%] flex items-center h-[45px] box-border cursor-pointer font-semibold focus:ring-blue-500/25';
+  'p-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-gray-50 text-xibo-blue-600 hover:bg-gray-100 hover:text-xibo-blue-800 focus:bg-gray-50 focus:ring-blue-500/25 focus:ring-4 focus:text-xibo-blue-600 disabled:text-blue-200 disabled:bg-gray-50 disabled:pointer-events-none cursor-pointer';
 
 export default function Button({
   variant = 'primary',
-  icon: Icon,
+  leftIcon: LeftIcon,
+  rightIcon: RightIcon,
   children,
   className,
   removeTextOnMobile = false,
   ariaLabel,
+  disabled = false,
   ...props
 }: ButtonProps) {
   const showText = Boolean(children);
@@ -55,12 +58,16 @@ export default function Button({
       type="button"
       className={twMerge(baseClasses, buttonVariant[variant], className)}
       aria-label={!showText ? ariaLabel : undefined}
+      disabled={disabled}
       {...props}
     >
-      {Icon && <Icon size={21} />}
+      {LeftIcon && <LeftIcon className="shrink-0 size-4" aria-hidden="true" />}
+
       {showText && (
         <span className={removeTextOnMobile ? 'hidden sm:inline' : undefined}>{children}</span>
       )}
+
+      {RightIcon && <RightIcon className="shrink-0 size-4" aria-hidden="true" />}
     </button>
   );
 }

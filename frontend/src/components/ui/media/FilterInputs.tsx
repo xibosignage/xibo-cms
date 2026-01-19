@@ -99,27 +99,32 @@ type FilterInputsProps = {
   onChange: (name: string, value: string) => void;
 };
 
-function FilterInputs({ open, values, onChange }: FilterInputsProps) {
+export default function FilterInputs({ open, values, onChange }: FilterInputsProps) {
   return (
     <div
-      className={`bg-slate-50 md:gap-x-4 gap-x-0 transition-all duration-300 ease-in-out
-        flex overflow-visible flex-wrap justify-between
-        ${open ? 'max-h-[600px] p-5 pt-7 mt-4 opacity-100' : 'max-h-0 opacity-0'}
+      aria-hidden={!open}
+      className={`
+        transition-all duration-300 ease-in-out w-full
+        ${
+          open
+            ? 'max-h-[600px] opacity-100 visible mt-4 overflow-visible'
+            : 'max-h-0 opacity-0 invisible mt-0 overflow-hidden'
+        }
       `}
     >
-      {FILTER_CONFIG.map((filter) => (
-        <SelectFilter
-          key={filter.name}
-          label={filter.label}
-          name={filter.name}
-          value={values[filter.name as keyof FilterInput]}
-          onChange={onChange}
-          options={filter.options}
-          className={filter?.className}
-        />
-      ))}
+      <div className="bg-slate-50 p-5 pt-7 flex flex-wrap justify-between md:gap-x-4 gap-x-0 rounded-lg border border-gray-100">
+        {FILTER_CONFIG.map((filter) => (
+          <SelectFilter
+            key={filter.name}
+            label={filter.label}
+            name={filter.name}
+            value={values[filter.name as keyof FilterInput]}
+            onChange={onChange}
+            options={filter.options}
+            className={filter?.className}
+          />
+        ))}
+      </div>
     </div>
   );
 }
-
-export default FilterInputs;

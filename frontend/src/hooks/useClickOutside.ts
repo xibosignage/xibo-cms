@@ -19,8 +19,28 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
 .*/
 
-export { Actions } from './cells/Actions';
-export { Media } from './cells/Media';
-export { Status } from './cells/Status';
-export { Tags } from './cells/Tags';
-export { Text } from './cells/Text';
+import { useEffect, type RefObject } from 'react';
+
+type Handler = (event: MouseEvent | TouchEvent) => void;
+
+export function useClickOutside<T extends HTMLElement>(
+  ref: RefObject<T | null>,
+  handler: Handler,
+): void {
+  useEffect(() => {
+    const listener = (event: MouseEvent | TouchEvent) => {
+      if (!ref.current || ref.current.contains(event.target as Node)) {
+        return;
+      }
+      handler(event);
+    };
+
+    document.addEventListener('mousedown', listener);
+    document.addEventListener('touchstart', listener);
+
+    return () => {
+      document.removeEventListener('mousedown', listener);
+      document.removeEventListener('touchstart', listener);
+    };
+  }, [ref, handler]);
+}

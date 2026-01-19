@@ -21,23 +21,24 @@
 
 import type { Row } from '@tanstack/react-table';
 
-import RowActions from '../RowActions';
-import type { RowAction } from '../RowActions';
+import DataTableRowActions from '../DataTableRowActions';
+import type { DataTableRowAction } from '../DataTableRowActions';
 
 interface ActionsProps<TData> {
   row: Row<TData>;
-  actions: RowAction<TData>[];
+  actions: DataTableRowAction<TData>[];
 }
 
-export function Actions<TData>({ row, actions }: ActionsProps<TData>) {
+export function ActionsCell<TData>({ row, actions }: ActionsProps<TData>) {
   // Quick actions
   const quickActions = actions.filter((a) => a.isQuickAction && !a.isSeparator);
 
   // Menu actions and separators
   const menuActions = actions.filter((a) => !a.isQuickAction);
 
+  // TODO: Pending final design
   return (
-    <div className="flex justify-end items-center gap-1">
+    <div className="flex justify-end items-center gap-1 no-print">
       {/* Quick Actions */}
       {quickActions.map((action, index) => (
         <button
@@ -46,7 +47,7 @@ export function Actions<TData>({ row, actions }: ActionsProps<TData>) {
             e.stopPropagation();
             if (action.onClick) action.onClick(row.original);
           }}
-          className={`p-1.5 ${
+          className={`p-1.5 cursor-pointer ${
             action.variant === 'danger'
               ? 'text-gray-800 hover:bg-red-50'
               : 'text-gray-800  hover:bg-blue-50 dark:text-neutral-400'
@@ -59,7 +60,10 @@ export function Actions<TData>({ row, actions }: ActionsProps<TData>) {
 
       {/* Menu Actions */}
       {menuActions.length > 0 && (
-        <RowActions row={row.original} actions={menuActions as RowAction<TData>[]} />
+        <DataTableRowActions
+          row={row.original}
+          actions={menuActions as DataTableRowAction<TData>[]}
+        />
       )}
     </div>
   );

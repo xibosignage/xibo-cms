@@ -18,20 +18,19 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
 .*/
+import Badge from '../../Badge';
 
-import React from 'react';
+import { type UIStatus } from '@/types/uiStatus';
 
-interface TextProps extends React.HTMLAttributes<HTMLDivElement> {
-  children: React.ReactNode;
-  subtext?: string;
-  className?: string;
+interface StatusProps {
+  label: string;
+  type?: UIStatus;
 }
 
-export function Text({ children, subtext, className = '', ...props }: TextProps) {
+export function StatusCell({ label, type = 'neutral' }: StatusProps) {
   return (
-    <div className={`flex flex-col ${className}`} {...props}>
-      <span className="text-gray-800">{children}</span>
-      {subtext && <span className="text-gray-500">{subtext}</span>}
-    </div>
+    <Badge type={type} variation="soft">
+      {label}
+    </Badge>
   );
 }

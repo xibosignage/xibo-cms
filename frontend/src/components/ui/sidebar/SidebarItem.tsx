@@ -66,9 +66,10 @@ export function SidebarItem({
   label,
   toggleMenu,
 }: SidebarItemProps) {
-  const activeClasses = 'nav_link text-white dark:text-black focus:outline-hidden group';
+  const activeClasses =
+    'font-medium text-sm flex items-center flex-row text-white dark:text-black focus:outline-hidden group';
   const inactiveClasses =
-    'nav_link focus:outline-hidden focus:text-gray-400 dark:text-neutral-400 dark:hover:text-neutral-500 dark:focus:text-neutral-500 group';
+    'font-medium text-sm flex items-center flex-row focus:outline-hidden focus:text-gray-400 dark:text-neutral-400 dark:hover:text-neutral-500 dark:focus:text-neutral-500 group';
 
   // Changing styles for different states
   function getSidebarItemClasses({ isCollapsed, isOpen, isActive }: SidebarItemClassProps) {

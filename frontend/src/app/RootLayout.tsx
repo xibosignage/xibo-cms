@@ -19,21 +19,20 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
 .*/
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 
 import SideBar from '@/components/layout/SideBar';
 import TopNav from '@/components/layout/TopNav';
+import { usePreline } from '@/hooks/usePreline';
 
 export default function RootLayout() {
   const { pathname } = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [openMobileDrawer, setOpenMobileDrawer] = useState(false);
 
-  useEffect(() => {
-    // @ts-expect-error - Preline attaches this to window
-    window.HSStaticMethods?.autoInit?.();
-  }, [pathname]);
+  // Init preline
+  usePreline();
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-gray-50 dark:bg-neutral-900">
@@ -67,7 +66,7 @@ export default function RootLayout() {
           pathName={pathname}
           onToggleMobileDrawer={() => setOpenMobileDrawer(!openMobileDrawer)}
         />
-        <main className="flex-1 overflow-y-auto bg-white dark:bg-black">
+        <main className="flex-1 flex flex-col min-h-0 p-5 bg-white dark:bg-black">
           <Outlet />
         </main>
       </div>

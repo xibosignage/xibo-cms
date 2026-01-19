@@ -37,7 +37,7 @@ export function SidebarPopup({ route, isCollapsed }: SidebarPopupProps) {
     <>
       {isCollapsed && (
         <div
-          className="pointer-events-none absolute top-0 opacity-0 hidden 
+          className="pointer-events-none absolute top-0 opacity-0 hidden
           group-hover:opacity-100 group-hover:block transition-opacity duration-200 -right-[200px] z-50"
         >
           <div className="pointer-events-auto *:min-w-[200px] text-white bg-xibo-blue-800 rounded-e-md shadow-lg">
@@ -50,7 +50,7 @@ export function SidebarPopup({ route, isCollapsed }: SidebarPopupProps) {
             </a>
 
             {route.subLinks && (
-              <div className="flex flex-col w-full px-6 py-2 bg-black/10 border-white/20">
+              <div className="flex flex-col w-full gap-1 px-6 py-2 bg-black/10 border-white/20">
                 {route.subLinks.map((sub) => {
                   const fullPath = `/${route.path}/${sub.path}`;
                   const isSubActive =

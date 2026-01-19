@@ -60,7 +60,7 @@ export default function MediaTopbar({ navigation, activeTab, onTabClick }: Media
 
       {/* TODO: Buttons */}
       <div className="flex items-center gap-2 md:mb-0">
-        <Button variant="primary" icon={Plus}>
+        <Button variant="primary" leftIcon={Plus}>
           {t('Add Media')}
         </Button>
       </div>

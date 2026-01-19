@@ -20,28 +20,32 @@
 .*/
 
 import type { Table } from '@tanstack/react-table';
-import { Settings2, Check } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { Check, ChevronDown, Printer, FileDown, RefreshCw, X } from 'lucide-react';
+import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
-interface DataTableViewOptionsProps<TData> {
+import Button from '../Button';
+
+import { useClickOutside } from '@/hooks/useClickOutside';
+
+interface DataTableOptionsProps<TData> {
   table: Table<TData>;
+  onPrint?: () => void;
+  onRefresh?: () => void;
+  onCSVExport?: () => void;
 }
 
-export function DataTableViewOptions<TData>({ table }: DataTableViewOptionsProps<TData>) {
+export function DataTableOptions<TData>({
+  table,
+  onPrint,
+  onRefresh,
+  onCSVExport,
+}: DataTableOptionsProps<TData>) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  useClickOutside(dropdownRef, () => setIsOpen(false));
 
   const columns = table.getAllLeafColumns().filter((column) => column.getCanHide());
 
@@ -50,24 +54,30 @@ export function DataTableViewOptions<TData>({ table }: DataTableViewOptionsProps
   }
 
   return (
-    <div className="relative inline-flex" ref={dropdownRef}>
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="py-2 px-3 inline-flex items-center gap-x-2 bg-white text-gray-800 hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
-        aria-haspopup="menu"
-        aria-expanded={isOpen}
-        aria-label={t('Toggle columns')}
-      >
-        <Settings2 className="w-4 h-4" />
-        {t('View')}
-      </button>
+    <div className="flex gap-3">
+      <div className="relative" ref={dropdownRef}>
+        <Button
+          type="button"
+          variant="tertiary"
+          onClick={() => setIsOpen(!isOpen)}
+          rightIcon={ChevronDown}
+          aria-haspopup="menu"
+          aria-expanded={isOpen}
+          aria-label={t('Toggle columns')}
+        >
+          {t('Columns')}
+        </Button>
 
-      {isOpen && (
-        <div className="absolute right-0 top-full mt-2 min-w-[200px] z-50">
-          <div className="bg-white shadow-md p-2 space-y-1 border ">
-            <div className="px-3 py-2 border-b mb-1">
-              <span className="text-gray-500">{t('Toggle Columns')}</span>
+        {isOpen && (
+          <div className="absolute right-0 top-10 w-52 z-50 rounded-lg overflow-hidden bg-white shadow-lg border border-gray-200">
+            <div className="relative flex bg-gray-100 px-3 py-2 justify-between items-center">
+              <span className="text-gray-500 text-sm font-semibold uppercase leading-normal">
+                {t('Visible Columns')}
+              </span>
+
+              <div className="flex items-center justify-center size-6 absolute right-[5px] cursor-pointer">
+                <X className="size-4 text-gray-500" onClick={() => setIsOpen(false)} />
+              </div>
             </div>
 
             <div className="max-h-[300px] overflow-y-auto space-y-1">
@@ -98,8 +108,18 @@ export function DataTableViewOptions<TData>({ table }: DataTableViewOptionsProps
               })}
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+
+      <Button type="button" onClick={onPrint} variant="tertiary" leftIcon={Printer}>
+        {t('Print')}
+      </Button>
+      <Button type="button" onClick={onCSVExport} variant="tertiary" leftIcon={FileDown}>
+        {t('CSV')}
+      </Button>
+      <Button type="button" onClick={onRefresh} variant="tertiary" leftIcon={RefreshCw}>
+        {t('Refresh')}
+      </Button>
     </div>
   );
 }

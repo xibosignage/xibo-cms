@@ -27,14 +27,14 @@ type Props = {
 
 export default function PageWrapper({ title, actions, children }: Props) {
   return (
-    <section className="space-y-4">
+    <section className="flex-1 flex flex-col min-h-0">
       {(title || actions) && (
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between shrink-0 mb-4">
           {title && <h1 className="text-xl font-semibold">{title}</h1>}
           {actions}
         </div>
       )}
-      <div className="px-5 shadow-sm text-gray-900">{children}</div>
+      <div className="text-gray-900 flex-1 flex flex-col min-h-0">{children}</div>
     </section>
   );
 }

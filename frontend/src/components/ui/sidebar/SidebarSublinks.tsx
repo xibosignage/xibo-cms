@@ -42,7 +42,7 @@ export function SidebarSubLinks({ route, isOpen, isCollapsed }: SidebarSubLinksP
             isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
-          <div className="flex flex-col w-full px-6 py-2 bg-black/10 border-y-2 border-white/20">
+          <div className="flex flex-col w-full px-6 gap-1 py-2 bg-black/10 border-y-2 border-white/20">
             {route.subLinks.map((sub) => {
               const fullPath = `/${route.path}/${sub.path}`;
               const isSubActive =

@@ -19,21 +19,28 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
 .*/
 
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
+import React from 'react';
 
-import App from './app/App';
-import 'preline/preline';
-import '@fontsource/inter/400.css';
-import '@fontsource/inter/500.css';
-import '@fontsource/inter/600.css';
-import '@fontsource/inter/700.css';
-import '@/styles/global.css';
-import '@/styles/print.css';
-import '@/lib/i18n';
+interface TextProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
+  subtext?: string;
+  weight?: 'normal' | 'bold';
+  className?: string;
+}
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+export function TextCell({
+  children,
+  subtext,
+  className = '',
+  weight = 'normal',
+  ...props
+}: TextProps) {
+  return (
+    <div className={`inline-flex gap-2 ${className}`} {...props}>
+      <span className={`text-gray-800 text-sm ${weight === 'bold' ? 'font-semibold' : ''}`}>
+        {children}
+      </span>
+      {subtext && <span className="text-gray-500 text-sm">{subtext}</span>}
+    </div>
+  );
+}

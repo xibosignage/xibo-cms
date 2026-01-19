@@ -56,3 +56,14 @@ export async function fetchMedia(
     totalCount,
   };
 }
+
+export async function deleteMedia(mediaId: number | string, force: boolean = false): Promise<void> {
+  await http.delete(`/library/${mediaId}`, {
+    params: {
+      forceDelete: force ? 1 : 0,
+    },
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+  });
+}

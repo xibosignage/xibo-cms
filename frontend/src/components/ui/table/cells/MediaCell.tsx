@@ -29,7 +29,7 @@ interface MediaProps {
   mediaType: 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
 }
 
-export function Media({ id, thumb, alt, mediaType }: MediaProps) {
+export function MediaCell({ id, thumb, alt, mediaType }: MediaProps) {
   const [hasError, setHasError] = useState(false);
 
   const handlePreview = (e: React.MouseEvent) => {
@@ -60,6 +60,7 @@ export function Media({ id, thumb, alt, mediaType }: MediaProps) {
     }
   };
 
+  // TODO: Pending final design
   return (
     <button type="button" className={baseClass} onClick={handlePreview}>
       {showThumbnail ? (

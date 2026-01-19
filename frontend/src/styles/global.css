@@ -37,6 +37,10 @@ body,
 
 /* Custom colours */
 @theme {
+  --font-sans:
+    'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    'Segoe UI Symbol', 'Noto Color Emoji';
+
   --color-xibo-blue-50: #e1f0ff;
   --color-xibo-blue-100: #bcd5ff;
   --color-xibo-blue-200: #9ebfff;
@@ -45,7 +49,7 @@ body,
   --color-xibo-blue-500: #3f7fff;
   --color-xibo-blue-600: #0e70f6;
   --color-xibo-blue-700: #0059d3;
-  --color-xibo-blue-800: #0042ae;
+  --color-xibo-blue-800: #00368e;
   --color-xibo-blue-900: #02266c;
   --color-xibo-blue-950: #001338;
 
@@ -68,11 +72,14 @@ body,
 }
 
 @layer components {
-  .nav_link {
-    @apply font-medium text-[14px] flex items-center flex-row;
-  }
-
   .center {
     @apply items-center justify-center flex;
+  }
+}
+
+@layer base {
+  body {
+    @apply font-sans;
+    @apply bg-white text-gray-800 dark:bg-neutral-900 dark:text-neutral-200;
   }
 }

@@ -17,23 +17,24 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
-.*/
+ */
 
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
+import type { ChangeEvent } from 'react';
 
-import App from './app/App';
-import 'preline/preline';
-import '@fontsource/inter/400.css';
-import '@fontsource/inter/500.css';
-import '@fontsource/inter/600.css';
-import '@fontsource/inter/700.css';
-import '@/styles/global.css';
-import '@/styles/print.css';
-import '@/lib/i18n';
+interface CheckboxCellProps {
+  checked: boolean;
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  ariaLabel?: string;
+}
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+export function CheckboxCell({ checked, onChange, ariaLabel = 'Select row' }: CheckboxCellProps) {
+  return (
+    <input
+      type="checkbox"
+      checked={checked}
+      onChange={onChange}
+      aria-label={ariaLabel}
+      className="rounded border-gray-200 no-print cursor-pointer"
+    />
+  );
+}

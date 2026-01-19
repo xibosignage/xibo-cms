@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
 .*/
 
-import { createBrowserRouter, redirect } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import type { RouteObject } from 'react-router-dom';
 
 import { requireAuthLoader } from './loaders';
@@ -53,6 +53,8 @@ export const router = createBrowserRouter(
     {
       path: '/',
       element: <RootLayout />,
+      // App loader
+      hydrateFallbackElement: <></>,
       children: [
         // Protected
         {
@@ -60,7 +62,10 @@ export const router = createBrowserRouter(
           element: <WithPageWrapper />,
           children: [
             // For now it redirect to media page
-            { index: true, loader: () => redirect('/library/media') },
+            {
+              index: true,
+              element: <Navigate to="/library/media" replace />,
+            },
             ...flattenRoutes(APP_ROUTES),
           ],
         },
