@@ -30,7 +30,7 @@ type MediaTopbarProps = {
   onTabClick: (tab: string) => void;
 };
 
-function MediaTopbar({ navigation, activeTab, onTabClick }: MediaTopbarProps) {
+export default function MediaTopbar({ navigation, activeTab, onTabClick }: MediaTopbarProps) {
   const { t } = useTranslation();
 
   return (
@@ -49,7 +49,7 @@ function MediaTopbar({ navigation, activeTab, onTabClick }: MediaTopbarProps) {
                 ? 'text-xibo-blue-600 border-xibo-blue-600'
                 : 'border-transparent  hover:text-gray-600 hover:border-gray-300'
             }`}
-            aria-current={tab === 'Media' ? 'page' : undefined}
+            aria-current={tab === activeTab ? 'page' : undefined}
             onClick={() => onTabClick(tab)}
           >
             {t(tab)}
@@ -67,5 +67,3 @@ function MediaTopbar({ navigation, activeTab, onTabClick }: MediaTopbarProps) {
     </div>
   );
 }
-
-export default MediaTopbar;

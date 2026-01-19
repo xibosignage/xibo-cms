@@ -20,6 +20,7 @@
 .*/
 
 import { type LucideIcon } from 'lucide-react';
+import { twMerge } from 'tailwind-merge';
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'primary' | 'secondary' | 'tertiary' | 'link';
@@ -28,7 +29,18 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   ariaLabel?: string;
 };
 
-function Button({
+const buttonVariant: Record<NonNullable<ButtonProps['variant']>, string> = {
+  primary: 'text-white bg-xibo-blue-600 hover:bg-xibo-blue-700 focus:ring-4',
+  secondary:
+    'text-xibo-blue-600 border border-xibo-blue-600 bg-white hover:border-xibo-blue-800 hover:text-xibo-blue-800',
+  tertiary: 'text-xibo-blue-600 bg-gray-50 hover:bg-gray-100 hover:text-xibo-blue-800',
+  link: 'text-xibo-blue-600 underline hover:text-xibo-blue-800 bg-transparent',
+};
+
+const baseClasses =
+  'p-2 rounded-lg gap-2 text-sm text-center tracking-[150%] flex items-center h-[45px] box-border cursor-pointer font-semibold focus:ring-blue-500/25';
+
+export default function Button({
   variant = 'primary',
   icon: Icon,
   children,
@@ -38,31 +50,17 @@ function Button({
   ...props
 }: ButtonProps) {
   const showText = Boolean(children);
-  const buttonVariant: Record<NonNullable<ButtonProps['variant']>, string> = {
-    primary: 'text-white bg-xibo-blue-600 hover:bg-xibo-blue-700 focus:ring-4',
-    secondary:
-      'text-xibo-blue-600 border border-xibo-blue-600 bg-white hover:border-xibo-blue-800 hover:text-xibo-blue-800',
-    tertiary: 'text-xibo-blue-600 bg-gray-50 hover:bg-gray-100 hover:text-xibo-blue-800',
-    link: 'text-xibo-blue-600 underline hover:text-xibo-blue-800 bg-transparent',
-  };
-
-  const baseClasses =
-    'p-2 rounded-lg gap-2 text-[14px] text-center leading-[0.07px] tracking-[150%] flex items-center h-[45px] box-border cursor-pointer font-semibold focus:ring-blue-500/25';
-
   return (
     <button
       type="button"
-      className={`${baseClasses} ${buttonVariant[variant]} ${className}`}
+      className={twMerge(baseClasses, buttonVariant[variant], className)}
       aria-label={!showText ? ariaLabel : undefined}
       {...props}
     >
       {Icon && <Icon size={21} />}
-
       {showText && (
         <span className={removeTextOnMobile ? 'hidden sm:inline' : undefined}>{children}</span>
       )}
     </button>
   );
 }
-
-export default Button;

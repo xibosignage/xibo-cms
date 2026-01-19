@@ -36,7 +36,14 @@ type SelectFilterProps = {
   className?: string;
 };
 
-const SelectFilter = ({ label, name, value, options, onChange, className }: SelectFilterProps) => {
+export default function SelectFilter({
+  label,
+  name,
+  value,
+  options,
+  onChange,
+  className,
+}: SelectFilterProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -106,6 +113,4 @@ const SelectFilter = ({ label, name, value, options, onChange, className }: Sele
       </ul>
     </div>
   );
-};
-
-export default SelectFilter;
+}
