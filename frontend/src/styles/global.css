@@ -75,19 +75,4 @@ body,
   .center {
     @apply items-center justify-center flex;
   }
-
-  .button {
-    @apply p-2 rounded-lg gap-2 text-[14px] text-center leading-[0.07px] tracking-[150%] flex items-center h-[45px] box-border cursor-pointer font-semibold focus:ring-blue-500/25;
-  }
-  .primary {
-    @apply text-white bg-xibo-blue-600 hover:bg-xibo-blue-700 focus:ring-4;
-  }
-
-  .secondary {
-    @apply text-xibo-blue-600 border-xibo-blue-600 border bg-white hover:border-xibo-blue-800 hover:text-xibo-blue-800;
-  }
-
-  .tertiary {
-    @apply text-xibo-blue-600 bg-gray-50 hover:bg-gray-100 hover:text-xibo-blue-800;
-  }
 }

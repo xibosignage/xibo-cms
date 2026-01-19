@@ -38,11 +38,21 @@ function Button({
   ...props
 }: ButtonProps) {
   const showText = Boolean(children);
+  const buttonVariant: Record<NonNullable<ButtonProps['variant']>, string> = {
+    primary: 'text-white bg-xibo-blue-600 hover:bg-xibo-blue-700 focus:ring-4',
+    secondary:
+      'text-xibo-blue-600 border border-xibo-blue-600 bg-white hover:border-xibo-blue-800 hover:text-xibo-blue-800',
+    tertiary: 'text-xibo-blue-600 bg-gray-50 hover:bg-gray-100 hover:text-xibo-blue-800',
+    link: 'text-xibo-blue-600 underline hover:text-xibo-blue-800 bg-transparent',
+  };
+
+  const baseClasses =
+    'p-2 rounded-lg gap-2 text-[14px] text-center leading-[0.07px] tracking-[150%] flex items-center h-[45px] box-border cursor-pointer font-semibold focus:ring-blue-500/25';
 
   return (
     <button
       type="button"
-      className={`button ${variant} ${className ?? ''}`}
+      className={`${baseClasses} ${buttonVariant[variant]} ${className}`}
       aria-label={!showText ? ariaLabel : undefined}
       {...props}
     >
