@@ -37,7 +37,12 @@ class CorsPreviewMiddleware implements MiddlewareInterface
         $response = $handler->handle($request->withAttribute('_entryPoint', 'preview'));
 
         // Is CORS required?
-        if ($request->getHeaderLine('Sec-Fetch-Site') === 'cross-site') {
+        $origin = $request->getHeaderLine('Origin');
+        $host = $request->getUri()->getHost();
+
+        if ($request->getHeaderLine('Sec-Fetch-Site') === 'cross-site'
+            || ($origin !== '' && !str_contains($origin, $host))
+        ) {
             // Handle CORS headers
             $response = $response
                 ->withHeader('Access-Control-Allow-Origin', '*')
