@@ -46,7 +46,26 @@ COPY ./modules/vendor ./modules/vendor
 # Build webpack
 RUN npm run publish
 
+
 # Stage 3
+# Build prototype
+FROM node:22 AS vite
+WORKDIR /app/frontend
+
+# Copy package.json and the webpack config file
+COPY frontend/package.json .
+COPY frontend/package-lock.json .
+
+# Install npm packages
+RUN npm install
+
+# Copy ui folder
+COPY ./frontend .
+
+# Build
+RUN npm run build
+
+# Stage 4
 # Build the CMS container
 FROM debian:bullseye-slim
 MAINTAINER Xibo Signage <support@xibosignage.com>
@@ -192,6 +211,9 @@ COPY --from=webpack /app/web/dist /var/www/cms/web/dist
 
 # Copy modules built webpack app folder to cms modules
 COPY --from=webpack /app/modules /var/www/cms/modules
+
+# Copy frontend built prototype folder to cms web
+COPY --from=vite /app/dist /var/www/cms/web/prototype
 
 # All other files (.dockerignore excludes many things, but we tidy up the rest below)
 COPY --chown=www-data:www-data . /var/www/cms

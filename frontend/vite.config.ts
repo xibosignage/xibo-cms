@@ -61,7 +61,7 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     minify: process.env.NODE_ENV !== 'debug',
-    outDir: path.resolve(__dirname, '../web/dist/react'),
+    outDir: path.resolve(__dirname, 'dist'),
     emptyOutDir: true,
   },
   define: {

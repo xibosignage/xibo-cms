@@ -8,6 +8,7 @@ on:
       - release23
       - release33
       - release43
+      - neujmin
 
 jobs:
   build:
