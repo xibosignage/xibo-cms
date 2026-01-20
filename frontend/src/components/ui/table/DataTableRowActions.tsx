@@ -19,11 +19,12 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import type { LucideIcon } from 'lucide-react';
 import { MoreVertical } from 'lucide-react';
-import type { ReactNode } from 'react';
 import { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+import { twMerge } from 'tailwind-merge';
 
 import { useClickOutside } from '@/hooks/useClickOutside';
 import { useCloseOnScroll } from '@/hooks/useCloseOnScroll';
@@ -31,8 +32,8 @@ import { useCloseOnScroll } from '@/hooks/useCloseOnScroll';
 export interface DataTableRowAction<TData> {
   label?: string;
   onClick?: (row: TData) => void;
-  icon?: ReactNode;
-  variant?: 'default' | 'danger';
+  icon?: LucideIcon;
+  variant?: 'default' | 'primary' | 'danger';
   isSeparator?: boolean;
   isQuickAction?: boolean;
 }
@@ -83,7 +84,6 @@ export default function DataTableRowActions<TData>({
     return null;
   }
 
-  // TODO: Pending final design
   return (
     <div className="relative inline-block text-left">
       <button
@@ -105,9 +105,9 @@ export default function DataTableRowActions<TData>({
               top: coords.top,
               left: coords.left,
             }}
-            className="fixed w-[180px] bg-white shadow-xl z-9999 overflow-hidden animate-in fade-in zoom-in-95 duration-100"
+            className="fixed bg-white shadow-lg z-100 rounded-xl overflow-hidden"
           >
-            <div className="py-1">
+            <div className="p-2">
               {actions.map((action, idx) => {
                 if (action.isSeparator) {
                   return <div key={idx} className="my-1 h-px bg-gray-100" role="separator" />;
@@ -121,15 +121,18 @@ export default function DataTableRowActions<TData>({
                       if (action.onClick) action.onClick(row);
                       setOpen(false);
                     }}
-                    className={`flex items-center w-full text-left px-4 py-2 text-sm transition-colors text-gray-700 cursor-pointer ${
+                    className={twMerge(
+                      'flex items-center w-full gap-3 rounded-lg text-left px-3 py-2 text-sm transition-colors cursor-pointer',
                       action.variant === 'danger'
-                        ? 'text-red-600 hover:bg-red-50'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
+                        ? 'text-red-800 hover:bg-red-50 focus:bg-red-100'
+                        : action.variant === 'primary'
+                          ? 'text-blue-800 hover:bg-blue-50 focus:bg-blue-100'
+                          : 'text-gray-800 hover:bg-gray-50 focus:bg-gray-100',
+                    )}
                   >
                     {action.icon && (
-                      <span className="mr-2 w-4 h-4 flex items-center justify-center">
-                        {action.icon}
+                      <span className="w-4 h-4 flex items-center justify-center">
+                        {action.icon && <action.icon />}
                       </span>
                     )}
                     {action.label}

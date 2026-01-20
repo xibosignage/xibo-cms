@@ -19,10 +19,25 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
 .*/
 
-export * from './ActionsCell';
-export * from './CheckboxCell';
-export * from './CheckMarkCell';
-export * from './MediaCell';
-export * from './StatusCell';
-export * from './TagsCell';
-export * from './TextCell';
+import type { LucideIcon } from 'lucide-react';
+import { Check, X } from 'lucide-react';
+import { twMerge } from 'tailwind-merge';
+
+const BASE_STYLE = 'inline-flex justify-center items-center size-6 rounded-lg';
+
+export function CheckMarkCell({ active = true }) {
+  const Icon = (active ? Check : X) as LucideIcon;
+
+  return (
+    <div className="flex items-center justify-center">
+      <span
+        className={twMerge(
+          BASE_STYLE,
+          active ? 'text-teal-800 bg-teal-100' : 'text-gray-500 bg-gray-50',
+        )}
+      >
+        <Icon className="size-4"></Icon>
+      </span>
+    </div>
+  );
+}

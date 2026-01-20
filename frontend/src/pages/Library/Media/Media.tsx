@@ -27,8 +27,6 @@ import {
   type RowSelectionState,
 } from '@tanstack/react-table';
 import {
-  Check,
-  X,
   Search,
   Filter,
   Folder,
@@ -41,6 +39,7 @@ import {
   Info,
   Trash2,
   FilterX,
+  MoreVertical,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -52,6 +51,7 @@ import { DataTable } from '@/components/ui/table/DataTable';
 import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
 import {
   MediaCell,
+  CheckMarkCell,
   TextCell,
   StatusCell,
   ActionsCell,
@@ -138,9 +138,32 @@ export default function Media() {
 
   const bulkActions: DataTableBulkAction<MediaRow>[] = [
     {
+      label: t('Move'),
+      icon: FolderInput,
+      onClick: async (selectedItems) => {
+        console.log('Move');
+        console.log(selectedItems);
+      },
+    },
+    {
+      label: t('Share'),
+      icon: UserPlus2,
+      onClick: async (selectedItems) => {
+        console.log('Share');
+        console.log(selectedItems);
+      },
+    },
+    {
+      label: t('Download'),
+      icon: Download,
+      onClick: async (selectedItems) => {
+        console.log('Download');
+        console.log(selectedItems);
+      },
+    },
+    {
       label: t('Delete Selected'),
-      icon: <Trash2 className="w-4 h-4" />,
-      variant: 'danger',
+      icon: Trash2,
       onClick: async (selectedItems) => {
         if (selectedItems.length === 0) {
           return;
@@ -161,6 +184,14 @@ export default function Media() {
             setLoading(false);
           }
         }
+      },
+    },
+    {
+      label: t('More'),
+      icon: MoreVertical,
+      onClick: async (selectedItems) => {
+        console.log('More?');
+        console.log(selectedItems);
       },
     },
   ];
@@ -251,7 +282,7 @@ export default function Media() {
     {
       accessorKey: 'thumbnail',
       header: t('Thumbnail'),
-      size: 100,
+      size: 150,
       enableSorting: false,
       cell: (info) => (
         <MediaCell
@@ -315,7 +346,7 @@ export default function Media() {
     {
       accessorKey: 'fileSize',
       header: t('Size (bytes)'),
-      size: 120,
+      size: 150,
       cell: (info) => (
         <TextCell className="font-mono text-sm">
           {info.getValue<number>().toLocaleString()}
@@ -325,7 +356,7 @@ export default function Media() {
     {
       id: 'resolution',
       header: t('Resolution'),
-      size: 120,
+      size: 150,
       accessorFn: (row) => {
         if (row.width && row.height) return `${row.width}x${row.height}`;
         return '';
@@ -351,21 +382,14 @@ export default function Media() {
     {
       accessorKey: 'revised',
       header: t('Revised'),
-      size: 80,
-      cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
+      size: 120,
+      cell: (info) => <CheckMarkCell active={(info.getValue<number>() === 1) as boolean} />,
     },
     {
       accessorKey: 'released',
       header: t('Released'),
-      size: 100,
-      cell: (info) => {
-        const isReleased = info.getValue() === 1;
-        return isReleased ? (
-          <Check className="w-4 h-4 text-green-600" />
-        ) : (
-          <X className="w-4 h-4 text-gray-400" />
-        );
-      },
+      size: 120,
+      cell: (info) => <CheckMarkCell active={(info.getValue<number>() === 1) as boolean} />,
     },
     {
       accessorKey: 'fileName',
@@ -387,13 +411,13 @@ export default function Media() {
       accessorKey: 'createdDt',
       header: t('Created'),
       size: 180,
-      cell: (info) => <TextCell subtext="Date">{info.getValue<string>()}</TextCell>,
+      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
     {
       accessorKey: 'modifiedDt',
       header: t('Modified'),
       size: 180,
-      cell: (info) => <TextCell subtext="Date">{info.getValue<string>()}</TextCell>,
+      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
     {
       accessorKey: 'expires',
@@ -419,13 +443,14 @@ export default function Media() {
             // Quick Actions
             {
               label: t('Edit'),
-              icon: <Edit className="w-4 h-4" />,
+              icon: Edit,
               onClick: (data) => console.log('Edit', data.mediaId),
               isQuickAction: true,
+              variant: 'primary',
             },
             {
               label: t('Download'),
-              icon: <Download className="w-4 h-4" />,
+              icon: Download,
               onClick: (data) => console.log('Download', data.mediaId),
               isQuickAction: true,
             },
@@ -433,37 +458,37 @@ export default function Media() {
             // Dropdown Menu Actions
             {
               label: t('Edit'),
-              icon: <Edit className="w-4 h-4" />,
+              icon: Edit,
               onClick: (data) => console.log('Edit', data.mediaId),
             },
             {
               label: t('Make a Copy'),
-              icon: <CopyCheck className="w-4 h-4" />,
+              icon: CopyCheck,
               onClick: (data) => console.log('Make a Copy', data.mediaId),
             },
             {
               label: t('Move'),
-              icon: <FolderInput className="w-4 h-4" />,
+              icon: FolderInput,
               onClick: (data) => console.log('Move', data.mediaId),
             },
             {
               label: t('Share'),
-              icon: <UserPlus2 className="w-4 h-4" />,
+              icon: UserPlus2,
               onClick: (data) => console.log('Share', data.mediaId),
             },
             {
               label: t('Download'),
-              icon: <Download className="w-4 h-4" />,
+              icon: Download,
               onClick: (data) => console.log('Download', data.mediaId),
             },
             {
               label: t('Schedule'),
-              icon: <CalendarClock className="w-4 h-4" />,
+              icon: CalendarClock,
               onClick: (data) => console.log('Schedule', data.mediaId),
             },
             {
               label: t('Details'),
-              icon: <Info className="w-4 h-4" />,
+              icon: Info,
               onClick: (data) => console.log('Details', data.mediaId),
             },
             { isSeparator: true },
@@ -478,7 +503,7 @@ export default function Media() {
             { isSeparator: true },
             {
               label: t('Delete'),
-              icon: <Trash2 className="w-4 h-4" />,
+              icon: Trash2,
               onClick: (data) => handleDelete(data.mediaId),
               variant: 'danger',
             },

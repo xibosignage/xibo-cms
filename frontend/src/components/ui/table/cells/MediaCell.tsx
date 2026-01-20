@@ -21,6 +21,7 @@
 
 import { Image as ImageIcon, Film, Music, FileText, Archive, File, Play } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface MediaProps {
   id: number;
@@ -29,7 +30,25 @@ interface MediaProps {
   mediaType: 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
 }
 
+const getIcon = (type: MediaProps['mediaType']) => {
+  switch (type) {
+    case 'image':
+      return ImageIcon;
+    case 'video':
+      return Film;
+    case 'audio':
+      return Music;
+    case 'pdf':
+      return FileText;
+    case 'archive':
+      return Archive;
+    default:
+      return File;
+  }
+};
+
 export function MediaCell({ id, thumb, alt, mediaType }: MediaProps) {
+  const { t } = useTranslation();
   const [hasError, setHasError] = useState(false);
 
   const handlePreview = (e: React.MouseEvent) => {
@@ -40,46 +59,37 @@ export function MediaCell({ id, thumb, alt, mediaType }: MediaProps) {
   const isPlayable = mediaType === 'video' || mediaType === 'audio';
   const showThumbnail = thumb && !hasError;
 
-  const baseClass =
-    'relative group h-10 w-10 shrink-0 flex items-center justify-center bg-gray-50 text-gray-800 cursor-pointer overflow-hidden';
+  const Icon = getIcon(mediaType);
 
-  const getIcon = () => {
-    switch (mediaType) {
-      case 'image':
-        return <ImageIcon className="w-5 h-5" />;
-      case 'video':
-        return <Film className="w-5 h-5" />;
-      case 'audio':
-        return <Music className="w-5 h-5" />;
-      case 'pdf':
-        return <FileText className="w-5 h-5" />;
-      case 'archive':
-        return <Archive className="w-5 h-5" />;
-      default:
-        return <File className="w-5 h-5" />;
-    }
-  };
-
-  // TODO: Pending final design
   return (
-    <button type="button" className={baseClass} onClick={handlePreview}>
-      {showThumbnail ? (
-        <>
-          <img
-            src={thumb}
-            alt={alt}
-            className="h-full w-full object-cover"
-            onError={() => setHasError(true)}
-          />
-          {isPlayable && (
-            <div className="absolute flex items-center justify-center">
-              <Play className="w-4 h-4 text-white fill-white" />
-            </div>
-          )}
-        </>
-      ) : (
-        getIcon()
-      )}
-    </button>
+    <div className="flex w-full justify-center items-center">
+      <button
+        type="button"
+        title={t('Preview media')}
+        aria-label={t('Preview media')}
+        className="cursor-pointer rounded-sm w-16 h-[47px] bg-gray-400 hover:bg-gray-300 focus:bg-gray-300 overflow-hidden"
+        onClick={handlePreview}
+      >
+        {showThumbnail ? (
+          <div className="flex h-full justify-center items-center">
+            <img
+              src={thumb}
+              alt={alt}
+              className="h-full w-full object-contain"
+              onError={() => setHasError(true)}
+            />
+            {isPlayable && (
+              <div className="absolute flex items-center justify-center">
+                <Play className="w-4 z-20 text-white fill-white" />
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex justify-center items-center">
+            <Icon className="size-6 text-gray-500" />
+          </div>
+        )}
+      </button>
+    </div>
   );
 }

@@ -20,11 +20,12 @@
 .*/
 
 import type { Table } from '@tanstack/react-table';
-import { Check, ChevronDown, Printer, FileDown, RefreshCw, X } from 'lucide-react';
+import { ChevronDown, Printer, FileDown, RefreshCw, X } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Button from '../Button';
+import Checkbox from '../forms/Checkbox';
 
 import { useClickOutside } from '@/hooks/useClickOutside';
 
@@ -53,6 +54,8 @@ export function DataTableOptions<TData>({
     return null;
   }
 
+  console.log('DataTableOptions Render');
+
   return (
     <div className="flex gap-3">
       <div className="relative" ref={dropdownRef}>
@@ -69,7 +72,7 @@ export function DataTableOptions<TData>({
         </Button>
 
         {isOpen && (
-          <div className="absolute right-0 top-10 w-52 z-50 rounded-lg overflow-hidden bg-white shadow-lg border border-gray-200">
+          <div className="absolute right-0 top-11 w-52 z-50 rounded-lg overflow-hidden bg-white shadow-lg border border-gray-200">
             <div className="relative flex bg-gray-100 px-3 py-2 justify-between items-center">
               <span className="text-gray-500 text-sm font-semibold uppercase leading-normal">
                 {t('Visible Columns')}
@@ -80,30 +83,31 @@ export function DataTableOptions<TData>({
               </div>
             </div>
 
-            <div className="max-h-[300px] overflow-y-auto space-y-1">
+            <div className="max-h-[300px] overflow-y-auto space-y-1 px-2">
               {columns.map((column) => {
                 let label = column.id;
                 const header = column.columnDef.header;
+
                 if (typeof header === 'string') {
                   label = header;
                 }
 
+                const uniqueCheckboxId = `col-toggle-${column.id}`;
+
+                const isChecked = column.getIsVisible();
+
                 return (
-                  <label
+                  <Checkbox
                     key={column.id}
-                    className="flex items-center gap-x-2.5 py-2 px-3 text-sm text-gray-800 hover:bg-gray-100 cursor-pointer"
-                  >
-                    <div className="relative flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={column.getIsVisible()}
-                        onChange={(e) => column.toggleVisibility(!!e.target.checked)}
-                        className="peer relative h-4 w-4 shrink-0 cursor-pointer appearance-none border bg-white checked:border-blue-600 checked:bg-blue-600"
-                      />
-                      <Check className="pointer-events-none absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
-                    </div>
-                    <span className="truncate">{label}</span>
-                  </label>
+                    id={uniqueCheckboxId}
+                    label={label}
+                    checked={isChecked}
+                    className="px-3 py-2.5 gap-4"
+                    classNameLabel="m-0"
+                    onChange={(e) => {
+                      column.toggleVisibility(!!e.target.checked);
+                    }}
+                  />
                 );
               })}
             </div>

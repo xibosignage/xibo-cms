@@ -22,7 +22,7 @@
 import type { ChangeEvent } from 'react';
 
 interface CheckboxCellProps {
-  checked: boolean;
+  checked?: boolean;
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
   ariaLabel?: string;
 }

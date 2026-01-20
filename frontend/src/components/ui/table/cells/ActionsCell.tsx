@@ -20,6 +20,7 @@
  */
 
 import type { Row } from '@tanstack/react-table';
+import { twMerge } from 'tailwind-merge';
 
 import DataTableRowActions from '../DataTableRowActions';
 import type { DataTableRowAction } from '../DataTableRowActions';
@@ -36,7 +37,6 @@ export function ActionsCell<TData>({ row, actions }: ActionsProps<TData>) {
   // Menu actions and separators
   const menuActions = actions.filter((a) => !a.isQuickAction);
 
-  // TODO: Pending final design
   return (
     <div className="flex justify-end items-center gap-1 no-print">
       {/* Quick Actions */}
@@ -47,14 +47,17 @@ export function ActionsCell<TData>({ row, actions }: ActionsProps<TData>) {
             e.stopPropagation();
             if (action.onClick) action.onClick(row.original);
           }}
-          className={`p-1.5 cursor-pointer ${
+          className={twMerge(
+            'cursor-pointer flex justify-center p-1 items-center text-sm font-medium rounded-lg border border-transparent focus:outline-hidden disabled:opacity-50 disabled:pointer-events-none',
             action.variant === 'danger'
-              ? 'text-gray-800 hover:bg-red-50'
-              : 'text-gray-800  hover:bg-blue-50 dark:text-neutral-400'
-          }`}
+              ? 'text-red-600 hover:bg-red-50 focus:bg-red-100'
+              : action.variant === 'primary'
+                ? 'text-blue-600 hover:bg-blue-50 focus:bg-blue-100'
+                : 'text-gray-600 hover:bg-gray-50 focus:bg-gray-100',
+          )}
           title={action.label}
         >
-          {action.icon}
+          {action.icon && <action.icon className="w-4 h-4" />}
         </button>
       ))}
 

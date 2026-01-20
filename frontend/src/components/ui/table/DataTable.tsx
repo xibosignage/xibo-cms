@@ -32,23 +32,15 @@ import {
   type Column,
   type VisibilityState,
 } from '@tanstack/react-table';
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  Loader2,
-  MoreHorizontal,
-  ChevronUp,
-  ChevronDown,
-  ChevronsUpDown,
-} from 'lucide-react';
+import { Loader2, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { type CSSProperties, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { twMerge } from 'tailwind-merge';
 
 import type { DataTableBulkAction } from './DataTableBulkActions';
 import { DataTableBulkActions } from './DataTableBulkActions';
 import { DataTableOptions } from './DataTableOptions';
+import { DataTablePagination } from './DataTablePagination';
 
 import { CheckboxCell } from '@/components/ui/table/cells';
 
@@ -96,37 +88,6 @@ const getCommonPinningStyles = <TData, TValue>(column: Column<TData, TValue>): C
     zIndex: 20,
   };
 };
-
-function getPaginationItems(pageIndex: number, pageCount: number) {
-  const current = pageIndex + 1;
-  const total = pageCount;
-  const delta = 1;
-
-  if (total <= 7) {
-    return Array.from({ length: total }, (_, i) => i + 1);
-  }
-
-  const range = [];
-  const rangeWithDots = [];
-  let l;
-
-  range.push(1);
-  for (let i = current - delta; i <= current + delta; i++) {
-    if (i < total && i > 1) range.push(i);
-  }
-  range.push(total);
-
-  for (const i of range) {
-    if (l) {
-      if (i - l === 2) rangeWithDots.push(l + 1);
-      else if (i - l !== 1) rangeWithDots.push('...');
-    }
-    rangeWithDots.push(i);
-    l = i;
-  }
-
-  return rangeWithDots;
-}
 
 export function DataTable<TData, TValue>({
   columns,
@@ -291,6 +252,10 @@ export function DataTable<TData, TValue>({
                   {headerGroup.headers.map((header) => {
                     const isSorted = header.column.getIsSorted();
                     const canSort = header.column.getCanSort();
+
+                    const headerContent = header.column.columnDef.header;
+                    const titleText = typeof headerContent === 'string' ? headerContent : header.id;
+
                     return (
                       <th
                         key={header.id}
@@ -307,13 +272,19 @@ export function DataTable<TData, TValue>({
                         }}
                       >
                         <div className="px-3 py-2 h-8 flex uppercase bg-gray-50 border-b border-gray-200 text-sm items-center justify-between text-gray-500">
-                          <div className="text-sm font-semibold ">
+                          <div
+                            className="text-sm font-semibold text-nowrap overflow-hidden"
+                            title={titleText}
+                          >
                             {flexRender(header.column.columnDef.header, header.getContext())}
                           </div>
 
                           {canSort && (
                             <div
-                              className={`flex justify-center items-center p-1 size-6 ${header.column.getCanSort() ? 'cursor-pointer select-none' : ''}`}
+                              className={twMerge(
+                                'flex justify-center items-center p-1 size-6',
+                                header.column.getCanSort() ? 'cursor-pointer select-none' : '',
+                              )}
                               onClick={header.column.getToggleSortingHandler()}
                             >
                               {isSorted === 'asc' ? (
@@ -330,7 +301,10 @@ export function DataTable<TData, TValue>({
                         <div
                           onMouseDown={header.getResizeHandler()}
                           onTouchStart={header.getResizeHandler()}
-                          className={`absolute right-0 top-0 h-8 w-2 resizer cursor-col-resize ${header.column.getIsResizing() ? 'isResizing' : ''}`}
+                          className={twMerge(
+                            'absolute right-0 top-0 h-8 w-2 resizer cursor-col-resize',
+                            header.column.getIsResizing() ? 'isResizing' : '',
+                          )}
                         ></div>
                       </th>
                     );
@@ -340,25 +314,33 @@ export function DataTable<TData, TValue>({
             </thead>
             <tbody className="divide-y divide-gray-300">
               {table.getRowModel().rows.length > 0 ? (
-                table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className={row.getIsSelected() ? 'bg-gray-50' : ''}>
-                    {row.getVisibleCells().map((cell) => (
-                      <td
-                        key={cell.id}
-                        className={`px-3 py-2 bg-white border-b border-gray-200 ${nonPrintableColumns.includes(cell.column.id) ? 'no-print' : ''}`}
-                        style={{
-                          ...getCommonPinningStyles(cell.column),
+                table.getRowModel().rows.map((row) => {
+                  const isSelected = row.getIsSelected();
+                  const rowBackgroundColor = isSelected ? 'bg-blue-50' : 'bg-white';
 
-                          width: cell.column.getSize(),
-                          minWidth: cell.column.columnDef.minSize,
-                          maxWidth: cell.column.columnDef.maxSize,
-                        }}
-                      >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
-                  </tr>
-                ))
+                  return (
+                    <tr key={row.id} className={rowBackgroundColor}>
+                      {row.getVisibleCells().map((cell) => (
+                        <td
+                          key={cell.id}
+                          className={twMerge(
+                            'px-3 py-2 border-b border-gray-200',
+                            rowBackgroundColor,
+                            nonPrintableColumns.includes(cell.column.id) ? 'no-print' : '',
+                          )}
+                          style={{
+                            ...getCommonPinningStyles(cell.column),
+                            width: cell.column.getSize(),
+                            minWidth: cell.column.columnDef.minSize,
+                            maxWidth: cell.column.columnDef.maxSize,
+                          }}
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan={columns.length} className="h-24 text-center text-gray-500">
@@ -371,94 +353,7 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
 
-      {/* TODO: Pending final design */}
-      <div className="flex flex-col md:flex-row items-center data-table-footer">
-        <div className="flex items-center gap-2 text-gray-800">
-          <span>{t('Rows per page')}:</span>
-          <select
-            value={table.getState().pagination.pageSize}
-            onChange={(e) => table.setPageSize(Number(e.target.value))}
-            className="py-1 px-2 pr-8 block"
-          >
-            {pageSizeOptions.map((pageSize) => (
-              <option key={pageSize} value={pageSize}>
-                {pageSize}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <nav className="flex items-center gap-x-1">
-          <button
-            type="button"
-            className="py-2 px-2.5 inline-flex justify-center items-center text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none"
-            onClick={() => table.setPageIndex(0)}
-            disabled={!table.getCanPreviousPage() || loading}
-            aria-label={t('First Page')}
-          >
-            <ChevronsLeft className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            className="py-2 px-2.5 inline-flex justify-center items-center text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage() || loading}
-            aria-label={t('Previous')}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-
-          <div className="flex items-center gap-x-1">
-            {getPaginationItems(pagination.pageIndex, table.getPageCount()).map((page, index) => {
-              if (page === '...') {
-                return (
-                  <span
-                    key={`dots-${index}`}
-                    className="min-h-8 min-w-8 flex justify-center items-center text-gray-400"
-                  >
-                    <MoreHorizontal className="h-4 w-4" />
-                  </span>
-                );
-              }
-              const isCurrent = (page as number) === pagination.pageIndex + 1;
-              return (
-                <button
-                  key={page}
-                  type="button"
-                  onClick={() => table.setPageIndex((page as number) - 1)}
-                  disabled={loading}
-                  className={`min-h-8 min-w-8 flex justify-center items-center disabled:opacity-50 disabled:pointer-events-none ${
-                    isCurrent
-                      ? 'bg-gray-200 text-gray-800 focus:bg-gray-300'
-                      : 'text-gray-800 hover:bg-gray-100'
-                  }`}
-                >
-                  {page}
-                </button>
-              );
-            })}
-          </div>
-
-          <button
-            type="button"
-            className="min-h-8 min-w-8 py-2 px-2.5 inline-flex justify-center items-center text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage() || loading}
-            aria-label={t('Next')}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            className="min-h-8 min-w-8 py-2 px-2.5 inline-flex justify-center items-center text-gray-800 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none"
-            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-            disabled={!table.getCanNextPage() || loading}
-            aria-label={t('Last Page')}
-          >
-            <ChevronsRight className="h-4 w-4" />
-          </button>
-        </nav>
-      </div>
+      <DataTablePagination table={table} loading={loading} pageSizeOptions={pageSizeOptions} />
     </div>
   );
 }

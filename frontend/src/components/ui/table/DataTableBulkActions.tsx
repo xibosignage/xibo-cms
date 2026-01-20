@@ -1,9 +1,11 @@
+import type { LucideIcon } from 'lucide-react';
 import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { twMerge } from 'tailwind-merge';
 
 export interface DataTableBulkAction<TData> {
   label: string;
-  icon?: React.ReactNode;
+  icon?: LucideIcon;
   onClick: (selectedRows: TData[]) => void;
   variant?: 'default' | 'danger';
 }
@@ -27,39 +29,36 @@ export function DataTableBulkActions<TData>({
     return null;
   }
 
-  // TODO: Pending final design
   return (
-    <div className="animate-in fade-in zoom-in-95 duration-200">
-      <div className="flex items-center gap-2 bg-gray-100 text-gray-900 border border-gray-100">
-        <div className="flex items-center gap-2 px-2 mr-1">
-          <button
-            onClick={onClearSelection}
-            className="text-gray-900 hover:text-white transition-colors cursor-pointer"
-            title={t('Clear selection')}
-          >
-            <X className="w-4 h-4" />
-          </button>
-          <span className="font-semibold text-sm whitespace-nowrap">
+    <div className="flex p-1 bg-slate-50 rounded-full gap-3 items-center">
+      <div className="flex items-center gap-2 mr-1">
+        <button
+          onClick={onClearSelection}
+          className="cursor-pointer rounded-full px-2 py-1 flex gap-2 items-center text-gray-600 hover:bg-gray-200 focus:bg-gray-300"
+          title={t('Clear selection')}
+        >
+          <X className="size-[21px]" />
+          <span className="text-sm leading-normal whitespace-nowrap">
             {selectedCount} {t('Selected')}
           </span>
-        </div>
-
-        <div className="flex items-center gap-1">
-          {actions.map((action, idx) => (
-            <button
-              key={idx}
-              onClick={() => action.onClick(selectedRows)}
-              className={`
-                flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded transition-colors bg-gray-100 hover:bg-gray-200 cursor-pointer
-                ${action.variant === 'danger' ? ' text-red-600' : ' text-gray-800'}
-              `}
-              title={action.label}
-            >
-              {action.icon}
-            </button>
-          ))}
-        </div>
+        </button>
       </div>
+
+      {actions.map((action, idx) => (
+        <button
+          key={idx}
+          onClick={() => action.onClick(selectedRows)}
+          className={twMerge(
+            'cursor-pointer flex justify-center size-6 items-center text-sm font-medium rounded-lg border border-transparent focus:outline-hidden disabled:opacity-50 disabled:pointer-events-none',
+            action.variant === 'danger'
+              ? 'text-red-600 hover:bg-red-50 focus:bg-red-100'
+              : 'text-gray-600 hover:bg-gray-200 focus:bg-gray-300',
+          )}
+          title={action.label}
+        >
+          {action.icon && <action.icon className="w-4 h-4"></action.icon>}
+        </button>
+      ))}
     </div>
   );
 }
