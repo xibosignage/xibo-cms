@@ -213,7 +213,7 @@ COPY --from=webpack /app/web/dist /var/www/cms/web/dist
 COPY --from=webpack /app/modules /var/www/cms/modules
 
 # Copy frontend built prototype folder to cms web
-COPY --from=vite /app/dist /var/www/cms/web/prototype
+COPY --from=vite /app/frontend/dist /var/www/cms/web/prototype
 
 # All other files (.dockerignore excludes many things, but we tidy up the rest below)
 COPY --chown=www-data:www-data . /var/www/cms
