@@ -38,6 +38,13 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_URI} ^/pwa.*$
 RewriteRule ^pwa/(.*)$ chromeos/$1 [NC,L]
 
+# Handle the SPA in the /prototype folder
+# If the request starts with /prototype/ and isn't a real file
+RewriteCond %{REQUEST_URI} ^/prototype/
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^prototype/.* /prototype/index.html [L]
+
 # all others - i.e. web
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
