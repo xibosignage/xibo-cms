@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -338,8 +338,7 @@ class Login extends Base
 
             $mail->Body = $this->generateEmailBody(
                 $mail->Subject,
-                '<p>' . __('You are receiving this email because a password reminder was requested for your account. 
-                If you did not make this request, please report this email to your administrator immediately.') . '</p>'
+                '<p>' . __('You are receiving this email because a password reminder was requested for your account. If you did not make this request, please report this email to your administrator immediately.') . '</p>' //phpcs:ignore
                 . $linkButton
                 . '<p style="margin-top:10px; font-size:14px; color:#555555;">'
                 . __('If the button does not work, copy and paste the following URL into your browser:')

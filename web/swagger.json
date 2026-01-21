@@ -8775,10 +8775,30 @@
                         "type": "integer"
                     },
                     {
+                        "name": "singlePointInTime",
+                        "in": "query",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
                         "name": "date",
                         "in": "query",
                         "description": "Date in Y-m-d H:i:s",
-                        "required": true,
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "startDate",
+                        "in": "query",
+                        "description": "Date in Y-m-d H:i:s",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "endDate",
+                        "in": "query",
+                        "description": "Date in Y-m-d H:i:s",
+                        "required": false,
                         "type": "string"
                     }
                 ],
@@ -11938,6 +11958,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
+                                "$ref": "WidgetDataOrder"
                             }
                         }
                     }
