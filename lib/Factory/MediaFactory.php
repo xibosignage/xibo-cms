@@ -552,6 +552,8 @@ class MediaFactory extends BaseFactory
                `media`.width,
                `media`.height,
                `user`.UserName AS owner,
+               `user`.email AS userEmail,
+               `folder`.folderName AS location,
             ';
         $select .= '     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
                               FROM `permission`
@@ -573,6 +575,8 @@ class MediaFactory extends BaseFactory
 
         // Media might be linked to the system user (userId 0)
         $body .= '   LEFT OUTER JOIN `user` ON `user`.userId = `media`.userId ';
+
+        $body .= '   LEFT OUTER JOIN `folder` ON `folder`.folderId = `media`.folderId ';
 
         if ($sanitizedFilter->getInt('displayGroupId') !== null) {
             $body .= '
