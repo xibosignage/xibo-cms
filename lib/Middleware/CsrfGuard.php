@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -30,6 +30,7 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
 use Slim\Routing\RouteContext;
 use Xibo\Helper\Environment;
+use Xibo\Helper\HttpsDetect;
 use Xibo\Support\Exception\ExpiredException;
 
 class CsrfGuard implements Middleware
@@ -71,14 +72,29 @@ class CsrfGuard implements Middleware
     public function process(Request $request, RequestHandler $handler): Response
     {
         $container = $this->app->getContainer();
-        /* @var \Xibo\Helper\Session $session */
-        $session = $this->app->getContainer()->get('session');
 
-        if (!$session->get($this->key)) {
-            $session->set($this->key, bin2hex(random_bytes(20)));
+        // Do we have a token already?
+        $token = $_SESSION[$this->key] ?? null;
+
+        if ($token === null) {
+            $_SESSION[$this->key] = bin2hex(random_bytes(20));
+
+            // Set the XSRF-TOKEN cookie
+            // This cookie is NOT HttpOnly so the SPA can read it.
+            // cookie is only set when generated
+            setcookie(
+                'XSRF-TOKEN',
+                $_SESSION[$this->key],
+                [
+                    'expires' => 0,
+                    'path' => '/',
+                    'domain' => '',
+                    'secure' => HttpsDetect::isHttps(),
+                    'httponly' => false,
+                    'samesite' => 'Lax',
+                ]
+            );
         }
-
-        $token = $session->get($this->key);
 
         // Validate the CSRF token.
         if (in_array($request->getMethod(), ['POST', 'PUT', 'DELETE'])) {
@@ -90,7 +106,7 @@ class CsrfGuard implements Middleware
 
             $excludedRoutes = $request->getAttribute('excludedCsrfRoutes');
 
-            if (($excludedRoutes !== null && is_array($excludedRoutes) && in_array($resource, $excludedRoutes))
+            if ((is_array($excludedRoutes) && in_array($resource, $excludedRoutes))
                 || (Environment::isDevMode() && $resource === '/login')
             ) {
                 $container->get('logger')->info('Route excluded from CSRF: ' . $resource);
@@ -99,6 +115,7 @@ class CsrfGuard implements Middleware
                 $userToken = $request->getHeaderLine('X-XSRF-TOKEN');
 
                 if ($userToken == '') {
+                    // Not in the header, check in params instead
                     $parsedBody = $request->getParsedBody();
                     foreach ($parsedBody as $param => $value) {
                         if ($param == $this->key) {
@@ -114,8 +131,9 @@ class CsrfGuard implements Middleware
         }
 
         // Assign CSRF token key and value to view.
+        // This is used when the backend outputs HTML (such as the login form)
         $container->get('view')->offsetSet('csrfKey', $this->key);
-        $container->get('view')->offsetSet('csrfToken',$token);
+        $container->get('view')->offsetSet('csrfToken', $token);
 
         // Call next middleware.
         return $handler->handle($request);
