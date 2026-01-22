@@ -692,47 +692,11 @@ class Library extends Base
 
             // User permissions
             $userPermissions = [
-                'edit'          => false,
-                'copy'          => false,
-                'enableStat'    => false,
-                'delete'        => false,
-                'share'         => false,
-                'folderView'    => false,
-                'usageReport'   => false,
-                'schedule'      => false,
-                'download'      => true, // No feature permissions here, anyone can get a file based on sharing.
+                'view'      => $user->checkViewable($media),
+                'edit'      => $user->checkEditable($media),
+                'delete'    => $user->checkDeleteable($media),
+                'modify'    => $user->checkPermissionsModifyable($media),
             ];
-
-            if ($user->featureEnabled('library.modify')) {
-                if ($user->checkEditable($media)) {
-                    $userPermissions['edit'] = true;
-                    $userPermissions['copy'] = true;
-                    $userPermissions['enableStat'] = true;
-                }
-
-                if ($user->checkDeleteable($media)) {
-                    $userPermissions['delete'] = true;
-                }
-
-                if ($user->checkPermissionsModifyable($media)) {
-                    $userPermissions['share'] = true;
-                }
-
-                if ($user->featureEnabled('folder.view')) {
-                    $userPermissions['folderView'] = true;
-                }
-            }
-
-            if ($user->featureEnabled(['schedule.view', 'layout.view'])) {
-                $userPermissions['usageReport'] = true;
-            }
-
-            if ($user->featureEnabled('schedule.add')
-                && in_array($media->mediaType, ['image', 'video'])
-                && ($user->checkEditable($media)
-                    || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1)) {
-                $userPermissions['schedule'] = true;
-            }
 
             $media->setUnmatchedProperty('userPermissions', $userPermissions);
         }

@@ -238,6 +238,7 @@ class User extends Base
         // TODO: output some settings
         return $response->withJson(array_merge($this->getUser()->toArray(), [
             'settings' => $settings,
+            'features' => $this->getUserFeatures()
         ]));
     }
 
@@ -2585,5 +2586,20 @@ class User extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Get user features
+     * @return array
+     */
+    private function getUserFeatures(): array
+    {
+        $userFeatures = [];
+
+        foreach ($this->userGroupFactory->getFeatures() as $key => $feature) {
+            $userFeatures[$key] = $this->getUser()->featureEnabled($feature);
+        };
+
+        return $userFeatures;
     }
 }
