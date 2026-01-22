@@ -553,7 +553,7 @@ class MediaFactory extends BaseFactory
                `media`.height,
                `user`.UserName AS owner,
                `user`.email AS userEmail,
-               `folder`.folderName AS location,
+               `folder`.folderName,
             ';
         $select .= '     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
                               FROM `permission`
