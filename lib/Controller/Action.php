@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -357,9 +357,9 @@ class Action  extends Base
         }
 
         // restrict to one touch Action per source
-        if (
-            (!empty($source) && $sourceId !== null && !empty($triggerType))
-            && $this->actionFactory->checkIfActionExist($source, $sourceId, $triggerType)
+        if ($triggerType === 'touch' &&
+            (!empty($source) && $sourceId !== null && !empty($triggerType)) &&
+            $this->actionFactory->checkIfActionExist($source, $sourceId, $triggerType)
         ) {
             throw new InvalidArgumentException(__('Action with specified Trigger Type already exists'), 'triggerType');
         }
@@ -516,8 +516,16 @@ class Action  extends Base
         $action->widgetId = $sanitizedParams->getInt('widgetId');
         $action->layoutCode = $sanitizedParams->getString('layoutCode');
         $action->validate();
+
         // restrict to one touch Action per source
-        if ($this->actionFactory->checkIfActionExist($action->source, $action->sourceId, $action->triggerType, $action->actionId)) {
+        if ($action->triggerType === 'touch' &&
+            $this->actionFactory->checkIfActionExist(
+                $action->source,
+                $action->sourceId,
+                $action->triggerType,
+                $action->actionId
+            )
+        ) {
             throw new InvalidArgumentException(__('Action with specified Trigger Type already exists'), 'triggerType');
         }
 
