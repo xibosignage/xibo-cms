@@ -1027,9 +1027,12 @@ class MediaFactory extends BaseFactory
         $order = [];
 
         foreach ($sortOrder as $sort) {
+            // Separate sort by and sort order
             $sortArr = explode(' ', trim($sort), 2);
 
-            $column = trim($sortArr[0], '`');
+            // Trim and sanitize sort by and normalize (remove table name if existing)
+            $columnParts = explode('.', str_replace('`', '', trim($sortArr[0])));
+            $column = end($columnParts);
 
             // Check against the allowed columns
             if (!isset($columnMapping[$column])) {
