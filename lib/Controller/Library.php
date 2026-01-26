@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -543,162 +543,17 @@ class Library extends Base
      */
     public function grid(Request $request, Response $response)
     {
-        $user = $this->getUser();
-
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
 
-        // Variables used for link signing
-        $isReturnPublicUrls = $parsedQueryParams->getCheckbox('isReturnPublicUrls') == 1;
-        $thumbnailRouteName = $isReturnPublicUrls ? 'library.public.thumbnail' : 'library.thumbnail';
-        $encryptionKey = $this->getConfig()->getApiKeyDetails()['encryptionKey'];
-        $rootUrl = (new HttpsDetect())->getUrl();
-
-        // Sorting
-        $mediaSortQuery = $this->gridRenderSort($parsedQueryParams, $this->isJson($request));
-
         // Construct the SQL
-        $mediaList = $this->mediaFactory->query($mediaSortQuery, $this->gridRenderFilter([
-            'mediaId' => $parsedQueryParams->getInt('mediaId'),
-            'name' => $parsedQueryParams->getString('media'),
-            'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
-            'nameExact' => $parsedQueryParams->getString('nameExact'),
-            'type' => $parsedQueryParams->getString('type'),
-            'types' => $parsedQueryParams->getArray('types'),
-            'tags' => $parsedQueryParams->getString('tags'),
-            'exactTags' => $parsedQueryParams->getCheckbox('exactTags'),
-            'ownerId' => $parsedQueryParams->getInt('ownerId'),
-            'retired' => $parsedQueryParams->getInt('retired'),
-            'duration' => $parsedQueryParams->getInt('duration'),
-            'fileSize' => $parsedQueryParams->getString('fileSize'),
-            'ownerUserGroupId' => $parsedQueryParams->getInt('ownerUserGroupId'),
-            'assignable' => $parsedQueryParams->getInt('assignable'),
-            'folderId' => $parsedQueryParams->getInt('folderId'),
-            'onlyMenuBoardAllowed' => $parsedQueryParams->getInt('onlyMenuBoardAllowed'),
-            'layoutId' => $parsedQueryParams->getInt('layoutId'),
-            'includeLayoutBackgroundImage' => ($parsedQueryParams->getInt('layoutId') != null) ? 1 : 0,
-            'orientation' => $parsedQueryParams->getString('orientation', ['defaultOnEmptyString' => true]),
-            'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
-            'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
-            'unreleasedOnly' => $parsedQueryParams->getCheckbox('unreleasedOnly'),
-            'unusedOnly' => $parsedQueryParams->getCheckbox('unusedOnly'),
-        ], $parsedQueryParams));
+        $mediaSortQuery = $this->gridRenderSort($parsedQueryParams, $this->isJson($request));
+        $mediaFilterQuery = $this->getMediaFilters($parsedQueryParams);
+
+        $mediaList = $this->mediaFactory->query($mediaSortQuery, $mediaFilterQuery);
 
         // Add some additional row content
         foreach ($mediaList as $media) {
-            $media->setUnmatchedProperty('revised', ($media->parentId != 0) ? 1 : 0);
-
-            // Thumbnail
-            $media->setUnmatchedProperty('thumbnail', '');
-            try {
-                $module = $this->moduleFactory->getByType($media->mediaType);
-                if ($module->hasThumbnail) {
-                    $renderThumbnail = true;
-                    // for video, check if the cover image exists here.
-                    if ($media->mediaType === 'video') {
-                        $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
-                        $renderThumbnail = file_exists($libraryLocation . $media->mediaId . '_videocover.png');
-                    }
-
-                    if ($renderThumbnail) {
-                        $thumbnailUrl = $this->urlFor($request, $thumbnailRouteName, [
-                            'id' => $media->mediaId,
-                        ]);
-
-                        if ($isReturnPublicUrls) {
-                            // If we are coming from the API we should remove the /api part of the URL
-                            if ($this->isApi($request)) {
-                                $thumbnailUrl = str_replace('/api/', '/', $thumbnailUrl);
-                            }
-
-                            // Sign the link.
-                            $thumbnailUrl = $rootUrl . $thumbnailUrl . '?' . LinkSigner::getSignature(
-                                $rootUrl,
-                                $thumbnailUrl,
-                                time() + 3600,
-                                $encryptionKey,
-                            );
-                        }
-
-                        $media->setUnmatchedProperty('thumbnail', $thumbnailUrl);
-                    }
-                }
-            } catch (NotFoundException) {
-                $this->getLog()->error('Module ' . $media->mediaType . ' not found');
-            }
-
-            $media->setUnmatchedProperty('fileSizeFormatted', ByteFormatter::format($media->fileSize));
-
-            // Media expiry
-            $media->setUnmatchedProperty('mediaExpiresIn', __('Expires %s'));
-            $media->setUnmatchedProperty('mediaExpiryFailed', __('Expired '));
-            $media->setUnmatchedProperty('mediaNoExpiryDate', __('Never'));
-
-            if ($this->isApi($request)) {
-                $media->excludeProperty('mediaExpiresIn');
-                $media->excludeProperty('mediaExpiryFailed');
-                $media->excludeProperty('mediaNoExpiryDate');
-                $media->expires = ($media->expires == 0)
-                    ? 0
-                    : Carbon::createFromTimestamp($media->expires)->format(DateFormatHelper::getSystemFormat());
-                continue;
-            }
-
-            switch ($media->released) {
-                case 1:
-                    $media->setUnmatchedProperty('releasedDescription', '');
-                    break;
-
-                case 2:
-                    $media->setUnmatchedProperty(
-                        'releasedDescription',
-                        __('The uploaded image is too large and cannot be processed, please use another image.')
-                    );
-                    break;
-
-                default:
-                    $media->setUnmatchedProperty(
-                        'releasedDescription',
-                        __('This image will be resized according to set thresholds and limits.')
-                    );
-            }
-
-            switch ($media->enableStat) {
-                case 'On':
-                    $media->setUnmatchedProperty(
-                        'enableStatDescription',
-                        __('This Media has enable stat collection set to ON')
-                    );
-                    break;
-
-                case 'Off':
-                    $media->setUnmatchedProperty(
-                        'enableStatDescription',
-                        __('This Media has enable stat collection set to OFF')
-                    );
-                    break;
-
-                default:
-                    $media->setUnmatchedProperty(
-                        'enableStatDescription',
-                        __('This Media has enable stat collection set to INHERIT')
-                    );
-            }
-
-            if ($parsedQueryParams->getCheckbox('fullScreenScheduleCheck')) {
-                $fullScreenCampaignId = $this->hasFullScreenLayout($media);
-                $media->setUnmatchedProperty('hasFullScreenLayout', (!empty($fullScreenCampaignId)));
-                $media->setUnmatchedProperty('fullScreenCampaignId', $fullScreenCampaignId);
-            }
-
-            // User permissions
-            $userPermissions = [
-                'view'      => $user->checkViewable($media),
-                'edit'      => $user->checkEditable($media),
-                'delete'    => $user->checkDeleteable($media),
-                'modify'    => $user->checkPermissionsModifyable($media),
-            ];
-
-            $media->setUnmatchedProperty('userPermissions', $userPermissions);
+            $this->decorateMediaProperties($request, $parsedQueryParams, $media);
         }
 
         $this->getState()->template = 'grid';
@@ -2891,5 +2746,181 @@ class Library extends Base
         $folder->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
 
         $oldMedia->save(['saveTags' => false, 'validate' => false]);
+    }
+
+    /**
+     * Get the media filters
+     * @param $parsedQueryParams
+     * @return array
+     */
+    private function getMediaFilters($parsedQueryParams): array
+    {
+        return ($this->gridRenderFilter([
+            'mediaId' => $parsedQueryParams->getInt('mediaId'),
+            'name' => $parsedQueryParams->getString('media'),
+            'nameExact' => $parsedQueryParams->getString('nameExact'),
+            'type' => $parsedQueryParams->getString('type'),
+            'types' => $parsedQueryParams->getArray('types'),
+            'tags' => $parsedQueryParams->getString('tags'),
+            'exactTags' => $parsedQueryParams->getCheckbox('exactTags'),
+            'ownerId' => $parsedQueryParams->getInt('ownerId'),
+            'retired' => $parsedQueryParams->getInt('retired'),
+            'duration' => $parsedQueryParams->getInt('duration'),
+            'fileSize' => $parsedQueryParams->getString('fileSize'),
+            'ownerUserGroupId' => $parsedQueryParams->getInt('ownerUserGroupId'),
+            'assignable' => $parsedQueryParams->getInt('assignable'),
+            'folderId' => $parsedQueryParams->getInt('folderId'),
+            'onlyMenuBoardAllowed' => $parsedQueryParams->getInt('onlyMenuBoardAllowed'),
+            'layoutId' => $parsedQueryParams->getInt('layoutId'),
+            'includeLayoutBackgroundImage' => ($parsedQueryParams->getInt('layoutId') != null) ? 1 : 0,
+            'orientation' => $parsedQueryParams->getString('orientation', ['defaultOnEmptyString' => true]),
+            'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
+            'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
+            'unreleasedOnly' => $parsedQueryParams->getCheckbox('unreleasedOnly'),
+            'unusedOnly' => $parsedQueryParams->getCheckbox('unusedOnly'),
+        ], $parsedQueryParams));
+    }
+
+    /**
+     * Get the media thumbnail URL
+     * @param $request
+     * @param $parsedQueryParams
+     * @param $media
+     * @return string
+     */
+    private function getMediaThumbnailUrl($request, $parsedQueryParams, $media): string
+    {
+        // Variables used for link signing/thumbnail generation
+        $isReturnPublicUrls = $parsedQueryParams->getCheckbox('isReturnPublicUrls') == 1;
+        $thumbnailRouteName = $isReturnPublicUrls ? 'library.public.thumbnail' : 'library.thumbnail';
+        $encryptionKey = $this->getConfig()->getApiKeyDetails()['encryptionKey'];
+        $rootUrl = (new HttpsDetect())->getUrl();
+
+        $thumbnailUrl = '';
+
+        try {
+            $module = $this->moduleFactory->getByType($media->mediaType);
+
+            if ($module->hasThumbnail) {
+                $renderThumbnail = true;
+                // for video, check if the cover image exists here.
+                if ($media->mediaType === 'video') {
+                    $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+                    $renderThumbnail = file_exists($libraryLocation . $media->mediaId . '_videocover.png');
+                }
+
+                if ($renderThumbnail) {
+                    $thumbnailUrl = $this->urlFor($request, $thumbnailRouteName, [
+                        'id' => $media->mediaId,
+                    ]);
+
+                    if ($isReturnPublicUrls) {
+                        // Sign the link.
+                        $thumbnailUrl = $rootUrl . $thumbnailUrl . '?' . LinkSigner::getSignature(
+                            $rootUrl,
+                            $thumbnailUrl,
+                            time() + 3600,
+                            $encryptionKey,
+                        );
+                    }
+                }
+            }
+        } catch (NotFoundException) {
+            $this->getLog()->error('Module ' . $media->mediaType . ' not found');
+        }
+
+        return $thumbnailUrl;
+    }
+
+    /**
+     * Get the media released description
+     * @param $released
+     * @return string
+     */
+    private function getMediaReleasedDescription($released): string
+    {
+        return match ($released) {
+            1 => '',
+            2 => 'The uploaded image is too large and cannot be processed, please use another image.',
+            default => 'This image will be resized according to set thresholds and limits.',
+        };
+    }
+
+    /**
+     * Get the media enable stat description
+     * @param $enableStat
+     * @return string
+     */
+    private function getMediaEnableStatDescription($enableStat): string
+    {
+        return match ($enableStat) {
+            'On' => 'This Media has enable stat collection set to ON',
+            'Off' => 'This Media has enable stat collection set to OFF',
+            default => 'This Media has enable stat collection set to INHERIT',
+        };
+    }
+
+    /**
+     * Get user permissions for media items
+     * @param $media
+     * @return array
+     */
+    private function getUserPermissions($media): array
+    {
+        $user = $this->getUser();
+
+        return [
+            'view'      => $user->checkViewable($media),
+            'edit'      => $user->checkEditable($media),
+            'delete'    => $user->checkDeleteable($media),
+            'modify'    => $user->checkPermissionsModifyable($media),
+        ];
+    }
+
+    /**
+     * Decorate media properties
+     * @param $request
+     * @param $parsedQueryParams
+     * @param $media
+     */
+    private function decorateMediaProperties($request, $parsedQueryParams, $media)
+    {
+        // Thumbnail
+        $thumbnailUrl = $this->getMediaThumbnailUrl($request, $parsedQueryParams, $media);
+
+        $media->setUnmatchedProperty('thumbnail', $thumbnailUrl);
+
+        // Properties
+        $media->setUnmatchedProperty('revised', ($media->parentId != 0) ? 1 : 0);
+        $media->setUnmatchedProperty('fileSizeFormatted', ByteFormatter::format($media->fileSize));
+
+        // Expiry
+        $media->setUnmatchedProperty('mediaExpiresIn', __('Expires %s'));
+        $media->setUnmatchedProperty('mediaExpiryFailed', __('Expired '));
+        $media->setUnmatchedProperty('mediaNoExpiryDate', __('Never'));
+        $media->expires = ($media->expires == 0)
+            ? 0
+            : Carbon::createFromTimestamp($media->expires)->format(DateFormatHelper::getSystemFormat());
+
+        // Description
+        $releasedDescription = $this->getMediaReleasedDescription($media->released);
+        $enableStatDescription = $this->getMediaEnableStatDescription($media->enableStat);
+
+        $media->setUnmatchedProperty('releasedDescription', __($releasedDescription));
+        $media->setUnmatchedProperty('enableStatDescription', __($enableStatDescription));
+
+        // Schedule
+        if ($parsedQueryParams->getCheckbox('fullScreenScheduleCheck')) {
+            $fullScreenCampaignId = $this->hasFullScreenLayout($media);
+            $media->setUnmatchedProperty('hasFullScreenLayout', (!empty($fullScreenCampaignId)));
+            $media->setUnmatchedProperty('fullScreenCampaignId', $fullScreenCampaignId);
+        }
+
+        // User permissions
+        $userPermissions = $this->getUserPermissions($media);
+
+        $media->setUnmatchedProperty('userPermissions', $userPermissions);
+
+        return $media;
     }
 }
