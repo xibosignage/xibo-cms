@@ -19,110 +19,45 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
 .*/
 
+import { useQueryClient } from '@tanstack/react-query';
 import {
-  type ColumnDef,
   type SortingState,
   type PaginationState,
   type OnChangeFn,
   type RowSelectionState,
 } from '@tanstack/react-table';
-import {
-  Search,
-  Filter,
-  Folder,
-  Edit,
-  Download,
-  CopyCheck,
-  UserPlus2,
-  CalendarClock,
-  FolderInput,
-  Info,
-  Trash2,
-  FilterX,
-  MoreVertical,
-} from 'lucide-react';
+import { Search, Filter, Folder, FilterX, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import Button from '@/components/ui/Button';
-import MediaPreviewer from '@/components/ui/MediaPreviewer';
-import FilterInputs from '@/components/ui/media/FilterInputs';
-import MediaTopbar from '@/components/ui/media/MediaTopNav';
-import { DataTable } from '@/components/ui/table/DataTable';
-import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
 import {
-  MediaCell,
-  CheckMarkCell,
-  TextCell,
-  StatusCell,
-  ActionsCell,
-  TagsCell,
-} from '@/components/ui/table/cells';
+  getMediaColumns,
+  getBulkActions,
+  getAddModalActions,
+  FILTER_OPTIONS,
+  INITIAL_FILTER_STATE,
+  LIBRARY_TABS,
+  type MediaFilterInput,
+} from './MediaConfig';
+import MediaPreviewer from './components/MediaPreviewer';
+import { useMediaData } from './hooks/useMediaData';
+
+import Button from '@/components/ui/Button';
+import { FileUploader } from '@/components/ui/FileUploader';
+import FilterInputs from '@/components/ui/FilterInputs';
+import TabNav from '@/components/ui/TabNav';
+import Modal from '@/components/ui/modals/Modal';
+import { DataTable } from '@/components/ui/table/DataTable';
 import { useDebounce } from '@/hooks/useDebounce';
-import { fetchMedia, deleteMedia, downloadMedia } from '@/services/mediaApi';
+import { useUploadQueue } from '@/hooks/useUploadQueue';
+import { deleteMedia, downloadMedia } from '@/services/mediaApi';
 import type { MediaRow } from '@/types/media';
-interface ApiTag {
-  tagId: number;
-  tag: string;
-}
-
-export interface FilterInput {
-  type: string;
-  owner: string;
-  userGroup: string;
-  orientation: string;
-  retired: string;
-  lastModified: string;
-}
-
-type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
-
-const MEDIA_NAV = ['Playlists', 'Media', 'Datasets', 'Menu Boards'];
-
-const formatDuration = (seconds: number) => {
-  if (!seconds) {
-    return '-';
-  }
-
-  return new Date(seconds * 1000).toISOString().slice(11, 19);
-};
-
-const getStatusTypeFromMediaType = (mediaType: string) => {
-  const type = mediaType?.toLowerCase();
-
-  switch (type) {
-    case 'image':
-    case 'video':
-    case 'audio':
-      return 'info';
-    case 'pdf':
-    case 'powerpoint':
-      return 'danger';
-    case 'flash':
-    case 'htmlpackage':
-      return 'success';
-    default:
-      return 'neutral';
-  }
-};
-
-const downloadMediaHandle = async (data: MediaRow) => {
-  try {
-    await downloadMedia(data.mediaId, data.storedAs);
-  } catch (error) {
-    console.error('Download failed', error);
-  }
-};
 
 export default function Media() {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
 
-  const [data, setData] = useState<MediaRow[]>([]);
-  const [error, setError] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(true);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  const [pageCount, setPageCount] = useState(0);
+  // UI state
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
@@ -130,84 +65,88 @@ export default function Media() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [activeTab, setActiveTab] = useState('Media');
   const [openFilter, setOpenFilter] = useState(false);
   const [previewItem, setPreviewItem] = useState<MediaRow | null>(null);
-  const [filterInputs, setFilterInput] = useState<FilterInput>({
-    type: '',
-    owner: '',
-    userGroup: '',
-    orientation: '',
-    retired: '',
-    lastModified: '',
-  });
+  const [filterInputs, setFilterInput] = useState<MediaFilterInput>(INITIAL_FILTER_STATE);
+  const [isAddModalOpen, setAddModalOpen] = useState(false);
 
   const debouncedFilter = useDebounce(globalFilter, 500);
 
-  const bulkActions: DataTableBulkAction<MediaRow>[] = [
-    {
-      label: t('Move'),
-      icon: FolderInput,
-      onClick: async (selectedItems) => {
-        console.log('Move');
-        console.log(selectedItems);
-      },
-    },
-    {
-      label: t('Share'),
-      icon: UserPlus2,
-      onClick: async (selectedItems) => {
-        console.log('Share');
-        console.log(selectedItems);
-      },
-    },
-    {
-      label: t('Download'),
-      icon: Download,
-      onClick: async (selectedItems) => {
-        console.log('Download');
-        console.log(selectedItems);
-      },
-    },
-    {
-      label: t('Delete Selected'),
-      icon: Trash2,
-      onClick: async (selectedItems) => {
-        if (selectedItems.length === 0) {
-          return;
-        }
+  // Data fetching
+  const {
+    data: queryData,
+    isLoading,
+    isError,
+    error: queryError,
+    isPlaceholderData,
+  } = useMediaData({
+    pagination,
+    sorting,
+    filter: debouncedFilter,
+    advancedFilters: filterInputs,
+  });
 
-        const message = `${t('Are you sure you want to delete these items?')}\n(${selectedItems.length} selected)`;
-        if (window.confirm(message)) {
-          setLoading(true);
-          try {
-            await Promise.all(selectedItems.map((item) => deleteMedia(item.mediaId)));
-            setRowSelection({});
-            setRefreshTrigger((prev) => prev + 1);
-          } catch (err) {
-            console.error('Bulk delete error', err);
-            alert(t('Some items could not be deleted. Check if they are in use.'));
-            setRefreshTrigger((prev) => prev + 1);
-          } finally {
-            setLoading(false);
-          }
-        }
-      },
-    },
-    {
-      label: t('More'),
-      icon: MoreVertical,
-      onClick: async (selectedItems) => {
-        console.log('More?');
-        console.log(selectedItems);
-      },
-    },
-  ];
+  // Computed values
+  const data = queryData?.rows || [];
+  const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
+  const error = isError && queryError instanceof Error ? queryError.message : '';
 
-  // Reset pagination when filter changes
-  useEffect(() => {
+  const { queue, addFiles, removeFile, updateFileData, startUploads, isUploading } =
+    useUploadQueue(1);
+
+  // Event handlers
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['media'] });
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteMedia(id);
+      handleRefresh();
+    } catch (err) {
+      console.error('Failed to delete media!', err);
+      alert(t('Failed to delete media!'));
+    }
+  };
+
+  const handleBulkDelete = async (selectedItems: MediaRow[]) => {
+    if (selectedItems.length === 0) return;
+
+    const message = `${t('Are you sure you want to delete these items?')}\n(${selectedItems.length} selected)`;
+    if (window.confirm(message)) {
+      try {
+        await Promise.all(selectedItems.map((item) => deleteMedia(item.mediaId)));
+        setRowSelection({});
+        handleRefresh();
+      } catch (err) {
+        console.error('Bulk delete error', err);
+        alert(t('Some items could not be deleted. Check if they are in use.'));
+        handleRefresh();
+      }
+    }
+  };
+
+  const handleDownload = async (row: MediaRow) => {
+    try {
+      await downloadMedia(row.mediaId, row.storedAs);
+    } catch (error) {
+      console.error('Download failed', error);
+    }
+  };
+
+  const handlePreviewClick = (row: MediaRow) => {
+    setPreviewItem(row);
+  };
+
+  const handleGlobalFilterChange = (value: string) => {
+    setGlobalFilter(value);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-  }, [debouncedFilter]);
+  };
+
+  const handleFilterChange = (name: string, value: string) => {
+    setFilterInput((prev) => ({ ...prev, [name]: value }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
 
   const handlePaginationChange: OnChangeFn<PaginationState> = (updaterOrValue) => {
     setPagination((prev) => {
@@ -220,321 +159,49 @@ export default function Media() {
     });
   };
 
-  const handleRefresh = () => {
-    setRefreshTrigger((prev) => prev + 1);
-  };
+  const columns = getMediaColumns({
+    t,
+    onPreview: handlePreviewClick,
+    onDelete: handleDelete,
+    onDownload: handleDownload,
+  });
 
-  const handlePreviewClick = (row: MediaRow) => {
-    setPreviewItem(row);
-  };
+  const bulkActions = getBulkActions({
+    t,
+    onDelete: handleBulkDelete,
+    onMove: (items) => console.log('Move', items),
+    onShare: (items) => console.log('Share', items),
+  });
 
+  const addModalActions = getAddModalActions({
+    t,
+    onCancel: () => setAddModalOpen(false),
+    onUpload: startUploads,
+    isUploading,
+    hasQueueItems: queue.length > 0,
+  });
+
+  // Side effects
   useEffect(() => {
-    const controller = new AbortController();
-
-    async function load() {
-      setLoading(true);
-      try {
-        const startOffset = pagination.pageIndex * pagination.pageSize;
-
-        const sortBy = sorting.map((s) => s.id).join(',');
-        const sortDir = sorting.map((s) => (s.desc ? 'desc' : 'asc')).join(',');
-
-        const result = await fetchMedia({
-          start: startOffset,
-          length: pagination.pageSize,
-          media: debouncedFilter,
-          sortBy: sortBy || undefined,
-          sortDir: sortDir || undefined,
-          signal: controller.signal,
-        });
-
-        setData(result.rows || []);
-        setRowSelection({});
-
-        const totalPages = Math.ceil(result.totalCount / pagination.pageSize);
-        setPageCount(totalPages);
-        setError('');
-      } catch (err) {
-        if (!controller.signal.aborted) {
-          console.error('Failed to load media', err);
-          setError(err instanceof Error ? err.message : 'Unknown error');
-          setData([]);
-        }
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-      }
+    const allCompleted = queue.length > 0 && queue.every((item) => item.status === 'completed');
+    if (allCompleted && !isUploading) {
+      queryClient.invalidateQueries({ queryKey: ['media'] });
     }
-    load();
-    return () => controller.abort();
-  }, [pagination, sorting, debouncedFilter, refreshTrigger]);
+  }, [queue, isUploading, queryClient]);
 
-  // Handle delete
-  const handleDelete = async (id: number) => {
-    try {
-      await deleteMedia(id);
-      setRefreshTrigger((prev) => prev + 1);
-    } catch (err) {
-      console.error('Failed to delete media!', err);
-      alert(t('Failed to delete media!'));
-    }
-  };
-
-  const handleFilterChange = (name: string, value: string) => {
-    setFilterInput((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const columns: ColumnDef<MediaRow>[] = [
-    {
-      accessorKey: 'mediaId',
-      header: t('ID'),
-      size: 80,
-      cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
-    },
-    {
-      accessorKey: 'thumbnail',
-      header: t('Thumbnail'),
-      size: 150,
-      enableSorting: false,
-      cell: (info) => (
-        <MediaCell
-          thumb={info.row.original.thumbnail}
-          alt={info.row.original.name}
-          mediaType={(info.row.original.mediaType as MediaType) || 'other'}
-          onPreview={() => handlePreviewClick(info.row.original)}
-        />
-      ),
-    },
-    {
-      accessorKey: 'name',
-      header: t('Name'),
-      size: 250,
-      enableHiding: false,
-      cell: (info) => <TextCell weight="bold">{info.getValue<string>()}</TextCell>,
-    },
-    {
-      accessorKey: 'mediaType',
-      header: t('Type'),
-      size: 100,
-      cell: (info) => {
-        const value = info.getValue() as string;
-        return <StatusCell label={value} type={getStatusTypeFromMediaType(value)} />;
-      },
-    },
-    {
-      accessorKey: 'tags',
-      header: t('Tags'),
-      enableSorting: false,
-      size: 200,
-      cell: (info) => {
-        const tags = info.getValue<ApiTag[]>() || [];
-        const formattedTags = tags.map((tag) => ({
-          id: tag.tagId,
-          label: tag.tag,
-        }));
-        return <TagsCell tags={formattedTags} />;
-      },
-    },
-    {
-      id: 'formattedDuration',
-      accessorKey: 'duration',
-      header: t('Duration'),
-      size: 140,
-      cell: (info) => <TextCell>{formatDuration(info.getValue<number>())}</TextCell>,
-    },
-    {
-      id: 'durationSeconds',
-      accessorKey: 'duration',
-      header: t('Duration (s)'),
-      size: 140,
-      cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
-    },
-    {
-      accessorKey: 'fileSizeFormatted',
-      header: t('Size'),
-      size: 100,
-      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
-    },
-    {
-      accessorKey: 'fileSize',
-      header: t('Size (bytes)'),
-      size: 150,
-      cell: (info) => (
-        <TextCell className="font-mono text-sm">
-          {info.getValue<number>().toLocaleString()}
-        </TextCell>
-      ),
-    },
-    {
-      id: 'resolution',
-      header: t('Resolution'),
-      size: 150,
-      accessorFn: (row) => {
-        if (row.width && row.height) return `${row.width}x${row.height}`;
-        return '';
-      },
-      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
-    },
-    {
-      accessorKey: 'owner',
-      header: t('Owner'),
-      size: 150,
-      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
-    },
-    {
-      accessorKey: 'groupsWithPermissions',
-      enableSorting: false,
-      header: t('Sharing'),
-      size: 150,
-      cell: (info) => {
-        const groups = info.getValue() as string;
-        return <TextCell className="italic text-gray-500">{groups || t('Private')}</TextCell>;
-      },
-    },
-    {
-      accessorKey: 'revised',
-      header: t('Revised'),
-      size: 120,
-      cell: (info) => <CheckMarkCell active={(info.getValue<number>() === 1) as boolean} />,
-    },
-    {
-      accessorKey: 'released',
-      header: t('Released'),
-      size: 120,
-      cell: (info) => <CheckMarkCell active={(info.getValue<number>() === 1) as boolean} />,
-    },
-    {
-      accessorKey: 'fileName',
-      header: t('File Name'),
-      size: 200,
-      cell: (info) => (
-        <TextCell className="truncate" title={info.getValue() as string}>
-          {info.getValue<string>()}
-        </TextCell>
-      ),
-    },
-    {
-      accessorKey: 'enableStat',
-      header: t('Stats?'),
-      size: 100,
-      cell: (info) => <StatusCell label={info.getValue() as string} type="neutral" />,
-    },
-    {
-      accessorKey: 'createdDt',
-      header: t('Created'),
-      size: 180,
-      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
-    },
-    {
-      accessorKey: 'modifiedDt',
-      header: t('Modified'),
-      size: 180,
-      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
-    },
-    {
-      accessorKey: 'expires',
-      header: t('Expires'),
-      size: 180,
-      cell: (info) => {
-        const val = info.getValue() as number;
-        if (val === 0) return <span className="text-gray-400">-</span>;
-        return <TextCell>{val}</TextCell>;
-      },
-    },
-    {
-      id: 'tableActions',
-      header: '',
-      size: 120,
-      minSize: 120,
-      maxSize: 120,
-      enableHiding: false,
-      cell: ({ row }) => (
-        <ActionsCell
-          row={row}
-          actions={[
-            // Quick Actions
-            {
-              label: t('Edit'),
-              icon: Edit,
-              onClick: (data) => console.log('Edit', data.mediaId),
-              isQuickAction: true,
-              variant: 'primary',
-            },
-            {
-              label: t('Download'),
-              icon: Download,
-              onClick: downloadMediaHandle,
-              isQuickAction: true,
-            },
-
-            // Dropdown Menu Actions
-            {
-              label: t('Edit'),
-              icon: Edit,
-              onClick: (data) => console.log('Edit', data.mediaId),
-            },
-            {
-              label: t('Make a Copy'),
-              icon: CopyCheck,
-              onClick: (data) => console.log('Make a Copy', data.mediaId),
-            },
-            {
-              label: t('Move'),
-              icon: FolderInput,
-              onClick: (data) => console.log('Move', data.mediaId),
-            },
-            {
-              label: t('Share'),
-              icon: UserPlus2,
-              onClick: (data) => console.log('Share', data.mediaId),
-            },
-            {
-              label: t('Download'),
-              icon: Download,
-              onClick: downloadMediaHandle,
-            },
-            {
-              label: t('Schedule'),
-              icon: CalendarClock,
-              onClick: (data) => console.log('Schedule', data.mediaId),
-            },
-            {
-              label: t('Details'),
-              icon: Info,
-              onClick: (data) => console.log('Details', data.mediaId),
-            },
-            { isSeparator: true },
-            {
-              label: t('Enable Stats Collection'),
-              onClick: (data) => console.log('Enable Stats', data.mediaId),
-            },
-            {
-              label: t('Usage Report'),
-              onClick: (data) => console.log('Usage Report', data.mediaId),
-            },
-            { isSeparator: true },
-            {
-              label: t('Delete'),
-              icon: Trash2,
-              onClick: (data) => handleDelete(data.mediaId),
-              variant: 'danger',
-            },
-          ]}
-        />
-      ),
-    },
-  ];
-
+  // Render
   return (
     <section className="space-y-4 flex-1 flex flex-col min-h-0">
-      {/* TODO: Navigation tabs & Buttons */}
-      <MediaTopbar activeTab={activeTab} onTabClick={setActiveTab} navigation={MEDIA_NAV} />
+      <div className="flex flex-row justify-between py-5 items-center gap-4">
+        <TabNav activeTab="Media" navigation={LIBRARY_TABS} />
+        <div className="flex items-center gap-2 md:mb-0">
+          <Button variant="primary" onClick={() => setAddModalOpen(true)} leftIcon={Plus}>
+            {t('Add Media')}
+          </Button>
+        </div>
+      </div>
 
-      {/* TODO: Folder control & Filters */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-        {/* TODO: Folder Control */}
         <div className="w-full md:w-auto">
           <button className="py-2 px-3 w-full md:w-auto inline-flex justify-center md:justify-start items-center gap-x-2 border border-gray-200 bg-white text-gray-800 hover:bg-gray-50">
             <Folder className="w-4 h-4 text-gray-500 fill-gray-100" />
@@ -542,9 +209,7 @@ export default function Media() {
           </button>
         </div>
 
-        {/* TODO: Filters */}
         <div className="flex items-center gap-2 md:w-auto w-full">
-          {/* Search */}
           <div className="relative flex-1 flex">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
               <Search className="w-4 h-4 text-gray-400" />
@@ -552,12 +217,11 @@ export default function Media() {
             <input
               name="search"
               value={globalFilter}
-              onChange={(e) => setGlobalFilter(e.target.value)}
+              onChange={(e) => handleGlobalFilterChange(e.target.value)}
               placeholder={t('Search media...')}
               className="py-2 px-3 pl-10 block h-[45px] bg-gray-100 rounded-lg md:w-[365px] w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none"
             />
           </div>
-          {/* Inline filter button */}
           <Button
             leftIcon={!openFilter ? Filter : FilterX}
             variant="secondary"
@@ -568,8 +232,14 @@ export default function Media() {
           </Button>
         </div>
       </div>
-      {/* Filter Input Fields */}
-      <FilterInputs onChange={handleFilterChange} open={openFilter} values={filterInputs} />
+
+      <FilterInputs
+        onChange={handleFilterChange}
+        open={openFilter}
+        values={filterInputs}
+        options={FILTER_OPTIONS}
+      />
+
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
           {error}
@@ -586,7 +256,7 @@ export default function Media() {
         onSortingChange={setSorting}
         globalFilter={globalFilter}
         onGlobalFilterChange={setGlobalFilter}
-        loading={loading}
+        loading={isLoading && !isPlaceholderData}
         rowSelection={rowSelection}
         onRowSelectionChange={setRowSelection}
         onRefresh={handleRefresh}
@@ -613,12 +283,38 @@ export default function Media() {
         bulkActions={bulkActions}
       />
 
+      <Modal
+        isOpen={isAddModalOpen}
+        closeOnOverlay={false}
+        onClose={() => !isUploading && setAddModalOpen(false)}
+        title={t('Add Media')}
+        actions={addModalActions}
+        size="lg"
+      >
+        <FileUploader
+          queue={queue}
+          addFiles={addFiles}
+          removeFile={removeFile}
+          updateFileData={updateFileData}
+          isUploading={isUploading}
+          maxSize={500 * 1024 * 1024}
+          acceptedFileTypes={{
+            'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'],
+            'video/*': ['.mp4', '.webm', '.mkv'],
+            'audio/*': ['.mp3', '.wav', '.m4a'],
+            'application/pdf': ['.pdf'],
+            'application/zip': ['.zip'],
+            'application/x-zip-compressed': ['.zip'],
+          }}
+        />
+      </Modal>
+
       <MediaPreviewer
         mediaId={previewItem?.mediaId ?? null}
         mediaType={previewItem?.mediaType}
         fileName={previewItem?.name}
         mediaData={previewItem}
-        onDownload={() => previewItem && downloadMediaHandle(previewItem)}
+        onDownload={() => previewItem && handleDownload(previewItem)}
         onClose={() => setPreviewItem(null)}
       />
     </section>

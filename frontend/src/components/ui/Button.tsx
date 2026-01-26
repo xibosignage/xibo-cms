@@ -22,7 +22,7 @@
 import { type LucideIcon } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
 
-type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'primary' | 'secondary' | 'tertiary' | 'link';
   leftIcon?: LucideIcon;
   rightIcon?: LucideIcon;
@@ -31,15 +31,17 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const buttonVariant: Record<NonNullable<ButtonProps['variant']>, string> = {
-  primary: 'text-white bg-xibo-blue-600 hover:bg-xibo-blue-700 focus:ring-4',
+  primary:
+    'text-white bg-xibo-blue-600 hover:bg-xibo-blue-700 focus:outline-4 focus:outline-blue-500/25 disabled:bg-blue-400 disabled:outline-0',
   secondary:
-    'text-xibo-blue-600 border border-xibo-blue-600 bg-white hover:border-xibo-blue-800 hover:text-xibo-blue-800',
-  tertiary: 'p-2 text-xibo-blue-600 bg-gray-50 hover:bg-gray-100 hover:text-xibo-blue-800',
+    'text-xibo-blue-600 border border-xibo-blue-600 bg-white hover:border-xibo-blue-800 hover:text-xibo-blue-800 focus:outline-4 focus:outline-blue-500/25 disabled:border-blue-200 disabled:text-blue-200 disabled:outline-0',
+  tertiary:
+    'p-2 text-xibo-blue-600 bg-gray-50 hover:bg-gray-100 hover:text-xibo-blue-800 focus:outline-4 focus:outline-blue-500/25 disabled:text-blue-200 disabled:outline-0',
   link: 'text-xibo-blue-600 underline hover:text-xibo-blue-800 bg-transparent',
 };
 
 const baseClasses =
-  'p-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-gray-50 text-xibo-blue-600 hover:bg-gray-100 hover:text-xibo-blue-800 focus:bg-gray-50 focus:ring-blue-500/25 focus:ring-4 focus:text-xibo-blue-600 disabled:text-blue-200 disabled:bg-gray-50 disabled:pointer-events-none cursor-pointer';
+  'p-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg disabled:pointer-events-none cursor-pointer';
 
 export default function Button({
   variant = 'primary',

@@ -22,23 +22,30 @@
 import http from '@/lib/api';
 import type { MediaRow } from '@/types/media';
 
-export interface FetchMediaParams {
+export interface FetchMediaRequest {
   start: number;
   length: number;
   media?: string;
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;
+
+  type?: string;
+  owner?: string;
+  userGroup?: string;
+  orientation?: string;
+  retired?: string;
+  lastModified?: string;
 }
 
-export interface MediaResponse {
+export interface FetchMediaResponse {
   rows: MediaRow[];
   totalCount: number;
 }
 
 export async function fetchMedia(
-  options: FetchMediaParams = { start: 0, length: 10 },
-): Promise<MediaResponse> {
+  options: FetchMediaRequest = { start: 0, length: 10 },
+): Promise<FetchMediaResponse> {
   const { signal, ...queryParams } = options;
 
   const response = await http.get('/library', {
@@ -55,6 +62,64 @@ export async function fetchMedia(
     rows,
     totalCount,
   };
+}
+
+export interface UploadMediaRequest {
+  file: File;
+  folderId?: number | string;
+  tags?: string[];
+  onProgress?: (progress: number) => void;
+  signal?: AbortSignal;
+}
+
+export interface UploadMediaResponse {
+  files: {
+    name: string;
+    size: number;
+    type: string;
+    url: string;
+    mediaId?: number;
+    error?: string;
+  }[];
+}
+
+export async function uploadMedia({
+  file,
+  folderId = 1,
+  tags = [],
+  onProgress,
+  signal,
+}: UploadMediaRequest): Promise<UploadMediaResponse> {
+  const formData = new FormData();
+
+  formData.append('files[]', file);
+  formData.append('name[]', file.name);
+
+  if (folderId) {
+    formData.append('folderId', folderId.toString());
+  }
+
+  if (tags.length > 0) {
+    tags.forEach((tag) => formData.append('tags[]', tag));
+  } else {
+    formData.append('tags[]', '');
+  }
+
+  const response = await http.post('/library', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+    signal,
+    onUploadProgress: (event) => {
+      if (onProgress && event.total) {
+        const percent = Math.round((event.loaded * 100) / event.total);
+        onProgress(percent);
+      }
+    },
+  });
+
+  return response.data;
 }
 
 export async function fetchMediaBlob(mediaId: number | string): Promise<Blob> {

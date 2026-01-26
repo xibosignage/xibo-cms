@@ -23,6 +23,7 @@ import { X, Loader2, Download, UserPlus2, Info, FolderInput } from 'lucide-react
 import { useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useKeydown } from '@/hooks/useKeydown';
 import { fetchMediaBlob } from '@/services/mediaApi';
 import type { MediaRow } from '@/types/media';
 
@@ -113,18 +114,7 @@ export default function MediaPreviewer({
     };
   }, [mediaId, mediaType, t]);
 
-  useEffect(() => {
-    if (!mediaId) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [mediaId, onClose]);
+  useKeydown('Escape', onClose, !!mediaId);
 
   if (!mediaId) {
     return null;
