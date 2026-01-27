@@ -419,6 +419,13 @@ class Library extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="keyword",
+     *      in="query",
+     *      description="Filter by Media Name, ID, or original filename",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="media",
      *      in="query",
      *      description="Filter by Media Name",
@@ -2757,7 +2764,9 @@ class Library extends Base
     {
         return ($this->gridRenderFilter([
             'mediaId' => $parsedQueryParams->getInt('mediaId'),
+            'keyword' => $parsedQueryParams->getString('keyword'),
             'name' => $parsedQueryParams->getString('media'),
+            'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
             'nameExact' => $parsedQueryParams->getString('nameExact'),
             'type' => $parsedQueryParams->getString('type'),
             'types' => $parsedQueryParams->getArray('types'),
@@ -2841,8 +2850,8 @@ class Library extends Base
     {
         return match ($released) {
             1 => '',
-            2 => 'The uploaded image is too large and cannot be processed, please use another image.',
-            default => 'This image will be resized according to set thresholds and limits.',
+            2 => __('The uploaded image is too large and cannot be processed, please use another image.'),
+            default => __('This image will be resized according to set thresholds and limits.'),
         };
     }
 
@@ -2854,9 +2863,9 @@ class Library extends Base
     private function getMediaEnableStatDescription($enableStat): string
     {
         return match ($enableStat) {
-            'On' => 'This Media has enable stat collection set to ON',
-            'Off' => 'This Media has enable stat collection set to OFF',
-            default => 'This Media has enable stat collection set to INHERIT',
+            'On' => __('This Media has enable stat collection set to ON'),
+            'Off' => __('This Media has enable stat collection set to OFF'),
+            default => __('This Media has enable stat collection set to INHERIT'),
         };
     }
 
@@ -2906,8 +2915,8 @@ class Library extends Base
         $releasedDescription = $this->getMediaReleasedDescription($media->released);
         $enableStatDescription = $this->getMediaEnableStatDescription($media->enableStat);
 
-        $media->setUnmatchedProperty('releasedDescription', __($releasedDescription));
-        $media->setUnmatchedProperty('enableStatDescription', __($enableStatDescription));
+        $media->setUnmatchedProperty('releasedDescription', $releasedDescription);
+        $media->setUnmatchedProperty('enableStatDescription', $enableStatDescription);
 
         // Schedule
         if ($parsedQueryParams->getCheckbox('fullScreenScheduleCheck')) {

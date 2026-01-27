@@ -68,7 +68,7 @@ export const useMediaData = ({ pagination, sorting, filter, advancedFilters }: U
       return fetchMedia({
         start: startOffset,
         length: pagination.pageSize,
-        media: filter,
+        keyword: filter,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,

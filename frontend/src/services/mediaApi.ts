@@ -25,7 +25,7 @@ import type { MediaRow } from '@/types/media';
 export interface FetchMediaRequest {
   start: number;
   length: number;
-  media?: string;
+  keyword?: string;
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;

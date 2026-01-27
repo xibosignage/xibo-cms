@@ -670,11 +670,25 @@ class MediaFactory extends BaseFactory
             ';
         }
 
-        if ($sanitizedFilter->getString('name') != null) {
+        if ($sanitizedFilter->getString('keyword') != null) {
             // Fulltext search
             $body .= $this->buildSearchQuery(
-                $sanitizedFilter->getString('name'),
+                $sanitizedFilter->getString('keyword'),
                 $params
+            );
+        }
+
+        if ($sanitizedFilter->getString('name') != null) {
+            $terms = explode(',', $sanitizedFilter->getString('name'));
+            $logicalOperator = $sanitizedFilter->getString('logicalOperatorName', ['default' => 'OR']);
+            $this->nameFilter(
+                'media',
+                'name',
+                $terms,
+                $body,
+                $params,
+                ($sanitizedFilter->getCheckbox('useRegexForName') == 1),
+                $logicalOperator
             );
         }
 
