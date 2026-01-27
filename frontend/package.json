@@ -23,6 +23,7 @@
     "papaparse": "^5.5.3",
     "preline": "^3.2.3",
     "react": "^19.1.1",
+    "react-day-picker": "^9.13.0",
     "react-dom": "^19.1.1",
     "react-dropzone": "^14.3.8",
     "react-i18next": "^15.7.1",
