@@ -21,7 +21,7 @@
 
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
-import { DayPicker, getDefaultClassNames } from 'react-day-picker';
+import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 import { twMerge } from 'tailwind-merge';
 
@@ -49,7 +49,6 @@ export default function FormDatePicker({ onApply, onCancel }: FormDatePickerProp
   const [hour, setHour] = useState('12');
   const [minute, setMinute] = useState('00');
   const [period, setPeriod] = useState<'AM' | 'PM'>('PM');
-  const defaultClassNames = getDefaultClassNames();
 
   const timeClass =
     'h-[32px] font-semibold w-[70px] rounded-lg border border-gray-200 px-3 text-xs bg-white';
