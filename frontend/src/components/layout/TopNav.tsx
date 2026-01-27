@@ -59,7 +59,16 @@ export default function TopNav({ pathName, onToggleMobileDrawer: onToggleSidebar
   return (
     <header className="sticky top-0 w-full px-5 py-4 bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
       <nav className="flex flex-row h-[38px] items-center justify-between">
-        <div className="flex align-middle font-semibold text-[16px]">{t(pageTitle)}</div>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onToggleSidebar}
+            className="md:hidden center rounded-md p-1.5 text-xibo-blue-600 outline outline-xibo-blue-600"
+          >
+            <Menu size={14} />
+          </button>
+          <div className="flex align-middle font-semibold text-[16px]">{t(pageTitle)}</div>
+        </div>
         <div className="center gap-x-2">
           <div className="center gap-x-3 relative h-[38px] w-[38px]">
             <button>
@@ -71,18 +80,11 @@ export default function TopNav({ pathName, onToggleMobileDrawer: onToggleSidebar
             </div>
           </div>
           {/* TODO: Update with real user's initial */}
-          <div className="h-[38px] w-[38px] center sm:flex hidden">
+          <div className="h-[38px] w-[38px] center flex">
             <div className="bg-xibo-blue-300 h-[26px] w-[26px] text-[12px] center rounded-full text-xibo-blue-800 font-semibold">
               WA
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onToggleSidebar}
-            className="md:hidden center rounded-md p-1.5 text-xibo-blue-600 outline outline-xibo-blue-600"
-          >
-            <Menu size={14} />
-          </button>
         </div>
       </nav>
     </header>
