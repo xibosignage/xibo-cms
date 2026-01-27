@@ -50,6 +50,7 @@ import Modal from '@/components/ui/modals/Modal';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useUploadQueue } from '@/hooks/useUploadQueue';
+import EditMediaModal from '@/pages/Library/Media/components/EditMediaModal';
 import { deleteMedia, downloadMedia } from '@/services/mediaApi';
 import type { MediaRow } from '@/types/media';
 
@@ -90,6 +91,8 @@ export default function Media() {
   const data = queryData?.rows || [];
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState<MediaRow | null>();
 
   const { queue, addFiles, removeFile, updateFileData, startUploads, isUploading } =
     useUploadQueue(1);
@@ -159,11 +162,22 @@ export default function Media() {
     });
   };
 
+  const handleOpenEditModal = (row: MediaRow) => {
+    setSelectedMedia(row);
+    setOpenModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setOpenModal(false);
+    setSelectedMedia(null);
+  };
+
   const columns = getMediaColumns({
     t,
     onPreview: handlePreviewClick,
     onDelete: handleDelete,
     onDownload: handleDownload,
+    openEditModal: handleOpenEditModal,
   });
 
   const bulkActions = getBulkActions({
@@ -317,6 +331,10 @@ export default function Media() {
         onDownload={() => previewItem && handleDownload(previewItem)}
         onClose={() => setPreviewItem(null)}
       />
+
+      {selectedMedia && (
+        <EditMediaModal openModal={openModal} onClose={handleCloseModal} data={selectedMedia} />
+      )}
     </section>
   );
 }

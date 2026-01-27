@@ -30,6 +30,7 @@ interface CheckboxProps {
   classNameLabel?: string;
   classNameInput?: string;
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  title?: string;
 }
 
 export default function Checkbox({
@@ -40,6 +41,7 @@ export default function Checkbox({
   classNameInput,
   checked,
   onChange,
+  title,
 }: CheckboxProps) {
   return (
     <div className={twMerge('flex', className)}>
@@ -53,15 +55,18 @@ export default function Checkbox({
           classNameInput,
         )}
       />
-      <label
-        htmlFor={id}
-        className={twMerge(
-          'text-sm cursor-pointer text-gray-500 ms-3 dark:text-neutral-400',
-          classNameLabel,
-        )}
-      >
-        {label}
-      </label>
+      <div className="flex flex-col ms-3">
+        <span className="text-sm font-semibold">{title}</span>
+        <label
+          htmlFor={id}
+          className={twMerge(
+            'text-sm cursor-pointer text-gray-500 dark:text-neutral-400',
+            classNameLabel,
+          )}
+        >
+          {label}
+        </label>
+      </div>
     </div>
   );
 }

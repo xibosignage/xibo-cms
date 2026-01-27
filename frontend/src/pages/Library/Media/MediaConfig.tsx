@@ -144,6 +144,26 @@ export const FILTER_OPTIONS: FilterConfigItem<MediaFilterInput>[] = [
   },
 ];
 
+export const MEDIA_FORM_OPTIONS = {
+  folders: {
+    myFiles: ['Folder 1', 'Folder 2', 'Folder 3'],
+    home: ['USER 1', 'USER 2', 'USER 3', 'USER 4'],
+  },
+
+  expiryDates: ['Never Expire', 'End of Today', 'In 7 Days', 'In 14 Days', 'In 30 Days'],
+
+  orientation: [
+    { label: 'Portrait', value: 'portrait' },
+    { label: 'Landscape', value: 'landscape' },
+  ],
+
+  inherit: [
+    { label: 'Off', value: 'off' },
+    { label: 'On', value: 'on' },
+    { label: 'Inherit', value: 'inherit' },
+  ],
+};
+
 const formatDuration = (seconds: number) => {
   if (!seconds) return '-';
   return new Date(seconds * 1000).toISOString().slice(11, 19);
@@ -172,6 +192,7 @@ interface GetMediaColumnsProps {
   onPreview: (row: MediaRow) => void;
   onDelete: (id: number) => void;
   onDownload: (row: MediaRow) => void;
+  openEditModal: (row: MediaRow) => void;
 }
 
 export const getMediaColumns = ({
@@ -179,6 +200,7 @@ export const getMediaColumns = ({
   onPreview,
   onDelete,
   onDownload,
+  openEditModal,
 }: GetMediaColumnsProps): ColumnDef<MediaRow>[] => {
   return [
     {
@@ -352,7 +374,9 @@ export const getMediaColumns = ({
             {
               label: t('Edit'),
               icon: Edit,
-              onClick: () => console.log('Edit', row.original.mediaId),
+              onClick: () => {
+                openEditModal(row.original);
+              },
               isQuickAction: true,
               variant: 'primary',
             },

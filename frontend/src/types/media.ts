@@ -30,4 +30,12 @@ export interface MediaRow {
   width?: number;
   height?: number;
   valid: boolean;
+  fileName: string;
+  fileSizeFormatted: string;
+  orientation: string;
+  tags: string[];
+  duration: number;
+  mediaNoExpiryDate: string;
+  enableStat: string;
+  retired: boolean;
 }
