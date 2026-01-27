@@ -21,7 +21,7 @@
 
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
-import { DayPicker } from 'react-day-picker';
+import { DayPicker, getDefaultClassNames } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 import { twMerge } from 'tailwind-merge';
 
@@ -49,6 +49,7 @@ export default function FormDatePicker({ onApply, onCancel }: FormDatePickerProp
   const [hour, setHour] = useState('12');
   const [minute, setMinute] = useState('00');
   const [period, setPeriod] = useState<'AM' | 'PM'>('PM');
+  const defaultClassNames = getDefaultClassNames();
 
   const timeClass =
     'h-[32px] font-semibold w-[70px] rounded-lg border border-gray-200 px-3 text-xs bg-white';
@@ -87,8 +88,11 @@ export default function FormDatePicker({ onApply, onCancel }: FormDatePickerProp
             chevron: 'fill-gray-400',
             nav_button:
               'h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-700',
-            selected: 'bg-red-500',
-            day_range_start: 'bg-blue-600 text-black',
+            selected: 'bg-blue-600',
+            range_start: 'bg-blue-600 text-white rounded-l-full',
+            range_end: 'bg-blue-600 text-white rounded-r-full',
+            // 👇 THIS is the gray bar you’re missing
+            range_middle: 'bg-gray-100 text-black',
           }}
         />
       </div>

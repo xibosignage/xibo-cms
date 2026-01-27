@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
 .*/
 
-import { CalendarCheck2Icon, ChevronDown } from 'lucide-react';
+import { CalendarCheck2Icon, ChevronDown, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -102,10 +102,11 @@ export default function ExpiryDateSelect({
             <div className="flex border-b border-gray-200" />
             <button
               type="button"
-              className="text-left p-2 rounded-lg hover:bg-gray-100 font-medium cursor-pointer"
+              className="text-left p-2 rounded-lg hover:bg-gray-100 font-medium cursor-pointer flex justify-between items-center"
               onClick={() => setOpenDatePicker((prev) => !prev)}
             >
               {t('Custom Range')}
+              <ChevronRight size={14} className="text-gray-500" />
             </button>
           </div>
           {openDatePicker && (

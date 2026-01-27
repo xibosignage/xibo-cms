@@ -87,11 +87,11 @@ export default function DurationInput({ value, onChange }: DurationInputProps) {
           setDisplayValue(formatSeconds(seconds));
         }}
       />
-      <div className="absolute mt-2.5 right-1 top-1/2 -translate-y-1/2 flex flex-col">
+      <div className="absolute mb-0.5 mr-1.5 bottom-0 right-0 flex flex-col">
         <button
           type="button"
           onClick={increment}
-          className="h-4 w-6 flex items-center justify-center rounded-t hover:bg-gray-100 text-gray-500"
+          className="h-4 w-6 flex items-center justify-center rounded-t text-gray-500 cursor-pointer"
           aria-label="Increase duration"
         >
           <ChevronUp size={14} />
@@ -100,7 +100,7 @@ export default function DurationInput({ value, onChange }: DurationInputProps) {
         <button
           type="button"
           onClick={decrement}
-          className="h-4 w-6 flex items-center justify-center rounded-b hover:bg-gray-100 text-gray-500"
+          className="h-4 w-6 flex items-center justify-center rounded-b text-gray-500 cursor-pointer"
           aria-label="Decrease duration"
         >
           <ChevronDown size={14} />
