@@ -23,25 +23,49 @@ import { X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-interface TagInputProps {
-  value: string[];
-  onChange: (tags: string[]) => void;
-}
+import type { Tag } from '@/types/media';
 
+interface TagInputProps {
+  value: Tag[];
+  onChange: (tags: Tag[]) => void;
+}
 function TagInput({ value, onChange }: TagInputProps) {
   const { t } = useTranslation();
   const [input, setInput] = useState('');
 
-  const addTag = (raw: string) => {
-    const tag = raw.trim();
-    if (!tag || value.includes(tag)) return;
+  const parseTag = (raw: string): Tag | null => {
+    const trimmed = raw.trim();
+    if (!trimmed) return null;
 
-    onChange([...value, tag]);
+    const [tag, rawValue] = trimmed.split('|');
+
+    if (!tag) return null;
+
+    return {
+      tag: tag.trim(),
+      value:
+        rawValue !== undefined && rawValue !== ''
+          ? isNaN(Number(rawValue))
+            ? rawValue.trim()
+            : Number(rawValue)
+          : '',
+      tagId: 0, // temporary ID (backend can replace this)
+    };
+  };
+
+  const addTag = (raw: string) => {
+    const newTag = parseTag(raw);
+    if (!newTag) return;
+
+    const exists = value.some((t) => t.tag === newTag.tag);
+    if (exists) return;
+
+    onChange([...value, newTag]);
     setInput('');
   };
 
   const removeTag = (tag: string) => {
-    onChange(value.filter((t) => t !== tag));
+    onChange(value.filter((t) => t.tag !== tag));
   };
 
   return (
@@ -49,15 +73,15 @@ function TagInput({ value, onChange }: TagInputProps) {
       <label className="text-xs font-semibold text-gray-500 leading-5">{t('Tags')}</label>
 
       <div className="border border-gray-200 rounded-lg p-2 flex flex-wrap gap-2 items-center">
-        {value.map((tag) => (
+        {value.map((tagObj) => (
           <span
-            key={tag}
+            key={tagObj.tag}
             className="flex items-center gap-1 px-2 py-1 text-sm font-semibold border text-xibo-blue-600 border-xibo-blue-400 rounded-full"
           >
-            {tag}
+            {tagObj.tag}
             <button
               type="button"
-              onClick={() => removeTag(tag)}
+              onClick={() => removeTag(tagObj.tag)}
               className="text-blue-600 w-3 rounded-full h-3 center bg-blue-200 hover:text-gray-600"
             >
               <X size={8} />

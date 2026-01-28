@@ -33,9 +33,15 @@ export interface MediaRow {
   fileName: string;
   fileSizeFormatted: string;
   orientation: string;
-  tags: string[];
+  tags: Tag[];
   duration: number;
   mediaNoExpiryDate: string;
   enableStat: string;
   retired: boolean;
+}
+
+export interface Tag {
+  tag: string;
+  tagId: number;
+  value: string | number;
 }
