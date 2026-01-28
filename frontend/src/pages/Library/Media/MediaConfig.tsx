@@ -374,9 +374,7 @@ export const getMediaColumns = ({
             {
               label: t('Edit'),
               icon: Edit,
-              onClick: () => {
-                openEditModal(row.original);
-              },
+              onClick: () => openEditModal(row.original),
               isQuickAction: true,
               variant: 'primary',
             },
@@ -391,7 +389,7 @@ export const getMediaColumns = ({
             {
               label: t('Edit'),
               icon: Edit,
-              onClick: () => console.log('Edit', row.original.mediaId),
+              onClick: () => openEditModal(row.original),
             },
             {
               label: t('Make a Copy'),
