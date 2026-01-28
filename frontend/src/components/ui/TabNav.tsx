@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
-.*/
+ */
 
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';

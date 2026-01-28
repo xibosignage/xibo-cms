@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
-.*/
+ */
 
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';

@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
-.*/
+ */
 
 import { HelpCircle } from 'lucide-react';
 import React, { useState } from 'react';
@@ -155,6 +155,7 @@ function EditMediaModal({ openModal, onClose, data }: EditMediaModalProps) {
         {/* Tags */}
         <TagInput
           value={mediaData.tags}
+          helpText={t('Tags (Comma-separated: Tag or Tag|Value)')}
           onChange={(tags) => setMediaState((prev) => ({ ...prev, tags }))}
         />
 

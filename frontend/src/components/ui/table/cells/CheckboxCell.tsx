@@ -34,7 +34,7 @@ export function CheckboxCell({ checked, onChange, ariaLabel = 'Select row' }: Ch
       checked={checked}
       onChange={onChange}
       aria-label={ariaLabel}
-      className="rounded border-gray-200 no-print cursor-pointer"
+      className="rounded border-gray-200 no-print cursor-pointer focus:border-blue-500 focus:border-2 focus:ring-0 focus:outline-0"
     />
   );
 }

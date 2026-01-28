@@ -17,39 +17,42 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
-.*/
+ */
 
 import { useQueryClient } from '@tanstack/react-query';
 import {
   type SortingState,
   type PaginationState,
-  type OnChangeFn,
   type RowSelectionState,
 } from '@tanstack/react-table';
-import { Search, Filter, Folder, FilterX, Plus } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Search, Filter, Folder, FilterX, Plus, Upload } from 'lucide-react';
+import { useState } from 'react';
+import { useDropzone } from 'react-dropzone';
 import { useTranslation } from 'react-i18next';
 
 import {
   getMediaColumns,
   getBulkActions,
-  getAddModalActions,
   FILTER_OPTIONS,
   INITIAL_FILTER_STATE,
   LIBRARY_TABS,
   type MediaFilterInput,
+  ACCEPTED_MIME_TYPES,
 } from './MediaConfig';
 import MediaPreviewer from './components/MediaPreviewer';
+import { UploadProgressDock } from './components/UploadProgressDock';
 import { useMediaData } from './hooks/useMediaData';
 
 import Button from '@/components/ui/Button';
 import { FileUploader } from '@/components/ui/FileUploader';
 import FilterInputs from '@/components/ui/FilterInputs';
+import { FolderSelect } from '@/components/ui/FolderSelect_TOREMOVE';
+import { notify } from '@/components/ui/Notification';
 import TabNav from '@/components/ui/TabNav';
 import Modal from '@/components/ui/modals/Modal';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { useUploadContext } from '@/context/UploadContext';
 import { useDebounce } from '@/hooks/useDebounce';
-import { useUploadQueue } from '@/hooks/useUploadQueue';
 import EditMediaModal from '@/pages/Library/Media/components/EditMediaModal';
 import { deleteMedia, downloadMedia } from '@/services/mediaApi';
 import type { MediaRow } from '@/types/media';
@@ -58,7 +61,6 @@ export default function Media() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
-  // UI state
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
@@ -69,9 +71,14 @@ export default function Media() {
   const [openFilter, setOpenFilter] = useState(false);
   const [previewItem, setPreviewItem] = useState<MediaRow | null>(null);
   const [filterInputs, setFilterInput] = useState<MediaFilterInput>(INITIAL_FILTER_STATE);
+
   const [isAddModalOpen, setAddModalOpen] = useState(false);
+  const [selectedFolderId, setSelectedFolderId] = useState(1);
 
   const debouncedFilter = useDebounce(globalFilter, 500);
+
+  const { queue, addFiles, removeFile, clearQueue, updateFileData, saveMetadata, addUrlToQueue } =
+    useUploadContext();
 
   // Data fetching
   const {
@@ -94,12 +101,33 @@ export default function Media() {
   const [openModal, setOpenModal] = useState(false);
   const [selectedMedia, setSelectedMedia] = useState<MediaRow | null>();
 
-  const { queue, addFiles, removeFile, updateFileData, startUploads, isUploading } =
-    useUploadQueue(1);
-
   // Event handlers
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['media'] });
+  };
+
+  // Handles dropping files anywhere on the screen
+  const onGlobalDrop = (acceptedFiles: File[]) => {
+    if (acceptedFiles.length > 0) {
+      setAddModalOpen(true);
+      addFiles(acceptedFiles, selectedFolderId);
+      notify.success(t('Files added to queue'));
+    }
+  };
+
+  const {
+    getRootProps: getGlobalRootProps,
+    getInputProps: getGlobalInputProps,
+    isDragActive: isGlobalDragActive,
+  } = useDropzone({
+    onDrop: onGlobalDrop,
+    noClick: true,
+    noKeyboard: true,
+    accept: ACCEPTED_MIME_TYPES,
+  });
+
+  const handleManualAddFiles = (files: File[]) => {
+    addFiles(files, selectedFolderId);
   };
 
   const handleDelete = async (id: number) => {
@@ -113,7 +141,9 @@ export default function Media() {
   };
 
   const handleBulkDelete = async (selectedItems: MediaRow[]) => {
-    if (selectedItems.length === 0) return;
+    if (selectedItems.length === 0) {
+      return;
+    }
 
     const message = `${t('Are you sure you want to delete these items?')}\n(${selectedItems.length} selected)`;
     if (window.confirm(message)) {
@@ -141,25 +171,25 @@ export default function Media() {
     setPreviewItem(row);
   };
 
-  const handleGlobalFilterChange = (value: string) => {
-    setGlobalFilter(value);
-    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  const handleStartUpload = async () => {
+    await saveMetadata();
+
+    const hasPending = queue.some(
+      (item) => item.status === 'uploading' || item.status === 'pending',
+    );
+
+    if (!hasPending) {
+      clearQueue();
+    }
+
+    setAddModalOpen(false);
+    handleRefresh();
   };
 
-  const handleFilterChange = (name: string, value: string) => {
-    setFilterInput((prev) => ({ ...prev, [name]: value }));
-    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-  };
-
-  const handlePaginationChange: OnChangeFn<PaginationState> = (updaterOrValue) => {
-    setPagination((prev) => {
-      const newPagination =
-        typeof updaterOrValue === 'function' ? updaterOrValue(prev) : updaterOrValue;
-      if (newPagination.pageSize !== prev.pageSize) {
-        return { ...newPagination, pageIndex: 0 };
-      }
-      return newPagination;
-    });
+  const handleCancelUpload = () => {
+    clearQueue();
+    setAddModalOpen(false);
+    handleRefresh();
   };
 
   const handleOpenEditModal = (row: MediaRow) => {
@@ -187,25 +217,53 @@ export default function Media() {
     onShare: (items) => console.log('Share', items),
   });
 
-  const addModalActions = getAddModalActions({
-    t,
-    onCancel: () => setAddModalOpen(false),
-    onUpload: startUploads,
-    isUploading,
-    hasQueueItems: queue.length > 0,
-  });
+  const addModalActions = [
+    {
+      label: t('Cancel'),
+      onClick: handleCancelUpload,
+      variant: 'secondary' as const,
+      className: 'bg-transparent',
+    },
+    {
+      label: t('Done'),
+      onClick: handleStartUpload,
+      variant: 'primary' as const,
+      disabled: queue.length === 0,
+    },
+  ];
 
-  // Side effects
-  useEffect(() => {
-    const allCompleted = queue.length > 0 && queue.every((item) => item.status === 'completed');
-    if (allCompleted && !isUploading) {
-      queryClient.invalidateQueries({ queryKey: ['media'] });
-    }
-  }, [queue, isUploading, queryClient]);
+  // TODO: Temporary placeholder folders
+  const tempFolders = [
+    { id: 1, name: 'Root Folder' },
+    { id: 2, name: 'Marketing Assets' },
+    { id: 3, name: 'Q1 Campaigns' },
+    { id: 99, name: 'Temporary' },
+  ];
 
-  // Render
   return (
-    <section className="space-y-4 flex-1 flex flex-col min-h-0">
+    <section
+      {...getGlobalRootProps()}
+      className="space-y-4 flex-1 flex flex-col min-h-0 relative outline-none"
+    >
+      <input {...getGlobalInputProps()} />
+
+      {isGlobalDragActive && !isAddModalOpen && (
+        <div className="absolute bottom-14 left-1/2 -translate-x-1/2 z-50 justify-center flex flex-col items-center gap-3 mb-0">
+          <span className="inline-flex justify-center items-center size-15.5 shadow-lg rounded-full border-7 animate-bounce border-blue-50 bg-xibo-blue-100 text-blue-800">
+            <Upload className="shrink-0 size-6.5" />
+          </span>
+          <div className="bg-slate-50 border border-gray-200 px-4 py-2 shadow-lg rounded-full flex justify-center items-center gap-2">
+            <span className="text-sm text-gray-800">{t('Upload files to ')}</span>
+            <span className="text-xibo-blue-600 font-semibold flex">
+              <div className="size-6.5 flex justify-center items-center">
+                <Folder className="size-4"></Folder>
+              </div>
+              {`"${selectedFolderId === 1 ? 'Root Folder' : 'Selected Folder'}"`}
+            </span>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-row justify-between py-5 items-center gap-4">
         <TabNav activeTab="Media" navigation={LIBRARY_TABS} />
         <div className="flex items-center gap-2 md:mb-0">
@@ -231,7 +289,10 @@ export default function Media() {
             <input
               name="search"
               value={globalFilter}
-              onChange={(e) => handleGlobalFilterChange(e.target.value)}
+              onChange={(e) => {
+                setGlobalFilter(e.target.value);
+                setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+              }}
               placeholder={t('Search media...')}
               className="py-2 px-3 pl-10 block h-[45px] bg-gray-100 rounded-lg md:w-[365px] w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none"
             />
@@ -248,7 +309,10 @@ export default function Media() {
       </div>
 
       <FilterInputs
-        onChange={handleFilterChange}
+        onChange={(name, value) => {
+          setFilterInput((prev) => ({ ...prev, [name]: value }));
+          setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+        }}
         open={openFilter}
         values={filterInputs}
         options={FILTER_OPTIONS}
@@ -265,7 +329,7 @@ export default function Media() {
         data={data}
         pageCount={pageCount}
         pagination={pagination}
-        onPaginationChange={handlePaginationChange}
+        onPaginationChange={setPagination}
         sorting={sorting}
         onSortingChange={setSorting}
         globalFilter={globalFilter}
@@ -299,28 +363,31 @@ export default function Media() {
 
       <Modal
         isOpen={isAddModalOpen}
-        closeOnOverlay={false}
-        onClose={() => !isUploading && setAddModalOpen(false)}
+        onClose={handleCancelUpload}
         title={t('Add Media')}
         actions={addModalActions}
         size="lg"
       >
-        <FileUploader
-          queue={queue}
-          addFiles={addFiles}
-          removeFile={removeFile}
-          updateFileData={updateFileData}
-          isUploading={isUploading}
-          maxSize={500 * 1024 * 1024}
-          acceptedFileTypes={{
-            'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'],
-            'video/*': ['.mp4', '.webm', '.mkv'],
-            'audio/*': ['.mp3', '.wav', '.m4a'],
-            'application/pdf': ['.pdf'],
-            'application/zip': ['.zip'],
-            'application/x-zip-compressed': ['.zip'],
-          }}
-        />
+        <div className="flex flex-col gap-3">
+          {/* TODO: Folder select hardcoded for now */}
+          <FolderSelect
+            value={selectedFolderId}
+            folders={tempFolders}
+            onChange={setSelectedFolderId}
+          />
+
+          <FileUploader
+            queue={queue}
+            acceptedFileTypes={ACCEPTED_MIME_TYPES}
+            addFiles={handleManualAddFiles}
+            removeFile={removeFile}
+            clearQueue={clearQueue}
+            updateFileData={updateFileData}
+            isUploading={false}
+            maxSize={2 * 1024 * 1024 * 1024}
+            onUrlUpload={(url) => addUrlToQueue(url, selectedFolderId)}
+          />
+        </div>
       </Modal>
 
       <MediaPreviewer
@@ -329,12 +396,17 @@ export default function Media() {
         fileName={previewItem?.name}
         mediaData={previewItem}
         onDownload={() => previewItem && handleDownload(previewItem)}
-        onClose={() => setPreviewItem(null)}
+        onClose={() => {
+          setPreviewItem(null);
+          handleRefresh();
+        }}
       />
 
       {selectedMedia && (
         <EditMediaModal openModal={openModal} onClose={handleCloseModal} data={selectedMedia} />
       )}
+
+      <UploadProgressDock isModalOpen={isAddModalOpen} />
     </section>
   );
 }

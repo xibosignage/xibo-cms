@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
-.*/
+ */
 
 import type { ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
@@ -162,6 +162,37 @@ export const MEDIA_FORM_OPTIONS = {
     { label: 'On', value: 'on' },
     { label: 'Inherit', value: 'inherit' },
   ],
+};
+
+export const ACCEPTED_MIME_TYPES = {
+  // Audio
+  'audio/mpeg': ['.mp3'],
+  'audio/wav': ['.wav'],
+  // Flash
+  'application/x-shockwave-flash': ['.swf'],
+  // Generic
+  'application/vnd.android.package-archive': ['.apk'],
+  'application/x-webos-ipk': ['.ipk'],
+  'text/html': ['.html', '.htm'],
+  'text/javascript': ['.js'],
+  // HTML package
+  'application/octet-stream': ['.htz'],
+  // Images
+  'image/jpeg': ['.jpg', '.jpeg'],
+  'image/png': ['.png'],
+  'image/gif': ['.gif'],
+  'image/bmp': ['.bmp'],
+  // PDF
+  'application/pdf': ['.pdf'],
+  // Powerpoint
+  'application/vnd.ms-powerpoint': ['.ppt', '.pps'],
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
+  // Video
+  'video/mp4': ['.mp4'],
+  'video/webm': ['.webm'],
+  'video/mpeg': ['.mpg', '.mpeg'],
+  'video/x-msvideo': ['.avi'],
+  'video/x-ms-wmv': ['.wmv'],
 };
 
 const formatDuration = (seconds: number) => {
@@ -366,6 +397,7 @@ export const getMediaColumns = ({
       minSize: 120,
       maxSize: 120,
       enableHiding: false,
+      enableResizing: false,
       cell: ({ row }) => (
         <ActionsCell
           row={row}

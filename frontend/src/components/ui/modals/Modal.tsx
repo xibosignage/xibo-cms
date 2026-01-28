@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
-.*/
+ */
 
 import { createPortal } from 'react-dom';
 import { twMerge } from 'tailwind-merge';
@@ -34,6 +34,7 @@ export interface ModalAction {
   isSubmit?: boolean;
   formId?: string;
   disabled?: boolean;
+  className?: string;
 }
 
 interface ModalProps {
@@ -90,7 +91,7 @@ export default function Modal({
           <div className="text-lg font-semibold">{title}</div>
 
           {/* Body */}
-          <div className="overflow-y-auto w-full max-h-[70vh]">{children}</div>
+          <div className="overflow-y-auto overflow-x-visible w-full max-h-[70vh]">{children}</div>
         </div>
 
         {/* Footer */}
@@ -103,6 +104,7 @@ export default function Modal({
                 form={action.formId}
                 variant={action.variant}
                 disabled={action.disabled}
+                className={action.className}
                 onClick={() => {
                   if (action.onClick) {
                     action.onClick();

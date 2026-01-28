@@ -89,7 +89,7 @@ export default function DataTableRowActions<TData>({
       <button
         ref={buttonRef}
         onClick={toggleOpen}
-        className="p-1.5 text-gray-500 hover:bg-gray-100 focus:outline-none transition-colors cursor-pointer"
+        className="p-1.5 text-gray-500 hover:bg-gray-50 focus:bg-gray-100 rounded-lg focus:outline-none transition-colors cursor-pointer"
         aria-label={t('More actions')}
         aria-haspopup="true"
         aria-expanded={open}

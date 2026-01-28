@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
-.*/
+ */
 
 import {
   useReactTable,
@@ -130,6 +130,7 @@ export function DataTable<TData, TValue>({
         ></CheckboxCell>
       ),
       enableSorting: false,
+      enableResizing: false,
       enableHiding: false,
       size: 40,
     };
@@ -262,6 +263,7 @@ export function DataTable<TData, TValue>({
                   {headerGroup.headers.map((header) => {
                     const isSorted = header.column.getIsSorted();
                     const canSort = header.column.getCanSort();
+                    const canResize = header.column.getCanResize();
 
                     const headerContent = header.column.columnDef.header;
                     const titleText = typeof headerContent === 'string' ? headerContent : header.id;
@@ -308,14 +310,16 @@ export function DataTable<TData, TValue>({
                           )}
                         </div>
 
-                        <div
-                          onMouseDown={header.getResizeHandler()}
-                          onTouchStart={header.getResizeHandler()}
-                          className={twMerge(
-                            'absolute right-0 top-0 h-8 w-2 resizer cursor-col-resize',
-                            header.column.getIsResizing() ? 'isResizing' : '',
-                          )}
-                        ></div>
+                        {canResize && (
+                          <div
+                            onMouseDown={header.getResizeHandler()}
+                            onTouchStart={header.getResizeHandler()}
+                            className={twMerge(
+                              'absolute right-0 top-0 h-8 w-2 resizer cursor-col-resize',
+                              header.column.getIsResizing() ? 'isResizing' : '',
+                            )}
+                          ></div>
+                        )}
                       </th>
                     );
                   })}

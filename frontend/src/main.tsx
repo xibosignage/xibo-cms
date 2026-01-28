@@ -17,13 +17,17 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
-.*/
+ */
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import App from './app/App';
+import { Notification } from './components/ui/Notification';
+
+import { UploadProvider } from '@/context/UploadContext';
+
 import 'preline/preline';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
@@ -45,7 +49,10 @@ const queryClient = new QueryClient({
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <App />
+      <UploadProvider>
+        <App />
+      </UploadProvider>
     </QueryClientProvider>
+    <Notification />
   </StrictMode>,
 );

@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
-.*/
+ */
 
 import { type LucideIcon } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
@@ -37,7 +37,7 @@ const buttonVariant: Record<NonNullable<ButtonProps['variant']>, string> = {
     'text-xibo-blue-600 border border-xibo-blue-600 bg-white hover:border-xibo-blue-800 hover:text-xibo-blue-800 focus:outline-4 focus:outline-blue-500/25 disabled:border-blue-200 disabled:text-blue-200 disabled:outline-0',
   tertiary:
     'p-2 text-xibo-blue-600 bg-gray-50 hover:bg-gray-100 hover:text-xibo-blue-800 focus:outline-4 focus:outline-blue-500/25 disabled:text-blue-200 disabled:outline-0',
-  link: 'text-xibo-blue-600 underline hover:text-xibo-blue-800 bg-transparent',
+  link: 'text-xibo-blue-600 hover:text-xibo-blue-800 bg-transparent focus:outline-blue-500/25 focus:outline-4',
 };
 
 const baseClasses =

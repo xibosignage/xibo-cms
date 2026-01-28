@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
-.*/
+ */
 
 import { X, Loader2, Download, UserPlus2, Info, FolderInput } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
