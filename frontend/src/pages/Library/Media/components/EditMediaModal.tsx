@@ -246,23 +246,6 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
               <Icon className="w-10 h-10 text-gray-400" />
             )}
           </div>
-
-          {data.thumbnail ? (
-            <>
-              {isImageLoading && <div className="absolute inset-0 animate-pulse bg-gray-200" />}
-              <img
-                src={data.thumbnail}
-                alt={data.fileName}
-                onLoad={() => setIsImageLoading(false)}
-                onError={() => setIsImageLoading(false)}
-                className={`h-full w-full object-contain transition-opacity duration-300 ${
-                  isImageLoading ? 'opacity-0' : 'opacity-100'
-                }`}
-              />
-            </>
-          ) : (
-            <Film />
-          )}
         </div>
         <div className="flex flex-col justify-between flex-1">
           <div>

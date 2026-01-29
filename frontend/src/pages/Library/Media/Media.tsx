@@ -26,7 +26,7 @@ import {
   type RowSelectionState,
 } from '@tanstack/react-table';
 import { Search, Filter, Folder, FilterX, Plus, Upload } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useTranslation } from 'react-i18next';
 
@@ -112,10 +112,7 @@ export default function Media() {
     setMediaList(data ?? []);
   }, [data]);
 
-  const selectedMedia = useMemo(
-    () => mediaList.find((m) => m.mediaId === selectedMediaId) ?? null,
-    [mediaList, selectedMediaId],
-  );
+  const selectedMedia = mediaList.find((m) => m.mediaId === selectedMediaId) ?? null;
 
   // Event handlers
   const handleRefresh = () => {
