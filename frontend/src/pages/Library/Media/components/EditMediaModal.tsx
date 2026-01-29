@@ -132,7 +132,7 @@ function expiresToExpiryValue(expires?: string | number): ExpiryValue | undefine
   };
 }
 
-function EditMediaModal({ openModal, onClose, data, onSave }: EditMediaModalProps) {
+export default function EditMediaModal({ openModal, onClose, data, onSave }: EditMediaModalProps) {
   const { t } = useTranslation();
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [openSelect, setOpenSelect] = useState<null | OpenSelect>(null);
@@ -409,5 +409,3 @@ function EditMediaModal({ openModal, onClose, data, onSave }: EditMediaModalProp
     </Modal>
   );
 }
-
-export default EditMediaModal;
