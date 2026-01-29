@@ -34,12 +34,12 @@ import ExpiryDateSelect from '@/components/ui/forms/ExpiryDateSelect';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TagInput from '@/components/ui/forms/TagInput';
-import type { MediaRow } from '@/types/media';
+import type { Media } from '@/types/media';
 
 interface EditMediaModalProps {
   openModal: boolean;
   onClose: () => void;
-  data: MediaRow;
+  data: Media;
 }
 
 type OpenSelect = 'folder' | 'orientation' | 'expiry' | 'enableStat' | null;
@@ -68,6 +68,7 @@ function EditMediaModal({ openModal, onClose, data }: EditMediaModalProps) {
       title="Edit Media"
       onClose={onClose}
       isOpen={openModal}
+      scrollable={false}
       actions={[
         {
           label: 'Cancel',
@@ -80,160 +81,167 @@ function EditMediaModal({ openModal, onClose, data }: EditMediaModalProps) {
         },
       ]}
     >
-      {/* Media Preview */}
-      <div className="p-4 flex gap-3 bg-slate-50 mt-3">
-        <div className="h-[150px] aspect-7/6 relative bg-gray-400 overflow-hidden rounded">
-          {/* Loader */}
-          {isImageLoading && <div className="absolute inset-0 animate-pulse bg-gray-200" />}
+      <div className="flex flex-col h-full overflow-hidden gap-3 p-8 pt-0">
+        {/* Media Preview */}
+        <div className="shrink-0 p-4 mb-4 flex gap-3 bg-slate-50">
+          <div className="h-[150px] aspect-7/6 relative bg-gray-400 overflow-hidden rounded">
+            {/* Loader */}
+            {isImageLoading && <div className="absolute inset-0 animate-pulse bg-gray-200" />}
 
-          <img
-            src={data.thumbnail}
-            alt={data.fileName}
-            onLoad={() => setIsImageLoading(false)}
-            onError={() => setIsImageLoading(false)}
-            className={`h-full w-full object-contain transition-opacity duration-300 ${
-              isImageLoading ? 'opacity-0' : 'opacity-100'
-            }`}
+            <img
+              src={data.thumbnail}
+              alt={data.fileName}
+              onLoad={() => setIsImageLoading(false)}
+              onError={() => setIsImageLoading(false)}
+              className={`h-full w-full object-contain transition-opacity duration-300 ${
+                isImageLoading ? 'opacity-0' : 'opacity-100'
+              }`}
+            />
+          </div>
+          <div className="flex flex-col justify-between flex-1">
+            <div>
+              <span className="text-sm text-gray-500 font-semibold flex items-center gap-1">
+                {t('FILE NAME')} <HelpCircle size={12} />
+              </span>
+              <span className="text-sm">{t(data.fileName)}</span>
+            </div>
+            <div>
+              <span className="text-sm text-gray-500 font-semibold flex items-center gap-1">
+                {t('FILE SIZE')} <HelpCircle size={12} />
+              </span>
+              <span className="text-sm">{t(data.fileSizeFormatted)}</span>
+            </div>
+            <div>
+              <span className="text-sm text-gray-500 font-semibold flex items-center gap-1">
+                {t('RESOLUTION')} <HelpCircle size={12} />
+              </span>
+              <span className="text-sm">
+                {data.width} x {data.height}
+              </span>
+            </div>
+          </div>
+          <div className="">
+            <Button variant="secondary" className="border-0 bg-transparent">
+              {t('Replace File')}
+            </Button>
+          </div>
+        </div>
+        {/* Forms */}
+        <div className="flex flex-col gap-3 flex-1 min-h-0 overflow-y-auto">
+          {/* Select Folder */}
+          <SelectFolder
+            value={mediaData.folder}
+            homeFolders={MEDIA_FORM_OPTIONS.folders.home}
+            myFileFolders={MEDIA_FORM_OPTIONS.folders.myFiles}
+            isOpen={openSelect === 'folder'}
+            onToggle={toggleFolder}
+            onSelect={(folder) => {
+              setMediaState((prev) => ({ ...prev, folder }));
+              setOpenSelect(null);
+            }}
+          />
+
+          {/* Name */}
+          <div className="flex flex-col">
+            <label
+              htmlFor="folderLocation"
+              className="text-xs font-semibold text-gray-500 leading-5"
+            >
+              {t('Name')}
+            </label>
+            <input
+              className="border-gray-200 text-sm rounded-lg"
+              name="fileName"
+              value={mediaData.fileName}
+              onChange={(e) => setMediaState((prev) => ({ ...prev, fileName: e.target.value }))}
+            />
+          </div>
+
+          {/* Tags */}
+          <TagInput
+            value={mediaData.tags}
+            helpText={t('Tags (Comma-separated: Tag or Tag|Value)')}
+            onChange={(tags) => setMediaState((prev) => ({ ...prev, tags }))}
+          />
+
+          {/* Orientation */}
+          <SelectDropdown
+            label="Orientation"
+            value={mediaData.orientation}
+            placeholder="Select orientation"
+            options={MEDIA_FORM_OPTIONS.orientation}
+            isOpen={openSelect === 'orientation'}
+            onToggle={() =>
+              setOpenSelect((prev) => (prev === 'orientation' ? null : 'orientation'))
+            }
+            onSelect={(value) => {
+              setMediaState((prev) => ({ ...prev, orientation: value }));
+              setOpenSelect(null);
+            }}
+          />
+
+          {/* Duration */}
+          <DurationInput
+            value={mediaData.duration}
+            onChange={(seconds) =>
+              setMediaState((prev) => ({
+                ...prev,
+                duration: seconds,
+              }))
+            }
+          />
+
+          {/* Expiry Date */}
+          <ExpiryDateSelect
+            value={expiry}
+            options={MEDIA_FORM_OPTIONS.expiryDates}
+            isOpen={openSelect === 'expiry'}
+            onToggle={() => setOpenSelect((prev) => (prev === 'expiry' ? null : 'expiry'))}
+            onSelect={(value) => {
+              setExpiry(value);
+              setOpenSelect(null);
+            }}
+          />
+
+          {/* Inherit */}
+          <SelectDropdown
+            label="Enable Media Stats Collection?"
+            value={mediaData.enableStat}
+            placeholder="Inherit"
+            options={MEDIA_FORM_OPTIONS.inherit}
+            isOpen={openSelect === 'enableStat'}
+            onToggle={() => setOpenSelect((prev) => (prev === 'enableStat' ? null : 'enableStat'))}
+            onSelect={(value) => {
+              setMediaState((prev) => ({ ...prev, enableStat: value }));
+              setOpenSelect(null);
+            }}
+            helper={t(
+              `Enable the collection of Proof of Play statistics for this Media Item. Ensure that 'Enable Stats Collection' is set to 'On' in the Display Settings.`,
+            )}
+          />
+
+          {/* Retired */}
+          <Checkbox
+            id="retired"
+            className="items-center"
+            title={t('Retire this media?')}
+            label={t(
+              `Retired media remains on existing Layouts but is not available to assign to new Layouts.`,
+            )}
+            checked={mediaData.retired}
+            classNameLabel="text-xs"
+            onChange={() => setMediaState((prev) => ({ ...prev, retired: !prev.retired }))}
+          />
+          <Checkbox
+            id="retired"
+            className="items-center"
+            title={t('Update this media in all layouts it is assigned to')}
+            label={t(`Note: It will only be updated in layouts you have permission to edit.`)}
+            checked={mediaData.update}
+            classNameLabel="text-xs"
+            onChange={() => setMediaState((prev) => ({ ...prev, update: !prev.update }))}
           />
         </div>
-        <div className="flex flex-col justify-between flex-1">
-          <div>
-            <span className="text-sm text-gray-500 font-semibold flex items-center gap-1">
-              {t('FILE NAME')} <HelpCircle size={12} />
-            </span>
-            <span className="text-sm">{t(data.fileName)}</span>
-          </div>
-          <div>
-            <span className="text-sm text-gray-500 font-semibold flex items-center gap-1">
-              {t('FILE SIZE')} <HelpCircle size={12} />
-            </span>
-            <span className="text-sm">{t(data.fileSizeFormatted)}</span>
-          </div>
-          <div>
-            <span className="text-sm text-gray-500 font-semibold flex items-center gap-1">
-              {t('RESOLUTION')} <HelpCircle size={12} />
-            </span>
-            <span className="text-sm">
-              {data.width} x {data.height}
-            </span>
-          </div>
-        </div>
-        <div className="">
-          <Button variant="secondary" className="border-0 bg-transparent">
-            {t('Replace File')}
-          </Button>
-        </div>
-      </div>
-      {/* Forms */}
-      <div className="flex flex-col gap-3 mt-3 max-h-[450px] overflow-y-auto px-2">
-        {/* Select Folder */}
-        <SelectFolder
-          value={mediaData.folder}
-          homeFolders={MEDIA_FORM_OPTIONS.folders.home}
-          myFileFolders={MEDIA_FORM_OPTIONS.folders.myFiles}
-          isOpen={openSelect === 'folder'}
-          onToggle={toggleFolder}
-          onSelect={(folder) => {
-            setMediaState((prev) => ({ ...prev, folder }));
-            setOpenSelect(null);
-          }}
-        />
-
-        {/* Name */}
-        <div className="flex flex-col">
-          <label htmlFor="folderLocation" className="text-xs font-semibold text-gray-500 leading-5">
-            {t('Name')}
-          </label>
-          <input
-            className="border-gray-200 text-sm rounded-lg"
-            name="fileName"
-            value={mediaData.fileName}
-            onChange={(e) => setMediaState((prev) => ({ ...prev, fileName: e.target.value }))}
-          />
-        </div>
-
-        {/* Tags */}
-        <TagInput
-          value={mediaData.tags}
-          helpText={t('Tags (Comma-separated: Tag or Tag|Value)')}
-          onChange={(tags) => setMediaState((prev) => ({ ...prev, tags }))}
-        />
-
-        {/* Orientation */}
-        <SelectDropdown
-          label="Orientation"
-          value={mediaData.orientation}
-          placeholder="Select orientation"
-          options={MEDIA_FORM_OPTIONS.orientation}
-          isOpen={openSelect === 'orientation'}
-          onToggle={() => setOpenSelect((prev) => (prev === 'orientation' ? null : 'orientation'))}
-          onSelect={(value) => {
-            setMediaState((prev) => ({ ...prev, orientation: value }));
-            setOpenSelect(null);
-          }}
-        />
-
-        {/* Duration */}
-        <DurationInput
-          value={mediaData.duration}
-          onChange={(seconds) =>
-            setMediaState((prev) => ({
-              ...prev,
-              duration: seconds,
-            }))
-          }
-        />
-
-        {/* Expiry Date */}
-        <ExpiryDateSelect
-          value={expiry}
-          options={MEDIA_FORM_OPTIONS.expiryDates}
-          isOpen={openSelect === 'expiry'}
-          onToggle={() => setOpenSelect((prev) => (prev === 'expiry' ? null : 'expiry'))}
-          onSelect={(value) => {
-            setExpiry(value);
-            setOpenSelect(null);
-          }}
-        />
-
-        {/* Inherit */}
-        <SelectDropdown
-          label="Enable Media Stats Collection?"
-          value={mediaData.enableStat}
-          placeholder="Inherit"
-          options={MEDIA_FORM_OPTIONS.inherit}
-          isOpen={openSelect === 'enableStat'}
-          onToggle={() => setOpenSelect((prev) => (prev === 'enableStat' ? null : 'enableStat'))}
-          onSelect={(value) => {
-            setMediaState((prev) => ({ ...prev, enableStat: value }));
-            setOpenSelect(null);
-          }}
-          helper={t(
-            `Enable the collection of Proof of Play statistics for this Media Item. Ensure that 'Enable Stats Collection' is set to 'On' in the Display Settings.`,
-          )}
-        />
-
-        {/* Retired */}
-        <Checkbox
-          id="retired"
-          className="items-center"
-          title={t('Retire this media?')}
-          label={t(
-            `Retired media remains on existing Layouts but is not available to assign to new Layouts.`,
-          )}
-          checked={mediaData.retired}
-          classNameLabel="text-xs"
-          onChange={() => setMediaState((prev) => ({ ...prev, retired: !prev.retired }))}
-        />
-        <Checkbox
-          id="retired"
-          className="items-center"
-          title={t('Update this media in all layouts it is assigned to')}
-          label={t(`Note: It will only be updated in layouts you have permission to edit.`)}
-          checked={mediaData.update}
-          classNameLabel="text-xs"
-          onChange={() => setMediaState((prev) => ({ ...prev, update: !prev.update }))}
-        />
       </div>
     </Modal>
   );

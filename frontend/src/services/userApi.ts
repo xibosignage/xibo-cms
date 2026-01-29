@@ -19,25 +19,31 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { Tag } from './tag';
+import http from '@/lib/api';
+import type { User } from '@/types/user';
 
-export interface Media {
-  storedAs: string;
-  mediaId: number;
-  name: string;
-  thumbnail: string;
-  mediaType: string;
-  createdDt: string;
-  ownerId: string;
-  width?: number;
-  height?: number;
-  valid: boolean;
-  fileName: string;
-  fileSizeFormatted: string;
-  orientation: string;
-  tags: Tag[];
-  duration: number;
-  mediaNoExpiryDate: string;
-  enableStat: string;
-  retired: boolean;
+export interface FetchUsersRequest {
+  start: number;
+  length: number;
+  userName?: string;
+  userType?: string;
+  signal?: AbortSignal;
+}
+
+export interface FetchUsersResponse {
+  rows: User[];
+  totalCount: number;
+}
+
+export async function fetchUsers(
+  options: FetchUsersRequest = { start: 0, length: 10 },
+): Promise<FetchUsersResponse> {
+  const response = await http.get('/user', {
+    params: options,
+  });
+
+  return {
+    rows: response.data,
+    totalCount: parseInt(response.headers['x-total-count'] ?? '0', 10),
+  };
 }

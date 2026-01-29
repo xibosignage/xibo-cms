@@ -19,25 +19,31 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { Tag } from './tag';
+import http from '@/lib/api';
+import type { UserGroup } from '@/types/userGroup';
 
-export interface Media {
-  storedAs: string;
-  mediaId: number;
-  name: string;
-  thumbnail: string;
-  mediaType: string;
-  createdDt: string;
-  ownerId: string;
-  width?: number;
-  height?: number;
-  valid: boolean;
-  fileName: string;
-  fileSizeFormatted: string;
-  orientation: string;
-  tags: Tag[];
-  duration: number;
-  mediaNoExpiryDate: string;
-  enableStat: string;
-  retired: boolean;
+export interface FetchUserGroupsRequest {
+  start: number;
+  length: number;
+  userGroup?: string;
+}
+
+export interface FetchUserGroupsResponse {
+  rows: UserGroup[];
+  totalCount: number;
+}
+
+export async function fetchUserGroups(
+  options: FetchUserGroupsRequest = { start: 0, length: 10 },
+): Promise<FetchUserGroupsResponse> {
+  const response = await http.get('/group', {
+    params: options,
+  });
+
+  const totalCountHeader = response.headers['x-total-count'];
+
+  return {
+    rows: response.data,
+    totalCount: totalCountHeader ? parseInt(totalCountHeader, 10) : 0,
+  };
 }

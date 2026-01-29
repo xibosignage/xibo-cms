@@ -23,6 +23,9 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
 import type { AxiosError } from 'axios';
 
+import type { MediaFilterInput } from '../MediaConfig';
+
+import type { FetchMediaRequest } from '@/services/mediaApi';
 import { fetchMedia } from '@/services/mediaApi';
 
 export const mediaQueryKeys = {
@@ -30,20 +33,11 @@ export const mediaQueryKeys = {
   list: (params: Record<string, unknown>) => [...mediaQueryKeys.all, 'list', params] as const,
 };
 
-interface FilterInput {
-  type: string;
-  owner: string;
-  userGroup: string;
-  orientation: string;
-  retired: string;
-  lastModified: string;
-}
-
 interface UseMediaParams {
   pagination: PaginationState;
   sorting: SortingState;
   filter: string;
-  advancedFilters: FilterInput;
+  advancedFilters: MediaFilterInput;
 }
 
 export const useMediaData = ({ pagination, sorting, filter, advancedFilters }: UseMediaParams) => {
@@ -73,7 +67,7 @@ export const useMediaData = ({ pagination, sorting, filter, advancedFilters }: U
         sortDir: sorting.length ? sortDir : undefined,
         signal,
         ...advancedFilters,
-      });
+      } as FetchMediaRequest);
     },
 
     placeholderData: keepPreviousData, // Keep showing previous page's data while the new page loads

@@ -46,6 +46,7 @@ interface ModalProps {
   size?: 'sm' | 'md' | 'lg';
   closeOnOverlay?: boolean;
   className?: string;
+  scrollable?: boolean;
 }
 
 export default function Modal({
@@ -57,6 +58,7 @@ export default function Modal({
   size = 'md',
   className,
   closeOnOverlay,
+  scrollable = true,
 }: ModalProps) {
   useKeydown('Escape', onClose, isOpen);
 
@@ -80,23 +82,29 @@ export default function Modal({
       <dialog
         open
         className={twMerge(
-          'relative flex flex-col w-full bg-white rounded-xl overflow-hidden outline-none',
+          'relative flex flex-col w-full bg-white rounded-xl overflow-hidden outline-none max-h-[90vh] shadow-lg',
           sizeClasses[size],
           className,
         )}
       >
-        {/* Main */}
-        <div className="flex flex-col items-start justify-between p-8 gap-3">
-          {/* Header */}
+        {/* Header */}
+        <div className="shrink-0 p-8 pb-3">
           <div className="text-lg font-semibold">{title}</div>
+        </div>
 
-          {/* Body */}
-          <div className="overflow-y-auto overflow-x-visible w-full max-h-[70vh]">{children}</div>
+        {/* Body */}
+        <div
+          className={twMerge(
+            'flex-1 min-h-0 w-full flex flex-col',
+            scrollable ? 'overflow-y-auto' : 'overflow-hidden',
+          )}
+        >
+          {children}
         </div>
 
         {/* Footer */}
         {actions && actions.length > 0 && (
-          <div className="flex flex-row justify-end bg-gray-100 gap-3 px-5 py-4">
+          <div className="shrink-0 flex flex-row justify-end bg-gray-50 gap-3 px-8 py-4 border-t border-gray-100">
             {actions.map((action, idx) => (
               <Button
                 key={idx}

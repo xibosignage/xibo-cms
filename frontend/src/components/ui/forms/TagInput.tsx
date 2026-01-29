@@ -24,7 +24,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
-import type { Tag } from '@/types/media';
+import type { Tag } from '@/types/tag';
 
 interface TagInputProps {
   value: Tag[];

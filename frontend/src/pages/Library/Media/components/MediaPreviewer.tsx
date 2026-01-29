@@ -25,7 +25,7 @@ import { useTranslation } from 'react-i18next';
 
 import { useKeydown } from '@/hooks/useKeydown';
 import { fetchMediaBlob } from '@/services/mediaApi';
-import type { MediaRow } from '@/types/media';
+import type { Media } from '@/types/media';
 
 interface MediaPreviewerProps {
   mediaId: number | string | null;
@@ -35,7 +35,7 @@ interface MediaPreviewerProps {
   onShare?: () => void;
   onDownload: () => void;
   onClose: () => void;
-  mediaData?: MediaRow | null;
+  mediaData?: Media | null;
 }
 
 export default function MediaPreviewer({
@@ -223,7 +223,7 @@ export default function MediaPreviewer({
 
                 <div className="flex gap-2">
                   <span className="text-sm uppercase text-gray-500">{t('Owner')}</span>
-                  <span className="text-sm text-gray-300">{mediaData.owner || '-'}</span>
+                  <span className="text-sm text-gray-300">{mediaData.ownerId || '-'}</span>
                 </div>
 
                 <div className="flex gap-2">

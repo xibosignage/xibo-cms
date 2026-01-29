@@ -31,7 +31,7 @@ import TagInput from './forms/TagInput';
 
 import Button from '@/components/ui/Button';
 import type { UploadItem } from '@/hooks/useUploadQueue';
-import type { Tag } from '@/types/media';
+import type { Tag } from '@/types/tag';
 
 interface FileUploaderProps {
   queue: UploadItem[];
@@ -50,8 +50,6 @@ interface RowProps {
   onRemove: () => void;
   onUpdate: (data: { name?: string; tags?: string }) => void;
 }
-
-// --- Helpers for Tag Conversion ---
 
 const parseTagsFromString = (str: string | undefined): Tag[] => {
   if (!str) {
@@ -77,8 +75,6 @@ const parseTagsFromString = (str: string | undefined): Tag[] => {
 const serializeTagsToString = (tags: Tag[]): string => {
   return tags.map((t) => (t.value ? `${t.tag}|${t.value}` : t.tag)).join(',');
 };
-
-// ----------------------------------
 
 function formatBytes(bytes: number, t: TFunction): string {
   if (bytes === 0) {
@@ -108,12 +104,8 @@ function formatFileSize(item: UploadItem, t: TFunction): string {
 function UploadItemRow({ item, onRemove, onUpdate }: RowProps) {
   const { t } = useTranslation();
   const [preview, setPreview] = useState<string | null>(null);
-
-  // Name still needs local state for debouncing
   const [localName, setLocalName] = useState(item.displayName ?? '');
 
-  // REACT 19 UPDATE: Removed useMemo.
-  // The React Compiler automatically optimizes this calculation.
   const tagObjects = parseTagsFromString(item.tags);
 
   const isError = item.status === 'error';

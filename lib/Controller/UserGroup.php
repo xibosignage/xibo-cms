@@ -142,7 +142,7 @@ class UserGroup extends Base
                 ByteFormatter::format($group->libraryQuota * 1024)
             );
 
-            if ($this->isApi($request)) {
+            if ($this->isApi($request) || $this->isJson($request)) {
                 continue;
             }
 

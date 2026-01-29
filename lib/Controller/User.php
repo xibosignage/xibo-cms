@@ -329,7 +329,7 @@ class User extends Base
                 default => __('Disabled'),
             });
 
-            if ($this->isApi($request)) {
+            if ($this->isApi($request) || $this->isJson($request)) {
                 continue;
             }
 

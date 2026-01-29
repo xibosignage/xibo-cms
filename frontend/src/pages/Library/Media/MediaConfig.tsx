@@ -45,16 +45,16 @@ import {
   TagsCell,
 } from '@/components/ui/table/cells';
 import { APP_ROUTES } from '@/config/appRoutes';
-import type { MediaRow } from '@/types/media';
+import type { Media } from '@/types/media';
 
 export const LIBRARY_TABS = APP_ROUTES.find((r) => r.path === 'library')?.subLinks || [];
 
 export interface MediaFilterInput {
   type: string;
-  owner: string;
-  userGroup: string;
+  ownerId: string;
+  ownerUserGroupId: string;
   orientation: string;
-  retired: string;
+  retired?: number;
   lastModified: string;
 }
 
@@ -67,18 +67,18 @@ type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
 
 export const INITIAL_FILTER_STATE: MediaFilterInput = {
   type: '',
-  owner: '',
-  userGroup: '',
+  ownerId: '',
+  ownerUserGroupId: '',
   orientation: '',
-  retired: '',
   lastModified: '',
 };
 
-export const FILTER_OPTIONS: FilterConfigItem<MediaFilterInput>[] = [
+export const BASE_FILTER_KEYS: FilterConfigItem<MediaFilterInput>[] = [
   {
     label: 'Type',
     name: 'type',
     className: '',
+    shouldTranslateOptions: true,
     options: [
       { label: 'Image', value: 'image' },
       { label: 'Video', value: 'video' },
@@ -90,25 +90,18 @@ export const FILTER_OPTIONS: FilterConfigItem<MediaFilterInput>[] = [
   },
   {
     label: 'Owner',
-    name: 'owner',
+    name: 'ownerId',
     className: '',
-    options: [
-      { label: 'Owner 1', value: 'owner-1' },
-      { label: 'Owner 2', value: 'owner-2' },
-      { label: 'Owner 3', value: 'owner-3' },
-      { label: 'Owner 4', value: 'owner-4' },
-    ],
+    shouldTranslateOptions: false,
+    showAllOption: false,
+    options: [{ label: 'Select Owner', value: null }],
   },
   {
     label: 'User Group',
-    name: 'userGroup',
-    className: 'md:w-auto w-[100%]',
-    options: [
-      { label: 'Group 1', value: 'group-1' },
-      { label: 'Group 2', value: 'group-2' },
-      { label: 'Group 3', value: 'group-3' },
-      { label: 'Group 4', value: 'group-4' },
-    ],
+    name: 'ownerUserGroupId',
+    shouldTranslateOptions: false,
+    showAllOption: false,
+    options: [{ label: 'Select Group', value: null }],
   },
   {
     label: 'Orientation',
@@ -123,17 +116,21 @@ export const FILTER_OPTIONS: FilterConfigItem<MediaFilterInput>[] = [
   {
     label: 'Retired',
     name: 'retired',
-    className: 'max-w-[100px]',
+    className: 'max-w-auto md:max-w-[100px]',
+    shouldTranslateOptions: true,
+    showAllOption: false,
     options: [
-      { label: 'Any', value: '' },
-      { label: 'Yes', value: 'yes' },
-      { label: 'No', value: 'no' },
+      { label: 'Any', value: null },
+      { label: 'No', value: 0 },
+      { label: 'Yes', value: 1 },
     ],
   },
   {
     label: 'Last Modified',
     name: 'lastModified',
     className: '',
+    shouldTranslateOptions: true,
+    showAllOption: false,
     options: [
       { label: 'Any time', value: '' },
       { label: 'Today', value: 'today' },
@@ -220,10 +217,10 @@ const getStatusTypeFromMediaType = (mediaType: string) => {
 
 interface GetMediaColumnsProps {
   t: TFunction;
-  onPreview: (row: MediaRow) => void;
+  onPreview: (row: Media) => void;
   onDelete: (id: number) => void;
-  onDownload: (row: MediaRow) => void;
-  openEditModal: (row: MediaRow) => void;
+  onDownload: (row: Media) => void;
+  openEditModal: (row: Media) => void;
 }
 
 export const getMediaColumns = ({
@@ -232,7 +229,7 @@ export const getMediaColumns = ({
   onDelete,
   onDownload,
   openEditModal,
-}: GetMediaColumnsProps): ColumnDef<MediaRow>[] => {
+}: GetMediaColumnsProps): ColumnDef<Media>[] => {
   return [
     {
       accessorKey: 'mediaId',
@@ -325,7 +322,7 @@ export const getMediaColumns = ({
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
     {
-      accessorKey: 'owner',
+      accessorKey: 'ownerId',
       header: t('Owner'),
       size: 150,
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
@@ -478,9 +475,9 @@ export const getMediaColumns = ({
 
 interface GetBulkActionsProps {
   t: TFunction;
-  onDelete: (selectedItems: MediaRow[]) => void;
-  onMove: (selectedItems: MediaRow[]) => void;
-  onShare: (selectedItems: MediaRow[]) => void;
+  onDelete: (selectedItems: Media[]) => void;
+  onMove: (selectedItems: Media[]) => void;
+  onShare: (selectedItems: Media[]) => void;
 }
 
 export const getBulkActions = ({
@@ -488,7 +485,7 @@ export const getBulkActions = ({
   onDelete,
   onMove,
   onShare,
-}: GetBulkActionsProps): DataTableBulkAction<MediaRow>[] => {
+}: GetBulkActionsProps): DataTableBulkAction<Media>[] => {
   return [
     {
       label: t('Move'),

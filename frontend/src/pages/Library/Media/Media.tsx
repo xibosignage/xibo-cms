@@ -33,7 +33,6 @@ import { useTranslation } from 'react-i18next';
 import {
   getMediaColumns,
   getBulkActions,
-  FILTER_OPTIONS,
   INITIAL_FILTER_STATE,
   LIBRARY_TABS,
   type MediaFilterInput,
@@ -54,8 +53,9 @@ import { DataTable } from '@/components/ui/table/DataTable';
 import { useUploadContext } from '@/context/UploadContext';
 import { useDebounce } from '@/hooks/useDebounce';
 import EditMediaModal from '@/pages/Library/Media/components/EditMediaModal';
+import { useMediaFilterOptions } from '@/pages/Library/Media/hooks/useMediaFilterOptions';
 import { deleteMedia, downloadMedia } from '@/services/mediaApi';
-import type { MediaRow } from '@/types/media';
+import type { Media } from '@/types/media';
 
 export default function Media() {
   const { t } = useTranslation();
@@ -69,7 +69,7 @@ export default function Media() {
   const [globalFilter, setGlobalFilter] = useState('');
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [openFilter, setOpenFilter] = useState(false);
-  const [previewItem, setPreviewItem] = useState<MediaRow | null>(null);
+  const [previewItem, setPreviewItem] = useState<Media | null>(null);
   const [filterInputs, setFilterInput] = useState<MediaFilterInput>(INITIAL_FILTER_STATE);
 
   const [isAddModalOpen, setAddModalOpen] = useState(false);
@@ -99,7 +99,7 @@ export default function Media() {
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
   const [openModal, setOpenModal] = useState(false);
-  const [selectedMedia, setSelectedMedia] = useState<MediaRow | null>();
+  const [selectedMedia, setSelectedMedia] = useState<Media | null>();
 
   // Event handlers
   const handleRefresh = () => {
@@ -140,7 +140,7 @@ export default function Media() {
     }
   };
 
-  const handleBulkDelete = async (selectedItems: MediaRow[]) => {
+  const handleBulkDelete = async (selectedItems: Media[]) => {
     if (selectedItems.length === 0) {
       return;
     }
@@ -159,7 +159,7 @@ export default function Media() {
     }
   };
 
-  const handleDownload = async (row: MediaRow) => {
+  const handleDownload = async (row: Media) => {
     try {
       await downloadMedia(row.mediaId, row.storedAs);
     } catch (error) {
@@ -167,7 +167,7 @@ export default function Media() {
     }
   };
 
-  const handlePreviewClick = (row: MediaRow) => {
+  const handlePreviewClick = (row: Media) => {
     setPreviewItem(row);
   };
 
@@ -192,7 +192,7 @@ export default function Media() {
     handleRefresh();
   };
 
-  const handleOpenEditModal = (row: MediaRow) => {
+  const handleOpenEditModal = (row: Media) => {
     setSelectedMedia(row);
     setOpenModal(true);
   };
@@ -200,6 +200,11 @@ export default function Media() {
   const handleCloseModal = () => {
     setOpenModal(false);
     setSelectedMedia(null);
+  };
+
+  const handleResetFilters = () => {
+    setFilterInput(INITIAL_FILTER_STATE);
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
   const columns = getMediaColumns({
@@ -239,6 +244,8 @@ export default function Media() {
     { id: 3, name: 'Q1 Campaigns' },
     { id: 99, name: 'Temporary' },
   ];
+
+  const { filterOptions } = useMediaFilterOptions();
 
   return (
     <section
@@ -315,7 +322,8 @@ export default function Media() {
         }}
         open={openFilter}
         values={filterInputs}
-        options={FILTER_OPTIONS}
+        options={filterOptions}
+        onReset={handleResetFilters}
       />
 
       {error && (
@@ -355,7 +363,7 @@ export default function Media() {
             fileName: false,
             expires: false,
             enableStat: false,
-            owner: false,
+            ownerId: false,
           },
         }}
         bulkActions={bulkActions}
@@ -368,7 +376,7 @@ export default function Media() {
         actions={addModalActions}
         size="lg"
       >
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 p-8 pt-0">
           {/* TODO: Folder select hardcoded for now */}
           <FolderSelect
             value={selectedFolderId}

@@ -60,17 +60,19 @@ export function UploadProgressDock({ isModalOpen }: UploadProgressDockProps) {
     }
   };
 
+  const headerTitle = isFinished
+    ? hasErrors
+      ? 'Uploads completed with errors'
+      : 'Uploads completed'
+    : `${completed}/${total} items are still uploading`;
+
   const content = (
     <div className="fixed bottom-0 right-[85px] w-[290px] z-60 shadow-lg shadow-black/15">
       <div className="rounded-t-xl overflow-hidden relative">
         {/* Header */}
         <div className="flex justify-between items-center bg-gray-100">
-          <div className="text-sm font-semibold px-3 py-2 w-full truncate">
-            {isFinished
-              ? hasErrors
-                ? 'Uploads completed with errors'
-                : 'Uploads completed'
-              : `${completed}/${total} items are still uploading`}
+          <div title={headerTitle} className="text-sm font-semibold px-3 py-2 w-full truncate">
+            {headerTitle}
           </div>
 
           <button
@@ -98,7 +100,7 @@ export function UploadProgressDock({ isModalOpen }: UploadProgressDockProps) {
 
         {/* Content */}
         {isExpanded && (
-          <div className="bg-white p-5 flex flex-col gap-1">
+          <div className="bg-white p-5 flex flex-col gap-1 max-h-40 overflow-y-auto">
             {queue.map((item) => (
               <div key={item.id} className="flex items-center justify-between gap-3">
                 <div className="text-sm font-normal text-gray-800 items-center w-full truncate">
