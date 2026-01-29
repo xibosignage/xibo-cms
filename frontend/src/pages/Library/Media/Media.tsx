@@ -26,7 +26,7 @@ import {
   type RowSelectionState,
 } from '@tanstack/react-table';
 import { Search, Filter, Folder, FilterX, Plus, Upload } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useTranslation } from 'react-i18next';
 
@@ -75,6 +75,13 @@ export default function Media() {
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [selectedFolderId, setSelectedFolderId] = useState(1);
 
+  // Will need to add more modals later
+  const [openModal, setOpenModal] = useState({
+    edit: false,
+    share: false,
+  });
+  const [selectedMediaId, setSelectedMediaId] = useState<number | null>(null);
+
   const debouncedFilter = useDebounce(globalFilter, 500);
 
   const { queue, addFiles, removeFile, clearQueue, updateFileData, saveMetadata, addUrlToQueue } =
@@ -95,11 +102,17 @@ export default function Media() {
   });
 
   // Computed values
-  const data = queryData?.rows || [];
+  const data = queryData?.rows;
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
-  const [openModal, setOpenModal] = useState(false);
-  const [selectedMedia, setSelectedMedia] = useState<Media | null>();
+
+  const [mediaList, setMediaList] = useState<Media[]>([]);
+
+  useEffect(() => {
+    setMediaList(data ?? []);
+  }, [data]);
+
+  const selectedMedia = mediaList.find((m) => m.mediaId === selectedMediaId) ?? null;
 
   // Event handlers
   const handleRefresh = () => {
@@ -192,14 +205,18 @@ export default function Media() {
     handleRefresh();
   };
 
-  const handleOpenEditModal = (row: Media) => {
-    setSelectedMedia(row);
-    setOpenModal(true);
+  const openEditModal = (media: Media) => {
+    setSelectedMediaId(media.mediaId);
+    toggleModal('edit', true);
   };
 
-  const handleCloseModal = () => {
-    setOpenModal(false);
-    setSelectedMedia(null);
+  const closeEditModal = () => {
+    toggleModal('edit', false);
+    setSelectedMediaId(null);
+  };
+
+  const toggleModal = (name: string, isOpen: boolean) => {
+    setOpenModal((prev) => ({ ...prev, [name]: isOpen }));
   };
 
   const handleResetFilters = () => {
@@ -212,7 +229,7 @@ export default function Media() {
     onPreview: handlePreviewClick,
     onDelete: handleDelete,
     onDownload: handleDownload,
-    openEditModal: handleOpenEditModal,
+    openEditModal,
   });
 
   const bulkActions = getBulkActions({
@@ -334,7 +351,7 @@ export default function Media() {
 
       <DataTable
         columns={columns}
-        data={data}
+        data={mediaList}
         pageCount={pageCount}
         pagination={pagination}
         onPaginationChange={setPagination}
@@ -411,9 +428,21 @@ export default function Media() {
       />
 
       {selectedMedia && (
-        <EditMediaModal openModal={openModal} onClose={handleCloseModal} data={selectedMedia} />
+        <EditMediaModal
+          openModal={openModal.edit}
+          onClose={() => {
+            toggleModal('edit', false);
+            closeEditModal();
+          }}
+          onSave={(updatedMedia) => {
+            setMediaList((prev) =>
+              prev.map((m) => (m.mediaId === updatedMedia.mediaId ? updatedMedia : m)),
+            );
+            handleRefresh();
+          }}
+          data={selectedMedia}
+        />
       )}
-
       <UploadProgressDock isModalOpen={isAddModalOpen} />
     </section>
   );

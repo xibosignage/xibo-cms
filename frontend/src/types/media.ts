@@ -22,11 +22,12 @@
 import type { Tag } from './tag';
 
 export interface Media {
+  folderId: number;
   storedAs: string;
   mediaId: number;
   name: string;
   thumbnail: string;
-  mediaType: string;
+  mediaType: MediaType;
   createdDt: string;
   ownerId: string;
   width?: number;
@@ -34,10 +35,14 @@ export interface Media {
   valid: boolean;
   fileName: string;
   fileSizeFormatted: string;
-  orientation: string;
+  orientation: 'portrait' | 'landscape';
   tags: Tag[];
   duration: number;
   mediaNoExpiryDate: string;
   enableStat: string;
   retired: boolean;
+  expires: number;
+  updateInLayouts: boolean;
 }
+
+export type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
