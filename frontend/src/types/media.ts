@@ -46,7 +46,7 @@ export interface MediaRow {
 export interface Tag {
   tag: string;
   tagId: number;
-  value: string | number | null;
+  value: string | number;
 }
 
 export type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
