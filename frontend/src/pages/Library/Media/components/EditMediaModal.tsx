@@ -19,8 +19,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { HelpCircle } from 'lucide-react';
-import React, { useState } from 'react';
+import type { LucideIcon } from 'lucide-react';
+import { Image, Film, Music, FileText, Archive, File, HelpCircle, Loader2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Modal from '../../../../components/ui/modals/Modal';
@@ -34,67 +35,234 @@ import ExpiryDateSelect from '@/components/ui/forms/ExpiryDateSelect';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TagInput from '@/components/ui/forms/TagInput';
-import type { MediaRow } from '@/types/media';
+import { updateMedia } from '@/services/mediaApi';
+import type { MediaRow, MediaType, Tag } from '@/types/media';
 
 interface EditMediaModalProps {
   openModal: boolean;
-  onClose: () => void;
   data: MediaRow;
+  onClose: () => void;
+  onSave: (updated: MediaRow) => void;
 }
+
+type MediaDraft = {
+  name: string;
+  folder: string;
+  fileName: string;
+  tags: Tag[];
+  orientation: 'portrait' | 'landscape';
+  duration: number;
+  mediaNoExpiryDate?: ExpiryValue;
+  enableStat: string;
+  retired: boolean;
+  updateInLayouts: boolean;
+};
 
 type OpenSelect = 'folder' | 'orientation' | 'expiry' | 'enableStat' | null;
 
-function EditMediaModal({ openModal, onClose, data }: EditMediaModalProps) {
+const getIcon = (type: MediaType): LucideIcon => {
+  switch (type) {
+    case 'image':
+      return Image;
+    case 'video':
+      return Film;
+    case 'audio':
+      return Music;
+    case 'pdf':
+      return FileText;
+    case 'archive':
+      return Archive;
+    default:
+      return File;
+  }
+};
+
+function expiryToDateTime(expiry?: ExpiryValue): string | undefined {
+  if (!expiry) return undefined;
+
+  let date: Date;
+
+  if (expiry.type === 'preset') {
+    const now = new Date();
+
+    switch (expiry.value) {
+      case 'Never Expire':
+        return undefined;
+
+      case 'End of Today': {
+        date = new Date();
+        date.setHours(23, 59, 59, 0);
+        break;
+      }
+
+      case 'In 7 Days':
+        date = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+        break;
+
+      case 'In 14 Days':
+        date = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+        break;
+
+      case 'In 30 Days':
+        date = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+        break;
+
+      default:
+        return undefined;
+    }
+  } else {
+    date = expiry.to;
+  }
+  return date.toISOString().slice(0, 19).replace('T', ' ');
+}
+
+function expiresToExpiryValue(expires?: string | number): ExpiryValue | undefined {
+  if (!expires || expires === '0') return undefined;
+
+  const timestamp = typeof expires === 'string' ? Number(expires) : expires;
+
+  if (Number.isNaN(timestamp)) return undefined;
+
+  const date = new Date(timestamp * 1000);
+
+  return {
+    type: 'range',
+    from: date,
+    to: date,
+  };
+}
+
+function EditMediaModal({ openModal, onClose, data, onSave }: EditMediaModalProps) {
   const { t } = useTranslation();
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [openSelect, setOpenSelect] = useState<null | OpenSelect>(null);
   const [expiry, setExpiry] = useState<ExpiryValue | undefined>();
+  const [isSaving, setIsSaving] = useState(false);
+  const [draft, setDraft] = useState<MediaDraft>(() => ({
+    name: data.name,
+    folder: '',
+    fileName: data.name,
+    tags: data.tags.map((t) => ({ ...t })),
+    orientation: data.orientation,
+    duration: data.duration,
+    mediaNoExpiryDate: expiry,
+    enableStat: data.enableStat,
+    retired: data.retired,
+    updateInLayouts: data.updateInLayouts,
+  }));
+
+  const Icon = getIcon(data.mediaType);
 
   const toggleFolder = () => setOpenSelect((prev) => (prev === 'folder' ? null : 'folder'));
 
-  const [mediaData, setMediaState] = useState({
-    folder: '',
-    fileName: data.fileName,
-    tags: data.tags,
-    orientation: data.orientation,
-    duration: data.duration,
-    mediaNoExpiryDate: expiry, // TODO: Update correct expiry data
-    enableStat: data.enableStat,
-    retired: data.retired,
-    update: false, // TODO: Update correct update info data
-  });
+  useEffect(() => {
+    setDraft({
+      folder: '',
+      name: data.name,
+      fileName: data.name,
+      tags: data.tags.map((t) => ({ ...t })),
+      orientation: data.orientation,
+      duration: data.duration,
+      mediaNoExpiryDate: expiry,
+      enableStat: data.enableStat,
+      retired: data.retired,
+      updateInLayouts: data.updateInLayouts,
+    });
+
+    setExpiry(expiresToExpiryValue(data.expires));
+  }, [data]);
+
+  const handleSave = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+
+    const serializedTags = draft.tags.map((t) => (t.value != null ? `${t.tag}|${t.value}` : t.tag));
+
+    const expires = expiryToDateTime(expiry);
+
+    const updatedMedia = await updateMedia(data.mediaId, {
+      name: draft.name,
+      duration: draft.duration,
+      retired: draft.retired ? 1 : 0,
+      updateInLayouts: draft.updateInLayouts ? 1 : 0,
+      tags: serializedTags.join(','),
+      orientation: draft.orientation,
+      enableStat: draft.enableStat,
+      expires,
+      mediaNoExpiryDate: expires === undefined ? 1 : 0,
+    });
+
+    onSave({
+      ...data,
+      ...updatedMedia,
+    });
+    onClose();
+  };
+
   return (
     <Modal
-      title="Edit Media"
+      title={t('Edit Media')}
       onClose={onClose}
       isOpen={openModal}
       actions={[
         {
-          label: 'Cancel',
+          label: t('Cancel'),
           onClick: onClose,
           variant: 'secondary',
         },
         {
-          label: 'Save',
-          // TODO: Add update media function for Save Button
+          label: t('Save'),
+          onClick: handleSave,
+          disabled: isSaving,
         },
       ]}
     >
+      {isSaving && (
+        <div className="absolute w-full h-full center bg-black/20 top-0 left-0 z-10">
+          <span className="flex items-center gap-1 flex-col text-white">
+            <Loader2 size={32} className="animate-spin text-white" />
+            {isSaving ? t('Saving…') : t('Save')}
+          </span>
+        </div>
+      )}
       {/* Media Preview */}
       <div className="p-4 flex gap-3 bg-slate-50 mt-3">
         <div className="h-[150px] aspect-7/6 relative bg-gray-400 overflow-hidden rounded">
-          {/* Loader */}
-          {isImageLoading && <div className="absolute inset-0 animate-pulse bg-gray-200" />}
+          <div className="h-[150px] aspect-7/6 bg-gray-100 flex items-center justify-center rounded">
+            {data.thumbnail ? (
+              <>
+                {isImageLoading && <div className="absolute inset-0 animate-pulse bg-gray-200" />}
+                <img
+                  src={data.thumbnail}
+                  alt={data.fileName}
+                  onLoad={() => setIsImageLoading(false)}
+                  onError={() => setIsImageLoading(false)}
+                  className={`h-full w-full object-contain transition-opacity duration-300 ${
+                    isImageLoading ? 'opacity-0' : 'opacity-100'
+                  }`}
+                />
+              </>
+            ) : (
+              <Icon className="w-10 h-10 text-gray-400" />
+            )}
+          </div>
 
-          <img
-            src={data.thumbnail}
-            alt={data.fileName}
-            onLoad={() => setIsImageLoading(false)}
-            onError={() => setIsImageLoading(false)}
-            className={`h-full w-full object-contain transition-opacity duration-300 ${
-              isImageLoading ? 'opacity-0' : 'opacity-100'
-            }`}
-          />
+          {data.thumbnail ? (
+            <>
+              {isImageLoading && <div className="absolute inset-0 animate-pulse bg-gray-200" />}
+              <img
+                src={data.thumbnail}
+                alt={data.fileName}
+                onLoad={() => setIsImageLoading(false)}
+                onError={() => setIsImageLoading(false)}
+                className={`h-full w-full object-contain transition-opacity duration-300 ${
+                  isImageLoading ? 'opacity-0' : 'opacity-100'
+                }`}
+              />
+            </>
+          ) : (
+            <Film />
+          )}
         </div>
         <div className="flex flex-col justify-between flex-1">
           <div>
@@ -128,13 +296,13 @@ function EditMediaModal({ openModal, onClose, data }: EditMediaModalProps) {
       <div className="flex flex-col gap-3 mt-3 max-h-[450px] overflow-y-auto px-2">
         {/* Select Folder */}
         <SelectFolder
-          value={mediaData.folder}
+          value={draft.folder}
           homeFolders={MEDIA_FORM_OPTIONS.folders.home}
           myFileFolders={MEDIA_FORM_OPTIONS.folders.myFiles}
           isOpen={openSelect === 'folder'}
           onToggle={toggleFolder}
           onSelect={(folder) => {
-            setMediaState((prev) => ({ ...prev, folder }));
+            setDraft((prev) => ({ ...prev, folder }));
             setOpenSelect(null);
           }}
         />
@@ -146,38 +314,41 @@ function EditMediaModal({ openModal, onClose, data }: EditMediaModalProps) {
           </label>
           <input
             className="border-gray-200 text-sm rounded-lg"
-            name="fileName"
-            value={mediaData.fileName}
-            onChange={(e) => setMediaState((prev) => ({ ...prev, fileName: e.target.value }))}
+            name="name"
+            value={draft.name}
+            onChange={(e) => setDraft((prev) => ({ ...prev, name: e.target.value }))}
           />
         </div>
 
         {/* Tags */}
         <TagInput
-          value={mediaData.tags}
+          value={draft.tags}
           helpText={t('Tags (Comma-separated: Tag or Tag|Value)')}
-          onChange={(tags) => setMediaState((prev) => ({ ...prev, tags }))}
+          onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
         />
 
         {/* Orientation */}
         <SelectDropdown
           label="Orientation"
-          value={mediaData.orientation}
+          value={draft.orientation}
           placeholder="Select orientation"
           options={MEDIA_FORM_OPTIONS.orientation}
           isOpen={openSelect === 'orientation'}
           onToggle={() => setOpenSelect((prev) => (prev === 'orientation' ? null : 'orientation'))}
           onSelect={(value) => {
-            setMediaState((prev) => ({ ...prev, orientation: value }));
+            setDraft((prev) => ({
+              ...prev,
+              orientation: value as 'portrait' | 'landscape',
+            }));
             setOpenSelect(null);
           }}
         />
 
         {/* Duration */}
         <DurationInput
-          value={mediaData.duration}
+          value={draft.duration}
           onChange={(seconds) =>
-            setMediaState((prev) => ({
+            setDraft((prev) => ({
               ...prev,
               duration: seconds,
             }))
@@ -199,13 +370,13 @@ function EditMediaModal({ openModal, onClose, data }: EditMediaModalProps) {
         {/* Inherit */}
         <SelectDropdown
           label="Enable Media Stats Collection?"
-          value={mediaData.enableStat}
+          value={draft.enableStat}
           placeholder="Inherit"
           options={MEDIA_FORM_OPTIONS.inherit}
           isOpen={openSelect === 'enableStat'}
           onToggle={() => setOpenSelect((prev) => (prev === 'enableStat' ? null : 'enableStat'))}
           onSelect={(value) => {
-            setMediaState((prev) => ({ ...prev, enableStat: value }));
+            setDraft((prev) => ({ ...prev, enableStat: value }));
             setOpenSelect(null);
           }}
           helper={t(
@@ -221,18 +392,18 @@ function EditMediaModal({ openModal, onClose, data }: EditMediaModalProps) {
           label={t(
             `Retired media remains on existing Layouts but is not available to assign to new Layouts.`,
           )}
-          checked={mediaData.retired}
+          checked={draft.retired}
           classNameLabel="text-xs"
-          onChange={() => setMediaState((prev) => ({ ...prev, retired: !prev.retired }))}
+          onChange={() => setDraft((prev) => ({ ...prev, retired: !prev.retired }))}
         />
         <Checkbox
-          id="retired"
+          id="update"
           className="items-center"
           title={t('Update this media in all layouts it is assigned to')}
           label={t(`Note: It will only be updated in layouts you have permission to edit.`)}
-          checked={mediaData.update}
+          checked={draft.updateInLayouts}
           classNameLabel="text-xs"
-          onChange={() => setMediaState((prev) => ({ ...prev, update: !prev.update }))}
+          onChange={() => setDraft((prev) => ({ ...prev, updateInLayouts: !prev.updateInLayouts }))}
         />
       </div>
     </Modal>

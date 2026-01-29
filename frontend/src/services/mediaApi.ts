@@ -179,12 +179,16 @@ export interface UpdateMediaRequest {
   tags?: string;
   retired?: number;
   enableStat?: string;
+  updateInLayouts?: number; // temporary field
+  orientation?: 'portrait' | 'landscape';
+  expires?: string;
+  mediaNoExpiryDate?: number;
 }
 
 export async function updateMedia(
   mediaId: number | string,
   data: UpdateMediaRequest,
-): Promise<void> {
+): Promise<MediaRow> {
   const params = new URLSearchParams();
 
   params.append('name', data.name);
@@ -196,12 +200,30 @@ export async function updateMedia(
     params.append('tags', data.tags);
   }
 
-  await http.put(`/library/${mediaId}`, params.toString(), {
+  if (data.updateInLayouts !== undefined) {
+    params.append('updateInLayouts', data.updateInLayouts.toString());
+  }
+
+  if (data.orientation) {
+    params.append('orientation', data.orientation);
+  }
+
+  if (data.mediaNoExpiryDate !== undefined) {
+    params.append('mediaNoExpiryDate', data.mediaNoExpiryDate.toString());
+  }
+
+  if (data.expires) {
+    params.append('expires', data.expires);
+  }
+
+  const response = await http.put(`/library/${mediaId}`, params.toString(), {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
       'X-Requested-With': 'XMLHttpRequest',
     },
   });
+
+  return response.data;
 }
 
 export async function fetchMediaBlob(mediaId: number | string): Promise<Blob> {
