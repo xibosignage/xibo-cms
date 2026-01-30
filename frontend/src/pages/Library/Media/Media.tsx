@@ -90,10 +90,9 @@ export default function Media() {
   // Data fetching
   const {
     data: queryData,
-    isLoading,
+    isFetching,
     isError,
     error: queryError,
-    isPlaceholderData,
   } = useMediaData({
     pagination,
     sorting,
@@ -359,7 +358,7 @@ export default function Media() {
         onSortingChange={setSorting}
         globalFilter={globalFilter}
         onGlobalFilterChange={setGlobalFilter}
-        loading={isLoading && !isPlaceholderData}
+        loading={isFetching}
         rowSelection={rowSelection}
         onRowSelectionChange={setRowSelection}
         onRefresh={handleRefresh}

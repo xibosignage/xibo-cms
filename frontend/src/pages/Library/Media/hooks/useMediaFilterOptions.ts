@@ -87,7 +87,5 @@ export function useMediaFilterOptions() {
     };
   }, []);
 
-  console.log(filterOptions);
-
   return { filterOptions, isLoading };
 }

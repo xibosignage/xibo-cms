@@ -33,7 +33,7 @@ import {
   type VisibilityState,
 } from '@tanstack/react-table';
 import { Loader2, ChevronUp, ChevronDown, ChevronsUpDown, FileSearch2 } from 'lucide-react';
-import { type CSSProperties, useState } from 'react';
+import { type CSSProperties, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
@@ -110,6 +110,8 @@ export function DataTable<TData, TValue>({
   onRefresh,
 }: DataTableProps<TData, TValue>) {
   const { t } = useTranslation();
+
+  const [showLoading, setShowLoading] = useState(false);
 
   let tableColumns = columns;
 
@@ -204,6 +206,20 @@ export function DataTable<TData, TValue>({
 
   const nonPrintableColumns = ['tableSelection', 'tableActions'];
 
+  // Prevent loading to show if request takes less than X seconds
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+
+    if (loading) {
+      timer = setTimeout(() => {
+        setShowLoading(true);
+      }, 150);
+    } else {
+      setShowLoading(false);
+    }
+    return () => clearTimeout(timer);
+  }, [loading]);
+
   return (
     <div className="flex flex-col pt-5 gap-y-3 data-table flex-1 min-h-0">
       <div className="flex justify-between data-table-header flex-none">
@@ -234,11 +250,11 @@ export function DataTable<TData, TValue>({
 
       <div className="flex flex-col data-table-content bg-white overflow-hidden relative flex-1 min-h-0">
         {/* Loading Overlay */}
-        {loading && (
-          <div className="absolute inset-0 bg-white/60 z-50 flex items-center justify-center backdrop-blur-sm transition-all duration-200">
+        {showLoading && (
+          <div className="absolute inset-0 bg-white/60 z-50 flex items-center justify-center backdrop-blur-sm animate-in fade-in duration-300">
             <div className="flex flex-col items-center">
               <Loader2 className="w-8 h-8 animate-spin text-gray-600" />
-              <span className="mt-2 text-gray-500 ">{t('Loading...')}</span>
+              <span className="mt-2 text-gray-500">{t('Loading...')}</span>
             </div>
           </div>
         )}
