@@ -33,29 +33,25 @@ import {
   getFilteredRowModel,
   getSortedRowModel,
 } from '@tanstack/react-table';
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsUpDown,
-  ChevronUp,
-  Search,
-  UserRound,
-} from 'lucide-react';
+import { ChevronDown, ChevronsUpDown, ChevronUp, Loader2, Search, UserRound } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
-import { FILTER_DROPWN_OPTIONS, SAMPLE_USER } from '../MediaConfig';
+import { FILTER_DROPWN_OPTIONS } from '../../../pages/Library/Media/MediaConfig';
 
 import Button from '@/components/ui/Button';
 import Checkbox from '@/components/ui/forms/Checkbox';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import Modal from '@/components/ui/modals/Modal';
+import { DataTablePagination } from '@/components/ui/table/DataTablePagination';
+import { fetchUsers } from '@/services/userApi';
+import { fetchUserGroups } from '@/services/userGroupApi';
 
 interface UserRow {
+  id: number;
   name: string;
-  type: UserType;
+  type: 'user' | 'group';
   view: boolean;
   edit: boolean;
   delete: boolean;
@@ -67,60 +63,35 @@ interface ShareMediaModalProps {
 }
 
 type OpenSelect = 'owner' | 'filter' | null;
-type UserType = 'user' | 'group';
 
-export default function ShareMediaModal({ openModal, onClose }: ShareMediaModalProps) {
+type OwnerOption = {
+  label: string;
+  value: string;
+};
+
+export default function ShareModal({ openModal, onClose }: ShareMediaModalProps) {
   const { t } = useTranslation();
   const [openSelect, setOpenSelect] = useState<null | OpenSelect>(null);
-  const [user, setUser] = useState(SAMPLE_USER[0]?.label);
+  const [user, setUser] = useState<string | null>(null);
   const [filter, setFilter] = useState('all');
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [ownerOptions, setOwnerOptions] = useState<OwnerOption[]>([]);
+  const [ownerLoading, setOwnerLoading] = useState(false);
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: 25,
   });
 
-  const [pageInput, setPageInput] = useState(String(pagination.pageIndex + 1));
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
     type: false,
   });
 
-  const [tableData, setTableData] = useState<UserRow[]>(
-    SAMPLE_USER.map((u) => ({
-      name: u.label,
-      type: u.type,
-      view: false,
-      edit: false,
-      delete: false,
-    })),
-  );
+  const [tableData, setTableData] = useState<UserRow[]>([]);
+  const [loading, setLoading] = useState(false);
+  const pageSizeOptions = [5, 10, 20, 50, 100];
 
-  useEffect(() => {
-    setPageInput(String(pagination.pageIndex + 1));
-  }, [pagination.pageIndex]);
-
-  const handlePageInputChange = (value: string) => {
-    // allow only digits
-    if (!/^\d*$/.test(value)) return;
-
-    setPageInput(value);
-
-    if (value === '') return;
-
-    const page = Number(value);
-    const pageCount = table.getPageCount();
-
-    if (page < 1) {
-      table.setPageIndex(0);
-    } else if (page > pageCount) {
-      table.setPageIndex(pageCount - 1);
-    } else {
-      table.setPageIndex(page - 1);
-    }
-  };
-
-  const togglePermission = (rowIndex: number, key: keyof Omit<UserRow, 'name'>) => {
+  const togglePermission = (rowIndex: number, key: keyof Omit<UserRow, 'id' | 'name' | 'type'>) => {
     setTableData((prev) =>
       prev.map((row, index) => (index === rowIndex ? { ...row, [key]: !row[key] } : row)),
     );
@@ -197,6 +168,85 @@ export default function ShareMediaModal({ openModal, onClose }: ShareMediaModalP
     getSortedRowModel: getSortedRowModel(),
   });
 
+  useEffect(() => {
+    if (!openModal) return;
+
+    const loadData = async () => {
+      setLoading(true);
+
+      const start = pagination.pageIndex * pagination.pageSize;
+      const length = pagination.pageSize;
+
+      const search = (table.getColumn('name')?.getFilterValue() as string) || '';
+
+      const [usersRes, groupsRes] = await Promise.all([
+        filter !== 'group'
+          ? fetchUsers({
+              start,
+              length,
+              userName: search || undefined,
+            })
+          : Promise.resolve({ rows: [], totalCount: 0 }),
+
+        filter !== 'user'
+          ? fetchUserGroups({
+              start,
+              length,
+              userGroup: search || undefined,
+            })
+          : Promise.resolve({ rows: [], totalCount: 0 }),
+      ]);
+
+      const users: UserRow[] = usersRes.rows.map((u) => ({
+        id: u.userId,
+        name: u.userName,
+        type: 'user',
+        view: false,
+        edit: false,
+        delete: false,
+      }));
+
+      const groups: UserRow[] = groupsRes.rows.map((g) => ({
+        id: g.groupId,
+        name: g.group,
+        type: 'group',
+        view: false,
+        edit: false,
+        delete: false,
+      }));
+
+      setTableData([...users, ...groups]);
+      setLoading(false);
+    };
+
+    loadData();
+  }, [openModal, pagination.pageIndex, pagination.pageSize, filter, table]);
+
+  useEffect(() => {
+    if (!openModal) return;
+
+    const loadOwners = async () => {
+      setOwnerLoading(true);
+
+      try {
+        const res = await fetchUsers({ start: 0, length: 100 });
+
+        const { rows = [] } = res ?? {};
+
+        const options: OwnerOption[] = rows.map((u) => ({
+          label: u.userName,
+          value: String(u.userId),
+        }));
+
+        setOwnerOptions(options);
+      } finally {
+        setOwnerLoading(false);
+      }
+    };
+
+    loadOwners();
+  }, [openModal]);
+
   return (
     <div>
       <Modal
@@ -211,16 +261,16 @@ export default function ShareMediaModal({ openModal, onClose }: ShareMediaModalP
           },
           {
             label: 'Save',
-            // TODO: Add update media function for Save Button
+            // TODO: Implement actual sharing functionality
           },
         ]}
       >
-        <div className="flex flex-col min-h-[60vh] px-8 gap-y-3">
+        <div className="flex flex-col min-h-[60vh] px-8 gap-y-3 py-8">
           <SelectDropdown
             label="Select Owner"
-            value={user}
-            placeholder="Select Owner"
-            options={SAMPLE_USER}
+            value={user as string}
+            placeholder={ownerLoading ? t('Loading...') : t('Select Owner')}
+            options={ownerOptions}
             isOpen={openSelect === 'owner'}
             onToggle={() => setOpenSelect((prev) => (prev === 'owner' ? null : 'owner'))}
             onSelect={(value) => {
@@ -284,7 +334,8 @@ export default function ShareMediaModal({ openModal, onClose }: ShareMediaModalP
               Reset
             </Button>
           </div>
-          <div className="min-h-[400px] overflow-y-auto">
+          {/* TODO: Refactor Table to separate component */}
+          <div className="min-h-[400px] relative overflow-y-auto">
             <table className="w-full border-collapse">
               <thead className="bg-gray-50 sticky top-0 border-b border-gray-200">
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -327,57 +378,37 @@ export default function ShareMediaModal({ openModal, onClose }: ShareMediaModalP
                 ))}
               </thead>
 
-              <tbody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50">
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="p-3 text-sm font-semibold">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              {loading ? (
+                <div className="absolute bg-white w-full h-[200px] center z-50 backdrop-blur-sm animate-in fade-in duration-300">
+                  <div className="flex flex-col items-center">
+                    <Loader2 className="w-8 h-8 animate-spin text-gray-600" />
+                    <span className="mt-2 text-gray-500">{t('Loading...')}</span>
+                  </div>
+                </div>
+              ) : (
+                <tbody>
+                  {table.getRowModel().rows.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="py-10 text-center text-gray-500">
+                        {t('No results found')}
                       </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
+                    </tr>
+                  ) : (
+                    table.getRowModel().rows.map((row) => (
+                      <tr key={row.id} className="hover:bg-gray-50">
+                        {row.getVisibleCells().map((cell) => (
+                          <td key={cell.id} className="p-3 text-sm font-semibold">
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        ))}
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              )}
             </table>
           </div>
-          <div className="flex items-center px-2 py-3">
-            <div className="text-sm text-gray-600 flex items-end border-r border-gray-200 pe-4">
-              {pagination.pageSize} {t('Page')}{' '}
-              <Button
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-                variant="link"
-                className="text-gray-800 disabled:hover:cursor-not-allowed focus:outline-0 ml-2 p-0"
-                rightIcon={ChevronDown}
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-                variant="link"
-                className="text-gray-300 disabled:hover:cursor-not-allowed focus:outline-0 disabled:cursor-not-allowed"
-                rightIcon={ChevronLeft}
-              />
-
-              <input
-                type="text"
-                inputMode="numeric"
-                value={pageInput}
-                className="bg-gray-100 w-[35px] h-[35px] p-1 text-center border-0 rounded-sm disabled:text-gray-400"
-                onChange={(e) => handlePageInputChange(e.target.value)}
-                disabled={table.getPageCount() <= 1}
-              />
-
-              <Button
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-                variant="link"
-                className="text-gray-300 disabled:hover:cursor-not-allowed focus:outline-0 disabled:cursor-not-allowed"
-                rightIcon={ChevronRight}
-              />
-            </div>
-          </div>
+          <DataTablePagination table={table} loading={loading} pageSizeOptions={pageSizeOptions} />
         </div>
       </Modal>
     </div>

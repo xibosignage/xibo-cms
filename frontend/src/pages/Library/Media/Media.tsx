@@ -30,6 +30,8 @@ import { useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useTranslation } from 'react-i18next';
 
+import ShareModal from '../../../components/ui/modals/ShareModal';
+
 import {
   getMediaColumns,
   getBulkActions,
@@ -39,7 +41,6 @@ import {
   ACCEPTED_MIME_TYPES,
 } from './MediaConfig';
 import MediaPreviewer from './components/MediaPreviewer';
-import ShareMediaModal from './components/ShareMediaModal';
 import { UploadProgressDock } from './components/UploadProgressDock';
 import { useMediaData } from './hooks/useMediaData';
 
@@ -444,7 +445,7 @@ export default function Media() {
           data={selectedMedia}
         />
       )}
-      <ShareMediaModal onClose={() => toggleModal('share', false)} openModal={openModal.share} />
+      <ShareModal onClose={() => toggleModal('share', false)} openModal={openModal.share} />
       <UploadProgressDock isModalOpen={isAddModalOpen} />
     </section>
   );
