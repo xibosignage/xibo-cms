@@ -283,7 +283,7 @@ export default function Media() {
 
   const getMediaActions = getMediaItemActions({
     t,
-    onDelete: handleDelete,
+    onDelete: requestDelete,
     onDownload: handleDownload,
     openEditModal,
     onPreview: handlePreviewClick,
