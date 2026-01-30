@@ -268,7 +268,7 @@ export default function ShareMediaModal({ openModal, onClose }: ShareMediaModalP
                   table.getColumn('name')?.setFilterValue(e.target.value);
                   table.resetPageIndex();
                 }}
-                placeholder={t('Search media...')}
+                placeholder={t('Search')}
                 className="py-3 px-3 pl-10 block rounded-lg w-full text-sm border-gray-200 disabled:opacity-50 disabled:pointer-events-none"
               />
             </div>
