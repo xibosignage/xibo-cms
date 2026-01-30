@@ -22,6 +22,12 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
 import {
+  Image as ImageIcon,
+  Film,
+  Music,
+  FileText,
+  Archive,
+  File as FileIcon,
   Edit,
   Download,
   CopyCheck,
@@ -32,9 +38,9 @@ import {
   Trash2,
   MoreVertical,
 } from 'lucide-react';
+import { type ComponentProps, type ElementType } from 'react';
 
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
-import type { ModalAction } from '@/components/ui/modals/Modal';
 import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
 import {
   MediaCell,
@@ -62,6 +68,43 @@ interface ApiTag {
   tagId: number;
   tag: string;
 }
+
+export const getMediaIcon = (mediaType: string) => {
+  const type = mediaType?.toLowerCase();
+
+  switch (type) {
+    case 'image':
+      return ImageIcon;
+    case 'video':
+      return Film;
+    case 'audio':
+      return Music;
+    case 'pdf':
+      return FileText;
+    case 'archive':
+      return Archive;
+    default:
+      return FileIcon;
+  }
+};
+
+export type ActionItem =
+  | {
+      isSeparator: true;
+      label?: never;
+      icon?: never;
+      onClick?: never;
+      variant?: never;
+      isQuickAction?: never;
+    }
+  | {
+      isSeparator?: false | undefined;
+      label: string;
+      icon?: ElementType;
+      onClick?: () => void;
+      variant?: 'default' | 'primary' | 'danger';
+      isQuickAction?: boolean;
+    };
 
 type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
 
@@ -221,23 +264,96 @@ const getStatusTypeFromMediaType = (mediaType: string) => {
   }
 };
 
-interface GetMediaColumnsProps {
+export interface MediaActionsProps {
   t: TFunction;
-  onPreview: (row: Media) => void;
+  onPreview?: (row: Media) => void;
   onDelete: (id: number) => void;
   onDownload: (row: Media) => void;
   openEditModal: (row: Media) => void;
   openShareModal?: () => void;
 }
 
-export const getMediaColumns = ({
+export const getMediaItemActions = ({
   t,
-  onPreview,
   onDelete,
   onDownload,
   openEditModal,
   openShareModal,
-}: GetMediaColumnsProps): ColumnDef<Media>[] => {
+}: MediaActionsProps): ((media: Media) => ActionItem[]) => {
+  return (media: Media) => [
+    // Quick Actions
+    {
+      label: t('Edit'),
+      icon: Edit,
+      onClick: () => openEditModal(media),
+      isQuickAction: true,
+      variant: 'primary' as const,
+    },
+    {
+      label: t('Download'),
+      icon: Download,
+      onClick: () => onDownload(media),
+      isQuickAction: true,
+    },
+
+    // Dropdown Menu Actions
+    {
+      label: t('Edit'),
+      icon: Edit,
+      onClick: () => openEditModal(media),
+    },
+    {
+      label: t('Make a Copy'),
+      icon: CopyCheck,
+      onClick: () => console.log('Make a Copy', media.mediaId),
+    },
+    {
+      label: t('Move'),
+      icon: FolderInput,
+      onClick: () => console.log('Move', media.mediaId),
+    },
+    {
+      label: t('Share'),
+      icon: UserPlus2,
+      onClick: () => openShareModal && openShareModal(),
+    },
+    {
+      label: t('Download'),
+      icon: Download,
+      onClick: () => onDownload(media),
+    },
+    {
+      label: t('Schedule'),
+      icon: CalendarClock,
+      onClick: () => console.log('Schedule', media.mediaId),
+    },
+    {
+      label: t('Details'),
+      icon: Info,
+      onClick: () => console.log('Details', media.mediaId),
+    },
+    { isSeparator: true },
+    {
+      label: t('Enable Stats Collection'),
+      onClick: () => console.log('Enable Stats', media.mediaId),
+    },
+    {
+      label: t('Usage Report'),
+      onClick: () => console.log('Usage Report', media.mediaId),
+    },
+    { isSeparator: true },
+    {
+      label: t('Delete'),
+      icon: Trash2,
+      onClick: () => onDelete(media.mediaId),
+      variant: 'danger' as const,
+    },
+  ];
+};
+
+export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] => {
+  const { t, onPreview } = props;
+  const getActions = getMediaItemActions(props);
   return [
     {
       accessorKey: 'mediaId',
@@ -255,7 +371,7 @@ export const getMediaColumns = ({
           thumb={info.row.original.thumbnail}
           alt={info.row.original.name}
           mediaType={(info.row.original.mediaType as MediaType) || 'other'}
-          onPreview={() => onPreview(info.row.original)}
+          onPreview={() => onPreview?.(info.row.original)}
         />
       ),
     },
@@ -406,75 +522,7 @@ export const getMediaColumns = ({
       cell: ({ row }) => (
         <ActionsCell
           row={row}
-          actions={[
-            // Quick Actions
-            {
-              label: t('Edit'),
-              icon: Edit,
-              onClick: () => openEditModal(row.original),
-              isQuickAction: true,
-              variant: 'primary',
-            },
-            {
-              label: t('Download'),
-              icon: Download,
-              onClick: () => onDownload(row.original),
-              isQuickAction: true,
-            },
-
-            // Dropdown Menu Actions
-            {
-              label: t('Edit'),
-              icon: Edit,
-              onClick: () => openEditModal(row.original),
-            },
-            {
-              label: t('Make a Copy'),
-              icon: CopyCheck,
-              onClick: () => console.log('Make a Copy', row.original.mediaId),
-            },
-            {
-              label: t('Move'),
-              icon: FolderInput,
-              onClick: () => console.log('Move', row.original.mediaId),
-            },
-            {
-              label: t('Share'),
-              icon: UserPlus2,
-              onClick: openShareModal,
-            },
-            {
-              label: t('Download'),
-              icon: Download,
-              onClick: () => onDownload(row.original),
-            },
-            {
-              label: t('Schedule'),
-              icon: CalendarClock,
-              onClick: () => console.log('Schedule', row.original.mediaId),
-            },
-            {
-              label: t('Details'),
-              icon: Info,
-              onClick: () => console.log('Details', row.original.mediaId),
-            },
-            { isSeparator: true },
-            {
-              label: t('Enable Stats Collection'),
-              onClick: () => console.log('Enable Stats', row.original.mediaId),
-            },
-            {
-              label: t('Usage Report'),
-              onClick: () => console.log('Usage Report', row.original.mediaId),
-            },
-            { isSeparator: true },
-            {
-              label: t('Delete'),
-              icon: Trash2,
-              onClick: () => onDelete(row.original.mediaId),
-              variant: 'danger',
-            },
-          ]}
+          actions={getActions(row.original) as ComponentProps<typeof ActionsCell>['actions']}
         />
       ),
     },
@@ -526,32 +574,3 @@ export const getBulkActions = ({
     },
   ];
 };
-
-interface GetModalActionsProps {
-  t: TFunction;
-  onCancel: () => void;
-  onUpload: () => void;
-  isUploading: boolean;
-  hasQueueItems: boolean;
-}
-
-export const getAddModalActions = ({
-  t,
-  onCancel,
-  onUpload,
-  isUploading,
-  hasQueueItems,
-}: GetModalActionsProps): ModalAction[] => [
-  {
-    label: t('Cancel'),
-    onClick: onCancel,
-    variant: 'secondary',
-    disabled: isUploading,
-  },
-  {
-    label: isUploading ? t('Uploading...') : t('Start Upload'),
-    onClick: onUpload,
-    variant: 'primary',
-    disabled: isUploading || !hasQueueItems,
-  },
-];

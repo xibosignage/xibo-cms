@@ -19,9 +19,11 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { Image as ImageIcon, Film, Music, FileText, Archive, File, Play } from 'lucide-react';
+import { Play } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
+import { getMediaIcon } from '@/pages/Library/Media/MediaConfig';
 
 interface MediaProps {
   thumb?: string;
@@ -29,23 +31,6 @@ interface MediaProps {
   mediaType: 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
   onPreview: () => void;
 }
-
-const getIcon = (type: MediaProps['mediaType']) => {
-  switch (type) {
-    case 'image':
-      return ImageIcon;
-    case 'video':
-      return Film;
-    case 'audio':
-      return Music;
-    case 'pdf':
-      return FileText;
-    case 'archive':
-      return Archive;
-    default:
-      return File;
-  }
-};
 
 export function MediaCell({ thumb, alt, mediaType, onPreview }: MediaProps) {
   const { t } = useTranslation();
@@ -58,7 +43,7 @@ export function MediaCell({ thumb, alt, mediaType, onPreview }: MediaProps) {
 
   const isPlayable = mediaType === 'video' || mediaType === 'audio';
   const showThumbnail = thumb && !hasError;
-  const Icon = getIcon(mediaType);
+  const Icon = getMediaIcon(mediaType);
 
   return (
     <div className="flex w-full justify-center items-center">

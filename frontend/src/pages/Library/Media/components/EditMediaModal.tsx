@@ -19,13 +19,12 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { LucideIcon } from 'lucide-react';
-import { Image, Film, Music, FileText, Archive, File, HelpCircle, Loader2 } from 'lucide-react';
+import { HelpCircle, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Modal from '../../../../components/ui/modals/Modal';
-import { MEDIA_FORM_OPTIONS } from '../MediaConfig';
+import { getMediaIcon, MEDIA_FORM_OPTIONS } from '../MediaConfig';
 
 import Button from '@/components/ui/Button';
 import Checkbox from '@/components/ui/forms/Checkbox';
@@ -36,7 +35,7 @@ import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TagInput from '@/components/ui/forms/TagInput';
 import { updateMedia } from '@/services/mediaApi';
-import type { Media, MediaType } from '@/types/media';
+import type { Media } from '@/types/media';
 import type { Tag } from '@/types/tag';
 
 interface EditMediaModalProps {
@@ -60,23 +59,6 @@ type MediaDraft = {
 };
 
 type OpenSelect = 'folder' | 'orientation' | 'expiry' | 'enableStat' | null;
-
-const getIcon = (type: MediaType): LucideIcon => {
-  switch (type) {
-    case 'image':
-      return Image;
-    case 'video':
-      return Film;
-    case 'audio':
-      return Music;
-    case 'pdf':
-      return FileText;
-    case 'archive':
-      return Archive;
-    default:
-      return File;
-  }
-};
 
 function expiryToDateTime(expiry?: ExpiryValue): string | undefined {
   if (!expiry) return undefined;
@@ -152,7 +134,7 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
     updateInLayouts: data.updateInLayouts,
   }));
 
-  const Icon = getIcon(data.mediaType);
+  const Icon = getMediaIcon(data.mediaType);
 
   const toggleFolder = () => setOpenSelect((prev) => (prev === 'folder' ? null : 'folder'));
 

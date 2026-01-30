@@ -27,6 +27,7 @@ import {
   type SortingState,
   type PaginationState,
   type OnChangeFn,
+  type Row,
   type RowSelectionState,
   type ColumnPinningState,
   type Column,
@@ -65,6 +66,9 @@ interface DataTableProps<TData, TValue> {
     columnVisibility?: VisibilityState;
   };
   onRefresh?: () => void;
+  viewMode?: 'table' | 'grid';
+  onViewModeChange?: (mode: 'table' | 'grid') => void;
+  getRowId?: (originalRow: TData, index: number, parent?: Row<TData>) => string;
 }
 
 const getCommonPinningStyles = <TData, TValue>(column: Column<TData, TValue>): CSSProperties => {
@@ -108,6 +112,9 @@ export function DataTable<TData, TValue>({
   initialState,
   enableSelection = true,
   onRefresh,
+  viewMode,
+  onViewModeChange,
+  getRowId,
 }: DataTableProps<TData, TValue>) {
   const { t } = useTranslation();
 
@@ -168,6 +175,7 @@ export function DataTable<TData, TValue>({
     manualSorting: true,
     manualFiltering: true,
     getCoreRowModel: getCoreRowModel(),
+    getRowId: getRowId,
   });
 
   // TODO: Check if format is the intended
@@ -244,6 +252,8 @@ export function DataTable<TData, TValue>({
             onCSVExport={handleExportCSV}
             onPrint={handlePrint}
             columnVisibility={columnVisibility}
+            viewMode={viewMode}
+            onViewModeChange={onViewModeChange}
           />
         </div>
       </div>

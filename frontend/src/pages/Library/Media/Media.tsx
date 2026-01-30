@@ -32,6 +32,7 @@ import { useTranslation } from 'react-i18next';
 
 import ShareModal from '../../../components/ui/modals/ShareModal';
 
+import { getMediaItemActions } from './MediaConfig';
 import {
   getMediaColumns,
   getBulkActions,
@@ -40,6 +41,7 @@ import {
   type MediaFilterInput,
   ACCEPTED_MIME_TYPES,
 } from './MediaConfig';
+import MediaCard from './components/MediaCard';
 import MediaPreviewer from './components/MediaPreviewer';
 import { UploadProgressDock } from './components/UploadProgressDock';
 import { useMediaData } from './hooks/useMediaData';
@@ -51,6 +53,7 @@ import { FolderSelect } from '@/components/ui/FolderSelect_TOREMOVE';
 import { notify } from '@/components/ui/Notification';
 import TabNav from '@/components/ui/TabNav';
 import Modal from '@/components/ui/modals/Modal';
+import { DataGrid } from '@/components/ui/table/DataGrid';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useUploadContext } from '@/context/UploadContext';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -73,6 +76,7 @@ export default function Media() {
   const [openFilter, setOpenFilter] = useState(false);
   const [previewItem, setPreviewItem] = useState<Media | null>(null);
   const [filterInputs, setFilterInput] = useState<MediaFilterInput>(INITIAL_FILTER_STATE);
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
 
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [selectedFolderId, setSelectedFolderId] = useState(1);
@@ -114,6 +118,8 @@ export default function Media() {
   }, [data]);
 
   const selectedMedia = mediaList.find((m) => m.mediaId === selectedMediaId) ?? null;
+
+  const getRowId = (row: Media) => row.mediaId.toString();
 
   // Event handlers
   const handleRefresh = () => {
@@ -256,6 +262,14 @@ export default function Media() {
     },
   ];
 
+  const getMediaActions = getMediaItemActions({
+    t,
+    onDelete: handleDelete,
+    onDownload: handleDownload,
+    openEditModal,
+    onPreview: handlePreviewClick,
+  });
+
   // TODO: Temporary placeholder folders
   const tempFolders = [
     { id: 1, name: 'Root Folder' },
@@ -351,42 +365,72 @@ export default function Media() {
         </div>
       )}
 
-      <DataTable
-        columns={columns}
-        data={mediaList}
-        pageCount={pageCount}
-        pagination={pagination}
-        onPaginationChange={setPagination}
-        sorting={sorting}
-        onSortingChange={setSorting}
-        globalFilter={globalFilter}
-        onGlobalFilterChange={setGlobalFilter}
-        loading={isFetching}
-        rowSelection={rowSelection}
-        onRowSelectionChange={setRowSelection}
-        onRefresh={handleRefresh}
-        columnPinning={{
-          left: ['tableSelection'],
-          right: ['tableActions'],
-        }}
-        initialState={{
-          columnVisibility: {
-            mediaId: false,
-            durationSeconds: false,
-            fileSize: false,
-            createdDt: false,
-            modifiedDt: false,
-            groupsWithPermissions: false,
-            revised: false,
-            released: false,
-            fileName: false,
-            expires: false,
-            enableStat: false,
-            ownerId: false,
-          },
-        }}
-        bulkActions={bulkActions}
-      />
+      {viewMode === 'table' ? (
+        <DataTable
+          columns={columns}
+          data={mediaList}
+          pageCount={pageCount}
+          pagination={pagination}
+          onPaginationChange={setPagination}
+          sorting={sorting}
+          onSortingChange={setSorting}
+          globalFilter={globalFilter}
+          onGlobalFilterChange={setGlobalFilter}
+          loading={isFetching}
+          rowSelection={rowSelection}
+          onRowSelectionChange={setRowSelection}
+          onRefresh={handleRefresh}
+          columnPinning={{
+            left: ['tableSelection'],
+            right: ['tableActions'],
+          }}
+          initialState={{
+            columnVisibility: {
+              mediaId: false,
+              durationSeconds: false,
+              fileSize: false,
+              createdDt: false,
+              modifiedDt: false,
+              groupsWithPermissions: false,
+              revised: false,
+              released: false,
+              fileName: false,
+              expires: false,
+              enableStat: false,
+              ownerId: false,
+            },
+          }}
+          bulkActions={bulkActions}
+          viewMode="table"
+          onViewModeChange={setViewMode}
+          getRowId={getRowId}
+        />
+      ) : (
+        <DataGrid
+          data={mediaList}
+          pageCount={pageCount}
+          pagination={pagination}
+          onPaginationChange={setPagination}
+          rowSelection={rowSelection}
+          onRowSelectionChange={setRowSelection}
+          loading={isFetching}
+          onRefresh={handleRefresh}
+          bulkActions={bulkActions}
+          viewMode="grid"
+          onViewModeChange={setViewMode}
+          getRowId={getRowId}
+          renderCard={(media, isSelected, toggleSelect) => (
+            <MediaCard
+              key={media.mediaId}
+              media={media}
+              isSelected={isSelected}
+              onToggleSelect={toggleSelect}
+              onPreview={handlePreviewClick}
+              actions={getMediaActions(media)}
+            />
+          )}
+        />
+      )}
 
       <Modal
         isOpen={isAddModalOpen}
