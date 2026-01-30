@@ -8,7 +8,8 @@ import Modal from '@/components/ui/modals/Modal';
 interface DeleteMediaModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onDelete: () => void;
+  onDelete: (options: { allLayouts: boolean; purgeList: boolean }) => void;
+  itemCount: number;
   fileName?: string;
   error?: string | null;
   isLoading?: boolean;
@@ -20,10 +21,12 @@ export default function DeleteMediaModal({
   onDelete,
   fileName,
   isLoading,
+  itemCount,
+  error,
 }: DeleteMediaModalProps) {
   const { t } = useTranslation();
   const [checkedToDelete, setCheckedToDelete] = useState({
-    allLayouts: true,
+    allLayouts: false,
     purgeList: false,
   });
   return (
@@ -32,13 +35,16 @@ export default function DeleteMediaModal({
       onClose={onClose}
       actions={[
         {
-          label: t('No, Keep it'),
+          label: t('No'),
           onClick: onClose,
           variant: 'secondary',
+          className: 'px-6',
         },
         {
-          label: isLoading ? t('Deleting…') : t('Yes, Delete'),
-          onClick: onDelete,
+          label: isLoading ? t('Deleting…') : t('Yes'),
+          onClick: () => onDelete(checkedToDelete),
+          disabled: isLoading,
+          className: 'px-6',
         },
       ]}
       size="md"
@@ -51,20 +57,40 @@ export default function DeleteMediaModal({
             </div>
           </div>
           <h2 className="text-center text-lg font-semibold mb-2 text-red-800">
-            {t('Delete File?')}
+            {itemCount === 1 ? t('Delete File?') : t('Delete Files?')}
           </h2>
         </div>
         <p className="text-center text-gray-500">
-          {t(`Are you sure you want to delete `)} <strong>{fileName}?</strong>
+          {itemCount === 1 ? (
+            <>
+              {t('Are you sure you want to delete ')}
+              <strong>{fileName}</strong>?
+            </>
+          ) : (
+            <>
+              {t('Are you sure you want to delete ')}
+              <strong>{itemCount}</strong> {t('files')}?
+            </>
+          )}
         </p>
+
         <span className="center gap-0.5">
           <AlertTriangle size={12} />
           <p className="text-[12px] font-medium">
-            {t(
-              'This item will be removed from all published layouts and connected displays immediately.',
-            )}
+            {itemCount === 1
+              ? t(
+                  'This item will be removed from all published layouts and connected displays immediately.',
+                )
+              : t(
+                  'These items will be removed from all published layouts and connected displays immediately.',
+                )}
           </p>
         </span>
+        {error && (
+          <div className="mt-2 text-center">
+            <p className="text-sm font-medium text-red-600">{error}</p>
+          </div>
+        )}
         <div className="p-2.5 flex flex-col gap-[22px]">
           <Checkbox
             id="allLayouts"

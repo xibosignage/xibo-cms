@@ -87,7 +87,7 @@ export default function Media() {
     delete: false,
   });
 
-  const [mediaToDelete, setMediaToDelete] = useState<Media | null>(null);
+  const [itemsToDelete, setItemsToDelete] = useState<Media[]>([]);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -159,43 +159,44 @@ export default function Media() {
     const media = mediaList.find((m) => m.mediaId === id);
     if (!media) return;
 
-    setMediaToDelete(media);
+    setItemsToDelete([media]);
     setDeleteError(null);
     toggleModal('delete', true);
   };
 
   const confirmDelete = async () => {
-    if (!mediaToDelete || isDeleting) return;
+    if (itemsToDelete.length === 0 || isDeleting) return;
 
     try {
       setIsDeleting(true);
-      await deleteMedia(mediaToDelete.mediaId);
+
+      const results = await Promise.allSettled(
+        itemsToDelete.map((item) => deleteMedia(item.mediaId)),
+      );
+
+      const failed = results.filter((r) => r.status === 'rejected');
+
+      if (failed.length > 0) {
+        setDeleteError(`${failed.length} item(s) could not be deleted because they are in use.`);
+      }
+
+      setRowSelection({});
       handleRefresh();
       toggleModal('delete', false);
     } catch (error) {
-      console.error('Delete media error', error);
+      console.error(error);
+      setDeleteError('Some selected items are in use and cannot be deleted.');
     } finally {
       setIsDeleting(false);
     }
   };
 
-  const handleBulkDelete = async (selectedItems: Media[]) => {
-    if (selectedItems.length === 0) {
-      return;
-    }
+  const handleBulkDelete = (selectedItems: Media[]) => {
+    if (selectedItems.length === 0) return;
 
-    const message = `${t('Are you sure you want to delete these items?')}\n(${selectedItems.length} selected)`;
-    if (window.confirm(message)) {
-      try {
-        await Promise.all(selectedItems.map((item) => deleteMedia(item.mediaId)));
-        setRowSelection({});
-        handleRefresh();
-      } catch (err) {
-        console.error('Bulk delete error', err);
-        alert(t('Some items could not be deleted. Check if they are in use.'));
-        handleRefresh();
-      }
-    }
+    setItemsToDelete(selectedItems);
+    setDeleteError(null);
+    toggleModal('delete', true);
   };
 
   const handleDownload = async (row: Media) => {
@@ -514,7 +515,8 @@ export default function Media() {
         isOpen={openModal.delete}
         onClose={() => toggleModal('delete', false)}
         onDelete={confirmDelete}
-        fileName={mediaToDelete?.name}
+        itemCount={itemsToDelete.length}
+        fileName={itemsToDelete.length === 1 ? itemsToDelete[0]?.name : undefined}
         error={deleteError}
         isLoading={isDeleting}
       />
