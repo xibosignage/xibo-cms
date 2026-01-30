@@ -155,7 +155,7 @@ export default function Media() {
     addFiles(files, selectedFolderId);
   };
 
-  const requestDelete = (id: number) => {
+  const handleDelete = (id: number) => {
     const media = mediaList.find((m) => m.mediaId === id);
     if (!media) return;
 
@@ -253,7 +253,7 @@ export default function Media() {
   const columns = getMediaColumns({
     t,
     onPreview: handlePreviewClick,
-    onDelete: requestDelete,
+    onDelete: handleDelete,
     onDownload: handleDownload,
     openEditModal,
     openShareModal: () => toggleModal('share', true),
@@ -283,7 +283,7 @@ export default function Media() {
 
   const getMediaActions = getMediaItemActions({
     t,
-    onDelete: requestDelete,
+    onDelete: handleDelete,
     onDownload: handleDownload,
     openEditModal,
     onPreview: handlePreviewClick,
