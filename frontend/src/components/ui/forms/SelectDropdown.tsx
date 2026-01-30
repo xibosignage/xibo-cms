@@ -20,7 +20,9 @@
  */
 
 import { ChevronDown } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { twMerge } from 'tailwind-merge';
 export type SelectOption = {
   label: string;
   value: string;
@@ -37,6 +39,11 @@ interface SelectDropdownProps {
   onToggle: () => void;
   onSelect: (value: string) => void;
   helper?: string;
+  addLeftLabel?: boolean;
+  leftLabelContent?: ReactNode;
+  optionLabel?: string;
+  addOptionAvatar?: boolean;
+  className?: string;
 }
 
 export default function SelectDropdown({
@@ -48,18 +55,28 @@ export default function SelectDropdown({
   onToggle,
   onSelect,
   helper,
+  addLeftLabel,
+  leftLabelContent,
+  optionLabel,
+  className,
+  addOptionAvatar,
 }: SelectDropdownProps) {
   const { t } = useTranslation();
 
   const selectedLabel = options.find((o) => o.value === value)?.label ?? '';
 
   return (
-    <div className="relative overflow-visible">
+    <div className={twMerge('relative overflow-visible', className)}>
       <label className="text-xs font-semibold text-gray-500">{t(label)}</label>
       <div
-        className="w-full border border-gray-200 rounded-lg flex items-center cursor-pointer"
+        className="w-full border bg-white border-gray-200 rounded-lg flex items-center cursor-pointer max-h-[45px]"
         onClick={onToggle}
       >
+        {addLeftLabel && (
+          <div className="p-3 border-r text-sm border-gray-200 text-gray-500">
+            {leftLabelContent || t('My files')}
+          </div>
+        )}
         <span className="p-3 flex-1 text-sm capitalize">{selectedLabel || t(placeholder)}</span>
         <span className="p-3 text-gray-500">
           <ChevronDown size={14} />
@@ -67,18 +84,28 @@ export default function SelectDropdown({
       </div>
 
       <div
-        className={`absolute top-[75px] w-full bg-white shadow-md rounded-lg overflow-clip transition-all duration-150 ease-in-out z-50
+        className={`absolute top-[70px] w-full bg-white shadow-md rounded-lg overflow-clip transition-all duration-150 border border-gray-200 ease-in-out z-50
           ${isOpen ? 'opacity-100 max-h-[300px]' : 'opacity-0 max-h-0'}
         `}
       >
+        {optionLabel && (
+          <span className="bg-gray-100 p-2 text-sm font-semibold text-gray-500 uppercase w-full flex">
+            {t(optionLabel)}
+          </span>
+        )}
         <div className="flex flex-col p-2 text-sm">
           {options.map((option) => (
             <button
               key={option.value}
               type="button"
-              className="text-left p-2 rounded-lg hover:bg-gray-100 font-medium"
+              className="text-left p-2 rounded-lg hover:bg-gray-100 font-medium flex gap-2 items-center cursor-pointer"
               onClick={() => onSelect(option.value)}
             >
+              {addOptionAvatar && (
+                <div className="bg-xibo-blue-100 h-[26px] w-[26px] text-[12px] center rounded-full text-xibo-blue-800 font-semibold">
+                  {option.label.slice(0, 1)}
+                </div>
+              )}
               {t(option.label)}
             </button>
           ))}

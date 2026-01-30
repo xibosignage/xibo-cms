@@ -55,7 +55,7 @@ export default function Checkbox({
           classNameInput,
         )}
       />
-      <div className="flex flex-col ms-3">
+      <div className={twMerge('flex flex-col', label ? 'ms-3' : '')}>
         <span className="text-sm font-semibold">{title}</span>
         <label
           htmlFor={id}
