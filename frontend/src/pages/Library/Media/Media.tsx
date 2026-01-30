@@ -30,6 +30,7 @@ import { useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useTranslation } from 'react-i18next';
 
+import DeleteMediaModal from '../../../components/ui/modals/DeleteMediaModal';
 import ShareModal from '../../../components/ui/modals/ShareModal';
 
 import { getMediaItemActions } from './MediaConfig';
@@ -80,12 +81,16 @@ export default function Media() {
 
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [selectedFolderId, setSelectedFolderId] = useState(1);
-
-  // Will need to add more modals later
   const [openModal, setOpenModal] = useState({
     edit: false,
     share: false,
+    delete: false,
   });
+
+  const [mediaToDelete, setMediaToDelete] = useState<Media | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const [selectedMediaId, setSelectedMediaId] = useState<number | null>(null);
 
   const debouncedFilter = useDebounce(globalFilter, 500);
@@ -150,13 +155,27 @@ export default function Media() {
     addFiles(files, selectedFolderId);
   };
 
-  const handleDelete = async (id: number) => {
+  const requestDelete = (id: number) => {
+    const media = mediaList.find((m) => m.mediaId === id);
+    if (!media) return;
+
+    setMediaToDelete(media);
+    setDeleteError(null);
+    toggleModal('delete', true);
+  };
+
+  const confirmDelete = async () => {
+    if (!mediaToDelete || isDeleting) return;
+
     try {
-      await deleteMedia(id);
+      setIsDeleting(true);
+      await deleteMedia(mediaToDelete.mediaId);
       handleRefresh();
-    } catch (err) {
-      console.error('Failed to delete media!', err);
-      alert(t('Failed to delete media!'));
+      toggleModal('delete', false);
+    } catch (error) {
+      console.error('Delete media error', error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -234,7 +253,7 @@ export default function Media() {
   const columns = getMediaColumns({
     t,
     onPreview: handlePreviewClick,
-    onDelete: handleDelete,
+    onDelete: requestDelete,
     onDownload: handleDownload,
     openEditModal,
     openShareModal: () => toggleModal('share', true),
@@ -491,6 +510,14 @@ export default function Media() {
       )}
       <ShareModal onClose={() => toggleModal('share', false)} openModal={openModal.share} />
       <UploadProgressDock isModalOpen={isAddModalOpen} />
+      <DeleteMediaModal
+        isOpen={openModal.delete}
+        onClose={() => toggleModal('delete', false)}
+        onDelete={confirmDelete}
+        fileName={mediaToDelete?.name}
+        error={deleteError}
+        isLoading={isDeleting}
+      />
     </section>
   );
 }

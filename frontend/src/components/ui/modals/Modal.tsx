@@ -40,7 +40,7 @@ export interface ModalAction {
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  title: string;
+  title?: string;
   children: React.ReactNode;
   actions?: ModalAction[];
   size?: 'sm' | 'md' | 'lg';
@@ -88,9 +88,11 @@ export default function Modal({
         )}
       >
         {/* Header */}
-        <div className="shrink-0 p-8 pb-3">
-          <div className="text-lg font-semibold">{title}</div>
-        </div>
+        {title && (
+          <div className="shrink-0 p-8 pb-3">
+            <div className="text-lg font-semibold">{title}</div>
+          </div>
+        )}
 
         {/* Body */}
         <div
