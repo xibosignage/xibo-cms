@@ -192,6 +192,49 @@ export const ACCEPTED_MIME_TYPES = {
   'video/x-ms-wmv': ['.wmv'],
 };
 
+type ShareUserType = 'user' | 'group';
+
+type ShareUser = {
+  label: string;
+  value: string;
+  type: ShareUserType;
+};
+
+export const SAMPLE_USER: ShareUser[] = [
+  { label: 'User 1', value: '1', type: 'user' },
+  { label: 'User 2', value: '2', type: 'user' },
+  { label: 'User 3', value: '3', type: 'user' },
+  { label: 'User 4', value: '4', type: 'user' },
+  { label: 'User 5', value: '5', type: 'user' },
+  { label: 'User 6', value: '6', type: 'user' },
+  { label: 'User 7', value: '7', type: 'user' },
+  { label: 'User 8', value: '8', type: 'user' },
+  { label: 'User 9', value: '9', type: 'user' },
+  { label: 'User 10', value: '10', type: 'user' },
+  { label: 'User 11', value: '11', type: 'user' },
+  { label: 'User 12', value: '12', type: 'user' },
+  { label: 'User 13', value: '13', type: 'user' },
+  { label: 'User 14', value: '14', type: 'user' },
+  { label: 'User 15', value: '15', type: 'user' },
+  { label: 'User 16', value: '16', type: 'user' },
+  { label: 'Group A', value: 'g1', type: 'group' },
+  { label: 'Group B', value: 'g2', type: 'group' },
+  { label: 'Group C', value: 'g3', type: 'group' },
+  { label: 'Group D', value: 'g4', type: 'group' },
+  { label: 'Group E', value: 'g5', type: 'group' },
+  { label: 'Group F', value: 'g6', type: 'group' },
+  { label: 'Group G', value: 'g7', type: 'group' },
+  { label: 'Group H', value: 'g8', type: 'group' },
+  { label: 'Group I', value: 'g9', type: 'group' },
+  { label: 'Group J', value: 'g10', type: 'group' },
+];
+
+export const FILTER_DROPWN_OPTIONS = [
+  { label: 'All', value: 'all' },
+  { label: 'User', value: 'user' },
+  { label: 'Group', value: 'group' },
+];
+
 const formatDuration = (seconds: number) => {
   if (!seconds) return '-';
   return new Date(seconds * 1000).toISOString().slice(11, 19);
@@ -221,6 +264,7 @@ interface GetMediaColumnsProps {
   onDelete: (id: number) => void;
   onDownload: (row: Media) => void;
   openEditModal: (row: Media) => void;
+  openShareModal?: () => void;
 }
 
 export const getMediaColumns = ({
@@ -229,6 +273,7 @@ export const getMediaColumns = ({
   onDelete,
   onDownload,
   openEditModal,
+  openShareModal,
 }: GetMediaColumnsProps): ColumnDef<Media>[] => {
   return [
     {
@@ -433,7 +478,7 @@ export const getMediaColumns = ({
             {
               label: t('Share'),
               icon: UserPlus2,
-              onClick: () => console.log('Share', row.original.mediaId),
+              onClick: openShareModal,
             },
             {
               label: t('Download'),

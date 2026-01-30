@@ -39,6 +39,7 @@ import {
   ACCEPTED_MIME_TYPES,
 } from './MediaConfig';
 import MediaPreviewer from './components/MediaPreviewer';
+import ShareMediaModal from './components/ShareMediaModal';
 import { UploadProgressDock } from './components/UploadProgressDock';
 import { useMediaData } from './hooks/useMediaData';
 
@@ -229,6 +230,7 @@ export default function Media() {
     onDelete: handleDelete,
     onDownload: handleDownload,
     openEditModal,
+    openShareModal: () => toggleModal('share', true),
   });
 
   const bulkActions = getBulkActions({
@@ -442,6 +444,7 @@ export default function Media() {
           data={selectedMedia}
         />
       )}
+      <ShareMediaModal onClose={() => toggleModal('share', false)} openModal={openModal.share} />
       <UploadProgressDock isModalOpen={isAddModalOpen} />
     </section>
   );
