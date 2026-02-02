@@ -120,81 +120,14 @@ class UserGroup extends Base
     function grid(Request $request, Response $response)
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
-        $filterBy = [
-            'groupId' => $sanitizedQueryParams->getInt('userGroupId'),
-            'group' => $sanitizedQueryParams->getString('userGroup'),
-            'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
-            'logicalOperatorName' => $sanitizedQueryParams->getString('logicalOperatorName'),
-            'isUserSpecific' => 0,
-            'userIdMember' => $sanitizedQueryParams->getInt('userIdMember'),
-        ];
 
         $groups = $this->userGroupFactory->query(
             $this->gridRenderSort($sanitizedQueryParams),
-            $this->gridRenderFilter($filterBy, $sanitizedQueryParams)
+            $this->getUserGroupFilters($sanitizedQueryParams)
         );
 
         foreach ($groups as $group) {
-            /* @var \Xibo\Entity\UserGroup $group */
-
-            $group->setUnmatchedProperty(
-                'libraryQuotaFormatted',
-                ByteFormatter::format($group->libraryQuota * 1024)
-            );
-
-            if ($this->isApi($request) || $this->isJson($request)) {
-                continue;
-            }
-
-            // we only want to show certain buttons, depending on the user logged in
-            if ($this->getUser()->featureEnabled('usergroup.modify')
-                && $this->getUser()->checkEditable($group)
-            ) {
-                // Edit
-                $group->buttons[] = array(
-                    'id' => 'usergroup_button_edit',
-                    'url' => $this->urlFor($request, 'group.edit.form', ['id' => $group->groupId]),
-                    'text' => __('Edit')
-                );
-
-                if ($this->getUser()->isSuperAdmin()) {
-                    // Delete
-                    $group->buttons[] = array(
-                        'id' => 'usergroup_button_delete',
-                        'url' => $this->urlFor($request, 'group.delete.form', ['id' => $group->groupId]),
-                        'text' => __('Delete')
-                    );
-
-                    $group->buttons[] = ['divider' => true];
-
-                    // Copy
-                    $group->buttons[] = array(
-                        'id' => 'usergroup_button_copy',
-                        'url' => $this->urlFor($request, 'group.copy.form', ['id' => $group->groupId]),
-                        'text' => __('Copy')
-                    );
-
-                    $group->buttons[] = ['divider' => true];
-                }
-
-                // Members
-                $group->buttons[] = array(
-                    'id' => 'usergroup_button_members',
-                    'url' => $this->urlFor($request, 'group.members.form', ['id' => $group->groupId]),
-                    'text' => __('Members')
-                );
-
-                if ($this->getUser()->isSuperAdmin()) {
-                    // Features
-                    $group->buttons[] = ['divider' => true];
-                    $group->buttons[] = array(
-                        'id' => 'usergroup_button_page_security',
-                        'url' => $this->urlFor($request, 'group.acl.form', ['id' => $group->groupId]),
-                        'text' => __('Features'),
-                        'title' => __('Turn Features on/off for this User')
-                    );
-                }
-            }
+            $this->decorateUserGroupProperties($request, $group);
         }
 
         $this->getState()->template = 'grid';
@@ -1093,5 +1026,94 @@ class UserGroup extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Get the user group filters
+     * @param $sanitizedQueryParams
+     * @return array
+     */
+    private function getUserGroupFilters($sanitizedQueryParams): array
+    {
+        return $this->gridRenderFilter([
+            'groupId' => $sanitizedQueryParams->getInt('userGroupId'),
+            'group' => $sanitizedQueryParams->getString('userGroup'),
+            'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
+            'logicalOperatorName' => $sanitizedQueryParams->getString('logicalOperatorName'),
+            'isUserSpecific' => 0,
+            'userIdMember' => $sanitizedQueryParams->getInt('userIdMember'),
+        ], $sanitizedQueryParams);
+    }
+
+    /**
+     * Decorate user group properties
+     * @param $request
+     * @param $group
+     */
+    private function decorateUserGroupProperties($request, $group)
+    {
+        $group->setUnmatchedProperty(
+            'libraryQuotaFormatted',
+            ByteFormatter::format($group->libraryQuota * 1024)
+        );
+
+        $group->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($group));
+
+        $group->setUnmatchedProperty('isSuperAdmin', $this->getUser()->isSuperAdmin());
+
+        // TODO: Remove buttons
+        if ($this->isApi($request) || $this->isJson($request)) {
+            return;
+        }
+
+        // we only want to show certain buttons, depending on the user logged in
+        if ($this->getUser()->featureEnabled('usergroup.modify')
+            && $this->getUser()->checkEditable($group)
+        ) {
+            // Edit
+            $group->buttons[] = array(
+                'id' => 'usergroup_button_edit',
+                'url' => $this->urlFor($request, 'group.edit.form', ['id' => $group->groupId]),
+                'text' => __('Edit')
+            );
+
+            if ($this->getUser()->isSuperAdmin()) {
+                // Delete
+                $group->buttons[] = array(
+                    'id' => 'usergroup_button_delete',
+                    'url' => $this->urlFor($request, 'group.delete.form', ['id' => $group->groupId]),
+                    'text' => __('Delete')
+                );
+
+                $group->buttons[] = ['divider' => true];
+
+                // Copy
+                $group->buttons[] = array(
+                    'id' => 'usergroup_button_copy',
+                    'url' => $this->urlFor($request, 'group.copy.form', ['id' => $group->groupId]),
+                    'text' => __('Copy')
+                );
+
+                $group->buttons[] = ['divider' => true];
+            }
+
+            // Members
+            $group->buttons[] = array(
+                'id' => 'usergroup_button_members',
+                'url' => $this->urlFor($request, 'group.members.form', ['id' => $group->groupId]),
+                'text' => __('Members')
+            );
+
+            if ($this->getUser()->isSuperAdmin()) {
+                // Features
+                $group->buttons[] = ['divider' => true];
+                $group->buttons[] = array(
+                    'id' => 'usergroup_button_page_security',
+                    'url' => $this->urlFor($request, 'group.acl.form', ['id' => $group->groupId]),
+                    'text' => __('Features'),
+                    'title' => __('Turn Features on/off for this User')
+                );
+            }
+        }
     }
 }

@@ -2870,23 +2870,6 @@ class Library extends Base
     }
 
     /**
-     * Get user permissions for media items
-     * @param $media
-     * @return array
-     */
-    private function getUserPermissions($media): array
-    {
-        $user = $this->getUser();
-
-        return [
-            'view'      => $user->checkViewable($media),
-            'edit'      => $user->checkEditable($media),
-            'delete'    => $user->checkDeleteable($media),
-            'modify'    => $user->checkPermissionsModifyable($media),
-        ];
-    }
-
-    /**
      * Decorate media properties
      * @param $request
      * @param $parsedQueryParams
@@ -2926,9 +2909,7 @@ class Library extends Base
         }
 
         // User permissions
-        $userPermissions = $this->getUserPermissions($media);
-
-        $media->setUnmatchedProperty('userPermissions', $userPermissions);
+        $media->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($media));
 
         return $media;
     }

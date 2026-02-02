@@ -298,124 +298,14 @@ class User extends Base
     {
         $sanitizedParams = $this->getSanitizer($request->getQueryParams());
 
-        // Filter our users?
-        $filterBy = [
-            'userId' => $sanitizedParams->getInt('userId'),
-            'userTypeId' => $sanitizedParams->getInt('userTypeId'),
-            'userName' => $sanitizedParams->getString('userName'),
-            'firstName' => $sanitizedParams->getString('firstName'),
-            'lastName' => $sanitizedParams->getString('lastName'),
-            'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
-            'retired' => $sanitizedParams->getInt('retired'),
-            'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
-            'userGroupIdMembers' => $sanitizedParams->getInt('userGroupIdMembers'),
-        ];
-
         // Load results into an array
-        $users = $this->userFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter($filterBy, $sanitizedParams));
+        $users = $this->userFactory->query(
+            $this->gridRenderSort($sanitizedParams),
+            $this->getUserFilters($sanitizedParams)
+        );
 
         foreach ($users as $user) {
-            /* @var \Xibo\Entity\User $user */
-
-            $user->setUnmatchedProperty('libraryQuotaFormatted', ByteFormatter::format($user->libraryQuota * 1024));
-
-            $user->loggedIn = $this->sessionFactory->getActiveSessionsForUser($user->userId);
-            $this->getLog()->debug('Logged in status for user ID ' . $user->userId . ' with name ' . $user->userName . ' is ' . $user->loggedIn);
-
-            // Set some text for the display status
-            $user->setUnmatchedProperty('twoFactorDescription', match ($user->twoFactorTypeId) {
-                1 => __('Email'),
-                2 => __('Google Authenticator'),
-                default => __('Disabled'),
-            });
-
-            if ($this->isApi($request) || $this->isJson($request)) {
-                continue;
-            }
-
-            $user->includeProperty('buttons');
-
-            // Deal with the home page
-            try {
-                $user->setUnmatchedProperty(
-                    'homePage',
-                    $this->userGroupFactory->getHomepageByName($user->homePageId)->title
-                );
-            } catch (NotFoundException $exception) {
-                $this->getLog()->error('User has homepage which does not exist. userId: ' . $user->userId . ', homepage: ' . $user->homePageId);
-                $user->setUnmatchedProperty('homePage', __('Unknown homepage, please edit to update.'));
-            }
-
-            // Set the home folder
-            $user->setUnmatchedProperty('homeFolder', $user->getUnmatchedProperty('homeFolder', '/'));
-
-            // Super admins have some buttons
-            if ($this->getUser()->featureEnabled('users.modify')
-                && $this->getUser()->checkEditable($user)
-            ) {
-                // Edit
-                $user->buttons[] = [
-                    'id' => 'user_button_edit',
-                    'url' => $this->urlFor($request,'user.edit.form', ['id' => $user->userId]),
-                    'text' => __('Edit')
-                ];
-            }
-
-            if ($this->getUser()->featureEnabled('users.modify')
-                && $this->getUser()->checkDeleteable($user)
-                && $user->userId != $this->getConfig()->getSetting('SYSTEM_USER')
-                && $this->getUser()->userId !== $user->userId
-                && ( ($this->getUser()->isGroupAdmin() && $user->userTypeId == 3) || $this->getUser()->isSuperAdmin() )
-            ) {
-                // Delete
-                $user->buttons[] = [
-                    'id' => 'user_button_delete',
-                    'url' => $this->urlFor($request,'user.delete.form', ['id' => $user->userId]),
-                    'text' => __('Delete')
-                ];
-            }
-
-            if ($this->getUser()->featureEnabled('folder.userHome')) {
-                $user->buttons[] = [
-                    'id' => 'user_button_set_home',
-                    'url' => $this->urlFor($request, 'user.homeFolder.form', ['id' => $user->userId]),
-                    'text' => __('Set Home Folder'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'user.homeFolder', ['id' => $user->userId])],
-                        ['name' => 'commit-method', 'value' => 'post'],
-                        ['name' => 'id', 'value' => 'user_button_set_home'],
-                        ['name' => 'text', 'value' => __('Set home folder')],
-                        ['name' => 'rowtitle', 'value' => $user->userName],
-                        ['name' => 'form-callback', 'value' => 'userHomeFolderMultiselectFormOpen']
-                    ],
-                ];
-            }
-
-            if ($this->getUser()->featureEnabled('users.modify')
-                && $this->getUser()->checkPermissionsModifyable($user)
-            ) {
-                $user->buttons[] = ['divider' => true];
-
-                // User Groups
-                $user->buttons[] = array(
-                    'id' => 'user_button_group_membership',
-                    'url' => $this->urlFor($request,'user.membership.form', ['id' => $user->userId]),
-                    'text' => __('User Groups')
-                );
-            }
-
-            if ($this->getUser()->isSuperAdmin()) {
-                $user->buttons[] = ['divider' => true];
-
-                // Features
-                $user->buttons[] = [
-                    'id' => 'user_button_page_security',
-                    'url' => $this->urlFor($request,'group.acl.form', ['id' => $user->groupId, 'userId' => $user->userId]),
-                    'text' => __('Features'),
-                    'title' => __('Turn Features on/off for this User')
-                ];
-            }
+            $this->decorateUserProperties($request, $user);
         }
 
         $this->getState()->template = 'grid';
@@ -2601,5 +2491,151 @@ class User extends Base
         };
 
         return $userFeatures;
+    }
+
+    /**
+     * Get the user filters
+     * @param $sanitizedParams
+     * @return array
+     */
+    private function getUserFilters($sanitizedParams): array
+    {
+        return $this->gridRenderFilter([
+            'userId' => $sanitizedParams->getInt('userId'),
+            'userTypeId' => $sanitizedParams->getInt('userTypeId'),
+            'userName' => $sanitizedParams->getString('userName'),
+            'firstName' => $sanitizedParams->getString('firstName'),
+            'lastName' => $sanitizedParams->getString('lastName'),
+            'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
+            'retired' => $sanitizedParams->getInt('retired'),
+            'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
+            'userGroupIdMembers' => $sanitizedParams->getInt('userGroupIdMembers'),
+        ], $sanitizedParams);
+    }
+
+    /**
+     * Decorate user properties
+     * @param $request
+     * @param $user
+     * @throws InvalidArgumentException
+     */
+    private function decorateUserProperties($request, $user)
+    {
+        $user->setUnmatchedProperty('libraryQuotaFormatted', ByteFormatter::format($user->libraryQuota * 1024));
+
+        $user->loggedIn = $this->sessionFactory->getActiveSessionsForUser($user->userId);
+
+        $this->getLog()->debug('Logged in status for user ID ' . $user->userId . ' with name ' .
+            $user->userName . ' is ' . $user->loggedIn);
+
+        // Set some text for the display status
+        $user->setUnmatchedProperty('twoFactorDescription', $this->getTwoFactorDescription($user->twoFactorTypeId));
+
+        // Deal with the home page
+        try {
+            $user->setUnmatchedProperty(
+                'homePage',
+                $this->userGroupFactory->getHomepageByName($user->homePageId)->title
+            );
+        } catch (NotFoundException $exception) {
+            $this->getLog()->error('User has homepage which does not exist. userId: ' . $user->userId . ', homepage: ' . $user->homePageId);
+            $user->setUnmatchedProperty('homePage', __('Unknown homepage, please edit to update.'));
+        }
+
+        // Set the home folder
+        $user->setUnmatchedProperty('homeFolder', $user->getUnmatchedProperty('homeFolder', '/'));
+
+        $user->setUnmatchedProperty('isSuperAdmin', $user->isSuperAdmin());
+
+        $user->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($user));
+
+        // TODO: Remove buttons
+        if ($this->isApi($request) || $this->isJson($request)) {
+            return;
+        }
+
+        $user->includeProperty('buttons');
+
+        // Super admins have some buttons
+        if ($this->getUser()->featureEnabled('users.modify')
+            && $this->getUser()->checkEditable($user)
+        ) {
+            // Edit
+            $user->buttons[] = [
+                'id' => 'user_button_edit',
+                'url' => $this->urlFor($request,'user.edit.form', ['id' => $user->userId]),
+                'text' => __('Edit')
+            ];
+        }
+
+        if ($this->getUser()->featureEnabled('users.modify')
+            && $this->getUser()->checkDeleteable($user)
+            && $user->userId != $this->getConfig()->getSetting('SYSTEM_USER')
+            && $this->getUser()->userId !== $user->userId
+            && ( ($this->getUser()->isGroupAdmin() && $user->userTypeId == 3) || $this->getUser()->isSuperAdmin() )
+        ) {
+            // Delete
+            $user->buttons[] = [
+                'id' => 'user_button_delete',
+                'url' => $this->urlFor($request,'user.delete.form', ['id' => $user->userId]),
+                'text' => __('Delete')
+            ];
+        }
+
+        if ($this->getUser()->featureEnabled('folder.userHome')) {
+            $user->buttons[] = [
+                'id' => 'user_button_set_home',
+                'url' => $this->urlFor($request, 'user.homeFolder.form', ['id' => $user->userId]),
+                'text' => __('Set Home Folder'),
+                'multi-select' => true,
+                'dataAttributes' => [
+                    ['name' => 'commit-url', 'value' => $this->urlFor($request, 'user.homeFolder', ['id' => $user->userId])],
+                    ['name' => 'commit-method', 'value' => 'post'],
+                    ['name' => 'id', 'value' => 'user_button_set_home'],
+                    ['name' => 'text', 'value' => __('Set home folder')],
+                    ['name' => 'rowtitle', 'value' => $user->userName],
+                    ['name' => 'form-callback', 'value' => 'userHomeFolderMultiselectFormOpen']
+                ],
+            ];
+        }
+
+        if ($this->getUser()->featureEnabled('users.modify')
+            && $this->getUser()->checkPermissionsModifyable($user)
+        ) {
+            $user->buttons[] = ['divider' => true];
+
+            // User Groups
+            $user->buttons[] = array(
+                'id' => 'user_button_group_membership',
+                'url' => $this->urlFor($request,'user.membership.form', ['id' => $user->userId]),
+                'text' => __('User Groups')
+            );
+        }
+
+        if ($this->getUser()->isSuperAdmin()) {
+            $user->buttons[] = ['divider' => true];
+
+            // Features
+            $user->buttons[] = [
+                'id' => 'user_button_page_security',
+                'url' => $this->urlFor($request,'group.acl.form', ['id' => $user->groupId, 'userId' => $user->userId]),
+                'text' => __('Features'),
+                'title' => __('Turn Features on/off for this User')
+            ];
+        }
+    }
+
+    /**
+     * Get the two factor description
+     * @param $twoFactorTypeId
+     * @return string
+     */
+    private function getTwoFactorDescription($twoFactorTypeId): string
+    {
+        return match ($twoFactorTypeId) {
+            1 => __('Email'),
+            2 => __('Google Authenticator'),
+            default => __('Disabled'),
+        };
     }
 }
