@@ -29,6 +29,7 @@ export interface FetchMediaRequest {
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;
+  folderId?: number;
 
   type?: string;
   ownerId?: string;
@@ -175,6 +176,7 @@ export async function uploadMediaFromUrl({
 
 export interface UpdateMediaRequest {
   name: string;
+  folderId?: number | null;
   duration: number;
   tags?: string;
   retired?: number;
@@ -214,6 +216,10 @@ export async function updateMedia(
 
   if (data.expires) {
     params.append('expires', data.expires);
+  }
+
+  if (data.folderId) {
+    params.append('folderId', data.folderId.toString());
   }
 
   const response = await http.put(`/library/${mediaId}`, params.toString(), {

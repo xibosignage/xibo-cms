@@ -50,9 +50,11 @@ import { useMediaData } from './hooks/useMediaData';
 import Button from '@/components/ui/Button';
 import { FileUploader } from '@/components/ui/FileUploader';
 import FilterInputs from '@/components/ui/FilterInputs';
-import { FolderSelect } from '@/components/ui/FolderSelect_TOREMOVE';
+import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
+import FolderSidebar from '@/components/ui/FolderSidebar';
 import { notify } from '@/components/ui/Notification';
 import TabNav from '@/components/ui/TabNav';
+import SelectFolder from '@/components/ui/forms/SelectFolder';
 import Modal from '@/components/ui/modals/Modal';
 import { DataGrid } from '@/components/ui/table/DataGrid';
 import { DataTable } from '@/components/ui/table/DataTable';
@@ -80,7 +82,9 @@ export default function Media() {
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
 
   const [isAddModalOpen, setAddModalOpen] = useState(false);
-  const [selectedFolderId, setSelectedFolderId] = useState(1);
+  const [selectedFolderId, setSelectedFolderId] = useState<number | null>(1);
+  const [selectedFolderName, setSelectedFolderName] = useState(t('Root Folder'));
+  const [showFolderSidebar, setShowFolderSidebar] = useState(false);
   const [openModal, setOpenModal] = useState({
     edit: false,
     share: false,
@@ -109,6 +113,7 @@ export default function Media() {
     sorting,
     filter: debouncedFilter,
     advancedFilters: filterInputs,
+    folderId: selectedFolderId,
   });
 
   // Computed values
@@ -131,9 +136,16 @@ export default function Media() {
     queryClient.invalidateQueries({ queryKey: ['media'] });
   };
 
+  const handleFolderChange = (folder: { id: number | null; text: string | '' }) => {
+    setSelectedFolderId(folder.id);
+    setSelectedFolderName(folder.text);
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    setRowSelection({});
+  };
+
   // Handles dropping files anywhere on the screen
   const onGlobalDrop = (acceptedFiles: File[]) => {
-    if (acceptedFiles.length > 0) {
+    if (acceptedFiles.length > 0 && selectedFolderId != null) {
       setAddModalOpen(true);
       addFiles(acceptedFiles, selectedFolderId);
       notify.success(t('Files added to queue'));
@@ -152,6 +164,10 @@ export default function Media() {
   });
 
   const handleManualAddFiles = (files: File[]) => {
+    if (!selectedFolderId) {
+      return;
+    }
+
     addFiles(files, selectedFolderId);
   };
 
@@ -290,167 +306,182 @@ export default function Media() {
     onPreview: handlePreviewClick,
   });
 
-  // TODO: Temporary placeholder folders
-  const tempFolders = [
-    { id: 1, name: 'Root Folder' },
-    { id: 2, name: 'Marketing Assets' },
-    { id: 3, name: 'Q1 Campaigns' },
-    { id: 99, name: 'Temporary' },
-  ];
-
   const { filterOptions } = useMediaFilterOptions();
 
   return (
     <section
       {...getGlobalRootProps()}
-      className="space-y-4 flex-1 flex flex-col min-h-0 relative outline-none"
+      className="flex h-full w-full min-h-0 relative outline-none overflow-hidden"
     >
       <input {...getGlobalInputProps()} />
 
-      {isGlobalDragActive && !isAddModalOpen && (
-        <div className="absolute bottom-14 left-1/2 -translate-x-1/2 z-50 justify-center flex flex-col items-center gap-3 mb-0">
-          <span className="inline-flex justify-center items-center size-15.5 shadow-lg rounded-full border-7 animate-bounce border-blue-50 bg-xibo-blue-100 text-blue-800">
-            <Upload className="shrink-0 size-6.5" />
-          </span>
-          <div className="bg-slate-50 border border-gray-200 px-4 py-2 shadow-lg rounded-full flex justify-center items-center gap-2">
-            <span className="text-sm text-gray-800">{t('Upload files to ')}</span>
-            <span className="text-xibo-blue-600 font-semibold flex">
-              <div className="size-6.5 flex justify-center items-center">
-                <Folder className="size-4"></Folder>
-              </div>
-              {`"${selectedFolderId === 1 ? 'Root Folder' : 'Selected Folder'}"`}
-            </span>
-          </div>
-        </div>
-      )}
-
-      <div className="flex flex-row justify-between py-5 items-center gap-4">
-        <TabNav activeTab="Media" navigation={LIBRARY_TABS} />
-        <div className="flex items-center gap-2 md:mb-0">
-          <Button variant="primary" onClick={() => setAddModalOpen(true)} leftIcon={Plus}>
-            {t('Add Media')}
-          </Button>
-        </div>
-      </div>
-
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-        <div className="w-full md:w-auto">
-          <button className="py-2 px-3 w-full md:w-auto inline-flex justify-center md:justify-start items-center gap-x-2 border border-gray-200 bg-white text-gray-800 hover:bg-gray-50">
-            <Folder className="w-4 h-4 text-gray-500 fill-gray-100" />
-            {t('Folders')}
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2 md:w-auto w-full">
-          <div className="relative flex-1 flex">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <Search className="w-4 h-4 text-gray-400" />
-            </div>
-            <input
-              name="search"
-              value={globalFilter}
-              onChange={(e) => {
-                setGlobalFilter(e.target.value);
-                setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-              }}
-              placeholder={t('Search media...')}
-              className="py-2 px-3 pl-10 block h-[45px] bg-gray-100 rounded-lg md:w-[365px] w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none"
-            />
-          </div>
-          <Button
-            leftIcon={!openFilter ? Filter : FilterX}
-            variant="secondary"
-            onClick={() => setOpenFilter((prev) => !prev)}
-            removeTextOnMobile
-          >
-            {t('Filters')}
-          </Button>
-        </div>
-      </div>
-
-      <FilterInputs
-        onChange={(name, value) => {
-          setFilterInput((prev) => ({ ...prev, [name]: value }));
-          setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-        }}
-        open={openFilter}
-        values={filterInputs}
-        options={filterOptions}
-        onReset={handleResetFilters}
+      <FolderSidebar
+        isOpen={showFolderSidebar}
+        selectedFolderId={selectedFolderId}
+        onSelect={handleFolderChange}
+        onClose={() => setShowFolderSidebar(false)}
       />
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
-          {error}
-        </div>
-      )}
+      <div className="flex-1 flex flex-col min-h-0 min-w-0 px-4 pb-4">
+        {isGlobalDragActive && !isAddModalOpen && (
+          <div className="absolute bottom-14 left-1/2 -translate-x-1/2 z-50 justify-center flex flex-col items-center gap-3 mb-0">
+            {selectedFolderId != null ? (
+              <>
+                <span className="inline-flex justify-center items-center size-15.5 shadow-lg rounded-full border-7 animate-bounce border-blue-50 bg-xibo-blue-100 text-blue-800">
+                  <Upload className="shrink-0 size-6.5" />
+                </span>
+                <div className="bg-slate-50 border border-gray-200 px-4 py-2 shadow-lg rounded-full flex justify-center items-center gap-2">
+                  <span className="text-sm text-gray-800">{t('Upload files to ')}</span>
+                  <span className="text-xibo-blue-600 font-semibold flex">
+                    <div className="size-6.5 flex justify-center items-center">
+                      <Folder className="size-4"></Folder>
+                    </div>
+                    {`"${selectedFolderName}"`}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="bg-slate-50 border border-gray-200 px-4 py-2 shadow-lg rounded-full flex justify-center items-center">
+                <span className="text-sm font-bold text-red-800">
+                  {t('Remove filter "All Items" to upload to a folder!')}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
 
-      {viewMode === 'table' ? (
-        <DataTable
-          columns={columns}
-          data={mediaList}
-          pageCount={pageCount}
-          pagination={pagination}
-          onPaginationChange={setPagination}
-          sorting={sorting}
-          onSortingChange={setSorting}
-          globalFilter={globalFilter}
-          onGlobalFilterChange={setGlobalFilter}
-          loading={isFetching}
-          rowSelection={rowSelection}
-          onRowSelectionChange={setRowSelection}
-          onRefresh={handleRefresh}
-          columnPinning={{
-            left: ['tableSelection'],
-            right: ['tableActions'],
+        <div className="flex flex-row justify-between py-5 items-center gap-4">
+          <TabNav activeTab="Media" navigation={LIBRARY_TABS} />
+          <div className="flex items-center gap-2 md:mb-0">
+            <Button variant="primary" onClick={() => setAddModalOpen(true)} leftIcon={Plus}>
+              {t('Add Media')}
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="w-full md:w-auto">
+            <FolderBreadcrumb
+              currentFolderId={selectedFolderId}
+              onNavigate={handleFolderChange}
+              isSidebarOpen={showFolderSidebar}
+              onToggleSidebar={() => setShowFolderSidebar(!showFolderSidebar)}
+            />
+          </div>
+
+          <div className="flex items-center gap-2 md:w-auto w-full">
+            <div className="relative flex-1 flex">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <Search className="w-4 h-4 text-gray-400" />
+              </div>
+              <input
+                name="search"
+                value={globalFilter}
+                onChange={(e) => {
+                  setGlobalFilter(e.target.value);
+                  setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                }}
+                placeholder={t('Search media...')}
+                className="py-2 px-3 pl-10 block h-[45px] bg-gray-100 rounded-lg md:w-[365px] w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none"
+              />
+            </div>
+            <Button
+              leftIcon={!openFilter ? Filter : FilterX}
+              variant="secondary"
+              onClick={() => setOpenFilter((prev) => !prev)}
+              removeTextOnMobile
+            >
+              {t('Filters')}
+            </Button>
+          </div>
+        </div>
+
+        <FilterInputs
+          onChange={(name, value) => {
+            setFilterInput((prev) => ({ ...prev, [name]: value }));
+            setPagination((prev) => ({ ...prev, pageIndex: 0 }));
           }}
-          initialState={{
-            columnVisibility: {
-              mediaId: false,
-              durationSeconds: false,
-              fileSize: false,
-              createdDt: false,
-              modifiedDt: false,
-              groupsWithPermissions: false,
-              revised: false,
-              released: false,
-              fileName: false,
-              expires: false,
-              enableStat: false,
-              ownerId: false,
-            },
-          }}
-          bulkActions={bulkActions}
-          viewMode="table"
-          onViewModeChange={setViewMode}
-          getRowId={getRowId}
+          open={openFilter}
+          values={filterInputs}
+          options={filterOptions}
+          onReset={handleResetFilters}
         />
-      ) : (
-        <DataGrid
-          data={mediaList}
-          pageCount={pageCount}
-          pagination={pagination}
-          onPaginationChange={setPagination}
-          rowSelection={rowSelection}
-          onRowSelectionChange={setRowSelection}
-          loading={isFetching}
-          onRefresh={handleRefresh}
-          bulkActions={bulkActions}
-          viewMode="grid"
-          onViewModeChange={setViewMode}
-          getRowId={getRowId}
-          renderCard={(media, isSelected, toggleSelect) => (
-            <MediaCard
-              key={media.mediaId}
-              media={media}
-              isSelected={isSelected}
-              onToggleSelect={toggleSelect}
-              onPreview={handlePreviewClick}
-              actions={getMediaActions(media)}
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
+            {error}
+          </div>
+        )}
+
+        <div className="flex-1 min-h-0 flex flex-col">
+          {viewMode === 'table' ? (
+            <DataTable
+              columns={columns}
+              data={mediaList}
+              pageCount={pageCount}
+              pagination={pagination}
+              onPaginationChange={setPagination}
+              sorting={sorting}
+              onSortingChange={setSorting}
+              globalFilter={globalFilter}
+              onGlobalFilterChange={setGlobalFilter}
+              loading={isFetching}
+              rowSelection={rowSelection}
+              onRowSelectionChange={setRowSelection}
+              onRefresh={handleRefresh}
+              columnPinning={{
+                left: ['tableSelection'],
+                right: ['tableActions'],
+              }}
+              initialState={{
+                columnVisibility: {
+                  mediaId: false,
+                  durationSeconds: false,
+                  fileSize: false,
+                  createdDt: false,
+                  modifiedDt: false,
+                  groupsWithPermissions: false,
+                  revised: false,
+                  released: false,
+                  fileName: false,
+                  expires: false,
+                  enableStat: false,
+                  ownerId: false,
+                },
+              }}
+              bulkActions={bulkActions}
+              viewMode="table"
+              onViewModeChange={setViewMode}
+              getRowId={getRowId}
+            />
+          ) : (
+            <DataGrid
+              data={mediaList}
+              pageCount={pageCount}
+              pagination={pagination}
+              onPaginationChange={setPagination}
+              rowSelection={rowSelection}
+              onRowSelectionChange={setRowSelection}
+              loading={isFetching}
+              onRefresh={handleRefresh}
+              bulkActions={bulkActions}
+              viewMode="grid"
+              onViewModeChange={setViewMode}
+              getRowId={getRowId}
+              renderCard={(media, isSelected, toggleSelect) => (
+                <MediaCard
+                  key={media.mediaId}
+                  media={media}
+                  isSelected={isSelected}
+                  onToggleSelect={toggleSelect}
+                  onPreview={handlePreviewClick}
+                  actions={getMediaActions(media)}
+                />
+              )}
             />
           )}
-        />
-      )}
+        </div>
+      </div>
 
       <Modal
         isOpen={isAddModalOpen}
@@ -460,11 +491,11 @@ export default function Media() {
         size="lg"
       >
         <div className="flex flex-col gap-3 p-8 pt-0">
-          {/* TODO: Folder select hardcoded for now */}
-          <FolderSelect
-            value={selectedFolderId}
-            folders={tempFolders}
-            onChange={setSelectedFolderId}
+          <SelectFolder
+            selectedId={selectedFolderId}
+            onSelect={(folder) => {
+              setSelectedFolderId(folder.id);
+            }}
           />
 
           <FileUploader
@@ -476,7 +507,13 @@ export default function Media() {
             updateFileData={updateFileData}
             isUploading={false}
             maxSize={2 * 1024 * 1024 * 1024}
-            onUrlUpload={(url) => addUrlToQueue(url, selectedFolderId)}
+            onUrlUpload={(url) => {
+              if (!selectedFolderId) {
+                return;
+              }
+
+              addUrlToQueue(url, selectedFolderId);
+            }}
           />
         </div>
       </Modal>

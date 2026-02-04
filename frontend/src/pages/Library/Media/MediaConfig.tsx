@@ -395,7 +395,7 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
       accessorKey: 'tags',
       header: t('Tags'),
       enableSorting: false,
-      size: 200,
+      size: 180,
       cell: (info) => {
         const tags = info.getValue<ApiTag[]>() || [];
         const formattedTags = tags.map((tag) => ({

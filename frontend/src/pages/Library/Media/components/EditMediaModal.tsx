@@ -47,7 +47,7 @@ interface EditMediaModalProps {
 
 type MediaDraft = {
   name: string;
-  folder: string;
+  folderId: number | null;
   fileName: string;
   tags: Tag[];
   orientation: 'portrait' | 'landscape';
@@ -58,7 +58,7 @@ type MediaDraft = {
   updateInLayouts: boolean;
 };
 
-type OpenSelect = 'folder' | 'orientation' | 'expiry' | 'enableStat' | null;
+type OpenSelect = 'orientation' | 'expiry' | 'enableStat' | null;
 
 function expiryToDateTime(expiry?: ExpiryValue): string | undefined {
   if (!expiry) return undefined;
@@ -119,16 +119,19 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
   const { t } = useTranslation();
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [openSelect, setOpenSelect] = useState<null | OpenSelect>(null);
-  const [expiry, setExpiry] = useState<ExpiryValue | undefined>();
+  const [expiry, setExpiry] = useState<ExpiryValue | undefined>(() =>
+    expiresToExpiryValue(data.expires),
+  );
+
   const [isSaving, setIsSaving] = useState(false);
   const [draft, setDraft] = useState<MediaDraft>(() => ({
     name: data.name,
-    folder: '',
+    folderId: data.folderId ?? null,
     fileName: data.name,
     tags: data.tags.map((t) => ({ ...t })),
     orientation: data.orientation,
     duration: data.duration,
-    mediaNoExpiryDate: expiry,
+    mediaNoExpiryDate: expiresToExpiryValue(data.expires),
     enableStat: data.enableStat,
     retired: data.retired,
     updateInLayouts: data.updateInLayouts,
@@ -136,24 +139,24 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
 
   const Icon = getMediaIcon(data.mediaType);
 
-  const toggleFolder = () => setOpenSelect((prev) => (prev === 'folder' ? null : 'folder'));
-
   useEffect(() => {
+    const initialExpiry = expiresToExpiryValue(data.expires);
+
+    setExpiry(initialExpiry);
+
     setDraft({
-      folder: '',
+      folderId: data.folderId,
       name: data.name,
       fileName: data.name,
       tags: data.tags.map((t) => ({ ...t })),
       orientation: data.orientation,
       duration: data.duration,
-      mediaNoExpiryDate: expiry,
+      mediaNoExpiryDate: initialExpiry,
       enableStat: data.enableStat,
       retired: data.retired,
       updateInLayouts: data.updateInLayouts,
     });
-
-    setExpiry(expiresToExpiryValue(data.expires));
-  }, [data, expiry]);
+  }, [data]);
 
   const handleSave = async () => {
     if (isSaving) return;
@@ -173,6 +176,7 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
       enableStat: draft.enableStat,
       expires,
       mediaNoExpiryDate: expires === undefined ? 1 : 0,
+      folderId: draft.folderId,
     });
 
     onSave({
@@ -263,19 +267,19 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 flex-1 min-h-0 p-4 overflow-y-auto heyItsMe">
+        <div className="flex flex-col gap-3 flex-1 min-h-0 p-4 overflow-y-auto heyItsMe pb-32">
           {/* Select Folder */}
-          <SelectFolder
-            value={draft.folder}
-            homeFolders={MEDIA_FORM_OPTIONS.folders.home}
-            myFileFolders={MEDIA_FORM_OPTIONS.folders.myFiles}
-            isOpen={openSelect === 'folder'}
-            onToggle={toggleFolder}
-            onSelect={(folder) => {
-              setDraft((prev) => ({ ...prev, folder }));
-              setOpenSelect(null);
-            }}
-          />
+          <div className="relative z-20">
+            <SelectFolder
+              selectedId={draft.folderId}
+              onSelect={(folder) => {
+                setDraft((prev) => ({
+                  ...prev,
+                  folderId: Number(folder.id),
+                }));
+              }}
+            />
+          </div>
 
           {/* Name */}
           <div className="flex flex-col">
