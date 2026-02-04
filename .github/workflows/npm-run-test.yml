@@ -1,0 +1,34 @@
+name: Run Frontend Tests
+
+on:
+  pull_request:
+    types: [opened]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run Vitest
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # Step 3: Install frontend dependencies
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm install
+
+      # Step 4: Run Vitest
+      - name: Run Vitest tests
+        working-directory: frontend
+        run: npm run test
