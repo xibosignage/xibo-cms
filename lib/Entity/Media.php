@@ -404,6 +404,8 @@ class Media implements \JsonSerializable
             // If the media is imported from a provider (ie Pixabay, etc), use it instead of importing again.
             if (isset($this->apiRef) && $this->apiRef === $result[0]['apiRef']) {
                 $this->mediaId = intval($result[0]['mediaId']);
+            } else if ($options['isMediaReassigned']) {
+                $this->name = $this->getReassignedMediaName($result[0]['name']);
             } else {
                 throw new DuplicateEntityException(__('Media you own already has this name. Please choose another.'));
             }
@@ -456,6 +458,7 @@ class Media implements \JsonSerializable
             'deferred' => false,
             'saveTags' => true,
             'audit' => true,
+            'isMediaReassigned' => false
         ], $options);
 
         if ($options['validate'] && $this->mediaType !== 'module') {
@@ -1036,5 +1039,23 @@ class Media implements \JsonSerializable
         ]);
 
         return $this;
+    }
+
+    /**
+     * Get the reassigned media name
+     * @param $media
+     * @return string
+     */
+    private function getReassignedMediaName($media): string
+    {
+        // Separate the base and file extension
+        $separator = strrpos($media, '.');
+
+        [$base, $ext] = $separator
+            ? [substr($media, 0, $separator), substr($media, $separator)]
+            : [$media, ''];
+
+        // Append a suffix if the target user already has a media item with this name
+        return $base . '_imported' . $ext;
     }
 }
