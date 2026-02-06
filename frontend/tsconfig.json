@@ -14,7 +14,7 @@
     "noUncheckedIndexedAccess": true,
     "baseUrl": ".",
     "paths": { "@/*": ["src/*"] },
-    "types": ["vite/client", "react"]
+    "types": ["vite/client", "react", "vitest/globals", "@testing-library/jest-dom"]
   },
-  "include": ["src", "scripts", "types", "vite-env.d.ts"]
+  "include": ["src", "scripts", "types", "vite-env.d.ts", "vite.config.ts"]
 }
