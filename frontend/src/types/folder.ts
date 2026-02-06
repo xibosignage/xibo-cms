@@ -27,6 +27,8 @@ export interface Folder {
   parentId: number;
   isRoot: number;
   children: Folder[] | null;
+  ownerId: number;
+  ownerName: string;
 }
 
 export type FolderType = 'root' | 'home' | 'disabled' | '' | null;

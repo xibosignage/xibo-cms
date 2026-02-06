@@ -19,6 +19,31 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export function logout(redirectUrl: string = '/login') {
-  window.location.href = redirectUrl;
+import type { ReactNode } from 'react';
+import { createContext, useContext } from 'react';
+
+import { useUserAuth, type UserAuthType } from '@/hooks/useUserAuth';
+import type { User } from '@/types/user';
+
+const UserContext = createContext<UserAuthType | null>(null);
+
+interface UserProviderProps {
+  children: ReactNode;
+  initialUser: User | null;
+}
+
+export function UserProvider({ children, initialUser }: UserProviderProps) {
+  const auth = useUserAuth(initialUser);
+
+  return <UserContext.Provider value={auth}>{children}</UserContext.Provider>;
+}
+
+export function useUserContext() {
+  const context = useContext(UserContext);
+
+  if (!context) {
+    throw new Error('useUserContext must be used within a UserProvider');
+  }
+
+  return context;
 }

@@ -1,3 +1,24 @@
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 import type { LucideIcon } from 'lucide-react';
 import {
   ChevronDown,
@@ -9,23 +30,77 @@ import {
   Trash2,
   UserPlus2,
   FolderOpen,
+  Home,
 } from 'lucide-react';
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { twMerge } from 'tailwind-merge';
 
-import { fetchContextButtons, type FolderPermissions } from '@/services/folderApi';
+import { useUserContext } from '@/context/UserContext';
+import {
+  fetchContextButtons,
+  fetchFolderTree,
+  searchFolders,
+  type FolderPermissions,
+} from '@/services/folderApi';
 import type { Folder } from '@/types/folder';
 
 export type FolderAction = 'create' | 'rename' | 'move' | 'share' | 'delete';
+type FolderTab = 'Home' | 'My Files';
 
 interface FolderTreeListProps {
-  folders: Folder[];
   selectedId?: number | null;
   onSelect: (folder: Folder) => void;
   onAction?: (action: FolderAction, folder: Folder) => void;
+  searchQuery: string;
+  customSlot?: ReactNode;
+  refreshTrigger?: number;
 }
 
-const buildVisibleList = (
+const flattenTree = (nodes: Folder[]): Folder[] => {
+  let result: Folder[] = [];
+  for (const node of nodes) {
+    result.push(node);
+    if (node.children && node.children.length > 0) {
+      result = result.concat(flattenTree(node.children));
+    }
+  }
+  return result;
+};
+
+const groupFoldersByOwner = (folders: Folder[], currentUserId: number = -1) => {
+  const groups: Record<number, { ownerName: string; folders: Folder[] }> = {};
+
+  for (const f of folders) {
+    if (f.type === 'disabled') continue;
+
+    const ownerId = f.ownerId ?? 0;
+    const ownerName = f.ownerName;
+
+    if (!groups[ownerId]) {
+      groups[ownerId] = { ownerName, folders: [] };
+    }
+    groups[ownerId].folders.push(f);
+  }
+
+  return Object.entries(groups)
+    .map(([idStr, group]) => ({
+      ownerId: Number(idStr),
+      ...group,
+      folders: group.folders.sort((a, b) => a.text.localeCompare(b.text)),
+    }))
+    .sort((a, b) => {
+      // Put current user on top
+      if (a.ownerId === currentUserId) {
+        return -1;
+      } else if (b.ownerId === currentUserId) {
+        return 1;
+      }
+      return a.ownerName.localeCompare(b.ownerName);
+    });
+};
+
+const buildVisibleTree = (
   nodes: Folder[],
   expandedIds: Set<number>,
   depth = 0,
@@ -39,57 +114,230 @@ const buildVisibleList = (
     result.push({ ...node, depth, hasChildren, isExpanded });
 
     if (hasChildren && isExpanded) {
-      result.push(...buildVisibleList(node.children!, expandedIds, depth + 1));
+      result.push(...buildVisibleTree(node.children!, expandedIds, depth + 1));
     }
   }
   return result;
 };
 
 export default function FolderTreeList({
-  folders,
   selectedId,
   onSelect,
   onAction,
+  searchQuery,
+  customSlot,
+  refreshTrigger = 0,
 }: FolderTreeListProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
+
+  // To fix load flicker after tree operations
+  const isFirstLoad = useRef(true);
+
+  const currentUserId = user?.userId ?? -1;
+
+  const [activeTab, setActiveTab] = useState<FolderTab>('Home');
+  const [treeData, setTreeData] = useState<Folder[]>([]);
+  const [searchResults, setSearchResults] = useState<Folder[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set([1]));
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadTree() {
+      if (isFirstLoad.current) {
+        setIsLoading(true);
+      }
+
+      try {
+        if (searchQuery.trim()) {
+          const results = await searchFolders(searchQuery, controller.signal);
+          setSearchResults(results);
+        } else {
+          const tree = await fetchFolderTree(controller.signal);
+          setTreeData(tree);
+        }
+      } catch (e: unknown) {
+        if (e instanceof Error && e.name !== 'CanceledError' && e.name !== 'AbortError') {
+          console.error(e);
+        }
+      } finally {
+        setIsLoading(false);
+        isFirstLoad.current = false;
+      }
+    }
+
+    loadTree();
+    return () => controller.abort();
+  }, [searchQuery, activeTab, refreshTrigger]);
 
   const toggleExpand = (id: number, e?: React.MouseEvent) => {
     e?.stopPropagation();
     setExpandedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
 
-  const visibleList = useMemo(() => buildVisibleList(folders, expandedIds), [folders, expandedIds]);
+  const rawData = searchQuery.trim() ? searchResults : treeData;
+  let content: ReactNode;
 
-  if (visibleList.length === 0) {
-    return (
-      <div className="text-center py-6 text-gray-400 italic text-xs flex flex-col items-center gap-2">
-        <FolderIcon size={24} className="opacity-20" />
-        <span>{t('No folders found')}</span>
+  if (activeTab === 'Home' && !searchQuery.trim()) {
+    // Home view
+    const flatFolders = flattenTree(rawData);
+    const groupedFolders = groupFoldersByOwner(flatFolders, currentUserId);
+
+    content = (
+      <div className="flex flex-col gap-2">
+        {groupedFolders.map((group) => (
+          <UserGroupSection
+            key={group.ownerId}
+            group={group}
+            isCurrentUser={group.ownerId === currentUserId}
+            defaultOpen={group.ownerId === currentUserId}
+            selectedId={selectedId}
+            onSelect={onSelect}
+            onAction={onAction}
+          />
+        ))}
+      </div>
+    );
+  } else {
+    // My Files view
+    const visibleList = buildVisibleTree(rawData, expandedIds);
+
+    content = (
+      <div className="flex flex-col space-y-0.5 select-none">
+        {visibleList.map((folder) => (
+          <FolderItem
+            key={folder.id}
+            folder={folder}
+            isSelected={selectedId === folder.id}
+            onSelect={onSelect}
+            onAction={onAction}
+            onToggle={(e) => toggleExpand(folder.id, e)}
+          />
+        ))}
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col space-y-0.5 select-none">
-      {visibleList.map((folder) => (
-        <FolderItem
-          key={folder.id}
-          folder={folder}
-          isSelected={selectedId === folder.id}
-          onSelect={onSelect}
-          onAction={onAction}
-          onToggle={(e) => toggleExpand(folder.id, e)}
+    <div className="flex flex-col h-full overflow-hidden gap-2">
+      <div className="flex gap-x-1 px-2 pt-2 border-b border-gray-100 bg-white shrink-0">
+        {(['Home', 'My Files'] as FolderTab[]).map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => setActiveTab(tab)}
+            className={`flex items-center gap-2 px-3 py-2 text-sm font-semibold transition-all rounded-t-lg border-b-2 ${
+              activeTab === tab
+                ? 'text-xibo-blue-600 border-xibo-blue-600 font-medium'
+                : 'text-gray-500 border-transparent hover:text-xibo-blue-500'
+            }`}
+          >
+            {tab === 'Home' && <Home size={14} />}
+            {t(tab)}
+          </button>
+        ))}
+      </div>
+
+      {customSlot && <div className="flex flex-col gap-2 shrink-0">{customSlot}</div>}
+
+      <div className="flex-1 overflow-auto min-h-0 min-w-0 pb-4">
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center h-40 gap-3 text-gray-400">
+            <Loader2 className="w-6 h-6 animate-spin text-xibo-blue-500" />
+            <span className="text-xs">{t('Loading folders...')}</span>
+          </div>
+        ) : rawData.length === 0 ? (
+          <div className="text-center py-6 text-gray-400 italic text-xs flex flex-col items-center gap-2">
+            <FolderIcon size={24} className="opacity-20" />
+            <span>{t('No folders found')}</span>
+          </div>
+        ) : (
+          content
+        )}
+      </div>
+    </div>
+  );
+}
+
+function UserGroupSection({
+  group,
+  isCurrentUser,
+  defaultOpen,
+  selectedId,
+  onSelect,
+  onAction,
+}: {
+  group: { ownerId: number; ownerName: string; folders: Folder[] };
+  isCurrentUser: boolean;
+  defaultOpen: boolean;
+  selectedId?: number | null;
+  onSelect: (f: Folder) => void;
+  onAction?: (action: FolderAction, f: Folder) => void;
+}) {
+  const { t } = useTranslation();
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const { user } = useUserContext();
+
+  // TODO: temporary name
+  let displayName = group.ownerName || 'User';
+  if (isCurrentUser) {
+    if (user?.firstName || user?.lastName) {
+      displayName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim();
+    } else if (user?.userName) {
+      displayName = user.userName;
+    } else {
+      displayName = t('Me');
+    }
+  }
+
+  return (
+    <div className="flex flex-col">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={twMerge(
+          'flex px-3 py-2 gap-3 items-center cursor-pointer',
+          isCurrentUser ? 'bg-gray-100' : '',
+        )}
+      >
+        <div className="text-blue-800 bg-blue-100 rounded-full text-xs font-semibold flex justify-center items-center min-w-[26px] min-h-[26px] flex-1 leading-4.5">
+          {displayName[0]}
+        </div>
+
+        <span className="truncate w-full text-gray-800 text-sm font-semibold leading-[21px] flex items-start">
+          {displayName}
+        </span>
+
+        <ChevronDown
+          size={16}
+          className={`text-gray-800 transition-transform duration-200 ${
+            isOpen ? 'rotate-180' : 'rotate-0'
+          }`}
         />
-      ))}
+      </button>
+
+      {isOpen && (
+        <div className="flex flex-col space-y-0.5 pl-2 animate-in slide-in-from-top-1 duration-200">
+          {group.folders.map((folder) => (
+            <FolderItem
+              key={folder.id}
+              folder={{ ...folder, depth: 0, hasChildren: false, isExpanded: false }}
+              isSelected={selectedId === folder.id}
+              onSelect={onSelect}
+              onAction={onAction}
+              onToggle={() => {}}
+              forceIcon={FolderIcon}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -100,12 +348,14 @@ function FolderItem({
   onSelect,
   onAction,
   onToggle,
+  forceIcon,
 }: {
   folder: Folder & { depth: number; hasChildren: boolean; isExpanded: boolean };
   isSelected: boolean;
   onSelect: (f: Folder) => void;
   onAction?: (action: FolderAction, f: Folder) => void;
   onToggle: (e: React.MouseEvent) => void;
+  forceIcon?: LucideIcon;
 }) {
   const { t } = useTranslation();
   const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
@@ -113,12 +363,20 @@ function FolderItem({
   const [loadingPerms, setLoadingPerms] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  const isDisabled = folder.type === 'disabled';
+
   const handleContextMenu = (e: React.MouseEvent) => {
-    if (!onAction) return;
     e.preventDefault();
     e.stopPropagation();
 
-    setMenuPosition({ x: e.clientX, y: e.clientY });
+    if (isDisabled || !onAction) {
+      return;
+    }
+
+    const x = e.clientX + 160 > window.innerWidth ? e.clientX - 160 : e.clientX;
+    const y = e.clientY + 200 > window.innerHeight ? e.clientY - 200 : e.clientY;
+
+    setMenuPosition({ x, y });
 
     if (!permissions) {
       setLoadingPerms(true);
@@ -139,39 +397,43 @@ function FolderItem({
     return () => window.removeEventListener('mousedown', handleClick);
   }, [menuPosition]);
 
-  const Icon = folder.hasChildren && folder.isExpanded ? FolderOpen : FolderIcon;
+  let Icon = forceIcon;
+  if (!Icon) {
+    Icon = folder.hasChildren && folder.isExpanded ? FolderOpen : FolderIcon;
+  }
 
-  // TODO: Design and translations
   return (
     <>
       <div
-        className={`group relative flex items-center rounded-md transition-colors cursor-pointer
-          ${
-            isSelected
-              ? 'bg-xibo-blue-50 text-xibo-blue-700 font-medium'
-              : 'hover:bg-gray-100 text-gray-700'
-          }
-        `}
+        className={twMerge(
+          'group relative flex items-center transition-colors',
+          isSelected
+            ? 'bg-xibo-blue-50 text-xibo-blue-700 font-medium'
+            : isDisabled
+              ? 'text-gray-400 cursor-default'
+              : 'hover:bg-gray-100 text-gray-800 cursor-pointer',
+          isDisabled ? 'opacity-75' : '',
+        )}
         style={{ paddingLeft: `${folder.depth * 16 + 8}px` }}
-        onClick={() => onSelect(folder)}
+        onClick={() => !isDisabled && onSelect(folder)}
         onContextMenu={handleContextMenu}
       >
-        <div className="flex-1 flex items-center py-2 gap-2 overflow-hidden">
+        <div className="flex-1 flex items-center py-2 px-3 gap-2 overflow-hidden">
           <Icon
             size={16}
             className={`shrink-0 transition-colors ${
-              isSelected ? 'text-xibo-blue-500 fill-xibo-blue-200' : 'text-gray-400'
+              isSelected ? 'text-xibo-blue-500 fill-xibo-blue-200' : 'text-gray-800'
             }`}
           />
-          <span className="truncate text-sm">{folder.text}</span>
+          <span className="truncate text-sm font-semibold">{folder.text}</span>
         </div>
 
         <div className="pr-1">
           {folder.hasChildren ? (
             <button
               onClick={onToggle}
-              className={`p-1 rounded-full hover:bg-black/5 text-gray-400 transition-transform duration-200 ${
-                folder.isExpanded ? 'rotate-0' : '-rotate-90'
+              className={`p-1 rounded-full hover:bg-black/5 text-gray-800 transition-transform duration-200 ${
+                folder.isExpanded ? 'rotate-180' : 'rotate-0'
               }`}
             >
               <ChevronDown size={14} />
@@ -182,6 +444,7 @@ function FolderItem({
         </div>
       </div>
 
+      {/* Overflow menu*/}
       {menuPosition && (
         <div
           ref={menuRef}
@@ -251,7 +514,7 @@ function FolderItem({
               )}
               {!permissions?.create && !permissions?.modify && !permissions?.delete && (
                 <span className="text-[10px] text-gray-400 px-3 py-1 italic block text-center">
-                  Read Only
+                  {t('Read Only')}
                 </span>
               )}
             </>
@@ -262,7 +525,6 @@ function FolderItem({
   );
 }
 
-// TODO: Design
 function ContextMenuItem({
   label,
   onClick,
@@ -279,11 +541,11 @@ function ContextMenuItem({
       type="button"
       onClick={onClick}
       className={`flex items-center gap-2 text-xs text-left px-3 py-2 hover:bg-gray-50 w-full transition-colors ${
-        variant === 'danger' ? 'text-red-600 hover:bg-red-50' : 'text-gray-700'
+        variant === 'danger' ? 'text-red-600 hover:bg-red-50' : 'text-gray-800'
       }`}
     >
       {Icon && (
-        <Icon size={14} className={variant === 'danger' ? 'text-red-500' : 'text-gray-400'} />
+        <Icon size={14} className={variant === 'danger' ? 'text-red-500' : 'text-gray-800'} />
       )}
       {label}
     </button>

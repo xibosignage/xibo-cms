@@ -26,7 +26,7 @@ import {
   type RowSelectionState,
 } from '@tanstack/react-table';
 import { Search, Filter, Folder, FilterX, Plus, Upload } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useTranslation } from 'react-i18next';
 
@@ -50,6 +50,7 @@ import { useMediaData } from './hooks/useMediaData';
 import Button from '@/components/ui/Button';
 import { FileUploader } from '@/components/ui/FileUploader';
 import FilterInputs from '@/components/ui/FilterInputs';
+import FolderActionModals from '@/components/ui/FolderActionModals';
 import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import FolderSidebar from '@/components/ui/FolderSidebar';
 import { notify } from '@/components/ui/Notification';
@@ -60,8 +61,10 @@ import { DataGrid } from '@/components/ui/table/DataGrid';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useUploadContext } from '@/context/UploadContext';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useFolderActions } from '@/hooks/useFolderActions';
 import EditMediaModal from '@/pages/Library/Media/components/EditMediaModal';
 import { useMediaFilterOptions } from '@/pages/Library/Media/hooks/useMediaFilterOptions';
+import { fetchContextButtons } from '@/services/folderApi';
 import { deleteMedia, downloadMedia } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
 
@@ -73,6 +76,8 @@ export default function Media() {
     pageIndex: 0,
     pageSize: 10,
   });
+
+  const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -84,6 +89,8 @@ export default function Media() {
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [selectedFolderId, setSelectedFolderId] = useState<number | null>(1);
   const [selectedFolderName, setSelectedFolderName] = useState(t('Root Folder'));
+  const [canAddToFolder, setCanAddToFolder] = useState(false);
+
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
   const [openModal, setOpenModal] = useState({
     edit: false,
@@ -123,9 +130,53 @@ export default function Media() {
 
   const [mediaList, setMediaList] = useState<Media[]>([]);
 
+  const folderActions = useFolderActions({
+    onSuccess: (targetFolder) => {
+      setFolderRefreshTrigger((prev) => prev + 1);
+
+      if (targetFolder) {
+        handleFolderChange({ id: targetFolder.id, text: targetFolder.text });
+      } else {
+        handleRefresh();
+      }
+    },
+  });
+
   useEffect(() => {
     setMediaList(data ?? []);
   }, [data]);
+
+  // Check selected folder permission to add media
+  useEffect(() => {
+    if (selectedFolderId === null) {
+      setCanAddToFolder(false);
+      return;
+    }
+
+    let active = true;
+
+    fetchContextButtons(selectedFolderId)
+      .then((perms) => {
+        if (active) {
+          setCanAddToFolder(perms.create || false);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch folder permissions', err);
+        if (active) {
+          setCanAddToFolder(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [selectedFolderId]);
+
+  const uploadStateRef = useRef({ selectedFolderId, canCreate: canAddToFolder });
+  useEffect(() => {
+    uploadStateRef.current = { selectedFolderId, canCreate: canAddToFolder };
+  }, [selectedFolderId, canAddToFolder]);
 
   const selectedMedia = mediaList.find((m) => m.mediaId === selectedMediaId) ?? null;
 
@@ -145,10 +196,14 @@ export default function Media() {
 
   // Handles dropping files anywhere on the screen
   const onGlobalDrop = (acceptedFiles: File[]) => {
-    if (acceptedFiles.length > 0 && selectedFolderId != null) {
+    const { selectedFolderId: currentId, canCreate: hasPermission } = uploadStateRef.current;
+
+    if (acceptedFiles.length > 0 && currentId != null && hasPermission) {
       setAddModalOpen(true);
-      addFiles(acceptedFiles, selectedFolderId);
+      addFiles(acceptedFiles, currentId);
       notify.success(t('Files added to queue'));
+    } else if (currentId != null && !hasPermission) {
+      notify.error(t('You do not have permission to upload to this folder'));
     }
   };
 
@@ -164,7 +219,7 @@ export default function Media() {
   });
 
   const handleManualAddFiles = (files: File[]) => {
-    if (!selectedFolderId) {
+    if (!selectedFolderId || !canAddToFolder) {
       return;
     }
 
@@ -320,26 +375,37 @@ export default function Media() {
         selectedFolderId={selectedFolderId}
         onSelect={handleFolderChange}
         onClose={() => setShowFolderSidebar(false)}
+        onAction={folderActions.openAction}
+        refreshTrigger={folderRefreshTrigger}
       />
 
-      <div className="flex-1 flex flex-col min-h-0 min-w-0 px-4 pb-4">
+      <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
         {isGlobalDragActive && !isAddModalOpen && (
           <div className="absolute bottom-14 left-1/2 -translate-x-1/2 z-50 justify-center flex flex-col items-center gap-3 mb-0">
             {selectedFolderId != null ? (
-              <>
-                <span className="inline-flex justify-center items-center size-15.5 shadow-lg rounded-full border-7 animate-bounce border-blue-50 bg-xibo-blue-100 text-blue-800">
-                  <Upload className="shrink-0 size-6.5" />
-                </span>
-                <div className="bg-slate-50 border border-gray-200 px-4 py-2 shadow-lg rounded-full flex justify-center items-center gap-2">
-                  <span className="text-sm text-gray-800">{t('Upload files to ')}</span>
-                  <span className="text-xibo-blue-600 font-semibold flex">
-                    <div className="size-6.5 flex justify-center items-center">
-                      <Folder className="size-4"></Folder>
-                    </div>
-                    {`"${selectedFolderName}"`}
+              canAddToFolder ? (
+                <>
+                  <span className="inline-flex justify-center items-center size-15.5 shadow-lg rounded-full border-7 animate-bounce border-blue-50 bg-xibo-blue-100 text-blue-800">
+                    <Upload className="shrink-0 size-6.5" />
+                  </span>
+                  <div className="bg-slate-50 border border-gray-200 px-4 py-2 shadow-lg rounded-full flex justify-center items-center gap-2">
+                    <span className="text-sm text-gray-800">{t('Upload files to ')}</span>
+                    <span className="text-xibo-blue-600 font-semibold flex">
+                      <div className="size-6.5 flex justify-center items-center">
+                        <Folder className="size-4" />
+                      </div>
+                      {`"${selectedFolderName}"`}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <div className="bg-slate-50 border border-gray-200 px-4 py-2 shadow-lg rounded-full flex justify-center items-center">
+                  <span className="text-sm font-bold text-red-800">
+                    {t('You cannot upload files to')}
+                    <span className="ml-1">"{selectedFolderName}"</span>
                   </span>
                 </div>
-              </>
+              )
             ) : (
               <div className="bg-slate-50 border border-gray-200 px-4 py-2 shadow-lg rounded-full flex justify-center items-center">
                 <span className="text-sm font-bold text-red-800">
@@ -350,7 +416,7 @@ export default function Media() {
           </div>
         )}
 
-        <div className="flex flex-row justify-between py-5 items-center gap-4">
+        <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Media" navigation={LIBRARY_TABS} />
           <div className="flex items-center gap-2 md:mb-0">
             <Button variant="primary" onClick={() => setAddModalOpen(true)} leftIcon={Plus}>
@@ -359,17 +425,19 @@ export default function Media() {
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="w-full md:w-auto">
+        <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
+          <div className="w-full lg:flex-1 md:min-w-0">
             <FolderBreadcrumb
               currentFolderId={selectedFolderId}
               onNavigate={handleFolderChange}
               isSidebarOpen={showFolderSidebar}
               onToggleSidebar={() => setShowFolderSidebar(!showFolderSidebar)}
+              onAction={folderActions.openAction}
+              refreshTrigger={folderRefreshTrigger}
             />
           </div>
 
-          <div className="flex items-center gap-2 md:w-auto w-full">
+          <div className="flex items-center gap-2 w-full xl:w-[460px] lg:w-[300px] shrink-0">
             <div className="relative flex-1 flex">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <Search className="w-4 h-4 text-gray-400" />
@@ -382,7 +450,7 @@ export default function Media() {
                   setPagination((prev) => ({ ...prev, pageIndex: 0 }));
                 }}
                 placeholder={t('Search media...')}
-                className="py-2 px-3 pl-10 block h-[45px] bg-gray-100 rounded-lg md:w-[365px] w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none"
+                className="py-2 px-3 pl-10 block h-[45px] bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none"
               />
             </div>
             <Button
@@ -507,6 +575,7 @@ export default function Media() {
             updateFileData={updateFileData}
             isUploading={false}
             maxSize={2 * 1024 * 1024 * 1024}
+            disabled={!canAddToFolder || selectedFolderId === null}
             onUrlUpload={(url) => {
               if (!selectedFolderId) {
                 return;
@@ -547,7 +616,11 @@ export default function Media() {
         />
       )}
       <ShareModal onClose={() => toggleModal('share', false)} openModal={openModal.share} />
+
       <UploadProgressDock isModalOpen={isAddModalOpen} />
+
+      <FolderActionModals folderActions={folderActions} />
+
       <DeleteMediaModal
         isOpen={openModal.delete}
         onClose={() => toggleModal('delete', false)}

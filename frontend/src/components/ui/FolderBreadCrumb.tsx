@@ -1,20 +1,44 @@
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 import {
   ChevronRight,
   Folder as FolderIcon,
   Loader2,
-  MoreVertical,
-  FileEdit,
   Trash2,
   FolderPlus,
   UserPlus2,
   FolderInput,
+  ChevronDown,
+  FolderEdit,
+  MoreHorizontal,
   type LucideIcon,
 } from 'lucide-react';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { twMerge } from 'tailwind-merge';
 
 import Button from './Button';
 
+import type { ActionType } from '@/hooks/useFolderActions';
 import { fetchFolderById, fetchContextButtons, type FolderPermissions } from '@/services/folderApi';
 import type { Folder } from '@/types/folder';
 
@@ -24,6 +48,8 @@ interface FolderBreadcrumbProps {
   isSidebarOpen: boolean;
   onToggleSidebar: () => void;
   className?: string;
+  onAction: (action: ActionType, folder: Folder) => void;
+  refreshTrigger: number;
 }
 
 export default function FolderBreadcrumb({
@@ -32,22 +58,300 @@ export default function FolderBreadcrumb({
   isSidebarOpen,
   onToggleSidebar,
   className = '',
+  onAction,
+  refreshTrigger,
 }: FolderBreadcrumbProps) {
   const { t } = useTranslation();
+  const { breadcrumbs } = useBreadcrumbPath(currentFolderId, refreshTrigger);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [limits, setLimits] = useState({ start: 3, end: 3 });
 
-  const [breadcrumbs, setBreadcrumbs] = useState<Folder[]>([]);
-  const [loadingPath, setLoadingPath] = useState(false);
+  useLayoutEffect(() => {
+    const element = containerRef.current;
 
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [menuPerms, setMenuPerms] = useState<FolderPermissions | null>(null);
-  const [loadingPerms, setLoadingPerms] = useState(false);
+    if (!element) {
+      return;
+    }
+
+    const observer = new ResizeObserver((entries) => {
+      if (!entries[0]) {
+        return;
+      }
+
+      // Measure container
+      const width = entries[0].contentRect.width;
+
+      setLimits((prev) => {
+        let newLimits = { start: 4, end: 4 };
+        if (width < 300) {
+          newLimits = { start: 0, end: 1 };
+        } else if (width < 600) {
+          newLimits = { start: 1, end: 2 };
+        } else if (width < 800) {
+          newLimits = { start: 2, end: 2 };
+        } else if (width < 1000) {
+          newLimits = { start: 2, end: 3 };
+        } else if (width < 1200) {
+          newLimits = { start: 3, end: 3 };
+        }
+
+        // Only update if values changed
+        if (prev.start !== newLimits.start || prev.end !== newLimits.end) {
+          return newLimits;
+        }
+
+        return prev;
+      });
+    });
+
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, []);
+
+  const total = breadcrumbs.length;
+  const threshold = limits.start + limits.end;
+
+  let startItems = breadcrumbs;
+  let endItems: Folder[] = [];
+  let hasHiddenItems = false;
+
+  if (total > threshold) {
+    startItems = breadcrumbs.slice(0, limits.start);
+    endItems = breadcrumbs.slice(-limits.end);
+    hasHiddenItems = true;
+  }
+
+  const renderItem = (folder: Folder, isLast: boolean) => (
+    <div key={folder.id} className={twMerge('flex items-center gap-1', isLast ? '' : 'min-w-0')}>
+      {isLast ? (
+        <div className="flex items-center px-2 py-2">
+          <div
+            title={folder.text}
+            aria-label={folder.text}
+            className="font-semibold text-xibo-blue-500 truncate max-w-20 sm:max-w-[120px]"
+          >
+            {folder.text}
+          </div>
+          <FolderContextMenu folder={folder} onAction={onAction} />
+        </div>
+      ) : (
+        <>
+          <button
+            title={folder.text}
+            aria-label={folder.text}
+            onClick={() => onNavigate({ id: folder.id, text: folder.text })}
+            className="flex items-center px-2 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 cursor-pointer truncate max-w-[100px] sm:max-w-[150px]"
+          >
+            {folder.text}
+          </button>
+          <div className="text-gray-400 shrink-0">
+            <ChevronRight className="size-4" />
+          </div>
+        </>
+      )}
+    </div>
+  );
+
+  return (
+    <div ref={containerRef} className={twMerge('flex items-center gap-0.5 text-sm', className)}>
+      <Button
+        variant="tertiary"
+        onClick={onToggleSidebar}
+        title={t('Toggle Folder Tree')}
+        className="size-[38px] shrink-0 flex items-center justify-center mr-1"
+      >
+        <FolderIcon className={twMerge('size-4.5', isSidebarOpen ? 'fill-current' : '')} />
+      </Button>
+
+      {/* Start Group */}
+      {startItems.map((folder, index) => {
+        const isTrueLast = !hasHiddenItems && index === startItems.length - 1;
+        return renderItem(folder, isTrueLast);
+      })}
+
+      {/* Dots */}
+      {hasHiddenItems && (
+        <div className="flex items-center px-1 text-gray-400">
+          <MoreHorizontal className="size-4" />
+          <ChevronRight className="size-4 ml-1" />
+        </div>
+      )}
+
+      {/* End Group */}
+      {hasHiddenItems &&
+        endItems.map((folder, index) => {
+          const isTrueLast = index === endItems.length - 1;
+          return renderItem(folder, isTrueLast);
+        })}
+    </div>
+  );
+}
+
+function FolderContextMenu({
+  folder,
+  onAction,
+}: {
+  folder: Folder;
+  onAction: (action: ActionType, folder: Folder) => void;
+}) {
+  const { t } = useTranslation();
+  const [isOpen, setIsOpen] = useState(false);
+  const [perms, setPerms] = useState<FolderPermissions | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  const handleToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isOpen) {
+      setIsOpen(false);
+      return;
+    }
+    setIsOpen(true);
+
+    if (!perms) {
+      setIsLoading(true);
+      try {
+        const p = await fetchContextButtons(folder.id);
+        setPerms(p);
+      } catch (err) {
+        console.error('Failed to load permissions', err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const handleItemClick = (action: ActionType) => {
+    onAction(action, folder);
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="relative flex justify-center items-center" ref={menuRef}>
+      <button
+        onClick={handleToggle}
+        className={twMerge(
+          'rounded-lg p-1',
+          isOpen ? 'bg-gray-100 text-gray-900' : 'text-gray-400 hover:text-gray-800 cursor-pointer',
+        )}
+      >
+        <ChevronDown className="size-4" />
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-0 top-full mt-1 p-2 w-[218px] bg-white rounded-xl shadow-lg border border-gray-200 z-30 overflow-hidden">
+          {isLoading ? (
+            <div className="flex justify-center p-2">
+              <Loader2 size={14} className="animate-spin text-xibo-blue-500" />
+            </div>
+          ) : (
+            <>
+              {perms?.create && (
+                <ContextMenuItem
+                  icon={FolderPlus}
+                  label={t('New Folder')}
+                  onClick={() => handleItemClick('create')}
+                />
+              )}
+              {perms?.modify && (
+                <ContextMenuItem
+                  icon={FolderEdit}
+                  label={t('Rename')}
+                  onClick={() => handleItemClick('rename')}
+                />
+              )}
+              {perms?.share && (
+                <ContextMenuItem
+                  icon={UserPlus2}
+                  label={t('Share')}
+                  onClick={() => handleItemClick('share')}
+                />
+              )}
+              {perms?.move && (
+                <ContextMenuItem
+                  icon={FolderInput}
+                  label={t('Move')}
+                  onClick={() => handleItemClick('move')}
+                />
+              )}
+
+              {(perms?.create || perms?.modify || perms?.share || perms?.move) && perms?.delete && (
+                <div className="h-px my-2 bg-gray-200" role="separator" />
+              )}
+
+              {perms?.delete && (
+                <ContextMenuItem
+                  icon={Trash2}
+                  label={t('Delete')}
+                  variant="danger"
+                  onClick={() => handleItemClick('delete')}
+                />
+              )}
+
+              {!perms?.create && !perms?.modify && !perms?.delete && (
+                <span className="text-[10px] text-gray-600 px-2 py-1 italic block text-center">
+                  {t('Read Only')}
+                </span>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ContextMenuItem({
+  label,
+  onClick,
+  icon: Icon,
+  variant = 'default',
+}: {
+  label: string;
+  onClick: () => void;
+  icon?: LucideIcon;
+  variant?: 'default' | 'danger';
+}) {
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      className={twMerge(
+        'flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm font-semibold',
+        variant === 'danger' ? 'text-red-600 hover:bg-red-50' : 'text-gray-800 hover:bg-gray-100',
+      )}
+    >
+      {Icon && (
+        <Icon size={14} className={variant === 'danger' ? 'text-red-600' : 'text-gray-800'} />
+      )}
+      {label}
+    </button>
+  );
+}
+
+function useBreadcrumbPath(currentFolderId: number | null, refreshTrigger: number) {
+  const [breadcrumbs, setBreadcrumbs] = useState<Folder[]>([]);
+  const [isLoading, setIsLoading] = useState(!!currentFolderId);
 
   useEffect(() => {
     let active = true;
 
-    async function loadBreadcrumbPath() {
-      setLoadingPath(true);
+    async function loadPath() {
+      setIsLoading(true);
       try {
         const path: Folder[] = [];
         let nextId = currentFolderId;
@@ -76,213 +380,16 @@ export default function FolderBreadcrumb({
         console.error('Failed to resolve breadcrumb path', error);
         if (active) setBreadcrumbs([]);
       } finally {
-        if (active) setLoadingPath(false);
+        if (active) setIsLoading(false);
       }
     }
 
-    loadBreadcrumbPath();
+    loadPath();
 
     return () => {
       active = false;
     };
-  }, [currentFolderId]);
+  }, [currentFolderId, refreshTrigger]);
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false);
-      }
-    }
-    if (isMenuOpen) document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isMenuOpen]);
-
-  const handleMenuToggle = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isMenuOpen) {
-      setIsMenuOpen(false);
-      return;
-    }
-    setIsMenuOpen(true);
-
-    if (!menuPerms && currentFolderId) {
-      setLoadingPerms(true);
-      try {
-        const perms = await fetchContextButtons(currentFolderId);
-        setMenuPerms(perms);
-      } catch (err) {
-        console.error('Failed to load permissions', err);
-      } finally {
-        setLoadingPerms(false);
-      }
-    }
-  };
-
-  const handleAction = (action: string, folderId: number | null, folderName: string) => {
-    console.log(`Action: ${action} on folder: ${folderName} (${folderId})`);
-    setIsMenuOpen(false);
-  };
-
-  const currentFolderName = breadcrumbs?.[breadcrumbs.length - 1]?.text ?? '';
-
-  // TODO: Design
-  return (
-    <div className={`flex items-center gap-2 text-sm ${className}`}>
-      <Button
-        variant="link"
-        onClick={onToggleSidebar}
-        title={t('Toggle Folder Tree')}
-        className={`p-2 border rounded-md shadow-sm transition-colors ${
-          isSidebarOpen
-            ? 'bg-xibo-blue-50 text-xibo-blue-600 border-xibo-blue-200'
-            : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-600'
-        }`}
-      >
-        <FolderIcon size={18} className="fill-current" />
-      </Button>
-
-      <ChevronRight size={14} className="text-gray-300" />
-
-      <div className="flex items-center flex-wrap bg-white border border-gray-200 rounded-md shadow-sm px-2 py-1 gap-1 min-h-9">
-        {loadingPath && breadcrumbs.length === 0 ? (
-          <div className="flex items-center gap-2 px-2 text-gray-400">
-            <Loader2 size={12} className="animate-spin" />
-            <span>{t('Resolving path...')}</span>
-          </div>
-        ) : (
-          breadcrumbs.map((folder, index) => {
-            const isLast = index === breadcrumbs.length - 1;
-
-            return (
-              <div key={folder.id} className="flex items-center">
-                {index > 0 && <span className="text-gray-300 mx-1">/</span>}
-
-                {isLast ? (
-                  <div className="flex items-center gap-1 pl-1">
-                    <span className="font-semibold text-gray-700">{folder.text}</span>
-
-                    <div className="relative ml-1" ref={menuRef}>
-                      <button
-                        onClick={handleMenuToggle}
-                        className={`p-1 rounded-md transition-colors ${
-                          isMenuOpen
-                            ? 'bg-gray-100 text-gray-900'
-                            : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
-                        }`}
-                      >
-                        <MoreVertical size={14} />
-                      </button>
-
-                      {isMenuOpen && (
-                        <div className="absolute left-0 top-full mt-1 w-40 bg-white rounded-lg shadow-xl border border-gray-100 z-30 overflow-hidden py-1 animate-in fade-in zoom-in-95 duration-100">
-                          {loadingPerms ? (
-                            <div className="flex justify-center p-2">
-                              <Loader2 size={14} className="animate-spin text-xibo-blue-500" />
-                            </div>
-                          ) : (
-                            <>
-                              {menuPerms?.create && (
-                                <ContextMenuItem
-                                  icon={FolderPlus}
-                                  label={t('New Folder')}
-                                  onClick={() =>
-                                    handleAction('create', currentFolderId, currentFolderName)
-                                  }
-                                />
-                              )}
-                              {menuPerms?.modify && (
-                                <ContextMenuItem
-                                  icon={FileEdit}
-                                  label={t('Rename')}
-                                  onClick={() =>
-                                    handleAction('rename', currentFolderId, currentFolderName)
-                                  }
-                                />
-                              )}
-                              {menuPerms?.share && (
-                                <ContextMenuItem
-                                  icon={UserPlus2}
-                                  label={t('Share')}
-                                  onClick={() =>
-                                    handleAction('share', currentFolderId, currentFolderName)
-                                  }
-                                />
-                              )}
-                              {menuPerms?.move && (
-                                <ContextMenuItem
-                                  icon={FolderInput}
-                                  label={t('Move')}
-                                  onClick={() =>
-                                    handleAction('move', currentFolderId, currentFolderName)
-                                  }
-                                />
-                              )}
-                              <div className="m-2 h-px bg-gray-100" role="separator" />
-                              {menuPerms?.delete && (
-                                <ContextMenuItem
-                                  icon={Trash2}
-                                  label={t('Delete')}
-                                  variant="danger"
-                                  onClick={() =>
-                                    handleAction('delete', currentFolderId, currentFolderName)
-                                  }
-                                />
-                              )}
-                              {!menuPerms?.create && !menuPerms?.modify && !menuPerms?.delete && (
-                                <span className="text-[10px] text-gray-400 px-2 py-1 italic block text-center">
-                                  {t('Read Only')}
-                                </span>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => onNavigate({ id: folder.id, text: folder.text })}
-                    className="px-1.5 py-0.5 text-gray-500 hover:text-xibo-blue-600 hover:bg-blue-50 rounded text-xs transition-colors max-w-[100px] truncate"
-                    title={folder.text}
-                  >
-                    {folder.text}
-                  </button>
-                )}
-              </div>
-            );
-          })
-        )}
-      </div>
-    </div>
-  );
-}
-
-// TODO: Design
-function ContextMenuItem({
-  label,
-  onClick,
-  icon: Icon,
-  variant = 'default',
-}: {
-  label: string;
-  onClick: () => void;
-  icon?: LucideIcon;
-  variant?: 'default' | 'danger';
-}) {
-  return (
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick();
-      }}
-      className={`flex items-center gap-2 text-xs text-left p-2 hover:bg-gray-50 w-full transition-colors
-        ${variant === 'danger' ? 'text-red-600 hover:bg-red-50' : 'text-gray-700'}
-      `}
-    >
-      {Icon && (
-        <Icon size={14} className={variant === 'danger' ? 'text-red-500' : 'text-gray-400'} />
-      )}
-      {label}
-    </button>
-  );
+  return { breadcrumbs, isLoading };
 }

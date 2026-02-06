@@ -19,17 +19,15 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { ChevronDown, Home, Loader2, Search } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { ChevronDown, Search } from 'lucide-react';
+import { useEffect, useRef, useState, useLayoutEffect, useCallback, useId } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
-import Button from '../Button';
 import FolderTreeList, { type FolderAction } from '../FolderTreeList';
 
-import { fetchFolderById, fetchFolderTree, searchFolders } from '@/services/folderApi';
+import { fetchFolderById } from '@/services/folderApi';
 import type { Folder } from '@/types/folder';
-
-type FolderTab = 'Home' | 'My Files';
 
 interface SelectFolderProps {
   selectedId?: number | null;
@@ -39,117 +37,136 @@ interface SelectFolderProps {
 
 export default function SelectFolder({ selectedId, onSelect, onAction }: SelectFolderProps) {
   const { t } = useTranslation();
+  const generatedId = useId();
 
   const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<FolderTab>('Home');
   const [initialName, setInitialName] = useState<string | null>(null);
-
   const [folderSearch, setFolderSearch] = useState('');
-  const [treeData, setTreeData] = useState<Folder[]>([]);
-  const [searchResults, setSearchResults] = useState<Folder[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const findNameInTree = (nodes: Folder[], id: number): string | null => {
-    for (const node of nodes) {
-      if (node.id === id) return node.text;
-      if (node.children) {
-        const found = findNameInTree(node.children, id);
-        if (found) return found;
-      }
-    }
-    return null;
-  };
-
-  const treeName = selectedId
-    ? folderSearch
-      ? findNameInTree(searchResults, selectedId)
-      : findNameInTree(treeData, selectedId)
-    : null;
-
-  const displayName = treeName || initialName;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!selectedId || treeName) {
-      return;
-    }
-
+    if (!selectedId) return;
     let active = true;
-
     fetchFolderById(selectedId)
       .then((folder) => {
-        if (active) {
-          setInitialName(folder.text);
-        }
+        if (active) setInitialName(folder.text);
       })
-      .catch((err) => {
-        console.error('Failed to resolve folder name', err);
-      });
-
+      .catch((err) => console.error('Failed to resolve folder name', err));
     return () => {
       active = false;
     };
-  }, [selectedId, treeName]);
+  }, [selectedId]);
 
-  // Click Outside Listener
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
+  // Positioning
+  const updatePosition = useCallback(() => {
+    if (!isOpen || !containerRef.current || !dropdownRef.current) return;
+
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const dropdownRect = dropdownRef.current.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const gap = 4;
+
+    // Dimensions
+    const contentHeight = dropdownRect.height || 300;
+    const spaceBelow = viewportHeight - containerRect.bottom - gap;
+    const spaceAbove = containerRect.top - gap;
+    const maxHeight = 400;
+
+    let top: number;
+    let finalMaxHeight = maxHeight;
+    let transformOrigin = 'top';
+
+    if (spaceBelow < contentHeight && spaceAbove > spaceBelow) {
+      top = containerRect.top - gap - Math.min(contentHeight, spaceAbove);
+      finalMaxHeight = Math.min(maxHeight, spaceAbove);
+      transformOrigin = 'bottom';
+    } else {
+      top = containerRect.bottom + gap;
+      finalMaxHeight = Math.min(maxHeight, spaceBelow);
     }
-    if (isOpen) document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+
+    Object.assign(dropdownRef.current.style, {
+      top: `${top}px`,
+      left: `${containerRect.left}px`,
+      width: `${containerRect.width}px`,
+      maxHeight: `${finalMaxHeight}px`,
+      opacity: '1',
+      transformOrigin,
+    });
   }, [isOpen]);
 
-  // Data Loading Listener
+  useLayoutEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    requestAnimationFrame(() => updatePosition());
+
+    const resizeObserver = new ResizeObserver(() => updatePosition());
+    if (dropdownRef.current) {
+      resizeObserver.observe(dropdownRef.current);
+    }
+
+    return () => resizeObserver.disconnect();
+  }, [isOpen, updatePosition]);
+
   useEffect(() => {
     if (!isOpen) return;
 
-    const controller = new AbortController();
-
-    async function loadData() {
-      setIsLoading(true);
-      try {
-        if (folderSearch.trim()) {
-          const results = await searchFolders(folderSearch, controller.signal);
-          setSearchResults(results);
-        } else {
-          const tree = await fetchFolderTree(controller.signal);
-          setTreeData(tree);
-        }
-      } catch (e: unknown) {
-        if (e instanceof Error && e.name !== 'CanceledError' && e.name !== 'AbortError') {
-          console.error(e);
-        }
-      } finally {
-        setIsLoading(false);
+    const handleScroll = (event: Event) => {
+      if (dropdownRef.current && dropdownRef.current.contains(event.target as Node)) {
+        return;
       }
-    }
+      setIsOpen(false);
+    };
 
-    loadData();
-    return () => controller.abort();
-  }, [isOpen, folderSearch, activeTab]);
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(target) &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(target)
+      ) {
+        setIsOpen(false);
+      }
+    };
 
-  // TODO: Design
+    const handleResize = () => setIsOpen(false);
+
+    document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('resize', handleResize);
+
+    const scrollTimeout = setTimeout(() => {
+      window.addEventListener('scroll', handleScroll, true);
+    }, 100);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', handleScroll, true);
+      clearTimeout(scrollTimeout);
+    };
+  }, [isOpen]);
+
+  const displayName = initialName;
+
   return (
-    <div className="relative overflow-visible" ref={containerRef}>
+    <div className="relative" ref={containerRef}>
       <label className="block text-xs font-semibold text-gray-500 mb-1">
         {t('Select folder location')}
       </label>
 
-      {/* Trigger Button */}
+      {/* Portal Trigger */}
       <div
-        className="w-full border border-gray-200 rounded-lg flex items-center bg-white transition-shadow hover:shadow-sm cursor-pointer"
+        className="w-full border border-gray-200 rounded-lg flex items-center bg-white transition-shadow hover:shadow-sm cursor-pointer h-[42px]"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <span className="p-3 border-r text-sm border-gray-200 text-gray-500 bg-gray-50 rounded-l-lg font-medium">
-          {t(activeTab)}
-        </span>
-
         <button
           type="button"
-          className="p-3 flex-1 text-sm text-left hover:bg-gray-50 transition-colors truncate"
+          className="px-3 flex-1 text-sm text-left hover:bg-gray-50 transition-colors truncate h-full flex items-center"
         >
           {displayName || selectedId ? (
             <span className="text-gray-800">
@@ -160,7 +177,7 @@ export default function SelectFolder({ selectedId, onSelect, onAction }: SelectF
           )}
         </button>
 
-        <div className="p-3 text-gray-500">
+        <div className="px-3 text-gray-500">
           <ChevronDown
             size={14}
             className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
@@ -168,70 +185,52 @@ export default function SelectFolder({ selectedId, onSelect, onAction }: SelectF
         </div>
       </div>
 
-      {/* Dropdown Panel */}
-      <div
-        className={`absolute top-[75px] w-full bg-white shadow-xl rounded-lg border border-gray-100 overflow-hidden transition-all duration-200 ease-out z-50 origin-top
-          ${isOpen ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible pointer-events-none'}
-        `}
-      >
-        <div className="bg-gray-100 p-2 text-[10px] font-bold text-gray-500 uppercase tracking-wider w-full border-b border-gray-200">
-          {t('Select Folder')}
-        </div>
-
-        {/* Tabs */}
-        <div className="flex gap-x-1 px-2 pt-2 border-b border-gray-100 bg-white">
-          {(['Home', 'My Files'] as FolderTab[]).map((tab) => (
-            <Button
-              key={tab}
-              leftIcon={tab === 'Home' ? Home : undefined}
-              onClick={() => setActiveTab(tab)}
-              className={`px-3 py-2 text-sm transition-all rounded-t-lg border-b-2 bg-transparent hover:bg-blue-50/50 ${
-                activeTab === tab
-                  ? 'text-xibo-blue-600 border-xibo-blue-600 font-medium'
-                  : 'text-gray-500 border-transparent hover:text-gray-700'
-              }`}
-              variant="tertiary"
-            >
-              {t(tab)}
-            </Button>
-          ))}
-        </div>
-
-        {/* Search Bar */}
-        <div className="p-3 bg-white border-b border-gray-50">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <Search className="w-4 h-4 text-gray-400" />
+      {/* Portal Dropdown */}
+      {isOpen &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            style={{
+              position: 'fixed',
+              zIndex: 9999,
+              opacity: 0,
+            }}
+            className="bg-white shadow-xl rounded-lg border border-gray-100 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-100"
+          >
+            <div className="bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-500 uppercase w-fullshrink-0">
+              {t('Select Folder')}
             </div>
-            <input
-              value={folderSearch}
-              onChange={(e) => setFolderSearch(e.target.value)}
-              placeholder={t('Search folders...')}
-              className="py-2 pl-9 pr-4 block w-full rounded-md border-gray-200 text-sm focus:border-xibo-blue-500 focus:ring-xibo-blue-500 bg-gray-50 placeholder:text-gray-400"
-            />
-          </div>
-        </div>
 
-        {/* Content Area */}
-        <div className="max-h-[250px] overflow-y-auto pr-1 custom-scrollbar bg-white p-2">
-          {isLoading ? (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="w-5 h-5 text-xibo-blue-500 animate-spin" />
+            <div className="flex flex-col min-h-0 flex-1">
+              <FolderTreeList
+                selectedId={selectedId}
+                onSelect={(folder) => {
+                  onSelect({ id: folder.id, text: folder.text });
+                  setInitialName(folder.text);
+                  setIsOpen(false);
+                }}
+                onAction={onAction}
+                searchQuery={folderSearch}
+                customSlot={
+                  <div className="px-2 shrink-0 relative">
+                    <div className="absolute inset-y-0 left-3 flex items-center pl-3 pointer-events-none">
+                      <Search className="w-4 h-4 text-gray-500" />
+                    </div>
+                    <input
+                      id={generatedId + '_search'}
+                      value={folderSearch}
+                      onChange={(e) => setFolderSearch(e.target.value)}
+                      placeholder={t('Search')}
+                      className="py-2 pl-10 pr-4 block w-full rounded-lg border-gray-200 text-gray-800 text-sm focus:border-xibo-blue-500 focus:ring-xibo-blue-500 bg-white placeholder:text-gray-500"
+                      autoFocus
+                    />
+                  </div>
+                }
+              />
             </div>
-          ) : (
-            <FolderTreeList
-              folders={folderSearch.trim() ? searchResults : treeData}
-              selectedId={selectedId}
-              onSelect={(folder) => {
-                onSelect({ id: folder.id, text: folder.text });
-                setInitialName(folder.text);
-                setIsOpen(false);
-              }}
-              onAction={onAction}
-            />
-          )}
-        </div>
-      </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
