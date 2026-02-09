@@ -41,13 +41,14 @@ export default function FolderActionModals({ folderActions }: FolderActionModals
       {/* Create Modal */}
       <Modal
         isOpen={actionType === 'create'}
+        isPending={isPending}
         onClose={closeAction}
         title={t('Create New Folder')}
         size="sm"
         actions={[
           { label: t('Cancel'), onClick: closeAction, variant: 'secondary' },
           {
-            label: t('Save'),
+            label: isPending ? t('Creating...') : t('Create'),
             onClick: submitHandlers.create,
             disabled: isPending || !formState.inputText.trim(),
           },
@@ -68,13 +69,14 @@ export default function FolderActionModals({ folderActions }: FolderActionModals
       {/* Rename Modal */}
       <Modal
         isOpen={actionType === 'rename'}
+        isPending={isPending}
         onClose={closeAction}
         title={t('Rename Folder')}
         size="sm"
         actions={[
           { label: t('Cancel'), onClick: closeAction, variant: 'secondary' },
           {
-            label: t('Save'),
+            label: isPending ? t('Renaming...') : t('Rename'),
             onClick: submitHandlers.rename,
             disabled: isPending || !formState.inputText.trim(),
           },
@@ -95,13 +97,14 @@ export default function FolderActionModals({ folderActions }: FolderActionModals
       {/* Move Modal */}
       <Modal
         isOpen={actionType === 'move'}
+        isPending={isPending}
         onClose={closeAction}
         title={t('Move Folder')}
         size="md"
         actions={[
           { label: t('Cancel'), onClick: closeAction, variant: 'secondary' },
           {
-            label: t('Move'),
+            label: isPending ? t('Moving...') : t('Move'),
             onClick: submitHandlers.move,
             disabled: isPending || !formState.moveTargetId,
           },
@@ -127,20 +130,21 @@ export default function FolderActionModals({ folderActions }: FolderActionModals
       {/* Delete Modal */}
       <Modal
         isOpen={actionType === 'delete'}
+        isPending={isPending}
         onClose={closeAction}
         title={t('Delete Folder')}
         size="md"
         actions={[
           { label: t('Cancel'), onClick: closeAction, variant: 'secondary' },
           {
-            label: t('Delete'),
+            label: isPending ? t('Deleting...') : t('Delete'),
             onClick: submitHandlers.delete,
             disabled: isPending,
           },
         ]}
       >
         <div className="p-8 pt-0 flex flex-col gap-4">
-          <div className="text-sm text-gray-600 bg-red-100 p-4 py-8 rounded-lg">
+          <div className="text-sm text-gray-600 bg-red-100 p-4 py-8 rounded-lg overflow-hidden">
             {t('Delete')} <strong>"{activeFolder?.text}"</strong>?
           </div>
         </div>

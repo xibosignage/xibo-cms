@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { HelpCircle, Loader2 } from 'lucide-react';
+import { HelpCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -191,30 +191,23 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
       title={t('Edit Media')}
       onClose={onClose}
       isOpen={openModal}
+      isPending={isSaving}
       scrollable={false}
       actions={[
         {
           label: t('Cancel'),
           onClick: onClose,
           variant: 'secondary',
+          disabled: isSaving,
         },
         {
-          label: t('Save'),
+          label: isSaving ? t('Saving…') : t('Save'),
           onClick: handleSave,
           disabled: isSaving,
         },
       ]}
     >
-      <div className="flex flex-col h-full overflow-y-hidden overflow-x-visible gap-3 p-4 pt-0 relative">
-        {isSaving && (
-          <div className="absolute w-full h-full flex items-center justify-center bg-black/20 top-0 left-0 z-10 rounded-lg">
-            <span className="flex items-center gap-1 flex-col text-white">
-              <Loader2 size={32} className="animate-spin text-white" />
-              {isSaving ? t('Saving…') : t('Save')}
-            </span>
-          </div>
-        )}
-
+      <div className="flex flex-col h-full overflow-y-hidden overflow-x-visible gap-3 p-4 pt-0">
         <div className="shrink-0 p-4 m-4 mt-0 flex gap-3 bg-slate-50 rounded-lg">
           <div className="h-[150px] aspect-7/6 relative bg-gray-400 overflow-hidden rounded">
             <div className="h-[150px] aspect-7/6 bg-gray-100 flex items-center justify-center rounded">
@@ -267,7 +260,7 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 flex-1 min-h-0 p-4 overflow-y-auto heyItsMe pb-32">
+        <div className="flex flex-col gap-3 flex-1 min-h-0 p-4 overflow-y-auto pb-32">
           {/* Select Folder */}
           <div className="relative z-20">
             <SelectFolder

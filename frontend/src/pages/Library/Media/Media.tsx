@@ -30,7 +30,6 @@ import { useEffect, useState, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useTranslation } from 'react-i18next';
 
-import DeleteMediaModal from '../../../components/ui/modals/DeleteMediaModal';
 import ShareModal from '../../../components/ui/modals/ShareModal';
 
 import { getMediaItemActions } from './MediaConfig';
@@ -42,6 +41,7 @@ import {
   type MediaFilterInput,
   ACCEPTED_MIME_TYPES,
 } from './MediaConfig';
+import DeleteMediaModal from './components/DeleteMediaModal';
 import MediaCard from './components/MediaCard';
 import MediaPreviewer from './components/MediaPreviewer';
 import { UploadProgressDock } from './components/UploadProgressDock';

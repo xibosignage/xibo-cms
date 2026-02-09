@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { ChevronDown, Search } from 'lucide-react';
+import { ChevronDown, Loader2, Search } from 'lucide-react';
 import { useEffect, useRef, useState, useLayoutEffect, useCallback, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
@@ -41,19 +41,36 @@ export default function SelectFolder({ selectedId, onSelect, onAction }: SelectF
 
   const [isOpen, setIsOpen] = useState(false);
   const [initialName, setInitialName] = useState<string | null>(null);
+  const [isResolvingName, setIsResolvingName] = useState(false);
   const [folderSearch, setFolderSearch] = useState('');
 
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!selectedId) return;
+    if (!selectedId) {
+      setInitialName(null);
+      setIsResolvingName(false);
+      return;
+    }
+
     let active = true;
+
+    setIsResolvingName(true);
+    setInitialName(null);
+
     fetchFolderById(selectedId)
       .then((folder) => {
-        if (active) setInitialName(folder.text);
+        if (active) {
+          setInitialName(folder.text);
+        }
       })
-      .catch((err) => console.error('Failed to resolve folder name', err));
+      .catch((err) => console.error('Failed to resolve folder name', err))
+      .finally(() => {
+        if (active) {
+          setIsResolvingName(false);
+        }
+      });
     return () => {
       active = false;
     };
@@ -151,7 +168,27 @@ export default function SelectFolder({ selectedId, onSelect, onAction }: SelectF
     };
   }, [isOpen]);
 
-  const displayName = initialName;
+  // Helper to get the text to display on the button
+  const renderLabel = () => {
+    if (isResolvingName) {
+      return (
+        <span className="flex items-center gap-2 text-gray-400 italic text-xs">
+          <Loader2 className="animate-spin w-3 h-3" />
+          {t('Loading...')}
+        </span>
+      );
+    }
+
+    if (initialName) {
+      return <span className="text-gray-800">{initialName}</span>;
+    }
+
+    if (selectedId) {
+      return <span className="text-gray-800">{t('Folder #{{id}}', { id: selectedId })}</span>;
+    }
+
+    return <span className="text-gray-400">{t('Select a folder')}</span>;
+  };
 
   return (
     <div className="relative" ref={containerRef}>
@@ -168,13 +205,7 @@ export default function SelectFolder({ selectedId, onSelect, onAction }: SelectF
           type="button"
           className="px-3 flex-1 text-sm text-left hover:bg-gray-50 transition-colors truncate h-full flex items-center"
         >
-          {displayName || selectedId ? (
-            <span className="text-gray-800">
-              {displayName || t('Folder #{{id}}', { id: selectedId })}
-            </span>
-          ) : (
-            <span className="text-gray-400">{t('Select a folder')}</span>
-          )}
+          {renderLabel()}
         </button>
 
         <div className="px-3 text-gray-500">

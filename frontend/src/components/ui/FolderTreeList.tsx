@@ -131,9 +131,6 @@ export default function FolderTreeList({
   const { t } = useTranslation();
   const { user } = useUserContext();
 
-  // To fix load flicker after tree operations
-  const isFirstLoad = useRef(true);
-
   const currentUserId = user?.userId ?? -1;
 
   const [activeTab, setActiveTab] = useState<FolderTab>('Home');
@@ -146,9 +143,7 @@ export default function FolderTreeList({
     const controller = new AbortController();
 
     async function loadTree() {
-      if (isFirstLoad.current) {
-        setIsLoading(true);
-      }
+      setIsLoading(true);
 
       try {
         if (searchQuery.trim()) {
@@ -163,8 +158,9 @@ export default function FolderTreeList({
           console.error(e);
         }
       } finally {
-        setIsLoading(false);
-        isFirstLoad.current = false;
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     }
 
@@ -225,6 +221,10 @@ export default function FolderTreeList({
     );
   }
 
+  const hasData = rawData.length > 0;
+  const isInitialLoad = isLoading && !hasData;
+  const isRefreshing = isLoading && hasData;
+
   return (
     <div className="flex flex-col h-full overflow-hidden gap-2">
       <div className="flex gap-x-1 px-2 pt-2 border-b border-gray-100 bg-white shrink-0">
@@ -248,18 +248,38 @@ export default function FolderTreeList({
       {customSlot && <div className="flex flex-col gap-2 shrink-0">{customSlot}</div>}
 
       <div className="flex-1 overflow-auto min-h-0 min-w-0 pb-4">
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center h-40 gap-3 text-gray-400">
+        {/* Init loader */}
+        {isInitialLoad && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-gray-400 z-20 bg-white">
             <Loader2 className="w-6 h-6 animate-spin text-xibo-blue-500" />
             <span className="text-xs">{t('Loading folders...')}</span>
           </div>
-        ) : rawData.length === 0 ? (
-          <div className="text-center py-6 text-gray-400 italic text-xs flex flex-col items-center gap-2">
-            <FolderIcon size={24} className="opacity-20" />
-            <span>{t('No folders found')}</span>
+        )}
+
+        <div
+          className={twMerge(
+            'transition-all duration-300 ease-in-out h-full',
+            isRefreshing ? 'opacity-50 pointer-events-none grayscale-[0.5]' : 'opacity-100',
+          )}
+        >
+          {!hasData && !isLoading ? (
+            <div className="text-center py-6 text-gray-400 italic text-xs flex flex-col items-center gap-2">
+              <FolderIcon size={24} className="opacity-20" />
+              <span>{t('No folders found')}</span>
+            </div>
+          ) : (
+            content
+          )}
+        </div>
+
+        {/* Overlay loader */}
+        {isRefreshing && (
+          <div className="absolute inset-0 flex items-center justify-center z-10">
+            {/* Optional: Add a small white pill background for contrast */}
+            <div className="bg-white/80 p-2 rounded-full shadow-sm backdrop-blur-sm">
+              <Loader2 className="w-6 h-6 animate-spin text-xibo-blue-500" />
+            </div>
           </div>
-        ) : (
-          content
         )}
       </div>
     </div>
