@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import {defineConfig} from 'i18next-cli';
+import { defineConfig } from 'i18next-cli';
 
 export default defineConfig({
   locales: ['en'],
