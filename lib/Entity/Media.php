@@ -1056,6 +1056,6 @@ class Media implements \JsonSerializable
             : [$media, ''];
 
         // Append a suffix if the target user already has a media item with this name
-        return $base . '_imported' . $ext;
+        return $base . '_transferred' . $ext;
     }
 }
