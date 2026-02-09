@@ -76,8 +76,6 @@ class MastodonProvider implements WidgetProviderInterface
                 // username search: get account ID, always returns one record
                 $accountId = $this->getAccountId($uri, $dataProvider->getProperty('userName'), $dataProvider);
                 $queryOptions['tagged'] = trim($hashtag, '#');
-                $queryOptions['exclude_replies'] = true; // exclude replies to other users
-                $queryOptions['exclude_reblogs'] = true; // exclude reposts/boosts
                 $uri = rtrim($uri, '/') . '/api/v1/accounts/' . $accountId . '/statuses?';
             } else {
                 // Hashtag: When empty we should do a public search, when filled we should do a hashtag search
@@ -87,6 +85,9 @@ class MastodonProvider implements WidgetProviderInterface
                     $uri = rtrim($uri, '/') . '/api/v1/timelines/public';
                 }
             }
+
+            $queryOptions['exclude_replies'] = true; // exclude replies to other users
+            $queryOptions['exclude_reblogs'] = true; // exclude reposts/boosts
 
             $response = $dataProvider
                 ->getGuzzleClient($httpOptions)
@@ -103,7 +104,13 @@ class MastodonProvider implements WidgetProviderInterface
             // Expiry time for any media that is downloaded
             $expires = Carbon::now()->addHours($dataProvider->getSetting('cachePeriodImages', 24))->format('U');
 
+            $results = [];
+
             foreach ($result as $item) {
+                if ($this->isFilteredContent($item)) {
+                    continue;
+                }
+
                 // Parse the mastodon
                 $mastodon = new SocialMedia();
 
@@ -125,7 +132,6 @@ class MastodonProvider implements WidgetProviderInterface
                 // Bigger image
                 $mastodon->userProfileImageBigger = $mastodon->userProfileImage;
 
-
                 // Photo
                 // See if there are any photos associated with this status.
                 if ((isset($item['media_attachments']) && count($item['media_attachments']) > 0)) {
@@ -142,13 +148,21 @@ class MastodonProvider implements WidgetProviderInterface
                     }
                 }
 
+                $results[] = $mastodon;
+
                 // Add the mastodon topic.
                 $dataProvider->addItem($mastodon);
             }
 
-            // If we've got data, then set our cache period.
-            $dataProvider->setCacheTtl($dataProvider->getSetting('cachePeriod', 3600));
-            $dataProvider->setIsHandled();
+            // In case all results were filtered, then return an error message
+            if (empty($results)) {
+                $this->getLog()->error('Mastodon: No posts available due to filter settings.');
+                $dataProvider->addError(__('No posts available, please try a different hashtag.'));
+            } else {
+                // If we've got data, then set our cache period.
+                $dataProvider->setCacheTtl($dataProvider->getSetting('cachePeriod', 3600));
+                $dataProvider->setIsHandled();
+            }
         } catch (RequestException $requestException) {
             // Log and return empty?
             $this->getLog()->error('Mastodon: Unable to get posts: ' . $uri
@@ -198,5 +212,33 @@ class MastodonProvider implements WidgetProviderInterface
         $this->getLog()->debug('Mastodon: getAccountId: ID ' . $result['id']);
 
         return $result['id'];
+    }
+
+    /**
+     * Filter contents from Mastodon
+     */
+    private function isFilteredContent($item): bool
+    {
+        // Mastodon doesn't have a built-in API filter, thus, the current filtering logic is limited to
+        // the item properties
+
+        // Items marked as sensitive
+        if (!empty($item['sensitive'])) {
+            return true;
+        }
+
+        // Items with content warning
+        if (!empty(trim($item['spoiler_text'] ?? ''))) {
+            return true;
+        }
+
+        // Items with media attachments marked as sensitive
+        foreach ($item['media_attachments'] ?? [] as $media) {
+            if (!empty($media['sensitive'])) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
