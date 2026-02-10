@@ -271,6 +271,7 @@ export interface MediaActionsProps {
   onDownload: (row: Media) => void;
   openEditModal: (row: Media) => void;
   openShareModal?: () => void;
+  openDetails?: (id: number) => void;
 }
 
 export const getMediaItemActions = ({
@@ -279,6 +280,7 @@ export const getMediaItemActions = ({
   onDownload,
   openEditModal,
   openShareModal,
+  openDetails,
 }: MediaActionsProps): ((media: Media) => ActionItem[]) => {
   return (media: Media) => [
     // Quick Actions
@@ -330,7 +332,7 @@ export const getMediaItemActions = ({
     {
       label: t('Details'),
       icon: Info,
-      onClick: () => console.log('Details', media.mediaId),
+      onClick: () => openDetails && openDetails(media.mediaId),
     },
     { isSeparator: true },
     {

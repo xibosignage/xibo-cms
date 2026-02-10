@@ -43,6 +43,7 @@ import {
 } from './MediaConfig';
 import DeleteMediaModal from './components/DeleteMediaModal';
 import MediaCard from './components/MediaCard';
+import { MediaInfoPanel } from './components/MediaInfoPanel';
 import MediaPreviewer from './components/MediaPreviewer';
 import { UploadProgressDock } from './components/UploadProgressDock';
 import { useMediaData } from './hooks/useMediaData';
@@ -62,6 +63,7 @@ import { DataTable } from '@/components/ui/table/DataTable';
 import { useUploadContext } from '@/context/UploadContext';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useFolderActions } from '@/hooks/useFolderActions';
+import { useOwner } from '@/hooks/useOwner';
 import EditMediaModal from '@/pages/Library/Media/components/EditMediaModal';
 import { useMediaFilterOptions } from '@/pages/Library/Media/hooks/useMediaFilterOptions';
 import { fetchContextButtons } from '@/services/folderApi';
@@ -85,6 +87,7 @@ export default function Media() {
   const [previewItem, setPreviewItem] = useState<Media | null>(null);
   const [filterInputs, setFilterInput] = useState<MediaFilterInput>(INITIAL_FILTER_STATE);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+  const [showInfoPanel, setShowInfoPanel] = useState(false);
 
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [selectedFolderId, setSelectedFolderId] = useState<number | null>(1);
@@ -179,6 +182,10 @@ export default function Media() {
   }, [selectedFolderId, canAddToFolder]);
 
   const selectedMedia = mediaList.find((m) => m.mediaId === selectedMediaId) ?? null;
+
+  const ownerId = selectedMedia?.ownerId ? Number(selectedMedia.ownerId) : null;
+
+  const { owner, loading } = useOwner({ ownerId });
 
   const getRowId = (row: Media) => row.mediaId.toString();
 
@@ -329,6 +336,10 @@ export default function Media() {
     onDownload: handleDownload,
     openEditModal,
     openShareModal: () => toggleModal('share', true),
+    openDetails: (mediaId) => {
+      setSelectedMediaId(mediaId);
+      setShowInfoPanel(true);
+    },
   });
 
   const bulkActions = getBulkActions({
@@ -550,7 +561,18 @@ export default function Media() {
           )}
         </div>
       </div>
-
+      <MediaInfoPanel
+        open={showInfoPanel}
+        onClose={() => {
+          setSelectedMediaId(null);
+          setShowInfoPanel(false);
+        }}
+        mediaData={selectedMedia}
+        owner={owner}
+        applyVersionTwo
+        folderName={selectedFolderName}
+        loading={loading}
+      />
       <Modal
         isOpen={isAddModalOpen}
         onClose={handleCancelUpload}
@@ -595,8 +617,8 @@ export default function Media() {
         onDownload={() => previewItem && handleDownload(previewItem)}
         onClose={() => {
           setPreviewItem(null);
-          handleRefresh();
         }}
+        folderName={selectedFolderName}
       />
 
       {selectedMedia && (

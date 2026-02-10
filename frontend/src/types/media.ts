@@ -29,6 +29,7 @@ export interface Media {
   thumbnail: string;
   mediaType: MediaType;
   createdDt: string;
+  modifiedDt: string;
   ownerId: string;
   width?: number;
   height?: number;
@@ -37,6 +38,7 @@ export interface Media {
   fileSizeFormatted: string;
   orientation: 'portrait' | 'landscape';
   tags: Tag[];
+  fileSize: number;
   duration: number;
   mediaNoExpiryDate: string;
   enableStat: string;
