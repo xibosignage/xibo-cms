@@ -39,14 +39,25 @@ interface SidebarItemClassProps {
   isActive: boolean;
 }
 
-function getTarget(route: AppRoute, isCollapsed: boolean) {
-  // collapsed + has children => go to first child
-  if (isCollapsed && route.subLinks?.length) {
-    const first = route.subLinks[0];
+function getTarget(route: AppRoute) {
+  // if route has sublinks, and no path, go to the first child
+  if (route.subLinks && route.subLinks.length > 0) {
+    const firstChild = route.subLinks[0];
+
+    if (!firstChild) {
+      return { isExternal: false, to: `/${route.path}` };
+    }
+
+    if (firstChild.externalURL) {
+      return {
+        isExternal: true,
+        to: firstChild.externalURL,
+      };
+    }
 
     return {
-      isExternal: !!first?.externalURL,
-      to: first?.externalURL ?? `/${route.path}/${first?.path}`,
+      isExternal: false,
+      to: `/${route.path}/${firstChild.path}`,
     };
   }
 
@@ -67,14 +78,14 @@ export function SidebarItem({
   toggleMenu,
 }: SidebarItemProps) {
   const activeClasses =
-    'font-medium text-sm flex items-center flex-row text-white dark:text-black focus:outline-hidden group';
+    'font-medium text-sm w-full flex items-center flex-row text-white dark:text-black focus:outline-hidden group';
   const inactiveClasses =
-    'font-medium text-sm flex items-center flex-row focus:outline-hidden focus:text-gray-400 dark:text-neutral-400 dark:hover:text-neutral-500 dark:focus:text-neutral-500 group';
+    'font-medium text-sm w-full flex items-center flex-row focus:outline-hidden focus:text-gray-400 dark:text-neutral-400 dark:hover:text-neutral-500 dark:focus:text-neutral-500 group';
 
   // Changing styles for different states
   function getSidebarItemClasses({ isCollapsed, isOpen, isActive }: SidebarItemClassProps) {
     return [
-      'flex cursor-pointer py-2',
+      'flex cursor-pointer py-2 relative',
       'hover:bg-white/10 hover:text-white text-xibo-blue-100',
 
       isCollapsed ? 'px-3 w-fit justify-center' : 'px-3 w-full justify-between',
@@ -87,7 +98,7 @@ export function SidebarItem({
       .join(' ');
   }
 
-  const { isExternal, to } = getTarget(route, isCollapsed);
+  const { isExternal, to } = getTarget(route);
 
   const content = (
     <>
@@ -115,7 +126,13 @@ export function SidebarItem({
       )}
 
       {!isCollapsed && route.subLinks && (
-        <button onClick={() => toggleMenu(route.path)} className="text-white ml-2 cursor-pointer">
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            toggleMenu(route.path);
+          }}
+          className="text-white absolute right-0 top-0 size-9 z-10 flex items-center justify-center cursor-pointer"
+        >
           <ChevronDown size={16} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
       )}

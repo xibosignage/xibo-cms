@@ -58,14 +58,14 @@ export function SidebarHeader({ isCollapsed, toggleSidebar, closeMobileDrawer }:
           className={`md:flex hidden items-center justify-center rounded-lg
             bg-xibo-blue-800 text-xibo-white z-10 transition-colors
             hover:bg-white/10 cursor-pointer
-            ${isCollapsed ? 'w-6 h-6 hover:bg-xibo-blue-800' : 'w-[38px] h-[38px]'}
+            ${isCollapsed ? 'w-6 h-6 hover:bg-xibo-blue-800' : 'w-9.5 h-9.5'}
           `}
         >
           {isCollapsed ? <ChevronRightSquare size={16} /> : <ChevronLeftSquare size={16} />}
         </button>
         <button
           onClick={closeMobileDrawer}
-          className="md:hidden flex w-[38px] h-[38px] items-center
+          className="md:hidden flex w-9.5 h-9.5 items-center
             text-xibo-blue-100 justify-center rounded-lg hover:bg-white/10"
         >
           <X size={16} />

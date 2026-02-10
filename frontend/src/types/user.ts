@@ -21,16 +21,35 @@
 
 import type { UserGroup } from './userGroup';
 
-export type UserTypeID = 1 | 2 | 3;
+export enum UserType {
+  SuperAdmin = 1,
+  GroupAdmin = 2,
+  User = 3,
+}
+
+export type UserFeatures = Record<string, boolean>;
+
+export interface UserSettings {
+  defaultTimezone: string;
+  defaultLanguage: string;
+  DATE_FORMAT_JS: string;
+  TIME_FORMAT_JS: string;
+  homeFolder?: string;
+  [key: string]: string | number | boolean | object | null | undefined;
+}
 
 export interface User {
   userId: number;
   userName: string;
-  userTypeId: UserTypeID;
+  userTypeId: UserType;
+
   email?: string;
   firstName?: string;
   lastName?: string;
   phone?: string;
+
+  features: UserFeatures;
+  settings: UserSettings;
 
   groupId: number;
   group?: string;

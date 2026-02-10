@@ -39,7 +39,7 @@ export function SidebarSubLinks({ route, isOpen, isCollapsed }: SidebarSubLinksP
       {!isCollapsed && route.subLinks && (
         <div
           className={`overflow-hidden transition-all duration-500 ease-in-out w-full ${
-            isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+            isOpen ? 'max-h-200 opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
           <div className="flex flex-col w-full px-6 gap-1 py-2 bg-black/10 border-y-2 border-white/20">
