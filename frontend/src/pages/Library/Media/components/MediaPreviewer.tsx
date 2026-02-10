@@ -26,10 +26,9 @@ import { useTranslation } from 'react-i18next';
 import { MediaInfoPanel } from './MediaInfoPanel';
 
 import { useKeydown } from '@/hooks/useKeydown';
+import { useOwner } from '@/hooks/useOwner';
 import { fetchMediaBlob } from '@/services/mediaApi';
-import { fetchUsers } from '@/services/userApi';
 import type { Media } from '@/types/media';
-import type { User } from '@/types/user';
 
 interface MediaPreviewerProps {
   mediaId: number | string | null;
@@ -62,40 +61,9 @@ export default function MediaPreviewer({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [users, setUsers] = useState<User[]>([]);
-
   const ownerId = mediaData?.ownerId ? Number(mediaData.ownerId) : null;
 
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadUsers() {
-      setLoading(true);
-      try {
-        const { rows } = await fetchUsers({
-          start: 0,
-          length: 50,
-        });
-
-        if (isMounted) {
-          setUsers(rows);
-        }
-      } catch (err) {
-        console.error('Failed to fetch users', err);
-        if (isMounted) setError('Failed to load users');
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    }
-
-    loadUsers();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const owner = ownerId !== null ? (users.find((u) => u.userId === ownerId) ?? null) : null;
+  const { owner, loading: isOwnerLoading } = useOwner({ ownerId });
 
   const revokeUrl = () => {
     if (activeUrlRef.current) {
@@ -243,9 +211,8 @@ export default function MediaPreviewer({
             onClose={() => setShowInfoPanel(false)}
             mediaData={mediaData}
             owner={owner}
-            users={users}
             folderName={folderName}
-            loading={loading}
+            loading={isOwnerLoading}
           />
         </div>
       </div>

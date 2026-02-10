@@ -85,7 +85,7 @@ export function MediaInfoPanel({
         className={`flex w-full justify-between items-center px-3 py-2  ${applyVersionTwo ? 'bg-gray-100 text-gray-500' : 'text-gray-400'}`}
       >
         <span className="uppercase font-semibold text-sm">{t('File Details')}</span>
-        <button onClick={onClose} className="cursor-pointer rounded-lg hover:bg-white/10">
+        <button onClick={onClose} className="cursor-pointer rounded-lg">
           <X className="p-1 size-6" />
         </button>
       </div>
