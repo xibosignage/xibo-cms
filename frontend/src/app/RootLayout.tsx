@@ -22,6 +22,7 @@
 import { useState } from 'react';
 import { Outlet, useLocation, useLoaderData } from 'react-router-dom';
 
+import { SessionExpiredModal } from '@/components/auth/SessionExpiredModal';
 import SideBar from '@/components/layout/SideBar';
 import TopNav from '@/components/layout/TopNav';
 import { UserProvider } from '@/context/UserContext';
@@ -43,7 +44,7 @@ export default function RootLayout() {
         {/* Desktop Sidebar Drawer */}
         <aside
           className={`flex-none bg-xibo-blue-800 dark:bg-orange-300 transition-[width] duration-300 ease-in-out md:block hidden relative
-          ${isCollapsed ? 'w-[84px]' : 'w-60'}
+          ${isCollapsed ? 'w-21' : 'w-60'}
         `}
         >
           <SideBar isCollapsed={isCollapsed} toggleSidebar={() => setIsCollapsed(!isCollapsed)} />
@@ -74,6 +75,8 @@ export default function RootLayout() {
             <Outlet />
           </main>
         </div>
+
+        <SessionExpiredModal />
       </div>
     </UserProvider>
   );

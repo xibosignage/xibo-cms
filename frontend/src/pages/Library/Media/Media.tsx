@@ -437,7 +437,7 @@ export default function Media() {
             />
           </div>
 
-          <div className="flex items-center gap-2 w-full xl:w-[460px] lg:w-[300px] shrink-0">
+          <div className="flex items-center gap-2 w-full xl:w-115 lg:w-75 shrink-0">
             <div className="relative flex-1 flex">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <Search className="w-4 h-4 text-gray-400" />
@@ -450,7 +450,7 @@ export default function Media() {
                   setPagination((prev) => ({ ...prev, pageIndex: 0 }));
                 }}
                 placeholder={t('Search media...')}
-                className="py-2 px-3 pl-10 block h-[45px] bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none"
+                className="py-2 px-3 pl-10 block h-11.25 bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none"
               />
             </div>
             <Button

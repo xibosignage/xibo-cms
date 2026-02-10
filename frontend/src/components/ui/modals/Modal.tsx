@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import type { LucideIcon } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { twMerge } from 'tailwind-merge';
 
@@ -35,6 +36,8 @@ export interface ModalAction {
   formId?: string;
   disabled?: boolean;
   className?: string;
+  leftIcon?: LucideIcon;
+  rightIcon?: LucideIcon;
 }
 
 interface ModalProps {
@@ -122,6 +125,8 @@ export default function Modal({
                 variant={action.variant}
                 disabled={action.disabled}
                 className={action.className}
+                leftIcon={action.leftIcon}
+                rightIcon={action.rightIcon}
                 onClick={() => {
                   if (action.disabled) {
                     return;

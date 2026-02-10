@@ -19,29 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import axios from 'axios';
+export const authEvents = new EventTarget();
 
-import { triggerSessionExpired } from './auth-events';
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/json';
-
-const http = axios.create({
-  baseURL: BASE_URL,
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-http.interceptors.response.use(
-  (res) => res,
-  (err) => {
-    if (err.response?.status === 401) {
-      console.warn('Unauthorized access. Redirecting to login...');
-      triggerSessionExpired();
-    }
-    return Promise.reject(err);
-  },
-);
-
-export default http;
+export const triggerSessionExpired = () => {
+  authEvents.dispatchEvent(new Event('session-expired'));
+};

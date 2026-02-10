@@ -43,7 +43,7 @@ const buttonVariant: Record<NonNullable<ButtonProps['variant']>, string> = {
 };
 
 const baseClasses =
-  'p-3 inline-flex items-center gap-x-2 text-sm font-medium truncate rounded-lg disabled:pointer-events-none focus:outline-2 focus:outline-gray-800/25! cursor-pointer';
+  'p-3 inline-flex items-center justify-center gap-x-2 text-sm font-medium truncate rounded-lg disabled:pointer-events-none focus:outline-2 focus:outline-gray-800/25! cursor-pointer';
 
 export default function Button({
   variant = 'primary',
