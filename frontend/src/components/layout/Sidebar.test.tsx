@@ -33,7 +33,8 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
       'Administration',
       'Reporting',
       'Advanced',
-      'Developer' 
+      'Developer',
+      'Settings'
     ];
 
     expectedMenuItems.forEach((name) => {
@@ -42,7 +43,7 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
     });
   });
 
-  it('should expand the Library menu and show a link to the Media page', () => {
+  it('should expand the main menus and display the submenus', () => {
     render(
       <MemoryRouter>
         <SidebarMenu
@@ -52,20 +53,53 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
       </MemoryRouter>
     );
 
-    const libraryLabels = screen.getAllByText('Library');
-    const libraryButton = libraryLabels[0];
+    const menuStructure = [
+      {
+        main: 'Schedule',
+        subs: ['Event', 'Dayparting']
+      },
+      {
+        main: 'Design',
+        subs: ['Campaign', 'Layouts', 'Templates', 'Resolutions']
+      },
+      {
+        main: 'Library',
+        subs: ['Playlists', 'Media', 'Datasets']
+      },
+      {
+        main: 'Displays',
+        subs: ['Add Displays', 'Display Groups', 'Sync Groups', 'Commands']
+      },
+      {
+        main: 'Administration',
+        subs: ['Users', 'User Groups', 'Applications', 'Modules', 'Transitions', 'Tasks', 'Tags', 'Folders', 'Fonts']
+      },
+      {
+        main: 'Reporting',
+        subs: ['All Reports', 'Report Schedules', 'Saved Reports']
+      },
+      {
+        main: 'Advanced',
+        subs: ['Log', 'Sessions', 'Audit Trail', 'Report Fault']
+      }
+    ];
 
-    // 2. Click it to expand the menu
-    fireEvent.click(libraryButton!);
+    menuStructure.forEach((group) => {
+      const mainLabels = screen.getAllByText(group.main);
+      const mainButton = mainLabels[0];
 
-    // 3. Check if the submenus appeared
-    expect(screen.getByText('Playlists')).toBeVisible();
-    expect(screen.getByText('Media')).toBeVisible();
-    expect(screen.getByText('Datasets')).toBeVisible();
+      fireEvent.click(mainButton!);
+
+      group.subs.forEach((subItem) => {
+        const subLabels = screen.getAllByText(subItem);
+        expect(subLabels[0]).toBeVisible();
+      });
+    });
+
+    const settingsLabels = screen.getAllByText('Settings');
+    expect(settingsLabels[0]).toBeVisible();
 
     const mediaLink = screen.getByRole('link', { name: 'Media' });
-    
-    // This checks if the <a> tag looks like: <a href="/library/media">
     expect(mediaLink).toHaveAttribute('href', '/library/media');
   });
 
@@ -97,14 +131,10 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
       </MemoryRouter>
     );
 
-    // 1. We create a custom search function.
-    // "Find an element where the TAG is 'SPAN' and the TEXT is 'Dashboard'"
     const mainLabel = screen.queryByText((content, element) => {
       return element?.tagName.toLowerCase() === 'span' && content === 'Dashboard';
     });
 
-    // 2. Since the sidebar is collapsed, the Main Label span should not exist.
-    // (The Popup 'Dashboard' still exists, but we are ignoring it because it's not a span!)
     expect(mainLabel).not.toBeInTheDocument();
   });
 });
