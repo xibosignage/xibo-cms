@@ -19,123 +19,249 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { ChevronDown, Home, Search } from 'lucide-react';
-import React, { useState } from 'react';
+import { ChevronDown, Loader2, Search } from 'lucide-react';
+import { useEffect, useRef, useState, useLayoutEffect, useCallback, useId } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
-import Button from '../Button';
+import FolderTreeList, { type FolderAction } from '../FolderTreeList';
 
-type FolderTab = 'Home' | 'My Files';
+import { fetchFolderById } from '@/services/folderApi';
+import type { Folder } from '@/types/folder';
 
 interface SelectFolderProps {
-  value: string;
-  homeFolders: string[];
-  myFileFolders: string[];
-  isOpen: boolean;
-  onToggle: () => void;
-  onSelect: (folder: string) => void;
+  selectedId?: number | null;
+  onSelect: (folder: { id: number; text: string }) => void;
+  onAction?: (action: FolderAction, folder: Folder) => void;
 }
 
-function SelectFolder({
-  value,
-  homeFolders,
-  myFileFolders,
-  isOpen,
-  onToggle,
-  onSelect,
-}: SelectFolderProps) {
-  const [activeTab, setActiveTab] = useState<FolderTab>('Home');
+export default function SelectFolder({ selectedId, onSelect, onAction }: SelectFolderProps) {
   const { t } = useTranslation();
-  const visibleFolders = activeTab === 'Home' ? homeFolders : myFileFolders;
+  const generatedId = useId();
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [initialName, setInitialName] = useState<string | null>(null);
+  const [isResolvingName, setIsResolvingName] = useState(false);
   const [folderSearch, setFolderSearch] = useState('');
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!selectedId) {
+      setInitialName(null);
+      setIsResolvingName(false);
+      return;
+    }
+
+    let active = true;
+
+    setIsResolvingName(true);
+    setInitialName(null);
+
+    fetchFolderById(selectedId)
+      .then((folder) => {
+        if (active) {
+          setInitialName(folder.text);
+        }
+      })
+      .catch((err) => console.error('Failed to resolve folder name', err))
+      .finally(() => {
+        if (active) {
+          setIsResolvingName(false);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [selectedId]);
+
+  // Positioning
+  const updatePosition = useCallback(() => {
+    if (!isOpen || !containerRef.current || !dropdownRef.current) return;
+
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const dropdownRect = dropdownRef.current.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const gap = 4;
+
+    // Dimensions
+    const contentHeight = dropdownRect.height || 300;
+    const spaceBelow = viewportHeight - containerRect.bottom - gap;
+    const spaceAbove = containerRect.top - gap;
+    const maxHeight = 400;
+
+    let top: number;
+    let finalMaxHeight = maxHeight;
+    let transformOrigin = 'top';
+
+    if (spaceBelow < contentHeight && spaceAbove > spaceBelow) {
+      top = containerRect.top - gap - Math.min(contentHeight, spaceAbove);
+      finalMaxHeight = Math.min(maxHeight, spaceAbove);
+      transformOrigin = 'bottom';
+    } else {
+      top = containerRect.bottom + gap;
+      finalMaxHeight = Math.min(maxHeight, spaceBelow);
+    }
+
+    Object.assign(dropdownRef.current.style, {
+      top: `${top}px`,
+      left: `${containerRect.left}px`,
+      width: `${containerRect.width}px`,
+      maxHeight: `${finalMaxHeight}px`,
+      opacity: '1',
+      transformOrigin,
+    });
+  }, [isOpen]);
+
+  useLayoutEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    requestAnimationFrame(() => updatePosition());
+
+    const resizeObserver = new ResizeObserver(() => updatePosition());
+    if (dropdownRef.current) {
+      resizeObserver.observe(dropdownRef.current);
+    }
+
+    return () => resizeObserver.disconnect();
+  }, [isOpen, updatePosition]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleScroll = (event: Event) => {
+      if (dropdownRef.current && dropdownRef.current.contains(event.target as Node)) {
+        return;
+      }
+      setIsOpen(false);
+    };
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(target) &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(target)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleResize = () => setIsOpen(false);
+
+    document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('resize', handleResize);
+
+    const scrollTimeout = setTimeout(() => {
+      window.addEventListener('scroll', handleScroll, true);
+    }, 100);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', handleScroll, true);
+      clearTimeout(scrollTimeout);
+    };
+  }, [isOpen]);
+
+  // Helper to get the text to display on the button
+  const renderLabel = () => {
+    if (isResolvingName) {
+      return (
+        <span className="flex items-center gap-2 text-gray-400 italic text-xs">
+          <Loader2 className="animate-spin w-3 h-3" />
+          {t('Loading...')}
+        </span>
+      );
+    }
+
+    if (initialName) {
+      return <span className="text-gray-800">{initialName}</span>;
+    }
+
+    if (selectedId) {
+      return <span className="text-gray-800">{t('Folder #{{id}}', { id: selectedId })}</span>;
+    }
+
+    return <span className="text-gray-400">{t('Select a folder')}</span>;
+  };
+
   return (
-    <div className="relative overflow-visible">
-      <label className="text-xs font-semibold text-gray-500">{t('Select folder location')}</label>
+    <div className="relative" ref={containerRef}>
+      <label className="block text-xs font-semibold text-gray-500 mb-1">
+        {t('Select folder location')}
+      </label>
 
-      <div className="w-full border border-gray-200 rounded-lg flex items-center">
-        <span className="p-3 border-r text-sm border-gray-200 text-gray-500">{t('My files')}</span>
-
-        <span className="p-3 flex-1 text-sm cursor-pointer" onClick={onToggle}>
-          {value || t('Select a folder')}
-        </span>
-
-        <button type="button" className="p-3 text-gray-500" onClick={onToggle}>
-          <ChevronDown size={14} />
-        </button>
-      </div>
-
-      {/* Folder Options */}
+      {/* Portal Trigger */}
       <div
-        className={`absolute top-[70px] w-full bg-white shadow-md rounded-lg overflow-clip transition-all duration-150 ease-in-out z-50
-          ${isOpen ? 'opacity-100 max-h-[600px]' : 'opacity-0 max-h-0'}
-        `}
+        className="w-full border border-gray-200 rounded-lg flex items-center bg-white transition-shadow hover:shadow-sm cursor-pointer h-[42px]"
+        onClick={() => setIsOpen(!isOpen)}
       >
-        <span className="bg-gray-100 p-2 text-sm font-semibold text-gray-500 uppercase w-full flex">
-          {t('Select Folder')}
-        </span>
-        {/* Folder Tabs */}
-        <div className="flex gap-x-3 px-3">
-          <Button
-            leftIcon={Home}
-            onClick={() => setActiveTab('Home')}
-            className={`bg-transparent hover:bg-transparent focus:outline-0 ${
-              activeTab === 'Home'
-                ? 'text-xibo-blue-600 font-semibold border-b-2 border-b-xibo-blue-600 rounded-none'
-                : 'text-gray-500'
-            }`}
-          >
-            {t('Home')}
-          </Button>
+        <button
+          type="button"
+          className="px-3 flex-1 text-sm text-left hover:bg-gray-50 transition-colors truncate h-full flex items-center"
+        >
+          {renderLabel()}
+        </button>
 
-          <Button
-            onClick={() => setActiveTab('My Files')}
-            className={`bg-transparent hover:bg-transparent focus:outline-0 ${
-              activeTab === 'My Files'
-                ? 'text-xibo-blue-600 font-semibold border-b-2 border-b-xibo-blue-600 rounded-none'
-                : 'text-gray-500'
-            }`}
-          >
-            {t('My Files')}
-          </Button>
-        </div>
-
-        <div className="flex flex-col text-sm p-3">
-          {/* TODO: make search funtional */}
-          <div className="relative flex-1 flex w-full mb-2.5">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <Search className="w-4 h-4 text-gray-400" />
-            </div>
-            <input
-              name="search"
-              value={folderSearch}
-              onChange={(e) => setFolderSearch(e.target.value)}
-              placeholder={t('Search media...')}
-              className="py-2 px-3 pl-10 block h-[45px] rounded-lg w-full text-sm border-gray-200 disabled:opacity-50 disabled:pointer-events-none"
-            />
-          </div>
-          {visibleFolders.map((folder) => (
-            <button
-              key={folder}
-              type="button"
-              className="text-left text-sm font-semibold p-2 hover:bg-gray-100 rounded-lg gap-x-3 flex items-center cursor-pointer"
-              onClick={() => onSelect(folder)}
-            >
-              {activeTab === 'Home' ? (
-                <div className="h-[26px] w-[26px] center flex">
-                  <div className="bg-xibo-blue-100 h-[26px] w-[26px] text-[12px] center rounded-full text-xibo-blue-800 font-semibold">
-                    {folder.slice(0, 1)}
-                  </div>
-                </div>
-              ) : null}
-              <span className="flex-1">{folder}</span>
-              <ChevronDown size={14} className="text-gray-500" />
-            </button>
-          ))}
+        <div className="px-3 text-gray-500">
+          <ChevronDown
+            size={14}
+            className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+          />
         </div>
       </div>
+
+      {/* Portal Dropdown */}
+      {isOpen &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            style={{
+              position: 'fixed',
+              zIndex: 9999,
+              opacity: 0,
+            }}
+            className="bg-white shadow-xl rounded-lg border border-gray-100 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-100"
+          >
+            <div className="bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-500 uppercase w-fullshrink-0">
+              {t('Select Folder')}
+            </div>
+
+            <div className="flex flex-col min-h-0 flex-1">
+              <FolderTreeList
+                selectedId={selectedId}
+                onSelect={(folder) => {
+                  onSelect({ id: folder.id, text: folder.text });
+                  setInitialName(folder.text);
+                  setIsOpen(false);
+                }}
+                onAction={onAction}
+                searchQuery={folderSearch}
+                customSlot={
+                  <div className="px-2 shrink-0 relative">
+                    <div className="absolute inset-y-0 left-3 flex items-center pl-3 pointer-events-none">
+                      <Search className="w-4 h-4 text-gray-500" />
+                    </div>
+                    <input
+                      id={generatedId + '_search'}
+                      value={folderSearch}
+                      onChange={(e) => setFolderSearch(e.target.value)}
+                      placeholder={t('Search')}
+                      className="py-2 pl-10 pr-4 block w-full rounded-lg border-gray-200 text-gray-800 text-sm focus:border-xibo-blue-500 focus:ring-xibo-blue-500 bg-white placeholder:text-gray-500"
+                      autoFocus
+                    />
+                  </div>
+                }
+              />
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
-
-export default SelectFolder;

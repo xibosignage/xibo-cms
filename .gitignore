@@ -27,3 +27,7 @@ tests/http-client.private.env.json
 
 # Hide module/template translate file
 locale/moduletranslate.php
+
+# Hide react translate files
+locale/reacttranslate.php
+frontend/public/locale/translations/

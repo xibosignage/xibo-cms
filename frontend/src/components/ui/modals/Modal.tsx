@@ -47,6 +47,7 @@ interface ModalProps {
   closeOnOverlay?: boolean;
   className?: string;
   scrollable?: boolean;
+  isPending?: boolean;
 }
 
 export default function Modal({
@@ -59,6 +60,7 @@ export default function Modal({
   className,
   closeOnOverlay,
   scrollable = true,
+  isPending = false,
 }: ModalProps) {
   useKeydown('Escape', onClose, isOpen);
 
@@ -87,6 +89,11 @@ export default function Modal({
           className,
         )}
       >
+        {/* Pending transparent overlay */}
+        {isPending && (
+          <div className="absolute w-full h-full flex inset-0 items-center justify-center z-50"></div>
+        )}
+
         {/* Header */}
         {title && (
           <div className="shrink-0 p-8 pb-3">
@@ -116,6 +123,10 @@ export default function Modal({
                 disabled={action.disabled}
                 className={action.className}
                 onClick={() => {
+                  if (action.disabled) {
+                    return;
+                  }
+
                   if (action.onClick) {
                     action.onClick();
                   } else if (!action.isSubmit) {

@@ -336,56 +336,56 @@ export default function ShareModal({ openModal, onClose }: ShareMediaModalProps)
           </div>
           {/* TODO: Refactor Table to separate component */}
           <div className="min-h-[400px] relative overflow-y-auto">
-            <table className="w-full border-collapse">
-              <thead className="bg-gray-50 sticky top-0 border-b border-gray-200">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      const isSorted = header.column.getIsSorted();
-                      const canSort = header.column.getCanSort();
-                      return (
-                        <th
-                          key={header.id}
-                          className={twMerge(
-                            'py-2 text-sm font-medium text-gray-500 uppercase',
-                            header.column.id !== 'name'
-                              ? 'text-center px-4 w-[100px]'
-                              : 'text-left pl-4 flex justify-between',
-                          )}
-                        >
-                          {flexRender(header.column.columnDef.header, header.getContext())}
-                          {canSort && (
-                            <div
-                              className={twMerge(
-                                'flex justify-center items-center p-1 size-6',
-                                header.column.getCanSort() ? 'cursor-pointer select-none' : '',
-                              )}
-                              onClick={header.column.getToggleSortingHandler()}
-                            >
-                              {isSorted === 'asc' ? (
-                                <ChevronUp className="size-4" />
-                              ) : isSorted === 'desc' ? (
-                                <ChevronDown className="size-4" />
-                              ) : (
-                                <ChevronsUpDown className="size-4" />
-                              )}
-                            </div>
-                          )}
-                        </th>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </thead>
-
-              {loading ? (
-                <div className="absolute bg-white w-full h-[200px] center z-50 backdrop-blur-sm animate-in fade-in duration-300">
-                  <div className="flex flex-col items-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-gray-600" />
-                    <span className="mt-2 text-gray-500">{t('Loading...')}</span>
-                  </div>
+            {loading ? (
+              <div className="absolute bg-white w-full h-[200px] center z-50 backdrop-blur-sm animate-in fade-in duration-300">
+                <div className="flex flex-col items-center">
+                  <Loader2 className="w-8 h-8 animate-spin text-gray-600" />
+                  <span className="mt-2 text-gray-500">{t('Loading...')}</span>
                 </div>
-              ) : (
+              </div>
+            ) : (
+              <table className="w-full border-collapse">
+                <thead className="bg-gray-50 sticky top-0 border-b border-gray-200">
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <tr key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => {
+                        const isSorted = header.column.getIsSorted();
+                        const canSort = header.column.getCanSort();
+                        return (
+                          <th
+                            key={header.id}
+                            className={twMerge(
+                              'py-2 text-sm font-medium text-gray-500 uppercase',
+                              header.column.id !== 'name'
+                                ? 'text-center px-4 w-[100px]'
+                                : 'text-left pl-4 flex justify-between',
+                            )}
+                          >
+                            {flexRender(header.column.columnDef.header, header.getContext())}
+                            {canSort && (
+                              <div
+                                className={twMerge(
+                                  'flex justify-center items-center p-1 size-6',
+                                  header.column.getCanSort() ? 'cursor-pointer select-none' : '',
+                                )}
+                                onClick={header.column.getToggleSortingHandler()}
+                              >
+                                {isSorted === 'asc' ? (
+                                  <ChevronUp className="size-4" />
+                                ) : isSorted === 'desc' ? (
+                                  <ChevronDown className="size-4" />
+                                ) : (
+                                  <ChevronsUpDown className="size-4" />
+                                )}
+                              </div>
+                            )}
+                          </th>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </thead>
+
                 <tbody>
                   {table.getRowModel().rows.length === 0 ? (
                     <tr>
@@ -405,8 +405,8 @@ export default function ShareModal({ openModal, onClose }: ShareMediaModalProps)
                     ))
                   )}
                 </tbody>
-              )}
-            </table>
+              </table>
+            )}
           </div>
           <DataTablePagination table={table} loading={loading} pageSizeOptions={pageSizeOptions} />
         </div>

@@ -19,6 +19,16 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export function logout(redirectUrl: string = '/login') {
-  window.location.href = redirectUrl;
+export interface Folder {
+  id: number;
+  folderId?: number;
+  type: FolderType;
+  text: string;
+  parentId: number;
+  isRoot: number;
+  children: Folder[] | null;
+  ownerId: number;
+  ownerName: string;
 }
+
+export type FolderType = 'root' | 'home' | 'disabled' | '' | null;

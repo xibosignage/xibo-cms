@@ -32,6 +32,7 @@ export default function DeleteMediaModal({
   return (
     <Modal
       isOpen={isOpen}
+      isPending={isLoading}
       onClose={onClose}
       actions={[
         {

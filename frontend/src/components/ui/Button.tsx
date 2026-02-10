@@ -23,7 +23,7 @@ import { type LucideIcon } from 'lucide-react';
 import { twMerge } from 'tailwind-merge';
 
 export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: 'primary' | 'secondary' | 'tertiary' | 'link';
+  variant?: 'primary' | 'secondary' | 'tertiary' | 'link' | 'iconLink';
   leftIcon?: LucideIcon;
   rightIcon?: LucideIcon;
   removeTextOnMobile?: boolean;
@@ -38,10 +38,12 @@ const buttonVariant: Record<NonNullable<ButtonProps['variant']>, string> = {
   tertiary:
     'p-2 text-xibo-blue-600 bg-gray-50 hover:bg-gray-100 hover:text-xibo-blue-800 focus:outline-4 focus:outline-blue-500/25 disabled:text-blue-200 disabled:outline-0',
   link: 'text-xibo-blue-600 hover:text-xibo-blue-800 bg-transparent focus:outline-blue-500/25 focus:outline-4',
+  iconLink:
+    'flex items-center justify-center rounded-lg hover:bg-black/5 cursor-pointer text-gray-500 bg-transparent disabled:text-gray-300 focus:outline-blue-500/25 focus:outline-4',
 };
 
 const baseClasses =
-  'p-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg disabled:pointer-events-none cursor-pointer';
+  'p-3 inline-flex items-center gap-x-2 text-sm font-medium truncate rounded-lg disabled:pointer-events-none focus:outline-2 focus:outline-gray-800/25! cursor-pointer';
 
 export default function Button({
   variant = 'primary',

@@ -53,6 +53,7 @@ export const router = createBrowserRouter(
     {
       path: '/',
       element: <RootLayout />,
+      loader: requireAuthLoader,
       // App loader
       hydrateFallbackElement: <></>,
       children: [

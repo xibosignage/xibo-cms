@@ -21,6 +21,8 @@
 
 import axios from 'axios';
 
+import { logout } from '@/lib/logout';
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/json';
 
 const http = axios.create({
@@ -36,7 +38,7 @@ http.interceptors.response.use(
   (err) => {
     if (err.response?.status === 401) {
       console.warn('Unauthorized access. Redirecting to login...');
-      window.location.href = '/login';
+      logout();
     }
     return Promise.reject(err);
   },

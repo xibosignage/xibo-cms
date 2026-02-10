@@ -37,16 +37,24 @@ interface UseMediaParams {
   pagination: PaginationState;
   sorting: SortingState;
   filter: string;
+  folderId: number | null;
   advancedFilters: MediaFilterInput;
 }
 
-export const useMediaData = ({ pagination, sorting, filter, advancedFilters }: UseMediaParams) => {
+export const useMediaData = ({
+  pagination,
+  sorting,
+  filter,
+  folderId,
+  advancedFilters,
+}: UseMediaParams) => {
   // Combine settings into one object to create a unique cache key
   const queryParams = {
     pageIndex: pagination.pageIndex,
     pageSize: pagination.pageSize,
     sorting,
     filter,
+    folderId,
     ...advancedFilters,
   };
 
@@ -59,7 +67,7 @@ export const useMediaData = ({ pagination, sorting, filter, advancedFilters }: U
       const sortBy = sorting?.[0]?.id;
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
 
-      return fetchMedia({
+      const request: FetchMediaRequest = {
         start: startOffset,
         length: pagination.pageSize,
         keyword: filter,
@@ -67,7 +75,13 @@ export const useMediaData = ({ pagination, sorting, filter, advancedFilters }: U
         sortDir: sorting.length ? sortDir : undefined,
         signal,
         ...advancedFilters,
-      } as FetchMediaRequest);
+      } as FetchMediaRequest;
+
+      if (typeof folderId === 'number') {
+        request.folderId = folderId;
+      }
+
+      return fetchMedia(request);
     },
 
     placeholderData: keepPreviousData, // Keep showing previous page's data while the new page loads

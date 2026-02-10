@@ -19,6 +19,13 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export function logout(redirectUrl: string = '/login') {
-  window.location.href = redirectUrl;
-}
+import { defineConfig } from 'i18next-cli';
+
+export default defineConfig({
+  locales: ['en'],
+  extract: {
+    input: 'src/**/*.{js,jsx,ts,tsx}',
+    extractFromComments: false,
+    output: 'public/locale/translations/{{language}}/{{namespace}}.json',
+  },
+});

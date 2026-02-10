@@ -19,6 +19,30 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export function logout(redirectUrl: string = '/login') {
-  window.location.href = redirectUrl;
+import { useState } from 'react';
+
+import { logout as globalLogout } from '@/lib/logout';
+import type { User } from '@/types/user';
+
+export interface UserAuthType {
+  user: User | null;
+  isAuthenticated: boolean;
+  logout: () => void;
+  updateUser: (data: Partial<User>) => void;
+}
+
+export function useUserAuth(initialUser: User | null): UserAuthType {
+  const [user, setUser] = useState<User | null>(initialUser);
+
+  const logout = () => {
+    setUser(null);
+    globalLogout();
+  };
+
+  const updateUser = (data: Partial<User>) => {
+    if (!user) return;
+    setUser({ ...user, ...data });
+  };
+
+  return { user, isAuthenticated: !!user, logout, updateUser };
 }

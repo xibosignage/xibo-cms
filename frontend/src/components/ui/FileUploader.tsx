@@ -20,7 +20,7 @@
  */
 
 import type { TFunction } from 'i18next';
-import { Upload, Link as LinkIcon, MinusCircle, FileIcon, Globe } from 'lucide-react';
+import { Upload, Link as LinkIcon, MinusCircle, FileIcon, Globe, LockKeyhole } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useDropzone, type FileRejection, type DropEvent } from 'react-dropzone';
 import { useTranslation } from 'react-i18next';
@@ -43,6 +43,7 @@ interface FileUploaderProps {
   acceptedFileTypes?: Record<string, string[]>;
   maxSize?: number;
   onUrlUpload: (url: string) => void;
+  disabled?: boolean;
 }
 
 interface RowProps {
@@ -255,11 +256,16 @@ export function FileUploader({
   },
   maxSize = 2 * 1024 * 1024 * 1024,
   onUrlUpload,
+  disabled = false,
 }: FileUploaderProps) {
   const { t } = useTranslation();
   const [urlInput, setUrlInput] = useState('');
 
   const onDrop = (acceptedFiles: File[], fileRejections: FileRejection[], event: DropEvent) => {
+    if (disabled) {
+      return;
+    }
+
     if (event && 'stopPropagation' in event) {
       event.stopPropagation();
     }
@@ -271,7 +277,7 @@ export function FileUploader({
     accept: acceptedFileTypes,
     maxSize,
     noClick: true,
-    disabled: false,
+    disabled: disabled,
   });
 
   const handleUrlUpload = () => {
@@ -307,14 +313,27 @@ export function FileUploader({
         `}
       >
         <input {...getInputProps()} />
-        <Upload className="size-6 p-[3px]" />
+
+        {disabled ? (
+          <LockKeyhole className="size-6 p-[3px] mb-1" />
+        ) : (
+          <Upload className="size-6 p-[3px]" />
+        )}
+
         <div className="text-sm flex gap-1 justify-center items-center">
-          <div className="text-gray-800">{t('Drag & drop file here or')}</div>
-          <Button className="text-sm p-0" variant="tertiary" onClick={open}>
-            {t('Select Files')}
-          </Button>
+          {disabled ? (
+            <span className="font-semibold">{t('Upload disabled for this folder')}</span>
+          ) : (
+            <>
+              <div className="text-gray-800">{t('Drag & drop file here or')}</div>
+              <Button className="text-sm p-0" variant="tertiary" onClick={open}>
+                {t('Select Files')}
+              </Button>
+            </>
+          )}
         </div>
-        <div className="text-sm text-center text-gray-500 px-4">{helperText}</div>
+
+        {!disabled && <div className="text-sm text-center text-gray-500 px-4">{helperText}</div>}
       </div>
 
       <div className="">
@@ -338,7 +357,7 @@ export function FileUploader({
                 type="button"
                 className="p-3 justify-center text-blue-600 hover:text-blue-800 hover:bg-xibo-blue-50/25 items-center text-sm rounded-e-md border border-gray-200 border-l-0 disabled:text-blue-600/50 disabled:pointer-events-none"
                 onClick={handleUrlUpload}
-                disabled={!urlInput}
+                disabled={!urlInput || disabled}
               >
                 {t('Upload')}
               </button>
