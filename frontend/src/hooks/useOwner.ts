@@ -46,10 +46,7 @@ export function useOwner({ ownerId }: UseOwnerProps = {}) {
       setError(null);
 
       try {
-        const { rows } = await fetchUsers({
-          start: 0,
-          length: 50,
-        });
+        const { rows } = await fetchUsers();
 
         if (!isMounted) return;
 
