@@ -19,10 +19,11 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { ExternalLink, LockKeyhole, LogOut, RefreshCw, AlertTriangle } from 'lucide-react';
+import { ExternalLink, Lock, RefreshCw, AlertCircle } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import Button from '../ui/Button';
 import type { ModalAction } from '../ui/modals/Modal';
 import Modal from '../ui/modals/Modal';
 
@@ -98,7 +99,6 @@ export function SessionExpiredModal() {
         window.location.href = '/login';
       },
       variant: 'secondary',
-      leftIcon: LogOut,
     },
     {
       label: t('Log In'),
@@ -123,39 +123,35 @@ export function SessionExpiredModal() {
       size="sm"
     >
       <div className="flex flex-col gap-3 p-5 text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-xibo-blue-100 text-xibo-blue-800 outline-[7px] outline-xibo-blue-50">
-          <LockKeyhole size={28} />
+        <div className="mx-auto flex size-13.75 items-center justify-center rounded-full bg-xibo-blue-100 text-xibo-blue-800 outline-[7px] outline-xibo-blue-50">
+          <Lock size={26} />
         </div>
 
         <div className="text-lg font-semibold leading-7.5 text-xibo-blue-800">
           {t('Session Expired')}
         </div>
 
-        <div className="text-gray-500 dark:text-neutral-400 text-sm leading-relaxed">
-          <p>{t('You have been away for a while.')}</p>
-          <p>{t('To prevent data loss, we have paused your session.')}</p>
+        <div className="text-gray-500 dark:text-neutral-400 leading-6">
+          {t('We’ve paused your session to keep your work safe while you were away.')}
+        </div>
+
+        <div className="w-fit mx-auto flex justify-center items-center gap-1 p-1.5 rounded-lg bg-yellow-100 text-yellow-800">
+          <AlertCircle size={16} />
+          <p className="text-sm font-medium leading-4.5">
+            {t('Keep this window open! Login to pick up where you left off.')}
+          </p>
         </div>
 
         {isChecking ? (
-          <div className="flex items-center justify-center gap-2 text-xs font-medium text-xibo-blue-600 animate-pulse">
+          <div className="flex items-center justify-center p-2 text-sm font-medium text-xibo-blue-600 animate-pulse">
             <RefreshCw className="size-3 animate-spin" />
-            <span>{t('Verifying connection...')}</span>
+            <span className="ml-1 p-1">{t('Verifying connection...')}</span>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
-            <div className="flex justify-center gap-3 p-3 rounded-lg bg-amber-50 text-yellow-800">
-              <AlertTriangle className="mt-0.5 shrink-0" size={16} />
-              <p className="text-xs font-medium leading-relaxed">
-                {t('Do not refresh this page or you will lose unsaved work.')}
-              </p>
-            </div>
-
-            <button
-              onClick={() => checkSession()}
-              className="text-xs text-gray-500 underline decoration-dashed cursor-pointer hover:text-xibo-blue-600 transition-colors"
-            >
+          <div className="flex flex-col">
+            <Button variant="link" onClick={() => checkSession()} className="underline">
               {t('I have already logged in')}
-            </button>
+            </Button>
           </div>
         )}
       </div>
