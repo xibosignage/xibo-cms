@@ -32,6 +32,7 @@ import { useTranslation } from 'react-i18next';
 
 import ShareModal from '../../../components/ui/modals/ShareModal';
 
+import type { ModalType } from './MediaConfig';
 import { getMediaItemActions } from './MediaConfig';
 import {
   getMediaColumns,
@@ -41,6 +42,7 @@ import {
   type MediaFilterInput,
   ACCEPTED_MIME_TYPES,
 } from './MediaConfig';
+import CopyMediaModal from './components/CopyMediaModal';
 import DeleteMediaModal from './components/DeleteMediaModal';
 import MediaCard from './components/MediaCard';
 import { MediaInfoPanel } from './components/MediaInfoPanel';
@@ -67,7 +69,7 @@ import { useOwner } from '@/hooks/useOwner';
 import EditMediaModal from '@/pages/Library/Media/components/EditMediaModal';
 import { useMediaFilterOptions } from '@/pages/Library/Media/hooks/useMediaFilterOptions';
 import { fetchContextButtons } from '@/services/folderApi';
-import { deleteMedia, downloadMedia } from '@/services/mediaApi';
+import { cloneMedia, deleteMedia, downloadMedia } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
 
 export default function Media() {
@@ -95,15 +97,12 @@ export default function Media() {
   const [canAddToFolder, setCanAddToFolder] = useState(false);
 
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
-  const [openModal, setOpenModal] = useState({
-    edit: false,
-    share: false,
-    delete: false,
-  });
+  const [activeModal, setActiveModal] = useState<ModalType | null>(null);
 
   const [itemsToDelete, setItemsToDelete] = useState<Media[]>([]);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isCloning, setIsCloning] = useState(false);
 
   const [selectedMediaId, setSelectedMediaId] = useState<number | null>(null);
 
@@ -111,6 +110,10 @@ export default function Media() {
 
   const { queue, addFiles, removeFile, clearQueue, updateFileData, saveMetadata, addUrlToQueue } =
     useUploadContext();
+
+  const openModal = (name: ModalType) => setActiveModal(name);
+  const closeModal = () => setActiveModal(null);
+  const isModalOpen = (name: ModalType) => activeModal === name;
 
   // Data fetching
   const {
@@ -182,6 +185,7 @@ export default function Media() {
   }, [selectedFolderId, canAddToFolder]);
 
   const selectedMedia = mediaList.find((m) => m.mediaId === selectedMediaId) ?? null;
+  const existingNames = mediaList.map((m) => m.name);
 
   const ownerId = selectedMedia?.ownerId ? Number(selectedMedia.ownerId) : null;
 
@@ -239,7 +243,7 @@ export default function Media() {
 
     setItemsToDelete([media]);
     setDeleteError(null);
-    toggleModal('delete', true);
+    openModal('delete');
   };
 
   const confirmDelete = async () => {
@@ -260,7 +264,7 @@ export default function Media() {
 
       setRowSelection({});
       handleRefresh();
-      toggleModal('delete', false);
+      closeModal();
     } catch (error) {
       console.error(error);
       setDeleteError('Some selected items are in use and cannot be deleted.');
@@ -274,7 +278,7 @@ export default function Media() {
 
     setItemsToDelete(selectedItems);
     setDeleteError(null);
-    toggleModal('delete', true);
+    openModal('delete');
   };
 
   const handleDownload = async (row: Media) => {
@@ -312,21 +316,50 @@ export default function Media() {
 
   const openEditModal = (media: Media) => {
     setSelectedMediaId(media.mediaId);
-    toggleModal('edit', true);
+    openModal('edit');
   };
 
   const closeEditModal = () => {
-    toggleModal('edit', false);
+    closeModal();
     setSelectedMediaId(null);
-  };
-
-  const toggleModal = (name: string, isOpen: boolean) => {
-    setOpenModal((prev) => ({ ...prev, [name]: isOpen }));
   };
 
   const handleResetFilters = () => {
     setFilterInput(INITIAL_FILTER_STATE);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
+  const handleConfirmClone = async (newName: string) => {
+    if (!selectedMedia) return;
+
+    try {
+      setIsCloning(true);
+
+      await cloneMedia({
+        mediaId: selectedMedia.mediaId,
+        name: selectedMedia.name,
+        fileName: selectedMedia.fileName,
+        duration: selectedMedia.duration,
+        tags: selectedMedia.tags?.map((t) => t.tag) ?? [],
+        folderId: selectedMedia.folderId,
+        orientation: selectedMedia.orientation,
+        overrideName: newName,
+      });
+
+      notify.success(t('Media copied successfully'));
+      handleRefresh();
+      closeModal();
+    } catch (error) {
+      console.error('Copy media failed', error);
+      notify.error(t('Failed to copy media'));
+    } finally {
+      setIsCloning(false);
+    }
+  };
+
+  const openCopyModal = (mediaId: number) => {
+    setSelectedMediaId(mediaId);
+    openModal('copy');
   };
 
   const columns = getMediaColumns({
@@ -335,11 +368,12 @@ export default function Media() {
     onDelete: handleDelete,
     onDownload: handleDownload,
     openEditModal,
-    openShareModal: () => toggleModal('share', true),
+    openShareModal: () => openModal('share'),
     openDetails: (mediaId) => {
       setSelectedMediaId(mediaId);
       setShowInfoPanel(true);
     },
+    copyMedia: openCopyModal,
   });
 
   const bulkActions = getBulkActions({
@@ -623,9 +657,8 @@ export default function Media() {
 
       {selectedMedia && (
         <EditMediaModal
-          openModal={openModal.edit}
+          openModal={isModalOpen('edit')}
           onClose={() => {
-            toggleModal('edit', false);
             closeEditModal();
           }}
           onSave={(updatedMedia) => {
@@ -637,20 +670,29 @@ export default function Media() {
           data={selectedMedia}
         />
       )}
-      <ShareModal onClose={() => toggleModal('share', false)} openModal={openModal.share} />
+      <ShareModal onClose={closeModal} openModal={isModalOpen('share')} />
 
       <UploadProgressDock isModalOpen={isAddModalOpen} />
 
       <FolderActionModals folderActions={folderActions} />
 
       <DeleteMediaModal
-        isOpen={openModal.delete}
-        onClose={() => toggleModal('delete', false)}
+        isOpen={isModalOpen('delete')}
+        onClose={closeModal}
         onDelete={confirmDelete}
         itemCount={itemsToDelete.length}
         fileName={itemsToDelete.length === 1 ? itemsToDelete[0]?.name : undefined}
         error={deleteError}
         isLoading={isDeleting}
+      />
+
+      <CopyMediaModal
+        isOpen={isModalOpen('copy')}
+        onClose={closeModal}
+        onConfirm={handleConfirmClone}
+        media={selectedMedia}
+        isLoading={isCloning}
+        existingNames={existingNames}
       />
     </section>
   );

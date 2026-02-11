@@ -254,6 +254,98 @@ export async function downloadMedia(mediaId: number | string, fileName: string):
   window.URL.revokeObjectURL(url);
 }
 
+export interface CloneMediaRequest {
+  mediaId: number | string;
+  name: string;
+  fileName: string;
+  duration: number;
+  folderId?: number | string;
+  tags?: string[];
+  orientation?: 'portrait' | 'landscape';
+  expires?: string;
+  mediaNoExpiryDate?: number;
+  overrideName?: string;
+  signal?: AbortSignal;
+}
+
+export type CloneMediaResponse = Media;
+
+function incrementCopySuffix(value: string): string {
+  const copyRegex = /(.*?)(?:\s\((\d+)\))?$/;
+
+  const match = value.match(copyRegex);
+  if (!match) return `${value} (1)`;
+
+  const base = match[1];
+  const count = match[2] ? Number(match[2]) + 1 : 1;
+
+  return `${base} (${count})`;
+}
+
+function incrementFileName(fileName: string): string {
+  const dotIndex = fileName.lastIndexOf('.');
+
+  if (dotIndex === -1) {
+    return incrementCopySuffix(fileName);
+  }
+
+  const name = fileName.slice(0, dotIndex);
+  const ext = fileName.slice(dotIndex);
+
+  return `${incrementCopySuffix(name)}${ext}`;
+}
+
+function incrementDisplayName(name: string): string {
+  return incrementCopySuffix(name);
+}
+
+export async function cloneMedia({
+  mediaId,
+  name,
+  fileName,
+  duration,
+  folderId = 1,
+  tags = [],
+  orientation,
+  expires,
+  mediaNoExpiryDate,
+  signal,
+  overrideName,
+}: CloneMediaRequest): Promise<Media> {
+  const blob = await fetchMediaBlob(mediaId);
+
+  const clonedDisplayName = overrideName ?? incrementDisplayName(name);
+
+  const clonedFileName = incrementFileName(fileName);
+
+  const clonedFile = new File([blob], clonedFileName, {
+    type: blob.type,
+  });
+
+  const uploadResponse = await uploadMedia({
+    file: clonedFile,
+    folderId,
+    tags,
+    signal,
+  });
+
+  const uploadedFile = uploadResponse.data.files?.[0];
+  if (!uploadedFile) {
+    throw new Error('Upload media failed: no file returned');
+  }
+
+  return updateMedia(uploadedFile.mediaId, {
+    name: clonedDisplayName,
+    duration,
+    tags: tags.join(','),
+    orientation,
+    expires,
+    mediaNoExpiryDate,
+    retired: 0,
+    enableStat: 'Inherit',
+  });
+}
+
 export async function deleteMedia(mediaId: number | string, force: boolean = false): Promise<void> {
   await http.delete(`/library/${mediaId}`, {
     params: { forceDelete: force ? 1 : 0 },
