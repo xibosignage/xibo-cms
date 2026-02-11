@@ -90,6 +90,7 @@ export default function CopyMediaModal({
       isOpen={isOpen}
       title={t('Copy Media')}
       onClose={onClose}
+      size="sm"
       actions={[
         {
           label: t('Cancel'),
@@ -104,11 +105,11 @@ export default function CopyMediaModal({
         },
       ]}
     >
-      <div className="p-8 space-y-4">
+      <div className="px-8 pb-8 space-y-4">
         <TextInput
           name="newName"
           value={newName}
-          label={t('New name for this media')}
+          label={t('New name')}
           error={error}
           onChange={(e) => {
             setNewName(e.target.value);
