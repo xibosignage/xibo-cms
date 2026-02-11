@@ -21,6 +21,7 @@
 
 import http from '@/lib/api';
 import type { Media } from '@/types/media';
+import { incrementFileName, incrementName } from '@/utils/stringUtils';
 
 export interface FetchMediaRequest {
   start: number;
@@ -270,35 +271,6 @@ export interface CloneMediaRequest {
 
 export type CloneMediaResponse = Media;
 
-function incrementCopySuffix(value: string): string {
-  const copyRegex = /(.*?)(?:\s\((\d+)\))?$/;
-
-  const match = value.match(copyRegex);
-  if (!match) return `${value} (1)`;
-
-  const base = match[1];
-  const count = match[2] ? Number(match[2]) + 1 : 1;
-
-  return `${base} (${count})`;
-}
-
-function incrementFileName(fileName: string): string {
-  const dotIndex = fileName.lastIndexOf('.');
-
-  if (dotIndex === -1) {
-    return incrementCopySuffix(fileName);
-  }
-
-  const name = fileName.slice(0, dotIndex);
-  const ext = fileName.slice(dotIndex);
-
-  return `${incrementCopySuffix(name)}${ext}`;
-}
-
-function incrementDisplayName(name: string): string {
-  return incrementCopySuffix(name);
-}
-
 export async function cloneMedia({
   mediaId,
   name,
@@ -314,7 +286,7 @@ export async function cloneMedia({
 }: CloneMediaRequest): Promise<Media> {
   const blob = await fetchMediaBlob(mediaId);
 
-  const clonedDisplayName = overrideName ?? incrementDisplayName(name);
+  const clonedDisplayName = overrideName ?? incrementName(name);
 
   const clonedFileName = incrementFileName(fileName);
 

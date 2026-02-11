@@ -25,6 +25,7 @@ import { useTranslation } from 'react-i18next';
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
 import type { Media } from '@/types/media';
+import { incrementName } from '@/utils/stringUtils';
 
 interface CopyMediaModalProps {
   isOpen: boolean;
@@ -33,17 +34,6 @@ interface CopyMediaModalProps {
   media: Media | null;
   isLoading?: boolean;
   existingNames: string[];
-}
-
-function incrementCopySuffix(value: string): string {
-  const copyRegex = /(.*?)(?:\s\((\d+)\))?$/;
-  const match = value.match(copyRegex);
-  if (!match) return `${value} (1)`;
-
-  const base = match[1];
-  const count = match[2] ? Number(match[2]) + 1 : 1;
-
-  return `${base} (${count})`;
 }
 
 export default function CopyMediaModal({
@@ -60,7 +50,7 @@ export default function CopyMediaModal({
 
   useEffect(() => {
     if (media && isOpen) {
-      setNewName(incrementCopySuffix(media.name));
+      setNewName(incrementName(media.name));
     }
   }, [media, isOpen]);
 
