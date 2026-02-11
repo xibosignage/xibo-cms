@@ -624,7 +624,10 @@ class Region extends Base
 
             // Output a preview
             $module = $this->moduleFactory->getByType($widget->type);
-            $baseUrl = (new HttpsDetect())->getBaseUrl($request);
+            // Include the CMS alias or subdirectory to get the correct preview url
+            $baseUrl = (new HttpsDetect())->getBaseUrl($request)
+                . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
+
             $this->getState()->html = $this->moduleFactory
                 ->createWidgetHtmlRenderer()
                 ->preview(
