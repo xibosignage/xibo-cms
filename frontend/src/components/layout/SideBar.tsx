@@ -49,8 +49,6 @@ export default function SidebarMenu({
   const location = useLocation();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
 
-  console.log(user);
-
   const visibleRoutes = useMemo(() => {
     return user ? filterRoutesByUser(APP_ROUTES, user) : [];
   }, [user]);
