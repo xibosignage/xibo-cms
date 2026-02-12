@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -305,7 +305,7 @@ class Display extends Base
         foreach ($this->store->select($sql, ['displayId' => $id, 'type' => 'P']) as $row) {
             $totalSize = $totalSize + $row['size'];
             $totalCount++;
-            
+
             if (intval($row['complete']) === 1) {
                 $completeSize = $completeSize + $row['size'];
                 $completeCount = $completeCount + 1;
@@ -1928,8 +1928,8 @@ class Display extends Base
             $display->lastAccessed = Carbon::createFromTimestamp($display->lastAccessed)
                 ->format(DateFormatHelper::getSystemFormat());
             $display->auditingUntil = ($display->auditingUntil == 0)
-                    ? 0
-                    : Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
+                ? 0
+                : Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
         }
 
         // Return
@@ -2062,7 +2062,7 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
-        /**
+    /**
      * Set Bandwidth to one or more displays
      * @param Request $request
      * @param Response $response
@@ -2467,126 +2467,15 @@ class Display extends Base
         $alwaysAlert = ($this->getConfig()->getSetting('MAINTENANCE_ALWAYS_ALERT') == 1);
 
         foreach ($displays as $display) {
-            // Should we test against the collection interval or the preset alert timeout?
-            if ($display->alertTimeout == 0 && $display->clientType != '') {
-                $timeoutToTestAgainst = ((double)$display->getSetting('collectInterval', $globalTimeout)) * 1.1;
-            } else {
-                $timeoutToTestAgainst = $globalTimeout;
-            }
-
-            // Store the timeout to test against
-            $timeOut = $display->lastAccessed + $timeoutToTestAgainst;
+            $timeOut = $this->getDisplayTimeout($globalTimeout, $display);
 
             // If the last time we accessed is less than now minus the timeout
             if ($timeOut < Carbon::now()->format('U')) {
                 $this->getLog()->debug('Timed out display. Last Accessed: '
-                    . date('Y-m-d h:i:s', $display->lastAccessed) . '. Time out: ' . date('Y-m-d h:i:s', $timeOut));
+                    . date('Y-m-d h:i:s', $display->lastAccessed) .
+                    '. Time out: ' . date('Y-m-d h:i:s', $timeOut));
 
-                // Is this the first time this display has gone "off-line"
-                $displayOffline = ($display->loggedIn == 1);
-
-                // If this is the first switch (i.e. the row was logged in before)
-                if ($displayOffline) {
-                    // Update the display and set it as logged out
-                    $display->loggedIn = 0;
-                    $display->save(\Xibo\Entity\Display::$saveOptionsMinimum);
-
-                    // Log the down event
-                    $event = $this->displayEventFactory->createEmpty();
-                    $event->displayId = $display->displayId;
-                    $event->start = $display->lastAccessed;
-                    // eventTypeId 1 is for Display up/down events.
-                    $event->eventTypeId = 1;
-                    $event->save();
-                }
-
-                $dayPartId = $display->getSetting('dayPartId');
-                $operatingHours = true;
-
-                if ($dayPartId !== null) {
-                    try {
-                        $dayPart = $this->dayPartFactory->getById($dayPartId);
-
-                        $startTimeArray = explode(':', $dayPart->startTime);
-                        $startTime = Carbon::now()->setTime(intval($startTimeArray[0]), intval($startTimeArray[1]));
-
-                        $endTimeArray = explode(':', $dayPart->endTime);
-                        $endTime = Carbon::now()->setTime(intval($endTimeArray[0]), intval($endTimeArray[1]));
-
-                        $now = Carbon::now();
-
-                        // exceptions
-                        foreach ($dayPart->exceptions as $exception) {
-                            // check if we are on exception day and if so override the start and endtime accordingly
-                            if ($exception['day'] == Carbon::now()->format('D')) {
-                                $exceptionsStartTime = explode(':', $exception['start']);
-                                $startTime = Carbon::now()->setTime(
-                                    intval($exceptionsStartTime[0]),
-                                    intval($exceptionsStartTime[1])
-                                );
-
-                                $exceptionsEndTime = explode(':', $exception['end']);
-                                $endTime = Carbon::now()->setTime(
-                                    intval($exceptionsEndTime[0]),
-                                    intval($exceptionsEndTime[1])
-                                );
-                            }
-                        }
-
-                        // check if we are inside the operating hours for this display -
-                        // we use that flag to decide if we need to create a notification and send an email.
-                        if (($now >= $startTime && $now <= $endTime)) {
-                            $operatingHours = true;
-                        } else {
-                            $operatingHours = false;
-                        }
-                    } catch (NotFoundException) {
-                        $this->getLog()->debug(
-                            'Unknown dayPartId set on Display Profile for displayId ' . $display->displayId
-                        );
-                    }
-                }
-
-                // Should we create a notification
-                if ($emailAlerts && $display->emailAlert == 1 && ($displayOffline || $alwaysAlert)) {
-                    // Alerts enabled for this display
-                    // Display just gone offline, or always alert
-                    // Fields for email
-
-                    // for displays without dayPartId set, this is always true,
-                    // otherwise we check if we are inside the operating hours set for this display
-                    if ($operatingHours) {
-                        $subject = sprintf(__('Alert for Display %s'), $display->display);
-                        $body = sprintf(
-                            __('Display ID %d is offline since %s.'),
-                            $display->displayId,
-                            Carbon::createFromTimestamp($display->lastAccessed)
-                                ->format(DateFormatHelper::getSystemFormat())
-                        );
-
-                        // Add to system
-                        $notification = $this->notificationFactory->createSystemNotification(
-                            $subject,
-                            $body,
-                            Carbon::now(),
-                            'display'
-                        );
-
-                        // Add in any displayNotificationGroups, with permissions
-                        foreach ($this->userGroupFactory
-                                     ->getDisplayNotificationGroups($display->displayGroupId) as $group) {
-                            $notification->assignUserGroup($group);
-                        }
-
-                        $notification->save();
-                    } else {
-                        $this->getLog()->info('Not sending email down alert for Display - ' . $display->display
-                            . ' we are outside of its operating hours');
-                    }
-                } elseif ($displayOffline) {
-                    $this->getLog()->info('Not sending an email for offline display - emailAlert = '
-                        . $display->emailAlert . ', alwaysAlert = ' . $alwaysAlert);
-                }
+                $this->updateTimedOutDisplay($display, $emailAlerts, $alwaysAlert);
             }
         }
     }
@@ -3192,5 +3081,162 @@ class Display extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Get the display timeout value
+     * @param $globalTimeout
+     * @param $display
+     * @return float
+     */
+    private function getDisplayTimeout($globalTimeout, $display): float
+    {
+        // Should we test against the collection interval or the preset alert timeout?
+        $timeoutToTestAgainst = $globalTimeout;
+
+        if ($display->alertTimeout == 0 && $display->clientType != '') {
+            $timeoutToTestAgainst = ((double)$display->getSetting('collectInterval', $globalTimeout)) * 1.1;
+        }
+
+        // Store the timeout to test against
+        return $display->lastAccessed + $timeoutToTestAgainst;
+    }
+
+    /**
+     * Update the displays that have timed out
+     * @param $display
+     * @param $emailAlerts
+     * @param $alwaysAlert
+     * @return void
+     */
+    private function updateTimedOutDisplay($display, $emailAlerts, $alwaysAlert): void
+    {
+        // Is this the first time this display has gone "off-line"
+        $displayOffline = ($display->loggedIn == 1);
+
+        // If this is the first switch (i.e. the row was logged in before)
+        if ($displayOffline) {
+            // Update the display and set it as logged out
+            $display->loggedIn = 0;
+            $display->save(\Xibo\Entity\Display::$saveOptionsMinimum);
+
+            // Log the down event
+            $event = $this->displayEventFactory->createEmpty();
+            $event->displayId = $display->displayId;
+            $event->start = $display->lastAccessed;
+            // eventTypeId 1 is for Display up/down events.
+            $event->eventTypeId = 1;
+            $event->save();
+        }
+
+        $dayPartId = $display->getSetting('dayPartId');
+        $isWithinOperatingHours = true;
+
+        if ($dayPartId !== null) {
+            $isWithinOperatingHours = $this->getIsWithinOperatingHours($dayPartId, $display);
+        }
+
+        // Should we create a notification
+        if ($emailAlerts && $display->emailAlert == 1 && ($displayOffline || $alwaysAlert)) {
+            $this->createSystemNotification($isWithinOperatingHours, $display);
+        } elseif ($displayOffline) {
+            $this->getLog()->info('Not sending an email for offline display - emailAlert = '
+                . $display->emailAlert . ', alwaysAlert = ' . $alwaysAlert);
+        }
+    }
+
+    /**
+     * Check if display is within operating hours
+     * @param $dayPartId
+     * @param $display
+     * @return bool
+     */
+    private function getIsWithinOperatingHours($dayPartId, $display): bool
+    {
+        $isWithinOperatingHours = true;
+
+        try {
+            $dayPart = $this->dayPartFactory->getById($dayPartId);
+
+            $startTimeArray = explode(':', $dayPart->startTime);
+            $startTime = Carbon::now()->setTime(intval($startTimeArray[0]), intval($startTimeArray[1]));
+
+            $endTimeArray = explode(':', $dayPart->endTime);
+            $endTime = Carbon::now()->setTime(intval($endTimeArray[0]), intval($endTimeArray[1]));
+
+            $now = Carbon::now();
+
+            // exceptions
+            foreach ($dayPart->exceptions as $exception) {
+                // check if we are on exception day and if so override the start and endtime accordingly
+                if ($exception['day'] == Carbon::now()->format('D')) {
+                    $exceptionsStartTime = explode(':', $exception['start']);
+                    $startTime = Carbon::now()->setTime(
+                        intval($exceptionsStartTime[0]),
+                        intval($exceptionsStartTime[1])
+                    );
+
+                    $exceptionsEndTime = explode(':', $exception['end']);
+                    $endTime = Carbon::now()->setTime(
+                        intval($exceptionsEndTime[0]),
+                        intval($exceptionsEndTime[1])
+                    );
+                }
+            }
+
+            // check if we are inside the operating hours for this display -
+            // we use that flag to decide if we need to create a notification and send an email.
+            $isWithinOperatingHours = ($now >= $startTime && $now <= $endTime);
+        } catch (NotFoundException) {
+            $this->getLog()->debug(
+                'Unknown dayPartId set on Display Profile for displayId ' . $display->displayId
+            );
+        }
+
+        return $isWithinOperatingHours;
+    }
+
+    /**
+     * Creates system or email notifications
+     * @param $isWithinOperatingHours
+     * @param $display
+     * @return void
+     */
+    private function createSystemNotification($isWithinOperatingHours, $display): void
+    {
+        // Alerts enabled for this display
+        // Display just gone offline, or always alert
+        // Fields for email
+
+        // for displays without dayPartId set, this is always true,
+        // otherwise we check if we are inside the operating hours set for this display
+        if ($isWithinOperatingHours) {
+            $subject = sprintf(__('Alert for Display %s'), $display->display);
+            $body = sprintf(
+                __('Display ID %d is offline since %s.'),
+                $display->displayId,
+                Carbon::createFromTimestamp($display->lastAccessed)
+                    ->format(DateFormatHelper::getSystemFormat())
+            );
+
+            // Add to system
+            $notification = $this->notificationFactory->createSystemNotification(
+                $subject,
+                $body,
+                Carbon::now(),
+                'display'
+            );
+
+            // Add in any displayNotificationGroups, with permissions
+            foreach ($this->userGroupFactory
+                         ->getDisplayNotificationGroups($display->displayGroupId) as $group) {
+                $notification->assignUserGroup($group);
+            }
+
+            $notification->save();
+        } else {
+            $this->getLog()->info('Not sending email down alert for Display - ' . $display->display
+                . ' we are outside of its operating hours');
+        }
     }
 }

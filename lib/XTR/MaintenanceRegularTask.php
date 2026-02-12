@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -151,7 +151,29 @@ class MaintenanceRegularTask implements TaskInterface
     {
         $this->runMessage .= '## ' . __('Email Alerts') . PHP_EOL;
 
-        $this->displayController->validateDisplays($this->displayFactory->query());
+        // Process the validation by batch
+        $batchSize = 100;
+        $offset = 0;
+
+        while (true) {
+            $displays = $this->displayFactory->query(null, [
+                'start' => $offset,
+                'length' => $batchSize
+            ]);
+
+            if (empty($displays)) {
+                break;
+            }
+
+            $this->log->debug('XTR: validating displayId: %d-%d', $offset + 1, $offset + count($displays));
+
+            $this->displayController->validateDisplays($displays);
+
+            // Free the $displays array memory
+            unset($displays);
+
+            $offset += $batchSize;
+        }
 
         $this->appendRunMessage(__('Done'));
     }
