@@ -19,13 +19,14 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { type ChangeEvent } from 'react';
+import { useEffect, useRef, type ChangeEvent } from 'react';
 import { twMerge } from 'tailwind-merge';
 
 interface CheckboxProps {
   id: string;
   label?: string;
   checked?: boolean;
+  indeterminate?: boolean;
   className?: string;
   classNameLabel?: string;
   classNameInput?: string;
@@ -40,12 +41,22 @@ export default function Checkbox({
   classNameLabel,
   classNameInput,
   checked,
+  indeterminate,
   onChange,
   title,
 }: CheckboxProps) {
+  const checkboxRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (checkboxRef.current) {
+      checkboxRef.current.indeterminate = !!indeterminate;
+    }
+  }, [indeterminate]);
+
   return (
     <div className={twMerge('flex', className)}>
       <input
+        ref={checkboxRef}
         type="checkbox"
         id={id}
         checked={checked ?? false}

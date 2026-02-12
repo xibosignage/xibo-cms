@@ -183,7 +183,7 @@ class PermissionFactory extends BaseFactory
 
         // SQL gets all Groups/User Specific Groups for non-retired users
         // then it joins them to the permission table for the object specified
-        $select = 'SELECT `permissionId`, joinedGroup.`groupId`, `view`, `edit`, `delete`, joinedGroup.isuserspecific, joinedGroup.group ';
+        $select = 'SELECT `permissionId`, joinedGroup.`groupId`, `view`, `edit`, `delete`, joinedGroup.isUserSpecific, joinedGroup.group ';
         $body = '  FROM (
                 SELECT `group`.*
                   FROM `group`
@@ -264,6 +264,11 @@ class PermissionFactory extends BaseFactory
         if ($sanitizedFilter->getString('name') != null) {
             $body .= ' AND joinedGroup.group LIKE :name ';
             $params['name'] = '%' . $sanitizedFilter->getString('name') . '%';
+        }
+
+        if ($sanitizedFilter->getInt('isUserSpecific') !== null) {
+            $body .= ' AND joinedGroup.isUserSpecific = :isUserSpecific ';
+            $params['isUserSpecific'] = $sanitizedFilter->getInt('isUserSpecific');
         }
 
         $order = '';

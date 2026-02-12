@@ -35,7 +35,7 @@ interface MediaPreviewerProps {
   mediaType?: string | null;
   fileName?: string | undefined;
   onMove?: () => void;
-  onShare?: () => void;
+  onShare: (id: number) => void;
   onDownload: () => void;
   onClose: () => void;
   mediaData?: Media | null;
@@ -145,7 +145,7 @@ export default function MediaPreviewer({
             <FolderInput className="p-1" />
           </button>
           <button
-            onClick={onShare}
+            onClick={() => onShare(mediaId as number)}
             className="flex justify-center items-center cursor-pointer rounded-lg hover:bg-white/10"
             title={t('Share')}
           >
@@ -195,7 +195,7 @@ export default function MediaPreviewer({
                 <iframe
                   src={url}
                   title={fileName}
-                  className="w-full h-full min-h-[600px] rounded shadow-md border-0"
+                  className="w-full h-full min-h-150 rounded shadow-md border-0"
                 />
               ) : (
                 <div className="text-center p-8 text-gray-500">

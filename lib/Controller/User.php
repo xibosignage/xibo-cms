@@ -1545,7 +1545,7 @@ class User extends Base
         }
 
         // List of all Groups with a view / edit / delete check box
-        $permissions = $this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $id, $this->gridRenderSort($sanitizedParams), $this->gridRenderFilter(['name' => $sanitizedParams->getString('name')], $sanitizedParams));
+        $permissions = $this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $id, $this->gridRenderSort($sanitizedParams), $this->gridRenderFilter(['name' => $sanitizedParams->getString('name'), 'isUserSpecific' => $sanitizedParams->getInt('isUserSpecific')], $sanitizedParams));
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($permissions);

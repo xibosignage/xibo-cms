@@ -81,13 +81,13 @@ export function DataTableOptions<TData>({
           </Button>
 
           {isOpen && (
-            <div className="absolute right-0 top-11 w-52 z-50 max-h-[354px] flex flex-col rounded-lg overflow-hidden bg-white shadow-lg border border-gray-200">
+            <div className="absolute right-0 top-11 w-52 z-50 max-h-88.5 flex flex-col rounded-lg overflow-hidden bg-white shadow-lg border border-gray-200">
               <div className="relative flex bg-gray-100 px-3 py-2 justify-between items-center">
                 <span className="text-gray-500 text-sm font-semibold uppercase leading-normal">
                   {t('Visible Columns')}
                 </span>
                 <div
-                  className="flex items-center justify-center size-6 absolute right-[5px] cursor-pointer"
+                  className="flex items-center justify-center size-6 absolute right-1.25 cursor-pointer"
                   onClick={() => setIsOpen(false)}
                 >
                   <X className="size-4 text-gray-500" />

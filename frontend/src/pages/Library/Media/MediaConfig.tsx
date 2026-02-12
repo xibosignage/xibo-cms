@@ -237,12 +237,6 @@ export const ACCEPTED_MIME_TYPES = {
   'video/x-ms-wmv': ['.wmv'],
 };
 
-export const FILTER_DROPWN_OPTIONS = [
-  { label: 'All', value: 'all' },
-  { label: 'User', value: 'user' },
-  { label: 'Group', value: 'group' },
-];
-
 const formatDuration = (seconds: number) => {
   if (!seconds) return '-';
   return new Date(seconds * 1000).toISOString().slice(11, 19);
@@ -272,7 +266,7 @@ export interface MediaActionsProps {
   onDelete: (id: number) => void;
   onDownload: (row: Media) => void;
   openEditModal: (row: Media) => void;
-  openShareModal?: () => void;
+  openShareModal?: (id: number) => void;
   openDetails?: (id: number) => void;
   copyMedia?: (row: number) => void;
 }
@@ -321,7 +315,7 @@ export const getMediaItemActions = ({
     {
       label: t('Share'),
       icon: UserPlus2,
-      onClick: () => openShareModal && openShareModal(),
+      onClick: () => openShareModal && openShareModal(media.mediaId),
     },
     {
       label: t('Download'),

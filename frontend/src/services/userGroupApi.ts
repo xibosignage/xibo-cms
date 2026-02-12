@@ -26,6 +26,8 @@ export interface FetchUserGroupsRequest {
   start: number;
   length: number;
   userGroup?: string;
+  isUser?: number;
+  signal?: AbortSignal;
 }
 
 export interface FetchUserGroupsResponse {
@@ -34,10 +36,27 @@ export interface FetchUserGroupsResponse {
 }
 
 export async function fetchUserGroups(
-  options: FetchUserGroupsRequest = { start: 0, length: 10 },
+  { start = 0, length = 10, userGroup, isUser, signal }: FetchUserGroupsRequest = {
+    start: 0,
+    length: 10,
+  },
 ): Promise<FetchUserGroupsResponse> {
-  const response = await http.get('/group', {
-    params: options,
+  const params: Record<string, string | number> = {
+    start,
+    length,
+  };
+
+  if (userGroup) {
+    params.userGroup = userGroup;
+  }
+
+  if (isUser !== undefined) {
+    params.isUser = isUser;
+  }
+
+  const response = await http.get<UserGroup[]>('/group', {
+    params,
+    signal,
   });
 
   const totalCountHeader = response.headers['x-total-count'];

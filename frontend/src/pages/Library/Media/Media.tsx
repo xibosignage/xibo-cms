@@ -104,6 +104,8 @@ export default function Media() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCloning, setIsCloning] = useState(false);
 
+  const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
+
   const [selectedMediaId, setSelectedMediaId] = useState<number | null>(null);
 
   const debouncedFilter = useDebounce(globalFilter, 500);
@@ -368,7 +370,10 @@ export default function Media() {
     onDelete: handleDelete,
     onDownload: handleDownload,
     openEditModal,
-    openShareModal: () => openModal('share'),
+    openShareModal: (mediaId) => {
+      setShareEntityIds(mediaId);
+      openModal('share');
+    },
     openDetails: (mediaId) => {
       setSelectedMediaId(mediaId);
       setShowInfoPanel(true);
@@ -380,7 +385,11 @@ export default function Media() {
     t,
     onDelete: handleBulkDelete,
     onMove: (items) => console.log('Move', items),
-    onShare: (items) => console.log('Share', items),
+    onShare: (items) => {
+      const ids = items.map((i) => i.mediaId);
+      setShareEntityIds(ids);
+      openModal('share');
+    },
   });
 
   const addModalActions = [
@@ -652,6 +661,10 @@ export default function Media() {
         onClose={() => {
           setPreviewItem(null);
         }}
+        onShare={(mediaId) => {
+          setShareEntityIds(mediaId);
+          openModal('share');
+        }}
         folderName={selectedFolderName}
       />
 
@@ -670,7 +683,16 @@ export default function Media() {
           data={selectedMedia}
         />
       )}
-      <ShareModal onClose={closeModal} openModal={isModalOpen('share')} />
+      <ShareModal
+        title={t('Share Media')}
+        onClose={() => {
+          closeModal();
+          setShareEntityIds(null);
+        }}
+        openModal={isModalOpen('share')}
+        entityType="media"
+        entityId={shareEntityIds ?? (selectedMedia?.mediaId || null)}
+      />
 
       <UploadProgressDock isModalOpen={isAddModalOpen} />
 

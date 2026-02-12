@@ -20,7 +20,7 @@
  */
 
 import { ExternalLink, Lock, RefreshCw, AlertCircle } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Button from '../ui/Button';
@@ -35,6 +35,8 @@ export function SessionExpiredModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
 
+  const checkLock = useRef(false);
+
   // Listen for the "session-expired" event
   useEffect(() => {
     const handleExpired = () => setIsOpen(true);
@@ -43,51 +45,48 @@ export function SessionExpiredModal() {
   }, []);
 
   const checkSession = useCallback(async () => {
-    if (isChecking) {
+    if (checkLock.current) {
       return;
     }
+    checkLock.current = true;
 
-    // If modal is open, check if we can close it
-    if (isOpen) {
-      setIsChecking(true);
-      try {
-        await http.get('/user/me');
-        setIsOpen(false);
-      } catch {
-        // Still expired, stay open
-      } finally {
-        setIsChecking(false);
+    try {
+      // If modal is open, check if we can close it
+      if (isOpen) {
+        setIsChecking(true);
+        try {
+          await http.head('/user/me');
+          setIsOpen(false);
+        } catch {
+          // Still expired, stay open
+        } finally {
+          setIsChecking(false);
+        }
+      } else if (document.visibilityState === 'visible') {
+        // If modal is closed, check silently
+        try {
+          await http.head('/user/me');
+        } catch {
+          // Interceptor catches 401 and opens modal
+        }
       }
-    } else if (document.visibilityState === 'visible') {
-      // If modal is closed, check silently
-      try {
-        await http.get('/user/me');
-      } catch {
-        // Interceptor catches 401 and opens modal
-      }
+    } finally {
+      checkLock.current = false;
     }
-  }, [isOpen, isChecking]);
+  }, [isOpen]);
 
   // Pro active check - focus and auto-resume
   useEffect(() => {
-    // Check when tab becomes visible
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        checkSession();
-      }
-    };
-
-    // Check when window gets focus
-    const handleFocus = () => {
+    const handleTrigger = () => {
       checkSession();
     };
 
-    document.addEventListener('visibilitychange', handleVisibility);
-    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleTrigger);
+    window.addEventListener('focus', handleTrigger);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibility);
-      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleTrigger);
+      window.removeEventListener('focus', handleTrigger);
     };
   }, [checkSession]);
 

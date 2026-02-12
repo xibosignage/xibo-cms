@@ -69,7 +69,7 @@ export default function SelectDropdown({
     <div className={twMerge('relative overflow-visible', className)}>
       <label className="text-xs font-semibold text-gray-500">{t(label)}</label>
       <div
-        className="w-full border bg-white border-gray-200 rounded-lg flex items-center cursor-pointer max-h-[45px]"
+        className="w-full border bg-white border-gray-200 rounded-lg flex items-center cursor-pointer max-h-11.25"
         onClick={onToggle}
       >
         {addLeftLabel && (
@@ -84,8 +84,8 @@ export default function SelectDropdown({
       </div>
 
       <div
-        className={`absolute top-[70px] w-full bg-white shadow-md rounded-lg overflow-clip transition-all duration-150 border border-gray-200 ease-in-out z-50
-          ${isOpen ? 'opacity-100 max-h-[300px]' : 'opacity-0 max-h-0'}
+        className={`absolute top-17.5 w-full bg-white shadow-md rounded-lg overflow-clip transition-all duration-150 border border-gray-200 ease-in-out z-50
+          ${isOpen ? 'opacity-100 max-h-75' : 'opacity-0 max-h-0'}
         `}
       >
         {optionLabel && (
@@ -102,7 +102,7 @@ export default function SelectDropdown({
               onClick={() => onSelect(option.value)}
             >
               {addOptionAvatar && (
-                <div className="bg-xibo-blue-100 h-[26px] w-[26px] text-[12px] center rounded-full text-xibo-blue-800 font-semibold">
+                <div className="bg-xibo-blue-100 h-6.5 w-6.5 text-[12px] center rounded-full text-xibo-blue-800 font-semibold">
                   {option.label.slice(0, 1)}
                 </div>
               )}

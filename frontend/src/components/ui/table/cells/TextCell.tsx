@@ -25,6 +25,7 @@ interface TextProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   subtext?: string;
   weight?: 'normal' | 'bold';
+  truncate?: boolean;
   className?: string;
 }
 
@@ -33,11 +34,14 @@ export function TextCell({
   subtext,
   className = '',
   weight = 'normal',
+  truncate = false,
   ...props
 }: TextProps) {
   return (
-    <div className={`inline-flex gap-2 ${className}`} {...props}>
-      <span className={`text-gray-800 text-sm ${weight === 'bold' ? 'font-semibold' : ''}`}>
+    <div className={`flex items-center w-full min-w-0 gap-2 ${className}`} {...props}>
+      <span
+        className={`text-gray-800 text-sm ${truncate ? 'truncate' : ''} ${weight === 'bold' ? 'font-semibold' : ''}`}
+      >
         {children}
       </span>
       {subtext && <span className="text-gray-500 text-sm">{subtext}</span>}

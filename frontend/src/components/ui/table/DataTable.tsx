@@ -69,6 +69,7 @@ interface DataTableProps<TData, TValue> {
   viewMode?: 'table' | 'grid';
   onViewModeChange?: (mode: 'table' | 'grid') => void;
   getRowId?: (originalRow: TData, index: number, parent?: Row<TData>) => string;
+  hideToolbar?: boolean;
 }
 
 const getCommonPinningStyles = <TData, TValue>(column: Column<TData, TValue>): CSSProperties => {
@@ -115,6 +116,7 @@ export function DataTable<TData, TValue>({
   viewMode,
   onViewModeChange,
   getRowId,
+  hideToolbar = false,
 }: DataTableProps<TData, TValue>) {
   const { t } = useTranslation();
 
@@ -229,34 +231,36 @@ export function DataTable<TData, TValue>({
   }, [loading]);
 
   return (
-    <div className="flex flex-col pt-5 gap-y-3 data-table flex-1 min-h-0">
-      <div className="flex justify-between data-table-header flex-none">
-        <div className="flex items-center gap-3">
-          <div className="text-gray-500 font-sans text-sm font-semibold leading-normal tracking-tight uppercase">
-            {t('Table View')}
+    <div className="flex flex-col gap-y-3 data-table flex-1 min-h-0">
+      {!hideToolbar && (
+        <div className="flex justify-between data-table-header flex-none mt-5">
+          <div className="flex items-center gap-3">
+            <div className="text-gray-500 font-sans text-sm font-semibold leading-normal tracking-tight uppercase">
+              {t('Table View')}
+            </div>
+            {selectedCount > 0 && bulkActions.length > 0 && (
+              <DataTableBulkActions
+                selectedCount={selectedCount}
+                actions={bulkActions}
+                onClearSelection={() => table.toggleAllPageRowsSelected(false)}
+                selectedRows={selectedRowsData}
+              />
+            )}
           </div>
-          {selectedCount > 0 && bulkActions.length > 0 && (
-            <DataTableBulkActions
-              selectedCount={selectedCount}
-              actions={bulkActions}
-              onClearSelection={() => table.toggleAllPageRowsSelected(false)}
-              selectedRows={selectedRowsData}
-            />
-          )}
-        </div>
 
-        <div className="ml-auto">
-          <DataTableOptions
-            table={table}
-            onRefresh={onRefresh}
-            onCSVExport={handleExportCSV}
-            onPrint={handlePrint}
-            columnVisibility={columnVisibility}
-            viewMode={viewMode}
-            onViewModeChange={onViewModeChange}
-          />
+          <div className="ml-auto">
+            <DataTableOptions
+              table={table}
+              onRefresh={onRefresh}
+              onCSVExport={handleExportCSV}
+              onPrint={handlePrint}
+              columnVisibility={columnVisibility}
+              viewMode={viewMode}
+              onViewModeChange={onViewModeChange}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="flex flex-col data-table-content bg-white overflow-hidden relative flex-1 min-h-0">
         {/* Loading Overlay */}
@@ -311,7 +315,7 @@ export function DataTable<TData, TValue>({
                       >
                         <div className="px-3 py-2 h-8 flex uppercase bg-gray-50 border-b border-gray-200 text-sm items-center justify-between text-gray-500">
                           <div
-                            className="text-sm font-semibold text-nowrap overflow-hidden"
+                            className="text-sm font-semibold text-nowrap overflow-hidden w-full text-left"
                             title={titleText}
                           >
                             {flexRender(header.column.columnDef.header, header.getContext())}
