@@ -20,7 +20,15 @@
  */
 
 import type { TFunction } from 'i18next';
-import { Upload, Link as LinkIcon, MinusCircle, FileIcon, Globe, LockKeyhole } from 'lucide-react';
+import {
+  Upload,
+  Link as LinkIcon,
+  MinusCircle,
+  FileIcon,
+  Globe,
+  LockKeyhole,
+  Info,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useDropzone, type FileRejection, type DropEvent } from 'react-dropzone';
 import { useTranslation } from 'react-i18next';
@@ -30,6 +38,7 @@ import { notify } from './Notification';
 import TagInput from './forms/TagInput';
 
 import Button from '@/components/ui/Button';
+import { usePreline } from '@/hooks/usePreline';
 import type { UploadItem } from '@/hooks/useUploadQueue';
 import type { Tag } from '@/types/tag';
 
@@ -180,12 +189,12 @@ function UploadItemRow({ item, onRemove, onUpdate }: RowProps) {
       </button>
 
       <div className="flex gap-3 w-full md:w-auto">
-        <div className="thumb size-[70px] rounded text-xibo-blue-600 bg-gray-400 border border-xibo-blue-200/50 overflow-hidden">
+        <div className="thumb size-17.5 rounded text-xibo-blue-600 bg-gray-400 border border-xibo-blue-200/50 overflow-hidden">
           {renderThumbnail()}
         </div>
 
         <div className="flex flex-row gap-3 flex-1">
-          <div className="flex flex-col gap-1 w-full md:w-[200px]">
+          <div className="flex flex-col gap-1 w-full md:w-50">
             <label className="block text-sm font-medium text-gray-500">{t('Name')}</label>
             <input
               type="text"
@@ -197,7 +206,7 @@ function UploadItemRow({ item, onRemove, onUpdate }: RowProps) {
             />
           </div>
 
-          <div className="flex flex-col w-full md:w-[280px]">
+          <div className="flex flex-col w-full md:w-70">
             <TagInput value={tagObjects} onChange={handleTagsChange} disabled={isUploading} />
           </div>
         </div>
@@ -261,6 +270,9 @@ export function FileUploader({
   const { t } = useTranslation();
   const [urlInput, setUrlInput] = useState('');
 
+  // Init preline
+  usePreline();
+
   const onDrop = (acceptedFiles: File[], fileRejections: FileRejection[], event: DropEvent) => {
     if (disabled) {
       return;
@@ -301,7 +313,7 @@ export function FileUploader({
 
   const uniqueExts = Array.from(new Set(extensions)).join(', ');
   const sizeString = formatBytes(maxSize, t);
-  const helperText = `(${uniqueExts}, ${t('file size up to {{size}}', { size: sizeString })})`;
+  const helperText = `(${t('Maximum file size: {{size}}', { size: sizeString })}) Supported formats:`;
 
   return (
     <div className="flex flex-col gap-3">
@@ -315,25 +327,52 @@ export function FileUploader({
         <input {...getInputProps()} />
 
         {disabled ? (
-          <LockKeyhole className="size-6 p-[3px] mb-1" />
+          <LockKeyhole className="text-red-800 size-6 p-0.75 mb-1" />
         ) : (
-          <Upload className="size-6 p-[3px]" />
+          <Upload className="size-6 p-0.75" />
         )}
 
         <div className="text-sm flex gap-1 justify-center items-center">
           {disabled ? (
-            <span className="font-semibold">{t('Upload disabled for this folder')}</span>
+            <span className="text-red-800 font-semibold">
+              {t('Upload disabled for this folder')}
+            </span>
           ) : (
             <>
               <div className="text-gray-800">{t('Drag & drop file here or')}</div>
-              <Button className="text-sm p-0" variant="tertiary" onClick={open}>
+              <Button
+                className="text-sm p-0 focus:outline-offset-2"
+                variant="tertiary"
+                onClick={open}
+              >
                 {t('Select Files')}
               </Button>
             </>
           )}
         </div>
 
-        {!disabled && <div className="text-sm text-center text-gray-500 px-4">{helperText}</div>}
+        {!disabled && (
+          <div className="flex gap-1 justify-center items-center">
+            <div className="text-sm text-center text-gray-500">{helperText}</div>
+            {uniqueExts && (
+              <div className="hs-tooltip inline-block">
+                <button
+                  type="button"
+                  className="hs-tooltip-toggle block text-gray-400 hover:text-gray-600"
+                >
+                  <Info className="size-4" />
+
+                  <span
+                    className="hs-tooltip-content hs-tooltip-shown:opacity-80 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 p-2 bg-gray-900 text-xs font-medium text-white rounded shadow-sm"
+                    role="tooltip"
+                  >
+                    {uniqueExts}
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="">

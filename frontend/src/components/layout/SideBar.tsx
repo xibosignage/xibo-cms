@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 
@@ -29,6 +29,8 @@ import { SidebarPopup } from '../ui/sidebar/SidebarPopup';
 import { SidebarSubLinks } from '../ui/sidebar/SidebarSublinks';
 
 import { APP_ROUTES } from '@/config/appRoutes';
+import { useUserContext } from '@/context/UserContext';
+import { filterRoutesByUser } from '@/utils/permissions';
 import { isRouteActive } from '@/utils/sidebar';
 
 interface SidebarMenuProps {
@@ -43,22 +45,37 @@ export default function SidebarMenu({
   closeMobileDrawer,
 }: SidebarMenuProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
   const location = useLocation();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
 
+  const visibleRoutes = useMemo(() => {
+    return user ? filterRoutesByUser(APP_ROUTES, user) : [];
+  }, [user]);
+
   useEffect(() => {
-    APP_ROUTES.forEach((route) => {
-      // Check if any sublink matches the current location
-      if (
-        route.subLinks?.some((sub) => {
-          const fullPath = `/${route.path}/${sub.path}`;
-          return location.pathname === fullPath || location.pathname.startsWith(`${fullPath}/`);
-        })
-      ) {
-        setOpenMenu(route.path);
-      }
+    // Find the parent menu that contains the active link
+    const activeParent = visibleRoutes.find((route) => {
+      route.subLinks?.some((sub) => {
+        // Check if an external URL
+        if (sub.externalURL) {
+          return (
+            location.pathname === sub.externalURL ||
+            location.pathname.startsWith(`${sub.externalURL}/`)
+          );
+        }
+
+        // React route
+        const fullPath = `/${route.path}/${sub.path}`;
+        return location.pathname === fullPath || location.pathname.startsWith(`${fullPath}/`);
+      });
     });
-  }, [location.pathname]);
+
+    // If we found a matching parent, expand it
+    if (activeParent) {
+      setOpenMenu(activeParent.path);
+    }
+  }, [location.pathname, visibleRoutes]);
 
   const toggleMenu = (path: string) => {
     setOpenMenu((prev) => (prev === path ? null : path));
@@ -73,7 +90,7 @@ export default function SidebarMenu({
       />
       {/* Routes */}
       <div className={`flex flex-col gap-y-2 ${isCollapsed ? 'items-center' : 'items-start'}`}>
-        {APP_ROUTES.map((route, index) => {
+        {visibleRoutes.map((route, index) => {
           const label = !isCollapsed ? t(route.labelKey) : null;
           const isOpen = openMenu === route.path;
           const isActive = isRouteActive(route, location.pathname);

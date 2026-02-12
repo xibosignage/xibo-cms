@@ -19,32 +19,29 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { Tag } from './tag';
+// Increments a numeric suffix for media name
+export function incrementName(value: string): string {
+  const regex = /^(.*?)(?:\s\((\d+)\))?$/;
 
-export interface Media {
-  folderId: number;
-  storedAs: string;
-  mediaId: number;
-  name: string;
-  thumbnail: string;
-  mediaType: MediaType;
-  createdDt: string;
-  modifiedDt: string;
-  ownerId: string;
-  width?: number;
-  height?: number;
-  valid: boolean;
-  fileName: string;
-  fileSizeFormatted: string;
-  orientation: 'portrait' | 'landscape';
-  tags: Tag[];
-  fileSize: number;
-  duration: number;
-  mediaNoExpiryDate: string;
-  enableStat: string;
-  retired: boolean;
-  expires: number;
-  updateInLayouts: boolean;
+  const match = value.match(regex);
+  if (!match) return `${value} (1)`;
+
+  const base = match[1];
+  const count = match[2] ? Number(match[2]) + 1 : 1;
+
+  return `${base} (${count})`;
 }
 
-export type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
+// Increments a numeric suffix for media file name
+export function incrementFileName(fileName: string): string {
+  const dotIndex = fileName.lastIndexOf('.');
+
+  if (dotIndex === -1) {
+    return incrementName(fileName);
+  }
+
+  const name = fileName.slice(0, dotIndex);
+  const ext = fileName.slice(dotIndex);
+
+  return `${incrementName(name)}${ext}`;
+}

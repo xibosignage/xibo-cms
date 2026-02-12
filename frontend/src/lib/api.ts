@@ -21,7 +21,7 @@
 
 import axios from 'axios';
 
-import { logout } from '@/lib/logout';
+import { triggerSessionExpired } from './auth-events';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/json';
 
@@ -38,7 +38,7 @@ http.interceptors.response.use(
   (err) => {
     if (err.response?.status === 401) {
       console.warn('Unauthorized access. Redirecting to login...');
-      logout();
+      triggerSessionExpired();
     }
     return Promise.reject(err);
   },

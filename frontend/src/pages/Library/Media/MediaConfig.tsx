@@ -108,6 +108,8 @@ export type ActionItem =
 
 type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
 
+export type ModalType = 'edit' | 'share' | 'delete' | 'copy' | null;
+
 export const INITIAL_FILTER_STATE: MediaFilterInput = {
   type: '',
   ownerId: '',
@@ -271,6 +273,8 @@ export interface MediaActionsProps {
   onDownload: (row: Media) => void;
   openEditModal: (row: Media) => void;
   openShareModal?: () => void;
+  openDetails?: (id: number) => void;
+  copyMedia?: (row: number) => void;
 }
 
 export const getMediaItemActions = ({
@@ -279,6 +283,8 @@ export const getMediaItemActions = ({
   onDownload,
   openEditModal,
   openShareModal,
+  openDetails,
+  copyMedia,
 }: MediaActionsProps): ((media: Media) => ActionItem[]) => {
   return (media: Media) => [
     // Quick Actions
@@ -305,7 +311,7 @@ export const getMediaItemActions = ({
     {
       label: t('Make a Copy'),
       icon: CopyCheck,
-      onClick: () => console.log('Make a Copy', media.mediaId),
+      onClick: () => copyMedia && copyMedia(media.mediaId),
     },
     {
       label: t('Move'),
@@ -330,7 +336,7 @@ export const getMediaItemActions = ({
     {
       label: t('Details'),
       icon: Info,
-      onClick: () => console.log('Details', media.mediaId),
+      onClick: () => openDetails && openDetails(media.mediaId),
     },
     { isSeparator: true },
     {

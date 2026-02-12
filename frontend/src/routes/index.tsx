@@ -73,6 +73,14 @@ export const router = createBrowserRouter(
       ],
     },
     {
+      path: 'login',
+      loader: () => {
+        // Force to go to server login page
+        window.location.href = '/login';
+        return null;
+      },
+    },
+    {
       path: '*',
       lazy: () => import('@/pages/NotFound/NotFound').then((m) => ({ Component: m.default })),
     },

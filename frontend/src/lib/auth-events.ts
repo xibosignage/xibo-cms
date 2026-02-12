@@ -19,32 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { Tag } from './tag';
+export const authEvents = new EventTarget();
 
-export interface Media {
-  folderId: number;
-  storedAs: string;
-  mediaId: number;
-  name: string;
-  thumbnail: string;
-  mediaType: MediaType;
-  createdDt: string;
-  modifiedDt: string;
-  ownerId: string;
-  width?: number;
-  height?: number;
-  valid: boolean;
-  fileName: string;
-  fileSizeFormatted: string;
-  orientation: 'portrait' | 'landscape';
-  tags: Tag[];
-  fileSize: number;
-  duration: number;
-  mediaNoExpiryDate: string;
-  enableStat: string;
-  retired: boolean;
-  expires: number;
-  updateInLayouts: boolean;
-}
-
-export type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
+export const triggerSessionExpired = () => {
+  authEvents.dispatchEvent(new Event('session-expired'));
+};

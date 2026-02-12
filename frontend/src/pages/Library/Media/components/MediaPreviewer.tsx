@@ -23,7 +23,10 @@ import { X, Loader2, Download, UserPlus2, Info, FolderInput } from 'lucide-react
 import { useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { MediaInfoPanel } from './MediaInfoPanel';
+
 import { useKeydown } from '@/hooks/useKeydown';
+import { useOwner } from '@/hooks/useOwner';
 import { fetchMediaBlob } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
 
@@ -36,6 +39,7 @@ interface MediaPreviewerProps {
   onDownload: () => void;
   onClose: () => void;
   mediaData?: Media | null;
+  folderName?: string;
 }
 
 export default function MediaPreviewer({
@@ -47,16 +51,19 @@ export default function MediaPreviewer({
   onDownload,
   onClose,
   mediaData,
+  folderName,
 }: MediaPreviewerProps) {
   const { t } = useTranslation();
 
+  const [showInfoPanel, setShowInfoPanel] = useState(false);
+  const activeUrlRef = useRef<string | null>(null);
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [showInfoPanel, setShowInfoPanel] = useState(false);
+  const ownerId = mediaData?.ownerId ? Number(mediaData.ownerId) : null;
 
-  const activeUrlRef = useRef<string | null>(null);
+  const { owner, loading: isOwnerLoading } = useOwner({ ownerId });
 
   const revokeUrl = () => {
     if (activeUrlRef.current) {
@@ -121,7 +128,7 @@ export default function MediaPreviewer({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80">
+    <div className="fixed inset-0 z-50 flex flex-col bg-black/80 h-dvh">
       <div className="flex w-full px-5 py-3 text-white justify-between">
         <div className="flex w-full items-center gap-3">
           <button onClick={onClose} className="cursor-pointer rounded-lg hover:bg-white/10">
@@ -161,82 +168,54 @@ export default function MediaPreviewer({
         </div>
       </div>
 
-      <div className="flex-1 w-full p-4 flex justify-center overflow-auto">
-        {loading ? (
-          <div className="flex flex-col items-center gap-2 text-gray-500">
-            <Loader2 className="w-10 h-10 animate-spin" />
-            <span>{t('Loading Media...')}</span>
-          </div>
-        ) : error ? (
-          <div className="text-red-500 bg-red-50 p-4 rounded">{error}</div>
-        ) : url ? (
-          <>
-            {mediaType === 'video' ? (
-              <video src={url} controls className="max-h-full max-w-full shadow-md" autoPlay />
-            ) : mediaType === 'image' ? (
-              <img
-                src={url}
-                alt={fileName}
-                className="max-h-full max-w-full object-contain shadow-md"
-              />
-            ) : mediaType === 'audio' ? (
-              <div className="flex items-center align-middle justify-center w-2/3 max-w-xl h-full flex-col gap-4">
-                <audio src={url} controls autoPlay className="w-full" />
-              </div>
-            ) : mediaType === 'pdf' ? (
-              <iframe
-                src={url}
-                title={fileName}
-                className="w-full h-full min-h-[600px] rounded shadow-md border-0"
-              />
-            ) : (
-              <div className="text-center p-8 text-gray-500">
-                <p>{t('Preview not available for this file type!')}</p>
-              </div>
-            )}
-          </>
-        ) : null}
-      </div>
-
-      {showInfoPanel && (
-        <div className="absolute top-14 right-5 bottom-5 w-[248px] rounded-xl bg-gray-800 border border-gray-700">
-          <div className="flex justify-between text-gray-400 items-center px-3 py-2">
-            <span className="uppercase text-sm">{t('File Details')}</span>
-            <button
-              onClick={() => setShowInfoPanel(false)}
-              className="cursor-pointer rounded-lg hover:bg-white/10"
-            >
-              <X className="p-1 size-6" />
-            </button>
-          </div>
-          <div className="p-5 text-gray-400">
-            {/* TODO: Add file info here */}
-
-            <p className="mb-2 font-bold">TODO: Add file info here</p>
-
-            {mediaData ? (
-              <>
-                <div className="flex gap-2">
-                  <span className="text-sm uppercase text-gray-500">{t('Type')}</span>
-                  <span className="text-sm text-gray-300">{mediaData.mediaType || '-'}</span>
+      <div className="flex flex-1 min-h-0">
+        <div className="flex-1 w-full p-4 flex justify-center items-center overflow-hidden min-h-0">
+          {loading ? (
+            <div className="flex flex-col items-center gap-2 text-gray-500">
+              <Loader2 className="w-10 h-10 animate-spin" />
+              <span>{t('Loading Media...')}</span>
+            </div>
+          ) : error ? (
+            <div className="text-red-500 bg-red-50 p-4 rounded">{error}</div>
+          ) : url ? (
+            <>
+              {mediaType === 'video' ? (
+                <video src={url} controls className="max-h-full max-w-full shadow-md" autoPlay />
+              ) : mediaType === 'image' ? (
+                <img
+                  src={url}
+                  alt={fileName}
+                  className="max-w-full max-h-full object-contain shadow-md"
+                />
+              ) : mediaType === 'audio' ? (
+                <div className="flex items-center align-middle justify-center w-2/3 max-w-xl h-full flex-col gap-4">
+                  <audio src={url} controls autoPlay className="w-full" />
                 </div>
-
-                <div className="flex gap-2">
-                  <span className="text-sm uppercase text-gray-500">{t('Owner')}</span>
-                  <span className="text-sm text-gray-300">{mediaData.ownerId || '-'}</span>
+              ) : mediaType === 'pdf' ? (
+                <iframe
+                  src={url}
+                  title={fileName}
+                  className="w-full h-full min-h-[600px] rounded shadow-md border-0"
+                />
+              ) : (
+                <div className="text-center p-8 text-gray-500">
+                  <p>{t('Preview not available for this file type!')}</p>
                 </div>
-
-                <div className="flex gap-2">
-                  <span className="text-sm uppercase text-gray-500">{t('Created')}</span>{' '}
-                  <span className="text-sm text-gray-300">{mediaData.createdDt || '-'}</span>
-                </div>
-              </>
-            ) : (
-              <p className="text-sm italic opacity-50">{t('No details available')}</p>
-            )}
-          </div>
+              )}
+            </>
+          ) : null}
         </div>
-      )}
+        <div className="pr-4 pb-4 flex">
+          <MediaInfoPanel
+            open={showInfoPanel}
+            onClose={() => setShowInfoPanel(false)}
+            mediaData={mediaData}
+            owner={owner}
+            folderName={folderName}
+            loading={isOwnerLoading}
+          />
+        </div>
+      </div>
     </div>
   );
 }

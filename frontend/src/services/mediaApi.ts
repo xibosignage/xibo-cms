@@ -21,6 +21,7 @@
 
 import http from '@/lib/api';
 import type { Media } from '@/types/media';
+import { incrementFileName, incrementName } from '@/utils/stringUtils';
 
 export interface FetchMediaRequest {
   start: number;
@@ -252,6 +253,69 @@ export async function downloadMedia(mediaId: number | string, fileName: string):
 
   link.parentNode?.removeChild(link);
   window.URL.revokeObjectURL(url);
+}
+
+export interface CloneMediaRequest {
+  mediaId: number | string;
+  name: string;
+  fileName: string;
+  duration: number;
+  folderId?: number | string;
+  tags?: string[];
+  orientation?: 'portrait' | 'landscape';
+  expires?: string;
+  mediaNoExpiryDate?: number;
+  overrideName?: string;
+  signal?: AbortSignal;
+}
+
+export type CloneMediaResponse = Media;
+
+export async function cloneMedia({
+  mediaId,
+  name,
+  fileName,
+  duration,
+  folderId = 1,
+  tags = [],
+  orientation,
+  expires,
+  mediaNoExpiryDate,
+  signal,
+  overrideName,
+}: CloneMediaRequest): Promise<Media> {
+  const blob = await fetchMediaBlob(mediaId);
+
+  const clonedDisplayName = overrideName ?? incrementName(name);
+
+  const clonedFileName = incrementFileName(fileName);
+
+  const clonedFile = new File([blob], clonedFileName, {
+    type: blob.type,
+  });
+
+  const uploadResponse = await uploadMedia({
+    file: clonedFile,
+    folderId,
+    tags,
+    signal,
+  });
+
+  const uploadedFile = uploadResponse.data.files?.[0];
+  if (!uploadedFile) {
+    throw new Error('Upload media failed: no file returned');
+  }
+
+  return updateMedia(uploadedFile.mediaId, {
+    name: clonedDisplayName,
+    duration,
+    tags: tags.join(','),
+    orientation,
+    expires,
+    mediaNoExpiryDate,
+    retired: 0,
+    enableStat: 'Inherit',
+  });
 }
 
 export async function deleteMedia(mediaId: number | string, force: boolean = false): Promise<void> {

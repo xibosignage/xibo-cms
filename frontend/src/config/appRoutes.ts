@@ -22,7 +22,6 @@
 import {
   type LucideIcon,
   LayoutDashboard,
-  Settings,
   Palette,
   Library,
   Monitor,
@@ -34,6 +33,14 @@ import {
 } from 'lucide-react';
 import type { ComponentType } from 'react';
 
+import type { User } from '@/types/user';
+
+enum UserType {
+  SuperAdmin = 1,
+  GroupAdmin = 2,
+  User = 3,
+}
+
 export interface AppRoute {
   path: string;
   labelKey: string;
@@ -41,7 +48,18 @@ export interface AppRoute {
   lazy?: () => Promise<{ Component: ComponentType<unknown> }>;
   externalURL?: string | undefined;
   subLinks?: AppRoute[];
+  feature?: string;
+  validator?: (user: User) => boolean;
 }
+
+const isSuperAdmin = (user: User) => user.userTypeId === UserType.SuperAdmin;
+
+const canViewUsers = (user: User) => {
+  const hasFeature = user.features?.['users.view'];
+  const isAdmin =
+    user.userTypeId === UserType.SuperAdmin || user.userTypeId === UserType.GroupAdmin;
+  return !!(hasFeature && isAdmin);
+};
 
 export const APP_ROUTES: AppRoute[] = [
   {
@@ -59,11 +77,13 @@ export const APP_ROUTES: AppRoute[] = [
         path: 'event',
         labelKey: 'Event',
         externalURL: '/schedule/view',
+        feature: 'schedule.view',
       },
       {
         path: 'dayparting',
         labelKey: 'Dayparting',
         externalURL: '/dayparting/view',
+        feature: 'daypart.view',
       },
     ],
   },
@@ -76,21 +96,25 @@ export const APP_ROUTES: AppRoute[] = [
         path: 'campaign',
         labelKey: 'Campaign',
         externalURL: '/campaign/view',
+        feature: 'campaign.view',
       },
       {
         path: 'layout',
         labelKey: 'Layouts',
         externalURL: '/layout/view',
+        feature: 'layout.view',
       },
       {
         path: 'templates',
         labelKey: 'Templates',
         externalURL: '/template/view',
+        feature: 'template.view',
       },
       {
         path: 'resolutions',
         labelKey: 'Resolutions',
         externalURL: '/resolution/view',
+        feature: 'resolution.view',
       },
     ],
   },
@@ -103,21 +127,25 @@ export const APP_ROUTES: AppRoute[] = [
         path: 'playlists',
         labelKey: 'Playlists',
         externalURL: '/playlist/view',
+        feature: 'playlist.view',
       },
       {
         path: 'media',
         labelKey: 'Media',
         lazy: () => import('@/pages/Library/Media/Media').then((m) => ({ Component: m.default })),
+        feature: 'library.view',
       },
       {
         path: 'datasets',
         labelKey: 'Datasets',
         externalURL: '/dataset/view',
+        feature: 'dataset.view',
       },
       {
         path: 'menu-boards',
         labelKey: 'Menu Boards',
         externalURL: '/menuboard/view',
+        feature: 'menuBoard.view',
       },
     ],
   },
@@ -130,26 +158,37 @@ export const APP_ROUTES: AppRoute[] = [
         path: 'add-displays',
         labelKey: 'Add Displays',
         externalURL: '/display/view',
+        feature: 'displays.view',
       },
       {
         path: 'display-groups',
         labelKey: 'Display Groups',
         externalURL: '/displaygroup/view',
+        feature: 'displaygroup.view',
       },
       {
         path: 'sync-groups',
         labelKey: 'Sync Groups',
         externalURL: '/syncgroup/view',
+        feature: 'display.syncView',
       },
       {
         path: 'settings',
         labelKey: 'Settings',
         externalURL: '/displayprofile/view',
+        feature: 'displayprofile.view',
+      },
+      {
+        path: 'playersoftware',
+        labelKey: 'Player Versions',
+        externalURL: '/playersoftware/view',
+        feature: 'playersoftware.view',
       },
       {
         path: 'commands',
         labelKey: 'Commands',
         externalURL: '/command/view',
+        feature: 'command.view',
       },
     ],
   },
@@ -162,51 +201,61 @@ export const APP_ROUTES: AppRoute[] = [
         path: 'users',
         labelKey: 'Users',
         externalURL: '/user/view',
+        validator: canViewUsers,
       },
       {
         path: 'user-groups',
         labelKey: 'User Groups',
         externalURL: '/group/view',
+        feature: 'usergroup.view',
       },
       {
         path: 'settings',
         labelKey: 'Settings',
         externalURL: '/admin/view',
+        validator: isSuperAdmin,
       },
       {
         path: 'applications',
         labelKey: 'Applications',
         externalURL: '/application/view',
+        validator: isSuperAdmin,
       },
       {
         path: 'modules',
         labelKey: 'Modules',
         externalURL: '/module/view',
+        feature: 'module.view',
       },
       {
         path: 'transitions',
         labelKey: 'Transitions',
         externalURL: '/transition/view',
+        feature: 'transition.view',
       },
       {
         path: 'tasks',
         labelKey: 'Tasks',
         externalURL: '/task/view',
+        feature: 'task.view',
       },
       {
         path: 'tags',
         labelKey: 'Tags',
         externalURL: '/tag/view',
+        feature: 'tag.view',
       },
       {
         path: 'folders',
         labelKey: 'Folders',
         externalURL: '/folders/view',
+        validator: isSuperAdmin,
       },
       {
         path: 'fonts',
         labelKey: 'Fonts',
         externalURL: '/fonts/view',
+        feature: 'font.view',
       },
     ],
   },
@@ -219,16 +268,19 @@ export const APP_ROUTES: AppRoute[] = [
         path: 'all-reports',
         labelKey: 'All Reports',
         externalURL: '/report/view',
+        feature: 'report.view',
       },
       {
         path: 'report-schedules',
         labelKey: 'Report Schedules',
         externalURL: '/report/reportschedule/view',
+        feature: 'report.scheduling',
       },
       {
         path: 'saved-reports',
         labelKey: 'Saved Reports',
         externalURL: '/report/savedreport/view',
+        feature: 'report.saving',
       },
     ],
   },
@@ -240,22 +292,26 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'log',
         labelKey: 'Log',
-        externalURL: '/report/savedreport/view',
+        externalURL: '/log/view',
+        feature: 'log.view',
       },
       {
         path: 'sessions',
         labelKey: 'Sessions',
         externalURL: '/sessions/view',
+        feature: 'sessions.view',
       },
       {
         path: 'audit-trail',
         labelKey: 'Audit Trail',
         externalURL: '/audit/view',
+        feature: 'auditlog.view',
       },
       {
         path: 'report-fault',
         labelKey: 'Report Fault',
         externalURL: '/fault/view',
+        feature: 'fault.view',
       },
     ],
   },
@@ -264,11 +320,6 @@ export const APP_ROUTES: AppRoute[] = [
     labelKey: 'Developer',
     icon: CodeXml,
     externalURL: '/developer/template/view',
-  },
-  {
-    path: 'settings',
-    labelKey: 'Settings',
-    icon: Settings,
-    externalURL: '/admin/view',
+    feature: 'developer.edit',
   },
 ];
