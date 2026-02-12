@@ -29,10 +29,6 @@ use Xibo\Middleware\SuperAdminAuth;
 
 defined('XIBO') or die('Sorry, you are not allowed to directly access this page.');
 
-if (file_exists(PROJECT_ROOT . '/lib/routes-cypress.php')) {
-    include(PROJECT_ROOT . '/lib/routes-cypress.php');
-}
-
 /**
  * @SWG\Swagger(
  *  basePath="/api",
