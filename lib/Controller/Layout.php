@@ -1579,8 +1579,7 @@ class Layout extends Base
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
         // Should we parse the description into markdown
         $showDescriptionId = $parsedQueryParams->getInt('showDescriptionId');
-        // Include the CMS alias or subdirectory to get the correct preview url
-        $baseUrl = (new HttpsDetect())->getBaseUrl($request) . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
+        $baseUrl = (new HttpsDetect())->getBaseUrl($request);
 
         // We might need to embed some extra content into the response if the "Show Description"
         // is set to media listing

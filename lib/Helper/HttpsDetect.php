@@ -90,8 +90,14 @@ class HttpsDetect
         // i.e. if we're running in a sub-folder we might be on /xibo/playersoftware
         // in which case we want to remove /playersoftware to get to /xibo which is the base path.
         $path = $request?->getUri()?->getPath() ?? '';
+
         if (!empty($path)) {
             $baseUrl = str_replace($path, '', $baseUrl);
+            $scriptDir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
+
+            if (!empty($scriptDir) && $scriptDir !== '/') {
+                $baseUrl .= $scriptDir;
+            }
         }
 
         return $baseUrl;

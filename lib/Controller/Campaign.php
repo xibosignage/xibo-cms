@@ -1289,8 +1289,7 @@ class Campaign extends Base
         $layouts = $this->layoutFactory->getByCampaignId($id);
         $duration = 0 ;
         $extendedLayouts = [];
-        // Include the CMS alias or subdirectory to get the correct preview url
-        $baseUrl = (new HttpsDetect())->getBaseUrl($request) . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
+        $baseUrl = (new HttpsDetect())->getBaseUrl($request);
 
         foreach ($layouts as $layout) {
             $duration += $layout->duration;

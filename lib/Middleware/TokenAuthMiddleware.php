@@ -137,7 +137,10 @@ class TokenAuthMiddleware implements MiddlewareInterface
         int $expiry,
         string $encryptionKey
     ): string {
-        $rootUrl = (new HttpsDetect())->getBaseUrl($request);
+        // When signing from a preview, use the root url since the alias is included in the entrypoint
+        $rootUrl = ($request->getAttribute('_entryPoint') != 'preview')
+            ? (new HttpsDetect())->getBaseUrl($request)
+            : (new HttpsDetect())->getRootUrl();
 
         if ($request->getAttribute('_entryPoint') != 'web') {
             $url = str_replace('/api/', '/', $url);

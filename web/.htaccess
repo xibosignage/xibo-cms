@@ -23,6 +23,7 @@ RewriteCond %{REQUEST_URI} ^/install/.*$
 RewriteRule ^ install/index.php [QSA,L]
 
 # preview
+# preview is routed through the web, thus, matching must include the alias
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^preview/(.*)$ preview/index.php [QSA,L]
 
