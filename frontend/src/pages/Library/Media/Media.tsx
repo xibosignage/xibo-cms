@@ -60,6 +60,7 @@ import { notify } from '@/components/ui/Notification';
 import TabNav from '@/components/ui/TabNav';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
 import Modal from '@/components/ui/modals/Modal';
+import MoveModal from '@/components/ui/modals/MoveModal';
 import { DataGrid } from '@/components/ui/table/DataGrid';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useUploadContext } from '@/context/UploadContext';
@@ -68,7 +69,7 @@ import { useFolderActions } from '@/hooks/useFolderActions';
 import { useOwner } from '@/hooks/useOwner';
 import EditMediaModal from '@/pages/Library/Media/components/EditMediaModal';
 import { useMediaFilterOptions } from '@/pages/Library/Media/hooks/useMediaFilterOptions';
-import { fetchContextButtons } from '@/services/folderApi';
+import { fetchContextButtons, selectFolder } from '@/services/folderApi';
 import { cloneMedia, deleteMedia, downloadMedia } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
 
@@ -85,6 +86,7 @@ export default function Media() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [selectionCache, setSelectionCache] = useState<Record<string, Media>>({});
   const [openFilter, setOpenFilter] = useState(false);
   const [previewItem, setPreviewItem] = useState<Media | null>(null);
   const [filterInputs, setFilterInput] = useState<MediaFilterInput>(INITIAL_FILTER_STATE);
@@ -103,6 +105,8 @@ export default function Media() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCloning, setIsCloning] = useState(false);
+
+  const [itemsToMove, setItemsToMove] = useState<Media[]>([]);
 
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
 
@@ -180,6 +184,30 @@ export default function Media() {
       active = false;
     };
   }, [selectedFolderId]);
+
+  // Update the selected cache when data loads or selection changes
+  useEffect(() => {
+    if (!mediaList || mediaList.length === 0) {
+      return;
+    }
+
+    setSelectionCache((prev) => {
+      const next = { ...prev };
+      let hasChanges = false;
+
+      mediaList.forEach((item) => {
+        const id = item.mediaId.toString();
+        if (rowSelection[id]) {
+          if (!next[id]) {
+            next[id] = item;
+            hasChanges = true;
+          }
+        }
+      });
+
+      return hasChanges ? next : prev;
+    });
+  }, [mediaList, rowSelection]);
 
   const uploadStateRef = useRef({ selectedFolderId, canCreate: canAddToFolder });
   useEffect(() => {
@@ -275,14 +303,6 @@ export default function Media() {
     }
   };
 
-  const handleBulkDelete = (selectedItems: Media[]) => {
-    if (selectedItems.length === 0) return;
-
-    setItemsToDelete(selectedItems);
-    setDeleteError(null);
-    openModal('delete');
-  };
-
   const handleDownload = async (row: Media) => {
     try {
       await downloadMedia(row.mediaId, row.storedAs);
@@ -359,6 +379,53 @@ export default function Media() {
     }
   };
 
+  const handleConfirmMove = async (newFolderId: number) => {
+    if (!itemsToMove || itemsToMove.length === 0) {
+      return;
+    }
+
+    const movePromises = itemsToMove.map((item) =>
+      selectFolder({
+        folderId: newFolderId,
+        targetId: item.mediaId,
+        targetType: 'library',
+      }),
+    );
+
+    try {
+      const results = await Promise.all(movePromises);
+      const failures = results.filter((res) => !res.success);
+
+      if (failures.length === 0) {
+        // All Success
+        notify.info(t('{{count}} items moved successfully!', { count: itemsToMove.length }));
+        setItemsToMove([]);
+        handleRefresh();
+        closeModal();
+      } else {
+        // Some failed
+        console.error('Failed to move some items:', failures);
+
+        if (failures.length === itemsToMove.length) {
+          notify.error(t('Failed to move items.'));
+        } else {
+          notify.warning(
+            t('Moved {{success}} items, but {{fail}} failed.', {
+              success: itemsToMove.length - failures.length,
+              fail: failures.length,
+            }),
+          );
+          setItemsToMove([]);
+          handleRefresh();
+          closeModal();
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      notify.error(t('An unexpected error occurred while moving items.'));
+    }
+  };
+
   const openCopyModal = (mediaId: number) => {
     setSelectedMediaId(mediaId);
     openModal('copy');
@@ -370,6 +437,10 @@ export default function Media() {
     onDelete: handleDelete,
     onDownload: handleDownload,
     openEditModal,
+    openMoveModal: (media) => {
+      setItemsToMove([media] as Media[]);
+      openModal('move');
+    },
     openShareModal: (mediaId) => {
       setShareEntityIds(mediaId);
       openModal('share');
@@ -381,14 +452,36 @@ export default function Media() {
     copyMedia: openCopyModal,
   });
 
+  const getAllSelectedItems = (): Media[] => {
+    return Object.keys(rowSelection)
+      .map((id) => selectionCache[id])
+      .filter((item): item is Media => !!item); // Filter out any missing data
+  };
+
   const bulkActions = getBulkActions({
     t,
-    onDelete: handleBulkDelete,
-    onMove: (items) => console.log('Move', items),
-    onShare: (items) => {
-      const ids = items.map((i) => i.mediaId);
+    onDelete: () => {
+      const allItems = getAllSelectedItems();
+      setItemsToDelete(allItems);
+      setDeleteError(null);
+      openModal('delete');
+    },
+    onMove: () => {
+      const allItems = getAllSelectedItems();
+      setItemsToMove(allItems);
+      openModal('move');
+    },
+    onShare: () => {
+      const allItems = getAllSelectedItems();
+      const ids = allItems.map((i) => i.mediaId);
       setShareEntityIds(ids);
       openModal('share');
+    },
+    onDownload: () => {
+      const allItems = getAllSelectedItems();
+      // TODO: Download multiple items
+      console.log('Download multiple items');
+      console.log(allItems);
     },
   });
 
@@ -665,6 +758,14 @@ export default function Media() {
           setShareEntityIds(mediaId);
           openModal('share');
         }}
+        onMove={() => {
+          if (!previewItem) {
+            return;
+          }
+
+          setItemsToMove([previewItem]);
+          openModal('move');
+        }}
         folderName={selectedFolderName}
       />
 
@@ -715,6 +816,14 @@ export default function Media() {
         media={selectedMedia}
         isLoading={isCloning}
         existingNames={existingNames}
+      />
+
+      <MoveModal
+        isOpen={isModalOpen('move')}
+        onClose={closeModal}
+        onConfirm={handleConfirmMove}
+        items={itemsToMove}
+        entityLabel={t('Media')}
       />
     </section>
   );

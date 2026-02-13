@@ -52,6 +52,12 @@ export interface MoveFolderRequest {
   merge?: boolean;
 }
 
+export interface SelectFolderRequest {
+  targetType: string;
+  targetId: number;
+  folderId?: number;
+}
+
 function handleApiError(error: unknown): { success: false; error: string; status?: number } {
   console.error('API Error:', error);
 
@@ -144,6 +150,19 @@ export async function moveFolder(data: MoveFolderRequest): Promise<ApiResult> {
     };
 
     await http.put(`/folders/${data.id}/move`, payload);
+    return { success: true, data: undefined };
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+export async function selectFolder(data: SelectFolderRequest): Promise<ApiResult> {
+  try {
+    const payload = {
+      folderId: data.folderId,
+    };
+
+    await http.put(`/${data.targetType}/${data.targetId}/selectfolder`, payload);
     return { success: true, data: undefined };
   } catch (error) {
     return handleApiError(error);

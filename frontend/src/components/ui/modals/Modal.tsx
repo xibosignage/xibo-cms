@@ -100,7 +100,7 @@ export default function Modal({
         {/* Header */}
         {title && (
           <div className="shrink-0 p-8 pb-3">
-            <div className="text-lg font-semibold">{title}</div>
+            <div className="text-lg font-semibold truncate">{title}</div>
           </div>
         )}
 

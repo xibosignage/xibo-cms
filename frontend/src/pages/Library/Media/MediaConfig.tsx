@@ -36,7 +36,6 @@ import {
   CalendarClock,
   Info,
   Trash2,
-  MoreVertical,
 } from 'lucide-react';
 import { type ComponentProps, type ElementType } from 'react';
 
@@ -108,7 +107,7 @@ export type ActionItem =
 
 type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
 
-export type ModalType = 'edit' | 'share' | 'delete' | 'copy' | null;
+export type ModalType = 'edit' | 'share' | 'delete' | 'copy' | 'move' | null;
 
 export const INITIAL_FILTER_STATE: MediaFilterInput = {
   type: '',
@@ -267,6 +266,7 @@ export interface MediaActionsProps {
   onDownload: (row: Media) => void;
   openEditModal: (row: Media) => void;
   openShareModal?: (id: number) => void;
+  openMoveModal?: (row: Media | Media[]) => void;
   openDetails?: (id: number) => void;
   copyMedia?: (row: number) => void;
 }
@@ -277,6 +277,7 @@ export const getMediaItemActions = ({
   onDownload,
   openEditModal,
   openShareModal,
+  openMoveModal,
   openDetails,
   copyMedia,
 }: MediaActionsProps): ((media: Media) => ActionItem[]) => {
@@ -310,7 +311,7 @@ export const getMediaItemActions = ({
     {
       label: t('Move'),
       icon: FolderInput,
-      onClick: () => console.log('Move', media.mediaId),
+      onClick: () => openMoveModal && openMoveModal(media),
     },
     {
       label: t('Share'),
@@ -531,9 +532,10 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
 
 interface GetBulkActionsProps {
   t: TFunction;
-  onDelete: (selectedItems: Media[]) => void;
-  onMove: (selectedItems: Media[]) => void;
-  onShare: (selectedItems: Media[]) => void;
+  onDelete: () => void;
+  onMove: () => void;
+  onShare: () => void;
+  onDownload: () => void;
 }
 
 export const getBulkActions = ({
@@ -541,6 +543,7 @@ export const getBulkActions = ({
   onDelete,
   onMove,
   onShare,
+  onDownload,
 }: GetBulkActionsProps): DataTableBulkAction<Media>[] => {
   return [
     {
@@ -556,21 +559,12 @@ export const getBulkActions = ({
     {
       label: t('Download'),
       icon: Download,
-      onClick: async (selectedItems) => {
-        console.log('Download', selectedItems);
-      },
+      onClick: onDownload,
     },
     {
       label: t('Delete Selected'),
       icon: Trash2,
       onClick: onDelete,
-    },
-    {
-      label: t('More'),
-      icon: MoreVertical,
-      onClick: async (selectedItems) => {
-        console.log('More?', selectedItems);
-      },
     },
   ];
 };

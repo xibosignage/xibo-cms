@@ -235,7 +235,7 @@ export default function SelectFolder({ selectedId, onSelect, onAction }: SelectF
             <div className="flex flex-col min-h-0 flex-1">
               <FolderTreeList
                 selectedId={selectedId}
-                onSelect={(folder) => {
+                onSelect={(folder: Folder) => {
                   onSelect({ id: folder.id, text: folder.text });
                   setInitialName(folder.text);
                   setIsOpen(false);
