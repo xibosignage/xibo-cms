@@ -30,3 +30,4 @@ locale/moduletranslate.php
 # Hide react translate files
 locale/reacttranslate.php
 frontend/public/locale/translations/
+frontend/coverage

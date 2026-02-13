@@ -14,7 +14,8 @@
     "i18n:convert": "tsx scripts/convertMoToJson.ts",
     "test": "vitest",
     "test:watch": "vitest --watch",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "test:ci": "vitest run --coverage"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",
@@ -46,6 +47,7 @@
     "@types/react-dom": "^19.1.7",
     "@types/testing-library__jest-dom": "^5.14.9",
     "@vitejs/plugin-react": "^5.1.2",
+    "@vitest/coverage-v8": "^4.0.18",
     "@vitest/ui": "^4.0.18",
     "autoprefixer": "^10.4.22",
     "babel-plugin-react-compiler": "^1.0.0",
