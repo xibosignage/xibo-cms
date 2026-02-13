@@ -55,10 +55,9 @@ class LinkSigner
         // Start with the base url, which should correctly account for running with a CMS_ALIAS
         $xmdsRoot = (new HttpsDetect())->getBaseUrl();
 
-        // PWA requests resources via `/pwa/getResource` and `/pwa/getData`, but the link should be served from `/xmds.php`
+        // PWA requests come via /pwa/* endpoints — rewrite to /pwa/file for downloads
         if ($isRequestFromPwa) {
-            $xmdsRoot = str_replace('/pwa/getResource', '/xmds.php', $xmdsRoot);
-            $xmdsRoot = str_replace('/pwa/getData', '/xmds.php', $xmdsRoot);
+            $xmdsRoot = preg_replace('#/pwa/[^?]*#', '/pwa/file', $xmdsRoot);
         }
 
         // Build the rest of the URL

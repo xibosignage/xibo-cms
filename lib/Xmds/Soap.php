@@ -420,6 +420,7 @@ class Soap
                             $realId,
                             $node->getAttribute('saveAs'),
                             $fileType,
+                            $this->display->isPwa(),
                         );
 
                         $node->setAttribute('path', $newUrl);
@@ -773,6 +774,7 @@ class Soap
                         'M',
                         $id,
                         $path,
+                        isRequestFromPwa: $this->display->isPwa(),
                     ));
                     $file->setAttribute('saveAs', $path);
                     $file->setAttribute('download', 'http');
@@ -863,6 +865,7 @@ class Soap
                         'L',
                         $layoutId,
                         $fileName,
+                        isRequestFromPwa: $this->display->isPwa(),
                     ));
                     $file->setAttribute('saveAs', $fileName);
                     $file->setAttribute('download', 'http');
@@ -2938,6 +2941,7 @@ class Soap
                 $dependency->id,
                 $dependencyBasePath,
                 $dependency->fileType,
+                $this->display->isPwa(),
             );
 
             $file->setAttribute('download', 'http');
