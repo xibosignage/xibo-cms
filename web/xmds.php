@@ -24,7 +24,6 @@ use Monolog\Logger;
 use Nyholm\Psr7\ServerRequest;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\ContainerFactory;
-use Xibo\Helper\LinkSigner;
 use Xibo\Support\Exception\NotFoundException;
 
 define('XIBO', true);
@@ -133,160 +132,22 @@ if (isset($_GET['file'])) {
         exit;
     }
 
-    // Check nonce, output appropriate headers, log bandwidth and stop.
     try {
-        if (!isset($_REQUEST['displayId']) || !isset($_REQUEST['type']) || !isset($_REQUEST['itemId'])) {
-            $logger->error('HTTP GetFile: Missing params');
-            throw new NotFoundException(__('Missing params'));
-        }
+        $result = \Xibo\Service\FileDownloadService::serve($container, $_REQUEST, $sendFileMode);
 
-        $displayId = intval($_REQUEST['displayId']);
+        header('Content-Type: ' . $result['contentType']);
 
-        // Has the URL expired
-        if (time() > $_REQUEST['X-Amz-Expires']) {
-            $logger->error('HTTP GetFile: Access denied: Pre-signed S3 URL expired');
-            throw new NotFoundException(__('Expired'));
-        }
-
-        // Validate the URL.
-        $encryptionKey = $container->get('configService')->getApiKeyDetails()['encryptionKey'];
-        $signature = $_REQUEST['X-Amz-Signature'];
-        $calculatedSignature = \Xibo\Helper\LinkSigner::getSignature(
-            parse_url(\Xibo\Xmds\Wsdl::getRoot(), PHP_URL_HOST),
-            $_GET['file'],
-            $_REQUEST['X-Amz-Expires'],
-            $encryptionKey,
-            $_REQUEST['X-Amz-Date'],
-            true,
-        );
-
-        if ($signature !== $calculatedSignature) {
-            $logger->error('HTTP GetFile: Invalid URL');
-            throw new NotFoundException(__('Invalid URL'));
-        }
-
-        /** @var \Xibo\Factory\RequiredFileFactory $requiredFileFactory */
-        $requiredFileFactory = $container->get('requiredFileFactory');
-        $file = $requiredFileFactory->resolveRequiredFileFromRequest($_REQUEST);
-
-        // Check that we've not used all of our bandwidth already (if we have an allowance)
-        if ($container->get('bandwidthFactory')->isBandwidthExceeded(
-            $container->get('configService')->getSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB')
-        )) {
-            $logger->error('HTTP GetFile: Bandwidth Exceeded');
-            throw new \Xibo\Support\Exception\InstanceSuspendedException('Bandwidth Exceeded');
-        }
-
-        // Get the display
-        /** @var \Xibo\Entity\Display $display */
-        $display = $container->get('displayFactory')->getById($displayId);
-
-        // Check it is still authorised.
-        if ($display->licensed == 0) {
-            $logger->error('HTTP GetFile: Display unauthorised');
-            throw new NotFoundException(__('Display unauthorised'));
-        }
-
-        // Check the display specific limit next.
-        $usage = 0;
-        if ($container->get('bandwidthFactory')->isBandwidthExceeded(
-            $display->bandwidthLimit,
-            $usage,
-            $displayId
-        )) {
-            $logger->error('HTTP GetFile: Bandwidth Exceeded for Display ID: ' . $displayId);
-            throw new \Xibo\Support\Exception\InstanceSuspendedException('Bandwidth Exceeded');
-        }
-
-        // Bandwidth
-        // Add the size to the bytes we have already requested.
-        $file->bytesRequested = $file->bytesRequested + $file->size;
-        $file->save(['useTransaction' => false]);
-
-        // Issue magic packet
-        $libraryLocation = $container->get('configService')->getSetting('LIBRARY_LOCATION');
-        $cdnUrl = $container->get('configService')->getSetting('CDN_URL');
-
-        // Issue content type header
-        $isCss = false;
-        if ($file->type === 'L') {
-            // Layouts are always XML
-            header('Content-Type: text/xml');
-        } else if ($file->fileType === 'bundle' || \Illuminate\Support\Str::endsWith($file->path, '.js')) {
-            header('Content-Type: application/javascript');
-        } else if ($file->fileType === 'fontCss' || \Illuminate\Support\Str::endsWith($file->path, '.css')) {
-            $isCss = true;
-            header('Content-Type: text/css');
-        } else {
-            $contentType = mime_content_type($libraryLocation . $file->path);
-            if ($contentType !== false) {
-                header('Content-Type: ' . $contentType);
-            }
-        }
-
-        // Are we a special request that needs modification before sending?
-        // For CSS, we look up the files to replace in required files using their stored path
-        if ($display->isPwa() && $isCss) {
-            $logger->debug('Rewriting CSS for PWA: ' . $file->path);
-
-            // Rewrite CSS for PWAs
-            $cssFile = file_get_contents($libraryLocation . $file->path);
-            $matches = [];
-            preg_match_all('/url\(\'?(.*?)\'?\)/', $cssFile, $matches);
-            foreach ($matches[1] as $match) {
-                // Look up the file to get the right ID/path.
-                try {
-                    $replacementFile = $requiredFileFactory->getByDisplayAndDependencyPath($displayId, $match);
-
-                    $url = LinkSigner::generateSignedLink(
-                        $display,
-                        $encryptionKey,
-                        $cdnUrl,
-                        'P',
-                        $replacementFile->realId,
-                        $replacementFile->path,
-                        $file->fileType === 'fontCss' ? 'font' : 'asset',
-                        true,
-                    );
-                    $cssFile = str_replace(
-                        $match,
-                        $url,
-                        $cssFile,
-                    );
-                } catch (Exception $exception) {
-                    $logger->error('CSS has dependency which does not exist in Required Files: ' . $match);
-                }
-            }
-
-            $file->size = strlen($cssFile);
-
-            echo $cssFile;
-        } else {
-            $logger->info('HTTP GetFile request redirecting to ' . $libraryLocation . $file->path);
-
-            // Normal send
-            if ($sendFileMode == 'Apache') {
-                // Send via Apache X-Sendfile header
-                header('X-Sendfile: ' . $libraryLocation . $file->path);
-            } else if ($sendFileMode == 'Nginx') {
-                // Send via Nginx X-Accel-Redirect
-                header('X-Accel-Redirect: /download/' . $file->path);
-            } else {
-                header('HTTP/1.0 404 Not Found');
-            }
-
-            // Also add to the overall bandwidth used by get file
-            $container->get('bandwidthFactory')->createAndSave(
-                \Xibo\Entity\Bandwidth::$GETFILE,
-                $file->displayId,
-                $file->size
-            );
+        if ($result['mode'] === 'css') {
+            echo $result['body'];
+        } elseif ($result['mode'] === 'sendfile') {
+            header('X-Sendfile: ' . $result['path']);
+        } elseif ($result['mode'] === 'accel') {
+            header('X-Accel-Redirect: ' . $result['path']);
         }
     } catch (\Xibo\Support\Exception\NotFoundException|\Xibo\Support\Exception\ExpiredException $e) {
         $logger->notice('HTTP GetFile: request received but unable to find XMDS Nonce. Issuing 404. '
             . $e->getMessage());
 
-        // 404
         header('HTTP/1.0 404 Not Found');
     } catch (\Xibo\Support\Exception\InstanceSuspendedException $e) {
         $logger->debug('HTTP GetFile: Bandwidth exceeded');
@@ -295,7 +156,6 @@ if (isset($_GET['file'])) {
         $logger->error('HTTP GetFile: Unknown Error: ' . $e->getMessage());
         $logger->debug($e->getTraceAsString());
 
-        // Issue a 500
         header('HTTP/1.0 500 Internal Server Error');
     }
     exit;

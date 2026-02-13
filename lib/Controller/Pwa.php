@@ -25,9 +25,7 @@ namespace Xibo\Controller;
 use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Entity\Bandwidth;
 use Xibo\Factory\DisplayFactory;
-use Xibo\Helper\LinkSigner;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InstanceSuspendedException;
@@ -133,8 +131,8 @@ class Pwa extends Base
      * Download a file (media, layout, font, CSS, bundle) via signed URL.
      *
      * This makes the REST API self-contained — PWA clients no longer need
-     * to know about xmds.php. Same HMAC validation, bandwidth tracking,
-     * and sendfile headers as xmds.php.
+     * to know about xmds.php. Delegates to FileDownloadService for shared
+     * HMAC validation, bandwidth tracking, and sendfile logic.
      *
      * @param Request $request
      * @param Response $response
@@ -142,9 +140,6 @@ class Pwa extends Base
      */
     public function downloadFile(Request $request, Response $response): Response
     {
-        $params = $this->getSanitizer($request->getQueryParams());
-
-        // Check send file mode is enabled
         $sendFileMode = $this->getConfig()->getSetting('SENDFILE_MODE');
         if ($sendFileMode === 'Off') {
             $this->getLog()->notice('downloadFile: SendFile Mode is Off');
@@ -152,145 +147,21 @@ class Pwa extends Base
         }
 
         try {
-            $displayId = $params->getInt('displayId');
-            $type = $params->getString('type');
-            $itemId = $params->getString('itemId');
-
-            if (empty($displayId) || empty($type) || empty($itemId)) {
-                throw new NotFoundException(__('Missing params'));
-            }
-
-            // Check URL expiration
-            $expires = $params->getInt('X-Amz-Expires');
-            if (time() > $expires) {
-                $this->getLog()->error('downloadFile: Expired URL');
-                throw new NotFoundException(__('Expired'));
-            }
-
-            // Validate HMAC signature
-            $encryptionKey = $this->getConfig()->getApiKeyDetails()['encryptionKey'];
-            $file = $params->getString('file');
-            $signature = $params->getString('X-Amz-Signature');
-            $calculatedSignature = LinkSigner::getSignature(
-                parse_url(\Xibo\Xmds\Wsdl::getRoot(), PHP_URL_HOST),
-                $file,
-                $expires,
-                $encryptionKey,
-                $params->getString('X-Amz-Date'),
-                true,
+            $result = \Xibo\Service\FileDownloadService::serve(
+                $this->container,
+                $request->getQueryParams(),
+                $sendFileMode,
             );
 
-            if ($signature !== $calculatedSignature) {
-                $this->getLog()->error('downloadFile: Invalid signature');
-                throw new NotFoundException(__('Invalid URL'));
+            $response = $response->withHeader('Content-Type', $result['contentType']);
+
+            if ($result['mode'] === 'css') {
+                $response->getBody()->write($result['body']);
+            } elseif ($result['mode'] === 'sendfile') {
+                $response = $response->withHeader('X-Sendfile', $result['path']);
+            } elseif ($result['mode'] === 'accel') {
+                $response = $response->withHeader('X-Accel-Redirect', $result['path']);
             }
-
-            // Resolve the file
-            /** @var \Xibo\Factory\RequiredFileFactory $requiredFileFactory */
-            $requiredFileFactory = $this->container->get('requiredFileFactory');
-            $requiredFile = $requiredFileFactory->resolveRequiredFileFromRequest($request->getQueryParams());
-
-            // Check monthly bandwidth limit
-            /** @var \Xibo\Factory\BandwidthFactory $bandwidthFactory */
-            $bandwidthFactory = $this->container->get('bandwidthFactory');
-            if ($bandwidthFactory->isBandwidthExceeded(
-                $this->getConfig()->getSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB')
-            )) {
-                throw new InstanceSuspendedException('Bandwidth Exceeded');
-            }
-
-            // Get the display and check authorization
-            $display = $this->displayFactory->getById($displayId);
-            if ($display->licensed == 0) {
-                throw new NotFoundException(__('Display unauthorised'));
-            }
-
-            // Check per-display bandwidth limit
-            $usage = 0;
-            if ($bandwidthFactory->isBandwidthExceeded(
-                $display->bandwidthLimit,
-                $usage,
-                $displayId
-            )) {
-                throw new InstanceSuspendedException('Bandwidth Exceeded');
-            }
-
-            // Track bandwidth
-            $requiredFile->bytesRequested = $requiredFile->bytesRequested + $requiredFile->size;
-            $requiredFile->save(['useTransaction' => false]);
-
-            $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
-            $cdnUrl = $this->getConfig()->getSetting('CDN_URL');
-
-            // Determine content type
-            $isCss = false;
-            if ($requiredFile->type === 'L') {
-                $response = $response->withHeader('Content-Type', 'text/xml');
-            } elseif ($requiredFile->fileType === 'bundle'
-                || \Illuminate\Support\Str::endsWith($requiredFile->path, '.js')
-            ) {
-                $response = $response->withHeader('Content-Type', 'application/javascript');
-            } elseif ($requiredFile->fileType === 'fontCss'
-                || \Illuminate\Support\Str::endsWith($requiredFile->path, '.css')
-            ) {
-                $isCss = true;
-                $response = $response->withHeader('Content-Type', 'text/css');
-            } else {
-                $contentType = mime_content_type($libraryLocation . $requiredFile->path);
-                if ($contentType !== false) {
-                    $response = $response->withHeader('Content-Type', $contentType);
-                }
-            }
-
-            // CSS rewriting for PWA: replace url() paths with signed URLs
-            if ($display->isPwa() && $isCss) {
-                $this->getLog()->debug('Rewriting CSS for PWA: ' . $requiredFile->path);
-
-                $cssFile = file_get_contents($libraryLocation . $requiredFile->path);
-                $matches = [];
-                preg_match_all('/url\(\'?(.*?)\'?\)/', $cssFile, $matches);
-                foreach ($matches[1] as $match) {
-                    try {
-                        $replacementFile = $requiredFileFactory->getByDisplayAndDependencyPath(
-                            $displayId,
-                            $match
-                        );
-                        $url = LinkSigner::generateSignedLink(
-                            $display,
-                            $encryptionKey,
-                            $cdnUrl,
-                            'P',
-                            $replacementFile->realId,
-                            $replacementFile->path,
-                            $requiredFile->fileType === 'fontCss' ? 'font' : 'asset',
-                        );
-                        $cssFile = str_replace($match, $url, $cssFile);
-                    } catch (\Exception $e) {
-                        $this->getLog()->error('CSS dependency not in Required Files: ' . $match);
-                    }
-                }
-
-                $response->getBody()->write($cssFile);
-                return $response;
-            }
-
-            // Normal file serving via sendfile
-            $this->getLog()->info('downloadFile: serving ' . $libraryLocation . $requiredFile->path);
-
-            if ($sendFileMode === 'Apache') {
-                $response = $response->withHeader('X-Sendfile', $libraryLocation . $requiredFile->path);
-            } elseif ($sendFileMode === 'Nginx') {
-                $response = $response->withHeader('X-Accel-Redirect', '/download/' . $requiredFile->path);
-            } else {
-                return $response->withStatus(404);
-            }
-
-            // Track overall bandwidth
-            $bandwidthFactory->createAndSave(
-                Bandwidth::$GETFILE,
-                $requiredFile->displayId,
-                $requiredFile->size,
-            );
 
             return $response;
         } catch (NotFoundException $e) {
