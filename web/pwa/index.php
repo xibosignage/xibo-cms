@@ -99,6 +99,16 @@ $errorMiddleware->setDefaultErrorHandler(\Xibo\Middleware\Handlers::jsonErrorHan
 $app->get('/getResource', ['\Xibo\Controller\Pwa', 'getResource'])->setName('pwa.getResource');
 $app->get('/getData', ['\Xibo\Controller\Pwa', 'getData'])->setName('pwa.getData');
 
+// PWA REST endpoints (complete player protocol)
+$app->post('/register', ['\Xibo\Controller\Pwa', 'register'])->setName('pwa.register');
+$app->get('/requiredFiles', ['\Xibo\Controller\Pwa', 'requiredFiles'])->setName('pwa.requiredFiles');
+$app->get('/schedule', ['\Xibo\Controller\Pwa', 'schedule'])->setName('pwa.schedule');
+$app->put('/status', ['\Xibo\Controller\Pwa', 'notifyStatus'])->setName('pwa.notifyStatus');
+$app->post('/log', ['\Xibo\Controller\Pwa', 'submitLog'])->setName('pwa.submitLog');
+$app->post('/stats', ['\Xibo\Controller\Pwa', 'submitStats'])->setName('pwa.submitStats');
+$app->post('/screenshot', ['\Xibo\Controller\Pwa', 'submitScreenshot'])->setName('pwa.submitScreenshot');
+$app->post('/mediaInventory', ['\Xibo\Controller\Pwa', 'mediaInventory'])->setName('pwa.mediaInventory');
+
 // Run App
 try {
     $app->run();
