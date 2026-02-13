@@ -96,6 +96,7 @@ $errorMiddleware = $app->addErrorMiddleware(
 $errorMiddleware->setDefaultErrorHandler(\Xibo\Middleware\Handlers::jsonErrorHandler($container));
 
 // All application routes
+$app->get('/file', ['\Xibo\Controller\Pwa', 'downloadFile'])->setName('pwa.downloadFile');
 $app->get('/getResource', ['\Xibo\Controller\Pwa', 'getResource'])->setName('pwa.getResource');
 $app->get('/getData', ['\Xibo\Controller\Pwa', 'getData'])->setName('pwa.getData');
 

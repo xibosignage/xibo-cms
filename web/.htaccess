@@ -35,7 +35,7 @@ RewriteCond %{REQUEST_URI} ^/pwa/getData.*$
 RewriteRule ^ pwa/index.php [QSA,L]
 
 # pwa - player REST API endpoints
-RewriteCond %{REQUEST_URI} ^/pwa/(register|requiredFiles|schedule|status|log|stats|screenshot|mediaInventory)
+RewriteCond %{REQUEST_URI} ^/pwa/(register|requiredFiles|schedule|status|log|stats|screenshot|mediaInventory|file)
 RewriteRule ^ pwa/index.php [QSA,L]
 
 # pwa - catch-all for static PWA files (chromeos)
