@@ -18,6 +18,11 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_URI} ^REPLACE_ME/api/.*$
 RewriteRule ^ api/index.php [QSA,L]
 
+# preview
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_URI} ^REPLACE_ME/preview/.*$
+RewriteRule ^ preview/index.php [QSA,L]
+
 # install
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_URI} ^REPLACE_ME/install/.*$
