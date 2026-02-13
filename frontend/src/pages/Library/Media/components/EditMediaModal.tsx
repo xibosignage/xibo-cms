@@ -37,6 +37,7 @@ import TagInput from '@/components/ui/forms/TagInput';
 import { updateMedia } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
 import type { Tag } from '@/types/tag';
+import { expiresToExpiryValue, expiryToDateTime } from '@/utils/date';
 
 interface EditMediaModalProps {
   openModal: boolean;
@@ -59,61 +60,6 @@ type MediaDraft = {
 };
 
 type OpenSelect = 'orientation' | 'expiry' | 'enableStat' | null;
-
-function expiryToDateTime(expiry?: ExpiryValue): string | undefined {
-  if (!expiry) return undefined;
-
-  let date: Date;
-
-  if (expiry.type === 'preset') {
-    const now = new Date();
-
-    switch (expiry.value) {
-      case 'Never Expire':
-        return undefined;
-
-      case 'End of Today': {
-        date = new Date();
-        date.setHours(23, 59, 59, 0);
-        break;
-      }
-
-      case 'In 7 Days':
-        date = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-        break;
-
-      case 'In 14 Days':
-        date = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
-        break;
-
-      case 'In 30 Days':
-        date = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-        break;
-
-      default:
-        return undefined;
-    }
-  } else {
-    date = expiry.to;
-  }
-  return date.toISOString().slice(0, 19).replace('T', ' ');
-}
-
-function expiresToExpiryValue(expires?: string | number): ExpiryValue | undefined {
-  if (!expires || expires === '0') return undefined;
-
-  const timestamp = typeof expires === 'string' ? Number(expires) : expires;
-
-  if (Number.isNaN(timestamp)) return undefined;
-
-  const date = new Date(timestamp * 1000);
-
-  return {
-    type: 'range',
-    from: date,
-    to: date,
-  };
-}
 
 export default function EditMediaModal({ openModal, onClose, data, onSave }: EditMediaModalProps) {
   const { t } = useTranslation();

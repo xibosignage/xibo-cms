@@ -27,7 +27,7 @@ import { twMerge } from 'tailwind-merge';
 
 import Button from './Button';
 
-interface FormDatePickerProps {
+interface DatePickerProps {
   onApply: (range: { from: Date; to: Date }) => void;
   onCancel: () => void;
 }
@@ -44,7 +44,7 @@ function to24Hour(hour: string, period: 'AM' | 'PM') {
   return h === 12 ? 12 : h + 12;
 }
 
-export default function FormDatePicker({ onApply, onCancel }: FormDatePickerProps) {
+export default function DatePicker({ onApply, onCancel }: DatePickerProps) {
   const [range, setRange] = useState<DateRange | undefined>();
   const [hour, setHour] = useState('12');
   const [minute, setMinute] = useState('00');
@@ -76,7 +76,7 @@ export default function FormDatePicker({ onApply, onCancel }: FormDatePickerProp
           selected={range}
           onSelect={setRange}
           numberOfMonths={1}
-          className="text-sm flex flex-col"
+          className="text-sm flex flex-col datepicker"
           classNames={{
             months: 'flex flex-col items-center',
             caption: 'flex items-center justify-center mb-2 px-1',
@@ -87,11 +87,7 @@ export default function FormDatePicker({ onApply, onCancel }: FormDatePickerProp
             chevron: 'fill-gray-400',
             nav_button:
               'h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-700',
-            selected: 'bg-blue-600',
-            range_start: 'bg-blue-600 text-white rounded-l-full',
-            range_end: 'bg-blue-600 text-white rounded-r-full',
-            // 👇 THIS is the gray bar you’re missing
-            range_middle: 'bg-gray-100 text-black',
+            selected: `bg-blue-600`,
           }}
         />
       </div>

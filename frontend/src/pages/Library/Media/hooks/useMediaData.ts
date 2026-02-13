@@ -27,6 +27,7 @@ import type { MediaFilterInput } from '../MediaConfig';
 
 import type { FetchMediaRequest } from '@/services/mediaApi';
 import { fetchMedia } from '@/services/mediaApi';
+import { resolveLastModified } from '@/utils/date';
 
 export const mediaQueryKeys = {
   all: ['media'] as const,
@@ -67,6 +68,8 @@ export const useMediaData = ({
       const sortBy = sorting?.[0]?.id;
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
 
+      const { lastModified, ...restFilters } = advancedFilters;
+
       const request: FetchMediaRequest = {
         start: startOffset,
         length: pagination.pageSize,
@@ -74,7 +77,8 @@ export const useMediaData = ({
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
-        ...advancedFilters,
+        ...restFilters,
+        ...resolveLastModified(lastModified),
       } as FetchMediaRequest;
 
       if (typeof folderId === 'number') {

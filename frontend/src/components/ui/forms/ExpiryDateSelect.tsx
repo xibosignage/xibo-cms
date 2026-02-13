@@ -23,7 +23,7 @@ import { CalendarCheck2Icon, ChevronDown, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import FormDatePicker from '../FormDatePicker';
+import DatePicker from '../DatePicker';
 
 export type ExpiryValue =
   | { type: 'preset'; value: string }
@@ -110,7 +110,7 @@ export default function ExpiryDateSelect({
             </button>
           </div>
           {openDatePicker && (
-            <FormDatePicker
+            <DatePicker
               onCancel={() => setOpenDatePicker(false)}
               onApply={(range) => {
                 onSelect({
