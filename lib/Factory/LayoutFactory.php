@@ -2582,6 +2582,9 @@ class LayoutFactory extends BaseFactory
                 foreach ($this->getStore()->select($sql, []) as $row) {
                     $campaignIds[] = $row['CampaignID'];
                 }
+                if (count($campaignIds) === 0) {
+                    $campaignIds[] = "NULL";
+                }
 
                 $body .= ' AND campaign.CampaignID NOT IN ( ' . implode(',', array_filter($campaignIds)) . ' )  
                      AND layout.layoutID NOT IN (SELECT DISTINCT defaultlayoutid FROM display) 
