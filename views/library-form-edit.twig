@@ -38,7 +38,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="mediaEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("library.edit", {"id": media.mediaId}) }}" data-media-id="{{ media.mediaId }}" data-valid-extensions="{{ validExtensions }}" data-gettag="{{ url_for("tag.getByName") }}" data-folder-id="{{ media.folderId }}">
+            <form id="mediaEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("library.edit", {"id": media.mediaId}) }}" data-media-id="{{ media.mediaId }}" data-media-name="{{ media.name }}" data-media-file-name="{{ media.fileName }}" data-valid-extensions="{{ validExtensions }}" data-gettag="{{ url_for("tag.getByName") }}" data-folder-id="{{ media.folderId }}">
                 {% if media.mediaType != "font" %}
 
                     <div class="form-group row">
