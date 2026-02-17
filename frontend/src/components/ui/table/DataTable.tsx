@@ -273,11 +273,11 @@ export function DataTable<TData, TValue>({
           </div>
         )}
 
-        <div className="overflow-auto w-full printable-table-container flex-1 max-h-[700px]">
+        <div className="overflow-auto w-full printable-table-container flex-1 min-h-0 mb-2">
           <table
             className={twMerge(
               'border-separate border-spacing-0 bg-white',
-              'w-full min-w-full',
+              'w-full min-w-full mb-2',
               // Fix for header width with no results
               table.getRowModel().rows.length === 0
                 ? 'table-auto min-h-full'
