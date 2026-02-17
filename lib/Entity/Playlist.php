@@ -347,7 +347,7 @@ class Playlist implements \JsonSerializable
      * @throws DuplicateEntityException
      * @throws NotFoundException
      */
-    public function validate()
+    public function validate($isPlaylistReassigned = false)
     {
         // check for duplicates,
         // we check for empty playlist name due to layouts existing in the CMS before upgrade to v2
@@ -361,7 +361,11 @@ class Playlist implements \JsonSerializable
             ]);
 
             if (count($duplicates) > 0) {
-                throw new DuplicateEntityException(sprintf(__("You already own a Playlist called '%s'. Please choose another name."), $this->name));
+                ($isPlaylistReassigned)
+                    ? $this->name = $this->getReassignedPlaylistName()
+                    : throw new DuplicateEntityException(
+                        sprintf(__("You already own a Playlist called '%s'. Please choose another name."), $this->name)
+                     );
             }
         }
 
@@ -581,11 +585,12 @@ class Playlist implements \JsonSerializable
             'saveWidgets' => true,
             'notify' => true,
             'validate' => true,
-            'auditPlaylist' => true
+            'auditPlaylist' => true,
+            'isPlaylistReassigned' => false
         ], $options);
 
         if ($options['validate']) {
-            $this->validate();
+            $this->validate($options['isPlaylistReassigned']);
         }
 
         // if we are auditing and editing a regionPlaylist then get layout specific campaignId
@@ -1186,5 +1191,48 @@ class Playlist implements \JsonSerializable
         }
 
         return $playlistMappings;
+    }
+
+    /**
+     * Get the reassigned playlist name
+     * @return string
+     */
+    private function getReassignedPlaylistName(): string
+    {
+        // Append a numeric suffix if the target user already has a playlist item with this name
+        // However, we first need to check similar names to ensure that there's no conflict in renaming the playlist.
+
+        // Get all similar names
+        $params = [];
+        $checkSQL = 'SELECT `name` FROM `playlist` WHERE `name` LIKE :name AND ownerId = :ownerId';
+
+        $params['name'] = $this->name . '%';
+        $params['ownerId'] = $this->ownerId;
+
+        $entries = $this->getStore()->select($checkSQL, $params);
+
+        $count = [];
+
+        foreach ($entries as $entry) {
+            $name = $entry['name'];
+
+            if ($name === $this->name) {
+                $count[] = 0;
+                continue;
+            }
+
+            // We look for playlists that match the same name + (count suffix) so we can update the count correctly
+            if (preg_match('/^' . preg_quote($this->name, '/') . ' \((\d+)\)$/', $name, $matches)) {
+                $count[] = (int) $matches[1];
+            }
+        }
+
+        $i = 0;
+
+        while (in_array($i, $count, true)) {
+            $i++;
+        }
+
+        return $i === 0 ? $this->name : $this->name . " ($i)";
     }
 }

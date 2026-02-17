@@ -1048,6 +1048,9 @@ class Media implements \JsonSerializable
      */
     private function getReassignedMediaName($media): string
     {
+        // Append a numeric suffix if the target user already has a media item with this name
+        // However, we first need to check similar names to ensure that there's no conflict in renaming the media.
+
         // Separate the base and file extension
         $separator = strrpos($media, '.');
 
@@ -1055,7 +1058,39 @@ class Media implements \JsonSerializable
             ? [substr($media, 0, $separator), substr($media, $separator)]
             : [$media, ''];
 
-        // Append a suffix if the target user already has a media item with this name
-        return $base . '_transferred' . $ext;
+        // Get all similar names
+        $params = [];
+        $checkSQL = 'SELECT `name` FROM `media` WHERE `name` LIKE :name AND userid = :userId';
+
+        $params['name'] = $base . '%';
+        $params['userId'] = $this->ownerId;
+
+        $entries = $this->getStore()->select($checkSQL, $params);
+
+        $count = [];
+
+        foreach ($entries as $entry) {
+            $name = $entry['name'];
+
+            if ($name === $base . $ext) {
+                $count[] = 0;
+                continue;
+            }
+
+            // Check for numeric suffix like (1), (2), etc. to get the correct subsequent suffix
+            $suffix = trim(substr($name, strlen($base), strlen($name) - strlen($base) - strlen($ext)));
+
+            if (strlen($suffix) > 2 && $suffix[0] === '(' && $suffix[-1] === ')') {
+                $count[] = (int) substr($suffix, 1, -1);
+            }
+        }
+
+        $i = 0;
+
+        while (in_array($i, $count, true)) {
+            $i++;
+        }
+
+        return $base . ($i > 0 ? " ($i)" : '') . $ext;
     }
 }

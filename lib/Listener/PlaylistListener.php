@@ -95,7 +95,7 @@ class PlaylistListener
             // Reassign playlists and widgets
             foreach ($this->playlistFactory->getByOwnerId($user->userId) as $playlist) {
                 $playlist->setOwner($newUser->userId);
-                $playlist->save();
+                $playlist->save(['isPlaylistReassigned' => true]);
             }
         } else if ($function === 'countChildren') {
             $playlists = $this->playlistFactory->getByOwnerId($user->userId);

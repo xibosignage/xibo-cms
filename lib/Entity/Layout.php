@@ -892,7 +892,8 @@ class Layout implements \JsonSerializable
             'appendCountOnDuplicate' => false,
             'setModifiedDt' => true,
             'auditMessage' => 'Saved',
-            'type' => null
+            'type' => null,
+            'isLayoutReassigned' => false
         ], $options);
 
         if ($options['validate']) {
@@ -1129,6 +1130,8 @@ class Layout implements \JsonSerializable
         if ($duplicateCount > 0) {
             if ($options['appendCountOnDuplicate']) {
                 $this->layout = $this->layout . ' #' . ($duplicateCount + 1);
+            } else if ($options['isLayoutReassigned']) {
+                $this->layout = $this->getReassignedLayoutName();
             } else {
                 throw new DuplicateEntityException(sprintf(
                     __("You already own a Layout called '%s'. Please choose another name."),
@@ -3128,5 +3131,48 @@ class Layout implements \JsonSerializable
                 $libraryLocation . 'thumbs/' . $this->campaignId . '_campaign_thumb.png'
             );
         }
+    }
+
+    /**
+     * Get the reassigned layout name
+     * @return string
+     */
+    private function getReassignedLayoutName(): string
+    {
+        // Append a numeric suffix if the target user already has a layout item with this name
+        // However, we first need to check similar names to ensure that there's no conflict in renaming the layout.
+
+        // Get all similar names
+        $params = [];
+        $checkSQL = 'SELECT `layout` FROM `layout` WHERE `layout` LIKE :layout AND userId = :userId';
+
+        $params['layout'] = $this->layout . '%';
+        $params['userId'] = $this->ownerId;
+
+        $entries = $this->getStore()->select($checkSQL, $params);
+
+        $count = [];
+
+        foreach ($entries as $entry) {
+            $name = $entry['layout'];
+
+            if ($name === $this->layout) {
+                $count[] = 0;
+                continue;
+            }
+
+            // We look for layouts that match the same name + (count suffix) so we can update the count correctly
+            if (preg_match('/^' . preg_quote($this->layout, '/') . ' \((\d+)\)$/', $name, $matches)) {
+                $count[] = $matches[1];
+            }
+        }
+
+        $i = 0;
+
+        while (in_array($i, $count, true)) {
+            $i++;
+        }
+
+        return $i === 0 ? $this->layout : $this->layout . " ($i)";
     }
 }
