@@ -2575,28 +2575,26 @@ class LayoutFactory extends BaseFactory
                 $campaignIds[] = $row['CampaignID'];
             }
 
-            if ($parsedFilter->getInt('filterLayoutStatusId') == 2) {
-                $body .= ' AND (';
-
-                // We have current or future scheduled in-use layouts/campaigns
-                if (!empty($campaignIds)) {
-                    $body .= ' campaign.CampaignID IN ( ' . implode(',', array_filter($campaignIds)) . ' ) OR';
-                }
-
-                $body .= ' layout.layoutID IN (SELECT DISTINCT defaultlayoutid FROM display) 
-                             OR layout.layoutID IN (SELECT DISTINCT layoutId FROM lklayoutdisplaygroup) )';
-            } else {
-                if (!empty($campaignIds)) {
+            if (!empty($campaignIds)) {
+                if ($parsedFilter->getInt('filterLayoutStatusId') == 2) {
+                    // Only show used layouts
+                    $body .= ' AND ('
+                        . '      campaign.CampaignID IN ( ' . implode(',', array_filter($campaignIds)) . ' ) 
+                             OR layout.layoutID IN (SELECT DISTINCT defaultlayoutid FROM display) 
+                             OR layout.layoutID IN (SELECT DISTINCT layoutId FROM lklayoutdisplaygroup)'
+                        . ' ) ';
+                } else {
+                    // Only show unused layouts
                     $body .= ' AND campaign.CampaignID NOT IN ( ' . implode(',', array_filter($campaignIds))
                         . ' ) ';
 
                     if ($parsedFilter->getInt('isFullScreenCampaign', ['default' => -1]) == 1) {
                         $body .= 'AND campaign.type IN ("media", "playlist") ';
                     }
-                }
 
-                $body .= 'AND layout.layoutID NOT IN (SELECT DISTINCT defaultlayoutid FROM display) 
-                 AND layout.layoutID NOT IN (SELECT DISTINCT layoutId FROM lklayoutdisplaygroup) ';
+                    $body .= 'AND layout.layoutID NOT IN (SELECT DISTINCT defaultlayoutid FROM display) 
+                        AND layout.layoutID NOT IN (SELECT DISTINCT layoutId FROM lklayoutdisplaygroup) ';
+                }
             }
         }
 
