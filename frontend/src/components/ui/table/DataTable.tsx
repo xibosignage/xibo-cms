@@ -273,7 +273,7 @@ export function DataTable<TData, TValue>({
           </div>
         )}
 
-        <div className="overflow-auto w-full printable-table-container flex-1">
+        <div className="overflow-auto w-full printable-table-container flex-1 max-h-[700px]">
           <table
             className={twMerge(
               'border-separate border-spacing-0 bg-white',
@@ -411,9 +411,8 @@ export function DataTable<TData, TValue>({
             </tbody>
           </table>
         </div>
+        <DataTablePagination table={table} loading={loading} pageSizeOptions={pageSizeOptions} />
       </div>
-
-      <DataTablePagination table={table} loading={loading} pageSizeOptions={pageSizeOptions} />
     </div>
   );
 }
