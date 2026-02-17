@@ -2559,34 +2559,44 @@ class LayoutFactory extends BaseFactory
         // Used - In active schedule, scheduled in the future, directly assigned to displayGroup, default Layout.
         // Unused - Every layout NOT matching the Used ie not in active schedule, not scheduled in the future, not directly assigned to any displayGroup, not default layout.
         if ($parsedFilter->getInt('filterLayoutStatusId', ['default' => 1]) != 1)  {
-            if ($parsedFilter->getInt('filterLayoutStatusId') == 2) {
+            // Get the current or future scheduled layouts
+            $now = Carbon::now()->format('U');
+            $sql = 'SELECT DISTINCT schedule.CampaignID FROM schedule';
+            $campaignIds = [];
 
-                // Only show used layouts
-                $now = Carbon::now()->format('U');
-                $sql = 'SELECT DISTINCT schedule.CampaignID FROM schedule WHERE ( ( schedule.fromDt < '. $now . ' OR schedule.fromDt = 0 ) ' . ' AND schedule.toDt > ' . $now . ') OR schedule.fromDt > ' . $now;
-                $campaignIds = [];
-                foreach ($this->getStore()->select($sql, []) as $row) {
-                    $campaignIds[] = $row['CampaignID'];
-                }
-                $body .= ' AND ('
-                    . '      campaign.CampaignID IN ( ' . implode(',', array_filter($campaignIds)) . ' ) 
-                             OR layout.layoutID IN (SELECT DISTINCT defaultlayoutid FROM display) 
-                             OR layout.layoutID IN (SELECT DISTINCT layoutId FROM lklayoutdisplaygroup)'
-                    . ' ) ';
+            // Note: For the maintenance XTR, we will only delete unused/unscheduled fullscreen campaign layouts
+            // (i.e. when the user schedules a media and later on deletes the schedule)
+            if ($parsedFilter->getInt('isFullScreenCampaign', ['default' => -1]) != 1) {
+                $sql .= ' WHERE ( ( schedule.fromDt < ' . $now
+                    . ' OR schedule.fromDt = 0 ) ' . ' AND schedule.toDt > ' . $now . ') OR schedule.fromDt > ' . $now;
             }
-            else {
-                // Only show unused layouts
-                $now = Carbon::now()->format('U');
-                $sql = 'SELECT DISTINCT schedule.CampaignID FROM schedule WHERE ( ( schedule.fromDt < '. $now . ' OR schedule.fromDt = 0 ) ' . ' AND schedule.toDt > ' . $now . ') OR schedule.fromDt > ' . $now;
-                $campaignIds = [];
-                foreach ($this->getStore()->select($sql, []) as $row) {
-                    $campaignIds[] = $row['CampaignID'];
+
+            foreach ($this->getStore()->select($sql, []) as $row) {
+                $campaignIds[] = $row['CampaignID'];
+            }
+
+            if ($parsedFilter->getInt('filterLayoutStatusId') == 2) {
+                $body .= ' AND (';
+
+                // We have current or future scheduled in-use layouts/campaigns
+                if (!empty($campaignIds)) {
+                    $body .= ' campaign.CampaignID IN ( ' . implode(',', array_filter($campaignIds)) . ' ) OR';
                 }
 
-                $body .= ' AND campaign.CampaignID NOT IN ( ' . implode(',', array_filter($campaignIds)) . ' )  
-                     AND layout.layoutID NOT IN (SELECT DISTINCT defaultlayoutid FROM display) 
-                     AND layout.layoutID NOT IN (SELECT DISTINCT layoutId FROM lklayoutdisplaygroup) 
-                     ';
+                $body .= ' layout.layoutID IN (SELECT DISTINCT defaultlayoutid FROM display) 
+                             OR layout.layoutID IN (SELECT DISTINCT layoutId FROM lklayoutdisplaygroup) )';
+            } else {
+                if (!empty($campaignIds)) {
+                    $body .= ' AND campaign.CampaignID NOT IN ( ' . implode(',', array_filter($campaignIds))
+                        . ' ) ';
+
+                    if ($parsedFilter->getInt('isFullScreenCampaign', ['default' => -1]) == 1) {
+                        $body .= 'AND campaign.type IN ("media", "playlist") ';
+                    }
+                }
+
+                $body .= 'AND layout.layoutID NOT IN (SELECT DISTINCT defaultlayoutid FROM display) 
+                 AND layout.layoutID NOT IN (SELECT DISTINCT layoutId FROM lklayoutdisplaygroup) ';
             }
         }
 
@@ -2631,10 +2641,7 @@ class LayoutFactory extends BaseFactory
             }
         }
 
-        // Get the fullscreen media or playlist layout
-        if ($parsedFilter->getInt('isFullScreenCampaign', ['default' => -1]) == 1) {
-            $body .= ' AND campaign.type IN ("media", "playlist") ';
-        } else if ($parsedFilter->getString('campaignType') != '') {
+        if ($parsedFilter->getString('campaignType') != '') {
             $body .= ' AND campaign.type = :type ';
             $params['type'] = $parsedFilter->getString('campaignType');
         }
