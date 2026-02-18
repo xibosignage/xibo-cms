@@ -2559,40 +2559,54 @@ class LayoutFactory extends BaseFactory
         // Used - In active schedule, scheduled in the future, directly assigned to displayGroup, default Layout.
         // Unused - Every layout NOT matching the Used ie not in active schedule, not scheduled in the future, not directly assigned to any displayGroup, not default layout.
         if ($parsedFilter->getInt('filterLayoutStatusId', ['default' => 1]) != 1)  {
-            // Note: For the maintenance XTR, we need to query all scheduled playlist or media events
-            // so that we can exclude them once we delete unused/unscheduled fullscreen campaign layouts
-            if ($parsedFilter->getInt('removeUnusedFullScreenLayouts', ['default' => -1]) == 1) {
-                $sql = 'SELECT DISTINCT schedule.CampaignID FROM schedule';
-            } else {
-                // Get the current or future scheduled layouts
-                $now = Carbon::now()->format('U');
-                $campaignIds = [];
-                $sql = 'SELECT DISTINCT schedule.CampaignID FROM schedule WHERE ( ( schedule.fromDt < ' . $now
-                    . ' OR schedule.fromDt = 0 ) ' . ' AND schedule.toDt > ' . $now . ') OR schedule.fromDt > ' . $now;
-            }
-
-            foreach ($this->getStore()->select($sql, []) as $row) {
-                $campaignIds[] = $row['CampaignID'];
-            }
+            // Get the current or future scheduled layouts
+            $now = Carbon::now()->format('U');
 
             if ($parsedFilter->getInt('filterLayoutStatusId') == 2) {
                 // Only show used layouts
-                $body .= ' AND (';
+                $body .= ' AND (
+                    EXISTS (
+                        SELECT 1
+                        FROM schedule
+                        WHERE schedule.CampaignID = campaign.CampaignID
+                        AND (
+                            (
+                                (schedule.fromDt < :now OR schedule.fromDt = 0)
+                                AND schedule.toDt > :now
+                            )
+                            OR schedule.fromDt > :now
+                        )
+                    )
+                    OR layout.layoutID IN (SELECT DISTINCT defaultlayoutid FROM display)
+                    OR layout.layoutID IN (SELECT DISTINCT layoutId FROM lklayoutdisplaygroup)
+                ) ';
 
-                if (!empty($campaignIds)) {
-                    $body .= ' campaign.CampaignID IN ( ' . implode(',', array_filter($campaignIds)) . ' ) OR ';
-                }
-
-                $body .= ' layout.layoutID IN (SELECT DISTINCT defaultlayoutid FROM display) 
-                             OR layout.layoutID IN (SELECT DISTINCT layoutId FROM lklayoutdisplaygroup) ) ';
+                $params['now'] = $now;
             } else {
-                if (!empty($campaignIds)) {
-                    $body .= ' AND campaign.CampaignID NOT IN ( ' . implode(',', array_filter($campaignIds)) .
-                        ' )';
-                }
                 // Only show unused layouts
-                $body .= ' AND layout.layoutID NOT IN (SELECT DISTINCT defaultlayoutid FROM display) 
-                         AND layout.layoutID NOT IN (SELECT DISTINCT layoutId FROM lklayoutdisplaygroup) ';
+                $body .= '
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM schedule
+                        WHERE schedule.CampaignID = campaign.CampaignID ';
+
+                // Note: For the maintenance XTR, we don't have to add the date in the query
+                if ($parsedFilter->getInt('removeUnusedFullScreenLayouts', ['default' => -1]) != 1) {
+                    $body .=
+                        ' AND (
+                            (
+                                (schedule.fromDt < :now OR schedule.fromDt = 0)
+                                AND schedule.toDt > :now
+                            )
+                            OR schedule.fromDt > :now
+                        )';
+
+                    $params['now'] = $now;
+                }
+
+                $body .= '
+                    ) AND layout.layoutID NOT IN (SELECT DISTINCT defaultlayoutid FROM display)
+                    AND layout.layoutID NOT IN (SELECT DISTINCT layoutId FROM lklayoutdisplaygroup) ';
             }
         }
 
