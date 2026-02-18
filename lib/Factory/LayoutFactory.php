@@ -2638,10 +2638,8 @@ class LayoutFactory extends BaseFactory
         if ($parsedFilter->getInt('isFullScreenCampaign', ['default' => -1]) == 1) {
             $body .= ' AND campaign.type IN ("media", "playlist") ';
         } else if ($parsedFilter->getString('campaignType') != '') {
-            if ($parsedFilter->getString('campaignType') != '') {
-                $body .= ' AND campaign.type = :type ';
-                $params['type'] = $parsedFilter->getString('campaignType');
-            }
+            $body .= ' AND campaign.type = :type ';
+            $params['type'] = $parsedFilter->getString('campaignType');
         }
 
         // Logged in user view permissions
