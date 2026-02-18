@@ -2575,21 +2575,24 @@ class LayoutFactory extends BaseFactory
                 $campaignIds[] = $row['CampaignID'];
             }
 
-            if (!empty($campaignIds)) {
-                if ($parsedFilter->getInt('filterLayoutStatusId') == 2) {
-                    // Only show used layouts
-                    $body .= ' AND ('
-                        . '      campaign.CampaignID IN ( ' . implode(',', array_filter($campaignIds)) . ' ) 
-                             OR layout.layoutID IN (SELECT DISTINCT defaultlayoutid FROM display) 
-                             OR layout.layoutID IN (SELECT DISTINCT layoutId FROM lklayoutdisplaygroup)'
-                        . ' ) ';
-                } else {
-                    // Only show unused layouts
-                    $body .= ' AND campaign.CampaignID NOT IN ( ' . implode(',', array_filter($campaignIds)) . ' )  
-                         AND layout.layoutID NOT IN (SELECT DISTINCT defaultlayoutid FROM display) 
-                         AND layout.layoutID NOT IN (SELECT DISTINCT layoutId FROM lklayoutdisplaygroup) 
-                         ';
+            if ($parsedFilter->getInt('filterLayoutStatusId') == 2) {
+                // Only show used layouts
+                $body .= ' AND (';
+
+                if (!empty($campaignIds)) {
+                    $body .= ' campaign.CampaignID IN ( ' . implode(',', array_filter($campaignIds)) . ' ) OR ';
                 }
+
+                $body .= ' layout.layoutID IN (SELECT DISTINCT defaultlayoutid FROM display) 
+                             OR layout.layoutID IN (SELECT DISTINCT layoutId FROM lklayoutdisplaygroup) ) ';
+            } else {
+                if (!empty($campaignIds)) {
+                    $body .= ' AND campaign.CampaignID NOT IN ( ' . implode(',', array_filter($campaignIds)) .
+                        ' )';
+                }
+                // Only show unused layouts
+                $body .= ' AND layout.layoutID NOT IN (SELECT DISTINCT defaultlayoutid FROM display) 
+                         AND layout.layoutID NOT IN (SELECT DISTINCT layoutId FROM lklayoutdisplaygroup) ';
             }
         }
 
