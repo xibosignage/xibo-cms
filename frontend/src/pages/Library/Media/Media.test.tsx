@@ -7,7 +7,7 @@ import Media from './Media';
 import { UploadProvider } from '@/context/UploadContext';
 import { UserProvider } from '@/context/UserContext';
 import { testQueryClient } from '@/setupTests';
-import type { User } from '@/types/user';
+import type { User, UserFeatures } from '@/types/user';
 
 // Create mock user
 const mockUser = {
@@ -18,6 +18,9 @@ const mockUser = {
   firstName: 'Mock',
   lastName: 'User',
   phone: '123456789',
+  features: {
+    'folder.view': true,
+  } as UserFeatures,
 } as User;
 
 describe('Media page', () => {
