@@ -21,7 +21,30 @@
  */
 
 namespace Xibo\Controller;
-use Carbon\Carbon;use OpenApi\Attributes as OA;use Psr\Http\Message\ResponseInterface;use Slim\Http\Response as Response;use Slim\Http\ServerRequest as Request;use Slim\Routing\RouteContext;use Slim\Views\Twig;use Symfony\Component\EventDispatcher\EventDispatcher;use Symfony\Component\EventDispatcher\EventDispatcherInterface;use Twig\Error\LoaderError;use Twig\Error\RuntimeError;use Twig\Error\SyntaxError;use Xibo\Entity\User;use Xibo\Helper\ApplicationState;use Xibo\Helper\HttpsDetect;use Xibo\Helper\SanitizerService;use Xibo\Service\BaseDependenciesService;use Xibo\Service\ConfigServiceInterface;use Xibo\Service\HelpServiceInterface;use Xibo\Service\LogServiceInterface;use Xibo\Support\Exception\ControllerNotImplemented;use Xibo\Support\Exception\GeneralException;use Xibo\Support\Exception\InvalidArgumentException;
+
+use Carbon\Carbon;
+use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Routing\RouteContext;
+use Slim\Views\Twig;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
+use Xibo\Entity\User;
+use Xibo\Helper\ApplicationState;
+use Xibo\Helper\HttpsDetect;
+use Xibo\Helper\SanitizerService;
+use Xibo\Service\BaseDependenciesService;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\HelpServiceInterface;
+use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class Base
@@ -31,12 +54,12 @@ use Carbon\Carbon;use OpenApi\Attributes as OA;use Psr\Http\Message\ResponseInte
  *
  */
 #[OA\Info(
-    title: 'Xibo API',
     version: '4.0',
     description: "Xibo CMS API.\n       Using HTTP formData requests.\n       All PUT requests require Content-Type:application/x-www-form-urlencoded header.", // phpcs:ignore
+    title: 'Xibo API',
     termsOfService: 'https://xibosignage.com/legal',
     contact: new OA\Contact(email: 'info@xibo.org.uk'),
-    license: new OA\License(name: 'AGPLv3 or later', url: 'http://www.gnu.org/licenses/')
+    license: new OA\License(name: 'AGPLv3 or later', url: 'https://www.gnu.org/licenses/')
 )]
 #[OA\Server(url: '/api')]
 #[OA\SecurityScheme(

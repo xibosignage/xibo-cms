@@ -115,15 +115,58 @@ class Widget extends Base
         $this->widgetAudioFactory = $widgetAudioFactory;
     }
 
-    // phpcs:disable
-    #[OA\Post(path: '/playlist/widget/{type}/{playlistId}', operationId: 'addWidget', summary: 'Add a Widget to a Playlist', description: 'Add a new Widget to a Playlist', tags: ['widget'])]
-    #[OA\Parameter(name: 'type', in: 'path', description: 'The type of the Widget e.g. text. Media based Widgets like Image are added via POST /playlist/library/assign/{playlistId} call.', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'playlistId', in: 'path', description: 'The Playlist ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(properties: [
-        new OA\Property(property: 'displayOrder', description: 'Optional integer to say which position this assignment should occupy in the list. If more than one media item is being added, this will be the position of the first one.', type: 'integer'),
-        new OA\Property(property: 'templateId', description: 'If the module type provided has a dataType then provide the templateId to use.', type: 'string')
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))])]
+    #[OA\Post(
+        path: '/playlist/widget/{type}/{playlistId}',
+        operationId: 'addWidget',
+        description: 'Add a new Widget to a Playlist',
+        summary: 'Add a Widget to a Playlist',
+        tags: ['widget'],
+    )]
+    #[OA\Parameter(
+        name: 'type',
+        description: 'The type of the Widget e.g. text. Media based Widgets like Image are added via POST /playlist/library/assign/{playlistId} call.', // phpcs:ignore
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'string'),
+    )]
+    #[OA\Parameter(
+        name: 'playlistId',
+        description: 'The Playlist ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer'),
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'displayOrder',
+                        description: 'Optional integer to say which position this assignment should occupy in the list. If more than one media item is being added, this will be the position of the first one.',  // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'templateId',
+                        description: 'If the module type provided has a dataType then provide the templateId to use.',
+                        type: 'string'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add Widget
      *
@@ -135,7 +178,6 @@ class Widget extends Base
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    // phpcs:enable
     public function addWidget(Request $request, Response $response, $type, $id)
     {
         $params = $this->getSanitizer($request->getParams());
@@ -338,18 +380,65 @@ class Widget extends Base
         return $this->render($request, $response);
     }
 
-    // phpcs:disable
-    #[OA\Put(path: '/playlist/widget/{id}', operationId: 'editWidget', summary: 'Edit a Widget', description: 'Edit a widget providing new properties to set on it', tags: ['widget'])]
-    #[OA\Parameter(name: 'id', in: 'path', description: 'The ID of the Widget', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(properties: [
-        new OA\Property(property: 'useDuration', description: 'Set a duration on this widget, if unchecked the default or library duration will be used.', type: 'integer'),
-        new OA\Property(property: 'duration', description: 'Duration to use on this widget', type: 'integer'),
-        new OA\Property(property: 'name', description: 'An optional name for this widget', type: 'string'),
-        new OA\Property(property: 'enableStat', description: 'Should stats be enabled? On|Off|Inherit ', type: 'string'),
-        new OA\Property(property: 'isRepeatData', description: 'If this widget requires data, should that data be repeated to meet the number of items requested?', type: 'integer'),
-        new OA\Property(property: 'showFallback', description: 'If this widget requires data and allows fallback data how should that data be returned? (never, always, empty, error)', type: 'string'),
-        new OA\Property(property: 'properties', description: 'Add an additional parameter for each of the properties required this module and its template. Use the moduleProperties and moduleTemplateProperties calls to get a list of properties needed', type: 'integer')
-    ])))]
+    #[OA\Put(
+        path: '/playlist/widget/{id}',
+        operationId: 'editWidget',
+        description: 'Edit a widget providing new properties to set on it',
+        summary: 'Edit a Widget',
+        tags: ['widget']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The ID of the Widget',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'useDuration',
+                        description: 'Set a duration on this widget, if unchecked the default or library duration will be used.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'duration',
+                        description: 'Duration to use on this widget',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'name',
+                        description: 'An optional name for this widget',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'enableStat',
+                        description: 'Should stats be enabled? On|Off|Inherit ',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'isRepeatData',
+                        description: 'If this widget requires data, should that data be repeated to meet the number of items requested?', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'showFallback',
+                        description: 'If this widget requires data and allows fallback data how should that data be returned? (never, always, empty, error)', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'properties',
+                        description: 'Add an additional parameter for each of the properties required this module and its template. Use the moduleProperties and moduleTemplateProperties calls to get a list of properties needed', // phpcs:ignore
+                        type: 'integer'
+                    )
+                ]
+            )
+        )
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Edit Widget
@@ -360,7 +449,6 @@ class Widget extends Base
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    // phpcs:enable
     public function editWidget(Request $request, Response $response, $id)
     {
         $params = $this->getSanitizer($request->getParams());
@@ -513,8 +601,20 @@ class Widget extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Delete(path: '/playlist/widget/{widgetId}', operationId: 'WidgetDelete', summary: 'Delete a Widget', description: 'Deleted a specified widget', tags: ['widget'])]
-    #[OA\Parameter(name: 'widgetId', in: 'path', description: 'The widget ID to delete', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Delete(
+        path: '/playlist/widget/{widgetId}',
+        operationId: 'WidgetDelete',
+        description: 'Deleted a specified widget',
+        summary: 'Delete a Widget',
+        tags: ['widget']
+    )]
+    #[OA\Parameter(
+        name: 'widgetId',
+        description: 'The widget ID to delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 200, description: 'successful operation')]
     /**
      * Delete a Widget
@@ -631,15 +731,65 @@ class Widget extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/playlist/widget/transition/{type}/{widgetId}', operationId: 'WidgetEditTransition', summary: 'Adds In/Out transition', description: 'Adds In/Out transition to a specified widget', tags: ['widget'])]
-    #[OA\Parameter(name: 'type', in: 'path', description: 'Transition type, available options: in, out', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'widgetId', in: 'path', description: 'The widget ID to add the transition to', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['transitionType'], properties: [
-        new OA\Property(property: 'transitionType', description: 'Type of a transition, available Options: fly, fadeIn, fadeOut', type: 'string'),
-        new OA\Property(property: 'transitionDuration', description: 'Duration of this transition in milliseconds', type: 'integer'),
-        new OA\Property(property: 'transitionDirection', description: 'The direction for this transition, only appropriate for transitions that move, such as fly. Available options: N, NE, E, SE, S, SW, W, NW', type: 'integer')
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new widget', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/Widget'))]
+    #[OA\Put(
+        path: '/playlist/widget/transition/{type}/{widgetId}',
+        operationId: 'WidgetEditTransition',
+        description: 'Adds In/Out transition to a specified widget',
+        summary: 'Adds In/Out transition',
+        tags: ['widget']
+    )]
+    #[OA\Parameter(
+        name: 'type',
+        description: 'Transition type, available options: in, out',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'widgetId',
+        description: 'The widget ID to add the transition to',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['transitionType'],
+                properties: [
+                    new OA\Property(
+                        property: 'transitionType',
+                        description: 'Type of a transition, available Options: fly, fadeIn, fadeOut',
+                        type: 'string',
+                    ),
+                    new OA\Property(
+                        property: 'transitionDuration',
+                        description: 'Duration of this transition in milliseconds',
+                        type: 'integer',
+                    ),
+                    new OA\Property(
+                        property: 'transitionDirection',
+                        description: 'The direction for this transition, only appropriate for transitions that move, such as fly. Available options: N, NE, E, SE, S, SW, W, NW', // phpcs:ignore
+                        type: 'integer',
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new widget',
+                schema: new OA\Schema(type: 'string')
+            )
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/Widget')
+    )]
     /**
      * Edit Widget transition
      *
@@ -761,14 +911,57 @@ class Widget extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/playlist/widget/{widgetId}/audio', operationId: 'WidgetAssignedAudioEdit', summary: 'Parameters for edting/adding audio file to a specific widget', description: 'Parameters for edting/adding audio file to a specific widget', tags: ['widget'])]
-    #[OA\Parameter(name: 'widgetId', in: 'path', description: 'Id of a widget to which you want to add audio or edit existing audio', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(properties: [
-        new OA\Property(property: 'mediaId', description: 'Id of a audio file in CMS library you wish to add to a widget', type: 'integer'),
-        new OA\Property(property: 'volume', description: 'Volume percentage(0-100) for this audio to play at', type: 'integer'),
-        new OA\Property(property: 'loop', description: 'Flag (0, 1) Should the audio loop if it finishes before the widget has finished?', type: 'integer')
-    ])))]
-    #[OA\Response(response: 200, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new widget', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/Widget'))]
+    #[OA\Put(
+        path: '/playlist/widget/{widgetId}/audio',
+        operationId: 'WidgetAssignedAudioEdit',
+        description: 'Parameters for edting/adding audio file to a specific widget',
+        summary: 'Parameters for edting/adding audio file to a specific widget',
+        tags: ['widget']
+    )]
+    #[OA\Parameter(
+        name: 'widgetId',
+        description: 'Id of a widget to which you want to add audio or edit existing audio',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'mediaId',
+                        description: 'Id of a audio file in CMS library you wish to add to a widget',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'volume',
+                        description: 'Volume percentage(0-100) for this audio to play at',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'loop',
+                        description: 'Flag (0, 1) Should the audio loop if it finishes before the widget has finished?',
+                        type: 'integer'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new widget',
+                schema: new OA\Schema(type: 'string')
+            )
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/Widget')
+    )]
     /**
      * Edit an Audio Widget
      *
@@ -844,8 +1037,20 @@ class Widget extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Delete(path: '/playlist/widget/{widgetId}/audio', operationId: 'WidgetAudioDelete', summary: 'Delete assigned audio widget', description: 'Delete assigned audio widget from specified widget ID', tags: ['widget'])]
-    #[OA\Parameter(name: 'widgetId', in: 'path', description: 'Id of a widget from which you want to delete the audio from', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Delete(
+        path: '/playlist/widget/{widgetId}/audio',
+        operationId: 'WidgetAudioDelete',
+        description: 'Delete assigned audio widget from specified widget ID',
+        summary: 'Delete assigned audio widget',
+        tags: ['widget']
+    )]
+    #[OA\Parameter(
+        name: 'widgetId',
+        description: 'Id of a widget from which you want to delete the audio from',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 200, description: 'successful operation')]
     /**
      * Delete an Assigned Audio Widget
@@ -1245,14 +1450,57 @@ class Widget extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/playlist/widget/{widgetId}/expiry', operationId: 'WidgetAssignedExpiryEdit', summary: 'Set Widget From/To Dates', description: 'Control when this Widget is active on this Playlist', tags: ['widget'])]
-    #[OA\Parameter(name: 'widgetId', in: 'path', description: 'Id of a widget to which you want to add audio or edit existing audio', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(properties: [
-        new OA\Property(property: 'fromDt', description: 'The From Date in Y-m-d H::i:s format', type: 'string'),
-        new OA\Property(property: 'toDt', description: 'The To Date in Y-m-d H::i:s format', type: 'string'),
-        new OA\Property(property: 'deleteOnExpiry', description: 'Delete this Widget when it expires?', type: 'integer')
-    ])))]
-    #[OA\Response(response: 200, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new widget', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/Widget'))]
+    #[OA\Put(
+        path: '/playlist/widget/{widgetId}/expiry',
+        operationId: 'WidgetAssignedExpiryEdit',
+        description: 'Control when this Widget is active on this Playlist',
+        summary: 'Set Widget From/To Dates',
+        tags: ['widget']
+    )]
+    #[OA\Parameter(
+        name: 'widgetId',
+        description: 'Id of a widget to which you want to add audio or edit existing audio',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'fromDt',
+                        description: 'The From Date in Y-m-d H::i:s format',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'toDt',
+                        description: 'The To Date in Y-m-d H::i:s format',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'deleteOnExpiry',
+                        description: 'Delete this Widget when it expires?',
+                        type: 'integer'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new widget',
+                schema: new OA\Schema(type: 'string')
+            )
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/Widget')
+    )]
     /**
      * Edit an Expiry Widget
      *
@@ -1342,11 +1590,32 @@ class Widget extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/playlist/widget/{widgetId}/region', operationId: 'WidgetAssignedRegionSet', summary: 'Set Widget Region', description: 'Set the Region this Widget is intended for - only suitable for Drawer Widgets', tags: ['widget'])]
-    #[OA\Parameter(name: 'widgetId', in: 'path', description: 'Id of the Widget to set region on', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['targetRegionId'], properties: [
-        new OA\Property(property: 'targetRegionId', description: 'The target regionId', type: 'string')
-    ])))]
+    #[OA\Put(
+        path: '/playlist/widget/{widgetId}/region',
+        operationId: 'WidgetAssignedRegionSet',
+        description: 'Set the Region this Widget is intended for - only suitable for Drawer Widgets',
+        summary: 'Set Widget Region',
+        tags: ['widget']
+    )]
+    #[OA\Parameter(
+        name: 'widgetId',
+        description: 'Id of the Widget to set region on',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['targetRegionId'],
+                properties: [
+                    new OA\Property(property: 'targetRegionId', description: 'The target regionId', type: 'string')
+                ]
+            )
+        )
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * @param Request $request
@@ -1408,11 +1677,36 @@ class Widget extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/playlist/widget/{widgetId}/elements', operationId: 'widgetSaveElements', summary: 'Save elements to a widget', description: 'Update a widget with elements associated with it', tags: ['widget'])]
-    #[OA\Parameter(name: 'widgetId', in: 'path', description: 'Id of the Widget to set region on', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/json', schema: new OA\Schema(required: ['elements'], properties: [
-        new OA\Property(property: 'elements', description: 'JSON representing the elements assigned to this widget', type: 'string')
-    ])))]
+    #[OA\Put(
+        path: '/playlist/widget/{widgetId}/elements',
+        operationId: 'widgetSaveElements',
+        description: 'Update a widget with elements associated with it',
+        summary: 'Save elements to a widget',
+        tags: ['widget']
+    )]
+    #[OA\Parameter(
+        name: 'widgetId',
+        description: 'Id of the Widget to set region on',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/json',
+            schema: new OA\Schema(
+                required: ['elements'],
+                properties: [
+                    new OA\Property(
+                        property: 'elements',
+                        description: 'JSON representing the elements assigned to this widget',
+                        type: 'string'
+                    )
+                ]
+            )
+        )
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * @param Request $request
@@ -1689,11 +1983,36 @@ class Widget extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/playlist/widget/{widgetId}/dataType', operationId: 'widgetGetDataType', summary: 'Widget DataType', description: 'Get DataType for a Widget according to the widgets module definition', tags: ['widget'])]
-    #[OA\Parameter(name: 'widgetId', in: 'path', description: 'Id of the Widget', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/json', schema: new OA\Schema(required: ['dataType'], properties: [
-        new OA\Property(property: 'dataType', description: 'A JSON representation of your dataType', type: 'string')
-    ])))]
+    #[OA\Put(
+        path: '/playlist/widget/{widgetId}/dataType',
+        operationId: 'widgetGetDataType',
+        description: 'Get DataType for a Widget according to the widgets module definition',
+        summary: 'Widget DataType',
+        tags: ['widget']
+    )]
+    #[OA\Parameter(
+        name: 'widgetId',
+        description: 'Id of the Widget',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/json',
+            schema: new OA\Schema(
+                required: ['dataType'],
+                properties: [
+                    new OA\Property(
+                        property: 'dataType',
+                        description: 'A JSON representation of your dataType',
+                        type: 'string'
+                    )
+                ]
+            )
+        )
+    )]
     #[OA\Response(response: 200, description: 'successful operation')]
     /**
      * @param \Slim\Http\ServerRequest $request

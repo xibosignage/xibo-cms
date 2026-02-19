@@ -43,9 +43,25 @@ class WidgetData extends Base
     ) {
     }
 
-    #[OA\Get(path: '/playlist/widget/data/{id}', operationId: 'getWidgetData', summary: 'Get data for Widget', description: 'Return all of the fallback data currently assigned to this Widget', tags: ['widget'])]
-    #[OA\Parameter(name: 'id', in: 'path', description: 'The Widget ID that this data should be added to', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Response(response: 201, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/WidgetData')))]
+    #[OA\Get(
+        path: '/playlist/widget/data/{id}',
+        operationId: 'getWidgetData',
+        description: 'Return all of the fallback data currently assigned to this Widget',
+        summary: 'Get data for Widget',
+        tags: ['widget']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The Widget ID that this data should be added to',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/WidgetData'))
+    )]
     /**
      * @throws \Xibo\Support\Exception\GeneralException
      */
@@ -59,13 +75,50 @@ class WidgetData extends Base
         return $response->withJson($this->widgetDataFactory->getByWidgetId($widget->widgetId));
     }
 
-    #[OA\Post(path: '/playlist/widget/data/{id}', operationId: 'addWidgetData', summary: 'Add a data to a Widget', description: 'Add fallback data to a data Widget', tags: ['widget'])]
-    #[OA\Parameter(name: 'id', in: 'path', description: 'The Widget ID that this data should be added to', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['data'], properties: [
-        new OA\Property(property: 'data', description: 'A JSON formatted string containing a single data item for this widget\'s data type', type: 'string'),
-        new OA\Property(property: 'displayOrder', description: 'Optional integer to say which position this data should appear if there is more than one data item', type: 'integer')
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))])]
+    #[OA\Post(
+        path: '/playlist/widget/data/{id}',
+        operationId: 'addWidgetData',
+        description: 'Add fallback data to a data Widget',
+        summary: 'Add a data to a Widget',
+        tags: ['widget'],
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The Widget ID that this data should be added to',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer'),
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['data'],
+                properties: [
+                    new OA\Property(
+                        property: 'data',
+                        description: 'A JSON formatted string containing a single data item for this widget\'s data type', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'displayOrder',
+                        description: 'Optional integer to say which position this data should appear if there is more than one data item', // phpcs:ignore
+                        type: 'integer'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        headers: [new OA\Header(
+            header: 'Location',
+            description: 'Location of the new record',
+            schema: new OA\Schema(type: 'string')
+        )]
+    )]
     /**
      * @throws \Xibo\Support\Exception\GeneralException
      */
@@ -101,13 +154,48 @@ class WidgetData extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/playlist/widget/data/{id}/{dataId}', operationId: 'editWidgetData', summary: 'Edit data on a Widget', description: 'Edit fallback data on a data Widget', tags: ['widget'])]
-    #[OA\Parameter(name: 'id', in: 'path', description: 'The Widget ID that this data is attached to', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'dataId', in: 'path', description: 'The ID of the data to be edited', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['data'], properties: [
-        new OA\Property(property: 'data', description: 'A JSON formatted string containing a single data item for this widget\'s data type', type: 'string'),
-        new OA\Property(property: 'displayOrder', description: 'Optional integer to say which position this data should appear if there is more than one data item', type: 'integer')
-    ])))]
+    #[OA\Put(
+        path: '/playlist/widget/data/{id}/{dataId}',
+        operationId: 'editWidgetData',
+        description: 'Edit fallback data on a data Widget',
+        summary: 'Edit data on a Widget',
+        tags: ['widget'],
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The Widget ID that this data is attached to',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer'),
+    )]
+    #[OA\Parameter(
+        name: 'dataId',
+        description: 'The ID of the data to be edited',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer'),
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['data'],
+                properties: [
+                    new OA\Property(
+                        property: 'data',
+                        description: 'A JSON formatted string containing a single data item for this widget\'s data type', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'displayOrder',
+                        description: 'Optional integer to say which position this data should appear if there is more than one data item', // phpcs:ignore
+                        type: 'integer'
+                    )
+                ]
+            )
+        )
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * @throws \Xibo\Support\Exception\GeneralException
@@ -144,9 +232,27 @@ class WidgetData extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Delete(path: '/playlist/widget/data/{id}/{dataId}', operationId: 'deleteWidgetData', summary: 'Delete data on a Widget', description: 'Delete fallback data on a data Widget', tags: ['widget'])]
-    #[OA\Parameter(name: 'id', in: 'path', description: 'The Widget ID that this data is attached to', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'dataId', in: 'path', description: 'The ID of the data to be deleted', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Delete(
+        path: '/playlist/widget/data/{id}/{dataId}',
+        operationId: 'deleteWidgetData',
+        description: 'Delete fallback data on a data Widget',
+        summary: 'Delete data on a Widget',
+        tags: ['widget']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The Widget ID that this data is attached to',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'dataId',
+        description: 'The ID of the data to be deleted',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * @throws \Xibo\Support\Exception\GeneralException
@@ -175,9 +281,33 @@ class WidgetData extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/playlist/widget/data/{id}/order', operationId: 'orderWidgetData', summary: 'Update the order of data on a Widget', description: 'Provide all data to be ordered on a widget', tags: ['widget'])]
-    #[OA\Parameter(name: 'id', in: 'path', description: 'The Widget ID that this data is attached to', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\JsonContent(type: 'array', items: new OA\Items(properties: [new OA\Property(property: 'dataId', description: 'Data ID', type: 'integer'), new OA\Property(property: 'displayOrder', description: 'Desired display order', type: 'integer')], type: 'object')))]
+    #[OA\Post(
+        path: '/playlist/widget/data/{id}/order',
+        operationId: 'orderWidgetData',
+        description: 'Provide all data to be ordered on a widget',
+        summary: 'Update the order of data on a Widget',
+        tags: ['widget']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The Widget ID that this data is attached to',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(
+                properties: [
+                    new OA\Property(property: 'dataId', description: 'Data ID', type: 'integer'),
+                    new OA\Property(property: 'displayOrder', description: 'Desired display order', type: 'integer')
+                ],
+                type: 'object'
+            )
+        )
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * @throws \Xibo\Support\Exception\GeneralException
