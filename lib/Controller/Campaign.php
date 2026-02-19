@@ -133,19 +133,95 @@ class Campaign extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/campaign', operationId: 'campaignSearch', summary: 'Search Campaigns', description: 'Search all Campaigns this user has access to', tags: ['campaign'])]
-    #[OA\Parameter(name: 'campaignId', in: 'query', description: 'Filter by Campaign Id', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'name', in: 'query', description: 'Filter by Name', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'tags', in: 'query', description: 'Filter by Tags', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'exactTags', in: 'query', description: 'A flag indicating whether to treat the tags filter as an exact match', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'logicalOperator', in: 'query', description: 'When filtering by multiple Tags, which logical operator should be used? AND|OR', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'hasLayouts', in: 'query', description: 'Filter by has layouts', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'isLayoutSpecific', in: 'query', description: 'Filter by whether this Campaign is specific to a Layout or User added', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'retired', in: 'query', description: 'Filter by retired', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'totalDuration', in: 'query', description: 'Should we total the duration?', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'embed', in: 'query', description: 'Embed related data such as layouts, permissions, tags and events', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'folderId', in: 'query', description: 'Filter by Folder ID', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Campaign')))]
+    #[OA\Get(
+        path: '/campaign',
+        operationId: 'campaignSearch',
+        description: 'Search all Campaigns this user has access to',
+        summary: 'Search Campaigns',
+        tags: ['campaign']
+    )]
+    #[OA\Parameter(
+        name: 'campaignId',
+        description: 'Filter by Campaign Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'name',
+        description: 'Filter by Name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'tags',
+        description: 'Filter by Tags',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'exactTags',
+        description: 'A flag indicating whether to treat the tags filter as an exact match',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'logicalOperator',
+        description: 'When filtering by multiple Tags, which logical operator should be used? AND|OR',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'hasLayouts',
+        description: 'Filter by has layouts',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'isLayoutSpecific',
+        description: 'Filter by whether this Campaign is specific to a Layout or User added',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'retired',
+        description: 'Filter by retired',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'totalDuration',
+        description: 'Should we total the duration?',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'embed',
+        description: 'Embed related data such as layouts, permissions, tags and events',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'folderId',
+        description: 'Filter by Folder ID',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Campaign'))
+    )]
     /**
      * Returns a Grid of Campaigns
      *
@@ -387,19 +463,74 @@ class Campaign extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/campaign', operationId: 'campaignAdd', summary: 'Add Campaign', description: 'Add a Campaign', tags: ['campaign'])]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['type', 'name'], properties: [
-        new OA\Property(property: 'type', description: 'Type of campaign, either list|ad', type: 'string'),
-        new OA\Property(property: 'name', description: 'Name for this Campaign', type: 'string'),
-        new OA\Property(property: 'folderId', description: 'Folder ID to which this object should be assigned to', type: 'integer'),
-        new OA\Property(property: 'layoutIds', description: 'An array of layoutIds to assign to this Campaign, in order.', type: 'array', items: new OA\Items(type: 'integer')),
-        new OA\Property(property: 'cyclePlaybackEnabled', description: 'When cycle based playback is enabled only 1 Layout from this Campaign will be played each time it is in a Schedule loop. The same Layout will be shown until the \'Play count\' is achieved.', type: 'integer'),
-        new OA\Property(property: 'playCount', description: 'In cycle based playback, how many plays should each Layout have before moving on?', type: 'integer'),
-        new OA\Property(property: 'listPlayOrder', description: 'In layout list, how should campaigns in the schedule with the same play order be played?', type: 'string'),
-        new OA\Property(property: 'targetType', description: 'For ad campaigns, how do we measure the target? plays|budget|imp', type: 'string'),
-        new OA\Property(property: 'target', description: 'For ad campaigns, what is the target count for playback over the entire campaign', type: 'integer')
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/Campaign'))]
+    #[OA\Post(
+        path: '/campaign',
+        operationId: 'campaignAdd',
+        description: 'Add a Campaign',
+        summary: 'Add Campaign',
+        tags: ['campaign']
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['type', 'name'],
+                properties: [
+                    new OA\Property(property: 'type', description: 'Type of campaign, either list|ad', type: 'string'),
+                    new OA\Property(property: 'name', description: 'Name for this Campaign', type: 'string'),
+                    new OA\Property(
+                        property: 'folderId',
+                        description: 'Folder ID to which this object should be assigned to',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'layoutIds',
+                        description: 'An array of layoutIds to assign to this Campaign, in order.',
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
+                    ),
+                    new OA\Property(
+                        property: 'cyclePlaybackEnabled',
+                        description: 'When cycle based playback is enabled only 1 Layout from this Campaign will be played each time it is in a Schedule loop. The same Layout will be shown until the \'Play count\' is achieved.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'playCount',
+                        description: 'In cycle based playback, how many plays should each Layout have before moving on?', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'listPlayOrder',
+                        description: 'In layout list, how should campaigns in the schedule with the same play order be played?', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'targetType',
+                        description: 'For ad campaigns, how do we measure the target? plays|budget|imp',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'target',
+                        description: 'For ad campaigns, what is the target count for playback over the entire campaign',
+                        type: 'integer'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/Campaign')
+    )]
     /**
      * Add a Campaign
      *
@@ -550,28 +681,101 @@ class Campaign extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/campaign/{campaignId}', operationId: 'campaignEdit', summary: 'Edit Campaign', description: 'Edit an existing Campaign', tags: ['campaign'])]
-    #[OA\Parameter(name: 'campaignId', in: 'path', description: 'The Campaign ID to Edit', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['name'], properties: [
-        new OA\Property(property: 'name', description: 'Name for this Campaign', type: 'string'),
-        new OA\Property(property: 'folderId', description: 'Folder ID to which this object should be assigned to', type: 'integer'),
-        new OA\Property(property: 'manageLayouts', description: 'Flag indicating whether to manage layouts or not. Default to no.', type: 'integer'),
-        new OA\Property(property: 'layoutIds', description: 'An array of layoutIds to assign to this Campaign, in order.', type: 'array', items: new OA\Items(type: 'integer')),
-        new OA\Property(property: 'cyclePlaybackEnabled', description: 'When cycle based playback is enabled only 1 Layout from this Campaign will be played each time it is in a Schedule loop. The same Layout will be shown until the \'Play count\' is achieved.', type: 'integer'),
-        new OA\Property(property: 'playCount', description: 'In cycle based playback, how many plays should each Layout have before moving on?', type: 'integer'),
-        new OA\Property(property: 'listPlayOrder', description: 'In layout list, how should campaigns in the schedule with the same play order be played?', type: 'string'),
-        new OA\Property(property: 'targetType', description: 'For ad campaigns, how do we measure the target? plays|budget|imp', type: 'string'),
-        new OA\Property(property: 'target', description: 'For ad campaigns, what is the target count for playback over the entire campaign', type: 'integer'),
-        new OA\Property(property: 'startDt', description: 'For ad campaigns, what is the start date', type: 'string', format: 'date-time'),
-        new OA\Property(property: 'endDt', description: 'For ad campaigns, what is the start date', type: 'string', format: 'date-time'),
-        new OA\Property(property: 'displayGroupIds[]', description: 'For ad campaigns, which display groups should the campaign be run on?', type: 'array', items: new OA\Items(type: 'integer')),
-        new OA\Property(property: 'ref1', description: 'An optional reference field', type: 'string'),
-        new OA\Property(property: 'ref2', description: 'An optional reference field', type: 'string'),
-        new OA\Property(property: 'ref3', description: 'An optional reference field', type: 'string'),
-        new OA\Property(property: 'ref4', description: 'An optional reference field', type: 'string'),
-        new OA\Property(property: 'ref5', description: 'An optional reference field', type: 'string')
-    ])))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Campaign'))]
+    #[OA\Put(
+        path: '/campaign/{campaignId}',
+        operationId: 'campaignEdit',
+        description: 'Edit an existing Campaign',
+        summary: 'Edit Campaign',
+        tags: ['campaign']
+    )]
+    #[OA\Parameter(
+        name: 'campaignId',
+        description: 'The Campaign ID to Edit',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['name'],
+                properties: [
+                    new OA\Property(property: 'name', description: 'Name for this Campaign', type: 'string'),
+                    new OA\Property(
+                        property: 'folderId',
+                        description: 'Folder ID to which this object should be assigned to',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'manageLayouts',
+                        description: 'Flag indicating whether to manage layouts or not. Default to no.',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'layoutIds',
+                        description: 'An array of layoutIds to assign to this Campaign, in order.',
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
+                    ),
+                    new OA\Property(
+                        property: 'cyclePlaybackEnabled',
+                        description: 'When cycle based playback is enabled only 1 Layout from this Campaign will be played each time it is in a Schedule loop. The same Layout will be shown until the \'Play count\' is achieved.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'playCount',
+                        description: 'In cycle based playback, how many plays should each Layout have before moving on?', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'listPlayOrder',
+                        description: 'In layout list, how should campaigns in the schedule with the same play order be played?', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'targetType',
+                        description: 'For ad campaigns, how do we measure the target? plays|budget|imp',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'target',
+                        description: 'For ad campaigns, what is the target count for playback over the entire campaign',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'startDt',
+                        description: 'For ad campaigns, what is the start date',
+                        type: 'string',
+                        format: 'date-time'
+                    ),
+                    new OA\Property(
+                        property: 'endDt',
+                        description: 'For ad campaigns, what is the start date',
+                        type: 'string',
+                        format: 'date-time'
+                    ),
+                    new OA\Property(
+                        property: 'displayGroupIds[]',
+                        description: 'For ad campaigns, which display groups should the campaign be run on?',
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
+                    ),
+                    new OA\Property(property: 'ref1', description: 'An optional reference field', type: 'string'),
+                    new OA\Property(property: 'ref2', description: 'An optional reference field', type: 'string'),
+                    new OA\Property(property: 'ref3', description: 'An optional reference field', type: 'string'),
+                    new OA\Property(property: 'ref4', description: 'An optional reference field', type: 'string'),
+                    new OA\Property(property: 'ref5', description: 'An optional reference field', type: 'string')
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Campaign')
+    )]
     /**
      * Edit a Campaign
      * @param Request $request
@@ -726,8 +930,20 @@ class Campaign extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Delete(path: '/campaign/{campaignId}', operationId: 'campaignDelete', summary: 'Delete Campaign', description: 'Delete an existing Campaign', tags: ['campaign'])]
-    #[OA\Parameter(name: 'campaignId', in: 'path', description: 'The Campaign ID to Delete', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Delete(
+        path: '/campaign/{campaignId}',
+        operationId: 'campaignDelete',
+        description: 'Delete an existing Campaign',
+        summary: 'Delete Campaign',
+        tags: ['campaign']
+    )]
+    #[OA\Parameter(
+        name: 'campaignId',
+        description: 'The Campaign ID to Delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete Campaign
@@ -761,14 +977,52 @@ class Campaign extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/campaign/layout/assign/{campaignId}', operationId: 'campaignAssignLayout', summary: 'Assign Layout', description: 'Assign a Layout to a Campaign. Please note that as of v3.0.0 this API no longer accepts multiple layoutIds.', tags: ['campaign'])]
-    #[OA\Parameter(name: 'campaignId', in: 'path', description: 'The Campaign ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['layoutId'], properties: [
-        new OA\Property(property: 'layoutId', description: 'Layout ID to Assign: Please note that as of v3.0.0 this API no longer accepts multiple layoutIds.', type: 'integer'),
-        new OA\Property(property: 'daysOfWeek[]', description: 'Ad campaigns: restrict this to certain days of the week (iso week)', type: 'array', items: new OA\Items(type: 'integer')),
-        new OA\Property(property: 'dayPartId', description: 'Ad campaigns: restrict this to a day part', type: 'integer'),
-        new OA\Property(property: 'geoFence', description: 'Ad campaigns: restrict this to a geofence', type: 'string')
-    ])))]
+    #[OA\Post(
+        path: '/campaign/layout/assign/{campaignId}',
+        operationId: 'campaignAssignLayout',
+        description: 'Assign a Layout to a Campaign. Please note that as of v3.0.0 this API no longer accepts multiple layoutIds.', // phpcs:ignore
+        summary: 'Assign Layout',
+        tags: ['campaign']
+    )]
+    #[OA\Parameter(
+        name: 'campaignId',
+        description: 'The Campaign ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['layoutId'],
+                properties: [
+                    new OA\Property(
+                        property: 'layoutId',
+                        description: 'Layout ID to Assign: Please note that as of v3.0.0 this API no longer accepts multiple layoutIds.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'daysOfWeek[]',
+                        description: 'Ad campaigns: restrict this to certain days of the week (iso week)',
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
+                    ),
+                    new OA\Property(
+                        property: 'dayPartId',
+                        description: 'Ad campaigns: restrict this to a day part',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'geoFence',
+                        description: 'Ad campaigns: restrict this to a geofence',
+                        type: 'string'
+                    )
+                ]
+            )
+        )
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Assigns a layout to a Campaign
@@ -870,12 +1124,37 @@ class Campaign extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Delete(path: '/campaign/layout/remove/{campaignId}', operationId: 'campaignRemoveLayout', summary: 'Remove Layout', description: 'Remove a Layout from a Campaign.', tags: ['campaign'])]
-    #[OA\Parameter(name: 'campaignId', in: 'path', description: 'The Campaign ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['layoutId'], properties: [
-        new OA\Property(property: 'layoutId', description: 'Layout ID to remove', type: 'integer'),
-        new OA\Property(property: 'displayOrder', description: 'The display order. Omit to remove all occurences of the layout', type: 'integer')
-    ])))]
+    #[OA\Delete(
+        path: '/campaign/layout/remove/{campaignId}',
+        operationId: 'campaignRemoveLayout',
+        description: 'Remove a Layout from a Campaign.',
+        summary: 'Remove Layout',
+        tags: ['campaign']
+    )]
+    #[OA\Parameter(
+        name: 'campaignId',
+        description: 'The Campaign ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['layoutId'],
+                properties: [
+                    new OA\Property(property: 'layoutId', description: 'Layout ID to remove', type: 'integer'),
+                    new OA\Property(
+                        property: 'displayOrder',
+                        description: 'The display order. Omit to remove all occurences of the layout',
+                        type: 'integer'
+                    )
+                ]
+            )
+        )
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Remove a layout from a Campaign
@@ -1078,12 +1357,40 @@ class Campaign extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/campaign/{id}/selectfolder', operationId: 'campaignSelectFolder', summary: 'Campaign Select folder', description: 'Select Folder for Campaign, can also be used with Layout specific Campaign ID', tags: ['campaign'])]
-    #[OA\Parameter(name: 'campaignId', in: 'path', description: 'The Campaign ID or Layout specific Campaign ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(properties: [
-        new OA\Property(property: 'folderId', description: 'Folder ID to which this object should be assigned to', type: 'integer')
-    ])))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Campaign'))]
+    #[OA\Put(
+        path: '/campaign/{id}/selectfolder',
+        operationId: 'campaignSelectFolder',
+        description: 'Select Folder for Campaign, can also be used with Layout specific Campaign ID', // phpcs:ignore
+        summary: 'Campaign Select folder',
+        tags: ['campaign']
+    )]
+    #[OA\Parameter(
+        name: 'campaignId',
+        description: 'The Campaign ID or Layout specific Campaign ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'folderId',
+                        description: 'Folder ID to which this object should be assigned to',
+                        type: 'integer'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Campaign')
+    )]
     /**
      * Select Folder
      *
