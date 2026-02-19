@@ -6765,12 +6765,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/xibosignage/support.git",
-                "reference": "371a680cdf26de37efbf454a0bf4a85c2c2d3833"
+                "reference": "c07109ad83ad23274f6ea800140ffbf765bd1af8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/xibosignage/support/zipball/371a680cdf26de37efbf454a0bf4a85c2c2d3833",
-                "reference": "371a680cdf26de37efbf454a0bf4a85c2c2d3833",
+                "url": "https://api.github.com/repos/xibosignage/support/zipball/c07109ad83ad23274f6ea800140ffbf765bd1af8",
+                "reference": "c07109ad83ad23274f6ea800140ffbf765bd1af8",
                 "shasum": ""
             },
             "require": {
@@ -6812,7 +6812,7 @@
                 "issues": "https://github.com/xibosignage/support/issues",
                 "source": "https://github.com/xibosignage/support/tree/php8"
             },
-            "time": "2025-05-23T07:38:48+00:00"
+            "time": "2026-02-19T13:42:49+00:00"
         }
     ],
     "packages-dev": [
