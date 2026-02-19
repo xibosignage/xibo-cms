@@ -30,4 +30,4 @@ jobs:
         with:
           files: "**.php"
           phpcs_path: php phpcs.phar
-          standard: xibo_ruleset.xml
+          standard: ./xibo_ruleset.xml

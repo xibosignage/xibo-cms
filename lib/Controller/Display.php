@@ -2634,8 +2634,8 @@ class Display extends Base
     }
 
 
-    #[OA\Put(path: '/display/purgeAll/{displayId}', operationId: 'displayPurgeAll', summary: 'Purge All', description: 'Ask this Player to purge all Media from its local storage and request fresh files from CMS.', tags: ['display'])]
-    #[OA\Parameter(name: 'displayId', in: 'path', description: 'The Display ID', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Put(path: '/display/purgeAll/{displayId}', operationId: 'displayPurgeAll', description: 'Ask this Player to purge all Media from its local storage and request fresh files from CMS.', summary: 'Purge All', tags: ['display'])]
+    #[OA\Parameter(name: 'displayId', description: 'The Display ID', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Purge All
