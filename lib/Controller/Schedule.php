@@ -52,6 +52,12 @@ use Xibo\Support\Exception\NotFoundException;
  * Class Schedule
  * @package Xibo\Controller
  */
+#[OA\Schema(schema: 'ScheduleCalendarData', properties: [
+    new OA\Property(property: 'id', description: 'Event ID', type: 'integer'),
+    new OA\Property(property: 'title', description: 'Event Title', type: 'string'),
+    new OA\Property(property: 'sameDay', description: 'Does this event happen only on 1 day', type: 'integer'),
+    new OA\Property(property: 'event', ref: '#/components/schemas/Schedule')
+])]
 class Schedule extends Base
 {
     /**
@@ -167,12 +173,6 @@ class Schedule extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Schema(schema: 'ScheduleCalendarData', properties: [
-        new OA\Property(property: 'id', description: 'Event ID', type: 'integer'),
-        new OA\Property(property: 'title', description: 'Event Title', type: 'string'),
-        new OA\Property(property: 'sameDay', description: 'Does this event happen only on 1 day', type: 'integer'),
-        new OA\Property(property: 'event', ref: '#/components/schemas/Schedule')
-    ])]
     #[OA\Get(path: '/schedule/data/events', operationId: 'scheduleCalendarData', summary: 'Generates the calendar that we draw events on', description: '⚠️ This endpoint is deprecated and will be removed in v5.0.', deprecated: true, tags: ['schedule'])]
     #[OA\Parameter(name: 'displayGroupIds', in: 'query', description: 'The DisplayGroupIds to return the schedule for. [-1] for All.', required: true, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'integer')))]
     #[OA\Parameter(name: 'from', in: 'query', description: 'From Date in Y-m-d H:i:s format, if not provided defaults to start of the current month', required: false, schema: new OA\Schema(type: 'string'))]

@@ -49,6 +49,10 @@ use Xibo\Widget\SubPlaylistItem;
  * Class Playlist
  * @package Xibo\Controller
  */
+#[OA\Schema(schema: 'PlaylistWidgetList', properties: [
+    new OA\Property(property: 'widgetId', description: 'Widget ID', type: 'integer'),
+    new OA\Property(property: 'position', description: 'The position in the Playlist', type: 'integer')
+])]
 class Playlist extends Base
 {
     /** @var PlaylistFactory */
@@ -1132,10 +1136,6 @@ class Playlist extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Schema(schema: 'PlaylistWidgetList', properties: [
-        new OA\Property(property: 'widgetId', description: 'Widget ID', type: 'integer'),
-        new OA\Property(property: 'position', description: 'The position in the Playlist', type: 'integer')
-    ])]
     #[OA\Post(path: '/playlist/order/{playlistId}', operationId: 'playlistOrder', summary: 'Order Widgets', description: 'Set the order of widgets in the Playlist', tags: ['playlist'])]
     #[OA\Parameter(name: 'playlistId', in: 'path', description: 'The Playlist ID to Order', required: true, schema: new OA\Schema(type: 'integer'))]
     #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['widgets'], properties: [

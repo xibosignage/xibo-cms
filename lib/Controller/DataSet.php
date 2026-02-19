@@ -46,6 +46,11 @@ use Xibo\Support\Exception\NotFoundException;
  * Class DataSet
  * @package Xibo\Controller
  */
+#[OA\Schema(schema: 'importJsonSchema', type: 'object', properties: [
+    new OA\Property(property: 'uniqueKeys', description: 'A name of the unique column', type: 'array', items: new OA\Items(type: 'string')),
+    new OA\Property(property: 'truncate', description: 'Flag True or False, whether to truncate existing data on import', type: 'boolean'),
+    new OA\Property(property: 'rows', description: 'An array of objects with pairs: ColumnName:Value', type: 'array', items: new OA\Items(type: 'object', additionalProperties: new OA\AdditionalProperties(type: 'string')))
+])]
 class DataSet extends Base
 {
     /** @var  DataSetFactory */
@@ -953,11 +958,6 @@ class DataSet extends Base
     }
 
 
-    #[OA\Schema(schema: 'importJsonSchema', type: 'object', properties: [
-        new OA\Property(property: 'uniqueKeys', description: 'A name of the unique column', type: 'array', items: new OA\Items(type: 'string')),
-        new OA\Property(property: 'truncate', description: 'Flag True or False, whether to truncate existing data on import', type: 'boolean'),
-        new OA\Property(property: 'rows', description: 'An array of objects with pairs: ColumnName:Value', type: 'array', items: new OA\Items(type: 'object', additionalProperties: new OA\AdditionalProperties(type: 'string')))
-    ])]
     #[OA\Post(path: '/dataset/importjson/{dataSetId}', operationId: 'dataSetImportJson', summary: 'Import JSON', description: 'Import JSON into a DataSet', tags: ['dataset'])]
     #[OA\Parameter(name: 'dataSetId', in: 'path', description: 'The DataSet ID to import into.', required: true, schema: new OA\Schema(type: 'integer'))]
     #[OA\RequestBody(description: 'The row data, field name vs field data format. e.g. { uniqueKeys: [col1], rows: [{col1: value1}]}', required: true, content: new OA\JsonContent(ref: '#/components/schemas/importJsonSchema'))]

@@ -327,7 +327,7 @@ class Module extends Base
     }
 
     // phpcs:disable
-    #[OA\Get(path: '/module/template/{dataType}/properties/{id}', operationId: 'getModuleProperties', summary: 'Get Module Template Properties', description: 'Get a module template properties which are needed to for the editWidget call', tags: ['module'])]
+    #[OA\Get(path: '/module/template/{dataType}/properties/{id}', operationId: 'getModuleTemplateProperties', summary: 'Get Module Template Properties', description: 'Get a module template properties which are needed to for the editWidget call', tags: ['module'])]
     #[OA\Parameter(name: 'dataType', in: 'path', description: 'The Template DataType', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'id', in: 'path', description: 'The Template Id', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'object', additionalProperties: new OA\AdditionalProperties(type: 'string')))]

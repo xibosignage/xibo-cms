@@ -40,6 +40,31 @@ use Xibo\Support\Exception\NotFoundException;
  * Class Stats
  * @package Xibo\Controller
  */
+#[OA\Schema(schema: 'StatisticsData', properties: [
+    new OA\Property(property: 'type', type: 'string'),
+    new OA\Property(property: 'display', type: 'string'),
+    new OA\Property(property: 'displayId', type: 'integer'),
+    new OA\Property(property: 'layout', type: 'string'),
+    new OA\Property(property: 'layoutId', type: 'integer'),
+    new OA\Property(property: 'media', type: 'string'),
+    new OA\Property(property: 'mediaId', type: 'integer'),
+    new OA\Property(property: 'widgetId', type: 'integer'),
+    new OA\Property(property: 'scheduleId', type: 'integer'),
+    new OA\Property(property: 'numberPlays', type: 'integer'),
+    new OA\Property(property: 'duration', type: 'integer'),
+    new OA\Property(property: 'start', type: 'string'),
+    new OA\Property(property: 'end', type: 'string'),
+    new OA\Property(property: 'statDate', type: 'string'),
+    new OA\Property(property: 'tag', type: 'string')
+])]
+#[OA\Schema(schema: 'TimeDisconnectedData', properties: [
+    new OA\Property(property: 'display', type: 'string'),
+    new OA\Property(property: 'displayId', type: 'integer'),
+    new OA\Property(property: 'duration', type: 'integer'),
+    new OA\Property(property: 'start', type: 'string'),
+    new OA\Property(property: 'end', type: 'string'),
+    new OA\Property(property: 'isFinished', type: 'boolean')
+])]
 class Stats extends Base
 {
     /**
@@ -109,23 +134,6 @@ class Stats extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Schema(schema: 'StatisticsData', properties: [
-        new OA\Property(property: 'type', type: 'string'),
-        new OA\Property(property: 'display', type: 'string'),
-        new OA\Property(property: 'displayId', type: 'integer'),
-        new OA\Property(property: 'layout', type: 'string'),
-        new OA\Property(property: 'layoutId', type: 'integer'),
-        new OA\Property(property: 'media', type: 'string'),
-        new OA\Property(property: 'mediaId', type: 'integer'),
-        new OA\Property(property: 'widgetId', type: 'integer'),
-        new OA\Property(property: 'scheduleId', type: 'integer'),
-        new OA\Property(property: 'numberPlays', type: 'integer'),
-        new OA\Property(property: 'duration', type: 'integer'),
-        new OA\Property(property: 'start', type: 'string'),
-        new OA\Property(property: 'end', type: 'string'),
-        new OA\Property(property: 'statDate', type: 'string'),
-        new OA\Property(property: 'tag', type: 'string')
-    ])]
     #[OA\Get(path: '/stats', operationId: 'statsSearch', tags: ['statistics'])]
     #[OA\Parameter(name: 'type', in: 'query', description: 'The type of stat to return. Layout|Media|Widget', required: false, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'fromDt', in: 'query', description: 'The start date for the filter. Default = 24 hours ago', required: false, schema: new OA\Schema(type: 'string'))]
@@ -642,14 +650,6 @@ class Stats extends Base
         )->withHeader('Content-Type', 'text/csv'));
     }
 
-    #[OA\Schema(schema: 'TimeDisconnectedData', properties: [
-        new OA\Property(property: 'display', type: 'string'),
-        new OA\Property(property: 'displayId', type: 'integer'),
-        new OA\Property(property: 'duration', type: 'integer'),
-        new OA\Property(property: 'start', type: 'string'),
-        new OA\Property(property: 'end', type: 'string'),
-        new OA\Property(property: 'isFinished', type: 'boolean')
-    ])]
     #[OA\Get(path: '/stats/timeDisconnected', operationId: 'timeDisconnectedSearch', tags: ['statistics'])]
     #[OA\Parameter(name: 'fromDt', in: 'query', description: 'The start date for the filter.', required: true, schema: new OA\Schema(type: 'string'))]
     #[OA\Parameter(name: 'toDt', in: 'query', description: 'The end date for the filter.', required: true, schema: new OA\Schema(type: 'string'))]

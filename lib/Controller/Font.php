@@ -170,7 +170,7 @@ class Font extends Base
 
     #[OA\Get(path: '/fonts/details/{id}', operationId: 'fontDetails', summary: 'Font Details', description: 'Get the Font details', tags: ['font'])]
     #[OA\Parameter(name: 'id', in: 'path', description: 'The Font ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'object', additionalProperties: new OA\AdditionalProperties(type: 'array')))]
+    #[OA\Response(response: 200, description: 'successful operation')]
     /**
      * Font details provided by FontLib
      *
