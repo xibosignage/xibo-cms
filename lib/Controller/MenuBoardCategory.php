@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\MediaFactory;
@@ -87,52 +88,15 @@ class MenuBoardCategory extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(path: '/menuboard/{menuId}/categories', operationId: 'menuBoardCategorySearch', summary: 'Search Menu Board Categories', description: 'Search all Menu Boards Categories this user has access to', tags: ['menuBoard'])]
+    #[OA\Parameter(name: 'menuId', in: 'path', description: 'Filter by Menu board Id', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'menuCategoryId', in: 'query', description: 'Filter by Menu Board Category Id', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'name', in: 'query', description: 'Filter by name', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'code', in: 'query', description: 'Filter by code', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/MenuBoard')))]
     /**
      * Returns a Grid of Menu Board Categories
      *
-     * @SWG\Get(
-     *  path="/menuboard/{menuId}/categories",
-     *  operationId="menuBoardCategorySearch",
-     *  tags={"menuBoard"},
-     *  summary="Search Menu Board Categories",
-     *  description="Search all Menu Boards Categories this user has access to",
-     *  @SWG\Parameter(
-     *      name="menuId",
-     *      in="path",
-     *      description="Filter by Menu board Id",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="menuCategoryId",
-     *      in="query",
-     *      description="Filter by Menu Board Category Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="name",
-     *      in="query",
-     *      description="Filter by name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="code",
-     *      in="query",
-     *      description="Filter by code",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/MenuBoard")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @param int $id
@@ -237,61 +201,18 @@ class MenuBoardCategory extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(path: '/menuboard/{menuId}/category', operationId: 'menuBoardCategoryAdd', summary: 'Add Menu Board', description: 'Add a new Menu Board Category', tags: ['menuBoard'])]
+    #[OA\Parameter(name: 'menuId', in: 'path', description: 'The Menu Board ID to which we want to add this Category to', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['name'], properties: [
+        new OA\Property(property: 'name', description: 'Menu Board Category name', type: 'string'),
+        new OA\Property(property: 'mediaId', description: 'Media ID associated with this Menu Board Category', type: 'integer'),
+        new OA\Property(property: 'code', description: 'Menu Board Category code identifier', type: 'string'),
+        new OA\Property(property: 'description', description: 'Menu Board Category description', type: 'string')
+    ])))]
+    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/MenuBoard'))]
     /**
      * Add a new Menu Board Category
      *
-     * @SWG\Post(
-     *  path="/menuboard/{menuId}/category",
-     *  operationId="menuBoardCategoryAdd",
-     *  tags={"menuBoard"},
-     *  summary="Add Menu Board",
-     *  description="Add a new Menu Board Category",
-     *  @SWG\Parameter(
-     *      name="menuId",
-     *      in="path",
-     *      description="The Menu Board ID to which we want to add this Category to",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="Menu Board Category name",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="mediaId",
-     *      in="formData",
-     *      description="Media ID associated with this Menu Board Category",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="code",
-     *      in="formData",
-     *      description="Menu Board Category code identifier",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="Menu Board Category description",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/MenuBoard"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @param int $id
@@ -358,54 +279,16 @@ class MenuBoardCategory extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(path: '/menuboard/{menuCategoryId}/category', operationId: 'menuBoardCategoryEdit', summary: 'Edit Menu Board Category', description: 'Edit existing Menu Board Category', tags: ['menuBoard'])]
+    #[OA\Parameter(name: 'menuCategoryId', in: 'path', description: 'The Menu Board Category ID to Edit', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['name'], properties: [
+        new OA\Property(property: 'name', description: 'Menu Board name', type: 'string'),
+        new OA\Property(property: 'mediaId', description: 'Media ID from CMS Library to associate with this Menu Board Category', type: 'integer'),
+        new OA\Property(property: 'code', description: 'Menu Board Category code identifier', type: 'string'),
+        new OA\Property(property: 'description', description: 'Menu Board Category description', type: 'string')
+    ])))]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
-     * @SWG\Put(
-     *  path="/menuboard/{menuCategoryId}/category",
-     *  operationId="menuBoardCategoryEdit",
-     *  tags={"menuBoard"},
-     *  summary="Edit Menu Board Category",
-     *  description="Edit existing Menu Board Category",
-     *  @SWG\Parameter(
-     *      name="menuCategoryId",
-     *      in="path",
-     *      description="The Menu Board Category ID to Edit",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="Menu Board name",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="mediaId",
-     *      in="formData",
-     *      description="Media ID from CMS Library to associate with this Menu Board Category",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="code",
-     *      in="formData",
-     *      description="Menu Board Category code identifier",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="Menu Board Category description",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
-     *
      * @param Request $request
      * @param Response $response
      * @param int $id
@@ -471,26 +354,10 @@ class MenuBoardCategory extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(path: '/menuboard/{menuCategoryId}/category', operationId: 'menuBoardCategoryDelete', summary: 'Delete Menu Board Category', description: 'Delete existing Menu Board Category', tags: ['menuBoard'])]
+    #[OA\Parameter(name: 'menuId', in: 'path', description: 'The menuId to Delete', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
-     * @SWG\Delete(
-     *  path="/menuboard/{menuCategoryId}/category",
-     *  operationId="menuBoardCategoryDelete",
-     *  tags={"menuBoard"},
-     *  summary="Delete Menu Board Category",
-     *  description="Delete existing Menu Board Category",
-     *  @SWG\Parameter(
-     *      name="menuId",
-     *      in="path",
-     *      description="The menuId to Delete",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
-     *
      * @param Request $request
      * @param Response $response
      * @param $id

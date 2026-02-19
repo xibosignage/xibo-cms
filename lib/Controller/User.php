@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
 use RobThree\Auth\TwoFactorAuth;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -189,21 +190,11 @@ class User extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(path: '/user/me', operationId: 'userMe', summary: 'Get Me', description: 'Get my details', tags: ['user'])]
+    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/User'))]
     /**
      * Me
      *
-     * @SWG\Get(
-     *  path="/user/me",
-     *  operationId="userMe",
-     *  tags={"user"},
-     *  summary="Get Me",
-     *  description="Get my details",
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/User")
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -242,52 +233,15 @@ class User extends Base
         ]));
     }
 
+    #[OA\Get(path: '/user', operationId: 'userSearch', summary: 'User Search', description: 'Search users', tags: ['user'])]
+    #[OA\Parameter(name: 'userId', in: 'query', description: 'Filter by User Id', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'userName', in: 'query', description: 'Filter by User Name', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'userTypeId', in: 'query', description: 'Filter by UserType Id', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'retired', in: 'query', description: 'Filter by Retired', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/User')))]
     /**
      * Prints the user information in a table based on a check box selection
      *
-     * @SWG\Get(
-     *  path="/user",
-     *  operationId="userSearch",
-     *  tags={"user"},
-     *  summary="User Search",
-     *  description="Search users",
-     *  @SWG\Parameter(
-     *      name="userId",
-     *      in="query",
-     *      description="Filter by User Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="userName",
-     *      in="query",
-     *      description="Filter by User Name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="userTypeId",
-     *      in="query",
-     *      description="Filter by UserType Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="retired",
-     *      in="query",
-     *      description="Filter by Retired",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/User")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -315,153 +269,31 @@ class User extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(path: '/user', operationId: 'userAdd', summary: 'Add User', description: 'Add a new User', tags: ['user'])]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['userName', 'userTypeId', 'homePageId', 'password', 'groupId', 'newUserWizard', 'hideNavigation'], properties: [
+        new OA\Property(property: 'userName', description: 'The User Name', type: 'string'),
+        new OA\Property(property: 'email', description: 'The user email address', type: 'string'),
+        new OA\Property(property: 'userTypeId', description: 'The user type ID', type: 'integer'),
+        new OA\Property(property: 'homePageId', description: 'The homepage to use for this User', type: 'string', enum: ['statusdashboard.view', 'icondashboard.view', 'mediamanager.view', 'playlistdashboard.view']),
+        new OA\Property(property: 'libraryQuota', description: 'The users library quota in kilobytes', type: 'integer'),
+        new OA\Property(property: 'password', description: 'The users password', type: 'string'),
+        new OA\Property(property: 'groupId', description: 'The inital user group for this User', type: 'integer'),
+        new OA\Property(property: 'firstName', description: 'The users first name', type: 'string'),
+        new OA\Property(property: 'lastName', description: 'The users last name', type: 'string'),
+        new OA\Property(property: 'phone', description: 'The users phone number', type: 'string'),
+        new OA\Property(property: 'ref1', description: 'Reference 1', type: 'string'),
+        new OA\Property(property: 'ref2', description: 'Reference 2', type: 'string'),
+        new OA\Property(property: 'ref3', description: 'Reference 3', type: 'string'),
+        new OA\Property(property: 'ref4', description: 'Reference 4', type: 'string'),
+        new OA\Property(property: 'ref5', description: 'Reference 5', type: 'string'),
+        new OA\Property(property: 'newUserWizard', description: 'Flag indicating whether to show the new user guide', type: 'integer'),
+        new OA\Property(property: 'hideNavigation', description: 'Flag indicating whether to hide the navigation', type: 'integer'),
+        new OA\Property(property: 'isPasswordChangeRequired', description: 'A flag indicating whether password change should be forced for this user', type: 'integer')
+    ])))]
+    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/User'))]
     /**
      * Adds a user
      *
-     * @SWG\Post(
-     *  path="/user",
-     *  operationId="userAdd",
-     *  tags={"user"},
-     *  summary="Add User",
-     *  description="Add a new User",
-     *  @SWG\Parameter(
-     *      name="userName",
-     *      in="formData",
-     *      description="The User Name",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="email",
-     *      in="formData",
-     *      description="The user email address",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="userTypeId",
-     *      in="formData",
-     *      description="The user type ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="homePageId",
-     *      in="formData",
-     *      description="The homepage to use for this User",
-     *      type="string",
-     *      enum={"statusdashboard.view", "icondashboard.view", "mediamanager.view", "playlistdashboard.view"},
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="libraryQuota",
-     *      in="formData",
-     *      description="The users library quota in kilobytes",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="password",
-     *      in="formData",
-     *      description="The users password",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="groupId",
-     *      in="formData",
-     *      description="The inital user group for this User",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="firstName",
-     *      in="formData",
-     *      description="The users first name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="lastName",
-     *      in="formData",
-     *      description="The users last name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="phone",
-     *      in="formData",
-     *      description="The users phone number",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ref1",
-     *      in="formData",
-     *      description="Reference 1",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ref2",
-     *      in="formData",
-     *      description="Reference 2",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ref3",
-     *      in="formData",
-     *      description="Reference 3",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ref4",
-     *      in="formData",
-     *      description="Reference 4",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ref5",
-     *      in="formData",
-     *      description="Reference 5",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="newUserWizard",
-     *      in="formData",
-     *      description="Flag indicating whether to show the new user guide",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="hideNavigation",
-     *      in="formData",
-     *      description="Flag indicating whether to hide the navigation",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isPasswordChangeRequired",
-     *      in="formData",
-     *      description="A flag indicating whether password change should be forced for this user",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/User"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -554,167 +386,33 @@ class User extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(path: '/user/{userId}', operationId: 'userEdit', summary: 'Edit User', description: 'Edit existing User', tags: ['user'])]
+    #[OA\Parameter(name: 'userId', in: 'path', description: 'The user ID to edit', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['userName', 'userTypeId', 'homePageId', 'newUserWizard', 'hideNavigation'], properties: [
+        new OA\Property(property: 'userName', description: 'The User Name', type: 'string'),
+        new OA\Property(property: 'email', description: 'The user email address', type: 'string'),
+        new OA\Property(property: 'userTypeId', description: 'The user type ID', type: 'integer'),
+        new OA\Property(property: 'homePageId', description: 'The homepage to use for this User', type: 'string', enum: ['statusdashboard.view', 'icondashboard.view', 'mediamanager.view', 'playlistdashboard.view']),
+        new OA\Property(property: 'libraryQuota', description: 'The users library quota in kilobytes', type: 'integer'),
+        new OA\Property(property: 'newPassword', description: 'New User password', type: 'string'),
+        new OA\Property(property: 'retypeNewPassword', description: 'Repeat the new User password', type: 'string'),
+        new OA\Property(property: 'retired', description: 'Flag indicating whether to retire this user', type: 'integer'),
+        new OA\Property(property: 'firstName', description: 'The users first name', type: 'string'),
+        new OA\Property(property: 'lastName', description: 'The users last name', type: 'string'),
+        new OA\Property(property: 'phone', description: 'The users phone number', type: 'string'),
+        new OA\Property(property: 'ref1', description: 'Reference 1', type: 'string'),
+        new OA\Property(property: 'ref2', description: 'Reference 2', type: 'string'),
+        new OA\Property(property: 'ref3', description: 'Reference 3', type: 'string'),
+        new OA\Property(property: 'ref4', description: 'Reference 4', type: 'string'),
+        new OA\Property(property: 'ref5', description: 'Reference 5', type: 'string'),
+        new OA\Property(property: 'newUserWizard', description: 'Flag indicating whether to show the new user guide', type: 'integer'),
+        new OA\Property(property: 'hideNavigation', description: 'Flag indicating whether to hide the navigation', type: 'integer'),
+        new OA\Property(property: 'isPasswordChangeRequired', description: 'A flag indicating whether password change should be forced for this user', type: 'integer')
+    ])))]
+    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/User'))]
     /**
      * Edit a user
      *
-     * @SWG\Put(
-     *  path="/user/{userId}",
-     *  operationId="userEdit",
-     *  tags={"user"},
-     *  summary="Edit User",
-     *  description="Edit existing User",
-     *  @SWG\Parameter(
-     *      name="userId",
-     *      in="path",
-     *      description="The user ID to edit",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="userName",
-     *      in="formData",
-     *      description="The User Name",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="email",
-     *      in="formData",
-     *      description="The user email address",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="userTypeId",
-     *      in="formData",
-     *      description="The user type ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="homePageId",
-     *      in="formData",
-     *      description="The homepage to use for this User",
-     *      type="string",
-     *      enum={"statusdashboard.view", "icondashboard.view", "mediamanager.view", "playlistdashboard.view"},
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="libraryQuota",
-     *      in="formData",
-     *      description="The users library quota in kilobytes",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="newPassword",
-     *      in="formData",
-     *      description="New User password",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="retypeNewPassword",
-     *      in="formData",
-     *      description="Repeat the new User password",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="retired",
-     *      in="formData",
-     *      description="Flag indicating whether to retire this user",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="firstName",
-     *      in="formData",
-     *      description="The users first name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="lastName",
-     *      in="formData",
-     *      description="The users last name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="phone",
-     *      in="formData",
-     *      description="The users phone number",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ref1",
-     *      in="formData",
-     *      description="Reference 1",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ref2",
-     *      in="formData",
-     *      description="Reference 2",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ref3",
-     *      in="formData",
-     *      description="Reference 3",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ref4",
-     *      in="formData",
-     *      description="Reference 4",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ref5",
-     *      in="formData",
-     *      description="Reference 5",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="newUserWizard",
-     *      in="formData",
-     *      description="Flag indicating whether to show the new user guide",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="hideNavigation",
-     *      in="formData",
-     *      description="Flag indicating whether to hide the navigation",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isPasswordChangeRequired",
-     *      in="formData",
-     *      description="A flag indicating whether password change should be forced for this user",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/User"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -847,45 +545,14 @@ class User extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(path: '/user/{userId}', operationId: 'userDelete', summary: 'User Delete', description: 'Delete user', tags: ['user'])]
+    #[OA\Parameter(name: 'userId', in: 'path', description: 'Id of the user to delete', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'deleteAllItems', in: 'query', description: 'Flag indicating whether to delete all items owned by that user', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'reassignUserId', in: 'query', description: 'Reassign all items owned by this user to the specified user ID', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Response(response: 204, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/User')))]
     /**
      * Deletes a User
      *
-     * @SWG\Delete(
-     *  path="/user/{userId}",
-     *  operationId="userDelete",
-     *  tags={"user"},
-     *  summary="User Delete",
-     *  description="Delete user",
-     *  @SWG\Parameter(
-     *      name="userId",
-     *      in="path",
-     *      description="Id of the user to delete",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="deleteAllItems",
-     *      in="formData",
-     *      description="Flag indicating whether to delete all items owned by that user",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="reassignUserId",
-     *      in="formData",
-     *      description="Reassign all items owned by this user to the specified user ID",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/User")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -1491,37 +1158,11 @@ class User extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(path: '/user/permissions/{entity}/{objectId}', operationId: 'userPermissionsSearch', summary: 'Permission Data', description: 'Permission data for the Entity and Object Provided.', tags: ['user'])]
+    #[OA\Parameter(name: 'entity', in: 'path', description: 'The Entity', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'objectId', in: 'path', description: 'The ID of the Object to return permissions for', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Permission')))]
     /**
-     * @SWG\Get(
-     *  path="/user/permissions/{entity}/{objectId}",
-     *  operationId="userPermissionsSearch",
-     *  tags={"user"},
-     *  summary="Permission Data",
-     *  description="Permission data for the Entity and Object Provided.",
-     *  @SWG\Parameter(
-     *      name="entity",
-     *      in="path",
-     *      description="The Entity",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="objectId",
-     *      in="path",
-     *      description="The ID of the Object to return permissions for",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/Permission")
-     *      )
-     *  )
-     * )
-     *
      * @param Request $request
      * @param Response $response
      * @param string $entity
@@ -1555,37 +1196,11 @@ class User extends Base
     }
 
 
+    #[OA\Get(path: '/user/permissions/{entity}', operationId: 'userPermissionsMultiSearch', summary: 'Permission Data', description: 'Permission data for the multiple Entities and Objects Provided.', tags: ['user'])]
+    #[OA\Parameter(name: 'entity', in: 'path', description: 'The Entity', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'ids', in: 'query', description: 'The IDs of the Objects to return permissions for', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Permission')))]
     /**
-     * @SWG\Get(
-     *  path="/user/permissions/{entity}",
-     *  operationId="userPermissionsMultiSearch",
-     *  tags={"user"},
-     *  summary="Permission Data",
-     *  description="Permission data for the multiple Entities and Objects Provided.",
-     *  @SWG\Parameter(
-     *      name="entity",
-     *      in="path",
-     *      description="The Entity",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ids",
-     *      in="query",
-     *      description="The IDs of the Objects to return permissions for",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/Permission")
-     *      )
-     *  )
-     * )
-     *
      * @param Request $request
      * @param Response $response
      * @param string $entities
@@ -1747,48 +1362,13 @@ class User extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(path: '/user/permissions/{entity}/{objectId}', operationId: 'userPermissionsSet', summary: 'Permission Set', description: 'Set Permissions to users/groups for the provided entity.', tags: ['user'])]
+    #[OA\Parameter(name: 'entity', in: 'path', description: 'The Entity', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'objectId', in: 'path', description: 'The ID of the Object to set permissions on', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'groupIds', in: 'query', description: 'Array of permissions with groupId as the key', required: true, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'string')))]
+    #[OA\Parameter(name: 'ownerId', in: 'query', description: 'Change the owner of this item. Leave empty to keep the current owner', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
-     * @SWG\Post(
-     *  path="/user/permissions/{entity}/{objectId}",
-     *  operationId="userPermissionsSet",
-     *  tags={"user"},
-     *  summary="Permission Set",
-     *  description="Set Permissions to users/groups for the provided entity.",
-     *  @SWG\Parameter(
-     *      name="entity",
-     *      in="path",
-     *      description="The Entity",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="objectId",
-     *      in="path",
-     *      description="The ID of the Object to set permissions on",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="groupIds",
-     *      in="formData",
-     *      description="Array of permissions with groupId as the key",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(type="string")
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ownerId",
-     *      in="formData",
-     *      description="Change the owner of this item. Leave empty to keep the current owner",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
-     *
      * @param Request $request
      * @param Response $response
      * @param string $entity
@@ -1903,48 +1483,13 @@ class User extends Base
     }
 
 
+    #[OA\Post(path: '/user/permissions/{entity}/multiple', operationId: 'userPermissionsMultiSet', summary: 'Multiple Permission Set', description: 'Set Permissions to users/groups for multiple provided entities.', tags: ['user'])]
+    #[OA\Parameter(name: 'entity', in: 'path', description: 'The Entity type', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'ids', in: 'query', description: 'Array of object IDs', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'groupIds', in: 'query', description: 'Array of permissions with groupId as the key', required: true, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'string')))]
+    #[OA\Parameter(name: 'ownerId', in: 'query', description: 'Change the owner of this item. Leave empty to keep the current owner', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
-     * @SWG\Post(
-     *  path="/user/permissions/{entity}/multiple",
-     *  operationId="userPermissionsMultiSet",
-     *  tags={"user"},
-     *  summary="Multiple Permission Set",
-     *  description="Set Permissions to users/groups for multiple provided entities.",
-     *  @SWG\Parameter(
-     *      name="entity",
-     *      in="path",
-     *      description="The Entity type",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ids",
-     *      in="formData",
-     *      description="Array of object IDs",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="groupIds",
-     *      in="formData",
-     *      description="Array of permissions with groupId as the key",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(type="string")
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ownerId",
-     *      in="formData",
-     *      description="Change the owner of this item. Leave empty to keep the current owner",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
-     *
      * @param Request $request
      * @param Response $response
      * @param string $entity
@@ -2059,29 +1604,10 @@ class User extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(path: '/user/pref', operationId: 'userPrefGet', summary: 'Retrieve User Preferences', description: 'User preferences for non-state information, such as Layout designer zoom levels', tags: ['user'])]
+    #[OA\Parameter(name: 'preference', in: 'query', description: 'An optional preference', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Response(response: 200, description: 'successful response', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/UserOption')))]
     /**
-     * @SWG\Get(
-     *     path="/user/pref",
-     *     operationId="userPrefGet",
-     *     tags={"user"},
-     *     summary="Retrieve User Preferences",
-     *     description="User preferences for non-state information, such as Layout designer zoom levels",
-     *     @SWG\Parameter(
-     *      name="preference",
-     *      in="query",
-     *      description="An optional preference",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful response",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/UserOption")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -2107,27 +1633,12 @@ class User extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(path: '/user/pref', operationId: 'userPrefEdit', summary: 'Save User Preferences', description: 'Save User preferences for non-state information, such as Layout designer zoom levels', tags: ['user'])]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/json', schema: new OA\Schema(required: ['preference'], properties: [
+        new OA\Property(property: 'preference', type: 'array', items: new OA\Items(ref: '#/components/schemas/UserOption'))
+    ])))]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
-     * @SWG\Post(
-     *     path="/user/pref",
-     *     operationId="userPrefEdit",
-     *     tags={"user"},
-     *     summary="Save User Preferences",
-     *     description="Save User preferences for non-state information, such as Layout designer zoom levels",
-     *     @SWG\Parameter(
-     *      name="preference",
-     *      in="body",
-     *      required=true,
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/UserOption")
-     *      )
-     *   ),
-     *   @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return Response
@@ -2316,42 +1827,15 @@ class User extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(path: '/user/pref', operationId: 'userPrefEditFromForm', summary: 'Save User Preferences', description: 'Save User preferences from the Preferences form.', tags: ['user'])]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['navigationMenuPosition'], properties: [
+        new OA\Property(property: 'navigationMenuPosition', type: 'string'),
+        new OA\Property(property: 'useLibraryDuration', type: 'integer'),
+        new OA\Property(property: 'showThumbnailColumn', type: 'integer'),
+        new OA\Property(property: 'rememberFolderTreeStateGlobally', type: 'integer')
+    ])))]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
-     * @SWG\Put(
-     *     path="/user/pref",
-     *     operationId="userPrefEditFromForm",
-     *     tags={"user"},
-     *     summary="Save User Preferences",
-     *     description="Save User preferences from the Preferences form.",
-     *     @SWG\Parameter(
-     *      name="navigationMenuPosition",
-     *      in="formData",
-     *      required=true,
-     *      type="string"
-     *   ),
-     *     @SWG\Parameter(
-     *      name="useLibraryDuration",
-     *      in="formData",
-     *      required=false,
-     *      type="integer"
-     *   ),
-     *     @SWG\Parameter(
-     *      name="showThumbnailColumn",
-     *      in="formData",
-     *      required=false,
-     *      type="integer"
-     *   ),
-     *     @SWG\Parameter(
-     *      name="rememberFolderTreeStateGlobally",
-     *      in="formData",
-     *      required=false,
-     *      type="integer"
-     *   ),
-     *   @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -25,6 +25,7 @@ namespace Xibo\Entity;
 
 use Carbon\Carbon;
 use Carbon\Factory;
+use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\DataSetColumnFactory;
@@ -45,228 +46,226 @@ use Xibo\Widget\Definition\Sql;
 /**
  * Class DataSet
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class DataSet implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="The dataSetId")
      * @var int
      */
+    #[OA\Property(description: "The dataSetId")]
     public $dataSetId;
 
     /**
-     * @SWG\Property(description="The dataSet Name")
      * @var string
      */
+    #[OA\Property(description: "The dataSet Name")]
     public $dataSet;
 
     /**
-     * @SWG\Property(description="The dataSet description")
      * @var string
      */
+    #[OA\Property(description: "The dataSet description")]
     public $description;
 
     /**
-     * @SWG\Property(description="The userId of the User that owns this DataSet")
      * @var int
      */
+    #[OA\Property(description: "The userId of the User that owns this DataSet")]
     public $userId;
 
     /**
-     * @SWG\Property(description="Timestamp indicating the date/time this DataSet was edited last")
      * @var int
      */
+    #[OA\Property(description: "Timestamp indicating the date/time this DataSet was edited last")]
     public $lastDataEdit;
 
     /**
-     * @SWG\Property(description="The user name of the User that owns this DataSet")
      * @var string
      */
+    #[OA\Property(description: "The user name of the User that owns this DataSet")]
     public $owner;
 
     /**
-     * @SWG\Property(description="A comma separated list of Groups/Users that have permission to this DataSet")
      * @var string
      */
+    #[OA\Property(description: "A comma separated list of Groups/Users that have permission to this DataSet")]
     public $groupsWithPermissions;
 
     /**
-     * @SWG\Property(description="A code for this Data Set")
      * @var string
      */
+    #[OA\Property(description: "A code for this Data Set")]
     public $code;
 
     /**
-     * @SWG\Property(description="Flag to indicate whether this DataSet is a lookup table")
      * @var int
      */
+    #[OA\Property(description: "Flag to indicate whether this DataSet is a lookup table")]
     public $isLookup = 0;
 
     /**
-     * @SWG\Property(description="Flag to indicate whether this DataSet is Remote")
      * @var int
      */
+    #[OA\Property(description: "Flag to indicate whether this DataSet is Remote")]
     public $isRemote = 0;
 
     /**
-     * @SWG\Property(description="Flag to indicate whether this DataSet is Real time")
      * @var int
      */
+    #[OA\Property(description: "Flag to indicate whether this DataSet is Real time")]
     public $isRealTime = 0;
 
     /**
-     * @SWG\Property(description="Indicates the source of the data connector. Requires the Real time flag. Can be null,
-     * user-defined, or a connector.")
      * @var string
      */
+    #[OA\Property(description: "Indicates the source of the data connector. Requires the Real time flag. Can be null, user-defined, or a connector.")]
     public $dataConnectorSource;
 
     /**
-     * @SWG\Property(description="Method to fetch the Data, can be GET or POST")
      * @var string
      */
+    #[OA\Property(description: "Method to fetch the Data, can be GET or POST")]
     public $method;
 
     /**
-     * @SWG\Property(description="URI to call to fetch Data from. Replacements are {{DATE}}, {{TIME}} and, in case this is a sequencial used DataSet, {{COL.NAME}} where NAME is a ColumnName from the underlying DataSet.")
      * @var string
      */
+    #[OA\Property(description: "URI to call to fetch Data from. Replacements are {{DATE}}, {{TIME}} and, in case this is a sequencial used DataSet, {{COL.NAME}} where NAME is a ColumnName from the underlying DataSet.")]
     public $uri;
 
     /**
-     * @SWG\Property(description="Data to send as POST-Data to the remote host with the same Replacements as in the URI.")
      * @var string
      */
+    #[OA\Property(description: "Data to send as POST-Data to the remote host with the same Replacements as in the URI.")]
     public $postData;
 
     /**
-     * @SWG\Property(description="Authentication method, can be none, digest, basic")
      * @var string
      */
+    #[OA\Property(description: "Authentication method, can be none, digest, basic")]
     public $authentication;
 
     /**
-     * @SWG\Property(description="Username to authenticate with")
      * @var string
      */
+    #[OA\Property(description: "Username to authenticate with")]
     public $username;
 
     /**
-     * @SWG\Property(description="Corresponding password")
      * @var string
      */
+    #[OA\Property(description: "Corresponding password")]
     public $password;
 
     /**
-     * @SWG\Property(description="Comma separated string of custom HTTP headers")
      * @var string
      */
+    #[OA\Property(description: "Comma separated string of custom HTTP headers")]
     public $customHeaders;
 
     /**
-     * @SWG\Property(description="Custom User agent")
      * @var string
      */
+    #[OA\Property(description: "Custom User agent")]
     public $userAgent;
 
     /**
-     * @SWG\Property(description="Time in seconds this DataSet should fetch new Datas from the remote host")
      * @var int
      */
+    #[OA\Property(description: "Time in seconds this DataSet should fetch new Datas from the remote host")]
     public $refreshRate;
 
     /**
-     * @SWG\Property(description="Time in seconds when this Dataset should be cleared. If here is a lower value than in RefreshRate it will be cleared when the data is refreshed")
      * @var int
      */
+    #[OA\Property(description: "Time in seconds when this Dataset should be cleared. If here is a lower value than in RefreshRate it will be cleared when the data is refreshed")]
     public $clearRate;
 
     /**
-     * @SWG\Property(description="Flag whether to truncate DataSet data if no new data is pulled from remote source")
      * @var int
      */
+    #[OA\Property(description: "Flag whether to truncate DataSet data if no new data is pulled from remote source")]
     public $truncateOnEmpty;
 
     /**
-     * @SWG\Property(description="DataSetID of the DataSet which should be fetched and present before the Data from this DataSet are fetched")
      * @var int
      */
+    #[OA\Property(description: "DataSetID of the DataSet which should be fetched and present before the Data from this DataSet are fetched")]
     public $runsAfter;
 
     /**
-     * @SWG\Property(description="Last Synchronisation Timestamp")
      * @var int
      */
+    #[OA\Property(description: "Last Synchronisation Timestamp")]
     public $lastSync = 0;
 
     /**
-     * @SWG\Property(description="Last Clear Timestamp")
      * @var int
      */
+    #[OA\Property(description: "Last Clear Timestamp")]
     public $lastClear = 0;
 
     /**
-     * @SWG\Property(description="Root-Element form JSON where the data are stored in")
      * @var String
      */
+    #[OA\Property(description: "Root-Element form JSON where the data are stored in")]
     public $dataRoot;
 
     /**
-     * @SWG\Property(description="Optional function to use for summarize or count unique fields in a remote request")
      * @var String
      */
+    #[OA\Property(description: "Optional function to use for summarize or count unique fields in a remote request")]
     public $summarize;
 
     /**
-     * @SWG\Property(description="JSON-Element below the Root-Element on which the consolidation should be applied on")
      * @var String
      */
+    #[OA\Property(description: "JSON-Element below the Root-Element on which the consolidation should be applied on")]
     public $summarizeField;
 
     /**
-     * @SWG\Property(description="The source id for remote dataSet, 1 - JSON, 2 - CSV")
      * @var integer
      */
+    #[OA\Property(description: "The source id for remote dataSet, 1 - JSON, 2 - CSV")]
     public $sourceId;
 
     /**
-     * @SWG\Property(description="A flag whether to ignore the first row, for CSV source remote dataSet")
      * @var integer
      */
+    #[OA\Property(description: "A flag whether to ignore the first row, for CSV source remote dataSet")]
     public $ignoreFirstRow;
 
     /**
-     * @SWG\Property(description="Soft limit on number of rows per DataSet, if left empty the global DataSet row limit will be used.")
      * @var integer
      */
+    #[OA\Property(description: "Soft limit on number of rows per DataSet, if left empty the global DataSet row limit will be used.")]
     public $rowLimit = null;
 
     /**
-     * @SWG\Property(description="Type of action that should be taken on next remote DataSet sync - stop, fifo or truncate")
      * @var string
      */
+    #[OA\Property(description: "Type of action that should be taken on next remote DataSet sync - stop, fifo or truncate")]
     public $limitPolicy;
 
     /**
-     * @SWG\Property(description="Custom separator for CSV source, comma will be used by default")
      * @var string
      */
+    #[OA\Property(description: "Custom separator for CSV source, comma will be used by default")]
     public $csvSeparator;
 
     /**
-     * @SWG\Property(description="The id of the Folder this DataSet belongs to")
      * @var int
      */
+    #[OA\Property(description: "The id of the Folder this DataSet belongs to")]
     public $folderId;
 
     /**
-     * @SWG\Property(description="The id of the Folder responsible for providing permissions for this DataSet")
      * @var int
      */
+    #[OA\Property(description: "The id of the Folder responsible for providing permissions for this DataSet")]
     public $permissionsFolderId;
 
     /** @var array Permissions */

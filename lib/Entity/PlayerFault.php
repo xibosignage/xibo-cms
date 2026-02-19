@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -22,80 +22,83 @@
 
 namespace Xibo\Entity;
 
+use OpenApi\Attributes as OA;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
- * @SWG\Definition()
+ * Class PlayerFault
+ * @package Xibo\Entity
  */
+#[OA\Schema]
 class PlayerFault implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="The Fault Id")
      * @var int
      */
+    #[OA\Property(description: 'The Fault Id')]
     public $playerFaultId;
 
     /**
-     * @SWG\Property(description="The Display Id")
      * @var int
      */
+    #[OA\Property(description: 'The Display Id')]
     public $displayId;
 
     /**
-     * @SWG\Property(description="The Date the error occured")
      * @var string
      */
+    #[OA\Property(description: 'The Date the error occured')]
     public $incidentDt;
 
     /**
-     * @SWG\Property(description="The Date the error expires")
      * @var string
      */
+    #[OA\Property(description: 'The Date the error expires')]
     public $expires;
 
     /**
-     * @SWG\Property(description="The Code associated with the fault")
      * @var int
      */
+    #[OA\Property(description: 'The Code associated with the fault')]
     public $code;
 
     /**
-     * @SWG\Property(description="The Reason for the fault")
      * @var string
      */
+    #[OA\Property(description: 'The Reason for the fault')]
     public $reason;
 
     /**
-     * @SWG\Property(description="The Layout Id")
      * @var int
      */
+    #[OA\Property(description: 'The Layout Id')]
     public $layoutId;
 
     /**
-     * @SWG\Property(description="The Region Id")
      * @var int
      */
+    #[OA\Property(description: 'The Region Id')]
     public $regionId;
 
     /**
-     * @SWG\Property(description="The Schedule Id")
      * @var int
      */
+    #[OA\Property(description: 'The Schedule Id')]
     public $scheduleId;
 
     /**
-     * @SWG\Property(description="The Widget Id")
      * @var int
      */
+    #[OA\Property(description: 'The Widget Id')]
     public $widgetId;
 
     /**
-     * @SWG\Property(description="The Media Id")
      * @var int
      */
+    #[OA\Property(description: 'The Media Id')]
     public $mediaId;
 
     /**

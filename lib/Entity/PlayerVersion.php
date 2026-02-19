@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,6 +23,7 @@ namespace Xibo\Entity;
 
 
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
 use Slim\Http\ServerRequest;
 use Symfony\Component\Filesystem\Filesystem;
 use Xibo\Factory\MediaFactory;
@@ -40,77 +41,76 @@ use Xibo\Support\Exception\NotFoundException;
 /**
  * Class PlayerVersion
  * @package Xibo\Entity
- *
- * @SWG\Definition()
 */
+#[OA\Schema]
 class PlayerVersion implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="Version ID")
      * @var int
      */
+    #[OA\Property(description: 'Version ID')]
     public $versionId;
 
     /**
-     * @SWG\Property(description="Player type")
      * @var string
      */
+    #[OA\Property(description: 'Player type')]
     public $type;
 
     /**
-     * @SWG\Property(description="Version number")
      * @var string
      */
+    #[OA\Property(description: 'Version number')]
     public $version;
 
     /**
-     * @SWG\Property(description="Code number")
      * @var int
      */
+    #[OA\Property(description: 'Code number')]
     public $code;
 
     /**
-     * @SWG\Property(description="Player version to show")
      * @var string
      */
+    #[OA\Property(description: 'Player version to show')]
     public $playerShowVersion;
 
     /**
-     * @SWG\Property(description="The Player Version created date")
      * @var string
      */
+    #[OA\Property(description: 'The Player Version created date')]
     public $createdAt;
 
     /**
-     * @SWG\Property(description="The Player Version modified date")
      * @var string
      */
+    #[OA\Property(description: 'The Player Version modified date')]
     public $modifiedAt;
 
     /**
-     * @SWG\Property(description="The name of the user that modified this Player Version last")
      * @var string
      */
+    #[OA\Property(description: 'The name of the user that modified this Player Version last')]
     public $modifiedBy;
 
     /**
-     * @SWG\Property(description="The Player Version file name")
      * @var string
      */
+    #[OA\Property(description: 'The Player Version file name')]
     public $fileName;
 
     /**
-     * @SWG\Property(description="The Player Version file size in bytes")
      * @var int
      */
+    #[OA\Property(description: 'The Player Version file size in bytes')]
     public $size;
 
     /**
-     * @SWG\Property(description="A MD5 checksum of the stored Player Version file")
      * @var string
      */
+    #[OA\Property(description: 'A MD5 checksum of the stored Player Version file')]
     public $md5;
 
     /**

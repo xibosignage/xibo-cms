@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,6 +23,7 @@
 namespace Xibo\Entity;
 
 use Illuminate\Support\Str;
+use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetColumnTypeFactory;
@@ -36,107 +37,106 @@ use Xibo\Widget\Definition\Sql;
 /**
  * Class DataSetColumn
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class DataSetColumn implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="The ID of this DataSetColumn")
      * @var int
      */
+    #[OA\Property(description: "The ID of this DataSetColumn")]
     public $dataSetColumnId;
 
     /**
-     * @SWG\Property(description="The ID of the DataSet that this Column belongs to")
      * @var int
      */
+    #[OA\Property(description: "The ID of the DataSet that this Column belongs to")]
     public $dataSetId;
 
     /**
-     * @SWG\Property(description="The Column Heading")
      * @var string
      */
+    #[OA\Property(description: "The Column Heading")]
     public $heading;
 
     /**
-     * @SWG\Property(description="The ID of the DataType for this Column")
      * @var int
      */
+    #[OA\Property(description: "The ID of the DataType for this Column")]
     public $dataTypeId;
 
     /**
-     * @SWG\Property(description="The ID of the ColumnType for this Column")
      * @var int
      */
+    #[OA\Property(description: "The ID of the ColumnType for this Column")]
     public $dataSetColumnTypeId;
 
     /**
-     * @SWG\Property(description="Comma separated list of valid content for drop down columns")
      * @var string
      */
+    #[OA\Property(description: "Comma separated list of valid content for drop down columns")]
     public $listContent;
 
     /**
-     * @SWG\Property(description="The order this column should be displayed")
      * @var int
      */
+    #[OA\Property(description: "The order this column should be displayed")]
     public $columnOrder;
 
     /**
-     * @SWG\Property(description="A MySQL formula for this column")
      * @var string
      */
+    #[OA\Property(description: "A MySQL formula for this column")]
     public $formula;
 
     /**
-     * @SWG\Property(description="The data type for this Column")
      * @var string
      */
+    #[OA\Property(description: "The data type for this Column")]
     public $dataType;
 
     /**
-     * @SWG\Property(description="The data field of the remote DataSet as a JSON-String")
      * @var string
      */
+    #[OA\Property(description: "The data field of the remote DataSet as a JSON-String")]
     public $remoteField;
 
     /**
-     * @SWG\Property(description="Does this column show a filter on the data entry page?")
      * @var string
      */
+    #[OA\Property(description: "Does this column show a filter on the data entry page?")]
     public $showFilter = 0;
 
     /**
-     * @SWG\Property(description="Does this column allow a sorting on the data entry page?")
      * @var string
      */
+    #[OA\Property(description: "Does this column allow a sorting on the data entry page?")]
     public $showSort = 0;
 
     /**
-     * @SWG\Property(description="The column type for this Column")
      * @var string
      */
+    #[OA\Property(description: "The column type for this Column")]
     public $dataSetColumnType;
 
     /**
-     * @SWG\Property(description="Help text that should be displayed when entering data for this Column.")
      * @var string
      */
+    #[OA\Property(description: "Help text that should be displayed when entering data for this Column.")]
     public $tooltip;
 
     /**
-     * @SWG\Property(description="Flag indicating whether value must be provided for this Column.")
      * @var int
      */
+    #[OA\Property(description: "Flag indicating whether value must be provided for this Column.")]
     public $isRequired = 0;
 
     /**
-     * @SWG\Property(description="Date format of dates in the source for remote DataSet.")
      * @var string
      */
+    #[OA\Property(description: "Date format of dates in the source for remote DataSet.")]
     public $dateFormat;
 
     /** @var  DataSetColumnFactory */

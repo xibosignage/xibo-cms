@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 namespace Xibo\Entity;
 
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Xibo\Event\LayoutBuildEvent;
 use Xibo\Event\LayoutBuildRegionEvent;
@@ -55,235 +56,186 @@ use Xibo\Support\Exception\NotFoundException;
 /**
  * Class Layout
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class Layout implements \JsonSerializable
 {
     use EntityTrait;
     use TagLinkTrait;
 
     /**
-     * @SWG\Property(
-     *  description="The layoutId"
-     * )
      * @var int
      */
+    #[OA\Property(description: "The layoutId")]
     public $layoutId;
 
     /**
      * @var int
-     * @SWG\Property(
-     *  description="The userId of the Layout Owner"
-     * )
      */
+    #[OA\Property(description: "The userId of the Layout Owner")]
     public $ownerId;
 
     /**
      * @var int
-     * @SWG\Property(
-     *  description="The id of the Layout's dedicated Campaign"
-     * )
      */
+    #[OA\Property(description: "The id of the Layout's dedicated Campaign")]
     public $campaignId;
 
     /**
      * @var int
-     * @SWG\Property(
-     *  description="The parentId, if this Layout has a draft"
-     * )
      */
+    #[OA\Property(description: "The parentId, if this Layout has a draft")]
     public $parentId;
 
     /**
      * @var int
-     * @SWG\Property(
-     *  description="The Status Id"
-     * )
      */
+    #[OA\Property(description: "The Status Id")]
     public $publishedStatusId = 1;
 
     /**
      * @var string
-     * @SWG\Property(
-     *  description="The Published Status (Published, Draft or Pending Approval"
-     * )
      */
+    #[OA\Property(description: "The Published Status (Published, Draft or Pending Approval")]
     public $publishedStatus;
 
     /**
      * @var string
-     * @SWG\Property(
-     *  description="The Published Date"
-     * )
      */
+    #[OA\Property(description: "The Published Date")]
     public $publishedDate;
 
     /**
      * @var int
-     * @SWG\Property(
-     *  description="The id of the image media set as the background"
-     * )
      */
+    #[OA\Property(description: "The id of the image media set as the background")]
     public $backgroundImageId;
 
     /**
      * @var int
-     * @SWG\Property(
-     *  description="The XLF schema version"
-     * )
      */
+    #[OA\Property(description: "The XLF schema version")]
     public $schemaVersion;
 
     /**
      * @var string
-     * @SWG\Property(
-     *  description="The name of the Layout"
-     * )
      */
+    #[OA\Property(description: "The name of the Layout")]
     public $layout;
 
     /**
      * @var string
-     * @SWG\Property(
-     *  description="The description of the Layout"
-     * )
      */
+    #[OA\Property(description: "The description of the Layout")]
     public $description;
 
     /**
      * @var string
-     * @SWG\Property(
-     *  description="A HEX string representing the Layout background color"
-     * )
      */
+    #[OA\Property(description: "A HEX string representing the Layout background color")]
     public $backgroundColor;
 
     /**
      * @var string
-     * @SWG\Property(
-     *  description="The datetime the Layout was created"
-     * )
      */
+    #[OA\Property(description: "The datetime the Layout was created")]
     public $createdDt;
 
     /**
      * @var string
-     * @SWG\Property(
-     *  description="The datetime the Layout was last modified"
-     * )
      */
+    #[OA\Property(description: "The datetime the Layout was last modified")]
     public $modifiedDt;
 
     /**
      * @var int
-     * @SWG\Property(
-     *  description="Flag indicating the Layout status"
-     * )
      */
+    #[OA\Property(description: "Flag indicating the Layout status")]
     public $status;
 
     /**
      * @var int
-     * @SWG\Property(
-     *  description="Flag indicating whether the Layout is retired"
-     * )
      */
+    #[OA\Property(description: "Flag indicating whether the Layout is retired")]
     public $retired;
 
     /**
      * @var int
-     * @SWG\Property(
-     *  description="The Layer that the background should occupy"
-     * )
      */
+    #[OA\Property(description: "The Layer that the background should occupy")]
     public $backgroundzIndex;
 
     /**
      * @var double
-     * @SWG\Property(
-     *  description="The Layout Width"
-     * )
      */
+    #[OA\Property(description: "The Layout Width")]
     public $width;
 
     /**
      * @var double
-     * @SWG\Property(
-     *  description="The Layout Height"
-     * )
      */
+    #[OA\Property(description: "The Layout Height")]
     public $height;
 
     /**
      * @var string
-     * @SWG\Property(
-     *  description="The Layout Orientation"
-     * )
      */
+    #[OA\Property(description: "The Layout Orientation")]
     public $orientation;
 
     /**
      * @var int
-     * @SWG\Property(
-     *  description="If this Layout has been requested by Campaign, then this is the display order of the Layout within the Campaign"
-     * )
      */
+    #[OA\Property(description: "If this Layout has been requested by Campaign, then this is the display order of the Layout within the Campaign")]
     public $displayOrder;
 
     /**
      * @var int
-     * @SWG\Property(
-     *  description="A read-only estimate of this Layout's total duration in seconds. This is equal to the longest region duration and is valid when the layout status is 1 or 2."
-     * )
      */
+    #[OA\Property(description: "A read-only estimate of this Layout's total duration in seconds. This is equal to the longest region duration and is valid when the layout status is 1 or 2.")]
     public $duration;
 
     /**
      * @var string
-     * @SWG\Property(description="A status message detailing any errors with the layout")
      */
+    #[OA\Property(description: "A status message detailing any errors with the layout")]
     public $statusMessage;
 
     /**
      * @var int
-     * @SWG\Property(
-     *  description="Flag indicating whether the Layout stat is enabled"
-     * )
      */
+    #[OA\Property(description: "Flag indicating whether the Layout stat is enabled")]
     public $enableStat;
 
     /**
      * @var int
-     * @SWG\Property(
-     *  description="Flag indicating whether the default transitions should be applied to this Layout"
-     * )
      */
+    #[OA\Property(description: "Flag indicating whether the default transitions should be applied to this Layout")]
     public $autoApplyTransitions;
 
     /**
      * @var string
-     * @SWG\Property(description="Code identifier for this Layout")
      */
+    #[OA\Property(description: "Code identifier for this Layout")]
     public $code;
 
     /**
-     * @SWG\Property(description="Is this layout locked by another user?")
      * @var bool
      */
+    #[OA\Property(description: "Is this layout locked by another user?")]
     public $isLocked;
 
     // Child items
     /**
-     * @SWG\Property(description="An array of Regions belonging to this Layout")
      * @var Region[]
      */
+    #[OA\Property(description: "An array of Regions belonging to this Layout")]
     public $regions = [];
 
     /**
-     * @SWG\Property(description="Tags associated with this Layout, array of TagLink objects")
      * @var TagLink[]
      */
+    #[OA\Property(description: "Tags associated with this Layout, array of TagLink objects")]
     public $tags = [];
 
     /** @var Region[]  */
@@ -303,15 +255,15 @@ class Layout implements \JsonSerializable
     public $groupsWithPermissions;
 
     /**
-     * @SWG\Property(description="The id of the Folder this Layout belongs to")
      * @var int
      */
+    #[OA\Property(description: "The id of the Folder this Layout belongs to")]
     public $folderId;
 
     /**
-     * @SWG\Property(description="The id of the Folder responsible for providing permissions for this Layout")
      * @var int
      */
+    #[OA\Property(description: "The id of the Folder responsible for providing permissions for this Layout")]
     public $permissionsFolderId;
 
     // Private

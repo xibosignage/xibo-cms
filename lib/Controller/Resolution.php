@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\ResolutionFactory;
@@ -61,66 +62,17 @@ class Resolution extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(path: '/resolution', operationId: 'resolutionSearch', summary: 'Resolution Search', description: 'Search Resolutions this user has access to', tags: ['resolution'])]
+    #[OA\Parameter(name: 'resolutionId', in: 'query', description: 'Filter by Resolution Id', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'resolution', in: 'query', description: 'Filter by Resolution Name', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'partialResolution', in: 'query', description: 'Filter by Partial Resolution Name', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'enabled', in: 'query', description: 'Filter by Enabled', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'width', in: 'query', description: 'Filter by Resolution width', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'height', in: 'query', description: 'Filter by Resolution height', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Resolution')))]
     /**
      * Resolution Grid
      *
-     * @SWG\Get(
-     *  path="/resolution",
-     *  operationId="resolutionSearch",
-     *  tags={"resolution"},
-     *  summary="Resolution Search",
-     *  description="Search Resolutions this user has access to",
-     *  @SWG\Parameter(
-     *      name="resolutionId",
-     *      in="query",
-     *      description="Filter by Resolution Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="resolution",
-     *      in="query",
-     *      description="Filter by Resolution Name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="partialResolution",
-     *      in="query",
-     *      description="Filter by Partial Resolution Name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="enabled",
-     *      in="query",
-     *      description="Filter by Enabled",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="width",
-     *      in="query",
-     *      description="Filter by Resolution width",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="height",
-     *      in="query",
-     *      description="Filter by Resolution height",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/Resolution")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -249,47 +201,16 @@ class Resolution extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(path: '/resolution', operationId: 'resolutionAdd', summary: 'Add Resolution', description: 'Add new Resolution', tags: ['resolution'])]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['resolution', 'width', 'height'], properties: [
+        new OA\Property(property: 'resolution', description: 'A name for the Resolution', type: 'string'),
+        new OA\Property(property: 'width', description: 'The Display Width of the Resolution', type: 'integer'),
+        new OA\Property(property: 'height', description: 'The Display Height of the Resolution', type: 'integer')
+    ])))]
+    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/Resolution'))]
     /**
      * Add Resolution
      *
-     * @SWG\Post(
-     *  path="/resolution",
-     *  operationId="resolutionAdd",
-     *  tags={"resolution"},
-     *  summary="Add Resolution",
-     *  description="Add new Resolution",
-     *  @SWG\Parameter(
-     *      name="resolution",
-     *      in="formData",
-     *      description="A name for the Resolution",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="width",
-     *      in="formData",
-     *      description="The Display Width of the Resolution",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="height",
-     *      in="formData",
-     *      description="The Display Height of the Resolution",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Resolution"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -320,6 +241,14 @@ class Resolution extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(path: '/resolution/{resolutionId}', operationId: 'resolutionEdit', summary: 'Edit Resolution', description: 'Edit new Resolution', tags: ['resolution'])]
+    #[OA\Parameter(name: 'resolutionId', in: 'path', description: 'The Resolution ID to Edit', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['resolution', 'width', 'height'], properties: [
+        new OA\Property(property: 'resolution', description: 'A name for the Resolution', type: 'string'),
+        new OA\Property(property: 'width', description: 'The Display Width of the Resolution', type: 'integer'),
+        new OA\Property(property: 'height', description: 'The Display Height of the Resolution', type: 'integer')
+    ])))]
+    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Resolution'))]
     /**
      * Edit Resolution
      * @param Request $request
@@ -331,46 +260,6 @@ class Resolution extends Base
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      * @throws \Xibo\Support\Exception\NotFoundException
-     * @SWG\Put(
-     *  path="/resolution/{resolutionId}",
-     *  operationId="resolutionEdit",
-     *  tags={"resolution"},
-     *  summary="Edit Resolution",
-     *  description="Edit new Resolution",
-     *  @SWG\Parameter(
-     *      name="resolutionId",
-     *      in="path",
-     *      description="The Resolution ID to Edit",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="resolution",
-     *      in="formData",
-     *      description="A name for the Resolution",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="width",
-     *      in="formData",
-     *      description="The Display Width of the Resolution",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="height",
-     *      in="formData",
-     *      description="The Display Height of the Resolution",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Resolution")
-     *  )
-     * )
      */
     function edit(Request $request, Response $response, $id)
     {
@@ -398,6 +287,9 @@ class Resolution extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(path: '/resolution/{resolutionId}', operationId: 'resolutionDelete', summary: 'Delete Resolution', description: 'Delete Resolution', tags: ['resolution'])]
+    #[OA\Parameter(name: 'resolutionId', in: 'path', description: 'The Resolution ID to Delete', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete Resolution
      * @param Request $request
@@ -408,24 +300,6 @@ class Resolution extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
-     * @SWG\Delete(
-     *  path="/resolution/{resolutionId}",
-     *  operationId="resolutionDelete",
-     *  tags={"resolution"},
-     *  summary="Delete Resolution",
-     *  description="Delete Resolution",
-     *  @SWG\Parameter(
-     *      name="resolutionId",
-     *      in="path",
-     *      description="The Resolution ID to Delete",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     function delete(Request $request, Response $response, $id)
     {

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -24,6 +24,7 @@
 namespace Xibo\Entity;
 
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\PermissionFactory;
@@ -37,9 +38,8 @@ use Xibo\Support\Exception\NotFoundException;
 /**
  * Class Campaign
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class Campaign implements \JsonSerializable
 {
     use EntityTrait;
@@ -48,159 +48,159 @@ class Campaign implements \JsonSerializable
     public static $availableTypes = ['ad', 'list', 'media', 'playlist'];
 
     /**
-     * @SWG\Property(description="The Campaign Id")
      * @var int
      */
+    #[OA\Property(description: "The Campaign Id")]
     public $campaignId;
 
     /**
-     * @SWG\Property(description="The userId of the User that owns this Campaign")
      * @var int
      */
+    #[OA\Property(description: "The userId of the User that owns this Campaign")]
     public $ownerId;
 
     /**
-     * @SWG\Property(description="The type of campaign, either list, ad, playlist or media")
      * @var string
      */
+    #[OA\Property(description: "The type of campaign, either list, ad, playlist or media")]
     public $type;
 
     /**
-     * @SWG\Property(description="The name of the Campaign")
      * @var string
      */
+    #[OA\Property(description: "The name of the Campaign")]
     public $campaign;
 
     /**
-     * @SWG\Property(description="A 0|1 flag to indicate whether this is a Layout specific Campaign or not.")
      * @var int
      */
+    #[OA\Property(description: "A 0|1 flag to indicate whether this is a Layout specific Campaign or not.")]
     public $isLayoutSpecific = 0;
 
     /**
-     * @SWG\Property(description="The number of Layouts associated with this Campaign")
      * @var int
      */
+    #[OA\Property(description: "The number of Layouts associated with this Campaign")]
     public $numberLayouts;
 
     /**
-     * @SWG\Property(description="The total duration of the campaign (sum of layout's durations)")
      * @var int
      */
+    #[OA\Property(description: "The total duration of the campaign (sum of layout's durations)")]
     public $totalDuration;
 
     /**
-     * @SWG\Property(description="Tags associated with this Campaign, array of TagLink objects")
      * @var TagLink[]
      */
+    #[OA\Property(description: "Tags associated with this Campaign, array of TagLink objects")]
     public $tags = [];
 
     /**
-     * @SWG\Property(description="The id of the Folder this Campaign belongs to")
      * @var int
      */
+    #[OA\Property(description: "The id of the Folder this Campaign belongs to")]
     public $folderId;
 
     /**
-     * @SWG\Property(description="The id of the Folder responsible for providing permissions for this Campaign")
      * @var int
      */
+    #[OA\Property(description: "The id of the Folder responsible for providing permissions for this Campaign")]
     public $permissionsFolderId;
 
     /**
-     * @SWG\Property(description="Flag indicating whether this Campaign has cycle based playback enabled")
      * @var int
      */
+    #[OA\Property(description: "Flag indicating whether this Campaign has cycle based playback enabled")]
     public $cyclePlaybackEnabled;
 
     /**
-     * @SWG\Property(description="In cycle based playback, how many plays should each Layout have before moving on?")
      * @var int
      */
+    #[OA\Property(description: "In cycle based playback, how many plays should each Layout have before moving on?")]
     public $playCount;
 
     /**
-     * @SWG\Property(description="In list campaign types, how should the layouts play out?")
      * @var string
      */
+    #[OA\Property(description: "In list campaign types, how should the layouts play out?")]
     public $listPlayOrder;
 
     /**
-     * @SWG\Property(description="For an ad campaign, what's the target type, plays|budget|imp")
      * @var string
      */
+    #[OA\Property(description: "For an ad campaign, what's the target type, plays|budget|imp")]
     public $targetType;
 
     /**
-     * @SWG\Property(description="For an ad campaign, what's the target (expressed in targetType)")
      * @var int
      */
+    #[OA\Property(description: "For an ad campaign, what's the target (expressed in targetType)")]
     public $target;
 
     /**
-     * @SWG\Property(description="For an ad campaign, what's the start date")
      * @var int
      */
+    #[OA\Property(description: "For an ad campaign, what's the start date")]
     public $startDt;
 
     /**
-     * @SWG\Property(description="For an ad campaign, what's the end date")
      * @var int
      */
+    #[OA\Property(description: "For an ad campaign, what's the end date")]
     public $endDt;
 
     /**
-     * @SWG\Property(description="The number of plays achived by this campaign")
      * @var int
      */
+    #[OA\Property(description: "The number of plays achived by this campaign")]
     public $plays;
 
     /**
-     * @SWG\Property(description="The amount of spend in cents/pence/etc")
      * @var double
      */
+    #[OA\Property(description: "The amount of spend in cents/pence/etc")]
     public $spend;
 
     /**
-     * @SWG\Property(description="The number of impressions achived by this campaign")
      * @var double
      */
+    #[OA\Property(description: "The number of impressions achived by this campaign")]
     public $impressions;
 
     /**
-     * @SWG\Property(description="The latest proof of play ID aggregated into the stats")
      * @var int
      */
+    #[OA\Property(description: "The latest proof of play ID aggregated into the stats")]
     public $lastPopId;
 
     /**
-     * @SWG\Property(description="Reference field 1")
      * @var string
      */
+    #[OA\Property(description: "Reference field 1")]
     public $ref1;
 
     /**
-     * @SWG\Property(description="Reference field 1")
      * @var string
      */
+    #[OA\Property(description: "Reference field 1")]
     public $ref2;
 
     /**
-     * @SWG\Property(description="Reference field 1")
      * @var string
      */
+    #[OA\Property(description: "Reference field 1")]
     public $ref3;
 
     /**
-     * @SWG\Property(description="Reference field 1")
      * @var string
      */
+    #[OA\Property(description: "Reference field 1")]
     public $ref4;
 
     /**
-     * @SWG\Property(description="Reference field 1")
      * @var string
      */
+    #[OA\Property(description: "Reference field 1")]
     public $ref5;
 
     public $createdAt;

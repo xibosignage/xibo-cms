@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -22,15 +22,11 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Event\ConnectorReportEvent;
 use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
-use Xibo\Factory\UserFactory;
-use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
 use Xibo\Helper\SendFile;
@@ -113,199 +109,42 @@ class Stats extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Schema(schema: 'StatisticsData', properties: [
+        new OA\Property(property: 'type', type: 'string'),
+        new OA\Property(property: 'display', type: 'string'),
+        new OA\Property(property: 'displayId', type: 'integer'),
+        new OA\Property(property: 'layout', type: 'string'),
+        new OA\Property(property: 'layoutId', type: 'integer'),
+        new OA\Property(property: 'media', type: 'string'),
+        new OA\Property(property: 'mediaId', type: 'integer'),
+        new OA\Property(property: 'widgetId', type: 'integer'),
+        new OA\Property(property: 'scheduleId', type: 'integer'),
+        new OA\Property(property: 'numberPlays', type: 'integer'),
+        new OA\Property(property: 'duration', type: 'integer'),
+        new OA\Property(property: 'start', type: 'string'),
+        new OA\Property(property: 'end', type: 'string'),
+        new OA\Property(property: 'statDate', type: 'string'),
+        new OA\Property(property: 'tag', type: 'string')
+    ])]
+    #[OA\Get(path: '/stats', operationId: 'statsSearch', tags: ['statistics'])]
+    #[OA\Parameter(name: 'type', in: 'query', description: 'The type of stat to return. Layout|Media|Widget', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'fromDt', in: 'query', description: 'The start date for the filter. Default = 24 hours ago', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'toDt', in: 'query', description: 'The end date for the filter. Default = now.', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'statDate', in: 'query', description: 'The statDate filter returns records that are greater than or equal a particular date', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'statId', in: 'query', description: 'The statId filter returns records that are greater than a particular statId', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'displayId', in: 'query', description: 'An optional display Id to filter', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'displayIds', in: 'query', description: 'An optional array of display Id to filter', required: false, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'integer')))]
+    #[OA\Parameter(name: 'layoutId', in: 'query', description: 'An optional array of layout Id to filter', required: false, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'integer')))]
+    #[OA\Parameter(name: 'parentCampaignId', in: 'query', description: 'An optional Parent Campaign ID to filter', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'mediaId', in: 'query', description: 'An optional array of media Id to filter', required: false, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'integer')))]
+    #[OA\Parameter(name: 'campaignId', in: 'query', description: 'An optional Campaign Id to filter', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'returnDisplayLocalTime', in: 'query', description: 'true/1/On if the results should be in display local time, otherwise CMS time', required: false, schema: new OA\Schema(type: 'boolean'))]
+    #[OA\Parameter(name: 'returnDateFormat', in: 'query', description: 'A PHP formatted date format for how the dates in this call should be returned.', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'embed', in: 'query', description: 'Should the return embed additional data, options are layoutTags,displayTags and mediaTags', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/StatisticsData')))]
     /**
-     * @SWG\Definition(
-     *  definition="StatisticsData",
-     *  @SWG\Property(
-     *      property="type",
-     *      type="string"
-     *  ),
-     *  @SWG\Property(
-     *      property="display",
-     *      type="string"
-     *  ),
-     *  @SWG\Property(
-     *      property="displayId",
-     *      type="integer"
-     *  ),
-     *  @SWG\Property(
-     *      property="layout",
-     *      type="string"
-     *  ),
-     *  @SWG\Property(
-     *      property="layoutId",
-     *      type="integer"
-     *  ),
-     *  @SWG\Property(
-     *      property="media",
-     *      type="string"
-     *  ),
-     *  @SWG\Property(
-     *      property="mediaId",
-     *      type="integer"
-     *  ),
-     *  @SWG\Property(
-     *      property="widgetId",
-     *      type="integer"
-     *  ),
-     *  @SWG\Property(
-     *      property="scheduleId",
-     *      type="integer"
-     *  ),
-     *  @SWG\Property(
-     *      property="numberPlays",
-     *      type="integer"
-     *  ),
-     *  @SWG\Property(
-     *      property="duration",
-     *      type="integer"
-     *  ),
-     *  @SWG\Property(
-     *      property="start",
-     *      type="string"
-     *  ),
-     *  @SWG\Property(
-     *      property="end",
-     *      type="string"
-     *  ),
-     *  @SWG\Property(
-     *      property="statDate",
-     *      type="string"
-     *  ),
-     *  @SWG\Property(
-     *      property="tag",
-     *      type="string"
-     *  )
-     * )
-     *
-     *
      * Stats API
      *
-     * @SWG\Get(
-     *  path="/stats",
-     *  operationId="statsSearch",
-     *  tags={"statistics"},
-     *  @SWG\Parameter(
-     *      name="type",
-     *      in="query",
-     *      description="The type of stat to return. Layout|Media|Widget",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="fromDt",
-     *      in="query",
-     *      description="The start date for the filter. Default = 24 hours ago",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="toDt",
-     *      in="query",
-     *      description="The end date for the filter. Default = now.",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="statDate",
-     *      in="query",
-     *      description="The statDate filter returns records that are greater than or equal a particular date",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="statId",
-     *      in="query",
-     *      description="The statId filter returns records that are greater than a particular statId",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="displayId",
-     *      in="query",
-     *      description="An optional display Id to filter",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="displayIds",
-     *      description="An optional array of display Id to filter",
-     *      in="query",
-     *      required=false,
-     *      type="array",
-     *      @SWG\Items(
-     *          type="integer"
-     *      )
-     *  ),
-     *   @SWG\Parameter(
-     *      name="layoutId",
-     *      description="An optional array of layout Id to filter",
-     *      in="query",
-     *      required=false,
-     *      type="array",
-     *      @SWG\Items(
-     *          type="integer"
-     *      )
-     *  ),
-     *   @SWG\Parameter(
-     *      name="parentCampaignId",
-     *      description="An optional Parent Campaign ID to filter",
-     *      in="query",
-     *      required=false,
-     *      type="integer",
-     *      @SWG\Items(
-     *          type="integer"
-     *      )
-     *  ),
-     *   @SWG\Parameter(
-     *      name="mediaId",
-     *      description="An optional array of media Id to filter",
-     *      in="query",
-     *      required=false,
-     *      type="array",
-     *      @SWG\Items(
-     *          type="integer"
-     *      )
-     *  ),
-     *   @SWG\Parameter(
-     *      name="campaignId",
-     *      in="query",
-     *      description="An optional Campaign Id to filter",
-     *      type="integer",
-     *      required=false
-     *  ),
-     *   @SWG\Parameter(
-     *      name="returnDisplayLocalTime",
-     *      in="query",
-     *      description="true/1/On if the results should be in display local time, otherwise CMS time",
-     *      type="boolean",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="returnDateFormat",
-     *      in="query",
-     *      description="A PHP formatted date format for how the dates in this call should be returned.",
-     *      type="string",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="embed",
-     *      in="query",
-     *      description="Should the return embed additional data, options are layoutTags,displayTags and mediaTags",
-     *      type="string",
-     *      required=false
-     *  ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(
-     *              ref="#/definitions/StatisticsData"
-     *          )
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -584,39 +423,14 @@ class Stats extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(path: '/stats/getExportStatsCount', operationId: 'getExportStatsCount', tags: ['statistics'])]
+    #[OA\Parameter(name: 'fromDt', in: 'query', description: 'The start date for the filter. Default = 24 hours ago', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'toDt', in: 'query', description: 'The end date for the filter. Default = now.', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'displayId', in: 'query', description: 'An optional display Id to filter', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Response(response: 200, description: 'successful operation')]
     /**
      * Total count of stats
      *
-     * @SWG\Get(
-     *  path="/stats/getExportStatsCount",
-     *  operationId="getExportStatsCount",
-     *  tags={"statistics"},
-     *  @SWG\Parameter(
-     *      name="fromDt",
-     *      in="query",
-     *      description="The start date for the filter. Default = 24 hours ago",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="toDt",
-     *      in="query",
-     *      description="The end date for the filter. Default = now.",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="displayId",
-     *      in="query",
-     *      description="An optional display Id to filter",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation"
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -828,95 +642,23 @@ class Stats extends Base
         )->withHeader('Content-Type', 'text/csv'));
     }
 
+    #[OA\Schema(schema: 'TimeDisconnectedData', properties: [
+        new OA\Property(property: 'display', type: 'string'),
+        new OA\Property(property: 'displayId', type: 'integer'),
+        new OA\Property(property: 'duration', type: 'integer'),
+        new OA\Property(property: 'start', type: 'string'),
+        new OA\Property(property: 'end', type: 'string'),
+        new OA\Property(property: 'isFinished', type: 'boolean')
+    ])]
+    #[OA\Get(path: '/stats/timeDisconnected', operationId: 'timeDisconnectedSearch', tags: ['statistics'])]
+    #[OA\Parameter(name: 'fromDt', in: 'query', description: 'The start date for the filter.', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'toDt', in: 'query', description: 'The end date for the filter.', required: true, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'displayId', in: 'query', description: 'An optional display Id to filter', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'displayIds', in: 'query', description: 'An optional array of display Id to filter', required: false, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'integer')))]
+    #[OA\Parameter(name: 'returnDisplayLocalTime', in: 'query', description: 'true/1/On if the results should be in display local time, otherwise CMS time', required: false, schema: new OA\Schema(type: 'boolean'))]
+    #[OA\Parameter(name: 'returnDateFormat', in: 'query', description: 'A PHP formatted date format for how the dates in this call should be returned.', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/TimeDisconnectedData')))]
     /**
-     * @SWG\Definition(
-     *  definition="TimeDisconnectedData",
-     *  @SWG\Property(
-     *      property="display",
-     *      type="string"
-     *  ),
-     *  @SWG\Property(
-     *      property="displayId",
-     *      type="integer"
-     *  ),
-     *  @SWG\Property(
-     *      property="duration",
-     *      type="integer"
-     *  ),
-     *  @SWG\Property(
-     *      property="start",
-     *      type="string"
-     *  ),
-     *  @SWG\Property(
-     *      property="end",
-     *      type="string"
-     *  ),
-     *  @SWG\Property(
-     *      property="isFinished",
-     *      type="boolean"
-     *  )
-     * )
-     *
-     * @SWG\Get(
-     *  path="/stats/timeDisconnected",
-     *  operationId="timeDisconnectedSearch",
-     *  tags={"statistics"},
-     *  @SWG\Parameter(
-     *      name="fromDt",
-     *      in="query",
-     *      description="The start date for the filter.",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="toDt",
-     *      in="query",
-     *      description="The end date for the filter.",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="displayId",
-     *      in="query",
-     *      description="An optional display Id to filter",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="displayIds",
-     *      description="An optional array of display Id to filter",
-     *      in="query",
-     *      required=false,
-     *      type="array",
-     *      @SWG\Items(
-     *          type="integer"
-     *      )
-     *  ),
-     *   @SWG\Parameter(
-     *      name="returnDisplayLocalTime",
-     *      in="query",
-     *      description="true/1/On if the results should be in display local time, otherwise CMS time",
-     *      type="boolean",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="returnDateFormat",
-     *      in="query",
-     *      description="A PHP formatted date format for how the dates in this call should be returned.",
-     *      type="string",
-     *      required=false
-     *  ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(
-     *              ref="#/definitions/TimeDisconnectedData"
-     *          )
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response

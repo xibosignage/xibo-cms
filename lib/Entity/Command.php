@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,6 +23,7 @@
 
 namespace Xibo\Entity;
 
+use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -31,120 +32,91 @@ use Xibo\Support\Exception\InvalidArgumentException;
 /**
  * Class Command
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class Command implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(
-     *  description="Command Id"
-     * )
      * @var int
      */
+    #[OA\Property(description: 'Command Id')]
     public $commandId;
 
     /**
-     * @SWG\Property(
-     *  description="Command Name"
-     * )
      * @var string
      */
+    #[OA\Property(description: 'Command Name')]
     public $command;
 
     /**
-     * @SWG\Property(
-     *  description="Unique Code"
-     * )
      * @var string
      */
+    #[OA\Property(description: 'Unique Code')]
     public $code;
 
     /**
-     * @SWG\Property(
-     *  description="Description"
-     * )
      * @var string
      */
+    #[OA\Property(description: 'Description')]
     public $description;
 
     /**
-     * @SWG\Property(
-     *  description="User Id"
-     * )
      * @var int
      */
+    #[OA\Property(description: 'User Id')]
     public $userId;
 
     /**
-     * @SWG\Property(
-     *  description="Command String"
-     * )
      * @var string
      */
+    #[OA\Property(description: 'Command String')]
     public $commandString;
 
     /**
-     * @SWG\Property(
-     *  description="Validation String"
-     * )
      * @var string
      */
+    #[OA\Property(description: 'Validation String')]
     public $validationString;
 
     /**
-     * @SWG\Property(
-     *  description="DisplayProfileId if specific to a Display Profile"
-     * )
      * @var int
      */
+    #[OA\Property(description: 'DisplayProfileId if specific to a Display Profile')]
     public $displayProfileId;
 
     /**
-     * @SWG\Property(
-     *  description="Command String specific to the provided DisplayProfile"
-     * )
      * @var string
      */
+    #[OA\Property(description: 'Command String specific to the provided DisplayProfile')]
     public $commandStringDisplayProfile;
 
     /**
-     * @SWG\Property(
-     *  description="Validation String specific to the provided DisplayProfile"
-     * )
      * @var string
      */
+    #[OA\Property(description: 'Validation String specific to the provided DisplayProfile')]
     public $validationStringDisplayProfile;
 
     /**
-     * @SWG\Property(
-     *  description="A comma separated list of player types this command is available on"
-     * )
      * @var string
      */
+    #[OA\Property(description: 'A comma separated list of player types this command is available on')]
     public $availableOn;
 
     /**
-     * @SWG\Property(
-     *  description="Define if execution of this command should create an alert on success, failure, always or never."
-     * )
      * @var string
      */
+    #[OA\Property(description: 'Define if execution of this command should create an alert on success, failure, always or never.')]
     public $createAlertOn;
 
-    /**
-     * @SWG\Property(
-     *     description="Create Alert On specific to the provided DisplayProfile."
-     * )
-     */
+    #[OA\Property(description: 'Create Alert On specific to the provided DisplayProfile.')]
     public $createAlertOnDisplayProfile;
 
     /**
-     * @SWG\Property(description="A comma separated list of groups/users with permissions to this Command")
      * @var string
      */
+    #[OA\Property(description: 'A comma separated list of groups/users with permissions to this Command')]
     public $groupsWithPermissions;
 
     /**

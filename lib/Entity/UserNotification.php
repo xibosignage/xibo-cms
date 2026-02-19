@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,97 +22,77 @@
 
 
 namespace Xibo\Entity;
+use OpenApi\Attributes as OA;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
- * Class UserGroupNotification
+ * Class UserNotification
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class UserNotification implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(
-     *  description="The User Id"
-     * )
      * @var int
      */
+    #[OA\Property(description: 'The User Id')]
     public $userId;
 
     /**
-     * @SWG\Property(
-     *  description="The Notification Id"
-     * )
      * @var int
      */
+    #[OA\Property(description: 'The Notification Id')]
     public $notificationId;
 
     /**
-     * @SWG\Property(
-     *  description="Release Date expressed as Unix Timestamp"
-     * )
      * @var int
      */
+    #[OA\Property(description: 'Release Date expressed as Unix Timestamp')]
     public $releaseDt;
 
     /**
-     * @SWG\Property(
-     *  description="Read Date expressed as Unix Timestamp"
-     * )
      * @var int
      */
+    #[OA\Property(description: 'Read Date expressed as Unix Timestamp')]
     public $readDt;
 
     /**
-     * @SWG\Property(
-     *  description="Email Date expressed as Unix Timestamp"
-     * )
      * @var int
      */
+    #[OA\Property(description: 'Email Date expressed as Unix Timestamp')]
     public $emailDt;
 
     /**
-     * @SWG\Property(
-     *  description="A flag indicating whether to show as read or not"
-     * )
      * @var int
      */
+    #[OA\Property(description: 'A flag indicating whether to show as read or not')]
     public $read;
 
     /**
-     * @SWG\Property(
-     *  description="The subject"
-     * )
      * @var string
      */
+    #[OA\Property(description: 'The subject')]
     public $subject;
 
     /**
-     * @SWG\Property(
-     *  description="The body"
-     * )
      * @var string
      */
+    #[OA\Property(description: 'The body')]
     public $body;
 
     /**
-     * @SWG\Property(
-     *  description="Should the notification interrupt the CMS UI on navigate/login"
-     * )
      * @var int
      */
+    #[OA\Property(description: 'Should the notification interrupt the CMS UI on navigate/login')]
     public $isInterrupt;
 
     /**
-     * @SWG\Property(
-     *  description="Flag for system notification"
-     * )
      * @var int
      */
+    #[OA\Property(description: 'Flag for system notification')]
     public $isSystem;
 
     /**

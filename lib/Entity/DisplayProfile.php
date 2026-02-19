@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 namespace Xibo\Entity;
 
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayProfileFactory;
@@ -35,53 +36,52 @@ use Xibo\Support\Exception\NotFoundException;
 /**
  * Class DisplayProfile
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class DisplayProfile implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="The ID of this Display Profile")
      * @var int
      */
+    #[OA\Property(description: 'The ID of this Display Profile')]
     public $displayProfileId;
 
     /**
-     * @SWG\Property(description="The name of this Display Profile")
      * @var string
      */
+    #[OA\Property(description: 'The name of this Display Profile')]
     public $name;
 
     /**
-     * @SWG\Property(description="The player type that this Display Profile is for")
      * @var string
      */
+    #[OA\Property(description: 'The player type that this Display Profile is for')]
     public $type;
 
     /**
-     * @SWG\Property(description="The configuration options for this Profile")
      * @var string[]
      */
+    #[OA\Property(description: 'The configuration options for this Profile')]
     public $config;
 
     /**
-     * @SWG\Property(description="A flag indicating if this profile should be used as the Default for the client type")
      * @var int
      */
+    #[OA\Property(description: 'A flag indicating if this profile should be used as the Default for the client type')]
     public $isDefault;
 
     /**
-     * @SWG\Property(description="The userId of the User that owns this profile")
      * @var int
      */
+    #[OA\Property(description: 'The userId of the User that owns this profile')]
     public $userId;
 
     /**
-     * @SWG\Property(description="The default configuration options for this Profile")
      * @var string[]
      */
+    #[OA\Property(description: 'The default configuration options for this Profile')]
     public $configDefault;
 
     /**

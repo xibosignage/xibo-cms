@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 
 namespace Xibo\Entity;
 
+use OpenApi\Attributes as OA;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Factory\ModuleTemplateFactory;
 use Xibo\Service\LogServiceInterface;
@@ -30,8 +31,8 @@ use Xibo\Widget\Definition\Asset;
 
 /**
  * Represents a module template
- * @SWG\Definition()
  */
+#[OA\Schema]
 class ModuleTemplate implements \JsonSerializable
 {
     use EntityTrait;
@@ -41,54 +42,54 @@ class ModuleTemplate implements \JsonSerializable
     public $id;
 
     /**
-     * @SWG\Property()
      * @var string The templateId
      */
+    #[OA\Property]
     public $templateId;
 
     /**
-     * @SWG\Property()
      * @var string Type of template (static|element|stencil)
      */
+    #[OA\Property]
     public $type;
 
     /**
-     * @SWG\Property()
      * @var \Xibo\Widget\Definition\Extend|null If this template extends another
      */
+    #[OA\Property]
     public $extends;
 
     /**
-     * @SWG\Property()
      * @var string The datatype of this template
      */
+    #[OA\Property]
     public $dataType;
 
     /**
-     * @SWG\Property()
      * @var string The title
      */
+    #[OA\Property]
     public $title;
 
     /**
-     * @SWG\Property(description="Description of the Module Template")
      * @var string
      */
+    #[OA\Property(description: 'Description of the Module Template')]
     public $description;
 
     /**
-     * @SWG\Property()
      * @var string Icon
      */
+    #[OA\Property]
     public $icon;
 
     /**
-     * @SWG\Property()
      * Thumbnail
      * this is the location to a module template's thumbnail, which should be added to the installation
      * relative to the module class file.
      * @var string
      */
+    #[OA\Property]
     public $thumbnail;
 
     /** @var int The width of the zone */
@@ -104,45 +105,45 @@ class ModuleTemplate implements \JsonSerializable
     public $canRotate;
 
     /**
-     * @SWG\Property(description="A flag indicating whether the template should be excluded from the Layout Editor")
      * @var string
      */
+    #[OA\Property(description: 'A flag indicating whether the template should be excluded from the Layout Editor')]
     public $showIn = 'both';
 
     /**
-     * @SWG\Property()
      * @var \Xibo\Widget\Definition\Property[]|null Properties
      */
+    #[OA\Property]
     public $properties;
 
     /**
-     * @SWG\Property()
      * @var bool Is Visible?
      */
+    #[OA\Property]
     public $isVisible = true;
 
     /**
-     * @SWG\Property()
      * @var bool Is Enabled?
      */
+    #[OA\Property]
     public $isEnabled = true;
 
     /**
-     * @SWG\Property(description="An array of additional module specific group properties")
      * @var \Xibo\Widget\Definition\PropertyGroup[]
      */
+    #[OA\Property(description: 'An array of additional module specific group properties')]
     public $propertyGroups = [];
 
     /**
-     * @SWG\Property()
      * @var \Xibo\Widget\Definition\Stencil|null A stencil, if needed
      */
+    #[OA\Property]
     public $stencil;
 
     /**
-     * @SWG\Property()
      * @var Asset[]
      */
+    #[OA\Property]
     public $assets;
 
     /** @var string A Renderer to run if custom rendering is required. */
@@ -167,9 +168,9 @@ class ModuleTemplate implements \JsonSerializable
     public $ownerId;
 
     /**
-     * @SWG\Property(description="A comma separated list of groups/users with permissions to this template")
      * @var string
      */
+    #[OA\Property(description: 'A comma separated list of groups/users with permissions to this template')]
     public $groupsWithPermissions;
     /** @var string $xml The XML used to build this template */
     

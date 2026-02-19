@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,6 +23,7 @@
 namespace Xibo\Controller;
 
 use GuzzleHttp\Psr7\Stream;
+use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Invalidation;
@@ -91,38 +92,12 @@ class Font extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(path: '/fonts', operationId: 'fontSearch', summary: 'Font Search', description: 'Search the available Fonts', tags: ['font'])]
+    #[OA\Parameter(name: 'id', in: 'query', description: 'Filter by Font Id', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'name', in: 'query', description: 'Filter by Font Name', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Font')))]
     /**
      * Prints out a Table of all Font items
-     *
-     * @SWG\Get(
-     *  path="/fonts",
-     *  operationId="fontSearch",
-     *  tags={"font"},
-     *  summary="Font Search",
-     *  description="Search the available Fonts",
-     *  @SWG\Parameter(
-     *      name="id",
-     *      in="query",
-     *      description="Filter by Font Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="query",
-     *      description="Filter by Font Name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/Font")
-     *      )
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response
@@ -193,34 +168,11 @@ class Font extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(path: '/fonts/details/{id}', operationId: 'fontDetails', summary: 'Font Details', description: 'Get the Font details', tags: ['font'])]
+    #[OA\Parameter(name: 'id', in: 'path', description: 'The Font ID', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'object', additionalProperties: new OA\AdditionalProperties(type: 'array')))]
     /**
      * Font details provided by FontLib
-     *
-     * @SWG\Get(
-     *  path="/fonts/details/{id}",
-     *  operationId="fontDetails",
-     *  tags={"font"},
-     *  summary="Font Details",
-     *  description="Get the Font details",
-     *  @SWG\Parameter(
-     *      name="id",
-     *      in="path",
-     *      description="The Font ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="object",
-     *          additionalProperties={
-     *              "title"="details",
-     *              "type"="array"
-     *          }
-     *      )
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response
@@ -257,38 +209,10 @@ class Font extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(path: '/fonts/download/{id}', operationId: 'fontDownload', summary: 'Download Font', description: 'Download a Font file from the Library', tags: ['font'])]
+    #[OA\Parameter(name: 'id', in: 'path', description: 'The Font ID to Download', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Response(response: 200, description: 'successful operation', headers: [new OA\Header(header: 'X-Sendfile', description: 'Apache Send file header - if enabled.', schema: new OA\Schema(type: 'string')), new OA\Header(header: 'X-Accel-Redirect', description: 'nginx send file header - if enabled.', schema: new OA\Schema(type: 'string'))], content: new OA\MediaType(mediaType: 'application/octet-stream', schema: new OA\Schema(type: 'string', format: 'binary')))]
     /**
-     * @SWG\Get(
-     *  path="/fonts/download/{id}",
-     *  operationId="fontDownload",
-     *  tags={"font"},
-     *  summary="Download Font",
-     *  description="Download a Font file from the Library",
-     *  produces={"application/octet-stream"},
-     *  @SWG\Parameter(
-     *      name="id",
-     *      in="path",
-     *      description="The Font ID to Download",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(type="file"),
-     *      @SWG\Header(
-     *          header="X-Sendfile",
-     *          description="Apache Send file header - if enabled.",
-     *          type="string"
-     *      ),
-     *      @SWG\Header(
-     *          header="X-Accel-Redirect",
-     *          description="nginx send file header - if enabled.",
-     *          type="string"
-     *      )
-     *  )
-     * )
-     *
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -324,34 +248,14 @@ class Font extends Base
         return ['otf', 'ttf', 'eot', 'svg', 'woff'];
     }
 
+    #[OA\Post(path: '/fonts', operationId: 'fontUpload', summary: 'Font Upload', description: 'Upload a new Font file', tags: ['font'])]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'multipart/form-data', schema: new OA\Schema(required: ['files'], properties: [
+        new OA\Property(property: 'files', description: 'The Uploaded File', type: 'string', format: 'binary'),
+        new OA\Property(property: 'name', description: 'Optional Font Name', type: 'string')
+    ])))]
+    #[OA\Response(response: 200, description: 'successful operation')]
     /**
      * Font Upload
-     *
-     * @SWG\Post(
-     *  path="/fonts",
-     *  operationId="fontUpload",
-     *  tags={"font"},
-     *  summary="Font Upload",
-     *  description="Upload a new Font file",
-     *  @SWG\Parameter(
-     *      name="files",
-     *      in="formData",
-     *      description="The Uploaded File",
-     *      type="file",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="Optional Font Name",
-     *      type="string",
-     *      required=false
-     *  ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation"
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response
@@ -472,27 +376,11 @@ class Font extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(path: '/fonts/{id}/delete', operationId: 'fontDelete', summary: 'Font Delete', description: 'Delete existing Font file', tags: ['font'])]
+    #[OA\Parameter(name: 'id', in: 'path', description: 'The Font ID to delete', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Font Delete
-     *
-     * @SWG\Delete(
-     *  path="/fonts/{id}/delete",
-     *  operationId="fontDelete",
-     *  tags={"font"},
-     *  summary="Font Delete",
-     *  description="Delete existing Font file",
-     *  @SWG\Parameter(
-     *      name="id",
-     *      in="path",
-     *      description="The Font ID to delete",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,6 +23,7 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\DisplayFactory;
@@ -150,87 +151,20 @@ class Playlist extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(path: '/playlist', operationId: 'playlistSearch', summary: 'Search Playlists', description: 'Search for Playlists viewable by this user', tags: ['playlist'])]
+    #[OA\Parameter(name: 'playlistId', in: 'query', description: 'Filter by Playlist Id', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'name', in: 'query', description: 'Filter by partial Playlist name', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'userId', in: 'query', description: 'Filter by user Id', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'tags', in: 'query', description: 'Filter by tags', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'exactTags', in: 'query', description: 'A flag indicating whether to treat the tags filter as an exact match', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'logicalOperator', in: 'query', description: 'When filtering by multiple Tags, which logical operator should be used? AND|OR', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'ownerUserGroupId', in: 'query', description: 'Filter by users in this UserGroupId', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'embed', in: 'query', description: 'Embed related data such as regions, widgets, permissions, tags', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'folderId', in: 'query', description: 'Filter by Folder ID', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Playlist')))]
     /**
      * Playlist Search
      *
-     * @SWG\Get(
-     *  path="/playlist",
-     *  operationId="playlistSearch",
-     *  tags={"playlist"},
-     *  summary="Search Playlists",
-     *  description="Search for Playlists viewable by this user",
-     *  @SWG\Parameter(
-     *      name="playlistId",
-     *      in="query",
-     *      description="Filter by Playlist Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="query",
-     *      description="Filter by partial Playlist name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="userId",
-     *      in="query",
-     *      description="Filter by user Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="tags",
-     *      in="query",
-     *      description="Filter by tags",
-     *      type="string",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="exactTags",
-     *      in="query",
-     *      description="A flag indicating whether to treat the tags filter as an exact match",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="logicalOperator",
-     *      in="query",
-     *      description="When filtering by multiple Tags, which logical operator should be used? AND|OR",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ownerUserGroupId",
-     *      in="query",
-     *      description="Filter by users in this UserGroupId",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="embed",
-     *      in="query",
-     *      description="Embed related data such as regions, widgets, permissions, tags",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="query",
-     *      description="Filter by Folder ID",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/Playlist")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -566,96 +500,22 @@ class Playlist extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(path: '/playlist', operationId: 'playlistAdd', summary: 'Add a Playlist', description: 'Add a new Playlist', tags: ['playlist'])]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['name', 'isDynamic'], properties: [
+        new OA\Property(property: 'name', description: 'The Name for this Playlist', type: 'string'),
+        new OA\Property(property: 'tags', description: 'Tags', type: 'string'),
+        new OA\Property(property: 'isDynamic', description: 'Is this Playlist Dynamic?', type: 'integer'),
+        new OA\Property(property: 'filterMediaName', description: 'Add Library Media matching the name filter provided', type: 'string'),
+        new OA\Property(property: 'logicalOperatorName', description: 'When filtering by multiple names in name filter, which logical operator should be used? AND|OR', type: 'string'),
+        new OA\Property(property: 'filterMediaTag', description: 'Add Library Media matching the tag filter provided', type: 'string'),
+        new OA\Property(property: 'exactTags', description: 'When filtering by Tags, should we use exact match?', type: 'integer'),
+        new OA\Property(property: 'logicalOperator', description: 'When filtering by Tags, which logical operator should be used? AND|OR', type: 'string'),
+        new OA\Property(property: 'maxNumberOfItems', description: 'Maximum number of items that can be assigned to this Playlist (dynamic Playlist only)', type: 'integer'),
+        new OA\Property(property: 'folderId', description: 'Folder ID to which this object should be assigned to', type: 'integer')
+    ])))]
+    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/Playlist'))]
     /**
      * Add
-     *
-     * @SWG\Post(
-     *  path="/playlist",
-     *  operationId="playlistAdd",
-     *  tags={"playlist"},
-     *  summary="Add a Playlist",
-     *  description="Add a new Playlist",
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="The Name for this Playlist",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="tags",
-     *      in="formData",
-     *      description="Tags",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isDynamic",
-     *      in="formData",
-     *      description="Is this Playlist Dynamic?",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="filterMediaName",
-     *      in="formData",
-     *      description="Add Library Media matching the name filter provided",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="logicalOperatorName",
-     *      in="formData",
-     *      description="When filtering by multiple names in name filter, which logical operator should be used? AND|OR",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="filterMediaTag",
-     *      in="formData",
-     *      description="Add Library Media matching the tag filter provided",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="exactTags",
-     *      in="formData",
-     *      description="When filtering by Tags, should we use exact match?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="logicalOperator",
-     *      in="formData",
-     *      description="When filtering by Tags, which logical operator should be used? AND|OR",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="maxNumberOfItems",
-     *      in="formData",
-     *      description="Maximum number of items that can be assigned to this Playlist (dynamic Playlist only)",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="formData",
-     *      description="Folder ID to which this object should be assigned to",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Playlist"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response
@@ -829,97 +689,23 @@ class Playlist extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(path: '/playlist/{playlistId}', operationId: 'playlistEdit', summary: 'Edit a Playlist', description: 'Edit a Playlist', tags: ['playlist'])]
+    #[OA\Parameter(name: 'playlistId', in: 'path', description: 'The PlaylistId to Edit', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['name', 'isDynamic'], properties: [
+        new OA\Property(property: 'name', description: 'The Name for this Playlist', type: 'string'),
+        new OA\Property(property: 'tags', description: 'Tags', type: 'string'),
+        new OA\Property(property: 'isDynamic', description: 'Is this Playlist Dynamic?', type: 'integer'),
+        new OA\Property(property: 'filterMediaName', description: 'Add Library Media matching the name filter provided', type: 'string'),
+        new OA\Property(property: 'logicalOperatorName', description: 'When filtering by multiple names in name filter, which logical operator should be used? AND|OR', type: 'string'),
+        new OA\Property(property: 'filterMediaTag', description: 'Add Library Media matching the tag filter provided', type: 'string'),
+        new OA\Property(property: 'exactTags', description: 'When filtering by Tags, should we use exact match?', type: 'integer'),
+        new OA\Property(property: 'logicalOperator', description: 'When filtering by Tags, which logical operator should be used? AND|OR', type: 'string'),
+        new OA\Property(property: 'maxNumberOfItems', description: 'Maximum number of items that can be assigned to this Playlist (dynamic Playlist only)', type: 'integer'),
+        new OA\Property(property: 'folderId', description: 'Folder ID to which this object should be assigned to', type: 'integer')
+    ])))]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Edit
-     *
-     * @SWG\Put(
-     *  path="/playlist/{playlistId}",
-     *  operationId="playlistEdit",
-     *  tags={"playlist"},
-     *  summary="Edit a Playlist",
-     *  description="Edit a Playlist",
-     *  @SWG\Parameter(
-     *      name="playlistId",
-     *      in="path",
-     *      description="The PlaylistId to Edit",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="The Name for this Playlist",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="tags",
-     *      in="formData",
-     *      description="Tags",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isDynamic",
-     *      in="formData",
-     *      description="Is this Playlist Dynamic?",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="filterMediaName",
-     *      in="formData",
-     *      description="Add Library Media matching the name filter provided",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="logicalOperatorName",
-     *      in="formData",
-     *      description="When filtering by multiple names in name filter, which logical operator should be used? AND|OR",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="filterMediaTag",
-     *      in="formData",
-     *      description="Add Library Media matching the tag filter provided",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="exactTags",
-     *      in="formData",
-     *      description="When filtering by Tags, should we use exact match?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="logicalOperator",
-     *      in="formData",
-     *      description="When filtering by Tags, which logical operator should be used? AND|OR",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="maxNumberOfItems",
-     *      in="formData",
-     *      description="Maximum number of items that can be assigned to this Playlist (dynamic Playlist only)",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="formData",
-     *      description="Folder ID to which this object should be assigned to",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response
@@ -1029,27 +815,12 @@ class Playlist extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(path: '/playlist/{playlistId}', operationId: 'playlistDelete', summary: 'Delete a Playlist', description: 'Delete a Playlist', tags: ['playlist'])]
+    #[OA\Parameter(name: 'playlistId', in: 'path', description: 'The PlaylistId to delete', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete
      *
-     * @SWG\Delete(
-     *  path="/playlist/{playlistId}",
-     *  operationId="playlistDelete",
-     *  tags={"playlist"},
-     *  summary="Delete a Playlist",
-     *  description="Delete a Playlist",
-     *  @SWG\Parameter(
-     *      name="playlistId",
-     *      in="path",
-     *      description="The PlaylistId to delete",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -1111,6 +882,13 @@ class Playlist extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(path: '/playlist/copy/{playlistId}', operationId: 'playlistCopy', summary: 'Copy Playlist', description: 'Copy a Playlist, providing a new name if applicable', tags: ['playlist'])]
+    #[OA\Parameter(name: 'playlistId', in: 'path', description: 'The Playlist ID to Copy', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['name', 'copyMediaFiles'], properties: [
+        new OA\Property(property: 'name', description: 'The name for the new Playlist', type: 'string'),
+        new OA\Property(property: 'copyMediaFiles', description: 'Flag indicating whether to make new Copies of all Media Files assigned to the Playlist being Copied', type: 'integer')
+    ])))]
+    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/Playlist'))]
     /**
      * Copies a playlist
      * @param Request $request
@@ -1124,44 +902,6 @@ class Playlist extends Base
      * @throws \Xibo\Support\Exception\ConfigurationException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
-     * @SWG\Post(
-     *  path="/playlist/copy/{playlistId}",
-     *  operationId="playlistCopy",
-     *  tags={"playlist"},
-     *  summary="Copy Playlist",
-     *  description="Copy a Playlist, providing a new name if applicable",
-     *  @SWG\Parameter(
-     *      name="playlistId",
-     *      in="path",
-     *      description="The Playlist ID to Copy",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="The name for the new Playlist",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="copyMediaFiles",
-     *      in="formData",
-     *      description="Flag indicating whether to make new Copies of all Media Files assigned to the Playlist being Copied",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Playlist"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      */
     public function copy(Request $request, Response $response, $id)
     {
@@ -1263,6 +1003,15 @@ class Playlist extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(path: '/playlist/library/assign/{playlistId}', operationId: 'playlistLibraryAssign', summary: 'Assign Library Items', description: 'Assign Media from the Library to this Playlist', tags: ['playlist'])]
+    #[OA\Parameter(name: 'playlistId', in: 'path', description: 'The Playlist ID to assign to', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['media'], properties: [
+        new OA\Property(property: 'media', description: 'Array of Media IDs to assign', type: 'array', items: new OA\Items(type: 'integer')),
+        new OA\Property(property: 'duration', description: 'Optional duration for all Media in this assignment to use on the Widget', type: 'integer'),
+        new OA\Property(property: 'useDuration', description: 'Optional flag indicating whether to enable the useDuration field', type: 'integer'),
+        new OA\Property(property: 'displayOrder', description: 'Optional integer to say which position this assignment should occupy in the list. If more than one media item is being added, this will be the position of the first one.', type: 'integer')
+    ])))]
+    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Playlist'))]
     /**
      * Add Library items to a Playlist
      * @param Request $request
@@ -1275,54 +1024,6 @@ class Playlist extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
-     * @SWG\Post(
-     *  path="/playlist/library/assign/{playlistId}",
-     *  operationId="playlistLibraryAssign",
-     *  tags={"playlist"},
-     *  summary="Assign Library Items",
-     *  description="Assign Media from the Library to this Playlist",
-     *  @SWG\Parameter(
-     *      name="playlistId",
-     *      in="path",
-     *      description="The Playlist ID to assign to",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="media",
-     *      in="formData",
-     *      description="Array of Media IDs to assign",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(type="integer")
-     *   ),
-     *  @SWG\Parameter(
-     *      name="duration",
-     *      in="formData",
-     *      description="Optional duration for all Media in this assignment to use on the Widget",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="useDuration",
-     *      in="formData",
-     *      description="Optional flag indicating whether to enable the useDuration field",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="displayOrder",
-     *      in="formData",
-     *      description="Optional integer to say which position this assignment should occupy in the list. If more than one media item is being added, this will be the position of the first one.",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Playlist")
-     *  )
-     * )
      */
     public function libraryAssign(Request $request, Response $response, $id)
     {
@@ -1431,22 +1132,16 @@ class Playlist extends Base
         return $this->render($request, $response);
     }
 
-    /**
-     * @SWG\Definition(
-     *  definition="PlaylistWidgetList",
-     *  @SWG\Property(
-     *      property="widgetId",
-     *      type="integer",
-     *      description="Widget ID"
-     *  ),
-     *  @SWG\Property(
-     *      property="position",
-     *      type="integer",
-     *      description="The position in the Playlist"
-     *  )
-     * )
-     */
-
+    #[OA\Schema(schema: 'PlaylistWidgetList', properties: [
+        new OA\Property(property: 'widgetId', description: 'Widget ID', type: 'integer'),
+        new OA\Property(property: 'position', description: 'The position in the Playlist', type: 'integer')
+    ])]
+    #[OA\Post(path: '/playlist/order/{playlistId}', operationId: 'playlistOrder', summary: 'Order Widgets', description: 'Set the order of widgets in the Playlist', tags: ['playlist'])]
+    #[OA\Parameter(name: 'playlistId', in: 'path', description: 'The Playlist ID to Order', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['widgets'], properties: [
+        new OA\Property(property: 'widgets', description: 'Array of widgetIds and positions - all widgetIds present in the playlist need to be passed in the call with their positions', type: 'array', items: new OA\Items(ref: '#/components/schemas/PlaylistWidgetList'))
+    ])))]
+    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Playlist'))]
     /**
      * Order a playlist and its widgets
      * @param Request $request
@@ -1459,35 +1154,6 @@ class Playlist extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
-     * @SWG\Post(
-     *  path="/playlist/order/{playlistId}",
-     *  operationId="playlistOrder",
-     *  tags={"playlist"},
-     *  summary="Order Widgets",
-     *  description="Set the order of widgets in the Playlist",
-     *  @SWG\Parameter(
-     *      name="playlistId",
-     *      in="path",
-     *      description="The Playlist ID to Order",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="widgets",
-     *      in="formData",
-     *      description="Array of widgetIds and positions - all widgetIds present in the playlist need to be passed in the call with their positions",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(
-     *          ref="#/definitions/PlaylistWidgetList"
-     *      )
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Playlist")
-     *  )
-     * )
      */
     public function order(Request $request, Response $response, $id)
     {
@@ -1562,26 +1228,10 @@ class Playlist extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(path: '/playlist/usage/{playlistId}', operationId: 'playlistUsageReport', summary: 'Get Playlist Item Usage Report', description: 'Get the records for the playlist item usage report', tags: ['playlist'])]
+    #[OA\Parameter(name: 'playlistId', in: 'path', description: 'The Playlist Id', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Response(response: 200, description: 'successful operation')]
     /**
-     * @SWG\Get(
-     *  path="/playlist/usage/{playlistId}",
-     *  operationId="playlistUsageReport",
-     *  tags={"playlist"},
-     *  summary="Get Playlist Item Usage Report",
-     *  description="Get the records for the playlist item usage report",
-     * @SWG\Parameter(
-     *      name="playlistId",
-     *      in="path",
-     *      description="The Playlist Id",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *     response=200,
-     *     description="successful operation"
-     *  )
-     * )
-     *
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -1676,26 +1326,10 @@ class Playlist extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(path: '/playlist/usage/layouts/{playlistId}', operationId: 'playlistUsageLayoutsReport', summary: 'Get Playlist Item Usage Report for Layouts', description: 'Get the records for the playlist item usage report for Layouts', tags: ['playlist'])]
+    #[OA\Parameter(name: 'playlistId', in: 'path', description: 'The Playlist Id', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Response(response: 200, description: 'successful operation')]
     /**
-     * @SWG\Get(
-     *  path="/playlist/usage/layouts/{playlistId}",
-     *  operationId="playlistUsageLayoutsReport",
-     *  tags={"playlist"},
-     *  summary="Get Playlist Item Usage Report for Layouts",
-     *  description="Get the records for the playlist item usage report for Layouts",
-     * @SWG\Parameter(
-     *      name="playlistId",
-     *      in="path",
-     *      description="The Playlist Id",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *     response=200,
-     *     description="successful operation"
-     *  )
-     * )
-     *
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -1755,6 +1389,12 @@ class Playlist extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(path: '/playlist/setenablestat/{playlistId}', operationId: 'playlistSetEnableStat', summary: 'Enable Stats Collection', description: 'Set Enable Stats Collection? to use for the collection of Proof of Play statistics for a Playlist.', tags: ['playlist'])]
+    #[OA\Parameter(name: 'playlistId', in: 'path', description: 'The Playlist ID', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['enableStat'], properties: [
+        new OA\Property(property: 'enableStat', description: 'The option to enable the collection of Media Proof of Play statistics, On, Off or Inherit.', type: 'string')
+    ])))]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Set Enable Stats Collection of a Playlist
      * @param Request $request
@@ -1767,31 +1407,6 @@ class Playlist extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
-     * @SWG\Put(
-     *  path="/playlist/setenablestat/{playlistId}",
-     *  operationId="playlistSetEnableStat",
-     *  tags={"playlist"},
-     *  summary="Enable Stats Collection",
-     *  description="Set Enable Stats Collection? to use for the collection of Proof of Play statistics for a Playlist.",
-     *  @SWG\Parameter(
-     *      name="playlistId",
-     *      in="path",
-     *      description="The Playlist ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="enableStat",
-     *      in="formData",
-     *      description="The option to enable the collection of Media Proof of Play statistics, On, Off or Inherit.",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
 
     function setEnableStat(Request $request, Response $response, $id)
@@ -1882,33 +1497,13 @@ class Playlist extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(path: '/playlist/{id}/selectfolder', operationId: 'playlistSelectFolder', summary: 'Playlist Select folder', description: 'Select Folder for Playlist', tags: ['playlist'])]
+    #[OA\Parameter(name: 'playlistId', in: 'path', description: 'The Playlist ID', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['folderId'], properties: [
+        new OA\Property(property: 'folderId', description: 'Folder ID to which this object should be assigned to', type: 'integer')
+    ])))]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
-     * @SWG\Put(
-     *  path="/playlist/{id}/selectfolder",
-     *  operationId="playlistSelectFolder",
-     *  tags={"playlist"},
-     *  summary="Playlist Select folder",
-     *  description="Select Folder for Playlist",
-     *  @SWG\Parameter(
-     *      name="playlistId",
-     *      in="path",
-     *      description="The Playlist ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="formData",
-     *      description="Folder ID to which this object should be assigned to",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
-     *
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -1961,35 +1556,16 @@ class Playlist extends Base
         return $this->layoutFactory->getLinkedFullScreenLayout('playlist', $playlist->playlistId)?->campaignId;
     }
 
+    #[OA\Post(path: '/playlist/{id}/convert', operationId: 'convert', summary: 'Playlist Convert', description: 'Create a global playlist from inline editor Playlist.
+     * Assign created Playlist via sub-playlist Widget to region Playlist.', tags: ['playlist'])]
+    #[OA\Parameter(name: 'playlistId', in: 'path', description: 'The Playlist ID', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(properties: [
+        new OA\Property(property: 'name', description: 'Optional name for the global Playlist.', type: 'string')
+    ])))]
+    #[OA\Response(response: 201, description: 'successful operation')]
     /**
      * Convert Layout editor playlist to global playlist.
      * Assign this Playlist to the original regionPlaylist via sub-playlist Widget.
-     * @SWG\Post(
-     *   path="/playlist/{id}/convert",
-     *   operationId="convert",
-     *   tags={"playlist"},
-     *   summary="Playlist Convert",
-     *   description="Create a global playlist from inline editor Playlist.
-     * Assign created Playlist via sub-playlist Widget to region Playlist.",
-     *   @SWG\Parameter(
-     *       name="playlistId",
-     *       in="path",
-     *       description="The Playlist ID",
-     *       type="integer",
-     *       required=true
-     *    ),
-     *   @SWG\Parameter(
-     *       name="name",
-     *       in="formData",
-     *       description="Optional name for the global Playlist.",
-     *       type="string",
-     *       required=false
-     *    ),
-     *   @SWG\Response(
-     *       response=201,
-     *       description="successful operation"
-     *   )
-     *  )
      * @param Request $request
      * @param Response $response
      * @param $id

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 
 namespace Xibo\Entity;
 
+use OpenApi\Attributes as OA;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -30,8 +31,8 @@ use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Schedule Criteria entity
- * @SWG\Definition()
  */
+#[OA\Schema]
 class ScheduleCriteria implements \JsonSerializable
 {
     use EntityTrait;

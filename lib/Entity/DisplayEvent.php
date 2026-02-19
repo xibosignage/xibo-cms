@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -119,11 +119,12 @@ class DisplayEvent implements \JsonSerializable
     /**
      * Record end date for specified display and event type.
      * @param int $displayId
-     * @param int|null $date
      * @param int $eventTypeId
+     * @param string|null $detail
+     * @param int|null $date
      * @return void
      */
-    public function eventEnd(int $displayId, int $eventTypeId = 1, string $detail = null, ?int $date = null): void
+    public function eventEnd(int $displayId, int $eventTypeId = 1, ?string $detail = null, ?int $date = null): void
     {
         $this->getLog()->debug(
             sprintf(
@@ -152,10 +153,11 @@ class DisplayEvent implements \JsonSerializable
      * @param int $displayId
      * @param int $eventTypeId
      * @param int $refId
+     * @param string|null $detail
      * @param int|null $date
      * @return void
      */
-    public function eventEndByReference(int $displayId, int $eventTypeId, int $refId, string $detail = null, ?int $date = null): void
+    public function eventEndByReference(int $displayId, int $eventTypeId, int $refId, ?string $detail = null, ?int $date = null): void
     {
         $this->getLog()->debug(
             sprintf(

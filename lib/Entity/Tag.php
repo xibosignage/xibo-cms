@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 
 
 namespace Xibo\Entity;
+use OpenApi\Attributes as OA;
 use Xibo\Factory\TagFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -32,41 +33,40 @@ use Xibo\Support\Exception\InvalidArgumentException;
 /**
  * Class Tag
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class Tag implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="The Tag ID")
      * @var int
      */
+    #[OA\Property(description: 'The Tag ID')]
     public $tagId;
 
     /**
-     * @SWG\Property(description="The Tag Name")
      * @var string
      */
+    #[OA\Property(description: 'The Tag Name')]
     public $tag;
 
     /**
-     * @SWG\Property(description="Flag, whether the tag is a system tag")
      * @var int
      */
+    #[OA\Property(description: 'Flag, whether the tag is a system tag')]
     public $isSystem = 0;
 
     /**
-     * @SWG\Property(description="Flag, whether the tag requires additional values")
      * @var int
      */
+    #[OA\Property(description: 'Flag, whether the tag requires additional values')]
     public $isRequired = 0;
 
     /**
-     * @SWG\Property(description="An array of options assigned to this Tag")
      * @var ?string
      */
+    #[OA\Property(description: 'An array of options assigned to this Tag')]
     public $options;
 
     /** @var  TagFactory */

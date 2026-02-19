@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,34 +22,37 @@
 
 namespace Xibo\Entity;
 
+use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
- * @SWG\Definition()
+ * Class MenuBoardProductOption
+ * @package Xibo\Entity
  */
+#[OA\Schema]
 class MenuBoardProductOption implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="The Menu Product ID that this Option belongs to")
      * @var int
      */
+    #[OA\Property(description: 'The Menu Product ID that this Option belongs to')]
     public $menuProductId;
 
     /**
-     * @SWG\Property(description="The option name")
      * @var string
      */
+    #[OA\Property(description: 'The option name')]
     public $option;
 
     /**
-     * @SWG\Property(description="The option value")
      * @var string
      */
+    #[OA\Property(description: 'The option value')]
     public $value;
 
     /**

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Permission;
@@ -80,37 +81,12 @@ class UserGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(path: '/group', operationId: 'userGroupSearch', summary: 'UserGroup Search', description: 'Search User Groups', tags: ['usergroup'])]
+    #[OA\Parameter(name: 'userGroupId', in: 'query', description: 'Filter by UserGroup Id', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'userGroup', in: 'query', description: 'Filter by UserGroup Name', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/UserGroup')))]
     /**
      * Group Grid
-     * @SWG\Get(
-     *  path="/group",
-     *  operationId="userGroupSearch",
-     *  tags={"usergroup"},
-     *  summary="UserGroup Search",
-     *  description="Search User Groups",
-     *  @SWG\Parameter(
-     *      name="userGroupId",
-     *      in="query",
-     *      description="Filter by UserGroup Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="userGroup",
-     *      in="query",
-     *      description="Filter by UserGroup Name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/UserGroup")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -205,115 +181,26 @@ class UserGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(path: '/group', operationId: 'userGroupAdd', summary: 'UserGroup Add', description: 'Add User Group', tags: ['usergroup'])]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['group'], properties: [
+        new OA\Property(property: 'group', description: 'Name of the User Group', type: 'string'),
+        new OA\Property(property: 'decription', description: 'A description of the User Group', type: 'string'),
+        new OA\Property(property: 'libraryQuota', description: 'The quota that should be applied (KiB). Provide 0 for no quota', type: 'string'),
+        new OA\Property(property: 'isSystemNotification', description: 'Flag (0, 1), should members of this Group receive system notifications?', type: 'integer'),
+        new OA\Property(property: 'isDisplayNotification', description: 'Flag (0, 1), should members of this Group receive Display notifications
+     * for Displays they have permissions to see', type: 'integer'),
+        new OA\Property(property: 'isDataSetNotification', description: 'Flag (0, 1), should members of this Group receive DataSet notification emails?', type: 'integer'),
+        new OA\Property(property: 'isLayoutNotification', description: 'Flag (0, 1), should members of this Group receive Layout notification emails?', type: 'integer'),
+        new OA\Property(property: 'isLibraryNotification', description: 'Flag (0, 1), should members of this Group receive Library notification emails?', type: 'integer'),
+        new OA\Property(property: 'isReportNotification', description: 'Flag (0, 1), should members of this Group receive Report notification emails?', type: 'integer'),
+        new OA\Property(property: 'isScheduleNotification', description: 'Flag (0, 1), should members of this Group receive Schedule notification emails?', type: 'integer'),
+        new OA\Property(property: 'isCustomNotification', description: 'Flag (0, 1), should members of this Group receive Custom notification emails?', type: 'integer'),
+        new OA\Property(property: 'isShownForAddUser', description: 'Flag (0, 1), should this Group be shown in the Add User onboarding form.', type: 'integer'),
+        new OA\Property(property: 'defaultHomePageId', description: 'If this user has been created via the onboarding form, this should be the default home page', type: 'integer')
+    ])))]
+    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/UserGroup'))]
     /**
      * Add User Group
-     * @SWG\Post(
-     *  path="/group",
-     *  operationId="userGroupAdd",
-     *  tags={"usergroup"},
-     *  summary="UserGroup Add",
-     *  description="Add User Group",
-     *  @SWG\Parameter(
-     *      name="group",
-     *      in="formData",
-     *      description="Name of the User Group",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="decription",
-     *      in="formData",
-     *      description="A description of the User Group",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="libraryQuota",
-     *      in="formData",
-     *      description="The quota that should be applied (KiB). Provide 0 for no quota",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isSystemNotification",
-     *      in="formData",
-     *      description="Flag (0, 1), should members of this Group receive system notifications?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isDisplayNotification",
-     *      in="formData",
-     *      description="Flag (0, 1), should members of this Group receive Display notifications
-     * for Displays they have permissions to see",
-     *      type="integer",
-     *      required=false
-     *   ),
-     * @SWG\Parameter(
-     *        name="isDataSetNotification",
-     *        in="formData",
-     *        description="Flag (0, 1), should members of this Group receive DataSet notification emails?",
-     *        type="integer",
-     *        required=false
-     *     ),
-     * @SWG\Parameter(
-     *        name="isLayoutNotification",
-     *        in="formData",
-     *        description="Flag (0, 1), should members of this Group receive Layout notification emails?",
-     *        type="integer",
-     *        required=false
-     *     ),
-     * @SWG\Parameter(
-     *        name="isLibraryNotification",
-     *        in="formData",
-     *        description="Flag (0, 1), should members of this Group receive Library notification emails?",
-     *        type="integer",
-     *        required=false
-     *     ),
-     * @SWG\Parameter(
-     *        name="isReportNotification",
-     *        in="formData",
-     *        description="Flag (0, 1), should members of this Group receive Report notification emails?",
-     *        type="integer",
-     *        required=false
-     *     ),
-     * @SWG\Parameter(
-     *         name="isScheduleNotification",
-     *         in="formData",
-     *         description="Flag (0, 1), should members of this Group receive Schedule notification emails?",
-     *         type="integer",
-     *         required=false
-     *      ),
-     * @SWG\Parameter(
-     *         name="isCustomNotification",
-     *         in="formData",
-     *         description="Flag (0, 1), should members of this Group receive Custom notification emails?",
-     *         type="integer",
-     *         required=false
-     *      ),
-     *  @SWG\Parameter(
-     *      name="isShownForAddUser",
-     *      in="formData",
-     *      description="Flag (0, 1), should this Group be shown in the Add User onboarding form.",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="defaultHomePageId",
-     *      in="formData",
-     *      description="If this user has been created via the onboarding form, this should be the default home page",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/UserGroup")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -370,122 +257,27 @@ class UserGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(path: '/group/{userGroupId}', operationId: 'userGroupEdit', summary: 'UserGroup Edit', description: 'Edit User Group', tags: ['usergroup'])]
+    #[OA\Parameter(name: 'userGroupId', in: 'path', description: 'ID of the User Group', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['group'], properties: [
+        new OA\Property(property: 'group', description: 'Name of the User Group', type: 'string'),
+        new OA\Property(property: 'decription', description: 'A description of the User Group', type: 'string'),
+        new OA\Property(property: 'libraryQuota', description: 'The quota that should be applied (KiB). Provide 0 for no quota', type: 'string'),
+        new OA\Property(property: 'isSystemNotification', description: 'Flag (0, 1), should members of this Group receive system notifications?', type: 'integer'),
+        new OA\Property(property: 'isDisplayNotification', description: 'Flag (0, 1), should members of this Group receive Display notifications
+     * for Displays they have permissions to see', type: 'integer'),
+        new OA\Property(property: 'isDataSetNotification', description: 'Flag (0, 1), should members of this Group receive DataSet notification emails?', type: 'integer'),
+        new OA\Property(property: 'isLayoutNotification', description: 'Flag (0, 1), should members of this Group receive Layout notification emails?', type: 'integer'),
+        new OA\Property(property: 'isLibraryNotification', description: 'Flag (0, 1), should members of this Group receive Library notification emails?', type: 'integer'),
+        new OA\Property(property: 'isReportNotification', description: 'Flag (0, 1), should members of this Group receive Report notification emails?', type: 'integer'),
+        new OA\Property(property: 'isScheduleNotification', description: 'Flag (0, 1), should members of this Group receive Schedule notification emails?', type: 'integer'),
+        new OA\Property(property: 'isCustomNotification', description: 'Flag (0, 1), should members of this Group receive Custom notification emails?', type: 'integer'),
+        new OA\Property(property: 'isShownForAddUser', description: 'Flag (0, 1), should this Group be shown in the Add User onboarding form.', type: 'integer'),
+        new OA\Property(property: 'defaultHomePageId', description: 'If this user has been created via the onboarding form, this should be the default home page', type: 'integer')
+    ])))]
+    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/UserGroup')))]
     /**
      * Edit User Group
-     * @SWG\Put(
-     *  path="/group/{userGroupId}",
-     *  operationId="userGroupEdit",
-     *  tags={"usergroup"},
-     *  summary="UserGroup Edit",
-     *  description="Edit User Group",
-     *  @SWG\Parameter(
-     *      name="userGroupId",
-     *      in="path",
-     *      description="ID of the User Group",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="group",
-     *      in="formData",
-     *      description="Name of the User Group",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="decription",
-     *      in="formData",
-     *      description="A description of the User Group",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="libraryQuota",
-     *      in="formData",
-     *      description="The quota that should be applied (KiB). Provide 0 for no quota",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isSystemNotification",
-     *      in="formData",
-     *      description="Flag (0, 1), should members of this Group receive system notifications?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isDisplayNotification",
-     *      in="formData",
-     *      description="Flag (0, 1), should members of this Group receive Display notifications
-     * for Displays they have permissions to see",
-     *      type="integer",
-     *      required=false
-     *   ),
-     * @SWG\Parameter(
-     *       name="isDataSetNotification",
-     *       in="formData",
-     *       description="Flag (0, 1), should members of this Group receive DataSet notification emails?",
-     *       type="integer",
-     *       required=false
-     *    ),
-     * @SWG\Parameter(
-     *       name="isLayoutNotification",
-     *       in="formData",
-     *       description="Flag (0, 1), should members of this Group receive Layout notification emails?",
-     *       type="integer",
-     *       required=false
-     *    ),
-     * @SWG\Parameter(
-     *       name="isLibraryNotification",
-     *       in="formData",
-     *       description="Flag (0, 1), should members of this Group receive Library notification emails?",
-     *       type="integer",
-     *       required=false
-     *    ),
-     * @SWG\Parameter(
-     *       name="isReportNotification",
-     *       in="formData",
-     *       description="Flag (0, 1), should members of this Group receive Report notification emails?",
-     *       type="integer",
-     *       required=false
-     *    ),
-     * @SWG\Parameter(
-     *        name="isScheduleNotification",
-     *        in="formData",
-     *        description="Flag (0, 1), should members of this Group receive Schedule notification emails?",
-     *        type="integer",
-     *        required=false
-     *     ),
-     * @SWG\Parameter(
-     *        name="isCustomNotification",
-     *        in="formData",
-     *        description="Flag (0, 1), should members of this Group receive Custom notification emails?",
-     *        type="integer",
-     *        required=false
-     *     ),
-     *  @SWG\Parameter(
-     *      name="isShownForAddUser",
-     *      in="formData",
-     *      description="Flag (0, 1), should this Group be shown in the Add User onboarding form.",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="defaultHomePageId",
-     *      in="formData",
-     *      description="If this user has been created via the onboarding form, this should be the default home page",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/UserGroup")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -725,38 +517,15 @@ class UserGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(path: '/group/members/assign/{userGroupId}', operationId: 'userGroupAssign', summary: 'Assign User to User Group', description: 'Assign User to User Group', tags: ['usergroup'])]
+    #[OA\Parameter(name: 'userGroupId', in: 'path', description: 'ID of the user group to which assign the user', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['userId'], properties: [
+        new OA\Property(property: 'userId', description: 'Array of userIDs to assign', type: 'array', items: new OA\Items(type: 'integer')),
+        new OA\Property(property: 'unassignUserId', description: 'An optional array of User IDs to unassign', type: 'array', items: new OA\Items(type: 'integer'))
+    ])))]
+    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/UserGroup')))]
     /**
      * Assign User to the User Group
-     * @SWG\Post(
-     *  path="/group/members/assign/{userGroupId}",
-     *  operationId="userGroupAssign",
-     *  tags={"usergroup"},
-     *  summary="Assign User to User Group",
-     *  description="Assign User to User Group",
-     *  @SWG\Parameter(
-     *      name="userGroupId",
-     *      in="path",
-     *      description="ID of the user group to which assign the user",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="userId",
-     *      in="formData",
-     *      description="Array of userIDs to assign",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(type="integer")
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/UserGroup")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -831,38 +600,14 @@ class UserGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(path: '/group/members/unassign/{userGroupId}', operationId: 'userGroupUnassign', summary: 'Unassign User from User Group', description: 'Unassign User from User Group', tags: ['usergroup'])]
+    #[OA\Parameter(name: 'userGroupId', in: 'path', description: 'ID of the user group from which to unassign the user', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['userId'], properties: [
+        new OA\Property(property: 'userId', description: 'Array of userIDs to unassign', type: 'array', items: new OA\Items(type: 'integer'))
+    ])))]
+    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/UserGroup')))]
     /**
      * Unassign User to the User Group
-     * @SWG\Post(
-     *  path="/group/members/unassign/{userGroupId}",
-     *  operationId="userGroupUnassign",
-     *  tags={"usergroup"},
-     *  summary="Unassign User from User Group",
-     *  description="Unassign User from User Group",
-     *  @SWG\Parameter(
-     *      name="userGroupId",
-     *      in="path",
-     *      description="ID of the user group from which to unassign the user",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="userId",
-     *      in="formData",
-     *      description="Array of userIDs to unassign",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(type="integer")
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/UserGroup")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -927,53 +672,15 @@ class UserGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(path: '/group/{userGroupId}/copy', operationId: 'userGroupCopy', summary: 'Copy User Group', description: 'Copy an user group, optionally copying the group members', tags: ['usergroup'])]
+    #[OA\Parameter(name: 'userGroupId', in: 'path', description: 'The User Group ID to Copy', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['group'], properties: [
+        new OA\Property(property: 'group', description: 'The Group Name', type: 'string'),
+        new OA\Property(property: 'copyMembers', description: 'Flag indicating whether to copy group members', type: 'integer'),
+        new OA\Property(property: 'copyFeatures', description: 'Flag indicating whether to copy group features', type: 'integer')
+    ])))]
+    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/UserGroup'))]
     /**
-     * @SWG\Post(
-     *  path="/group/{userGroupId}/copy",
-     *  operationId="userGroupCopy",
-     *  tags={"usergroup"},
-     *  summary="Copy User Group",
-     *  description="Copy an user group, optionally copying the group members",
-     *  @SWG\Parameter(
-     *      name="userGroupId",
-     *      in="path",
-     *      description="The User Group ID to Copy",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="group",
-     *      in="formData",
-     *      description="The Group Name",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="copyMembers",
-     *      in="formData",
-     *      description="Flag indicating whether to copy group members",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="copyFeatures",
-     *      in="formData",
-     *      description="Flag indicating whether to copy group features",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/UserGroup"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
-     *
      * @param Request $request
      * @param Response $response
      * @param $id

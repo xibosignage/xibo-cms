@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
 use Parsedown;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
@@ -86,24 +87,11 @@ class Template extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(path: '/template', operationId: 'templateSearch', summary: 'Template Search', description: 'Search templates this user has access to', tags: ['template'])]
+    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Layout')))]
     /**
      * Data grid
      *
-     * @SWG\Get(
-     *  path="/template",
-     *  operationId="templateSearch",
-     *  tags={"template"},
-     *  summary="Template Search",
-     *  description="Search templates this user has access to",
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/Layout")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -351,24 +339,11 @@ class Template extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(path: '/template/search', operationId: 'templateSearchAll', summary: 'Template Search All', description: 'Search all templates from local and connectors', tags: ['template'])]
+    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/SearchResult')))]
     /**
      * Data grid
      *
-     * @SWG\Get(
-     *  path="/template/search",
-     *  operationId="templateSearchAll",
-     *  tags={"template"},
-     *  summary="Template Search All",
-     *  description="Search all templates from local and connectors",
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/SearchResult")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -476,53 +451,16 @@ class Template extends Base
 
         return $this->render($request, $response);
     }
+    #[OA\Post(path: '/template', operationId: 'templateAdd', summary: 'Add a Template', description: 'Add a new Template to the CMS', tags: ['template'])]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['name'], properties: [
+        new OA\Property(property: 'name', description: 'The layout name', type: 'string'),
+        new OA\Property(property: 'description', description: 'The layout description', type: 'string'),
+        new OA\Property(property: 'resolutionId', description: 'If a Template is not provided, provide the resolutionId for this Layout.', type: 'integer'),
+        new OA\Property(property: 'returnDraft', description: 'Should we return the Draft Layout or the Published Layout on Success?', type: 'boolean')
+    ])))]
+    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/Layout'))]
     /**
      * Add a Template
-     * @SWG\Post(
-     *  path="/template",
-     *  operationId="templateAdd",
-     *  tags={"template"},
-     *  summary="Add a Template",
-     *  description="Add a new Template to the CMS",
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="The layout name",
-     *      type="string",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="The layout description",
-     *      type="string",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="resolutionId",
-     *      in="formData",
-     *      description="If a Template is not provided, provide the resolutionId for this Layout.",
-     *      type="integer",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="returnDraft",
-     *      in="formData",
-     *      description="Should we return the Draft Layout or the Published Layout on Success?",
-     *      type="boolean",
-     *      required=false
-     *  ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Layout"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response
@@ -593,6 +531,15 @@ class Template extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(path: '/template/{layoutId}', operationId: 'template.add.from.layout', summary: 'Add a template from a Layout', description: 'Use the provided layout as a base for a new template', tags: ['template'])]
+    #[OA\Parameter(name: 'layoutId', in: 'path', description: 'The Layout ID', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['includeWidgets', 'name'], properties: [
+        new OA\Property(property: 'includeWidgets', description: 'Flag indicating whether to include the widgets in the Template', type: 'integer'),
+        new OA\Property(property: 'name', description: 'The Template Name', type: 'string'),
+        new OA\Property(property: 'tags', description: 'Comma separated list of Tags for the template', type: 'string'),
+        new OA\Property(property: 'description', description: 'A description of the Template', type: 'string')
+    ])))]
+    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/Layout'))]
     /**
      * Add template
      * @param Request $request
@@ -603,58 +550,6 @@ class Template extends Base
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\NotFoundException
-     * @SWG\Post(
-     *  path="/template/{layoutId}",
-     *  operationId="template.add.from.layout",
-     *  tags={"template"},
-     *  summary="Add a template from a Layout",
-     *  description="Use the provided layout as a base for a new template",
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      in="path",
-     *      description="The Layout ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="includeWidgets",
-     *      in="formData",
-     *      description="Flag indicating whether to include the widgets in the Template",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="The Template Name",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="tags",
-     *      in="formData",
-     *      description="Comma separated list of Tags for the template",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="A description of the Template",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Layout"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      */
     public function addFromLayout(Request $request, Response $response, $id): Response
     {

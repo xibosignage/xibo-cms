@@ -16,7 +16,7 @@ digital signage network, or single screen, open source and free to use.
 
 [![Licence](https://img.shields.io/github/license/xibosignage/xibo-cms)]()
 
-Copyright (C) 2006-2025 Xibo Signage Ltd and Contributors.
+Copyright (C) 2006-2026 Xibo Signage Ltd and Contributors.
 
 Xibo is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public
 License as published by the Free Software Foundation, either version 3 of the License, or any later version.
@@ -210,7 +210,7 @@ Convert `mo` files to `json`
 To generate a `swagger.json` file, with the dev containers running:
 
 ```shell
-docker-compose exec web sh -c "cd /var/www/cms; vendor/bin/swagger lib -o web/swagger.json"
+docker-compose exec web sh -c "cd /var/www/cms; vendor/bin/openapi lib -o web/swagger.json"
 ```
 
 ## Application Structure

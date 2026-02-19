@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,89 +22,89 @@
 
 
 namespace Xibo\Entity;
+use OpenApi\Attributes as OA;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class LogEntry
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class LogEntry implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="The Log ID")
      * @var int
      */
+    #[OA\Property(description: 'The Log ID')]
     public $logId;
 
     /**
-     * @SWG\Property(description="A unique run number for a set of Log Messages.")
      * @var string
      */
+    #[OA\Property(description: 'A unique run number for a set of Log Messages.')]
     public $runNo;
 
     /**
-     * @SWG\Property(description="A timestamp representing the CMS date this log message occured")
      * @var int
      */
+    #[OA\Property(description: 'A timestamp representing the CMS date this log message occured')]
     public $logDate;
 
     /**
-     * @SWG\Property(description="The Channel that generated this message. WEB/API/MAINT/TEST")
      * @var string
      */
+    #[OA\Property(description: 'The Channel that generated this message. WEB/API/MAINT/TEST')]
     public $channel;
 
     /**
-     * @SWG\Property(description="The requested route")
      * @var string
      */
+    #[OA\Property(description: 'The requested route')]
     public $page;
 
     /**
-     * @SWG\Property(description="The request method, GET/POST/PUT/DELETE")
      * @var string
      */
+    #[OA\Property(description: 'The request method, GET/POST/PUT/DELETE')]
     public $function;
 
     /**
-     * @SWG\Property(description="The log message")
      * @var string
      */
+    #[OA\Property(description: 'The log message')]
     public $message;
 
     /**
-     * @SWG\Property(description="The display ID this message relates to or NULL for CMS")
      * @var int
      */
+    #[OA\Property(description: 'The display ID this message relates to or NULL for CMS')]
     public $displayId;
 
     /**
-     * @SWG\Property(description="The Log Level")
      * @var string
      */
+    #[OA\Property(description: 'The Log Level')]
     public $type;
 
     /**
-     * @SWG\Property(description="The display this message relates to or CMS for CMS.")
      * @var string
      */
+    #[OA\Property(description: 'The display this message relates to or CMS for CMS.')]
     public $display;
 
     /**
-     * @SWG\Property(description="Session history id.")
      * @var int
      */
+    #[OA\Property(description: 'Session history id.')]
     public $sessionHistoryId;
 
     /**
-     * @SWG\Property(description="User id.")
      * @var int
      */
+    #[OA\Property(description: 'User id.')]
     public $userId;
 
     /**

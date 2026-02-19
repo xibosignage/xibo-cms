@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 namespace Xibo\Entity;
 
 use League\OAuth2\Server\Entities\UserEntityInterface;
+use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\ApplicationScopeFactory;
 use Xibo\Factory\CampaignFactory;
@@ -53,260 +54,259 @@ use Xibo\Support\Exception\NotFoundException;
 /**
  * Class User
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class User implements \JsonSerializable, UserEntityInterface
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="The ID of this User")
      * @var int
      */
+    #[OA\Property(description: 'The ID of this User')]
     public $userId;
 
     /**
-     * @SWG\Property(description="The user name")
      * @var string
      */
+    #[OA\Property(description: 'The user name')]
     public $userName;
 
     /**
-     * @SWG\Property(description="The user type ID")
      * @var int
      */
+    #[OA\Property(description: 'The user type ID')]
     public $userTypeId;
 
     /**
-     * @SWG\Property(description="Flag indicating whether this user is logged in or not")
      * @var int
      */
+    #[OA\Property(description: 'Flag indicating whether this user is logged in or not')]
     public $loggedIn;
 
     /**
-     * @SWG\Property(description="Email address of the user used for email alerts")
      * @var string
      */
+    #[OA\Property(description: 'Email address of the user used for email alerts')]
     public $email;
 
     /**
-     * @SWG\Property(description="The pageId of the Homepage for this User")
      * @var int
      */
+    #[OA\Property(description: 'The pageId of the Homepage for this User')]
     public $homePageId;
 
     /**
-     * @SWG\Property(description="This users home folder")
      * @var int
      */
+    #[OA\Property(description: 'This users home folder')]
     public $homeFolderId;
 
     /**
-     * @SWG\Property(description="A timestamp indicating the time the user last logged into the CMS")
      * @var int
      */
+    #[OA\Property(description: 'A timestamp indicating the time the user last logged into the CMS')]
     public $lastAccessed;
 
     /**
-     * @SWG\Property(description="A flag indicating whether this user has see the new user wizard")
      * @var int
      */
+    #[OA\Property(description: 'A flag indicating whether this user has see the new user wizard')]
     public $newUserWizard = 0;
 
     /**
-     * @SWG\Property(description="A flag indicating whether the user is retired")
      * @var int
      */
+    #[OA\Property(description: 'A flag indicating whether the user is retired')]
     public $retired;
 
     private $CSPRNG;
     private $password;
 
     /**
-     * @SWG\Property(description="A flag indicating whether password change should be forced for this user")
      * @var int
      */
+    #[OA\Property(description: 'A flag indicating whether password change should be forced for this user')]
     public $isPasswordChangeRequired = 0;
 
     /**
-     * @SWG\Property(description="The users user group ID")
      * @var int
      */
+    #[OA\Property(description: 'The users user group ID')]
     public $groupId;
 
     /**
-     * @SWG\Property(description="The users group name")
      * @var int
      */
+    #[OA\Property(description: 'The users group name')]
     public $group;
 
     /**
-     * @SWG\Property(description="The users library quota in bytes")
      * @var int
      */
+    #[OA\Property(description: 'The users library quota in bytes')]
     public $libraryQuota;
 
     /**
-     * @SWG\Property(description="First Name")
      * @var string
      */
+    #[OA\Property(description: 'First Name')]
     public $firstName;
 
     /**
-     * @SWG\Property(description="Last Name")
      * @var string
      */
+    #[OA\Property(description: 'Last Name')]
     public $lastName;
 
     /**
-     * @SWG\Property(description="Phone Number")
      * @var string
      */
+    #[OA\Property(description: 'Phone Number')]
     public $phone;
 
     /**
-     * @SWG\Property(description="Reference field 1")
      * @var string
      */
+    #[OA\Property(description: 'Reference field 1')]
     public $ref1;
 
     /**
-     * @SWG\Property(description="Reference field 2")
      * @var string
      */
+    #[OA\Property(description: 'Reference field 2')]
     public $ref2;
 
     /**
-     * @SWG\Property(description="Reference field 3")
      * @var string
      */
+    #[OA\Property(description: 'Reference field 3')]
     public $ref3;
 
     /**
-     * @SWG\Property(description="Reference field 4")
      * @var string
      */
+    #[OA\Property(description: 'Reference field 4')]
     public $ref4;
 
     /**
-     * @SWG\Property(description="Reference field 5")
      * @var string
      */
+    #[OA\Property(description: 'Reference field 5')]
     public $ref5;
 
     /**
-     * @SWG\Property(description="An array of user groups this user is assigned to")
      * @var UserGroup[]
      */
+    #[OA\Property(description: 'An array of user groups this user is assigned to')]
     public $groups = [];
 
     /**
-     * @SWG\Property(description="An array of Campaigns for this User")
      * @var Campaign[]
      */
+    #[OA\Property(description: 'An array of Campaigns for this User')]
     public $campaigns = [];
 
     /**
-     * @SWG\Property(description="An array of Layouts for this User")
      * @var Layout[]
      */
+    #[OA\Property(description: 'An array of Layouts for this User')]
     public $layouts = [];
 
     /**
-     * @SWG\Property(description="An array of Media for this user")
      * @var Media[]
      */
+    #[OA\Property(description: 'An array of Media for this user')]
     public $media = [];
 
     /**
-     * @SWG\Property(description="An array of Scheduled Events for this User")
      * @var Schedule[]
      */
+    #[OA\Property(description: 'An array of Scheduled Events for this User')]
     public $events = [];
 
     /**
-     * @SWG\Property(description="An array of Playlists owned by this User")
      * @var Playlist[]
      */
+    #[OA\Property(description: 'An array of Playlists owned by this User')]
     public $playlists = [];
 
     /**
-     * @SWG\Property(description="An array of Display Groups owned by this User")
      * @var DisplayGroup[]
      */
+    #[OA\Property(description: 'An array of Display Groups owned by this User')]
     public $displayGroups = [];
 
     /**
-     * @SWG\Property(description="An array of Dayparts owned by this User")
      * @var DayPart[]
      */
+    #[OA\Property(description: 'An array of Dayparts owned by this User')]
     public $dayParts = [];
 
     /**
-     * @SWG\Property(description="Does this User receive system notifications.")
      * @var int
      */
+    #[OA\Property(description: 'Does this User receive system notifications.')]
     public $isSystemNotification = 0;
 
     /**
-     * @SWG\Property(description="Does this User receive system notifications.")
      * @var int
      */
+    #[OA\Property(description: 'Does this User receive system notifications.')]
     public $isDisplayNotification = 0;
 
     /**
-     * @SWG\Property(description="Does this User receive DataSet notifications.")
      * @var int
      */
+    #[OA\Property(description: 'Does this User receive DataSet notifications.')]
     public $isDataSetNotification = 0;
 
     /**
-     * @SWG\Property(description="Does this User receive Layout notifications.")
      * @var int
      */
+    #[OA\Property(description: 'Does this User receive Layout notifications.')]
     public $isLayoutNotification = 0;
 
     /**
-     * @SWG\Property(description="Does this User receive Library notifications.")
      * @var int
      */
+    #[OA\Property(description: 'Does this User receive Library notifications.')]
     public $isLibraryNotification = 0;
 
     /**
-     * @SWG\Property(description="Does this User receive Report notifications.")
      * @var int
      */
+    #[OA\Property(description: 'Does this User receive Report notifications.')]
     public $isReportNotification = 0;
 
     /**
-     * @SWG\Property(description="Does this User receive Schedule notifications.")
      * @var int
      */
+    #[OA\Property(description: 'Does this User receive Schedule notifications.')]
     public $isScheduleNotification = 0;
 
     /**
-     * @SWG\Property(description="Does this User receive Custom notifications.")
      * @var int
      */
+    #[OA\Property(description: 'Does this User receive Custom notifications.')]
     public $isCustomNotification = 0;
 
     /**
-     * @SWG\Property(description="The two factor type id")
      * @var int
      */
+    #[OA\Property(description: 'The two factor type id')]
     public $twoFactorTypeId;
 
     /**
-     * @SWG\Property(description="Two Factor authorisation shared secret for this user")
      * @var string
      */
+    #[OA\Property(description: 'Two Factor authorisation shared secret for this user')]
     public $twoFactorSecret;
 
     /**
-     * @SWG\Property(description="Two Factor authorisation recovery codes", @SWG\Items(type="string"))
      * @var array
      */
+    #[OA\Property(description: 'Two Factor authorisation recovery codes', items: new OA\Items(type: 'string'))]
     public $twoFactorRecoveryCodes = [];
 
     /**

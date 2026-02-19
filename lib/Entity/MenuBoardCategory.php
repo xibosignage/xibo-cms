@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 
 namespace Xibo\Entity;
 
+use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\MenuBoardCategoryFactory;
 use Xibo\Service\LogServiceInterface;
@@ -31,46 +32,48 @@ use Xibo\Support\Exception\NotFoundException;
 use Xibo\Widget\DataType\ProductCategory;
 
 /**
- * @SWG\Definition()
+ * Class MenuBoardCategory
+ * @package Xibo\Entity
  */
+#[OA\Schema]
 class MenuBoardCategory implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="The Menu Board Category Id")
      * @var int
      */
+    #[OA\Property(description: 'The Menu Board Category Id')]
     public $menuCategoryId;
 
     /**
-     * @SWG\Property(description="The Menu Board Id")
      * @var int
      */
+    #[OA\Property(description: 'The Menu Board Id')]
     public $menuId;
 
     /**
-     * @SWG\Property(description="The Menu Board Category name")
      * @var string
      */
+    #[OA\Property(description: 'The Menu Board Category name')]
     public $name;
 
     /**
-     * @SWG\Property(description="The Menu Board Category description")
      * @var string
      */
+    #[OA\Property(description: 'The Menu Board Category description')]
     public $description;
 
     /**
-     * @SWG\Property(description="The Menu Board Category code identifier")
      * @var string
      */
+    #[OA\Property(description: 'The Menu Board Category code identifier')]
     public $code;
 
     /**
-     * @SWG\Property(description="The Menu Board Category associated mediaId")
      * @var int
      */
+    #[OA\Property(description: 'The Menu Board Category associated mediaId')]
     public $mediaId;
 
     private $products;

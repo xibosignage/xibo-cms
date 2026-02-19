@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -22,35 +22,35 @@
 
 namespace Xibo\Entity;
 
+use OpenApi\Attributes as OA;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class UserOption
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class UserOption implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="The userId that this Option applies to")
      * @var int
      */
+    #[OA\Property(description: 'The userId that this Option applies to')]
     public $userId;
 
     /**
-     * @SWG\Property(description="The option name")
      * @var string
      */
+    #[OA\Property(description: 'The option name')]
     public $option;
 
     /**
-     * @SWG\Property(description="The option value")
      * @var string
      */
+    #[OA\Property(description: 'The option value')]
     public $value;
 
     /**

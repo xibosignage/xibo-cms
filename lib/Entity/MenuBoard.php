@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -23,6 +23,7 @@
 namespace Xibo\Entity;
 
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\MenuBoardCategoryFactory;
@@ -36,65 +37,67 @@ use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
- * @SWG\Definition()
+ * Class MenuBoard
+ * @package Xibo\Entity
  */
+#[OA\Schema]
 class MenuBoard implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="The Menu Board Id")
      * @var int
      */
+    #[OA\Property(description: 'The Menu Board Id')]
     public $menuId;
 
     /**
-     * @SWG\Property(description="The Menu Board name")
      * @var string
      */
+    #[OA\Property(description: 'The Menu Board name')]
     public $name;
 
     /**
-     * @SWG\Property(description="The Menu Board description")
      * @var string
      */
+    #[OA\Property(description: 'The Menu Board description')]
     public $description;
 
     /**
-     * @SWG\Property(description="The Menu Board code identifier")
      * @var string
      */
+    #[OA\Property(description: 'The Menu Board code identifier')]
     public $code;
 
     /**
-     * @SWG\Property(description="The Menu Board owner Id")
      * @var int
      */
+    #[OA\Property(description: 'The Menu Board owner Id')]
     public $userId;
     public $owner;
 
     /**
-     * @SWG\Property(description="The Menu Board last modified date")
      * @var int
      */
+    #[OA\Property(description: 'The Menu Board last modified date')]
     public $modifiedDt;
 
     /**
-     * @SWG\Property(description="The Id of the Folder this Menu Board belongs to")
      * @var string
      */
+    #[OA\Property(description: 'The Id of the Folder this Menu Board belongs to')]
     public $folderId;
 
     /**
-     * @SWG\Property(description="The id of the Folder responsible for providing permissions for this Menu Board")
      * @var int
      */
+    #[OA\Property(description: 'The id of the Folder responsible for providing permissions for this Menu Board')]
     public $permissionsFolderId;
 
     /**
-     * @SWG\Property(description="A comma separated list of Groups/Users that have permission to this menu Board")
      * @var string
      */
+    #[OA\Property(description: 'A comma separated list of Groups/Users that have permission to this menu Board')]
     public $groupsWithPermissions;
 
     /** @var  SanitizerService */

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 namespace Xibo\Entity;
 
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
 use Xibo\Event\SubPlaylistDurationEvent;
 use Xibo\Event\WidgetDeleteEvent;
 use Xibo\Event\WidgetEditEvent;
@@ -40,9 +41,8 @@ use Xibo\Widget\Definition\Property;
 /**
  * Class Widget
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class Widget implements \JsonSerializable
 {
     public static $DATE_MIN = 0;
@@ -51,139 +51,135 @@ class Widget implements \JsonSerializable
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="The Widget ID")
      * @var int
      */
+    #[OA\Property(description: 'The Widget ID')]
     public $widgetId;
 
     /**
-     * @SWG\Property(description="The ID of the Playlist this Widget belongs to")
      * @var int
      */
+    #[OA\Property(description: 'The ID of the Playlist this Widget belongs to')]
     public $playlistId;
 
     /**
-     * @SWG\Property(description="The ID of the User that owns this Widget")
      * @var int
      */
+    #[OA\Property(description: 'The ID of the User that owns this Widget')]
     public $ownerId;
 
     /**
-     * @SWG\Property(description="The Module Type Code")
      * @var string
      */
+    #[OA\Property(description: 'The Module Type Code')]
     public $type;
 
     /**
-     * @SWG\Property(description="The duration in seconds this widget should be shown")
      * @var int
      */
+    #[OA\Property(description: 'The duration in seconds this widget should be shown')]
     public $duration;
 
     /**
-     * @SWG\Property(description="The display order of this widget")
      * @var int
      */
+    #[OA\Property(description: 'The display order of this widget')]
     public $displayOrder;
 
     /**
-     * @SWG\Property(description="Flag indicating if this widget has a duration that should be used")
      * @var int
      */
+    #[OA\Property(description: 'Flag indicating if this widget has a duration that should be used')]
     public $useDuration;
 
     /**
-     * @SWG\Property(description="Calculated Duration of this widget after taking into account the useDuration flag")
      * @var int
      */
+    #[OA\Property(description: 'Calculated Duration of this widget after taking into account the useDuration flag')]
     public $calculatedDuration = 0;
 
     /**
      * @var string
-     * @SWG\Property(
-     *  description="The datetime the Layout was created"
-     * )
      */
+    #[OA\Property(description: 'The datetime the Layout was created')]
     public $createdDt;
 
     /**
      * @var string
-     * @SWG\Property(
-     *  description="The datetime the Layout was last modified"
-     * )
      */
+    #[OA\Property(description: 'The datetime the Layout was last modified')]
     public $modifiedDt;
 
     /**
-     * @SWG\Property(description="Widget From Date")
      * @var int
      */
+    #[OA\Property(description: 'Widget From Date')]
     public $fromDt;
 
     /**
-     * @SWG\Property(description="Widget To Date")
      * @var int
      */
+    #[OA\Property(description: 'Widget To Date')]
     public $toDt;
 
     /**
-     * @SWG\Property(description="Widget Schema Version")
      * @var int
      */
+    #[OA\Property(description: 'Widget Schema Version')]
     public $schemaVersion;
 
     /**
-     * @SWG\Property(description="Transition Type In")
      * @var int
      */
+    #[OA\Property(description: 'Transition Type In')]
     public $transitionIn;
 
     /**
-     * @SWG\Property(description="Transition Type out")
      * @var int
      */
+    #[OA\Property(description: 'Transition Type out')]
     public $transitionOut;
 
     /**
-     * @SWG\Property(description="Transition duration in")
      * @var int
      */
+    #[OA\Property(description: 'Transition duration in')]
     public $transitionDurationIn;
 
     /**
-     * @SWG\Property(description="Transition duration out")
      * @var int
      */
+    #[OA\Property(description: 'Transition duration out')]
     public $transitionDurationOut;
 
     /**
-     * @SWG\Property(description="An array of Widget Options")
      * @var WidgetOption[]
      */
+    #[OA\Property(description: 'An array of Widget Options')]
     public $widgetOptions = [];
 
     /**
-     * @SWG\Property(description="An array of MediaIds this widget is linked to")
      * @var int[]
      */
+    #[OA\Property(description: 'An array of MediaIds this widget is linked to')]
     public $mediaIds = [];
 
     /**
-     * @SWG\Property(description="An array of Audio MediaIds this widget is linked to")
      * @var WidgetAudio[]
      */
+    #[OA\Property(description: 'An array of Audio MediaIds this widget is linked to')]
     public $audio = [];
 
     /**
-     * @SWG\Property(description="An array of permissions for this widget")
      * @var Permission[]
      */
+    #[OA\Property(description: 'An array of permissions for this widget')]
     public $permissions = [];
 
     /**
-     * @SWG\Property(description="The name of the Playlist this Widget is on")
      * @var string $playlist
      */
+    #[OA\Property(description: 'The name of the Playlist this Widget is on')]
     public $playlist;
 
     /** @var Action[] */
