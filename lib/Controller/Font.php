@@ -92,10 +92,35 @@ class Font extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/fonts', operationId: 'fontSearch', summary: 'Font Search', description: 'Search the available Fonts', tags: ['font'])]
-    #[OA\Parameter(name: 'id', in: 'query', description: 'Filter by Font Id', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'name', in: 'query', description: 'Filter by Font Name', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Font')))]
+    #[OA\Get(
+        path: '/fonts',
+        operationId: 'fontSearch',
+        description: 'Search the available Fonts',
+        summary: 'Font Search',
+        tags: ['font']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'Filter by Font Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'name',
+        description: 'Filter by Font Name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Font')
+        )
+    )]
     /**
      * Prints out a Table of all Font items
      *
@@ -168,8 +193,20 @@ class Font extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/fonts/details/{id}', operationId: 'fontDetails', summary: 'Font Details', description: 'Get the Font details', tags: ['font'])]
-    #[OA\Parameter(name: 'id', in: 'path', description: 'The Font ID', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Get(
+        path: '/fonts/details/{id}',
+        operationId: 'fontDetails',
+        description: 'Get the Font details',
+        summary: 'Font Details',
+        tags: ['font']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The Font ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 200, description: 'successful operation')]
     /**
      * Font details provided by FontLib
@@ -209,9 +246,40 @@ class Font extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/fonts/download/{id}', operationId: 'fontDownload', summary: 'Download Font', description: 'Download a Font file from the Library', tags: ['font'])]
-    #[OA\Parameter(name: 'id', in: 'path', description: 'The Font ID to Download', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Response(response: 200, description: 'successful operation', headers: [new OA\Header(header: 'X-Sendfile', description: 'Apache Send file header - if enabled.', schema: new OA\Schema(type: 'string')), new OA\Header(header: 'X-Accel-Redirect', description: 'nginx send file header - if enabled.', schema: new OA\Schema(type: 'string'))], content: new OA\MediaType(mediaType: 'application/octet-stream', schema: new OA\Schema(type: 'string', format: 'binary')))]
+    #[OA\Get(
+        path: '/fonts/download/{id}',
+        operationId: 'fontDownload',
+        description: 'Download a Font file from the Library',
+        summary: 'Download Font',
+        tags: ['font']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The Font ID to Download',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\MediaType(
+            mediaType: 'application/octet-stream',
+            schema: new OA\Schema(format: 'binary', type: 'string')
+        ),
+        headers: [
+            new OA\Header(
+                header: 'X-Sendfile',
+                description: 'Apache Send file header - if enabled.',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Header(
+                header: 'X-Accel-Redirect',
+                description: 'nginx send file header - if enabled.',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * @param Request $request
      * @param Response $response
@@ -248,11 +316,31 @@ class Font extends Base
         return ['otf', 'ttf', 'eot', 'svg', 'woff'];
     }
 
-    #[OA\Post(path: '/fonts', operationId: 'fontUpload', summary: 'Font Upload', description: 'Upload a new Font file', tags: ['font'])]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'multipart/form-data', schema: new OA\Schema(required: ['files'], properties: [
-        new OA\Property(property: 'files', description: 'The Uploaded File', type: 'string', format: 'binary'),
-        new OA\Property(property: 'name', description: 'Optional Font Name', type: 'string')
-    ])))]
+    #[OA\Post(
+        path: '/fonts',
+        operationId: 'fontUpload',
+        description: 'Upload a new Font file',
+        summary: 'Font Upload',
+        tags: ['font']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'multipart/form-data',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'files',
+                        description: 'The Uploaded File',
+                        format: 'binary',
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'name', description: 'Optional Font Name', type: 'string')
+                ],
+                required: ['files']
+            )
+        ),
+        required: true
+    )]
     #[OA\Response(response: 200, description: 'successful operation')]
     /**
      * Font Upload
@@ -376,8 +464,20 @@ class Font extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Delete(path: '/fonts/{id}/delete', operationId: 'fontDelete', summary: 'Font Delete', description: 'Delete existing Font file', tags: ['font'])]
-    #[OA\Parameter(name: 'id', in: 'path', description: 'The Font ID to delete', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Delete(
+        path: '/fonts/{id}/delete',
+        operationId: 'fontDelete',
+        description: 'Delete existing Font file',
+        summary: 'Font Delete',
+        tags: ['font']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The Font ID to delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Font Delete

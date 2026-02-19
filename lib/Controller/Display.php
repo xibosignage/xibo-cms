@@ -173,7 +173,12 @@ class Display extends Base
         $this->dayPartFactory = $dayPartFactory;
     }
 
-    #[OA\Get(path: '/displayvenue', operationId: 'displayVenueSearch', summary: 'Get Display Venues', tags: ['displayVenue'])]
+    #[OA\Get(
+        path: '/displayvenue',
+        operationId: 'displayVenueSearch',
+        summary: 'Get Display Venues',
+        tags: ['displayVenue']
+    )]
     #[OA\Response(response: 200, description: 'a successful response')]
     /**
      * @param Request $request
@@ -501,28 +506,161 @@ class Display extends Base
         ];
     }
 
-    #[OA\Get(path: '/display', operationId: 'displaySearch', summary: 'Display Search', description: 'Search Displays for this User', tags: ['display'])]
-    #[OA\Parameter(name: 'displayId', in: 'query', description: 'Filter by Display Id', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'displayGroupId', in: 'query', description: 'Filter by DisplayGroup Id', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'display', in: 'query', description: 'Filter by Display Name', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'tags', in: 'query', description: 'Filter by tags', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'exactTags', in: 'query', description: 'A flag indicating whether to treat the tags filter as an exact match', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'logicalOperator', in: 'query', description: 'When filtering by multiple Tags, which logical operator should be used? AND|OR', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'macAddress', in: 'query', description: 'Filter by Mac Address', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'hardwareKey', in: 'query', description: 'Filter by Hardware Key', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'clientVersion', in: 'query', description: 'Filter by Client Version', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'clientType', in: 'query', description: 'Filter by Client Type', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'clientCode', in: 'query', description: 'Filter by Client Code', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'embed', in: 'query', description: 'Embed related data, namely displaygroups. A comma separated list of child objects to embed.', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'authorised', in: 'query', description: 'Filter by authorised flag', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'displayProfileId', in: 'query', description: 'Filter by Display Profile', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'mediaInventoryStatus', in: 'query', description: 'Filter by Display Status ( 1 - up to date, 2 - downloading, 3 - Out of date)', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'loggedIn', in: 'query', description: 'Filter by Logged In flag', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'lastAccessed', in: 'query', description: 'Filter by Display Last Accessed date, expects date in Y-m-d H:i:s format', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'folderId', in: 'query', description: 'Filter by Folder ID', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'xmrRegistered', in: 'query', description: 'Filter by whether XMR is registed (1 or 0)', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'isPlayerSupported', in: 'query', description: 'Filter by whether the player is supported (1 or 0)', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Display')))]
+    #[OA\Get(
+        path: '/display',
+        operationId: 'displaySearch',
+        description: 'Search Displays for this User',
+        summary: 'Display Search',
+        tags: ['display']
+    )]
+    #[OA\Parameter(
+        name: 'displayId',
+        description: 'Filter by Display Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupId',
+        description: 'Filter by DisplayGroup Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'display',
+        description: 'Filter by Display Name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'tags',
+        description: 'Filter by tags',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'exactTags',
+        description: 'A flag indicating whether to treat the tags filter as an exact match',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'logicalOperator',
+        description: 'When filtering by multiple Tags, which logical operator should be used? AND|OR',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'macAddress',
+        description: 'Filter by Mac Address',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'hardwareKey',
+        description: 'Filter by Hardware Key',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'clientVersion',
+        description: 'Filter by Client Version',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'clientType',
+        description: 'Filter by Client Type',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'clientCode',
+        description: 'Filter by Client Code',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'embed',
+        description: 'Embed related data, namely displaygroups. A comma separated list of child objects to embed.', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'authorised',
+        description: 'Filter by authorised flag',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'displayProfileId',
+        description: 'Filter by Display Profile',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'mediaInventoryStatus',
+        description: 'Filter by Display Status ( 1 - up to date, 2 - downloading, 3 - Out of date)',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'loggedIn',
+        description: 'Filter by Logged In flag',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'lastAccessed',
+        description: 'Filter by Display Last Accessed date, expects date in Y-m-d H:i:s format',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'folderId',
+        description: 'Filter by Folder ID',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'xmrRegistered',
+        description: 'Filter by whether XMR is registed (1 or 0)',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'isPlayerSupported',
+        description: 'Filter by whether the player is supported (1 or 0)',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Display')
+        )
+    )]
     /**
      * Grid of Displays
      *
@@ -1372,50 +1510,180 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/display/{displayId}', operationId: 'displayEdit', summary: 'Display Edit', description: 'Edit a Display', tags: ['display'])]
-    #[OA\Parameter(name: 'displayId', in: 'path', description: 'The Display ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['display', 'defaultLayoutId', 'licensed', 'license', 'incSchedule', 'emailAlert', 'wakeOnLanEnabled'], properties: [
-        new OA\Property(property: 'display', description: 'The Display Name', type: 'string'),
-        new OA\Property(property: 'description', description: 'A description of the Display', type: 'string'),
-        new OA\Property(property: 'tags', description: 'A comma separated list of tags for this item', type: 'string'),
-        new OA\Property(property: 'auditingUntil', description: 'A date this Display records auditing information until.', type: 'string', format: 'date-time'),
-        new OA\Property(property: 'defaultLayoutId', description: 'A Layout ID representing the Default Layout for this Display.', type: 'integer'),
-        new OA\Property(property: 'licensed', description: 'Flag indicating whether this display is licensed.', type: 'integer'),
-        new OA\Property(property: 'license', description: 'The hardwareKey to use as the licence key for this Display', type: 'string'),
-        new OA\Property(property: 'incSchedule', description: 'Flag indicating whether the Default Layout should be included in the Schedule', type: 'integer'),
-        new OA\Property(property: 'emailAlert', description: 'Flag indicating whether the Display generates up/down email alerts.', type: 'integer'),
-        new OA\Property(property: 'alertTimeout', description: 'How long in seconds should this display wait before alerting when it hasn\'t connected. Override for the collection interval.', type: 'integer'),
-        new OA\Property(property: 'wakeOnLanEnabled', description: 'Flag indicating if Wake On LAN is enabled for this Display', type: 'integer'),
-        new OA\Property(property: 'wakeOnLanTime', description: 'A h:i string representing the time that the Display should receive its Wake on LAN command', type: 'string'),
-        new OA\Property(property: 'broadCastAddress', description: 'The BroadCast Address for this Display - used by Wake On LAN', type: 'string'),
-        new OA\Property(property: 'secureOn', description: 'The secure on configuration for this Display', type: 'string'),
-        new OA\Property(property: 'cidr', description: 'The CIDR configuration for this Display', type: 'integer'),
-        new OA\Property(property: 'latitude', description: 'The Latitude of this Display', type: 'number'),
-        new OA\Property(property: 'longitude', description: 'The Longitude of this Display', type: 'number'),
-        new OA\Property(property: 'timeZone', description: 'The timezone for this display, or empty to use the CMS timezone', type: 'string'),
-        new OA\Property(property: 'languages', description: 'An array of languages supported in this display location', type: 'string'),
-        new OA\Property(property: 'displayProfileId', description: 'The Display Settings Profile ID', type: 'integer'),
-        new OA\Property(property: 'displayTypeId', description: 'The Display Type ID of this Display', type: 'integer'),
-        new OA\Property(property: 'screenSize', description: 'The screen size of this Display', type: 'number'),
-        new OA\Property(property: 'venueId', description: 'The Venue ID of this Display', type: 'integer'),
-        new OA\Property(property: 'address', description: 'The Location Address of this Display', type: 'string'),
-        new OA\Property(property: 'isMobile', description: 'Is this Display mobile?', type: 'integer'),
-        new OA\Property(property: 'isOutdoor', description: 'Is this Display Outdoor?', type: 'integer'),
-        new OA\Property(property: 'costPerPlay', description: 'The Cost Per Play of this Display', type: 'number'),
-        new OA\Property(property: 'impressionsPerPlay', description: 'The Impressions Per Play of this Display', type: 'integer'),
-        new OA\Property(property: 'customId', description: 'The custom ID (an Id of any external system) of this Display', type: 'string'),
-        new OA\Property(property: 'ref1', description: 'Reference 1', type: 'string'),
-        new OA\Property(property: 'ref2', description: 'Reference 2', type: 'string'),
-        new OA\Property(property: 'ref3', description: 'Reference 3', type: 'string'),
-        new OA\Property(property: 'ref4', description: 'Reference 4', type: 'string'),
-        new OA\Property(property: 'ref5', description: 'Reference 5', type: 'string'),
-        new OA\Property(property: 'clearCachedData', description: 'Clear all Cached data for this display', type: 'integer'),
-        new OA\Property(property: 'rekeyXmr', description: 'Clear the cached XMR configuration and send a rekey', type: 'integer'),
-        new OA\Property(property: 'teamViewerSerial', description: 'The TeamViewer serial number for this Display, if applicable', type: 'string'),
-        new OA\Property(property: 'webkeySerial', description: 'The Webkey serial number for this Display, if applicable', type: 'string'),
-        new OA\Property(property: 'folderId', description: 'Folder ID to which this object should be assigned to', type: 'integer')
-    ])))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Display'))]
+    #[OA\Put(
+        path: '/display/{displayId}',
+        operationId: 'displayEdit',
+        description: 'Edit a Display',
+        summary: 'Display Edit',
+        tags: ['display']
+    )]
+    #[OA\Parameter(
+        name: 'displayId',
+        description: 'The Display ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'display', description: 'The Display Name', type: 'string'),
+                    new OA\Property(property: 'description', description: 'A description of the Display', type: 'string'),
+                    new OA\Property(
+                        property: 'tags',
+                        description: 'A comma separated list of tags for this item',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'auditingUntil',
+                        description: 'A date this Display records auditing information until.',
+                        format: 'date-time',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'defaultLayoutId',
+                        description: 'A Layout ID representing the Default Layout for this Display.',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'licensed',
+                        description: 'Flag indicating whether this display is licensed.',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'license',
+                        description: 'The hardwareKey to use as the licence key for this Display',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'incSchedule',
+                        description: 'Flag indicating whether the Default Layout should be included in the Schedule', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'emailAlert',
+                        description: 'Flag indicating whether the Display generates up/down email alerts.',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'alertTimeout',
+                        description: 'How long in seconds should this display wait before alerting when it hasn\'t connected. Override for the collection interval.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'wakeOnLanEnabled',
+                        description: 'Flag indicating if Wake On LAN is enabled for this Display',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'wakeOnLanTime',
+                        description: 'A h:i string representing the time that the Display should receive its Wake on LAN command', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'broadCastAddress',
+                        description: 'The BroadCast Address for this Display - used by Wake On LAN',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'secureOn',
+                        description: 'The secure on configuration for this Display',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'cidr',
+                        description: 'The CIDR configuration for this Display',
+                        type: 'integer'
+                    ),
+                    new OA\Property(property: 'latitude', description: 'The Latitude of this Display', type: 'number'),
+                    new OA\Property(property: 'longitude', description: 'The Longitude of this Display', type: 'number'),
+                    new OA\Property(
+                        property: 'timeZone',
+                        description: 'The timezone for this display, or empty to use the CMS timezone',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'languages',
+                        description: 'An array of languages supported in this display location',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'displayProfileId',
+                        description: 'The Display Settings Profile ID',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'displayTypeId',
+                        description: 'The Display Type ID of this Display',
+                        type: 'integer'
+                    ),
+                    new OA\Property(property: 'screenSize', description: 'The screen size of this Display', type: 'number'),
+                    new OA\Property(property: 'venueId', description: 'The Venue ID of this Display', type: 'integer'),
+                    new OA\Property(property: 'address', description: 'The Location Address of this Display', type: 'string'),
+                    new OA\Property(property: 'isMobile', description: 'Is this Display mobile?', type: 'integer'),
+                    new OA\Property(property: 'isOutdoor', description: 'Is this Display Outdoor?', type: 'integer'),
+                    new OA\Property(property: 'costPerPlay', description: 'The Cost Per Play of this Display', type: 'number'),
+                    new OA\Property(
+                        property: 'impressionsPerPlay',
+                        description: 'The Impressions Per Play of this Display',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'customId',
+                        description: 'The custom ID (an Id of any external system) of this Display',
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'ref1', description: 'Reference 1', type: 'string'),
+                    new OA\Property(property: 'ref2', description: 'Reference 2', type: 'string'),
+                    new OA\Property(property: 'ref3', description: 'Reference 3', type: 'string'),
+                    new OA\Property(property: 'ref4', description: 'Reference 4', type: 'string'),
+                    new OA\Property(property: 'ref5', description: 'Reference 5', type: 'string'),
+                    new OA\Property(
+                        property: 'clearCachedData',
+                        description: 'Clear all Cached data for this display',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'rekeyXmr',
+                        description: 'Clear the cached XMR configuration and send a rekey',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'teamViewerSerial',
+                        description: 'The TeamViewer serial number for this Display, if applicable',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'webkeySerial',
+                        description: 'The Webkey serial number for this Display, if applicable',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'folderId',
+                        description: 'Folder ID to which this object should be assigned to',
+                        type: 'integer'
+                    )
+                ],
+                required: [
+                    'display',
+                    'defaultLayoutId',
+                    'licensed',
+                    'license',
+                    'incSchedule',
+                    'emailAlert',
+                    'wakeOnLanEnabled'
+                ]
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Display')
+    )]
     /**
      * Display Edit
      * @param Request $request
@@ -1552,8 +1820,20 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Delete(path: '/display/{displayId}', operationId: 'displayDelete', summary: 'Display Delete', description: 'Delete a Display', tags: ['display'])]
-    #[OA\Parameter(name: 'displayId', in: 'path', description: 'The Display ID', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Delete(
+        path: '/display/{displayId}',
+        operationId: 'displayDelete',
+        description: 'Delete a Display',
+        summary: 'Display Delete',
+        tags: ['display']
+    )]
+    #[OA\Parameter(
+        name: 'displayId',
+        description: 'The Display ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete a display
@@ -1890,9 +2170,25 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/display/requestscreenshot/{displayId}', operationId: 'displayRequestScreenshot', summary: 'Request Screen Shot', description: 'Notify the display that the CMS would like a screen shot to be sent.', tags: ['display'])]
-    #[OA\Parameter(name: 'displayId', in: 'path', description: 'The Display ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Display'))]
+    #[OA\Put(
+        path: '/display/requestscreenshot/{displayId}',
+        operationId: 'displayRequestScreenshot',
+        description: 'Notify the display that the CMS would like a screen shot to be sent.',
+        summary: 'Request Screen Shot',
+        tags: ['display']
+    )]
+    #[OA\Parameter(
+        name: 'displayId',
+        description: 'The Display ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Display')
+    )]
     /**
      * Request ScreenShot
      * @param Request $request
@@ -1963,8 +2259,20 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/display/wol/{displayId}', operationId: 'displayWakeOnLan', summary: 'Issue WOL', description: 'Send a Wake On LAN packet to this Display', tags: ['display'])]
-    #[OA\Parameter(name: 'displayId', in: 'path', description: 'The Display ID', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Post(
+        path: '/display/wol/{displayId}',
+        operationId: 'displayWakeOnLan',
+        description: 'Send a Wake On LAN packet to this Display',
+        summary: 'Issue WOL',
+        tags: ['display']
+    )]
+    #[OA\Parameter(
+        name: 'displayId',
+        description: 'The Display ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Wake this display using a WOL command
@@ -2183,8 +2491,20 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/display/authorise/{displayId}', operationId: 'displayToggleAuthorise', summary: 'Toggle authorised', description: 'Toggle authorised for the Display.', tags: ['display'])]
-    #[OA\Parameter(name: 'displayId', in: 'path', description: 'The Display ID', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Put(
+        path: '/display/authorise/{displayId}',
+        operationId: 'displayToggleAuthorise',
+        description: 'Toggle authorised for the Display.',
+        summary: 'Toggle authorised',
+        tags: ['display']
+    )]
+    #[OA\Parameter(
+        name: 'displayId',
+        description: 'The Display ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Toggle Authorise on this Display
@@ -2251,11 +2571,32 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/display/defaultlayout/{displayId}', operationId: 'displayDefaultLayout', summary: 'Set Default Layout', description: 'Set the default Layout on this Display', tags: ['display'])]
-    #[OA\Parameter(name: 'displayId', in: 'path', description: 'The Display ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['layoutId'], properties: [
-        new OA\Property(property: 'layoutId', description: 'The Layout ID', type: 'integer')
-    ])))]
+    #[OA\Put(
+        path: '/display/defaultlayout/{displayId}',
+        operationId: 'displayDefaultLayout',
+        description: 'Set the default Layout on this Display',
+        summary: 'Set Default Layout',
+        tags: ['display']
+    )]
+    #[OA\Parameter(
+        name: 'displayId',
+        description: 'The Display ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'layoutId', description: 'The Layout ID', type: 'integer')
+                ],
+                required: ['layoutId']
+            )
+        ),
+        required: true
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Set the Default Layout for this Display
@@ -2545,8 +2886,20 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/display/licenceCheck/{displayId}', operationId: 'displayLicenceCheck', summary: 'Licence Check', description: 'Ask this Player to check its Commercial Licence', tags: ['display'])]
-    #[OA\Parameter(name: 'displayId', in: 'path', description: 'The Display ID', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Put(
+        path: '/display/licenceCheck/{displayId}',
+        operationId: 'displayLicenceCheck',
+        description: 'Ask this Player to check its Commercial Licence',
+        summary: 'Licence Check',
+        tags: ['display']
+    )]
+    #[OA\Parameter(
+        name: 'displayId',
+        description: 'The Display ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Check commercial licence
@@ -2584,9 +2937,28 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/display/status/{id}', operationId: 'displayStatus', summary: 'Display Status', description: 'Get the display status window for this Display.', tags: ['display'])]
-    #[OA\Parameter(name: 'id', in: 'path', description: 'Display Id', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(type: 'string')))]
+    #[OA\Get(
+        path: '/display/status/{id}',
+        operationId: 'displayStatus',
+        description: 'Get the display status window for this Display.',
+        summary: 'Display Status',
+        tags: ['display']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'Display Id',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(type: 'string')
+        )
+    )]
     /**
      * @param Request $request
      * @param Response $response
@@ -2634,8 +3006,20 @@ class Display extends Base
     }
 
 
-    #[OA\Put(path: '/display/purgeAll/{displayId}', operationId: 'displayPurgeAll', description: 'Ask this Player to purge all Media from its local storage and request fresh files from CMS.', summary: 'Purge All', tags: ['display'])]
-    #[OA\Parameter(name: 'displayId', description: 'The Display ID', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Put(
+        path: '/display/purgeAll/{displayId}',
+        operationId: 'displayPurgeAll',
+        description: 'Ask this Player to purge all Media from its local storage and request fresh files from CMS.', // phpcs:ignore
+        summary: 'Purge All',
+        tags: ['display']
+    )]
+    #[OA\Parameter(
+        name: 'displayId',
+        description: 'The Display ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Purge All

@@ -76,19 +76,95 @@ class Action  extends Base
     }
 
 
-    #[OA\Get(path: '/action', operationId: 'actionSearch', summary: 'Search Actions', description: 'Search all Actions this user has access to', tags: ['action'])]
-    #[OA\Parameter(name: 'actionId', in: 'query', description: 'Filter by Action Id', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'ownerId', in: 'query', description: 'Filter by Owner Id', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'triggerType', in: 'query', description: 'Filter by Action trigger type', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'triggerCode', in: 'query', description: 'Filter by Action trigger code', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'actionType', in: 'query', description: 'Filter by Action type', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'source', in: 'query', description: 'Filter by Action source', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'sourceId', in: 'query', description: 'Filter by Action source Id', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'target', in: 'query', description: 'Filter by Action target', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'targetId', in: 'query', description: 'Filter by Action target Id', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'layoutId', in: 'query', description: 'Return all actions pertaining to a particular Layout', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'sourceOrTargetId', in: 'query', description: 'Return all actions related to a source or target with the provided ID', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Action')))]
+    #[OA\Get(
+        path: '/action',
+        operationId: 'actionSearch',
+        description: 'Search all Actions this user has access to',
+        summary: 'Search Actions',
+        tags: ['action']
+    )]
+    #[OA\Parameter(
+        name: 'actionId',
+        description: 'Filter by Action Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'ownerId',
+        description: 'Filter by Owner Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'triggerType',
+        description: 'Filter by Action trigger type',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'triggerCode',
+        description: 'Filter by Action trigger code',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'actionType',
+        description: 'Filter by Action type',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'source',
+        description: 'Filter by Action source',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'sourceId',
+        description: 'Filter by Action source Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'target',
+        description: 'Filter by Action target',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'targetId',
+        description: 'Filter by Action target Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        description: 'Return all actions pertaining to a particular Layout',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'sourceOrTargetId',
+        description: 'Return all actions related to a source or target with the provided ID', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Action'))
+    )]
     /**
      * Returns a Grid of Actions
      *
@@ -157,20 +233,82 @@ class Action  extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/action', operationId: 'actionAdd', summary: 'Add Action', description: 'Add a new Action', tags: ['action'])]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['layoutId', 'actionType', 'target'], properties: [
-        new OA\Property(property: 'layoutId', description: 'LayoutId associted with this Action', type: 'integer'),
-        new OA\Property(property: 'actionType', description: 'Action type, next, previous, navLayout, navWidget', type: 'string'),
-        new OA\Property(property: 'target', description: 'Target for this action, screen or region', type: 'string'),
-        new OA\Property(property: 'targetId', description: 'The id of the target for this action - regionId if the target is set to region', type: 'string'),
-        new OA\Property(property: 'source', description: 'Source for this action layout, region or widget', type: 'string'),
-        new OA\Property(property: 'sourceId', description: 'The id of the source object, layoutId, regionId or widgetId', type: 'integer'),
-        new OA\Property(property: 'triggerType', description: 'Action trigger type, touch or webhook', type: 'string'),
-        new OA\Property(property: 'triggerCode', description: 'Action trigger code', type: 'string'),
-        new OA\Property(property: 'widgetId', description: 'For navWidget actionType, the WidgetId to navigate to', type: 'integer'),
-        new OA\Property(property: 'layoutCode', description: 'For navLayout, the Layout Code identifier to navigate to', type: 'string')
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/Action'))]
+    #[OA\Post(
+        path: '/action',
+        operationId: 'actionAdd',
+        description: 'Add a new Action',
+        summary: 'Add Action',
+        tags: ['action']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'layoutId',
+                        description: 'LayoutId associted with this Action',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'actionType',
+                        description: 'Action type, next, previous, navLayout, navWidget',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'target',
+                        description: 'Target for this action, screen or region',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'targetId',
+                        description: 'The id of the target for this action - regionId if the target is set to region', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'source',
+                        description: 'Source for this action layout, region or widget',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'sourceId',
+                        description: 'The id of the source object, layoutId, regionId or widgetId',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'triggerType',
+                        description: 'Action trigger type, touch or webhook',
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'triggerCode', description: 'Action trigger code', type: 'string'),
+                    new OA\Property(
+                        property: 'widgetId',
+                        description: 'For navWidget actionType, the WidgetId to navigate to',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'layoutCode',
+                        description: 'For navLayout, the Layout Code identifier to navigate to',
+                        type: 'string'
+                    )
+                ],
+                required: ['layoutId', 'actionType', 'target']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Action'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add a new Action
      *
@@ -239,21 +377,89 @@ class Action  extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/action/{actionId}', operationId: 'actionEdit', summary: 'Edit Action', description: 'Edit a new Action', tags: ['action'])]
-    #[OA\Parameter(name: 'actionId', in: 'path', description: 'Action ID to edit', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['layoutId', 'actionType', 'target', 'source', 'sourceId', 'triggerType'], properties: [
-        new OA\Property(property: 'layoutId', description: 'LayoutId associted with this Action', type: 'integer'),
-        new OA\Property(property: 'actionType', description: 'Action type, next, previous, navLayout, navWidget', type: 'string'),
-        new OA\Property(property: 'target', description: 'Target for this action, screen or region', type: 'string'),
-        new OA\Property(property: 'targetId', description: 'The id of the target for this action - regionId if the target is set to region', type: 'string'),
-        new OA\Property(property: 'source', description: 'Source for this action layout, region or widget', type: 'string'),
-        new OA\Property(property: 'sourceId', description: 'The id of the source object, layoutId, regionId or widgetId', type: 'integer'),
-        new OA\Property(property: 'triggerType', description: 'Action trigger type, touch or webhook', type: 'string'),
-        new OA\Property(property: 'triggerCode', description: 'Action trigger code', type: 'string'),
-        new OA\Property(property: 'widgetId', description: 'For navWidget actionType, the WidgetId to navigate to', type: 'integer'),
-        new OA\Property(property: 'layoutCode', description: 'For navLayout, the Layout Code identifier to navigate to', type: 'string')
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/Action'))]
+    #[OA\Put(
+        path: '/action/{actionId}',
+        operationId: 'actionEdit',
+        description: 'Edit a new Action',
+        summary: 'Edit Action',
+        tags: ['action']
+    )]
+    #[OA\Parameter(
+        name: 'actionId',
+        description: 'Action ID to edit',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'layoutId',
+                        description: 'LayoutId associted with this Action',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'actionType',
+                        description: 'Action type, next, previous, navLayout, navWidget',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'target',
+                        description: 'Target for this action, screen or region',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'targetId',
+                        description: 'The id of the target for this action - regionId if the target is set to region', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'source',
+                        description: 'Source for this action layout, region or widget',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'sourceId',
+                        description: 'The id of the source object, layoutId, regionId or widgetId',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'triggerType',
+                        description: 'Action trigger type, touch or webhook',
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'triggerCode', description: 'Action trigger code', type: 'string'),
+                    new OA\Property(
+                        property: 'widgetId',
+                        description: 'For navWidget actionType, the WidgetId to navigate to',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'layoutCode',
+                        description: 'For navLayout, the Layout Code identifier to navigate to',
+                        type: 'string'
+                    )
+                ],
+                required: ['layoutId', 'actionType', 'target', 'source', 'sourceId', 'triggerType']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Action'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Edit Action
      *
@@ -302,8 +508,20 @@ class Action  extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Delete(path: '/action/{actionId}', operationId: 'actionDelete', summary: 'Delete Action', description: 'Delete an existing Action', tags: ['action'])]
-    #[OA\Parameter(name: 'actionId', in: 'path', description: 'The Action ID to Delete', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Delete(
+        path: '/action/{actionId}',
+        operationId: 'actionDelete',
+        description: 'Delete an existing Action',
+        summary: 'Delete Action',
+        tags: ['action']
+    )]
+    #[OA\Parameter(
+        name: 'actionId',
+        description: 'The Action ID to Delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete Action

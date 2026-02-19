@@ -87,8 +87,20 @@ class DataSetData extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/dataset/data/{dataSetId}', operationId: 'dataSetData', summary: 'DataSet Data', description: 'Get Data for DataSet', tags: ['dataset'])]
-    #[OA\Parameter(name: 'dataSetId', in: 'path', description: 'The DataSet ID', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Get(
+        path: '/dataset/data/{dataSetId}',
+        operationId: 'dataSetData',
+        description: 'Get Data for DataSet',
+        summary: 'DataSet Data',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        description: 'The DataSet ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 200, description: 'successful operation')]
     /**
      * Grid
@@ -194,12 +206,47 @@ class DataSetData extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/dataset/data/{dataSetId}', operationId: 'dataSetDataAdd', summary: 'Add Row', description: 'Add a row of Data to a DataSet', tags: ['dataset'])]
-    #[OA\Parameter(name: 'dataSetId', in: 'path', description: 'The DataSet ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['dataSetColumnId_ID'], properties: [
-        new OA\Property(property: 'dataSetColumnId_ID', description: 'Parameter for each dataSetColumnId in the DataSet', type: 'string')
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))])]
+    #[OA\Post(
+        path: '/dataset/data/{dataSetId}',
+        operationId: 'dataSetDataAdd',
+        description: 'Add a row of Data to a DataSet',
+        summary: 'Add Row',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        description: 'The DataSet ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'dataSetColumnId_ID',
+                        description: 'Parameter for each dataSetColumnId in the DataSet',
+                        type: 'string'
+                    )
+                ],
+                required: ['dataSetColumnId_ID']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add
      * @param Request $request
@@ -321,12 +368,43 @@ class DataSetData extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/dataset/data/{dataSetId}/{rowId}', operationId: 'dataSetDataEdit', summary: 'Edit Row', description: 'Edit a row of Data to a DataSet', tags: ['dataset'])]
-    #[OA\Parameter(name: 'dataSetId', in: 'path', description: 'The DataSet ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'rowId', in: 'path', description: 'The Row ID of the Data to Edit', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['dataSetColumnId_ID'], properties: [
-        new OA\Property(property: 'dataSetColumnId_ID', description: 'Parameter for each dataSetColumnId in the DataSet', type: 'string')
-    ])))]
+    #[OA\Put(
+        path: '/dataset/data/{dataSetId}/{rowId}',
+        operationId: 'dataSetDataEdit',
+        description: 'Edit a row of Data to a DataSet',
+        summary: 'Edit Row',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        description: 'The DataSet ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'rowId',
+        description: 'The Row ID of the Data to Edit',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'dataSetColumnId_ID',
+                        description: 'Parameter for each dataSetColumnId in the DataSet',
+                        type: 'string'
+                    )
+                ],
+                required: ['dataSetColumnId_ID']
+            )
+        ),
+        required: true
+    )]
     #[OA\Response(response: 200, description: 'successful operation')]
     /**
      * Edit Row
@@ -460,9 +538,27 @@ class DataSetData extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Delete(path: '/dataset/data/{dataSetId}/{rowId}', operationId: 'dataSetDataDelete', summary: 'Delete Row', description: 'Delete a row of Data to a DataSet', tags: ['dataset'])]
-    #[OA\Parameter(name: 'dataSetId', in: 'path', description: 'The DataSet ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'rowId', in: 'path', description: 'The Row ID of the Data to Delete', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Delete(
+        path: '/dataset/data/{dataSetId}/{rowId}',
+        operationId: 'dataSetDataDelete',
+        description: 'Delete a row of Data to a DataSet',
+        summary: 'Delete Row',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        description: 'The DataSet ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'rowId',
+        description: 'The Row ID of the Data to Delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete Row

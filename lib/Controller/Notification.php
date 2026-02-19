@@ -151,11 +151,42 @@ class Notification extends Base
         }
     }
 
-    #[OA\Get(path: '/notification', operationId: 'notificationSearch', summary: 'Notification Search', description: 'Search this users Notifications', tags: ['notification'])]
-    #[OA\Parameter(name: 'notificationId', in: 'query', description: 'Filter by Notification Id', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'subject', in: 'query', description: 'Filter by Subject', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'embed', in: 'query', description: 'Embed related data such as userGroups,displayGroups', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Notification')))]
+    #[OA\Get(
+        path: '/notification',
+        operationId: 'notificationSearch',
+        description: 'Search this users Notifications',
+        summary: 'Notification Search',
+        tags: ['notification']
+    )]
+    #[OA\Parameter(
+        name: 'notificationId',
+        description: 'Filter by Notification Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'subject',
+        description: 'Filter by Subject',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'embed',
+        description: 'Embed related data such as userGroups,displayGroups',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Notification')
+        )
+    )]
     /**
      * @param Request $request
      * @param Response $response
@@ -461,16 +492,60 @@ class Notification extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/notification', operationId: 'notificationAdd', summary: 'Notification Add', description: 'Add a Notification', tags: ['notification'])]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['subject', 'isInterrupt', 'displayGroupIds', 'userGroupIds'], properties: [
-        new OA\Property(property: 'subject', description: 'The Subject', type: 'string'),
-        new OA\Property(property: 'body', description: 'The Body', type: 'string'),
-        new OA\Property(property: 'releaseDt', description: 'ISO date representing the release date for this notification', type: 'string'),
-        new OA\Property(property: 'isInterrupt', description: 'Flag indication whether this notification should interrupt the web portal nativation/login', type: 'integer'),
-        new OA\Property(property: 'displayGroupIds', description: 'The display group ids to assign this notification to', type: 'array', items: new OA\Items(type: 'integer')),
-        new OA\Property(property: 'userGroupIds', description: 'The user group ids to assign to this notification', type: 'array', items: new OA\Items(type: 'integer'))
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/Notification'))]
+    #[OA\Post(
+        path: '/notification',
+        operationId: 'notificationAdd',
+        description: 'Add a Notification',
+        summary: 'Notification Add',
+        tags: ['notification']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'subject', description: 'The Subject', type: 'string'),
+                    new OA\Property(property: 'body', description: 'The Body', type: 'string'),
+                    new OA\Property(
+                        property: 'releaseDt',
+                        description: 'ISO date representing the release date for this notification',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'isInterrupt',
+                        description: 'Flag indication whether this notification should interrupt the web portal nativation/login', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'displayGroupIds',
+                        description: 'The display group ids to assign this notification to',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'userGroupIds',
+                        description: 'The user group ids to assign to this notification',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    )
+                ],
+                required: ['subject', 'isInterrupt', 'displayGroupIds', 'userGroupIds']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Notification'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add Notification
      *
@@ -563,17 +638,60 @@ class Notification extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/notification/{notificationId}', operationId: 'notificationEdit', summary: 'Notification Edit', description: 'Edit a Notification', tags: ['notification'])]
-    #[OA\Parameter(name: 'notificationId', in: 'path', description: 'The NotificationId', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['subject', 'releaseDt', 'isInterrupt', 'displayGroupIds', 'userGroupIds'], properties: [
-        new OA\Property(property: 'subject', description: 'The Subject', type: 'string'),
-        new OA\Property(property: 'body', description: 'The Body', type: 'string'),
-        new OA\Property(property: 'releaseDt', description: 'ISO date representing the release date for this notification', type: 'string'),
-        new OA\Property(property: 'isInterrupt', description: 'Flag indication whether this notification should interrupt the web portal nativation/login', type: 'integer'),
-        new OA\Property(property: 'displayGroupIds', description: 'The display group ids to assign this notification to', type: 'array', items: new OA\Items(type: 'integer')),
-        new OA\Property(property: 'userGroupIds', description: 'The user group ids to assign to this notification', type: 'array', items: new OA\Items(type: 'integer'))
-    ])))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Notification'))]
+    #[OA\Put(
+        path: '/notification/{notificationId}',
+        operationId: 'notificationEdit',
+        description: 'Edit a Notification',
+        summary: 'Notification Edit',
+        tags: ['notification']
+    )]
+    #[OA\Parameter(
+        name: 'notificationId',
+        description: 'The NotificationId',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'subject', description: 'The Subject', type: 'string'),
+                    new OA\Property(property: 'body', description: 'The Body', type: 'string'),
+                    new OA\Property(
+                        property: 'releaseDt',
+                        description: 'ISO date representing the release date for this notification',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'isInterrupt',
+                        description: 'Flag indication whether this notification should interrupt the web portal nativation/login', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'displayGroupIds',
+                        description: 'The display group ids to assign this notification to',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'userGroupIds',
+                        description: 'The user group ids to assign to this notification',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    )
+                ],
+                required: ['subject', 'releaseDt', 'isInterrupt', 'displayGroupIds', 'userGroupIds']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Notification')
+    )]
     /**
      * Edit Notification
      * @param Request $request
@@ -633,8 +751,20 @@ class Notification extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Delete(path: '/notification/{notificationId}', operationId: 'notificationDelete', summary: 'Delete Notification', description: 'Delete the provided notification', tags: ['notification'])]
-    #[OA\Parameter(name: 'notificationId', in: 'path', description: 'The Notification Id to Delete', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Delete(
+        path: '/notification/{notificationId}',
+        operationId: 'notificationDelete',
+        description: 'Delete the provided notification',
+        summary: 'Delete Notification',
+        tags: ['notification']
+    )]
+    #[OA\Parameter(
+        name: 'notificationId',
+        description: 'The Notification Id to Delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete Notification

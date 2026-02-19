@@ -220,8 +220,20 @@ class PlayerSoftware extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Delete(path: '/playersoftware/{versionId}', operationId: 'playerSoftwareDelete', summary: 'Delete Version', description: 'Delete Version file from the Library and Player Versions table', tags: ['Player Software'])]
-    #[OA\Parameter(name: 'versionId', in: 'path', description: 'The Version ID to Delete', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Delete(
+        path: '/playersoftware/{versionId}',
+        operationId: 'playerSoftwareDelete',
+        description: 'Delete Version file from the Library and Player Versions table',
+        summary: 'Delete Version',
+        tags: ['Player Software']
+    )]
+    #[OA\Parameter(
+        name: 'versionId',
+        description: 'The Version ID to Delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete Version
@@ -297,14 +309,42 @@ class PlayerSoftware extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/playersoftware/{versionId}', operationId: 'playersoftwareEdit', summary: 'Edit Player Version', description: 'Edit a Player Version file information', tags: ['Player Software'])]
-    #[OA\Parameter(name: 'versionId', in: 'path', description: 'The Version ID to Edit', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(properties: [
-        new OA\Property(property: 'playerShowVersion', description: 'The Name of the player version application, this will be displayed in Version dropdowns in Display Profile and Display', type: 'string'),
-        new OA\Property(property: 'version', description: 'The Version number', type: 'string'),
-        new OA\Property(property: 'code', description: 'The Code number', type: 'integer')
-    ])))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Media'))]
+    #[OA\Put(
+        path: '/playersoftware/{versionId}',
+        operationId: 'playersoftwareEdit',
+        description: 'Edit a Player Version file information',
+        summary: 'Edit Player Version',
+        tags: ['Player Software']
+    )]
+    #[OA\Parameter(
+        name: 'versionId',
+        description: 'The Version ID to Edit',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'playerShowVersion',
+                        description: 'The Name of the player version application, this will be displayed in Version dropdowns in Display Profile and Display', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'version', description: 'The Version number', type: 'string'),
+                    new OA\Property(property: 'code', description: 'The Code number', type: 'integer')
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Media')
+    )]
     /**
      * Edit Player Version
      * @param Request $request
@@ -487,10 +527,30 @@ class PlayerSoftware extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/playersoftware', operationId: 'playersoftwareUpload', summary: 'Player Software Upload', description: 'Upload a new Player version file', tags: ['Player Software'])]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'multipart/form-data', schema: new OA\Schema(required: ['files'], properties: [
-        new OA\Property(property: 'files', description: 'The Uploaded File', type: 'string', format: 'binary')
-    ])))]
+    #[OA\Post(
+        path: '/playersoftware',
+        operationId: 'playersoftwareUpload',
+        description: 'Upload a new Player version file',
+        summary: 'Player Software Upload',
+        tags: ['Player Software']
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'multipart/form-data',
+            schema: new OA\Schema(
+                required: ['files'],
+                properties: [
+                    new OA\Property(
+                        property: 'files',
+                        description: 'The Uploaded File',
+                        type: 'string',
+                        format: 'binary'
+                    )
+                ]
+            )
+        )
+    )]
     #[OA\Response(response: 200, description: 'successful operation')]
     /**
      * Player Software Upload
@@ -596,9 +656,40 @@ class PlayerSoftware extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/playersoftware/download/{id}', operationId: 'playersoftwareDownload', summary: 'Download Player Version file', description: 'Download Player Version file', tags: ['Player Software'])]
-    #[OA\Parameter(name: 'id', in: 'path', description: 'The Player Version ID to Download', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Response(response: 200, description: 'successful operation', headers: [new OA\Header(header: 'X-Sendfile', description: 'Apache Send file header - if enabled.', schema: new OA\Schema(type: 'string')), new OA\Header(header: 'X-Accel-Redirect', description: 'nginx send file header - if enabled.', schema: new OA\Schema(type: 'string'))], content: new OA\MediaType(mediaType: 'application/octet-stream', schema: new OA\Schema(type: 'string', format: 'binary')))]
+    #[OA\Get(
+        path: '/playersoftware/download/{id}',
+        operationId: 'playersoftwareDownload',
+        description: 'Download Player Version file',
+        summary: 'Download Player Version file',
+        tags: ['Player Software']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The Player Version ID to Download',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Sendfile',
+                description: 'Apache Send file header - if enabled.',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Header(
+                header: 'X-Accel-Redirect',
+                description: 'nginx send file header - if enabled.',
+                schema: new OA\Schema(type: 'string')
+            )
+        ],
+        content: new OA\MediaType(
+            mediaType: 'application/octet-stream',
+            schema: new OA\Schema(type: 'string', format: 'binary')
+        )
+    )]
     /**
      * @param Request $request
      * @param Response $response

@@ -48,8 +48,21 @@ class Clock extends Base
         $this->session = $session;
     }
 
-    #[OA\Get(path: '/clock', operationId: 'clock', summary: 'The current CMS time', description: 'The Time', tags: ['misc'])]
-    #[OA\Response(response: 200, description: 'successful response', content: new OA\JsonContent(type: 'object', additionalProperties: new OA\AdditionalProperties(type: 'string')))]
+    #[OA\Get(
+        path: '/clock',
+        operationId: 'clock',
+        description: 'The Time',
+        summary: 'The current CMS time',
+        tags: ['misc']
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful response',
+        content: new OA\JsonContent(
+            type: 'object',
+            additionalProperties: new OA\AdditionalProperties(type: 'string')
+        )
+    )]
     /**
      * Gets the Time
      *

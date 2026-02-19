@@ -73,11 +73,42 @@ class DayPart extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/daypart', operationId: 'dayPartSearch', summary: 'Daypart Search', description: 'Search dayparts', tags: ['dayPart'])]
-    #[OA\Parameter(name: 'dayPartId', in: 'query', description: 'The dayPart ID to Search', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'name', in: 'query', description: 'The name of the dayPart to Search', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'embed', in: 'query', description: 'Embed related data such as exceptions', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/DayPart')))]
+    #[OA\Get(
+        path: '/daypart',
+        operationId: 'dayPartSearch',
+        description: 'Search dayparts',
+        summary: 'Daypart Search',
+        tags: ['dayPart']
+    )]
+    #[OA\Parameter(
+        name: 'dayPartId',
+        description: 'The dayPart ID to Search',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'name',
+        description: 'The name of the dayPart to Search',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'embed',
+        description: 'Embed related data such as exceptions',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/DayPart')
+        )
+    )]
     /**
      *  Search
      *
@@ -266,17 +297,70 @@ class DayPart extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/daypart', operationId: 'dayPartAdd', summary: 'Daypart Add', description: 'Add a Daypart', tags: ['dayPart'])]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['name', 'startTime', 'endTime'], properties: [
-        new OA\Property(property: 'name', description: 'The Daypart Name', type: 'string'),
-        new OA\Property(property: 'description', description: 'A description for the dayPart', type: 'string'),
-        new OA\Property(property: 'startTime', description: 'The start time for this day part', type: 'string'),
-        new OA\Property(property: 'endTime', description: 'The end time for this day part', type: 'string'),
-        new OA\Property(property: 'exceptionDays', description: 'String array of exception days', type: 'array', items: new OA\Items(type: 'string')),
-        new OA\Property(property: 'exceptionStartTimes', description: 'String array of exception start times to match the exception days', type: 'array', items: new OA\Items(type: 'string')),
-        new OA\Property(property: 'exceptionEndTimes', description: 'String array of exception end times to match the exception days', type: 'array', items: new OA\Items(type: 'string'))
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/DayPart'))]
+    #[OA\Post(
+        path: '/daypart',
+        operationId: 'dayPartAdd',
+        description: 'Add a Daypart',
+        summary: 'Daypart Add',
+        tags: ['dayPart']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'name', description: 'The Daypart Name', type: 'string'),
+                    new OA\Property(
+                        property: 'description',
+                        description: 'A description for the dayPart',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'startTime',
+                        description: 'The start time for this day part',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'endTime',
+                        description: 'The end time for this day part',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'exceptionDays',
+                        description: 'String array of exception days',
+                        items: new OA\Items(type: 'string'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'exceptionStartTimes',
+                        description: 'String array of exception start times to match the exception days',
+                        items: new OA\Items(type: 'string'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'exceptionEndTimes',
+                        description: 'String array of exception end times to match the exception days',
+                        items: new OA\Items(type: 'string'),
+                        type: 'array'
+                    )
+                ],
+                required: ['name', 'startTime', 'endTime']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DayPart'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add
      * @param Request $request
@@ -306,18 +390,70 @@ class DayPart extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/daypart/{dayPartId}', operationId: 'dayPartEdit', summary: 'Daypart Edit', description: 'Edit a Daypart', tags: ['dayPart'])]
-    #[OA\Parameter(name: 'dayPartId', in: 'path', description: 'The Daypart Id', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['name', 'startTime', 'endTime'], properties: [
-        new OA\Property(property: 'name', description: 'The Daypart Name', type: 'string'),
-        new OA\Property(property: 'description', description: 'A description for the dayPart', type: 'string'),
-        new OA\Property(property: 'startTime', description: 'The start time for this day part', type: 'string'),
-        new OA\Property(property: 'endTime', description: 'The end time for this day part', type: 'string'),
-        new OA\Property(property: 'exceptionDays', description: 'String array of exception days', type: 'array', items: new OA\Items(type: 'string')),
-        new OA\Property(property: 'exceptionStartTimes', description: 'String array of exception start times to match the exception days', type: 'array', items: new OA\Items(type: 'string')),
-        new OA\Property(property: 'exceptionEndTimes', description: 'String array of exception end times to match the exception days', type: 'array', items: new OA\Items(type: 'string'))
-    ])))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/DayPart'))]
+    #[OA\Put(
+        path: '/daypart/{dayPartId}',
+        operationId: 'dayPartEdit',
+        description: 'Edit a Daypart',
+        summary: 'Daypart Edit',
+        tags: ['dayPart']
+    )]
+    #[OA\Parameter(
+        name: 'dayPartId',
+        description: 'The Daypart Id',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'name', description: 'The Daypart Name', type: 'string'),
+                    new OA\Property(
+                        property: 'description',
+                        description: 'A description for the dayPart',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'startTime',
+                        description: 'The start time for this day part',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'endTime',
+                        description: 'The end time for this day part',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'exceptionDays',
+                        description: 'String array of exception days',
+                        items: new OA\Items(type: 'string'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'exceptionStartTimes',
+                        description: 'String array of exception start times to match the exception days',
+                        items: new OA\Items(type: 'string'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'exceptionEndTimes',
+                        description: 'String array of exception end times to match the exception days',
+                        items: new OA\Items(type: 'string'),
+                        type: 'array'
+                    )
+                ],
+                required: ['name', 'startTime', 'endTime']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DayPart')
+    )]
     /**
      * Edit
      * @param Request $request
@@ -418,8 +554,20 @@ class DayPart extends Base
         }
     }
 
-    #[OA\Delete(path: '/daypart/{dayPartId}', operationId: 'dayPartDelete', summary: 'Delete DayPart', description: 'Delete the provided dayPart', tags: ['dayPart'])]
-    #[OA\Parameter(name: 'dayPartId', in: 'path', description: 'The Daypart Id to Delete', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Delete(
+        path: '/daypart/{dayPartId}',
+        operationId: 'dayPartDelete',
+        description: 'Delete the provided dayPart',
+        summary: 'Delete DayPart',
+        tags: ['dayPart']
+    )]
+    #[OA\Parameter(
+        name: 'dayPartId',
+        description: 'The Daypart Id to Delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete

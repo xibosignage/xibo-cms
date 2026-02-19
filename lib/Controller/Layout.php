@@ -276,17 +276,58 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/layout', operationId: 'layoutAdd', summary: 'Add a Layout', description: 'Add a new Layout to the CMS', tags: ['layout'])]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(properties: [
-        new OA\Property(property: 'name', description: 'The layout name', type: 'string'),
-        new OA\Property(property: 'description', description: 'The layout description', type: 'string'),
-        new OA\Property(property: 'layoutId', description: 'If the Layout should be created with a Template, provide the ID, otherwise don\'t provide', type: 'integer'),
-        new OA\Property(property: 'resolutionId', description: 'If a Template is not provided, provide the resolutionId for this Layout.', type: 'integer'),
-        new OA\Property(property: 'returnDraft', description: 'Should we return the Draft Layout or the Published Layout on Success?', type: 'boolean'),
-        new OA\Property(property: 'code', description: 'Code identifier for this Layout', type: 'string'),
-        new OA\Property(property: 'folderId', description: 'Folder ID to which this object should be assigned to', type: 'integer')
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/Layout'))]
+    #[OA\Post(
+        path: '/layout',
+        operationId: 'layoutAdd',
+        description: 'Add a new Layout to the CMS',
+        summary: 'Add a Layout',
+        tags: ['layout']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'name', description: 'The layout name', type: 'string'),
+                    new OA\Property(property: 'description', description: 'The layout description', type: 'string'),
+                    new OA\Property(
+                        property: 'layoutId',
+                        description: 'If the Layout should be created with a Template, provide the ID, otherwise don\'t provide', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'resolutionId',
+                        description: 'If a Template is not provided, provide the resolutionId for this Layout.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'returnDraft',
+                        description: 'Should we return the Draft Layout or the Published Layout on Success?', // phpcs:ignore
+                        type: 'boolean'
+                    ),
+                    new OA\Property(property: 'code', description: 'Code identifier for this Layout', type: 'string'),
+                    new OA\Property(
+                        property: 'folderId',
+                        description: 'Folder ID to which this object should be assigned to',
+                        type: 'integer'
+                    )
+                ]
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add a Layout
      *
@@ -445,18 +486,54 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/layout/{layoutId}', operationId: 'layoutEdit', summary: 'Edit Layout', description: 'Edit a Layout', tags: ['layout'])]
-    #[OA\Parameter(name: 'layoutId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['name'], properties: [
-        new OA\Property(property: 'name', description: 'The Layout Name', type: 'string'),
-        new OA\Property(property: 'description', description: 'The Layout Description', type: 'string'),
-        new OA\Property(property: 'tags', description: 'A comma separated list of Tags', type: 'string'),
-        new OA\Property(property: 'retired', description: 'A flag indicating whether this Layout is retired.', type: 'integer'),
-        new OA\Property(property: 'enableStat', description: 'Flag indicating whether the Layout stat is enabled', type: 'integer'),
-        new OA\Property(property: 'code', description: 'Code identifier for this Layout', type: 'string'),
-        new OA\Property(property: 'folderId', description: 'Folder ID to which this object should be assigned to', type: 'integer')
-    ])))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Layout'))]
+    #[OA\Put(
+        path: '/layout/{layoutId}',
+        operationId: 'layoutEdit',
+        description: 'Edit a Layout',
+        summary: 'Edit Layout',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'name', description: 'The Layout Name', type: 'string'),
+                    new OA\Property(property: 'description', description: 'The Layout Description', type: 'string'),
+                    new OA\Property(property: 'tags', description: 'A comma separated list of Tags', type: 'string'),
+                    new OA\Property(
+                        property: 'retired',
+                        description: 'A flag indicating whether this Layout is retired.',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'enableStat',
+                        description: 'Flag indicating whether the Layout stat is enabled',
+                        type: 'integer'
+                    ),
+                    new OA\Property(property: 'code', description: 'Code identifier for this Layout', type: 'string'),
+                    new OA\Property(
+                        property: 'folderId',
+                        description: 'Folder ID to which this object should be assigned to',
+                        type: 'integer'
+                    )
+                ],
+                required: ['name']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout')
+    )]
     /**
      * Edit Layout
      * @param Request $request
@@ -569,15 +646,55 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/layout/background/{layoutId}', operationId: 'layoutEditBackground', summary: 'Edit Layout Background', description: 'Edit a Layout Background', tags: ['layout'])]
-    #[OA\Parameter(name: 'layoutId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['backgroundColor', 'backgroundzIndex'], properties: [
-        new OA\Property(property: 'backgroundColor', description: 'A HEX color to use as the background color of this Layout.', type: 'string'),
-        new OA\Property(property: 'backgroundImageId', description: 'A media ID to use as the background image for this Layout.', type: 'integer'),
-        new OA\Property(property: 'backgroundzIndex', description: 'The Layer Number to use for the background.', type: 'integer'),
-        new OA\Property(property: 'resolutionId', description: 'The Resolution ID to use on this Layout.', type: 'integer')
-    ])))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Layout'))]
+    #[OA\Put(
+        path: '/layout/background/{layoutId}',
+        operationId: 'layoutEditBackground',
+        description: 'Edit a Layout Background',
+        summary: 'Edit Layout Background',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'backgroundColor',
+                        description: 'A HEX color to use as the background color of this Layout.',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'backgroundImageId',
+                        description: 'A media ID to use as the background image for this Layout.',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'backgroundzIndex',
+                        description: 'The Layer Number to use for the background.',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'resolutionId',
+                        description: 'The Resolution ID to use on this Layout.',
+                        type: 'integer'
+                    )
+                ],
+                required: ['backgroundColor', 'backgroundzIndex']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout')
+    )]
     /**
      * Edit Layout Background
      * @param Request $request
@@ -654,11 +771,34 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/layout/applyTemplate/{layoutId}', operationId: 'layoutApplyTemplate', summary: 'Apply Template', description: 'Apply a new Template to an existing Layout, replacing it.', tags: ['layout'])]
-    #[OA\Parameter(name: 'layoutId', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(properties: [
-        new OA\Property(property: 'templateId', description: 'If the Layout should be created with a Template, provide the ID, otherwise don\'t provide', type: 'integer')
-    ])))]
+    #[OA\Put(
+        path: '/layout/applyTemplate/{layoutId}',
+        operationId: 'layoutApplyTemplate',
+        description: 'Apply a new Template to an existing Layout, replacing it.',
+        summary: 'Apply Template',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'templateId',
+                        description: 'If the Layout should be created with a Template, provide the ID, otherwise don\'t provide', // phpcs:ignore
+                        type: 'integer'
+                    )
+                ]
+            )
+        ),
+        required: true
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Apply a template to a Layout
@@ -867,8 +1007,19 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Delete(path: '/layout/{layoutId}', operationId: 'layoutDelete', summary: 'Delete Layout', description: 'Delete a Layout', tags: ['layout'])]
-    #[OA\Parameter(name: 'layoutId', in: 'path', description: 'The Layout ID to Delete', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Delete(
+        path: '/layout/{layoutId}',
+        operationId: 'layoutDelete',
+        description: 'Delete a Layout',
+        summary: 'Delete Layout',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Deletes a layout
@@ -906,9 +1057,32 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/layout/{layoutId}', operationId: 'layoutClear', summary: 'Clear Layout', description: 'Clear a draft layouts canvas of all widgets and elements, leaving it blank.', tags: ['layout'])]
-    #[OA\Parameter(name: 'layoutId', in: 'path', description: 'The Layout ID to Clear, must be a draft.', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/Layout'))]
+    #[OA\Post(
+        path: '/layout/{layoutId}',
+        operationId: 'layoutClear',
+        description: 'Clear a draft layouts canvas of all widgets and elements, leaving it blank.',
+        summary: 'Clear Layout',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        description: 'The Layout ID to Clear, must be a draft.',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Clears a layout
      * @param Request $request
@@ -963,8 +1137,19 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/layout/retire/{layoutId}', operationId: 'layoutRetire', summary: 'Retire Layout', description: 'Retire a Layout so that it isn\'t available to Schedule. Existing Layouts will still be played', tags: ['layout'])]
-    #[OA\Parameter(name: 'layoutId', in: 'path', description: 'The Layout ID', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Put(
+        path: '/layout/retire/{layoutId}',
+        operationId: 'layoutRetire',
+        description: 'Retire a Layout so that it isn\'t available to Schedule. Existing Layouts will still be played', // phpcs:ignore
+        summary: 'Retire Layout',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Retires a layout
@@ -1045,8 +1230,19 @@ class Layout extends Base
 
     }
 
-    #[OA\Put(path: '/layout/unretire/{layoutId}', operationId: 'layoutUnretire', summary: 'Unretire Layout', description: 'Retire a Layout so that it isn\'t available to Schedule. Existing Layouts will still be played', tags: ['layout'])]
-    #[OA\Parameter(name: 'layoutId', in: 'path', description: 'The Layout ID', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Put(
+        path: '/layout/unretire/{layoutId}',
+        operationId: 'layoutUnretire',
+        description: 'Retire a Layout so that it isn\'t available to Schedule. Existing Layouts will still be played', // phpcs:ignore
+        summary: 'Unretire Layout',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Unretires a layout
@@ -1091,11 +1287,35 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/layout/setenablestat/{layoutId}', operationId: 'layoutSetEnableStat', summary: 'Enable Stats Collection', description: 'Set Enable Stats Collection? to use for the collection of Proof of Play statistics for a Layout.', tags: ['layout'])]
-    #[OA\Parameter(name: 'layoutId', in: 'path', description: 'The Layout ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['enableStat'], properties: [
-        new OA\Property(property: 'enableStat', description: 'Flag indicating whether the Layout stat is enabled', type: 'integer')
-    ])))]
+    #[OA\Put(
+        path: '/layout/setenablestat/{layoutId}',
+        operationId: 'layoutSetEnableStat',
+        description: 'Set Enable Stats Collection? to use for the collection of Proof of Play statistics for a Layout.', // phpcs:ignore
+        summary: 'Enable Stats Collection',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'enableStat',
+                        description: 'Flag indicating whether the Layout stat is enabled',
+                        type: 'integer'
+                    )
+                ],
+                required: ['enableStat']
+            )
+        ),
+        required: true
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Set Enable Stats Collection of a layout
@@ -1167,22 +1387,119 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/layout', operationId: 'layoutSearch', summary: 'Search Layouts', description: 'Search for Layouts viewable by this user', tags: ['layout'])]
-    #[OA\Parameter(name: 'layoutId', in: 'query', description: 'Filter by Layout Id', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'parentId', in: 'query', description: 'Filter by parent Id', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'showDrafts', in: 'query', description: 'Flag indicating whether to show drafts', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'layout', in: 'query', description: 'Filter by partial Layout name', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'userId', in: 'query', description: 'Filter by user Id', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'retired', in: 'query', description: 'Filter by retired flag', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'tags', in: 'query', description: 'Filter by Tags', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'exactTags', in: 'query', description: 'A flag indicating whether to treat the tags filter as an exact match', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'logicalOperator', in: 'query', description: 'When filtering by multiple Tags, which logical operator should be used? AND|OR', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'ownerUserGroupId', in: 'query', description: 'Filter by users in this UserGroupId', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'publishedStatusId', in: 'query', description: 'Filter by published status id, 1 - Published, 2 - Draft', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'embed', in: 'query', description: 'Embed related data such as regions, playlists, widgets, tags, campaigns, permissions', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'campaignId', in: 'query', description: 'Get all Layouts for a given campaignId', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'folderId', in: 'query', description: 'Filter by Folder ID', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Layout')))]
+    #[OA\Get(
+        path: '/layout',
+        operationId: 'layoutSearch',
+        description: 'Search for Layouts viewable by this user',
+        summary: 'Search Layouts',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        description: 'Filter by Layout Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'parentId',
+        description: 'Filter by parent Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'showDrafts',
+        description: 'Flag indicating whether to show drafts',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'layout',
+        description: 'Filter by partial Layout name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'userId',
+        description: 'Filter by user Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'retired',
+        description: 'Filter by retired flag',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'tags',
+        description: 'Filter by Tags',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'exactTags',
+        description: 'A flag indicating whether to treat the tags filter as an exact match',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'logicalOperator',
+        description: 'When filtering by multiple Tags, which logical operator should be used? AND|OR',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'ownerUserGroupId',
+        description: 'Filter by users in this UserGroupId',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'publishedStatusId',
+        description: 'Filter by published status id, 1 - Published, 2 - Draft',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'embed',
+        description: 'Embed related data such as regions, playlists, widgets, tags, campaigns, permissions',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'campaignId',
+        description: 'Get all Layouts for a given campaignId',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'folderId',
+        description: 'Filter by Folder ID',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Layout')
+        )
+    )]
     /**
      * Shows the Layout Grid
      *
@@ -1809,14 +2126,54 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/layout/copy/{layoutId}', operationId: 'layoutCopy', summary: 'Copy Layout', description: 'Copy a Layout, providing a new name if applicable', tags: ['layout'])]
-    #[OA\Parameter(name: 'layoutId', in: 'path', description: 'The Layout ID to Copy', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['name', 'copyMediaFiles'], properties: [
-        new OA\Property(property: 'name', description: 'The name for the new Layout', type: 'string'),
-        new OA\Property(property: 'description', description: 'The Description for the new Layout', type: 'string'),
-        new OA\Property(property: 'copyMediaFiles', description: 'Flag indicating whether to make new Copies of all Media Files assigned to the Layout being Copied', type: 'integer')
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/Layout'))]
+    #[OA\Post(
+        path: '/layout/copy/{layoutId}',
+        operationId: 'layoutCopy',
+        description: 'Copy a Layout, providing a new name if applicable',
+        summary: 'Copy Layout',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        description: 'The Layout ID to Copy',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'name', description: 'The name for the new Layout', type: 'string'),
+                    new OA\Property(
+                        property: 'description',
+                        description: 'The Description for the new Layout',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'copyMediaFiles',
+                        description: 'Flag indicating whether to make new Copies of all Media Files assigned to the Layout being Copied', // phpcs:ignore
+                        type: 'integer'
+                    )
+                ],
+                required: ['name', 'copyMediaFiles']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Copies a layout
      * @param Request $request
@@ -1938,12 +2295,42 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/layout/{layoutId}/tag', operationId: 'layoutTag', summary: 'Tag Layout', description: 'Tag a Layout with one or more tags', tags: ['layout'])]
-    #[OA\Parameter(name: 'layoutId', in: 'path', description: 'The Layout Id to Tag', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['tag'], properties: [
-        new OA\Property(property: 'tag', description: 'An array of tags', type: 'array', items: new OA\Items(type: 'string'))
-    ])))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Layout'))]
+    #[OA\Post(
+        path: '/layout/{layoutId}/tag',
+        operationId: 'layoutTag',
+        description: 'Tag a Layout with one or more tags',
+        summary: 'Tag Layout',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        description: 'The Layout Id to Tag',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'tag',
+                        description: 'An array of tags',
+                        items: new OA\Items(type: 'string'),
+                        type: 'array'
+                    )
+                ],
+                required: ['tag']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout')
+    )]
     /**
      * @param Request $request
      * @param Response $response
@@ -1992,12 +2379,42 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/layout/{layoutId}/untag', operationId: 'layoutUntag', summary: 'Untag Layout', description: 'Untag a Layout with one or more tags', tags: ['layout'])]
-    #[OA\Parameter(name: 'layoutId', in: 'path', description: 'The Layout Id to Untag', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['tag'], properties: [
-        new OA\Property(property: 'tag', description: 'An array of tags', type: 'array', items: new OA\Items(type: 'string'))
-    ])))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Layout'))]
+    #[OA\Post(
+        path: '/layout/{layoutId}/untag',
+        operationId: 'layoutUntag',
+        description: 'Untag a Layout with one or more tags',
+        summary: 'Untag Layout',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        description: 'The Layout Id to Untag',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['tag'],
+                properties: [
+                    new OA\Property(
+                        property: 'tag',
+                        description: 'An array of tags',
+                        type: 'array',
+                        items: new OA\Items(type: 'string')
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout')
+    )]
     /**
      * @param Request $request
      * @param Response $response
@@ -2045,9 +2462,25 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/layout/status/{layoutId}', operationId: 'layoutStatus', summary: 'Layout Status', description: 'Calculate the Layout status and return a Layout', tags: ['layout'])]
-    #[OA\Parameter(name: 'layoutId', in: 'path', description: 'The Layout Id to get the status', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Layout'))]
+    #[OA\Get(
+        path: '/layout/status/{layoutId}',
+        operationId: 'layoutStatus',
+        description: 'Calculate the Layout status and return a Layout',
+        summary: 'Layout Status',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        description: 'The Layout Id to get the status',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout')
+    )]
     /**
      * Layout Status
      * @param Request $request
@@ -2373,9 +2806,25 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/layout/checkout/{layoutId}', operationId: 'layoutCheckout', summary: 'Checkout Layout', description: 'Checkout a Layout so that it can be edited. The original Layout will still be played', tags: ['layout'])]
-    #[OA\Parameter(name: 'layoutId', in: 'path', description: 'The Layout ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Layout'))]
+    #[OA\Put(
+        path: '/layout/checkout/{layoutId}',
+        operationId: 'layoutCheckout',
+        description: 'Checkout a Layout so that it can be edited. The original Layout will still be played',
+        summary: 'Checkout Layout',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        description: 'The Layout ID',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout')
+    )]
     /**
      * Checkout Layout
      *
@@ -2445,13 +2894,45 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/layout/publish/{layoutId}', operationId: 'layoutPublish', summary: 'Publish Layout', description: 'Publish a Layout, discarding the original', tags: ['layout'])]
-    #[OA\Parameter(name: 'layoutId', in: 'path', description: 'The Layout ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(properties: [
-        new OA\Property(property: 'publishNow', description: 'Flag, indicating whether to publish layout now', type: 'integer'),
-        new OA\Property(property: 'publishDate', description: 'The date/time at which layout should be published', type: 'string')
-    ])))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Layout'))]
+    #[OA\Put(
+        path: '/layout/publish/{layoutId}',
+        operationId: 'layoutPublish',
+        description: 'Publish a Layout, discarding the original',
+        summary: 'Publish Layout',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        description: 'The Layout ID',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'publishNow',
+                        description: 'Flag, indicating whether to publish layout now',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'publishDate',
+                        description: 'The date/time at which layout should be published',
+                        type: 'string'
+                    )
+                ]
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout')
+    )]
     /**
      * Publish Layout
      *
@@ -2572,9 +3053,25 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/layout/discard/{layoutId}', operationId: 'layoutDiscard', summary: 'Discard Layout', description: 'Discard a Layout restoring the original', tags: ['layout'])]
-    #[OA\Parameter(name: 'layoutId', in: 'path', description: 'The Layout ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Layout'))]
+    #[OA\Put(
+        path: '/layout/discard/{layoutId}',
+        operationId: 'layoutDiscard',
+        description: 'Discard a Layout restoring the original',
+        summary: 'Discard Layout',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        description: 'The Layout ID',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout')
+    )]
     /**
      * Discard Layout
      *
@@ -2901,15 +3398,61 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/layout/fullscreen', operationId: 'layoutAddFullScreen', summary: 'Add a Full Screen Layout', description: 'Add a new full screen Layout with specified Media/Playlist', tags: ['layout'])]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['id', 'type'], properties: [
-        new OA\Property(property: 'id', description: 'The Media or Playlist ID that should be added to this Layout', type: 'integer'),
-        new OA\Property(property: 'type', description: 'The type of Layout to be created = media or playlist', type: 'string'),
-        new OA\Property(property: 'resolutionId', description: 'The Id of the resolution for this Layout, defaults to 1080p for playlist and closest resolution match for Media', type: 'integer'),
-        new OA\Property(property: 'backgroundColor', description: 'A HEX color to use as the background color of this Layout. Default is black #000', type: 'string'),
-        new OA\Property(property: 'layoutDuration', description: 'Use with media type, to specify the duration this Media should play in one loop', type: 'boolean')
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/Layout'))]
+    #[OA\Post(
+        path: '/layout/fullscreen',
+        operationId: 'layoutAddFullScreen',
+        description: 'Add a new full screen Layout with specified Media/Playlist',
+        summary: 'Add a Full Screen Layout',
+        tags: ['layout']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'id',
+                        description: 'The Media or Playlist ID that should be added to this Layout',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'type',
+                        description: 'The type of Layout to be created = media or playlist',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'resolutionId',
+                        description: 'The Id of the resolution for this Layout, defaults to 1080p for playlist and closest resolution match for Media', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'backgroundColor',
+                        description: 'A HEX color to use as the background color of this Layout. Default is black #000', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'layoutDuration',
+                        description: 'Use with media type, to specify the duration this Media should play in one loop', // phpcs:ignore
+                        type: 'boolean'
+                    )
+                ],
+                required: ['id', 'type']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Create a Layout with full screen Region with Media/Playlist specific Widget
      * This is called as a first step when scheduling Media/Playlist eventType

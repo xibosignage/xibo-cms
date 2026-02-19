@@ -102,9 +102,28 @@ class DataSetRss extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/dataset/{dataSetId}/rss', operationId: 'dataSetRSSSearch', summary: 'Search RSSs', description: 'Search RSSs for DataSet', tags: ['dataset'])]
-    #[OA\Parameter(name: 'dataSetId', in: 'path', description: 'The DataSet ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/DataSetRss')))]
+    #[OA\Get(
+        path: '/dataset/{dataSetId}/rss',
+        operationId: 'dataSetRSSSearch',
+        description: 'Search RSSs for DataSet',
+        summary: 'Search RSSs',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        description: 'The DataSet ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/DataSetRss')
+        )
+    )]
     /**
      * Search
      * @param Request $request
@@ -203,16 +222,60 @@ class DataSetRss extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/dataset/{dataSetId}/rss', operationId: 'dataSetRssAdd', summary: 'Add RSS', description: 'Add a RSS to a DataSet', tags: ['dataset'])]
-    #[OA\Parameter(name: 'dataSetId', in: 'path', description: 'The DataSet ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['title', 'author', 'summaryColumnId', 'contentColumnId', 'publishedDateColumnId'], properties: [
-        new OA\Property(property: 'title', description: 'The title for the RSS', type: 'string'),
-        new OA\Property(property: 'author', description: 'The author for the RSS', type: 'string'),
-        new OA\Property(property: 'summaryColumnId', description: 'The columnId to be used as each item summary', type: 'integer'),
-        new OA\Property(property: 'contentColumnId', description: 'The columnId to be used as each item content', type: 'integer'),
-        new OA\Property(property: 'publishedDateColumnId', description: 'The columnId to be used as each item published date', type: 'integer')
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/DataSetRss'))]
+    #[OA\Post(
+        path: '/dataset/{dataSetId}/rss',
+        operationId: 'dataSetRssAdd',
+        description: 'Add a RSS to a DataSet',
+        summary: 'Add RSS',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        description: 'The DataSet ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'title', description: 'The title for the RSS', type: 'string'),
+                    new OA\Property(property: 'author', description: 'The author for the RSS', type: 'string'),
+                    new OA\Property(
+                        property: 'summaryColumnId',
+                        description: 'The columnId to be used as each item summary',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'contentColumnId',
+                        description: 'The columnId to be used as each item content',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'publishedDateColumnId',
+                        description: 'The columnId to be used as each item published date',
+                        type: 'integer'
+                    )
+                ],
+                required: ['title', 'author', 'summaryColumnId', 'contentColumnId', 'publishedDateColumnId']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DataSetRss'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add
      * @param Request $request
@@ -373,17 +436,56 @@ class DataSetRss extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/dataset/{dataSetId}/rss/{rssId}', operationId: 'dataSetRssEdit', summary: 'Edit Rss', description: 'Edit DataSet Rss Feed', tags: ['dataset'])]
-    #[OA\Parameter(name: 'dataSetId', in: 'path', description: 'The DataSet ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'rssId', in: 'path', description: 'The RSS ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['title', 'author', 'summaryColumnId', 'contentColumnId', 'publishedDateColumnId', 'regeneratePsk'], properties: [
-        new OA\Property(property: 'title', description: 'The title for the RSS', type: 'string'),
-        new OA\Property(property: 'author', description: 'The author for the RSS', type: 'string'),
-        new OA\Property(property: 'summaryColumnId', description: 'The rssId to be used as each item summary', type: 'integer'),
-        new OA\Property(property: 'contentColumnId', description: 'The columnId to be used as each item content', type: 'integer'),
-        new OA\Property(property: 'publishedDateColumnId', description: 'The columnId to be used as each item published date', type: 'integer'),
-        new OA\Property(property: 'regeneratePsk', description: 'Regenerate the PSK?', type: 'integer')
-    ])))]
+    #[OA\Put(
+        path: '/dataset/{dataSetId}/rss/{rssId}',
+        operationId: 'dataSetRssEdit',
+        description: 'Edit DataSet Rss Feed',
+        summary: 'Edit Rss',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        description: 'The DataSet ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'rssId',
+        description: 'The RSS ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'title', description: 'The title for the RSS', type: 'string'),
+                    new OA\Property(property: 'author', description: 'The author for the RSS', type: 'string'),
+                    new OA\Property(
+                        property: 'summaryColumnId',
+                        description: 'The rssId to be used as each item summary',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'contentColumnId',
+                        description: 'The columnId to be used as each item content',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'publishedDateColumnId',
+                        description: 'The columnId to be used as each item published date',
+                        type: 'integer'
+                    ),
+                    new OA\Property(property: 'regeneratePsk', description: 'Regenerate the PSK?', type: 'integer')
+                ],
+                required: ['title', 'author', 'summaryColumnId', 'contentColumnId', 'publishedDateColumnId', 'regeneratePsk'] // phpcs:ignore
+            )
+        ),
+        required: true
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Edit
@@ -476,9 +578,27 @@ class DataSetRss extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Delete(path: '/dataset/{dataSetId}/rss/{rssId}', operationId: 'dataSetRSSDelete', summary: 'Delete RSS', description: 'Delete DataSet RSS', tags: ['dataset'])]
-    #[OA\Parameter(name: 'dataSetId', in: 'path', description: 'The DataSet ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'rssId', in: 'path', description: 'The RSS ID', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Delete(
+        path: '/dataset/{dataSetId}/rss/{rssId}',
+        operationId: 'dataSetRSSDelete',
+        description: 'Delete DataSet RSS',
+        summary: 'Delete RSS',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        description: 'The DataSet ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'rssId',
+        description: 'The RSS ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete

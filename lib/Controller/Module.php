@@ -74,8 +74,18 @@ class Module extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/module', operationId: 'moduleSearch', summary: 'Module Search', description: 'Get a list of all modules available to this CMS', tags: ['module'])]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Module'))]
+    #[OA\Get(
+        path: '/module',
+        operationId: 'moduleSearch',
+        description: 'Get a list of all modules available to this CMS',
+        summary: 'Module Search',
+        tags: ['module']
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Module')
+    )]
     /**
      * @param Request $request
      * @param Response $response
@@ -138,9 +148,25 @@ class Module extends Base
     }
 
     // phpcs:disable
-    #[OA\Get(path: '/module/properties/{id}', operationId: 'getModuleProperties', summary: 'Get Module Properties', description: 'Get a module properties which are needed to for the editWidget call', tags: ['module'])]
-    #[OA\Parameter(name: 'id', in: 'path', description: 'The ModuleId', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Property'))]
+    #[OA\Get(
+        path: '/module/properties/{id}',
+        operationId: 'getModuleProperties',
+        description: 'Get a module properties which are needed to for the editWidget call',
+        summary: 'Get Module Properties',
+        tags: ['module']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The ModuleId',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Property')
+    )]
     /**
      * @param Request $request
      * @param Response $response
@@ -296,10 +322,32 @@ class Module extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/module/templates/{dataType}', operationId: 'moduleTemplateSearch', summary: 'Module Template Search', description: 'Get a list of templates available for a particular data type', tags: ['module'])]
-    #[OA\Parameter(name: 'dataType', in: 'path', description: 'DataType to return templates for', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'type', in: 'query', description: 'Type to return templates for', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Response(response: 200, description: 'An array of module templates for the provided datatype', content: new OA\JsonContent(ref: '#/components/schemas/ModuleTemplate'))]
+    #[OA\Get(
+        path: '/module/templates/{dataType}',
+        operationId: 'moduleTemplateSearch',
+        description: 'Get a list of templates available for a particular data type',
+        summary: 'Module Template Search',
+        tags: ['module']
+    )]
+    #[OA\Parameter(
+        name: 'dataType',
+        description: 'DataType to return templates for',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'type',
+        description: 'Type to return templates for',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'An array of module templates for the provided datatype',
+        content: new OA\JsonContent(ref: '#/components/schemas/ModuleTemplate')
+    )]
     /**
      * @param \Slim\Http\ServerRequest $request
      * @param \Slim\Http\Response $response
@@ -327,10 +375,35 @@ class Module extends Base
     }
 
     // phpcs:disable
-    #[OA\Get(path: '/module/template/{dataType}/properties/{id}', operationId: 'getModuleTemplateProperties', summary: 'Get Module Template Properties', description: 'Get a module template properties which are needed to for the editWidget call', tags: ['module'])]
-    #[OA\Parameter(name: 'dataType', in: 'path', description: 'The Template DataType', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'id', in: 'path', description: 'The Template Id', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'object', additionalProperties: new OA\AdditionalProperties(type: 'string')))]
+    #[OA\Get(
+        path: '/module/template/{dataType}/properties/{id}',
+        operationId: 'getModuleTemplateProperties',
+        description: 'Get a module template properties which are needed to for the editWidget call',
+        summary: 'Get Module Template Properties',
+        tags: ['module']
+    )]
+    #[OA\Parameter(
+        name: 'dataType',
+        description: 'The Template DataType',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The Template Id',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'object',
+            additionalProperties: new OA\AdditionalProperties(type: 'string')
+        )
+    )]
     /**
      * @param Request $request
      * @param Response $response

@@ -101,12 +101,49 @@ class MenuBoardProduct extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/menuboard/{menuCategoryId}/products', operationId: 'menuBoardProductsSearch', summary: 'Search Menu Board Products', description: 'Search all Menu Boards Products this user has access to', tags: ['menuBoard'])]
-    #[OA\Parameter(name: 'menuCategoryId', in: 'path', description: 'Filter by Menu Board Category Id', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'menuId', in: 'query', description: 'Filter by Menu board Id', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'name', in: 'query', description: 'Filter by name', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'code', in: 'query', description: 'Filter by code', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/MenuBoard')))]
+    #[OA\Get(
+        path: '/menuboard/{menuCategoryId}/products',
+        operationId: 'menuBoardProductsSearch',
+        description: 'Search all Menu Boards Products this user has access to',
+        summary: 'Search Menu Board Products',
+        tags: ['menuBoard']
+    )]
+    #[OA\Parameter(
+        name: 'menuCategoryId',
+        description: 'Filter by Menu Board Category Id',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'menuId',
+        description: 'Filter by Menu board Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'name',
+        description: 'Filter by name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'code',
+        description: 'Filter by code',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/MenuBoard')
+        )
+    )]
     /**
      * Returns a Grid of Menu Board Products
      *
@@ -241,22 +278,84 @@ class MenuBoardProduct extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/menuboard/{menuCategoryId}/product', operationId: 'menuBoardProductAdd', summary: 'Add Menu Board Product', description: 'Add a new Menu Board Product', tags: ['menuBoard'])]
-    #[OA\Parameter(name: 'menuCategoryId', in: 'path', description: 'The Menu Board Category ID to which we want to add this Product to', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['name', 'displayOrder'], properties: [
-        new OA\Property(property: 'name', description: 'Menu Board Product name', type: 'string'),
-        new OA\Property(property: 'description', description: 'Menu Board Product description', type: 'string'),
-        new OA\Property(property: 'price', description: 'Menu Board Product price', type: 'number'),
-        new OA\Property(property: 'allergyInfo', description: 'Menu Board Product allergyInfo', type: 'string'),
-        new OA\Property(property: 'calories', description: 'Menu Board Product calories', type: 'integer'),
-        new OA\Property(property: 'displayOrder', description: 'Menu Board Product Display Order, used for sorting', type: 'integer'),
-        new OA\Property(property: 'availability', description: 'Menu Board Product availability', type: 'integer'),
-        new OA\Property(property: 'mediaId', description: 'Media ID from CMS Library to associate with this Menu Board Product', type: 'integer'),
-        new OA\Property(property: 'code', description: 'Menu Board Product code', type: 'string'),
-        new OA\Property(property: 'productOptions', description: 'An array of optional Product Option names', type: 'array', items: new OA\Items(type: 'string')),
-        new OA\Property(property: 'productValues', description: 'An array of optional Product Option values', type: 'array', items: new OA\Items(type: 'string'))
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/MenuBoard'))]
+    #[OA\Post(
+        path: '/menuboard/{menuCategoryId}/product',
+        operationId: 'menuBoardProductAdd',
+        description: 'Add a new Menu Board Product',
+        summary: 'Add Menu Board Product',
+        tags: ['menuBoard']
+    )]
+    #[OA\Parameter(
+        name: 'menuCategoryId',
+        description: 'The Menu Board Category ID to which we want to add this Product to',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'name', description: 'Menu Board Product name', type: 'string'),
+                    new OA\Property(
+                        property: 'description',
+                        description: 'Menu Board Product description',
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'price', description: 'Menu Board Product price', type: 'number'),
+                    new OA\Property(
+                        property: 'allergyInfo',
+                        description: 'Menu Board Product allergyInfo',
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'calories', description: 'Menu Board Product calories', type: 'integer'),
+                    new OA\Property(
+                        property: 'displayOrder',
+                        description: 'Menu Board Product Display Order, used for sorting',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'availability',
+                        description: 'Menu Board Product availability',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'mediaId',
+                        description: 'Media ID from CMS Library to associate with this Menu Board Product', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(property: 'code', description: 'Menu Board Product code', type: 'string'),
+                    new OA\Property(
+                        property: 'productOptions',
+                        description: 'An array of optional Product Option names',
+                        items: new OA\Items(type: 'string'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'productValues',
+                        description: 'An array of optional Product Option values',
+                        items: new OA\Items(type: 'string'),
+                        type: 'array'
+                    )
+                ],
+                required: ['name', 'displayOrder']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/MenuBoard'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add a new Menu Board Product
      *
@@ -365,21 +464,72 @@ class MenuBoardProduct extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/menuboard/{menuProductId}/product', operationId: 'menuBoardProductEdit', summary: 'Edit Menu Board Product', description: 'Edit existing Menu Board Product', tags: ['menuBoard'])]
-    #[OA\Parameter(name: 'menuProductId', in: 'path', description: 'The Menu Board Product ID to Edit', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['name', 'displayOrder'], properties: [
-        new OA\Property(property: 'name', description: 'Menu Board Product name', type: 'string'),
-        new OA\Property(property: 'description', description: 'Menu Board Product description', type: 'string'),
-        new OA\Property(property: 'price', description: 'Menu Board Product price', type: 'number'),
-        new OA\Property(property: 'allergyInfo', description: 'Menu Board Product allergyInfo', type: 'string'),
-        new OA\Property(property: 'calories', description: 'Menu Board Product calories', type: 'integer'),
-        new OA\Property(property: 'displayOrder', description: 'Menu Board Product Display Order, used for sorting', type: 'integer'),
-        new OA\Property(property: 'availability', description: 'Menu Board Product availability', type: 'integer'),
-        new OA\Property(property: 'mediaId', description: 'Media ID from CMS Library to associate with this Menu Board Product', type: 'integer'),
-        new OA\Property(property: 'code', description: 'Menu Board Product code', type: 'string'),
-        new OA\Property(property: 'productOptions', description: 'An array of optional Product Option names', type: 'array', items: new OA\Items(type: 'string')),
-        new OA\Property(property: 'productValues', description: 'An array of optional Product Option values', type: 'array', items: new OA\Items(type: 'string'))
-    ])))]
+    #[OA\Put(
+        path: '/menuboard/{menuProductId}/product',
+        operationId: 'menuBoardProductEdit',
+        description: 'Edit existing Menu Board Product',
+        summary: 'Edit Menu Board Product',
+        tags: ['menuBoard']
+    )]
+    #[OA\Parameter(
+        name: 'menuProductId',
+        description: 'The Menu Board Product ID to Edit',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'name', description: 'Menu Board Product name', type: 'string'),
+                    new OA\Property(
+                        property: 'description',
+                        description: 'Menu Board Product description',
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'price', description: 'Menu Board Product price', type: 'number'),
+                    new OA\Property(
+                        property: 'allergyInfo',
+                        description: 'Menu Board Product allergyInfo',
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'calories', description: 'Menu Board Product calories', type: 'integer'),
+                    new OA\Property(
+                        property: 'displayOrder',
+                        description: 'Menu Board Product Display Order, used for sorting',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'availability',
+                        description: 'Menu Board Product availability',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'mediaId',
+                        description: 'Media ID from CMS Library to associate with this Menu Board Product', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(property: 'code', description: 'Menu Board Product code', type: 'string'),
+                    new OA\Property(
+                        property: 'productOptions',
+                        description: 'An array of optional Product Option names',
+                        items: new OA\Items(type: 'string'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'productValues',
+                        description: 'An array of optional Product Option values',
+                        items: new OA\Items(type: 'string'),
+                        type: 'array'
+                    )
+                ],
+                required: ['name', 'displayOrder']
+            )
+        ),
+        required: true
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * @param Request $request
@@ -477,8 +627,20 @@ class MenuBoardProduct extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Delete(path: '/menuboard/{menuProductId}/product', operationId: 'menuBoardProductDelete', summary: 'Delete Menu Board', description: 'Delete existing Menu Board Product', tags: ['menuBoard'])]
-    #[OA\Parameter(name: 'menuProductId', in: 'path', description: 'The Menu Board Product ID to Delete', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Delete(
+        path: '/menuboard/{menuProductId}/product',
+        operationId: 'menuBoardProductDelete',
+        description: 'Delete existing Menu Board Product',
+        summary: 'Delete Menu Board',
+        tags: ['menuBoard']
+    )]
+    #[OA\Parameter(
+        name: 'menuProductId',
+        description: 'The Menu Board Product ID to Delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * @param Request $request

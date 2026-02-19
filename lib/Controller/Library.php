@@ -73,6 +73,32 @@ use Xibo\Widget\Render\WidgetDownloader;
  * Class Library
  * @package Xibo\Controller
  */
+#[OA\Schema(
+    schema: 'importJsonSchema',
+    properties: [
+        new OA\Property(
+            property: 'uniqueKeys',
+            description: 'A name of the unique column',
+            items: new OA\Items(type: 'string'),
+            type: 'array'
+        ),
+        new OA\Property(
+            property: 'truncate',
+            description: 'Flag True or False, whether to truncate existing data on import',
+            type: 'boolean'
+        ),
+        new OA\Property(
+            property: 'rows',
+            description: 'An array of objects with pairs: ColumnName:Value',
+            items: new OA\Items(
+                additionalProperties: new OA\AdditionalProperties(type: 'string'),
+                type: 'object'
+            ),
+            type: 'array'
+        )
+    ],
+    type: 'object'
+)]
 class Library extends Base
 {
     /** @var EventDispatcherInterface */
@@ -309,11 +335,36 @@ class Library extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/library/setenablestat/{mediaId}', operationId: 'mediaSetEnableStat', summary: 'Enable Stats Collection', description: 'Set Enable Stats Collection? to use for the collection of Proof of Play statistics for a media.', tags: ['library'])]
-    #[OA\Parameter(name: 'mediaId', in: 'path', description: 'The Media ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['enableStat'], properties: [
-        new OA\Property(property: 'enableStat', description: 'The option to enable the collection of Media Proof of Play statistics', type: 'string')
-    ])))]
+    #[OA\Put(
+        path: '/library/setenablestat/{mediaId}',
+        operationId: 'mediaSetEnableStat',
+        description: 'Set Enable Stats Collection? to use for the collection of Proof of Play statistics for a media.', // phpcs:ignore
+        summary: 'Enable Stats Collection',
+        tags: ['library']
+    )]
+    #[OA\Parameter(
+        name: 'mediaId',
+        description: 'The Media ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'enableStat',
+                        description: 'The option to enable the collection of Media Proof of Play statistics',
+                        type: 'string'
+                    )
+                ],
+                required: ['enableStat']
+            )
+        ),
+        required: true
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Set Enable Stats Collection of a media
@@ -384,24 +435,156 @@ class Library extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/library', operationId: 'librarySearch', summary: 'Library Search', description: 'Search the Library for this user', tags: ['library'])]
-    #[OA\Parameter(name: 'mediaId', in: 'query', description: 'Filter by Media Id', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'keyword', in: 'query', description: 'Filter by Media Name, ID, or original filename', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'media', in: 'query', description: 'Filter by Media Name', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'type', in: 'query', description: 'Filter by Media Type', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'ownerId', in: 'query', description: 'Filter by Owner Id', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'retired', in: 'query', description: 'Filter by Retired', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'tags', in: 'query', description: 'Filter by Tags - comma seperated', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'exactTags', in: 'query', description: 'A flag indicating whether to treat the tags filter as an exact match', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'logicalOperator', in: 'query', description: 'When filtering by multiple Tags, which logical operator should be used? AND|OR', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'duration', in: 'query', description: 'Filter by Duration - a number or less-than,greater-than,less-than-equal or great-than-equal followed by a | followed by a number', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'fileSize', in: 'query', description: 'Filter by File Size - a number or less-than,greater-than,less-than-equal or great-than-equal followed by a | followed by a number', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'ownerUserGroupId', in: 'query', description: 'Filter by users in this UserGroupId', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'folderId', in: 'query', description: 'Filter by Folder ID', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'isReturnPublicUrls', in: 'query', description: 'Should the thumbail URLs be authenticated S3 style public URL, default = false', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'sortBy', in: 'query', description: 'Specifies which field the results are sorted by. Used together with sortDir', required: false, schema: new OA\Schema(type: 'string', enum: ['mediaId', 'name', 'type', 'duration', 'fileSize', 'owner', 'sharing', 'released', 'fileName', 'enableStat', 'createdAt', 'modifiedDt', 'expires', 'revised', 'formattedDuration', 'durationSeconds', 'fileSizeFormatted', 'mediaType', 'resolution']))]
-    #[OA\Parameter(name: 'sortDir', in: 'query', description: 'Sort direction', required: false, schema: new OA\Schema(type: 'string', enum: ['asc', 'desc']))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Media')))]
+    #[OA\Get(
+        path: '/library',
+        operationId: 'librarySearch',
+        description: 'Search the Library for this user',
+        summary: 'Library Search',
+        tags: ['library']
+    )]
+    #[OA\Parameter(
+        name: 'mediaId',
+        description: 'Filter by Media Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'keyword',
+        description: 'Filter by Media Name, ID, or original filename',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'media',
+        description: 'Filter by Media Name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'type',
+        description: 'Filter by Media Type',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'ownerId',
+        description: 'Filter by Owner Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'retired',
+        description: 'Filter by Retired',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'tags',
+        description: 'Filter by Tags - comma seperated',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'exactTags',
+        description: 'A flag indicating whether to treat the tags filter as an exact match',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'logicalOperator',
+        description: 'When filtering by multiple Tags, which logical operator should be used? AND|OR',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'duration',
+        description: 'Filter by Duration - a number or less-than,greater-than,less-than-equal or great-than-equal followed by a | followed by a number', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'fileSize',
+        description: 'Filter by File Size - a number or less-than,greater-than,less-than-equal or great-than-equal followed by a | followed by a number', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'ownerUserGroupId',
+        description: 'Filter by users in this UserGroupId',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'folderId',
+        description: 'Filter by Folder ID',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'isReturnPublicUrls',
+        description: 'Should the thumbail URLs be authenticated S3 style public URL, default = false',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            enum: [
+                'mediaId',
+                'name',
+                'type',
+                'duration',
+                'fileSize',
+                'owner',
+                'sharing',
+                'released',
+                'fileName',
+                'enableStat',
+                'createdAt',
+                'modifiedDt',
+                'expires',
+                'revised',
+                'formattedDuration',
+                'durationSeconds',
+                'fileSizeFormatted',
+                'mediaType',
+                'resolution'
+            ],
+            type: 'string'
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(enum: ['asc', 'desc'], type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Media')
+        )
+    )]
     /**
      * Prints out a Table of all media items
      *
@@ -434,8 +617,21 @@ class Library extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/library/search', operationId: 'librarySearchAll', summary: 'Library Search All', description: 'Search all library files from local and connectors', tags: ['library'])]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/SearchResult')))]
+    #[OA\Get(
+        path: '/library/search',
+        operationId: 'librarySearchAll',
+        description: 'Search all library files from local and connectors',
+        summary: 'Library Search All',
+        tags: ['library']
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/SearchResult')
+        )
+    )]
     /**
      * @param Request $request
      * @param Response $response
@@ -588,12 +784,41 @@ class Library extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Delete(path: '/library/{mediaId}', operationId: 'libraryDelete', summary: 'Delete Media', description: 'Delete Media from the Library', tags: ['library'])]
-    #[OA\Parameter(name: 'mediaId', in: 'path', description: 'The Media ID to Delete', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['forceDelete'], properties: [
-        new OA\Property(property: 'forceDelete', description: 'If the media item has been used should it be force removed from items that uses it?', type: 'integer'),
-        new OA\Property(property: 'purge', description: 'Should this Media be added to the Purge List for all Displays?', type: 'integer')
-    ])))]
+    #[OA\Delete(
+        path: '/library/{mediaId}',
+        operationId: 'libraryDelete',
+        description: 'Delete Media from the Library',
+        summary: 'Delete Media',
+        tags: ['library']
+    )]
+    #[OA\Parameter(
+        name: 'mediaId',
+        description: 'The Media ID to Delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'forceDelete',
+                        description: 'If the media item has been used should it be force removed from items that uses it?', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'purge',
+                        description: 'Should this Media be added to the Purge List for all Displays?',
+                        type: 'integer'
+                    )
+                ],
+                required: ['forceDelete']
+            )
+        ),
+        required: true
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete Media
@@ -643,22 +868,86 @@ class Library extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/library', operationId: 'libraryAdd', summary: 'Add Media', description: 'Add Media to the Library, optionally replacing an existing media item, optionally adding to a playlist.', tags: ['library'])]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'multipart/form-data', schema: new OA\Schema(required: ['files'], properties: [
-        new OA\Property(property: 'files', description: 'The Uploaded File', type: 'string', format: 'binary'),
-        new OA\Property(property: 'name', description: 'Optional Media Name', type: 'string'),
-        new OA\Property(property: 'oldMediaId', description: 'Id of an existing media file which should be replaced with the new upload', type: 'integer'),
-        new OA\Property(property: 'updateInLayouts', description: 'Flag (0, 1), set to 1 to update this media in all layouts (use with oldMediaId) ', type: 'integer'),
-        new OA\Property(property: 'deleteOldRevisions', description: 'Flag (0 , 1), to either remove or leave the old file revisions (use with oldMediaId)', type: 'integer'),
-        new OA\Property(property: 'tags', description: 'Comma separated string of Tags that should be assigned to uploaded Media', type: 'string'),
-        new OA\Property(property: 'expires', description: 'Date in Y-m-d H:i:s format, will set expiration date on the uploaded Media', type: 'string'),
-        new OA\Property(property: 'playlistId', description: 'A playlistId to add this uploaded media to', type: 'integer'),
-        new OA\Property(property: 'widgetFromDt', description: 'Date in Y-m-d H:i:s format, will set widget start date. Requires a playlistId.', type: 'string'),
-        new OA\Property(property: 'widgetToDt', description: 'Date in Y-m-d H:i:s format, will set widget end date. Requires a playlistId.', type: 'string'),
-        new OA\Property(property: 'deleteOnExpiry', description: 'Flag (0, 1), set to 1 to remove the Widget from the Playlist when the widgetToDt has been reached', type: 'integer'),
-        new OA\Property(property: 'applyToMedia', description: 'Flag (0, 1), set to 1 to apply the widgetFromDt as the expiry date on the Media', type: 'integer'),
-        new OA\Property(property: 'folderId', description: 'Folder ID to which this object should be assigned to', type: 'integer')
-    ])))]
+    #[OA\Post(
+        path: '/library',
+        operationId: 'libraryAdd',
+        description: 'Add Media to the Library, optionally replacing an existing media item, optionally adding to a playlist.', // phpcs:ignore
+        summary: 'Add Media',
+        tags: ['library']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'multipart/form-data',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'files',
+                        description: 'The Uploaded File',
+                        format: 'binary',
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'name', description: 'Optional Media Name', type: 'string'),
+                    new OA\Property(
+                        property: 'oldMediaId',
+                        description: 'Id of an existing media file which should be replaced with the new upload',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'updateInLayouts',
+                        description: 'Flag (0, 1), set to 1 to update this media in all layouts (use with oldMediaId) ', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'deleteOldRevisions',
+                        description: 'Flag (0 , 1), to either remove or leave the old file revisions (use with oldMediaId)', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'tags',
+                        description: 'Comma separated string of Tags that should be assigned to uploaded Media',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'expires',
+                        description: 'Date in Y-m-d H:i:s format, will set expiration date on the uploaded Media',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'playlistId',
+                        description: 'A playlistId to add this uploaded media to',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'widgetFromDt',
+                        description: 'Date in Y-m-d H:i:s format, will set widget start date. Requires a playlistId.',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'widgetToDt',
+                        description: 'Date in Y-m-d H:i:s format, will set widget end date. Requires a playlistId.',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'deleteOnExpiry',
+                        description: 'Flag (0, 1), set to 1 to remove the Widget from the Playlist when the widgetToDt has been reached', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'applyToMedia',
+                        description: 'Flag (0, 1), set to 1 to apply the widgetFromDt as the expiry date on the Media',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'folderId',
+                        description: 'Folder ID to which this object should be assigned to',
+                        type: 'integer'
+                    )
+                ],
+                required: ['files']
+            )
+        ),
+        required: true
+    )]
     #[OA\Response(response: 200, description: 'successful operation')]
     /**
      * Add a file to the library
@@ -801,18 +1090,63 @@ class Library extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/library/{mediaId}', operationId: 'libraryEdit', summary: 'Edit Media', description: 'Edit a Media Item in the Library', tags: ['library'])]
-    #[OA\Parameter(name: 'mediaId', in: 'path', description: 'The Media ID to Edit', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['name', 'duration', 'retired'], properties: [
-        new OA\Property(property: 'name', description: 'Media Item Name', type: 'string'),
-        new OA\Property(property: 'duration', description: 'The duration in seconds for this Media Item', type: 'integer'),
-        new OA\Property(property: 'retired', description: 'Flag indicating if this media is retired', type: 'integer'),
-        new OA\Property(property: 'tags', description: 'Comma separated list of Tags', type: 'string'),
-        new OA\Property(property: 'updateInLayouts', description: 'Flag indicating whether to update the duration in all Layouts the Media is assigned to', type: 'integer'),
-        new OA\Property(property: 'expires', description: 'Date in Y-m-d H:i:s format, will set expiration date on the Media item', type: 'string'),
-        new OA\Property(property: 'folderId', description: 'Folder ID to which this media should be assigned to', type: 'integer')
-    ])))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Media'))]
+    #[OA\Put(
+        path: '/library/{mediaId}',
+        operationId: 'libraryEdit',
+        description: 'Edit a Media Item in the Library',
+        summary: 'Edit Media',
+        tags: ['library']
+    )]
+    #[OA\Parameter(
+        name: 'mediaId',
+        description: 'The Media ID to Edit',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'name', description: 'Media Item Name', type: 'string'),
+                    new OA\Property(
+                        property: 'duration',
+                        description: 'The duration in seconds for this Media Item',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'retired',
+                        description: 'Flag indicating if this media is retired',
+                        type: 'integer'
+                    ),
+                    new OA\Property(property: 'tags', description: 'Comma separated list of Tags', type: 'string'),
+                    new OA\Property(
+                        property: 'updateInLayouts',
+                        description: 'Flag indicating whether to update the duration in all Layouts the Media is assigned to', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'expires',
+                        description: 'Date in Y-m-d H:i:s format, will set expiration date on the Media item',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'folderId',
+                        description: 'Folder ID to which this media should be assigned to',
+                        type: 'integer'
+                    )
+                ],
+                required: ['name', 'duration', 'retired']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Media')
+    )]
     /**
      * Edit Media
      *
@@ -951,10 +1285,24 @@ class Library extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Delete(path: '/library/tidy', operationId: 'libraryTidy', summary: 'Tidy Library', description: 'Routine tidy of the library, removing unused files.', tags: ['library'])]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(properties: [
-        new OA\Property(property: 'tidyGenericFiles', description: 'Also delete generic files?', type: 'integer')
-    ])))]
+    #[OA\Delete(
+        path: '/library/tidy',
+        operationId: 'libraryTidy',
+        description: 'Routine tidy of the library, removing unused files.',
+        summary: 'Tidy Library',
+        tags: ['library']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'tidyGenericFiles', description: 'Also delete generic files?', type: 'integer')
+                ]
+            )
+        ),
+        required: true
+    )]
     #[OA\Response(response: 200, description: 'successful operation')]
     /**
      * Tidies up the library
@@ -1017,10 +1365,47 @@ class Library extends Base
         return $this->getConfig()->getSetting('LIBRARY_LOCATION') . '/cache';
     }
 
-    #[OA\Get(path: '/library/download/{mediaId}/{type}', operationId: 'libraryDownload', summary: 'Download Media', description: 'Download a Media file from the Library', tags: ['library'])]
-    #[OA\Parameter(name: 'mediaId', in: 'path', description: 'The Media ID to Download', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'type', in: 'path', description: 'The Module Type of the Download', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Response(response: 200, description: 'successful operation', headers: [new OA\Header(header: 'X-Sendfile', description: 'Apache Send file header - if enabled.', schema: new OA\Schema(type: 'string')), new OA\Header(header: 'X-Accel-Redirect', description: 'nginx send file header - if enabled.', schema: new OA\Schema(type: 'string'))], content: new OA\MediaType(mediaType: 'application/octet-stream', schema: new OA\Schema(type: 'string', format: 'binary')))]
+    #[OA\Get(
+        path: '/library/download/{mediaId}/{type}',
+        operationId: 'libraryDownload',
+        description: 'Download a Media file from the Library',
+        summary: 'Download Media',
+        tags: ['library']
+    )]
+    #[OA\Parameter(
+        name: 'mediaId',
+        description: 'The Media ID to Download',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'type',
+        description: 'The Module Type of the Download',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\MediaType(
+            mediaType: 'application/octet-stream',
+            schema: new OA\Schema(format: 'binary', type: 'string')
+        ),
+        headers: [
+            new OA\Header(
+                header: 'X-Sendfile',
+                description: 'Apache Send file header - if enabled.',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Header(
+                header: 'X-Accel-Redirect',
+                description: 'nginx send file header - if enabled.',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * @param Request $request
      * @param Response $response
@@ -1106,9 +1491,40 @@ class Library extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/library/thumbnail/{mediaId}', operationId: 'libraryThumbnail', summary: 'Download Thumbnail', description: 'Download thumbnail for a Media file from the Library', tags: ['library'])]
-    #[OA\Parameter(name: 'mediaId', in: 'path', description: 'The Media ID to Download', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Response(response: 200, description: 'successful operation', headers: [new OA\Header(header: 'X-Sendfile', description: 'Apache Send file header - if enabled.', schema: new OA\Schema(type: 'string')), new OA\Header(header: 'X-Accel-Redirect', description: 'nginx send file header - if enabled.', schema: new OA\Schema(type: 'string'))], content: new OA\MediaType(mediaType: 'application/octet-stream', schema: new OA\Schema(type: 'string', format: 'binary')))]
+    #[OA\Get(
+        path: '/library/thumbnail/{mediaId}',
+        operationId: 'libraryThumbnail',
+        description: 'Download thumbnail for a Media file from the Library',
+        summary: 'Download Thumbnail',
+        tags: ['library']
+    )]
+    #[OA\Parameter(
+        name: 'mediaId',
+        description: 'The Media ID to Download',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\MediaType(
+            mediaType: 'application/octet-stream',
+            schema: new OA\Schema(format: 'binary', type: 'string')
+        ),
+        headers: [
+            new OA\Header(
+                header: 'X-Sendfile',
+                description: 'Apache Send file header - if enabled.',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Header(
+                header: 'X-Accel-Redirect',
+                description: 'nginx send file header - if enabled.',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Thumbnail for the libary page
      *  this is called by library-page datatable
@@ -1234,12 +1650,42 @@ class Library extends Base
         return $this->add($request->withParsedBody(['options' => $options]), $response);
     }
 
-    #[OA\Post(path: '/library/{mediaId}/tag', operationId: 'mediaTag', summary: 'Tag Media', description: 'Tag a Media with one or more tags', tags: ['library'])]
-    #[OA\Parameter(name: 'mediaId', in: 'path', description: 'The Media Id to Tag', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['tag'], properties: [
-        new OA\Property(property: 'tag', description: 'An array of tags', type: 'array', items: new OA\Items(type: 'string'))
-    ])))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Media'))]
+    #[OA\Post(
+        path: '/library/{mediaId}/tag',
+        operationId: 'mediaTag',
+        description: 'Tag a Media with one or more tags',
+        summary: 'Tag Media',
+        tags: ['library']
+    )]
+    #[OA\Parameter(
+        name: 'mediaId',
+        description: 'The Media Id to Tag',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'tag',
+                        description: 'An array of tags',
+                        items: new OA\Items(type: 'string'),
+                        type: 'array'
+                    )
+                ],
+                required: ['tag']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Media')
+    )]
     /**
      * @param Request $request
      * @param Response $response
@@ -1286,12 +1732,42 @@ class Library extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/library/{mediaId}/untag', operationId: 'mediaUntag', summary: 'Untag Media', description: 'Untag a Media with one or more tags', tags: ['library'])]
-    #[OA\Parameter(name: 'mediaId', in: 'path', description: 'The Media Id to Untag', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['tag'], properties: [
-        new OA\Property(property: 'tag', description: 'An array of tags', type: 'array', items: new OA\Items(type: 'string'))
-    ])))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Media'))]
+    #[OA\Post(
+        path: '/library/{mediaId}/untag',
+        operationId: 'mediaUntag',
+        description: 'Untag a Media with one or more tags',
+        summary: 'Untag Media',
+        tags: ['library']
+    )]
+    #[OA\Parameter(
+        name: 'mediaId',
+        description: 'The Media Id to Untag',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'tag',
+                        description: 'An array of tags',
+                        items: new OA\Items(type: 'string'),
+                        type: 'array'
+                    )
+                ],
+                required: ['tag']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Media')
+    )]
     /**
      * @param Request $request
      * @param Response $response
@@ -1370,8 +1846,20 @@ class Library extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/library/usage/{mediaId}', operationId: 'libraryUsageReport', summary: 'Get Library Item Usage Report', description: 'Get the records for the library item usage report', tags: ['library'])]
-    #[OA\Parameter(name: 'mediaId', in: 'path', description: 'The Media Id', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Get(
+        path: '/library/usage/{mediaId}',
+        operationId: 'libraryUsageReport',
+        description: 'Get the records for the library item usage report',
+        summary: 'Get Library Item Usage Report',
+        tags: ['library']
+    )]
+    #[OA\Parameter(
+        name: 'mediaId',
+        description: 'The Media Id',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 200, description: 'successful operation')]
     /**
      * @param Request $request
@@ -1471,8 +1959,20 @@ class Library extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/library/usage/layouts/{mediaId}', operationId: 'libraryUsageLayoutsReport', summary: 'Get Library Item Usage Report for Layouts', description: 'Get the records for the library item usage report for Layouts', tags: ['library'])]
-    #[OA\Parameter(name: 'mediaId', in: 'path', description: 'The Media Id', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Get(
+        path: '/library/usage/layouts/{mediaId}',
+        operationId: 'libraryUsageLayoutsReport',
+        description: 'Get the records for the library item usage report for Layouts',
+        summary: 'Get Library Item Usage Report for Layouts',
+        tags: ['library']
+    )]
+    #[OA\Parameter(
+        name: 'mediaId',
+        description: 'The Media Id',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 200, description: 'successful operation')]
     /**
      * @param Request $request
@@ -1570,13 +2070,45 @@ class Library extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/library/copy/{mediaId}', operationId: 'mediaCopy', summary: 'Copy Media', description: 'Copy a Media, providing a new name and tags if applicable', tags: ['library'])]
-    #[OA\Parameter(name: 'mediaId', in: 'path', description: 'The media ID to Copy', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['name'], properties: [
-        new OA\Property(property: 'name', description: 'The name for the new Media', type: 'string'),
-        new OA\Property(property: 'tags', description: 'The Optional tags for new Media', type: 'string')
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/Media'))]
+    #[OA\Post(
+        path: '/library/copy/{mediaId}',
+        operationId: 'mediaCopy',
+        description: 'Copy a Media, providing a new name and tags if applicable',
+        summary: 'Copy Media',
+        tags: ['library']
+    )]
+    #[OA\Parameter(
+        name: 'mediaId',
+        description: 'The media ID to Copy',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'name', description: 'The name for the new Media', type: 'string'),
+                    new OA\Property(property: 'tags', description: 'The Optional tags for new Media', type: 'string')
+                ],
+                required: ['name']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Media'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Copies a Media
      *
@@ -1641,8 +2173,20 @@ class Library extends Base
     }
 
 
-    #[OA\Get(path: '/library/{mediaId}/isused/', operationId: 'mediaIsUsed', summary: 'Media usage check', description: 'Checks if a Media is being used', tags: ['library'])]
-    #[OA\Parameter(name: 'mediaId', in: 'path', description: 'The Media Id', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Get(
+        path: '/library/{mediaId}/isused/',
+        operationId: 'mediaIsUsed',
+        description: 'Checks if a Media is being used',
+        summary: 'Media usage check',
+        tags: ['library']
+    )]
+    #[OA\Parameter(
+        name: 'mediaId',
+        description: 'The Media Id',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 200, description: 'successful operation')]
     /**
      * @param Request $request
@@ -1695,17 +2239,63 @@ class Library extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/library/uploadUrl', operationId: 'uploadFromUrl', summary: 'Upload Media from URL', description: 'Upload Media to CMS library from an external URL', tags: ['library'])]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['url', 'type'], properties: [
-        new OA\Property(property: 'url', description: 'The URL to the media', type: 'string'),
-        new OA\Property(property: 'type', description: 'The type of the media, image, video etc', type: 'string'),
-        new OA\Property(property: 'extension', description: 'Optional extension of the media, jpg, png etc. If not set in the request it will be retrieved from the headers', type: 'string'),
-        new OA\Property(property: 'enableStat', description: 'The option to enable the collection of Media Proof of Play statistics, On, Off or Inherit.', type: 'string'),
-        new OA\Property(property: 'optionalName', description: 'An optional name for this media file, if left empty it will default to the file name', type: 'string'),
-        new OA\Property(property: 'expires', description: 'Date in Y-m-d H:i:s format, will set expiration date on the Media item', type: 'string'),
-        new OA\Property(property: 'folderId', description: 'Folder ID to which this media should be assigned to', type: 'integer')
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/Media'))]
+    #[OA\Post(
+        path: '/library/uploadUrl',
+        operationId: 'uploadFromUrl',
+        description: 'Upload Media to CMS library from an external URL',
+        summary: 'Upload Media from URL',
+        tags: ['library']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'url', description: 'The URL to the media', type: 'string'),
+                    new OA\Property(property: 'type', description: 'The type of the media, image, video etc', type: 'string'),
+                    new OA\Property(
+                        property: 'extension',
+                        description: 'Optional extension of the media, jpg, png etc. If not set in the request it will be retrieved from the headers', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'enableStat',
+                        description: 'The option to enable the collection of Media Proof of Play statistics, On, Off or Inherit.', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'optionalName',
+                        description: 'An optional name for this media file, if left empty it will default to the file name', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'expires',
+                        description: 'Date in Y-m-d H:i:s format, will set expiration date on the Media item',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'folderId',
+                        description: 'Folder ID to which this media should be assigned to',
+                        type: 'integer'
+                    )
+                ],
+                required: ['url', 'type']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Media'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Upload Media via URL
      *
@@ -1929,12 +2519,40 @@ class Library extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/library/{id}/selectfolder', operationId: 'librarySelectFolder', summary: 'Media Select folder', description: 'Select Folder for Media', tags: ['library'])]
-    #[OA\Parameter(name: 'id', in: 'path', description: 'The Media ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(properties: [
-        new OA\Property(property: 'folderId', description: 'Folder ID to which this object should be assigned to', type: 'integer')
-    ])))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Media'))]
+    #[OA\Put(
+        path: '/library/{id}/selectfolder',
+        operationId: 'librarySelectFolder',
+        description: 'Select Folder for Media',
+        summary: 'Media Select folder',
+        tags: ['library']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The Media ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'folderId',
+                        description: 'Folder ID to which this object should be assigned to',
+                        type: 'integer'
+                    )
+                ]
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Media')
+    )]
     /**
      * @param Request $request
      * @param Response $response

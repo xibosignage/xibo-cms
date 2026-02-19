@@ -98,28 +98,28 @@ class Command extends Base
     )]
     #[OA\Parameter(
         name: 'useRegexForName',
-        description: 'Flag (0,1). When filtering by multiple commands in command filter, should we use regex?',
+        description: 'Flag (0,1). When filtering by multiple commands in command filter, should we use regex?', // phpcs:ignore
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
         name: 'useRegexForCode',
-        description: 'Flag (0,1). When filtering by multiple codes in code filter, should we use regex?',
+        description: 'Flag (0,1). When filtering by multiple codes in code filter, should we use regex?', // phpcs:ignore
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
         name: 'logicalOperatorName',
-        description: 'When filtering by multiple commands in command filter, which logical operator should be used? AND|OR',
+        description: 'When filtering by multiple commands in command filter, which logical operator should be used? AND|OR', // phpcs:ignore
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
         name: 'logicalOperatorCode',
-        description: 'When filtering by multiple codes in code filter, which logical operator should be used? AND|OR',
+        description: 'When filtering by multiple codes in code filter, which logical operator should be used? AND|OR', // phpcs:ignore
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'string')
@@ -325,11 +325,9 @@ class Command extends Base
         tags: ['command']
     )]
     #[OA\RequestBody(
-        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
-                required: ['command', 'code'],
                 properties: [
                     new OA\Property(
                         property: 'command',
@@ -348,39 +346,41 @@ class Command extends Base
                     ),
                     new OA\Property(
                         property: 'commandString',
-                        description: 'The Command String for this Command. Can be overridden on Display Settings.',
+                        description: 'The Command String for this Command. Can be overridden on Display Settings.', // phpcs:ignore
                         type: 'string'
                     ),
                     new OA\Property(
                         property: 'validationString',
-                        description: 'The Validation String for this Command. Can be overridden on Display Settings.',
+                        description: 'The Validation String for this Command. Can be overridden on Display Settings.', // phpcs:ignore
                         type: 'string'
                     ),
                     new OA\Property(
                         property: 'availableOn',
-                        description: 'An array of Player types this Command is available on, empty for all.',
+                        description: 'An array of Player types this Command is available on, empty for all.', // phpcs:ignore
                         type: 'string'
                     ),
                     new OA\Property(
                         property: 'createAlertOn',
-                        description: 'On command execution, when should a Display alert be created? success, failure, always or never',
+                        description: 'On command execution, when should a Display alert be created? success, failure, always or never', // phpcs:ignore
                         type: 'string'
                     )
-                ]
+                ],
+                required: ['command', 'code']
             )
-        )
+        ),
+        required: true
     )]
     #[OA\Response(
         response: 201,
         description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Command'),
         headers: [
             new OA\Header(
                 header: 'Location',
                 description: 'Location of the new record',
                 schema: new OA\Schema(type: 'string')
             )
-        ],
-        content: new OA\JsonContent(ref: '#/components/schemas/Command')
+        ]
     )]
     /**
      * Add Command
@@ -437,11 +437,9 @@ class Command extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
-        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
-                required: ['command'],
                 properties: [
                     new OA\Property(
                         property: 'command',
@@ -455,27 +453,29 @@ class Command extends Base
                     ),
                     new OA\Property(
                         property: 'commandString',
-                        description: 'The Command String for this Command. Can be overridden on Display Settings.',
+                        description: 'The Command String for this Command. Can be overridden on Display Settings.', // phpcs:ignore
                         type: 'string'
                     ),
                     new OA\Property(
                         property: 'validationString',
-                        description: 'The Validation String for this Command. Can be overridden on Display Settings.',
+                        description: 'The Validation String for this Command. Can be overridden on Display Settings.', // phpcs:ignore
                         type: 'string'
                     ),
                     new OA\Property(
                         property: 'availableOn',
-                        description: 'An array of Player types this Command is available on, empty for all.',
+                        description: 'An array of Player types this Command is available on, empty for all.', // phpcs:ignore
                         type: 'string'
                     ),
                     new OA\Property(
                         property: 'createAlertOn',
-                        description: 'On command execution, when should a Display alert be created? success, failure, always or never',
+                        description: 'On command execution, when should a Display alert be created? success, failure, always or never', // phpcs:ignore
                         type: 'string'
                     )
-                ]
+                ],
+                required: ['command']
             )
-        )
+        ),
+        required: true
     )]
     #[OA\Response(
         response: 200,

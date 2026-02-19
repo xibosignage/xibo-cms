@@ -411,8 +411,21 @@ class Login extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/about', operationId: 'about', summary: 'About', description: 'Information about this API, such as Version code, etc', tags: ['misc'])]
-    #[OA\Response(response: 200, description: 'successful response', content: new OA\JsonContent(type: 'object', additionalProperties: new OA\AdditionalProperties(type: 'string')))]
+    #[OA\Get(
+        path: '/about',
+        operationId: 'about',
+        description: 'Information about this API, such as Version code, etc',
+        summary: 'About',
+        tags: ['misc']
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful response',
+        content: new OA\JsonContent(
+            type: 'object',
+            additionalProperties: new OA\AdditionalProperties(type: 'string')
+        )
+    )]
     /**
      * Shows information about Xibo
      *

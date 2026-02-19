@@ -98,12 +98,49 @@ class DisplayProfile extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/displayprofile', operationId: 'displayProfileSearch', summary: 'Display Profile Search', description: 'Search this users Display Profiles', tags: ['displayprofile'])]
-    #[OA\Parameter(name: 'displayProfileId', in: 'query', description: 'Filter by DisplayProfile Id', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'displayProfile', in: 'query', description: 'Filter by DisplayProfile Name', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'type', in: 'query', description: 'Filter by DisplayProfile Type (windows|android|lg)', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'embed', in: 'query', description: 'Embed related data such as config,commands,configWithDefault', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/DisplayProfile')))]
+    #[OA\Get(
+        path: '/displayprofile',
+        operationId: 'displayProfileSearch',
+        description: 'Search this users Display Profiles',
+        summary: 'Display Profile Search',
+        tags: ['displayprofile']
+    )]
+    #[OA\Parameter(
+        name: 'displayProfileId',
+        description: 'Filter by DisplayProfile Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'displayProfile',
+        description: 'Filter by DisplayProfile Name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'type',
+        description: 'Filter by DisplayProfile Type (windows|android|lg)',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'embed',
+        description: 'Embed related data such as config,commands,configWithDefault',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/DisplayProfile')
+        )
+    )]
     /**
      * @param Request $request
      * @param Response $response
@@ -215,13 +252,47 @@ class DisplayProfile extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/displayprofile', operationId: 'displayProfileAdd', summary: 'Add Display Profile', description: 'Add a Display Profile', tags: ['displayprofile'])]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['name', 'type', 'isDefault'], properties: [
-        new OA\Property(property: 'name', description: 'The Name of the Display Profile', type: 'string'),
-        new OA\Property(property: 'type', description: 'The Client Type this Profile will apply to', type: 'string'),
-        new OA\Property(property: 'isDefault', description: 'Flag indicating if this is the default profile for the client type', type: 'integer')
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/DisplayProfile'))]
+    #[OA\Post(
+        path: '/displayprofile',
+        operationId: 'displayProfileAdd',
+        description: 'Add a Display Profile',
+        summary: 'Add Display Profile',
+        tags: ['displayprofile']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'name', description: 'The Name of the Display Profile', type: 'string'),
+                    new OA\Property(
+                        property: 'type',
+                        description: 'The Client Type this Profile will apply to',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'isDefault',
+                        description: 'Flag indicating if this is the default profile for the client type',
+                        type: 'integer'
+                    )
+                ],
+                required: ['name', 'type', 'isDefault']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DisplayProfile'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Display Profile Add
      *
@@ -328,13 +399,42 @@ class DisplayProfile extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/displayprofile/{displayProfileId}', operationId: 'displayProfileEdit', summary: 'Edit Display Profile', description: 'Edit a Display Profile', tags: ['displayprofile'])]
-    #[OA\Parameter(name: 'displayProfileId', in: 'path', description: 'The Display Profile ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['name', 'type', 'isDefault'], properties: [
-        new OA\Property(property: 'name', description: 'The Name of the Display Profile', type: 'string'),
-        new OA\Property(property: 'type', description: 'The Client Type this Profile will apply to', type: 'string'),
-        new OA\Property(property: 'isDefault', description: 'Flag indicating if this is the default profile for the client type', type: 'integer')
-    ])))]
+    #[OA\Put(
+        path: '/displayprofile/{displayProfileId}',
+        operationId: 'displayProfileEdit',
+        description: 'Edit a Display Profile',
+        summary: 'Edit Display Profile',
+        tags: ['displayprofile']
+    )]
+    #[OA\Parameter(
+        name: 'displayProfileId',
+        description: 'The Display Profile ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'name', description: 'The Name of the Display Profile', type: 'string'),
+                    new OA\Property(
+                        property: 'type',
+                        description: 'The Client Type this Profile will apply to',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'isDefault',
+                        description: 'Flag indicating if this is the default profile for the client type',
+                        type: 'integer'
+                    )
+                ],
+                required: ['name', 'type', 'isDefault']
+            )
+        ),
+        required: true
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Edit
@@ -441,8 +541,20 @@ class DisplayProfile extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Delete(path: '/displayprofile/{displayProfileId}', operationId: 'displayProfileDelete', summary: 'Delete Display Profile', description: 'Delete an existing Display Profile', tags: ['displayprofile'])]
-    #[OA\Parameter(name: 'displayProfileId', in: 'path', description: 'The Display Profile ID', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Delete(
+        path: '/displayprofile/{displayProfileId}',
+        operationId: 'displayProfileDelete',
+        description: 'Delete an existing Display Profile',
+        summary: 'Delete Display Profile',
+        tags: ['displayprofile']
+    )]
+    #[OA\Parameter(
+        name: 'displayProfileId',
+        description: 'The Display Profile ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete Display Profile
@@ -502,10 +614,39 @@ class DisplayProfile extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/displayprofile/{displayProfileId}/copy', operationId: 'displayProfileCopy', summary: 'Copy Display Profile', description: 'Copy an existing Display Profile', tags: ['displayprofile'])]
-    #[OA\Parameter(name: 'displayProfileId', in: 'path', description: 'The Display Profile ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'name', in: 'path', description: 'The name for the copy', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/DisplayProfile'))]
+    #[OA\Post(
+        path: '/displayprofile/{displayProfileId}/copy',
+        operationId: 'displayProfileCopy',
+        description: 'Copy an existing Display Profile',
+        summary: 'Copy Display Profile',
+        tags: ['displayprofile']
+    )]
+    #[OA\Parameter(
+        name: 'displayProfileId',
+        description: 'The Display Profile ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'name',
+        description: 'The name for the copy',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DisplayProfile'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Copy Display Profile
      * @param Request $request

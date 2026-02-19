@@ -98,10 +98,35 @@ class DataSetColumn extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/dataset/{dataSetId}/column', operationId: 'dataSetColumnSearch', summary: 'Search Columns', description: 'Search Columns for DataSet', tags: ['dataset'])]
-    #[OA\Parameter(name: 'dataSetId', in: 'path', description: 'The DataSet ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'dataSetColumnId', in: 'query', description: 'Filter by DataSet ColumnID', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/DataSetColumn')))]
+    #[OA\Get(
+        path: '/dataset/{dataSetId}/column',
+        operationId: 'dataSetColumnSearch',
+        description: 'Search Columns for DataSet',
+        summary: 'Search Columns',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        description: 'The DataSet ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'dataSetColumnId',
+        description: 'Filter by DataSet ColumnID',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/DataSetColumn')
+        )
+    )]
     /**
      * Column Search
      * @param Request $request
@@ -196,23 +221,99 @@ class DataSetColumn extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/dataset/{dataSetId}/column', operationId: 'dataSetColumnAdd', summary: 'Add Column', description: 'Add a Column to a DataSet', tags: ['dataset'])]
-    #[OA\Parameter(name: 'dataSetId', in: 'path', description: 'The DataSet ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['heading', 'columnOrder', 'dataTypeId', 'dataSetColumnTypeId', 'showFilter', 'showSort'], properties: [
-        new OA\Property(property: 'heading', description: 'The heading for the Column', type: 'string'),
-        new OA\Property(property: 'listContent', description: 'A comma separated list of content for drop downs', type: 'string'),
-        new OA\Property(property: 'columnOrder', description: 'The display order for this column', type: 'integer'),
-        new OA\Property(property: 'dataTypeId', description: 'The data type ID for this column', type: 'integer'),
-        new OA\Property(property: 'dataSetColumnTypeId', description: 'The column type for this column', type: 'integer'),
-        new OA\Property(property: 'formula', description: 'MySQL SELECT syntax formula for this Column if the column type is formula', type: 'string'),
-        new OA\Property(property: 'remoteField', description: 'JSON-String to select Data from the Remote DataSet', type: 'string'),
-        new OA\Property(property: 'showFilter', description: 'Flag indicating whether this column should present a filter on DataEntry', type: 'integer'),
-        new OA\Property(property: 'showSort', description: 'Flag indicating whether this column should allow sorting on DataEntry', type: 'integer'),
-        new OA\Property(property: 'tooltip', description: 'Help text that should be displayed when entering data for this Column.', type: 'integer'),
-        new OA\Property(property: 'isRequired', description: 'Flag indicating whether value must be provided for this Column.', type: 'integer'),
-        new OA\Property(property: 'dateFormat', description: 'PHP date format for the dates in the source of the remote DataSet', type: 'string')
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/DataSetColumn'))]
+    #[OA\Post(
+        path: '/dataset/{dataSetId}/column',
+        operationId: 'dataSetColumnAdd',
+        description: 'Add a Column to a DataSet',
+        summary: 'Add Column',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        description: 'The DataSet ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'heading', description: 'The heading for the Column', type: 'string'),
+                    new OA\Property(
+                        property: 'listContent',
+                        description: 'A comma separated list of content for drop downs',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'columnOrder',
+                        description: 'The display order for this column',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'dataTypeId',
+                        description: 'The data type ID for this column',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'dataSetColumnTypeId',
+                        description: 'The column type for this column',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'formula',
+                        description: 'MySQL SELECT syntax formula for this Column if the column type is formula', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'remoteField',
+                        description: 'JSON-String to select Data from the Remote DataSet',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'showFilter',
+                        description: 'Flag indicating whether this column should present a filter on DataEntry', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'showSort',
+                        description: 'Flag indicating whether this column should allow sorting on DataEntry', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'tooltip',
+                        description: 'Help text that should be displayed when entering data for this Column.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isRequired',
+                        description: 'Flag indicating whether value must be provided for this Column.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'dateFormat',
+                        description: 'PHP date format for the dates in the source of the remote DataSet', // phpcs:ignore
+                        type: 'string'
+                    )
+                ],
+                required: ['heading', 'columnOrder', 'dataTypeId', 'dataSetColumnTypeId', 'showFilter', 'showSort']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DataSetColumn'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add
      * @param Request $request
@@ -310,24 +411,106 @@ class DataSetColumn extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/dataset/{dataSetId}/column/{dataSetColumnId}', operationId: 'dataSetColumnEdit', summary: 'Edit Column', description: 'Edit a Column to a DataSet', tags: ['dataset'])]
-    #[OA\Parameter(name: 'dataSetId', in: 'path', description: 'The DataSet ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'dataSetColumnId', in: 'path', description: 'The Column ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['heading', 'columnOrder', 'dataTypeId', 'dataSetColumnTypeId', 'showFilter', 'showSort'], properties: [
-        new OA\Property(property: 'heading', description: 'The heading for the Column', type: 'string'),
-        new OA\Property(property: 'listContent', description: 'A comma separated list of content for drop downs', type: 'string'),
-        new OA\Property(property: 'columnOrder', description: 'The display order for this column', type: 'integer'),
-        new OA\Property(property: 'dataTypeId', description: 'The data type ID for this column', type: 'integer'),
-        new OA\Property(property: 'dataSetColumnTypeId', description: 'The column type for this column', type: 'integer'),
-        new OA\Property(property: 'formula', description: 'MySQL SELECT syntax formula for this Column if the column type is formula', type: 'string'),
-        new OA\Property(property: 'remoteField', description: 'JSON-String to select Data from the Remote DataSet', type: 'string'),
-        new OA\Property(property: 'showFilter', description: 'Flag indicating whether this column should present a filter on DataEntry', type: 'integer'),
-        new OA\Property(property: 'showSort', description: 'Flag indicating whether this column should allow sorting on DataEntry', type: 'integer'),
-        new OA\Property(property: 'tooltip', description: 'Help text that should be displayed when entering data for this Column.', type: 'integer'),
-        new OA\Property(property: 'isRequired', description: 'Flag indicating whether value must be provided for this Column.', type: 'integer'),
-        new OA\Property(property: 'dateFormat', description: 'PHP date format for the dates in the source of the remote DataSet', type: 'string')
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/DataSetColumn'))]
+    #[OA\Put(
+        path: '/dataset/{dataSetId}/column/{dataSetColumnId}',
+        operationId: 'dataSetColumnEdit',
+        description: 'Edit a Column to a DataSet',
+        summary: 'Edit Column',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        description: 'The DataSet ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'dataSetColumnId',
+        description: 'The Column ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'heading', description: 'The heading for the Column', type: 'string'),
+                    new OA\Property(
+                        property: 'listContent',
+                        description: 'A comma separated list of content for drop downs',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'columnOrder',
+                        description: 'The display order for this column',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'dataTypeId',
+                        description: 'The data type ID for this column',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'dataSetColumnTypeId',
+                        description: 'The column type for this column',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'formula',
+                        description: 'MySQL SELECT syntax formula for this Column if the column type is formula', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'remoteField',
+                        description: 'JSON-String to select Data from the Remote DataSet',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'showFilter',
+                        description: 'Flag indicating whether this column should present a filter on DataEntry', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'showSort',
+                        description: 'Flag indicating whether this column should allow sorting on DataEntry', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'tooltip',
+                        description: 'Help text that should be displayed when entering data for this Column.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isRequired',
+                        description: 'Flag indicating whether value must be provided for this Column.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'dateFormat',
+                        description: 'PHP date format for the dates in the source of the remote DataSet', // phpcs:ignore
+                        type: 'string'
+                    )
+                ],
+                required: ['heading', 'columnOrder', 'dataTypeId', 'dataSetColumnTypeId', 'showFilter', 'showSort']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DataSetColumn'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Edit
      * @param Request $request
@@ -418,9 +601,27 @@ class DataSetColumn extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Delete(path: '/dataset/{dataSetId}/column/{dataSetColumnId}', operationId: 'dataSetColumnDelete', summary: 'Delete Column', description: 'Delete DataSet Column', tags: ['dataset'])]
-    #[OA\Parameter(name: 'dataSetId', in: 'path', description: 'The DataSet ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'dataSetColumnId', in: 'path', description: 'The Column ID', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Delete(
+        path: '/dataset/{dataSetId}/column/{dataSetColumnId}',
+        operationId: 'dataSetColumnDelete',
+        description: 'Delete DataSet Column',
+        summary: 'Delete Column',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        description: 'The DataSet ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'dataSetColumnId',
+        description: 'The Column ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete
