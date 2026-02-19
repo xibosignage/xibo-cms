@@ -23,6 +23,7 @@ import path from 'node:path';
 
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
+import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
@@ -36,6 +37,12 @@ export default defineConfig(({ mode }) => ({
     }),
     tailwindcss(),
     tsconfigPaths(),
+    visualizer({
+      filename: 'stats.html',
+      open: true,
+      gzipSize: true,
+      brotliSize: true,
+    }),
   ],
   resolve: {
     alias: {
@@ -78,6 +85,41 @@ export default defineConfig(({ mode }) => ({
     minify: process.env.NODE_ENV !== 'debug',
     outDir: path.resolve(__dirname, 'dist'),
     emptyOutDir: true,
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // Split node_modules into separate 'vendor' chunks
+          if (id.includes('node_modules')) {
+            // React Core
+            if (
+              id.includes('/react/') ||
+              id.includes('/react-dom/') ||
+              id.includes('/react-router-dom/')
+            ) {
+              return 'react-vendor';
+            }
+
+            // Preline UI
+            if (id.includes('/preline/')) {
+              return 'preline-vendor';
+            }
+
+            // Utils
+            if (
+              id.includes('/axios/') ||
+              id.includes('/papaparse/') ||
+              id.includes('/tailwind-merge/')
+            ) {
+              return 'utils-vendor';
+            }
+
+            // The rest
+            return 'vendor';
+          }
+        },
+      },
+    },
   },
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version),

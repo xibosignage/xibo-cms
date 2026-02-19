@@ -19,11 +19,12 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { ChevronDown, Loader2, Search } from 'lucide-react';
+import { ChevronDown, Loader2 } from 'lucide-react';
 import { useEffect, useRef, useState, useLayoutEffect, useCallback, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
+import FolderSearchInput from '../FolderSearchInput';
 import FolderTreeList, { type FolderAction } from '../FolderTreeList';
 
 import { fetchFolderById } from '@/services/folderApi';
@@ -38,6 +39,7 @@ interface SelectFolderProps {
 export default function SelectFolder({ selectedId, onSelect, onAction }: SelectFolderProps) {
   const { t } = useTranslation();
   const generatedId = useId();
+  const searchInputId = `${generatedId}_search`;
 
   const [isOpen, setIsOpen] = useState(false);
   const [initialName, setInitialName] = useState<string | null>(null);
@@ -198,7 +200,7 @@ export default function SelectFolder({ selectedId, onSelect, onAction }: SelectF
 
       {/* Portal Trigger */}
       <div
-        className="w-full border border-gray-200 rounded-lg flex items-center bg-white transition-shadow hover:shadow-sm cursor-pointer h-[42px]"
+        className="w-full border border-gray-200 rounded-lg flex items-center bg-white transition-shadow hover:shadow-sm cursor-pointer h-10.5"
         onClick={() => setIsOpen(!isOpen)}
       >
         <button
@@ -243,17 +245,14 @@ export default function SelectFolder({ selectedId, onSelect, onAction }: SelectF
                 onAction={onAction}
                 searchQuery={folderSearch}
                 customSlot={
-                  <div className="px-2 shrink-0 relative">
-                    <div className="absolute inset-y-0 left-3 flex items-center pl-3 pointer-events-none">
-                      <Search className="w-4 h-4 text-gray-500" />
-                    </div>
-                    <input
-                      id={generatedId + '_search'}
+                  <div className="px-2 shrink-0">
+                    <FolderSearchInput
+                      id={searchInputId}
                       value={folderSearch}
-                      onChange={(e) => setFolderSearch(e.target.value)}
-                      placeholder={t('Search')}
-                      className="py-2 pl-10 pr-4 block w-full rounded-lg border-gray-200 text-gray-800 text-sm focus:border-xibo-blue-500 focus:ring-xibo-blue-500 bg-white placeholder:text-gray-500"
-                      autoFocus
+                      autoFocus={true}
+                      onChange={setFolderSearch}
+                      placeholder={t('Search Folder')}
+                      className="py-1"
                     />
                   </div>
                 }

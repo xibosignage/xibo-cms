@@ -19,10 +19,11 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { FolderInput, Search } from 'lucide-react';
+import { FolderInput } from 'lucide-react';
 import { useEffect, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import FolderSearchInput from '../FolderSearchInput';
 import FolderTreeList from '../FolderTreeList';
 
 import Modal from '@/components/ui/modals/Modal';
@@ -52,6 +53,7 @@ export default function MoveModal({
 }: MoveModalProps) {
   const { t } = useTranslation();
   const generatedId = useId();
+  const searchInputId = `${generatedId}_search`;
   const [targetFolderId, setTargetFolderId] = useState<number | null>(null);
   const [folderSearch, setFolderSearch] = useState('');
   const [error, setError] = useState<string | undefined>();
@@ -164,16 +166,12 @@ export default function MoveModal({
                 setError(undefined);
               }}
               customSlot={
-                <div className="px-2 shrink-0 relative">
-                  <div className="absolute inset-y-0 left-3 flex items-center pl-3 pointer-events-none">
-                    <Search className="w-4 h-4 text-gray-500" />
-                  </div>
-                  <input
-                    id={generatedId + '_search'}
+                <div className="px-2 shrink-0">
+                  <FolderSearchInput
+                    id={searchInputId}
                     value={folderSearch}
-                    onChange={(e) => setFolderSearch(e.target.value)}
+                    onChange={setFolderSearch}
                     placeholder={t('Search')}
-                    className="py-2 pl-10 pr-4 block w-full rounded-lg border-gray-200 text-gray-800 text-sm focus:border-xibo-blue-500 focus:ring-xibo-blue-500 bg-white placeholder:text-gray-500"
                     autoFocus
                   />
                 </div>

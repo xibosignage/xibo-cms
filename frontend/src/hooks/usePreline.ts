@@ -33,10 +33,14 @@ export const usePreline = () => {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      window.HSStaticMethods?.autoInit?.();
-    }, 150);
+    const loadPreline = async () => {
+      await import('preline/preline');
 
-    return () => clearTimeout(timer);
+      setTimeout(() => {
+        window.HSStaticMethods.autoInit();
+      }, 100);
+    };
+
+    loadPreline();
   }, [pathname]);
 };

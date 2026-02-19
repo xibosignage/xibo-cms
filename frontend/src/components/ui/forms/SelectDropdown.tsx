@@ -72,9 +72,9 @@ export default function SelectDropdown({
         className="w-full border bg-white border-gray-200 rounded-lg flex items-center cursor-pointer max-h-11.25"
         onClick={onToggle}
       >
-        {addLeftLabel && (
+        {addLeftLabel && leftLabelContent && (
           <div className="p-3 border-r text-sm border-gray-200 text-gray-500">
-            {leftLabelContent || t('My files')}
+            {leftLabelContent}
           </div>
         )}
         <span className="p-3 flex-1 text-sm capitalize">{selectedLabel || t(placeholder)}</span>

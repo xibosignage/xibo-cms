@@ -21,6 +21,13 @@
 
 import type { Tag } from './tag';
 
+export interface MediaPermissions {
+  view?: number;
+  edit?: number;
+  delete?: number;
+  modifyPermissions?: number;
+}
+
 export interface Media {
   folderId: number;
   storedAs: string;
@@ -45,6 +52,7 @@ export interface Media {
   retired: boolean;
   expires: number;
   updateInLayouts: boolean;
+  userPermissions: MediaPermissions;
 }
 
 export type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';

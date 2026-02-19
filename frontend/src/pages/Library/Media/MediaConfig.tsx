@@ -40,6 +40,7 @@ import {
 import { type ComponentProps, type ElementType } from 'react';
 
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
+import { notify } from '@/components/ui/Notification';
 import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
 import {
   MediaCell,
@@ -281,75 +282,133 @@ export const getMediaItemActions = ({
   openDetails,
   copyMedia,
 }: MediaActionsProps): ((media: Media) => ActionItem[]) => {
-  return (media: Media) => [
-    // Quick Actions
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => openEditModal(media),
-      isQuickAction: true,
-      variant: 'primary' as const,
-    },
-    {
-      label: t('Download'),
-      icon: Download,
-      onClick: () => onDownload(media),
-      isQuickAction: true,
-    },
+  return (media: Media) => {
+    const actions: ActionItem[] = [];
 
-    // Dropdown Menu Actions
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => openEditModal(media),
-    },
-    {
-      label: t('Make a Copy'),
-      icon: CopyCheck,
-      onClick: () => copyMedia && copyMedia(media.mediaId),
-    },
-    {
-      label: t('Move'),
-      icon: FolderInput,
-      onClick: () => openMoveModal && openMoveModal(media),
-    },
-    {
-      label: t('Share'),
-      icon: UserPlus2,
-      onClick: () => openShareModal && openShareModal(media.mediaId),
-    },
-    {
+    const canEdit = !!media.userPermissions?.edit;
+    const canDelete = !!media.userPermissions?.delete;
+    const canShare = !!media.userPermissions?.modifyPermissions;
+
+    if (canEdit) {
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => openEditModal(media),
+        isQuickAction: true,
+        variant: 'primary',
+      });
+    }
+
+    actions.push({
       label: t('Download'),
       icon: Download,
       onClick: () => onDownload(media),
-    },
-    {
+      isQuickAction: true,
+    });
+
+    if (canEdit) {
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => openEditModal(media),
+      });
+    }
+
+    if (copyMedia) {
+      actions.push({
+        label: t('Make a Copy'),
+        icon: CopyCheck,
+        onClick: () => copyMedia(media.mediaId),
+      });
+    }
+
+    if (canEdit && openMoveModal) {
+      actions.push({
+        label: t('Move'),
+        icon: FolderInput,
+        onClick: () => openMoveModal(media),
+      });
+    }
+
+    if (canShare && openShareModal) {
+      actions.push({
+        label: t('Share'),
+        icon: UserPlus2,
+        onClick: () => openShareModal(media.mediaId),
+      });
+    }
+
+    actions.push({
+      label: t('Download'),
+      icon: Download,
+      onClick: () => onDownload(media),
+    });
+
+    actions.push({
       label: t('Schedule'),
       icon: CalendarClock,
       onClick: () => console.log('Schedule', media.mediaId),
-    },
-    {
-      label: t('Details'),
-      icon: Info,
-      onClick: () => openDetails && openDetails(media.mediaId),
-    },
-    { isSeparator: true },
-    {
+    });
+
+    if (openDetails) {
+      actions.push({
+        label: t('Details'),
+        icon: Info,
+        onClick: () => openDetails(media.mediaId),
+      });
+    }
+
+    actions.push({ isSeparator: true });
+    actions.push({
       label: t('Enable Stats Collection'),
       onClick: () => console.log('Enable Stats', media.mediaId),
-    },
-    {
+    });
+    actions.push({
       label: t('Usage Report'),
       onClick: () => console.log('Usage Report', media.mediaId),
-    },
-    { isSeparator: true },
-    {
-      label: t('Delete'),
-      icon: Trash2,
-      onClick: () => onDelete(media.mediaId),
-      variant: 'danger' as const,
-    },
-  ];
+    });
+
+    if (canDelete) {
+      actions.push({ isSeparator: true });
+      actions.push({
+        label: t('Delete'),
+        icon: Trash2,
+        onClick: () => onDelete(media.mediaId),
+        variant: 'danger',
+      });
+    }
+
+    return actions;
+  };
+};
+
+export const filterMediaByPermission = <T,>(
+  items: T[],
+  checkFn: (item: T) => boolean | number | undefined | null,
+  t: TFunction,
+  actionLabel: string,
+): T[] => {
+  const permittedItems = items.filter((item) => !!checkFn(item));
+  const skippedCount = items.length - permittedItems.length;
+
+  if (permittedItems.length === 0) {
+    notify.warning(
+      t('You do not have permission to {{action}} any of the selected items.', {
+        action: actionLabel,
+      }),
+    );
+    return [];
+  }
+
+  if (skippedCount > 0) {
+    notify.info(
+      t('{{count}} items were skipped due to lack of permissions.', {
+        count: skippedCount,
+      }),
+    );
+  }
+
+  return permittedItems;
 };
 
 export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] => {
@@ -533,9 +592,9 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
 interface GetBulkActionsProps {
   t: TFunction;
   onDelete: () => void;
-  onMove: () => void;
-  onShare: () => void;
-  onDownload: () => void;
+  onMove?: () => void;
+  onShare?: () => void;
+  onDownload?: () => void;
 }
 
 export const getBulkActions = ({
@@ -545,26 +604,39 @@ export const getBulkActions = ({
   onShare,
   onDownload,
 }: GetBulkActionsProps): DataTableBulkAction<Media>[] => {
-  return [
-    {
-      label: t('Move'),
-      icon: FolderInput,
-      onClick: onMove,
-    },
-    {
+  const actions: DataTableBulkAction<Media>[] = [];
+
+  if (onShare) {
+    actions.push({
       label: t('Share'),
       icon: UserPlus2,
       onClick: onShare,
-    },
-    {
+    });
+  }
+
+  if (onDownload) {
+    actions.push({
       label: t('Download'),
       icon: Download,
       onClick: onDownload,
-    },
-    {
+    });
+  }
+
+  if (onMove) {
+    actions.push({
+      label: t('Move'),
+      icon: FolderInput,
+      onClick: onMove,
+    });
+  }
+
+  if (onDelete) {
+    actions.push({
       label: t('Delete Selected'),
       icon: Trash2,
       onClick: onDelete,
-    },
-  ];
+    });
+  }
+
+  return actions;
 };

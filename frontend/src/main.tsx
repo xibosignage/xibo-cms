@@ -28,7 +28,6 @@ import { Notification } from './components/ui/Notification';
 
 import { UploadProvider } from '@/context/UploadContext';
 
-import 'preline/preline';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
 import '@fontsource/inter/600.css';

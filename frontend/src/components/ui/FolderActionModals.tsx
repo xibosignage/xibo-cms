@@ -21,6 +21,8 @@
 
 import { useTranslation } from 'react-i18next';
 
+import ShareModal from './modals/ShareModal';
+
 import Checkbox from '@/components/ui/forms/Checkbox';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TextInput from '@/components/ui/forms/TextInput';
@@ -126,6 +128,16 @@ export default function FolderActionModals({ folderActions }: FolderActionModals
           />
         </div>
       </Modal>
+
+      {/* Share Modal */}
+      <ShareModal
+        openModal={actionType === 'share'}
+        showOwner={false}
+        onClose={closeAction}
+        title={t('Share Folder')}
+        entityType="folder"
+        entityId={activeFolder?.id ?? null}
+      />
 
       {/* Delete Modal */}
       <Modal
