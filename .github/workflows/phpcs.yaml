@@ -23,7 +23,7 @@ jobs:
 
       - name: Get our latest coding standards
         run: |
-          curl -OL https://raw.githubusercontent.com/xibosignage/support/master/src/Standards/xibo_ruleset.xml
+          curl -OL https://raw.githubusercontent.com/xibosignage/support/refs/heads/php8/src/Standards/xibo_ruleset.xml
 
       - uses: thenabeel/action-phpcs@v8
         with:
