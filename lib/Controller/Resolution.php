@@ -62,14 +62,63 @@ class Resolution extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/resolution', operationId: 'resolutionSearch', summary: 'Resolution Search', description: 'Search Resolutions this user has access to', tags: ['resolution'])]
-    #[OA\Parameter(name: 'resolutionId', in: 'query', description: 'Filter by Resolution Id', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'resolution', in: 'query', description: 'Filter by Resolution Name', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'partialResolution', in: 'query', description: 'Filter by Partial Resolution Name', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'enabled', in: 'query', description: 'Filter by Enabled', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'width', in: 'query', description: 'Filter by Resolution width', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'height', in: 'query', description: 'Filter by Resolution height', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Resolution')))]
+    #[OA\Get(
+        path: '/resolution',
+        operationId: 'resolutionSearch',
+        description: 'Search Resolutions this user has access to',
+        summary: 'Resolution Search',
+        tags: ['resolution']
+    )]
+    #[OA\Parameter(
+        name: 'resolutionId',
+        description: 'Filter by Resolution Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'resolution',
+        description: 'Filter by Resolution Name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'partialResolution',
+        description: 'Filter by Partial Resolution Name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'enabled',
+        description: 'Filter by Enabled',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'width',
+        description: 'Filter by Resolution width',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'height',
+        description: 'Filter by Resolution height',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Resolution')
+        )
+    )]
     /**
      * Resolution Grid
      *
@@ -201,13 +250,47 @@ class Resolution extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/resolution', operationId: 'resolutionAdd', summary: 'Add Resolution', description: 'Add new Resolution', tags: ['resolution'])]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['resolution', 'width', 'height'], properties: [
-        new OA\Property(property: 'resolution', description: 'A name for the Resolution', type: 'string'),
-        new OA\Property(property: 'width', description: 'The Display Width of the Resolution', type: 'integer'),
-        new OA\Property(property: 'height', description: 'The Display Height of the Resolution', type: 'integer')
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/Resolution'))]
+    #[OA\Post(
+        path: '/resolution',
+        operationId: 'resolutionAdd',
+        description: 'Add new Resolution',
+        summary: 'Add Resolution',
+        tags: ['resolution']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'resolution', description: 'A name for the Resolution', type: 'string'),
+                    new OA\Property(
+                        property: 'width',
+                        description: 'The Display Width of the Resolution',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'height',
+                        description: 'The Display Height of the Resolution',
+                        type: 'integer'
+                    )
+                ],
+                required: ['resolution', 'width', 'height']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Resolution'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add Resolution
      *
@@ -241,14 +324,47 @@ class Resolution extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/resolution/{resolutionId}', operationId: 'resolutionEdit', summary: 'Edit Resolution', description: 'Edit new Resolution', tags: ['resolution'])]
-    #[OA\Parameter(name: 'resolutionId', in: 'path', description: 'The Resolution ID to Edit', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['resolution', 'width', 'height'], properties: [
-        new OA\Property(property: 'resolution', description: 'A name for the Resolution', type: 'string'),
-        new OA\Property(property: 'width', description: 'The Display Width of the Resolution', type: 'integer'),
-        new OA\Property(property: 'height', description: 'The Display Height of the Resolution', type: 'integer')
-    ])))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Resolution'))]
+    #[OA\Put(
+        path: '/resolution/{resolutionId}',
+        operationId: 'resolutionEdit',
+        description: 'Edit new Resolution',
+        summary: 'Edit Resolution',
+        tags: ['resolution']
+    )]
+    #[OA\Parameter(
+        name: 'resolutionId',
+        description: 'The Resolution ID to Edit',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'resolution', description: 'A name for the Resolution', type: 'string'),
+                    new OA\Property(
+                        property: 'width',
+                        description: 'The Display Width of the Resolution',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'height',
+                        description: 'The Display Height of the Resolution',
+                        type: 'integer'
+                    )
+                ],
+                required: ['resolution', 'width', 'height']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Resolution')
+    )]
     /**
      * Edit Resolution
      * @param Request $request
@@ -287,8 +403,20 @@ class Resolution extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Delete(path: '/resolution/{resolutionId}', operationId: 'resolutionDelete', summary: 'Delete Resolution', description: 'Delete Resolution', tags: ['resolution'])]
-    #[OA\Parameter(name: 'resolutionId', in: 'path', description: 'The Resolution ID to Delete', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Delete(
+        path: '/resolution/{resolutionId}',
+        operationId: 'resolutionDelete',
+        description: 'Delete Resolution',
+        summary: 'Delete Resolution',
+        tags: ['resolution']
+    )]
+    #[OA\Parameter(
+        name: 'resolutionId',
+        description: 'The Resolution ID to Delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete Resolution

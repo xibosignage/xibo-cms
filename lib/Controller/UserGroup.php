@@ -81,10 +81,35 @@ class UserGroup extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/group', operationId: 'userGroupSearch', summary: 'UserGroup Search', description: 'Search User Groups', tags: ['usergroup'])]
-    #[OA\Parameter(name: 'userGroupId', in: 'query', description: 'Filter by UserGroup Id', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'userGroup', in: 'query', description: 'Filter by UserGroup Name', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/UserGroup')))]
+    #[OA\Get(
+        path: '/group',
+        operationId: 'userGroupSearch',
+        description: 'Search User Groups',
+        summary: 'UserGroup Search',
+        tags: ['usergroup']
+    )]
+    #[OA\Parameter(
+        name: 'userGroupId',
+        description: 'Filter by UserGroup Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'userGroup',
+        description: 'Filter by UserGroup Name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/UserGroup')
+        )
+    )]
     /**
      * Group Grid
      * @param Request $request
@@ -181,24 +206,94 @@ class UserGroup extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/group', operationId: 'userGroupAdd', summary: 'UserGroup Add', description: 'Add User Group', tags: ['usergroup'])]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['group'], properties: [
-        new OA\Property(property: 'group', description: 'Name of the User Group', type: 'string'),
-        new OA\Property(property: 'decription', description: 'A description of the User Group', type: 'string'),
-        new OA\Property(property: 'libraryQuota', description: 'The quota that should be applied (KiB). Provide 0 for no quota', type: 'string'),
-        new OA\Property(property: 'isSystemNotification', description: 'Flag (0, 1), should members of this Group receive system notifications?', type: 'integer'),
-        new OA\Property(property: 'isDisplayNotification', description: 'Flag (0, 1), should members of this Group receive Display notifications
-     * for Displays they have permissions to see', type: 'integer'),
-        new OA\Property(property: 'isDataSetNotification', description: 'Flag (0, 1), should members of this Group receive DataSet notification emails?', type: 'integer'),
-        new OA\Property(property: 'isLayoutNotification', description: 'Flag (0, 1), should members of this Group receive Layout notification emails?', type: 'integer'),
-        new OA\Property(property: 'isLibraryNotification', description: 'Flag (0, 1), should members of this Group receive Library notification emails?', type: 'integer'),
-        new OA\Property(property: 'isReportNotification', description: 'Flag (0, 1), should members of this Group receive Report notification emails?', type: 'integer'),
-        new OA\Property(property: 'isScheduleNotification', description: 'Flag (0, 1), should members of this Group receive Schedule notification emails?', type: 'integer'),
-        new OA\Property(property: 'isCustomNotification', description: 'Flag (0, 1), should members of this Group receive Custom notification emails?', type: 'integer'),
-        new OA\Property(property: 'isShownForAddUser', description: 'Flag (0, 1), should this Group be shown in the Add User onboarding form.', type: 'integer'),
-        new OA\Property(property: 'defaultHomePageId', description: 'If this user has been created via the onboarding form, this should be the default home page', type: 'integer')
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/UserGroup'))]
+    #[OA\Post(
+        path: '/group',
+        operationId: 'userGroupAdd',
+        description: 'Add User Group',
+        summary: 'UserGroup Add',
+        tags: ['usergroup']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'group', description: 'Name of the User Group', type: 'string'),
+                    new OA\Property(property: 'decription', description: 'A description of the User Group', type: 'string'),
+                    new OA\Property(
+                        property: 'libraryQuota',
+                        description: 'The quota that should be applied (KiB). Provide 0 for no quota',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'isSystemNotification',
+                        description: 'Flag (0, 1), should members of this Group receive system notifications?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isDisplayNotification',
+                        description: 'Flag (0, 1), should members of this Group receive Display notifications
+     * for Displays they have permissions to see', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isDataSetNotification',
+                        description: 'Flag (0, 1), should members of this Group receive DataSet notification emails?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isLayoutNotification',
+                        description: 'Flag (0, 1), should members of this Group receive Layout notification emails?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isLibraryNotification',
+                        description: 'Flag (0, 1), should members of this Group receive Library notification emails?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isReportNotification',
+                        description: 'Flag (0, 1), should members of this Group receive Report notification emails?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isScheduleNotification',
+                        description: 'Flag (0, 1), should members of this Group receive Schedule notification emails?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isCustomNotification',
+                        description: 'Flag (0, 1), should members of this Group receive Custom notification emails?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isShownForAddUser',
+                        description: 'Flag (0, 1), should this Group be shown in the Add User onboarding form.',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'defaultHomePageId',
+                        description: 'If this user has been created via the onboarding form, this should be the default home page', // phpcs:ignore
+                        type: 'integer'
+                    )
+                ],
+                required: ['group']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/UserGroup'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add User Group
      * @param Request $request
@@ -257,25 +352,94 @@ class UserGroup extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/group/{userGroupId}', operationId: 'userGroupEdit', summary: 'UserGroup Edit', description: 'Edit User Group', tags: ['usergroup'])]
-    #[OA\Parameter(name: 'userGroupId', in: 'path', description: 'ID of the User Group', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['group'], properties: [
-        new OA\Property(property: 'group', description: 'Name of the User Group', type: 'string'),
-        new OA\Property(property: 'decription', description: 'A description of the User Group', type: 'string'),
-        new OA\Property(property: 'libraryQuota', description: 'The quota that should be applied (KiB). Provide 0 for no quota', type: 'string'),
-        new OA\Property(property: 'isSystemNotification', description: 'Flag (0, 1), should members of this Group receive system notifications?', type: 'integer'),
-        new OA\Property(property: 'isDisplayNotification', description: 'Flag (0, 1), should members of this Group receive Display notifications
-     * for Displays they have permissions to see', type: 'integer'),
-        new OA\Property(property: 'isDataSetNotification', description: 'Flag (0, 1), should members of this Group receive DataSet notification emails?', type: 'integer'),
-        new OA\Property(property: 'isLayoutNotification', description: 'Flag (0, 1), should members of this Group receive Layout notification emails?', type: 'integer'),
-        new OA\Property(property: 'isLibraryNotification', description: 'Flag (0, 1), should members of this Group receive Library notification emails?', type: 'integer'),
-        new OA\Property(property: 'isReportNotification', description: 'Flag (0, 1), should members of this Group receive Report notification emails?', type: 'integer'),
-        new OA\Property(property: 'isScheduleNotification', description: 'Flag (0, 1), should members of this Group receive Schedule notification emails?', type: 'integer'),
-        new OA\Property(property: 'isCustomNotification', description: 'Flag (0, 1), should members of this Group receive Custom notification emails?', type: 'integer'),
-        new OA\Property(property: 'isShownForAddUser', description: 'Flag (0, 1), should this Group be shown in the Add User onboarding form.', type: 'integer'),
-        new OA\Property(property: 'defaultHomePageId', description: 'If this user has been created via the onboarding form, this should be the default home page', type: 'integer')
-    ])))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/UserGroup'))]
+    #[OA\Put(
+        path: '/group/{userGroupId}',
+        operationId: 'userGroupEdit',
+        description: 'Edit User Group',
+        summary: 'UserGroup Edit',
+        tags: ['usergroup']
+    )]
+    #[OA\Parameter(
+        name: 'userGroupId',
+        description: 'ID of the User Group',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'group', description: 'Name of the User Group', type: 'string'),
+                    new OA\Property(property: 'decription', description: 'A description of the User Group', type: 'string'),
+                    new OA\Property(
+                        property: 'libraryQuota',
+                        description: 'The quota that should be applied (KiB). Provide 0 for no quota',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'isSystemNotification',
+                        description: 'Flag (0, 1), should members of this Group receive system notifications?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isDisplayNotification',
+                        description: 'Flag (0, 1), should members of this Group receive Display notifications
+     * for Displays they have permissions to see', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isDataSetNotification',
+                        description: 'Flag (0, 1), should members of this Group receive DataSet notification emails?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isLayoutNotification',
+                        description: 'Flag (0, 1), should members of this Group receive Layout notification emails?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isLibraryNotification',
+                        description: 'Flag (0, 1), should members of this Group receive Library notification emails?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isReportNotification',
+                        description: 'Flag (0, 1), should members of this Group receive Report notification emails?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isScheduleNotification',
+                        description: 'Flag (0, 1), should members of this Group receive Schedule notification emails?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isCustomNotification',
+                        description: 'Flag (0, 1), should members of this Group receive Custom notification emails?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isShownForAddUser',
+                        description: 'Flag (0, 1), should this Group be shown in the Add User onboarding form.',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'defaultHomePageId',
+                        description: 'If this user has been created via the onboarding form, this should be the default home page', // phpcs:ignore
+                        type: 'integer'
+                    )
+                ],
+                required: ['group']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/UserGroup')
+    )]
     /**
      * Edit User Group
      * @param Request $request
@@ -348,8 +512,20 @@ class UserGroup extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Delete(path: '/group/{userGroupId}', operationId: 'userGroupDelete', summary: 'Delete User Group', description: 'Delete User Group', tags: ['usergroup'])]
-    #[OA\Parameter(name: 'userGroupId', in: 'path', description: 'The user Group ID to Delete', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Delete(
+        path: '/group/{userGroupId}',
+        operationId: 'userGroupDelete',
+        description: 'Delete User Group',
+        summary: 'Delete User Group',
+        tags: ['usergroup']
+    )]
+    #[OA\Parameter(
+        name: 'userGroupId',
+        description: 'The user Group ID to Delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete User Group
@@ -502,13 +678,51 @@ class UserGroup extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/group/members/assign/{userGroupId}', operationId: 'userGroupAssign', summary: 'Assign User to User Group', description: 'Assign User to User Group', tags: ['usergroup'])]
-    #[OA\Parameter(name: 'userGroupId', in: 'path', description: 'ID of the user group to which assign the user', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['userId'], properties: [
-        new OA\Property(property: 'userId', description: 'Array of userIDs to assign', type: 'array', items: new OA\Items(type: 'integer')),
-        new OA\Property(property: 'unassignUserId', description: 'An optional array of User IDs to unassign', type: 'array', items: new OA\Items(type: 'integer'))
-    ])))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/UserGroup')))]
+    #[OA\Post(
+        path: '/group/members/assign/{userGroupId}',
+        operationId: 'userGroupAssign',
+        description: 'Assign User to User Group',
+        summary: 'Assign User to User Group',
+        tags: ['usergroup']
+    )]
+    #[OA\Parameter(
+        name: 'userGroupId',
+        description: 'ID of the user group to which assign the user',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'userId',
+                        description: 'Array of userIDs to assign',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'unassignUserId',
+                        description: 'An optional array of User IDs to unassign',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    )
+                ],
+                required: ['userId']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/UserGroup')
+        )
+    )]
     /**
      * Assign User to the User Group
      * @param Request $request
@@ -585,12 +799,45 @@ class UserGroup extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/group/members/unassign/{userGroupId}', operationId: 'userGroupUnassign', summary: 'Unassign User from User Group', description: 'Unassign User from User Group', tags: ['usergroup'])]
-    #[OA\Parameter(name: 'userGroupId', in: 'path', description: 'ID of the user group from which to unassign the user', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['userId'], properties: [
-        new OA\Property(property: 'userId', description: 'Array of userIDs to unassign', type: 'array', items: new OA\Items(type: 'integer'))
-    ])))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/UserGroup')))]
+    #[OA\Post(
+        path: '/group/members/unassign/{userGroupId}',
+        operationId: 'userGroupUnassign',
+        description: 'Unassign User from User Group',
+        summary: 'Unassign User from User Group',
+        tags: ['usergroup']
+    )]
+    #[OA\Parameter(
+        name: 'userGroupId',
+        description: 'ID of the user group from which to unassign the user',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'userId',
+                        description: 'Array of userIDs to unassign',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    )
+                ],
+                required: ['userId']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/UserGroup')
+        )
+    )]
     /**
      * Unassign User to the User Group
      * @param Request $request
@@ -657,14 +904,54 @@ class UserGroup extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/group/{userGroupId}/copy', operationId: 'userGroupCopy', summary: 'Copy User Group', description: 'Copy an user group, optionally copying the group members', tags: ['usergroup'])]
-    #[OA\Parameter(name: 'userGroupId', in: 'path', description: 'The User Group ID to Copy', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['group'], properties: [
-        new OA\Property(property: 'group', description: 'The Group Name', type: 'string'),
-        new OA\Property(property: 'copyMembers', description: 'Flag indicating whether to copy group members', type: 'integer'),
-        new OA\Property(property: 'copyFeatures', description: 'Flag indicating whether to copy group features', type: 'integer')
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/UserGroup'))]
+    #[OA\Post(
+        path: '/group/{userGroupId}/copy',
+        operationId: 'userGroupCopy',
+        description: 'Copy an user group, optionally copying the group members',
+        summary: 'Copy User Group',
+        tags: ['usergroup']
+    )]
+    #[OA\Parameter(
+        name: 'userGroupId',
+        description: 'The User Group ID to Copy',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'group', description: 'The Group Name', type: 'string'),
+                    new OA\Property(
+                        property: 'copyMembers',
+                        description: 'Flag indicating whether to copy group members',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'copyFeatures',
+                        description: 'Flag indicating whether to copy group features',
+                        type: 'integer'
+                    )
+                ],
+                required: ['group']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/UserGroup'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * @param Request $request
      * @param Response $response

@@ -87,8 +87,21 @@ class Template extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/template', operationId: 'templateSearch', summary: 'Template Search', description: 'Search templates this user has access to', tags: ['template'])]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Layout')))]
+    #[OA\Get(
+        path: '/template',
+        operationId: 'templateSearch',
+        description: 'Search templates this user has access to',
+        summary: 'Template Search',
+        tags: ['template']
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Layout')
+        )
+    )]
     /**
      * Data grid
      *
@@ -339,8 +352,21 @@ class Template extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/template/search', operationId: 'templateSearchAll', summary: 'Template Search All', description: 'Search all templates from local and connectors', tags: ['template'])]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/SearchResult')))]
+    #[OA\Get(
+        path: '/template/search',
+        operationId: 'templateSearchAll',
+        description: 'Search all templates from local and connectors',
+        summary: 'Template Search All',
+        tags: ['template']
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/SearchResult')
+        )
+    )]
     /**
      * Data grid
      *
@@ -451,14 +477,49 @@ class Template extends Base
 
         return $this->render($request, $response);
     }
-    #[OA\Post(path: '/template', operationId: 'templateAdd', summary: 'Add a Template', description: 'Add a new Template to the CMS', tags: ['template'])]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['name'], properties: [
-        new OA\Property(property: 'name', description: 'The layout name', type: 'string'),
-        new OA\Property(property: 'description', description: 'The layout description', type: 'string'),
-        new OA\Property(property: 'resolutionId', description: 'If a Template is not provided, provide the resolutionId for this Layout.', type: 'integer'),
-        new OA\Property(property: 'returnDraft', description: 'Should we return the Draft Layout or the Published Layout on Success?', type: 'boolean')
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/Layout'))]
+
+    #[OA\Post(
+        path: '/template',
+        operationId: 'templateAdd',
+        description: 'Add a new Template to the CMS',
+        summary: 'Add a Template',
+        tags: ['template']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'name', description: 'The layout name', type: 'string'),
+                    new OA\Property(property: 'description', description: 'The layout description', type: 'string'),
+                    new OA\Property(
+                        property: 'resolutionId',
+                        description: 'If a Template is not provided, provide the resolutionId for this Layout.',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'returnDraft',
+                        description: 'Should we return the Draft Layout or the Published Layout on Success?',
+                        type: 'boolean'
+                    )
+                ],
+                required: ['name']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add a Template
      *
@@ -531,15 +592,55 @@ class Template extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/template/{layoutId}', operationId: 'template.add.from.layout', summary: 'Add a template from a Layout', description: 'Use the provided layout as a base for a new template', tags: ['template'])]
-    #[OA\Parameter(name: 'layoutId', in: 'path', description: 'The Layout ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['includeWidgets', 'name'], properties: [
-        new OA\Property(property: 'includeWidgets', description: 'Flag indicating whether to include the widgets in the Template', type: 'integer'),
-        new OA\Property(property: 'name', description: 'The Template Name', type: 'string'),
-        new OA\Property(property: 'tags', description: 'Comma separated list of Tags for the template', type: 'string'),
-        new OA\Property(property: 'description', description: 'A description of the Template', type: 'string')
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/Layout'))]
+    #[OA\Post(
+        path: '/template/{layoutId}',
+        operationId: 'template.add.from.layout',
+        description: 'Use the provided layout as a base for a new template',
+        summary: 'Add a template from a Layout',
+        tags: ['template']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        description: 'The Layout ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'includeWidgets',
+                        description: 'Flag indicating whether to include the widgets in the Template',
+                        type: 'integer'
+                    ),
+                    new OA\Property(property: 'name', description: 'The Template Name', type: 'string'),
+                    new OA\Property(
+                        property: 'tags',
+                        description: 'Comma separated list of Tags for the template',
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'description', description: 'A description of the Template', type: 'string')
+                ],
+                required: ['includeWidgets', 'name']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add template
      * @param Request $request

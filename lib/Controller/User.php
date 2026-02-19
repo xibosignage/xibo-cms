@@ -190,8 +190,18 @@ class User extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/user/me', operationId: 'userMe', summary: 'Get Me', description: 'Get my details', tags: ['user'])]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/User'))]
+    #[OA\Get(
+        path: '/user/me',
+        operationId: 'userMe',
+        description: 'Get my details',
+        summary: 'Get Me',
+        tags: ['user']
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/User')
+    )]
     /**
      * Me
      *
@@ -233,12 +243,49 @@ class User extends Base
         ]));
     }
 
-    #[OA\Get(path: '/user', operationId: 'userSearch', summary: 'User Search', description: 'Search users', tags: ['user'])]
-    #[OA\Parameter(name: 'userId', in: 'query', description: 'Filter by User Id', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'userName', in: 'query', description: 'Filter by User Name', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'userTypeId', in: 'query', description: 'Filter by UserType Id', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'retired', in: 'query', description: 'Filter by Retired', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/User')))]
+    #[OA\Get(
+        path: '/user',
+        operationId: 'userSearch',
+        description: 'Search users',
+        summary: 'User Search',
+        tags: ['user']
+    )]
+    #[OA\Parameter(
+        name: 'userId',
+        description: 'Filter by User Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'userName',
+        description: 'Filter by User Name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'userTypeId',
+        description: 'Filter by UserType Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'retired',
+        description: 'Filter by Retired',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/User')
+        )
+    )]
     /**
      * Prints the user information in a table based on a check box selection
      *
@@ -269,28 +316,92 @@ class User extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/user', operationId: 'userAdd', summary: 'Add User', description: 'Add a new User', tags: ['user'])]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['userName', 'userTypeId', 'homePageId', 'password', 'groupId', 'newUserWizard', 'hideNavigation'], properties: [
-        new OA\Property(property: 'userName', description: 'The User Name', type: 'string'),
-        new OA\Property(property: 'email', description: 'The user email address', type: 'string'),
-        new OA\Property(property: 'userTypeId', description: 'The user type ID', type: 'integer'),
-        new OA\Property(property: 'homePageId', description: 'The homepage to use for this User', type: 'string', enum: ['statusdashboard.view', 'icondashboard.view', 'mediamanager.view', 'playlistdashboard.view']),
-        new OA\Property(property: 'libraryQuota', description: 'The users library quota in kilobytes', type: 'integer'),
-        new OA\Property(property: 'password', description: 'The users password', type: 'string'),
-        new OA\Property(property: 'groupId', description: 'The inital user group for this User', type: 'integer'),
-        new OA\Property(property: 'firstName', description: 'The users first name', type: 'string'),
-        new OA\Property(property: 'lastName', description: 'The users last name', type: 'string'),
-        new OA\Property(property: 'phone', description: 'The users phone number', type: 'string'),
-        new OA\Property(property: 'ref1', description: 'Reference 1', type: 'string'),
-        new OA\Property(property: 'ref2', description: 'Reference 2', type: 'string'),
-        new OA\Property(property: 'ref3', description: 'Reference 3', type: 'string'),
-        new OA\Property(property: 'ref4', description: 'Reference 4', type: 'string'),
-        new OA\Property(property: 'ref5', description: 'Reference 5', type: 'string'),
-        new OA\Property(property: 'newUserWizard', description: 'Flag indicating whether to show the new user guide', type: 'integer'),
-        new OA\Property(property: 'hideNavigation', description: 'Flag indicating whether to hide the navigation', type: 'integer'),
-        new OA\Property(property: 'isPasswordChangeRequired', description: 'A flag indicating whether password change should be forced for this user', type: 'integer')
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/User'))]
+    #[OA\Post(
+        path: '/user',
+        operationId: 'userAdd',
+        description: 'Add a new User',
+        summary: 'Add User',
+        tags: ['user']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'userName', description: 'The User Name', type: 'string'),
+                    new OA\Property(property: 'email', description: 'The user email address', type: 'string'),
+                    new OA\Property(property: 'userTypeId', description: 'The user type ID', type: 'integer'),
+                    new OA\Property(
+                        property: 'homePageId',
+                        description: 'The homepage to use for this User',
+                        enum: [
+                            'statusdashboard.view',
+                            'icondashboard.view',
+                            'mediamanager.view',
+                            'playlistdashboard.view'
+                        ],
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'libraryQuota',
+                        description: 'The users library quota in kilobytes',
+                        type: 'integer'
+                    ),
+                    new OA\Property(property: 'password', description: 'The users password', type: 'string'),
+                    new OA\Property(
+                        property: 'groupId',
+                        description: 'The inital user group for this User',
+                        type: 'integer'
+                    ),
+                    new OA\Property(property: 'firstName', description: 'The users first name', type: 'string'),
+                    new OA\Property(property: 'lastName', description: 'The users last name', type: 'string'),
+                    new OA\Property(property: 'phone', description: 'The users phone number', type: 'string'),
+                    new OA\Property(property: 'ref1', description: 'Reference 1', type: 'string'),
+                    new OA\Property(property: 'ref2', description: 'Reference 2', type: 'string'),
+                    new OA\Property(property: 'ref3', description: 'Reference 3', type: 'string'),
+                    new OA\Property(property: 'ref4', description: 'Reference 4', type: 'string'),
+                    new OA\Property(property: 'ref5', description: 'Reference 5', type: 'string'),
+                    new OA\Property(
+                        property: 'newUserWizard',
+                        description: 'Flag indicating whether to show the new user guide',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'hideNavigation',
+                        description: 'Flag indicating whether to hide the navigation',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isPasswordChangeRequired',
+                        description: 'A flag indicating whether password change should be forced for this user', // phpcs:ignore
+                        type: 'integer'
+                    )
+                ],
+                required: [
+                    'userName',
+                    'userTypeId',
+                    'homePageId',
+                    'password',
+                    'groupId',
+                    'newUserWizard',
+                    'hideNavigation'
+                ]
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/User'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Adds a user
      *
@@ -386,30 +497,92 @@ class User extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/user/{userId}', operationId: 'userEdit', summary: 'Edit User', description: 'Edit existing User', tags: ['user'])]
-    #[OA\Parameter(name: 'userId', in: 'path', description: 'The user ID to edit', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['userName', 'userTypeId', 'homePageId', 'newUserWizard', 'hideNavigation'], properties: [
-        new OA\Property(property: 'userName', description: 'The User Name', type: 'string'),
-        new OA\Property(property: 'email', description: 'The user email address', type: 'string'),
-        new OA\Property(property: 'userTypeId', description: 'The user type ID', type: 'integer'),
-        new OA\Property(property: 'homePageId', description: 'The homepage to use for this User', type: 'string', enum: ['statusdashboard.view', 'icondashboard.view', 'mediamanager.view', 'playlistdashboard.view']),
-        new OA\Property(property: 'libraryQuota', description: 'The users library quota in kilobytes', type: 'integer'),
-        new OA\Property(property: 'newPassword', description: 'New User password', type: 'string'),
-        new OA\Property(property: 'retypeNewPassword', description: 'Repeat the new User password', type: 'string'),
-        new OA\Property(property: 'retired', description: 'Flag indicating whether to retire this user', type: 'integer'),
-        new OA\Property(property: 'firstName', description: 'The users first name', type: 'string'),
-        new OA\Property(property: 'lastName', description: 'The users last name', type: 'string'),
-        new OA\Property(property: 'phone', description: 'The users phone number', type: 'string'),
-        new OA\Property(property: 'ref1', description: 'Reference 1', type: 'string'),
-        new OA\Property(property: 'ref2', description: 'Reference 2', type: 'string'),
-        new OA\Property(property: 'ref3', description: 'Reference 3', type: 'string'),
-        new OA\Property(property: 'ref4', description: 'Reference 4', type: 'string'),
-        new OA\Property(property: 'ref5', description: 'Reference 5', type: 'string'),
-        new OA\Property(property: 'newUserWizard', description: 'Flag indicating whether to show the new user guide', type: 'integer'),
-        new OA\Property(property: 'hideNavigation', description: 'Flag indicating whether to hide the navigation', type: 'integer'),
-        new OA\Property(property: 'isPasswordChangeRequired', description: 'A flag indicating whether password change should be forced for this user', type: 'integer')
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/User'))]
+    #[OA\Put(
+        path: '/user/{userId}',
+        operationId: 'userEdit',
+        description: 'Edit existing User',
+        summary: 'Edit User',
+        tags: ['user']
+    )]
+    #[OA\Parameter(
+        name: 'userId',
+        description: 'The user ID to edit',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'userName', description: 'The User Name', type: 'string'),
+                    new OA\Property(property: 'email', description: 'The user email address', type: 'string'),
+                    new OA\Property(property: 'userTypeId', description: 'The user type ID', type: 'integer'),
+                    new OA\Property(
+                        property: 'homePageId',
+                        description: 'The homepage to use for this User',
+                        enum: [
+                            'statusdashboard.view',
+                            'icondashboard.view',
+                            'mediamanager.view',
+                            'playlistdashboard.view'
+                        ],
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'libraryQuota',
+                        description: 'The users library quota in kilobytes',
+                        type: 'integer'
+                    ),
+                    new OA\Property(property: 'newPassword', description: 'New User password', type: 'string'),
+                    new OA\Property(property: 'retypeNewPassword', description: 'Repeat the new User password', type: 'string'),
+                    new OA\Property(
+                        property: 'retired',
+                        description: 'Flag indicating whether to retire this user',
+                        type: 'integer'
+                    ),
+                    new OA\Property(property: 'firstName', description: 'The users first name', type: 'string'),
+                    new OA\Property(property: 'lastName', description: 'The users last name', type: 'string'),
+                    new OA\Property(property: 'phone', description: 'The users phone number', type: 'string'),
+                    new OA\Property(property: 'ref1', description: 'Reference 1', type: 'string'),
+                    new OA\Property(property: 'ref2', description: 'Reference 2', type: 'string'),
+                    new OA\Property(property: 'ref3', description: 'Reference 3', type: 'string'),
+                    new OA\Property(property: 'ref4', description: 'Reference 4', type: 'string'),
+                    new OA\Property(property: 'ref5', description: 'Reference 5', type: 'string'),
+                    new OA\Property(
+                        property: 'newUserWizard',
+                        description: 'Flag indicating whether to show the new user guide',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'hideNavigation',
+                        description: 'Flag indicating whether to hide the navigation',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isPasswordChangeRequired',
+                        description: 'A flag indicating whether password change should be forced for this user', // phpcs:ignore
+                        type: 'integer'
+                    )
+                ],
+                required: ['userName', 'userTypeId', 'homePageId', 'newUserWizard', 'hideNavigation']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/User'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Edit a user
      *
@@ -545,11 +718,42 @@ class User extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Delete(path: '/user/{userId}', operationId: 'userDelete', summary: 'User Delete', description: 'Delete user', tags: ['user'])]
-    #[OA\Parameter(name: 'userId', in: 'path', description: 'Id of the user to delete', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'deleteAllItems', in: 'query', description: 'Flag indicating whether to delete all items owned by that user', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'reassignUserId', in: 'query', description: 'Reassign all items owned by this user to the specified user ID', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Response(response: 204, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/User')))]
+    #[OA\Delete(
+        path: '/user/{userId}',
+        operationId: 'userDelete',
+        description: 'Delete user',
+        summary: 'User Delete',
+        tags: ['user']
+    )]
+    #[OA\Parameter(
+        name: 'userId',
+        description: 'Id of the user to delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'deleteAllItems',
+        description: 'Flag indicating whether to delete all items owned by that user',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'reassignUserId',
+        description: 'Reassign all items owned by this user to the specified user ID',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 204,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/User')
+        )
+    )]
     /**
      * Deletes a User
      *
@@ -1158,10 +1362,35 @@ class User extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/user/permissions/{entity}/{objectId}', operationId: 'userPermissionsSearch', summary: 'Permission Data', description: 'Permission data for the Entity and Object Provided.', tags: ['user'])]
-    #[OA\Parameter(name: 'entity', in: 'path', description: 'The Entity', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'objectId', in: 'path', description: 'The ID of the Object to return permissions for', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Permission')))]
+    #[OA\Get(
+        path: '/user/permissions/{entity}/{objectId}',
+        operationId: 'userPermissionsSearch',
+        description: 'Permission data for the Entity and Object Provided.',
+        summary: 'Permission Data',
+        tags: ['user']
+    )]
+    #[OA\Parameter(
+        name: 'entity',
+        description: 'The Entity',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'objectId',
+        description: 'The ID of the Object to return permissions for',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Permission')
+        )
+    )]
     /**
      * @param Request $request
      * @param Response $response
@@ -1196,10 +1425,35 @@ class User extends Base
     }
 
 
-    #[OA\Get(path: '/user/permissions/{entity}', operationId: 'userPermissionsMultiSearch', summary: 'Permission Data', description: 'Permission data for the multiple Entities and Objects Provided.', tags: ['user'])]
-    #[OA\Parameter(name: 'entity', in: 'path', description: 'The Entity', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'ids', in: 'query', description: 'The IDs of the Objects to return permissions for', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Permission')))]
+    #[OA\Get(
+        path: '/user/permissions/{entity}',
+        operationId: 'userPermissionsMultiSearch',
+        description: 'Permission data for the multiple Entities and Objects Provided.',
+        summary: 'Permission Data',
+        tags: ['user']
+    )]
+    #[OA\Parameter(
+        name: 'entity',
+        description: 'The Entity',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'ids',
+        description: 'The IDs of the Objects to return permissions for',
+        in: 'query',
+        required: true,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Permission')
+        )
+    )]
     /**
      * @param Request $request
      * @param Response $response
@@ -1362,11 +1616,41 @@ class User extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/user/permissions/{entity}/{objectId}', operationId: 'userPermissionsSet', summary: 'Permission Set', description: 'Set Permissions to users/groups for the provided entity.', tags: ['user'])]
-    #[OA\Parameter(name: 'entity', in: 'path', description: 'The Entity', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'objectId', in: 'path', description: 'The ID of the Object to set permissions on', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'groupIds', in: 'query', description: 'Array of permissions with groupId as the key', required: true, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'string')))]
-    #[OA\Parameter(name: 'ownerId', in: 'query', description: 'Change the owner of this item. Leave empty to keep the current owner', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Post(
+        path: '/user/permissions/{entity}/{objectId}',
+        operationId: 'userPermissionsSet',
+        description: 'Set Permissions to users/groups for the provided entity.',
+        summary: 'Permission Set',
+        tags: ['user']
+    )]
+    #[OA\Parameter(
+        name: 'entity',
+        description: 'The Entity',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'objectId',
+        description: 'The ID of the Object to set permissions on',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'groupIds',
+        description: 'Array of permissions with groupId as the key',
+        in: 'query',
+        required: true,
+        schema: new OA\Schema(items: new OA\Items(type: 'string'), type: 'array')
+    )]
+    #[OA\Parameter(
+        name: 'ownerId',
+        description: 'Change the owner of this item. Leave empty to keep the current owner',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * @param Request $request
@@ -1483,11 +1767,41 @@ class User extends Base
     }
 
 
-    #[OA\Post(path: '/user/permissions/{entity}/multiple', operationId: 'userPermissionsMultiSet', summary: 'Multiple Permission Set', description: 'Set Permissions to users/groups for multiple provided entities.', tags: ['user'])]
-    #[OA\Parameter(name: 'entity', in: 'path', description: 'The Entity type', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'ids', in: 'query', description: 'Array of object IDs', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'groupIds', in: 'query', description: 'Array of permissions with groupId as the key', required: true, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'string')))]
-    #[OA\Parameter(name: 'ownerId', in: 'query', description: 'Change the owner of this item. Leave empty to keep the current owner', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Post(
+        path: '/user/permissions/{entity}/multiple',
+        operationId: 'userPermissionsMultiSet',
+        description: 'Set Permissions to users/groups for multiple provided entities.',
+        summary: 'Multiple Permission Set',
+        tags: ['user']
+    )]
+    #[OA\Parameter(
+        name: 'entity',
+        description: 'The Entity type',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'ids',
+        description: 'Array of object IDs',
+        in: 'query',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'groupIds',
+        description: 'Array of permissions with groupId as the key',
+        in: 'query',
+        required: true,
+        schema: new OA\Schema(items: new OA\Items(type: 'string'), type: 'array')
+    )]
+    #[OA\Parameter(
+        name: 'ownerId',
+        description: 'Change the owner of this item. Leave empty to keep the current owner',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * @param Request $request
@@ -1604,9 +1918,28 @@ class User extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/user/pref', operationId: 'userPrefGet', summary: 'Retrieve User Preferences', description: 'User preferences for non-state information, such as Layout designer zoom levels', tags: ['user'])]
-    #[OA\Parameter(name: 'preference', in: 'query', description: 'An optional preference', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Response(response: 200, description: 'successful response', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/UserOption')))]
+    #[OA\Get(
+        path: '/user/pref',
+        operationId: 'userPrefGet',
+        description: 'User preferences for non-state information, such as Layout designer zoom levels',
+        summary: 'Retrieve User Preferences',
+        tags: ['user']
+    )]
+    #[OA\Parameter(
+        name: 'preference',
+        description: 'An optional preference',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful response',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/UserOption')
+        )
+    )]
     /**
      * @param Request $request
      * @param Response $response
@@ -1633,10 +1966,29 @@ class User extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Post(path: '/user/pref', operationId: 'userPrefEdit', summary: 'Save User Preferences', description: 'Save User preferences for non-state information, such as Layout designer zoom levels', tags: ['user'])]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/json', schema: new OA\Schema(required: ['preference'], properties: [
-        new OA\Property(property: 'preference', type: 'array', items: new OA\Items(ref: '#/components/schemas/UserOption'))
-    ])))]
+    #[OA\Post(
+        path: '/user/pref',
+        operationId: 'userPrefEdit',
+        description: 'Save User preferences for non-state information, such as Layout designer zoom levels',
+        summary: 'Save User Preferences',
+        tags: ['user']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/json',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'preference',
+                        items: new OA\Items(ref: '#/components/schemas/UserOption'),
+                        type: 'array'
+                    )
+                ],
+                required: ['preference']
+            )
+        ),
+        required: true
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * @param Request $request
@@ -1827,13 +2179,28 @@ class User extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/user/pref', operationId: 'userPrefEditFromForm', summary: 'Save User Preferences', description: 'Save User preferences from the Preferences form.', tags: ['user'])]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['navigationMenuPosition'], properties: [
-        new OA\Property(property: 'navigationMenuPosition', type: 'string'),
-        new OA\Property(property: 'useLibraryDuration', type: 'integer'),
-        new OA\Property(property: 'showThumbnailColumn', type: 'integer'),
-        new OA\Property(property: 'rememberFolderTreeStateGlobally', type: 'integer')
-    ])))]
+    #[OA\Put(
+        path: '/user/pref',
+        operationId: 'userPrefEditFromForm',
+        description: 'Save User preferences from the Preferences form.',
+        summary: 'Save User Preferences',
+        tags: ['user']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'navigationMenuPosition', type: 'string'),
+                    new OA\Property(property: 'useLibraryDuration', type: 'integer'),
+                    new OA\Property(property: 'showThumbnailColumn', type: 'integer'),
+                    new OA\Property(property: 'rememberFolderTreeStateGlobally', type: 'integer')
+                ],
+                required: ['navigationMenuPosition']
+            )
+        ),
+        required: true
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * @param Request $request

@@ -40,31 +40,37 @@ use Xibo\Support\Exception\NotFoundException;
  * Class Stats
  * @package Xibo\Controller
  */
-#[OA\Schema(schema: 'StatisticsData', properties: [
-    new OA\Property(property: 'type', type: 'string'),
-    new OA\Property(property: 'display', type: 'string'),
-    new OA\Property(property: 'displayId', type: 'integer'),
-    new OA\Property(property: 'layout', type: 'string'),
-    new OA\Property(property: 'layoutId', type: 'integer'),
-    new OA\Property(property: 'media', type: 'string'),
-    new OA\Property(property: 'mediaId', type: 'integer'),
-    new OA\Property(property: 'widgetId', type: 'integer'),
-    new OA\Property(property: 'scheduleId', type: 'integer'),
-    new OA\Property(property: 'numberPlays', type: 'integer'),
-    new OA\Property(property: 'duration', type: 'integer'),
-    new OA\Property(property: 'start', type: 'string'),
-    new OA\Property(property: 'end', type: 'string'),
-    new OA\Property(property: 'statDate', type: 'string'),
-    new OA\Property(property: 'tag', type: 'string')
-])]
-#[OA\Schema(schema: 'TimeDisconnectedData', properties: [
-    new OA\Property(property: 'display', type: 'string'),
-    new OA\Property(property: 'displayId', type: 'integer'),
-    new OA\Property(property: 'duration', type: 'integer'),
-    new OA\Property(property: 'start', type: 'string'),
-    new OA\Property(property: 'end', type: 'string'),
-    new OA\Property(property: 'isFinished', type: 'boolean')
-])]
+#[OA\Schema(
+    schema: 'StatisticsData',
+    properties: [
+        new OA\Property(property: 'type', type: 'string'),
+        new OA\Property(property: 'display', type: 'string'),
+        new OA\Property(property: 'displayId', type: 'integer'),
+        new OA\Property(property: 'layout', type: 'string'),
+        new OA\Property(property: 'layoutId', type: 'integer'),
+        new OA\Property(property: 'media', type: 'string'),
+        new OA\Property(property: 'mediaId', type: 'integer'),
+        new OA\Property(property: 'widgetId', type: 'integer'),
+        new OA\Property(property: 'scheduleId', type: 'integer'),
+        new OA\Property(property: 'numberPlays', type: 'integer'),
+        new OA\Property(property: 'duration', type: 'integer'),
+        new OA\Property(property: 'start', type: 'string'),
+        new OA\Property(property: 'end', type: 'string'),
+        new OA\Property(property: 'statDate', type: 'string'),
+        new OA\Property(property: 'tag', type: 'string')
+    ]
+)]
+#[OA\Schema(
+    schema: 'TimeDisconnectedData',
+    properties: [
+        new OA\Property(property: 'display', type: 'string'),
+        new OA\Property(property: 'displayId', type: 'integer'),
+        new OA\Property(property: 'duration', type: 'integer'),
+        new OA\Property(property: 'start', type: 'string'),
+        new OA\Property(property: 'end', type: 'string'),
+        new OA\Property(property: 'isFinished', type: 'boolean')
+    ]
+)]
 class Stats extends Base
 {
     /**
@@ -134,22 +140,117 @@ class Stats extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/stats', operationId: 'statsSearch', tags: ['statistics'])]
-    #[OA\Parameter(name: 'type', in: 'query', description: 'The type of stat to return. Layout|Media|Widget', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'fromDt', in: 'query', description: 'The start date for the filter. Default = 24 hours ago', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'toDt', in: 'query', description: 'The end date for the filter. Default = now.', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'statDate', in: 'query', description: 'The statDate filter returns records that are greater than or equal a particular date', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'statId', in: 'query', description: 'The statId filter returns records that are greater than a particular statId', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'displayId', in: 'query', description: 'An optional display Id to filter', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'displayIds', in: 'query', description: 'An optional array of display Id to filter', required: false, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'integer')))]
-    #[OA\Parameter(name: 'layoutId', in: 'query', description: 'An optional array of layout Id to filter', required: false, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'integer')))]
-    #[OA\Parameter(name: 'parentCampaignId', in: 'query', description: 'An optional Parent Campaign ID to filter', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'mediaId', in: 'query', description: 'An optional array of media Id to filter', required: false, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'integer')))]
-    #[OA\Parameter(name: 'campaignId', in: 'query', description: 'An optional Campaign Id to filter', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'returnDisplayLocalTime', in: 'query', description: 'true/1/On if the results should be in display local time, otherwise CMS time', required: false, schema: new OA\Schema(type: 'boolean'))]
-    #[OA\Parameter(name: 'returnDateFormat', in: 'query', description: 'A PHP formatted date format for how the dates in this call should be returned.', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'embed', in: 'query', description: 'Should the return embed additional data, options are layoutTags,displayTags and mediaTags', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/StatisticsData')))]
+    #[OA\Get(
+        path: '/stats',
+        operationId: 'statsSearch',
+        tags: ['statistics']
+    )]
+    #[OA\Parameter(
+        name: 'type',
+        description: 'The type of stat to return. Layout|Media|Widget',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'fromDt',
+        description: 'The start date for the filter. Default = 24 hours ago',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'toDt',
+        description: 'The end date for the filter. Default = now.',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'statDate',
+        description: 'The statDate filter returns records that are greater than or equal a particular date', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'statId',
+        description: 'The statId filter returns records that are greater than a particular statId',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'displayId',
+        description: 'An optional display Id to filter',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'displayIds',
+        description: 'An optional array of display Id to filter',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(items: new OA\Items(type: 'integer'), type: 'array')
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        description: 'An optional array of layout Id to filter',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(items: new OA\Items(type: 'integer'), type: 'array')
+    )]
+    #[OA\Parameter(
+        name: 'parentCampaignId',
+        description: 'An optional Parent Campaign ID to filter',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'mediaId',
+        description: 'An optional array of media Id to filter',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(items: new OA\Items(type: 'integer'), type: 'array')
+    )]
+    #[OA\Parameter(
+        name: 'campaignId',
+        description: 'An optional Campaign Id to filter',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'returnDisplayLocalTime',
+        description: 'true/1/On if the results should be in display local time, otherwise CMS time',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'boolean')
+    )]
+    #[OA\Parameter(
+        name: 'returnDateFormat',
+        description: 'A PHP formatted date format for how the dates in this call should be returned.',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'embed',
+        description: 'Should the return embed additional data, options are layoutTags,displayTags and mediaTags', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/StatisticsData')
+        )
+    )]
     /**
      * Stats API
      *
@@ -431,10 +532,32 @@ class Stats extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/stats/getExportStatsCount', operationId: 'getExportStatsCount', tags: ['statistics'])]
-    #[OA\Parameter(name: 'fromDt', in: 'query', description: 'The start date for the filter. Default = 24 hours ago', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'toDt', in: 'query', description: 'The end date for the filter. Default = now.', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'displayId', in: 'query', description: 'An optional display Id to filter', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Get(
+        path: '/stats/getExportStatsCount',
+        operationId: 'getExportStatsCount',
+        tags: ['statistics']
+    )]
+    #[OA\Parameter(
+        name: 'fromDt',
+        description: 'The start date for the filter. Default = 24 hours ago',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'toDt',
+        description: 'The end date for the filter. Default = now.',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'displayId',
+        description: 'An optional display Id to filter',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 200, description: 'successful operation')]
     /**
      * Total count of stats
@@ -650,14 +773,61 @@ class Stats extends Base
         )->withHeader('Content-Type', 'text/csv'));
     }
 
-    #[OA\Get(path: '/stats/timeDisconnected', operationId: 'timeDisconnectedSearch', tags: ['statistics'])]
-    #[OA\Parameter(name: 'fromDt', in: 'query', description: 'The start date for the filter.', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'toDt', in: 'query', description: 'The end date for the filter.', required: true, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'displayId', in: 'query', description: 'An optional display Id to filter', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'displayIds', in: 'query', description: 'An optional array of display Id to filter', required: false, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'integer')))]
-    #[OA\Parameter(name: 'returnDisplayLocalTime', in: 'query', description: 'true/1/On if the results should be in display local time, otherwise CMS time', required: false, schema: new OA\Schema(type: 'boolean'))]
-    #[OA\Parameter(name: 'returnDateFormat', in: 'query', description: 'A PHP formatted date format for how the dates in this call should be returned.', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/TimeDisconnectedData')))]
+    #[OA\Get(
+        path: '/stats/timeDisconnected',
+        operationId: 'timeDisconnectedSearch',
+        tags: ['statistics']
+    )]
+    #[OA\Parameter(
+        name: 'fromDt',
+        description: 'The start date for the filter.',
+        in: 'query',
+        required: true,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'toDt',
+        description: 'The end date for the filter.',
+        in: 'query',
+        required: true,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'displayId',
+        description: 'An optional display Id to filter',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'displayIds',
+        description: 'An optional array of display Id to filter',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(items: new OA\Items(type: 'integer'), type: 'array')
+    )]
+    #[OA\Parameter(
+        name: 'returnDisplayLocalTime',
+        description: 'true/1/On if the results should be in display local time, otherwise CMS time',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'boolean')
+    )]
+    #[OA\Parameter(
+        name: 'returnDateFormat',
+        description: 'A PHP formatted date format for how the dates in this call should be returned.',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/TimeDisconnectedData')
+        )
+    )]
     /**
      * @param Request $request
      * @param Response $response

@@ -52,12 +52,15 @@ use Xibo\Support\Exception\NotFoundException;
  * Class Schedule
  * @package Xibo\Controller
  */
-#[OA\Schema(schema: 'ScheduleCalendarData', properties: [
-    new OA\Property(property: 'id', description: 'Event ID', type: 'integer'),
-    new OA\Property(property: 'title', description: 'Event Title', type: 'string'),
-    new OA\Property(property: 'sameDay', description: 'Does this event happen only on 1 day', type: 'integer'),
-    new OA\Property(property: 'event', ref: '#/components/schemas/Schedule')
-])]
+#[OA\Schema(
+    schema: 'ScheduleCalendarData',
+    properties: [
+        new OA\Property(property: 'id', description: 'Event ID', type: 'integer'),
+        new OA\Property(property: 'title', description: 'Event Title', type: 'string'),
+        new OA\Property(property: 'sameDay', description: 'Does this event happen only on 1 day', type: 'integer'),
+        new OA\Property(property: 'event', ref: '#/components/schemas/Schedule')
+    ]
+)]
 class Schedule extends Base
 {
     /**
@@ -173,11 +176,43 @@ class Schedule extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(path: '/schedule/data/events', operationId: 'scheduleCalendarData', summary: 'Generates the calendar that we draw events on', description: '⚠️ This endpoint is deprecated and will be removed in v5.0.', deprecated: true, tags: ['schedule'])]
-    #[OA\Parameter(name: 'displayGroupIds', in: 'query', description: 'The DisplayGroupIds to return the schedule for. [-1] for All.', required: true, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'integer')))]
-    #[OA\Parameter(name: 'from', in: 'query', description: 'From Date in Y-m-d H:i:s format, if not provided defaults to start of the current month', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'to', in: 'query', description: 'To Date in Y-m-d H:i:s format, if not provided defaults to start of the next month', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Response(response: 200, description: 'successful response', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/ScheduleCalendarData')))]
+    #[OA\Get(
+        path: '/schedule/data/events',
+        operationId: 'scheduleCalendarData',
+        description: '⚠️ This endpoint is deprecated and will be removed in v5.0.',
+        deprecated: true,
+        summary: 'Generates the calendar that we draw events on',
+        tags: ['schedule']
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupIds',
+        description: 'The DisplayGroupIds to return the schedule for. [-1] for All.',
+        in: 'query',
+        required: true,
+        schema: new OA\Schema(items: new OA\Items(type: 'integer'), type: 'array')
+    )]
+    #[OA\Parameter(
+        name: 'from',
+        description: 'From Date in Y-m-d H:i:s format, if not provided defaults to start of the current month',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'to',
+        description: 'To Date in Y-m-d H:i:s format, if not provided defaults to start of the next month',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful response',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/ScheduleCalendarData')
+        )
+    )]
     /**
      * Generates the calendar that we draw events on
      * @deprecated - Deprecated API: This endpoint will be removed in v5.0
@@ -397,12 +432,41 @@ class Schedule extends Base
         return $response->withJson(['success' => 1, 'result' => $events]);
     }
 
-    #[OA\Get(path: '/schedule/{displayGroupId}/events', operationId: 'scheduleCalendarDataDisplayGroup', summary: 'Event List', tags: ['schedule'])]
-    #[OA\Parameter(name: 'displayGroupId', in: 'path', description: 'The DisplayGroupId to return the event list for.', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Get(
+        path: '/schedule/{displayGroupId}/events',
+        operationId: 'scheduleCalendarDataDisplayGroup',
+        summary: 'Event List',
+        tags: ['schedule']
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupId',
+        description: 'The DisplayGroupId to return the event list for.',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Parameter(name: 'singlePointInTime', in: 'query', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'date', in: 'query', description: 'Date in Y-m-d H:i:s', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'startDate', in: 'query', description: 'Date in Y-m-d H:i:s', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'endDate', in: 'query', description: 'Date in Y-m-d H:i:s', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(
+        name: 'date',
+        description: 'Date in Y-m-d H:i:s',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'startDate',
+        description: 'Date in Y-m-d H:i:s',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'endDate',
+        description: 'Date in Y-m-d H:i:s',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
     #[OA\Response(response: 200, description: 'successful response')]
     /**
      * Event List
@@ -790,44 +854,166 @@ class Schedule extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Schema(schema: 'ScheduleReminderArray', properties: [
-        new OA\Property(property: 'reminder_value', type: 'integer'),
-        new OA\Property(property: 'reminder_type', type: 'integer'),
-        new OA\Property(property: 'reminder_option', type: 'integer'),
-        new OA\Property(property: 'reminder_isEmailHidden', type: 'integer')
-    ])]
-    #[OA\Post(path: '/schedule', operationId: 'scheduleAdd', summary: 'Add Schedule Event', description: 'Add a new scheduled event for a Campaign/Layout to be shown on a Display Group/Display.', tags: ['schedule'])]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['eventTypeId', 'displayOrder', 'isPriority', 'displayGroupIds', 'fromDt'], properties: [
-        new OA\Property(property: 'eventTypeId', description: 'The Event Type Id to use for this Event.
-     * 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action, 7=Media Library, 8=Playlist', type: 'integer'),
-        new OA\Property(property: 'campaignId', description: 'The Campaign ID to use for this Event.
-     * If a Layout is needed then the Campaign specific ID for that Layout should be used.', type: 'integer'),
-        new OA\Property(property: 'fullScreenCampaignId', description: 'For Media or Playlist event Type. The Layout specific Campaign ID to use for this Event.
-     * This needs to be the Layout created with layout/fullscreen function', type: 'integer'),
-        new OA\Property(property: 'commandId', description: 'The Command ID to use for this Event.', type: 'integer'),
-        new OA\Property(property: 'mediaId', description: 'The Media ID to use for this Event.', type: 'integer'),
-        new OA\Property(property: 'displayOrder', description: 'The display order for this event. ', type: 'integer'),
-        new OA\Property(property: 'isPriority', description: 'An integer indicating the priority of this event. Normal events have a priority of 0.', type: 'integer'),
-        new OA\Property(property: 'displayGroupIds', description: 'The Display Group IDs for this event. Display specific Group IDs should be used to schedule on single displays.', type: 'array', items: new OA\Items(type: 'integer')),
-        new OA\Property(property: 'dayPartId', description: 'The Day Part for this event. Overrides supported are 0(custom) and 1(always). Defaulted to 0.', type: 'integer'),
-        new OA\Property(property: 'syncTimezone', description: 'Should this schedule be synced to the resulting Display timezone?', type: 'integer'),
-        new OA\Property(property: 'fromDt', description: 'The from date for this event.', type: 'string', format: 'date-time'),
-        new OA\Property(property: 'toDt', description: 'The to date for this event.', type: 'string', format: 'date-time'),
-        new OA\Property(property: 'recurrenceType', description: 'The type of recurrence to apply to this event.', type: 'string', enum: ['', 'Minute', 'Hour', 'Day', 'Week', 'Month', 'Year']),
-        new OA\Property(property: 'recurrenceDetail', description: 'The interval for the recurrence.', type: 'integer'),
-        new OA\Property(property: 'recurrenceRange', description: 'The end date for this events recurrence.', type: 'string', format: 'date-time'),
-        new OA\Property(property: 'recurrenceRepeatsOn', description: 'The days of the week that this event repeats - weekly only', type: 'string', format: 'array', items: new OA\Items(type: 'integer')),
-        new OA\Property(property: 'scheduleReminders', description: 'Array of Reminders for this event', type: 'array', items: new OA\Items(ref: '#/components/schemas/ScheduleReminderArray')),
-        new OA\Property(property: 'isGeoAware', description: 'Flag (0-1), whether this event is using Geo Location', type: 'integer'),
-        new OA\Property(property: 'geoLocation', description: 'Array of comma separated strings each with comma separated pair of coordinates', type: 'array', items: new OA\Items(type: 'string')),
-        new OA\Property(property: 'geoLocationJson', description: 'Valid GeoJSON string, use as an alternative to geoLocation parameter', type: 'string'),
-        new OA\Property(property: 'actionType', description: 'For Action eventTypeId, the type of the action - command or navLayout', type: 'string'),
-        new OA\Property(property: 'actionTriggerCode', description: 'For Action eventTypeId, the webhook trigger code for the Action', type: 'string'),
-        new OA\Property(property: 'actionLayoutCode', description: 'For Action eventTypeId and navLayout actionType, the Layout Code identifier', type: 'string'),
-        new OA\Property(property: 'dataSetId', description: 'For Data Connector eventTypeId, the DataSet ID', type: 'integer'),
-        new OA\Property(property: 'dataSetParams', description: 'For Data Connector eventTypeId, the DataSet params', type: 'string')
-    ])))]
-    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/Schedule'))]
+    #[OA\Schema(
+        schema: 'ScheduleReminderArray',
+        properties: [
+            new OA\Property(property: 'reminder_value', type: 'integer'),
+            new OA\Property(property: 'reminder_type', type: 'integer'),
+            new OA\Property(property: 'reminder_option', type: 'integer'),
+            new OA\Property(property: 'reminder_isEmailHidden', type: 'integer')
+        ]
+    )]
+    #[OA\Post(
+        path: '/schedule',
+        operationId: 'scheduleAdd',
+        description: 'Add a new scheduled event for a Campaign/Layout to be shown on a Display Group/Display.',
+        summary: 'Add Schedule Event',
+        tags: ['schedule']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'eventTypeId',
+                        description: 'The Event Type Id to use for this Event.
+     * 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action, 7=Media Library, 8=Playlist', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'campaignId',
+                        description: 'The Campaign ID to use for this Event.
+     * If a Layout is needed then the Campaign specific ID for that Layout should be used.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'fullScreenCampaignId',
+                        description: 'For Media or Playlist event Type. The Layout specific Campaign ID to use for this Event.
+     * This needs to be the Layout created with layout/fullscreen function', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(property: 'commandId', description: 'The Command ID to use for this Event.', type: 'integer'),
+                    new OA\Property(property: 'mediaId', description: 'The Media ID to use for this Event.', type: 'integer'),
+                    new OA\Property(property: 'displayOrder', description: 'The display order for this event. ', type: 'integer'),
+                    new OA\Property(
+                        property: 'isPriority',
+                        description: 'An integer indicating the priority of this event. Normal events have a priority of 0.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'displayGroupIds',
+                        description: 'The Display Group IDs for this event. Display specific Group IDs should be used to schedule on single displays.', // phpcs:ignore
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'dayPartId',
+                        description: 'The Day Part for this event. Overrides supported are 0(custom) and 1(always). Defaulted to 0.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'syncTimezone',
+                        description: 'Should this schedule be synced to the resulting Display timezone?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'fromDt',
+                        description: 'The from date for this event.',
+                        format: 'date-time',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'toDt',
+                        description: 'The to date for this event.',
+                        format: 'date-time',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'recurrenceType',
+                        description: 'The type of recurrence to apply to this event.',
+                        enum: ['', 'Minute', 'Hour', 'Day', 'Week', 'Month', 'Year'],
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'recurrenceDetail', description: 'The interval for the recurrence.', type: 'integer'),
+                    new OA\Property(
+                        property: 'recurrenceRange',
+                        description: 'The end date for this events recurrence.',
+                        format: 'date-time',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'recurrenceRepeatsOn',
+                        description: 'The days of the week that this event repeats - weekly only',
+                        format: 'array',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'scheduleReminders',
+                        description: 'Array of Reminders for this event',
+                        items: new OA\Items(ref: '#/components/schemas/ScheduleReminderArray'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'isGeoAware',
+                        description: 'Flag (0-1), whether this event is using Geo Location',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'geoLocation',
+                        description: 'Array of comma separated strings each with comma separated pair of coordinates',
+                        items: new OA\Items(type: 'string'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'geoLocationJson',
+                        description: 'Valid GeoJSON string, use as an alternative to geoLocation parameter',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'actionType',
+                        description: 'For Action eventTypeId, the type of the action - command or navLayout',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'actionTriggerCode',
+                        description: 'For Action eventTypeId, the webhook trigger code for the Action',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'actionLayoutCode',
+                        description: 'For Action eventTypeId and navLayout actionType, the Layout Code identifier',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'dataSetId',
+                        description: 'For Data Connector eventTypeId, the DataSet ID',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'dataSetParams',
+                        description: 'For Data Connector eventTypeId, the DataSet params',
+                        type: 'string'
+                    )
+                ],
+                required: ['eventTypeId', 'displayOrder', 'isPriority', 'displayGroupIds', 'fromDt']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Schedule'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add Event
      *
@@ -1264,8 +1450,20 @@ class Schedule extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Delete(path: '/schedulerecurrence/{eventId}', operationId: 'schedulerecurrenceDelete', summary: 'Delete a Recurring Event', description: 'Delete a Recurring Event of a Scheduled Event', tags: ['schedule'])]
-    #[OA\Parameter(name: 'eventId', in: 'path', description: 'The Scheduled Event ID', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Delete(
+        path: '/schedulerecurrence/{eventId}',
+        operationId: 'schedulerecurrenceDelete',
+        description: 'Delete a Recurring Event of a Scheduled Event',
+        summary: 'Delete a Recurring Event',
+        tags: ['schedule']
+    )]
+    #[OA\Parameter(
+        name: 'eventId',
+        description: 'The Scheduled Event ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Deletes a recurring Event from all displays
@@ -1305,38 +1503,152 @@ class Schedule extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Put(path: '/schedule/{eventId}', operationId: 'scheduleEdit', summary: 'Edit Schedule Event', description: 'Edit a scheduled event for a Campaign/Layout to be shown on a Display Group/Display.', tags: ['schedule'])]
-    #[OA\Parameter(name: 'eventId', in: 'path', description: 'The Scheduled Event ID', required: true, schema: new OA\Schema(type: 'integer'))]
-    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['eventTypeId', 'displayOrder', 'isPriority', 'displayGroupIds', 'fromDt'], properties: [
-        new OA\Property(property: 'eventTypeId', description: 'The Event Type Id to use for this Event.
-     * 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action', type: 'integer'),
-        new OA\Property(property: 'campaignId', description: 'The Campaign ID to use for this Event.
-     * If a Layout is needed then the Campaign specific ID for that Layout should be used.', type: 'integer'),
-        new OA\Property(property: 'commandId', description: 'The Command ID to use for this Event.', type: 'integer'),
-        new OA\Property(property: 'mediaId', description: 'The Media ID to use for this Event.', type: 'integer'),
-        new OA\Property(property: 'displayOrder', description: 'The display order for this event. ', type: 'integer'),
-        new OA\Property(property: 'isPriority', description: 'An integer indicating the priority of this event. Normal events have a priority of 0.', type: 'integer'),
-        new OA\Property(property: 'displayGroupIds', description: 'The Display Group IDs for this event.
-     * Display specific Group IDs should be used to schedule on single displays.', type: 'array', items: new OA\Items(type: 'integer')),
-        new OA\Property(property: 'dayPartId', description: 'The Day Part for this event. Overrides supported are 0(custom) and 1(always). Defaulted to 0.', type: 'integer'),
-        new OA\Property(property: 'syncTimezone', description: 'Should this schedule be synced to the resulting Display timezone?', type: 'integer'),
-        new OA\Property(property: 'fromDt', description: 'The from date for this event.', type: 'string', format: 'date-time'),
-        new OA\Property(property: 'toDt', description: 'The to date for this event.', type: 'string', format: 'date-time'),
-        new OA\Property(property: 'recurrenceType', description: 'The type of recurrence to apply to this event.', type: 'string', enum: ['', 'Minute', 'Hour', 'Day', 'Week', 'Month', 'Year']),
-        new OA\Property(property: 'recurrenceDetail', description: 'The interval for the recurrence.', type: 'integer'),
-        new OA\Property(property: 'recurrenceRange', description: 'The end date for this events recurrence.', type: 'string', format: 'date-time'),
-        new OA\Property(property: 'recurrenceRepeatsOn', description: 'The days of the week that this event repeats - weekly only', type: 'string', format: 'array', items: new OA\Items(type: 'integer')),
-        new OA\Property(property: 'scheduleReminders', description: 'Array of Reminders for this event', type: 'array', items: new OA\Items(ref: '#/components/schemas/ScheduleReminderArray')),
-        new OA\Property(property: 'isGeoAware', description: 'Flag (0-1), whether this event is using Geo Location', type: 'integer'),
-        new OA\Property(property: 'geoLocation', description: 'Array of comma separated strings each with comma separated pair of coordinates', type: 'array', items: new OA\Items(type: 'string')),
-        new OA\Property(property: 'geoLocationJson', description: 'Valid GeoJSON string, use as an alternative to geoLocation parameter', type: 'string'),
-        new OA\Property(property: 'actionType', description: 'For Action eventTypeId, the type of the action - command or navLayout', type: 'string'),
-        new OA\Property(property: 'actionTriggerCode', description: 'For Action eventTypeId, the webhook trigger code for the Action', type: 'string'),
-        new OA\Property(property: 'actionLayoutCode', description: 'For Action eventTypeId and navLayout actionType, the Layout Code identifier', type: 'string'),
-        new OA\Property(property: 'dataSetId', description: 'For Data Connector eventTypeId, the DataSet ID', type: 'integer'),
-        new OA\Property(property: 'dataSetParams', description: 'For Data Connector eventTypeId, the DataSet params', type: 'string')
-    ])))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Schedule'))]
+    #[OA\Put(
+        path: '/schedule/{eventId}',
+        operationId: 'scheduleEdit',
+        description: 'Edit a scheduled event for a Campaign/Layout to be shown on a Display Group/Display.',
+        summary: 'Edit Schedule Event',
+        tags: ['schedule']
+    )]
+    #[OA\Parameter(
+        name: 'eventId',
+        description: 'The Scheduled Event ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'eventTypeId',
+                        description: 'The Event Type Id to use for this Event.
+     * 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'campaignId',
+                        description: 'The Campaign ID to use for this Event.
+     * If a Layout is needed then the Campaign specific ID for that Layout should be used.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(property: 'commandId', description: 'The Command ID to use for this Event.', type: 'integer'),
+                    new OA\Property(property: 'mediaId', description: 'The Media ID to use for this Event.', type: 'integer'),
+                    new OA\Property(property: 'displayOrder', description: 'The display order for this event. ', type: 'integer'),
+                    new OA\Property(
+                        property: 'isPriority',
+                        description: 'An integer indicating the priority of this event. Normal events have a priority of 0.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'displayGroupIds',
+                        description: 'The Display Group IDs for this event.
+     * Display specific Group IDs should be used to schedule on single displays.', // phpcs:ignore
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'dayPartId',
+                        description: 'The Day Part for this event. Overrides supported are 0(custom) and 1(always). Defaulted to 0.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'syncTimezone',
+                        description: 'Should this schedule be synced to the resulting Display timezone?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'fromDt',
+                        description: 'The from date for this event.',
+                        format: 'date-time',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'toDt',
+                        description: 'The to date for this event.',
+                        format: 'date-time',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'recurrenceType',
+                        description: 'The type of recurrence to apply to this event.',
+                        enum: ['', 'Minute', 'Hour', 'Day', 'Week', 'Month', 'Year'],
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'recurrenceDetail', description: 'The interval for the recurrence.', type: 'integer'),
+                    new OA\Property(
+                        property: 'recurrenceRange',
+                        description: 'The end date for this events recurrence.',
+                        format: 'date-time',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'recurrenceRepeatsOn',
+                        description: 'The days of the week that this event repeats - weekly only',
+                        format: 'array',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'scheduleReminders',
+                        description: 'Array of Reminders for this event',
+                        items: new OA\Items(ref: '#/components/schemas/ScheduleReminderArray'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'isGeoAware',
+                        description: 'Flag (0-1), whether this event is using Geo Location',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'geoLocation',
+                        description: 'Array of comma separated strings each with comma separated pair of coordinates',
+                        items: new OA\Items(type: 'string'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'geoLocationJson',
+                        description: 'Valid GeoJSON string, use as an alternative to geoLocation parameter',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'actionType',
+                        description: 'For Action eventTypeId, the type of the action - command or navLayout',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'actionTriggerCode',
+                        description: 'For Action eventTypeId, the webhook trigger code for the Action',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'actionLayoutCode',
+                        description: 'For Action eventTypeId and navLayout actionType, the Layout Code identifier',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'dataSetId',
+                        description: 'For Data Connector eventTypeId, the DataSet ID',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'dataSetParams',
+                        description: 'For Data Connector eventTypeId, the DataSet params',
+                        type: 'string'
+                    )
+                ],
+                required: ['eventTypeId', 'displayOrder', 'isPriority', 'displayGroupIds', 'fromDt']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Schedule')
+    )]
     /**
      * Edits an event
      * @param Request $request
@@ -1755,8 +2067,20 @@ class Schedule extends Base
         return $this->render($request,$response);
     }
 
-    #[OA\Delete(path: '/schedule/{eventId}', operationId: 'scheduleDelete', summary: 'Delete Event', description: 'Delete a Scheduled Event', tags: ['schedule'])]
-    #[OA\Parameter(name: 'eventId', in: 'path', description: 'The Scheduled Event ID', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Delete(
+        path: '/schedule/{eventId}',
+        operationId: 'scheduleDelete',
+        description: 'Delete a Scheduled Event',
+        summary: 'Delete Event',
+        tags: ['schedule']
+    )]
+    #[OA\Parameter(
+        name: 'eventId',
+        description: 'The Scheduled Event ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Deletes an Event from all displays
@@ -1843,15 +2167,64 @@ class Schedule extends Base
     }
 
     #[OA\Get(path: '/schedule', operationId: 'scheduleSearch', tags: ['schedule'])]
-    #[OA\Parameter(name: 'eventTypeId', in: 'query', description: 'Filter grid by eventTypeId.
-     * 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action, 7=Media Library, 8=Playlist', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'fromDt', in: 'query', description: 'From Date in Y-m-d H:i:s format', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'toDt', in: 'query', description: 'To Date in Y-m-d H:i:s format', required: false, schema: new OA\Schema(type: 'string'))]
-    #[OA\Parameter(name: 'geoAware', in: 'query', description: 'Flag (0-1), whether to return events using Geo Location', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'recurring', in: 'query', description: 'Flag (0-1), whether to return Recurring events', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'campaignId', in: 'query', description: 'Filter events by specific campaignId', required: false, schema: new OA\Schema(type: 'integer'))]
-    #[OA\Parameter(name: 'displayGroupIds', in: 'query', description: 'Filter events by an array of Display Group Ids', required: false, schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'integer')))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Schedule')))]
+    #[OA\Parameter(
+        name: 'eventTypeId',
+        description: 'Filter grid by eventTypeId.
+     * 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action, 7=Media Library, 8=Playlist', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'fromDt',
+        description: 'From Date in Y-m-d H:i:s format',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'toDt',
+        description: 'To Date in Y-m-d H:i:s format',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'geoAware',
+        description: 'Flag (0-1), whether to return events using Geo Location',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'recurring',
+        description: 'Flag (0-1), whether to return Recurring events',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'campaignId',
+        description: 'Filter events by specific campaignId',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupIds',
+        description: 'Filter events by an array of Display Group Ids',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(items: new OA\Items(type: 'integer'), type: 'array')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Schedule')
+        )
+    )]
     /**
      * Generates the Schedule events grid
      *

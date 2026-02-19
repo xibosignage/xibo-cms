@@ -1525,9 +1525,19 @@ class Display extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: [
+                    'display',
+                    'defaultLayoutId',
+                    'licensed',
+                    'license',
+                    'incSchedule',
+                    'emailAlert',
+                    'wakeOnLanEnabled'
+                ],
                 properties: [
                     new OA\Property(property: 'display', description: 'The Display Name', type: 'string'),
                     new OA\Property(property: 'description', description: 'A description of the Display', type: 'string'),
@@ -1539,8 +1549,8 @@ class Display extends Base
                     new OA\Property(
                         property: 'auditingUntil',
                         description: 'A date this Display records auditing information until.',
-                        format: 'date-time',
-                        type: 'string'
+                        type: 'string',
+                        format: 'date-time'
                     ),
                     new OA\Property(
                         property: 'defaultLayoutId',
@@ -1665,19 +1675,9 @@ class Display extends Base
                         description: 'Folder ID to which this object should be assigned to',
                         type: 'integer'
                     )
-                ],
-                required: [
-                    'display',
-                    'defaultLayoutId',
-                    'licensed',
-                    'license',
-                    'incSchedule',
-                    'emailAlert',
-                    'wakeOnLanEnabled'
                 ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(
         response: 200,

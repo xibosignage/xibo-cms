@@ -73,32 +73,6 @@ use Xibo\Widget\Render\WidgetDownloader;
  * Class Library
  * @package Xibo\Controller
  */
-#[OA\Schema(
-    schema: 'importJsonSchema',
-    properties: [
-        new OA\Property(
-            property: 'uniqueKeys',
-            description: 'A name of the unique column',
-            items: new OA\Items(type: 'string'),
-            type: 'array'
-        ),
-        new OA\Property(
-            property: 'truncate',
-            description: 'Flag True or False, whether to truncate existing data on import',
-            type: 'boolean'
-        ),
-        new OA\Property(
-            property: 'rows',
-            description: 'An array of objects with pairs: ColumnName:Value',
-            items: new OA\Items(
-                additionalProperties: new OA\AdditionalProperties(type: 'string'),
-                type: 'object'
-            ),
-            type: 'array'
-        )
-    ],
-    type: 'object'
-)]
 class Library extends Base
 {
     /** @var EventDispatcherInterface */

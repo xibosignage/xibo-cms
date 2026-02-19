@@ -21,29 +21,7 @@
  */
 
 namespace Xibo\Controller;
-use Carbon\Carbon;
-use OpenApi\Attributes as OA;
-use Psr\Http\Message\ResponseInterface;
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
-use Slim\Routing\RouteContext;
-use Slim\Views\Twig;
-use Symfony\Component\EventDispatcher\EventDispatcher;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Twig\Error\LoaderError;
-use Twig\Error\RuntimeError;
-use Twig\Error\SyntaxError;
-use Xibo\Entity\User;
-use Xibo\Helper\ApplicationState;
-use Xibo\Helper\HttpsDetect;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\BaseDependenciesService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\HelpServiceInterface;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Support\Exception\ControllerNotImplemented;
-use Xibo\Support\Exception\GeneralException;
-use Xibo\Support\Exception\InvalidArgumentException;
+use Carbon\Carbon;use OpenApi\Attributes as OA;use Psr\Http\Message\ResponseInterface;use Slim\Http\Response as Response;use Slim\Http\ServerRequest as Request;use Slim\Routing\RouteContext;use Slim\Views\Twig;use Symfony\Component\EventDispatcher\EventDispatcher;use Symfony\Component\EventDispatcher\EventDispatcherInterface;use Twig\Error\LoaderError;use Twig\Error\RuntimeError;use Twig\Error\SyntaxError;use Xibo\Entity\User;use Xibo\Helper\ApplicationState;use Xibo\Helper\HttpsDetect;use Xibo\Helper\SanitizerService;use Xibo\Service\BaseDependenciesService;use Xibo\Service\ConfigServiceInterface;use Xibo\Service\HelpServiceInterface;use Xibo\Service\LogServiceInterface;use Xibo\Support\Exception\ControllerNotImplemented;use Xibo\Support\Exception\GeneralException;use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class Base
@@ -53,9 +31,9 @@ use Xibo\Support\Exception\InvalidArgumentException;
  *
  */
 #[OA\Info(
-    version: '4.0',
     title: 'Xibo API',
-    description: "Xibo CMS API.\n       Using HTTP formData requests.\n       All PUT requests require Content-Type:application/x-www-form-urlencoded header.",
+    version: '4.0',
+    description: "Xibo CMS API.\n       Using HTTP formData requests.\n       All PUT requests require Content-Type:application/x-www-form-urlencoded header.", // phpcs:ignore
     termsOfService: 'https://xibosignage.com/legal',
     contact: new OA\Contact(email: 'info@xibo.org.uk'),
     license: new OA\License(name: 'AGPLv3 or later', url: 'http://www.gnu.org/licenses/')
@@ -101,7 +79,7 @@ use Xibo\Support\Exception\InvalidArgumentException;
 #[OA\Tag(name: 'dayPart', description: 'Dayparting')]
 #[OA\Tag(name: 'Player Software')]
 #[OA\Tag(name: 'tags', description: 'Tags')]
-#[OA\Tag(name: 'menuBoard', description: 'Menu Boards - feature preview, please do not use in production.')]
+#[OA\Tag(name: 'menuBoard', description: 'Menu Boards - feature preview, please do not use in production.')] // phpcs:ignore
 class Base
 {
     use DataTablesDotNetTrait;
