@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - "**.php"
-      - ".github/workflows/phpcs.yml"
+      - ".github/workflows/phpcs.yaml"
     branches-ignore:
       - master
 
@@ -23,11 +23,10 @@ jobs:
 
       - name: Get our latest coding standards
         run: |
-          curl -OL https://raw.githubusercontent.com/xibosignage/support/refs/heads/php8/src/Standards/xibo_ruleset.xml
-          cat xibo_ruleset.xml
+          curl -L https://raw.githubusercontent.com/xibosignage/support/refs/heads/php8/src/Standards/xibo_ruleset.xml -o phpcs.xml
 
       - uses: thenabeel/action-phpcs@v8
         with:
           files: "**.php"
           phpcs_path: php phpcs.phar
-          standard: ./xibo_ruleset.xml
+          standard: phpcs.xml
