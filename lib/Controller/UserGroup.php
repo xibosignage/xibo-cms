@@ -275,7 +275,7 @@ class UserGroup extends Base
         new OA\Property(property: 'isShownForAddUser', description: 'Flag (0, 1), should this Group be shown in the Add User onboarding form.', type: 'integer'),
         new OA\Property(property: 'defaultHomePageId', description: 'If this user has been created via the onboarding form, this should be the default home page', type: 'integer')
     ])))]
-    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/UserGroup')))]
+    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/UserGroup'))]
     /**
      * Edit User Group
      * @param Request $request
@@ -348,6 +348,9 @@ class UserGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(path: '/group/{userGroupId}', operationId: 'userGroupDelete', summary: 'Delete User Group', description: 'Delete User Group', tags: ['usergroup'])]
+    #[OA\Parameter(name: 'userGroupId', in: 'path', description: 'The user Group ID to Delete', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete User Group
      * @param Request $request
@@ -358,24 +361,6 @@ class UserGroup extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
-     * @SWG\Delete(
-     *  path="/group/{userGroupId}",
-     *  operationId="userGroupDelete",
-     *  tags={"usergroup"},
-     *  summary="Delete User Group",
-     *  description="Delete User Group",
-     *  @SWG\Parameter(
-     *      name="userGroupId",
-     *      in="path",
-     *      description="The user Group ID to Delete",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function delete(Request $request, Response $response, $id)
     {

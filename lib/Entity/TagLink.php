@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,28 +22,33 @@
 
 namespace Xibo\Entity;
 
+use OpenApi\Attributes as OA;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
- * @SWG\Definition()
+ * @package Xibo\Entity
  */
+#[OA\Schema(schema: 'TagLink')]
 class TagLink implements \JsonSerializable
 {
     use EntityTrait;
+
+    #[OA\Property(description: 'The Tag')]
     /**
-     * @SWG\Property(description="The Tag")
      * @var string
      */
     public $tag;
+
+    #[OA\Property(description: 'The Tag ID')]
     /**
-     * @SWG\Property(description="The Tag ID")
      * @var int
      */
     public $tagId;
+
+    #[OA\Property(description: 'The Tag Value')]
     /**
-     * @SWG\Property(description="The Tag Value")
      * @var string
      */
     public $value = null;

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\CampaignFactory;
@@ -132,101 +133,22 @@ class Campaign extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(path: '/campaign', operationId: 'campaignSearch', summary: 'Search Campaigns', description: 'Search all Campaigns this user has access to', tags: ['campaign'])]
+    #[OA\Parameter(name: 'campaignId', in: 'query', description: 'Filter by Campaign Id', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'name', in: 'query', description: 'Filter by Name', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'tags', in: 'query', description: 'Filter by Tags', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'exactTags', in: 'query', description: 'A flag indicating whether to treat the tags filter as an exact match', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'logicalOperator', in: 'query', description: 'When filtering by multiple Tags, which logical operator should be used? AND|OR', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'hasLayouts', in: 'query', description: 'Filter by has layouts', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'isLayoutSpecific', in: 'query', description: 'Filter by whether this Campaign is specific to a Layout or User added', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'retired', in: 'query', description: 'Filter by retired', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'totalDuration', in: 'query', description: 'Should we total the duration?', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(name: 'embed', in: 'query', description: 'Embed related data such as layouts, permissions, tags and events', required: false, schema: new OA\Schema(type: 'string'))]
+    #[OA\Parameter(name: 'folderId', in: 'query', description: 'Filter by Folder ID', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Campaign')))]
     /**
      * Returns a Grid of Campaigns
      *
-     * @SWG\Get(
-     *  path="/campaign",
-     *  operationId="campaignSearch",
-     *  tags={"campaign"},
-     *  summary="Search Campaigns",
-     *  description="Search all Campaigns this user has access to",
-     *  @SWG\Parameter(
-     *      name="campaignId",
-     *      in="query",
-     *      description="Filter by Campaign Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="query",
-     *      description="Filter by Name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="tags",
-     *      in="query",
-     *      description="Filter by Tags",
-     *      type="string",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="exactTags",
-     *      in="query",
-     *      description="A flag indicating whether to treat the tags filter as an exact match",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="logicalOperator",
-     *      in="query",
-     *      description="When filtering by multiple Tags, which logical operator should be used? AND|OR",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="hasLayouts",
-     *      in="query",
-     *      description="Filter by has layouts",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isLayoutSpecific",
-     *      in="query",
-     *      description="Filter by whether this Campaign is specific to a Layout or User added",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="retired",
-     *      in="query",
-     *      description="Filter by retired",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="totalDuration",
-     *      in="query",
-     *      description="Should we total the duration?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="embed",
-     *      in="query",
-     *      description="Embed related data such as layouts, permissions, tags and events",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="query",
-     *      description="Filter by Folder ID",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/Campaign")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -465,91 +387,22 @@ class Campaign extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(path: '/campaign', operationId: 'campaignAdd', summary: 'Add Campaign', description: 'Add a Campaign', tags: ['campaign'])]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['type', 'name'], properties: [
+        new OA\Property(property: 'type', description: 'Type of campaign, either list|ad', type: 'string'),
+        new OA\Property(property: 'name', description: 'Name for this Campaign', type: 'string'),
+        new OA\Property(property: 'folderId', description: 'Folder ID to which this object should be assigned to', type: 'integer'),
+        new OA\Property(property: 'layoutIds', description: 'An array of layoutIds to assign to this Campaign, in order.', type: 'array', items: new OA\Items(type: 'integer')),
+        new OA\Property(property: 'cyclePlaybackEnabled', description: 'When cycle based playback is enabled only 1 Layout from this Campaign will be played each time it is in a Schedule loop. The same Layout will be shown until the \'Play count\' is achieved.', type: 'integer'),
+        new OA\Property(property: 'playCount', description: 'In cycle based playback, how many plays should each Layout have before moving on?', type: 'integer'),
+        new OA\Property(property: 'listPlayOrder', description: 'In layout list, how should campaigns in the schedule with the same play order be played?', type: 'string'),
+        new OA\Property(property: 'targetType', description: 'For ad campaigns, how do we measure the target? plays|budget|imp', type: 'string'),
+        new OA\Property(property: 'target', description: 'For ad campaigns, what is the target count for playback over the entire campaign', type: 'integer')
+    ])))]
+    #[OA\Response(response: 201, description: 'successful operation', headers: [new OA\Header(header: 'Location', description: 'Location of the new record', schema: new OA\Schema(type: 'string'))], content: new OA\JsonContent(ref: '#/components/schemas/Campaign'))]
     /**
      * Add a Campaign
      *
-     * @SWG\Post(
-     *  path="/campaign",
-     *  operationId="campaignAdd",
-     *  tags={"campaign"},
-     *  summary="Add Campaign",
-     *  description="Add a Campaign",
-     *  @SWG\Parameter(
-     *      name="type",
-     *      in="formData",
-     *      description="Type of campaign, either list|ad",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="Name for this Campaign",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="formData",
-     *      description="Folder ID to which this object should be assigned to",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="layoutIds",
-     *      in="formData",
-     *      description="An array of layoutIds to assign to this Campaign, in order.",
-     *      type="array",
-     *      @SWG\Items(type="integer"),
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="cyclePlaybackEnabled",
-     *      in="formData",
-     *      description="When cycle based playback is enabled only 1 Layout from this Campaign will be played each time
-     * it is in a Schedule loop. The same Layout will be shown until the 'Play count' is achieved.",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="playCount",
-     *      in="formData",
-     *      description="In cycle based playback, how many plays should each Layout have before moving on?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="listPlayOrder",
-     *      in="formData",
-     *      description="In layout list, how should campaigns in the schedule with the same play order be played?",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="targetType",
-     *      in="formData",
-     *      description="For ad campaigns, how do we measure the target? plays|budget|imp",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="target",
-     *      in="formData",
-     *      description="For ad campaigns, what is the target count for playback over the entire campaign",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Campaign"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -697,6 +550,28 @@ class Campaign extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(path: '/campaign/{campaignId}', operationId: 'campaignEdit', summary: 'Edit Campaign', description: 'Edit an existing Campaign', tags: ['campaign'])]
+    #[OA\Parameter(name: 'campaignId', in: 'path', description: 'The Campaign ID to Edit', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['name'], properties: [
+        new OA\Property(property: 'name', description: 'Name for this Campaign', type: 'string'),
+        new OA\Property(property: 'folderId', description: 'Folder ID to which this object should be assigned to', type: 'integer'),
+        new OA\Property(property: 'manageLayouts', description: 'Flag indicating whether to manage layouts or not. Default to no.', type: 'integer'),
+        new OA\Property(property: 'layoutIds', description: 'An array of layoutIds to assign to this Campaign, in order.', type: 'array', items: new OA\Items(type: 'integer')),
+        new OA\Property(property: 'cyclePlaybackEnabled', description: 'When cycle based playback is enabled only 1 Layout from this Campaign will be played each time it is in a Schedule loop. The same Layout will be shown until the \'Play count\' is achieved.', type: 'integer'),
+        new OA\Property(property: 'playCount', description: 'In cycle based playback, how many plays should each Layout have before moving on?', type: 'integer'),
+        new OA\Property(property: 'listPlayOrder', description: 'In layout list, how should campaigns in the schedule with the same play order be played?', type: 'string'),
+        new OA\Property(property: 'targetType', description: 'For ad campaigns, how do we measure the target? plays|budget|imp', type: 'string'),
+        new OA\Property(property: 'target', description: 'For ad campaigns, what is the target count for playback over the entire campaign', type: 'integer'),
+        new OA\Property(property: 'startDt', description: 'For ad campaigns, what is the start date', type: 'string', format: 'date-time'),
+        new OA\Property(property: 'endDt', description: 'For ad campaigns, what is the start date', type: 'string', format: 'date-time'),
+        new OA\Property(property: 'displayGroupIds[]', description: 'For ad campaigns, which display groups should the campaign be run on?', type: 'array', items: new OA\Items(type: 'integer')),
+        new OA\Property(property: 'ref1', description: 'An optional reference field', type: 'string'),
+        new OA\Property(property: 'ref2', description: 'An optional reference field', type: 'string'),
+        new OA\Property(property: 'ref3', description: 'An optional reference field', type: 'string'),
+        new OA\Property(property: 'ref4', description: 'An optional reference field', type: 'string'),
+        new OA\Property(property: 'ref5', description: 'An optional reference field', type: 'string')
+    ])))]
+    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Campaign'))]
     /**
      * Edit a Campaign
      * @param Request $request
@@ -709,148 +584,6 @@ class Campaign extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\DuplicateEntityException
-     * @SWG\Put(
-     *  path="/campaign/{campaignId}",
-     *  operationId="campaignEdit",
-     *  tags={"campaign"},
-     *  summary="Edit Campaign",
-     *  description="Edit an existing Campaign",
-     *  @SWG\Parameter(
-     *      name="campaignId",
-     *      in="path",
-     *      description="The Campaign ID to Edit",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="Name for this Campaign",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="formData",
-     *      description="Folder ID to which this object should be assigned to",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="manageLayouts",
-     *      in="formData",
-     *      description="Flag indicating whether to manage layouts or not. Default to no.",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="layoutIds",
-     *      in="formData",
-     *      description="An array of layoutIds to assign to this Campaign, in order.",
-     *      type="array",
-     *      @SWG\Items(type="integer"),
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="cyclePlaybackEnabled",
-     *      in="formData",
-     *      description="When cycle based playback is enabled only 1 Layout from this Campaign will be played each time it is in a Schedule loop. The same Layout will be shown until the 'Play count' is achieved.",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="playCount",
-     *      in="formData",
-     *      description="In cycle based playback, how many plays should each Layout have before moving on?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="listPlayOrder",
-     *      in="formData",
-     *      description="In layout list, how should campaigns in the schedule with the same play order be played?",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="targetType",
-     *      in="formData",
-     *      description="For ad campaigns, how do we measure the target? plays|budget|imp",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="target",
-     *      in="formData",
-     *      description="For ad campaigns, what is the target count for playback over the entire campaign",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="startDt",
-     *      in="formData",
-     *      description="For ad campaigns, what is the start date",
-     *      type="string",
-     *      format="date-time",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="endDt",
-     *      in="formData",
-     *      description="For ad campaigns, what is the start date",
-     *      type="string",
-     *      format="date-time",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="displayGroupIds[]",
-     *      in="formData",
-     *      description="For ad campaigns, which display groups should the campaign be run on?",
-     *      type="array",
-     *      @SWG\Items(type="integer"),
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ref1",
-     *      in="formData",
-     *      description="An optional reference field",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ref2",
-     *      in="formData",
-     *      description="An optional reference field",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ref3",
-     *      in="formData",
-     *      description="An optional reference field",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ref4",
-     *      in="formData",
-     *      description="An optional reference field",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ref5",
-     *      in="formData",
-     *      description="An optional reference field",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Campaign")
-     *  )
-     * )
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -993,6 +726,9 @@ class Campaign extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(path: '/campaign/{campaignId}', operationId: 'campaignDelete', summary: 'Delete Campaign', description: 'Delete an existing Campaign', tags: ['campaign'])]
+    #[OA\Parameter(name: 'campaignId', in: 'path', description: 'The Campaign ID to Delete', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete Campaign
      * @param Request $request
@@ -1005,24 +741,6 @@ class Campaign extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\DuplicateEntityException
-     * @SWG\Delete(
-     *  path="/campaign/{campaignId}",
-     *  operationId="campaignDelete",
-     *  tags={"campaign"},
-     *  summary="Delete Campaign",
-     *  description="Delete an existing Campaign",
-     *  @SWG\Parameter(
-     *      name="campaignId",
-     *      in="path",
-     *      description="The Campaign ID to Delete",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function delete(Request $request, Response $response, $id)
     {
@@ -1043,6 +761,15 @@ class Campaign extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(path: '/campaign/layout/assign/{campaignId}', operationId: 'campaignAssignLayout', summary: 'Assign Layout', description: 'Assign a Layout to a Campaign. Please note that as of v3.0.0 this API no longer accepts multiple layoutIds.', tags: ['campaign'])]
+    #[OA\Parameter(name: 'campaignId', in: 'path', description: 'The Campaign ID', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['layoutId'], properties: [
+        new OA\Property(property: 'layoutId', description: 'Layout ID to Assign: Please note that as of v3.0.0 this API no longer accepts multiple layoutIds.', type: 'integer'),
+        new OA\Property(property: 'daysOfWeek[]', description: 'Ad campaigns: restrict this to certain days of the week (iso week)', type: 'array', items: new OA\Items(type: 'integer')),
+        new OA\Property(property: 'dayPartId', description: 'Ad campaigns: restrict this to a day part', type: 'integer'),
+        new OA\Property(property: 'geoFence', description: 'Ad campaigns: restrict this to a geofence', type: 'string')
+    ])))]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Assigns a layout to a Campaign
      * @param Request $request
@@ -1055,53 +782,6 @@ class Campaign extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\DuplicateEntityException
-     * @SWG\Post(
-     *  path="/campaign/layout/assign/{campaignId}",
-     *  operationId="campaignAssignLayout",
-     *  tags={"campaign"},
-     *  summary="Assign Layout",
-     *  description="Assign a Layout to a Campaign. Please note that as of v3.0.0 this API no longer accepts multiple layoutIds.",
-     *  @SWG\Parameter(
-     *      name="campaignId",
-     *      in="path",
-     *      description="The Campaign ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      in="formData",
-     *      description="Layout ID to Assign: Please note that as of v3.0.0 this API no longer accepts multiple layoutIds.",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="daysOfWeek[]",
-     *      in="formData",
-     *      description="Ad campaigns: restrict this to certain days of the week (iso week)",
-     *      type="array",
-     *      @SWG\Items(type="integer"),
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="dayPartId",
-     *      in="formData",
-     *      description="Ad campaigns: restrict this to a day part",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="geoFence",
-     *      in="formData",
-     *      description="Ad campaigns: restrict this to a geofence",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function assignLayout(Request $request, Response $response, $id)
     {
@@ -1190,6 +870,13 @@ class Campaign extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(path: '/campaign/layout/remove/{campaignId}', operationId: 'campaignRemoveLayout', summary: 'Remove Layout', description: 'Remove a Layout from a Campaign.', tags: ['campaign'])]
+    #[OA\Parameter(name: 'campaignId', in: 'path', description: 'The Campaign ID', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(required: ['layoutId'], properties: [
+        new OA\Property(property: 'layoutId', description: 'Layout ID to remove', type: 'integer'),
+        new OA\Property(property: 'displayOrder', description: 'The display order. Omit to remove all occurences of the layout', type: 'integer')
+    ])))]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Remove a layout from a Campaign
      * @param Request $request
@@ -1197,38 +884,6 @@ class Campaign extends Base
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws \Xibo\Support\Exception\GeneralException
-     * @SWG\Delete(
-     *  path="/campaign/layout/remove/{campaignId}",
-     *  operationId="campaignAssignLayout",
-     *  tags={"campaign"},
-     *  summary="Remove Layout",
-     *  description="Remove a Layout from a Campaign.",
-     *  @SWG\Parameter(
-     *      name="campaignId",
-     *      in="path",
-     *      description="The Campaign ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      in="formData",
-     *      description="Layout ID to remove",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="displayOrder",
-     *      in="formData",
-     *      description="The display order. Omit to remove all occurences of the layout",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function removeLayout(Request $request, Response $response, $id)
     {
@@ -1423,35 +1078,14 @@ class Campaign extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(path: '/campaign/{id}/selectfolder', operationId: 'campaignSelectFolder', summary: 'Campaign Select folder', description: 'Select Folder for Campaign, can also be used with Layout specific Campaign ID', tags: ['campaign'])]
+    #[OA\Parameter(name: 'campaignId', in: 'path', description: 'The Campaign ID or Layout specific Campaign ID', required: true, schema: new OA\Schema(type: 'integer'))]
+    #[OA\RequestBody(required: true, content: new OA\MediaType(mediaType: 'application/x-www-form-urlencoded', schema: new OA\Schema(properties: [
+        new OA\Property(property: 'folderId', description: 'Folder ID to which this object should be assigned to', type: 'integer')
+    ])))]
+    #[OA\Response(response: 200, description: 'successful operation', content: new OA\JsonContent(ref: '#/components/schemas/Campaign'))]
     /**
      * Select Folder
-     *
-     * @SWG\Put(
-     *  path="/campaign/{id}/selectfolder",
-     *  operationId="campaignSelectFolder",
-     *  tags={"campaign"},
-     *  summary="Campaign Select folder",
-     *  description="Select Folder for Campaign, can also be used with Layout specific Campaign ID",
-     *  @SWG\Parameter(
-     *      name="campaignId",
-     *      in="path",
-     *      description="The Campaign ID or Layout specific Campaign ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="formData",
-     *      description="Folder ID to which this object should be assigned to",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Campaign")
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response

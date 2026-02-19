@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -24,6 +24,7 @@
 namespace Xibo\Entity;
 
 
+use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
@@ -36,111 +37,110 @@ use Xibo\Support\Exception\NotFoundException;
 /**
  * Class UserGroup
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema(schema: 'UserGroup')]
 class UserGroup
 {
     use EntityTrait;
 
+    #[OA\Property(description: 'The Group ID')]
     /**
-     * @SWG\Property(description="The Group ID")
      * @var int
      */
     public $groupId;
 
+    #[OA\Property(description: 'The group name')]
     /**
-     * @SWG\Property(description="The group name")
      * @var string
      */
     public $group;
 
+    #[OA\Property(description: 'A flag indicating whether this is a user specific group or not')]
     /**
-     * @SWG\Property(description="A flag indicating whether this is a user specific group or not")
      * @var int
      */
     public $isUserSpecific = 0;
 
+    #[OA\Property(description: 'A flag indicating the special everyone group')]
     /**
-     * @SWG\Property(description="A flag indicating the special everyone group")
      * @var int
      */
     public $isEveryone = 0;
 
+    #[OA\Property(description: 'Description of this User Group')]
     /**
-     * @SWG\Property(description="Description of this User Group")
      * @var string
      */
     public $description;
 
+    #[OA\Property(description: 'This users library quota in bytes. 0 = unlimited')]
     /**
-     * @SWG\Property(description="This users library quota in bytes. 0 = unlimited")
      * @var int
      */
     public $libraryQuota;
 
+    #[OA\Property(description: 'Does this Group receive system notifications.')]
     /**
-     * @SWG\Property(description="Does this Group receive system notifications.")
      * @var int
      */
     public $isSystemNotification = 0;
 
+    #[OA\Property(description: 'Does this Group receive display notifications.')]
     /**
-     * @SWG\Property(description="Does this Group receive display notifications.")
      * @var int
      */
     public $isDisplayNotification = 0;
 
+    #[OA\Property(description: 'Does this Group receive DataSet notifications.')]
     /**
-     * @SWG\Property(description="Does this Group receive DataSet notifications.")
      * @var int
      */
     public $isDataSetNotification = 0;
 
+    #[OA\Property(description: 'Does this Group receive Layout notifications.')]
     /**
-     * @SWG\Property(description="Does this Group receive Layout notifications.")
      * @var int
      */
     public $isLayoutNotification = 0;
 
+    #[OA\Property(description: 'Does this Group receive Library notifications.')]
     /**
-     * @SWG\Property(description="Does this Group receive Library notifications.")
      * @var int
      */
     public $isLibraryNotification = 0;
 
+    #[OA\Property(description: 'Does this Group receive Report notifications.')]
     /**
-     * @SWG\Property(description="Does this Group receive Report notifications.")
      * @var int
      */
     public $isReportNotification = 0;
 
+    #[OA\Property(description: 'Does this Group receive Schedule notifications.')]
     /**
-     * @SWG\Property(description="Does this Group receive Schedule notifications.")
      * @var int
      */
     public $isScheduleNotification = 0;
 
+    #[OA\Property(description: 'Does this Group receive Custom notifications.')]
     /**
-     * @SWG\Property(description="Does this Group receive Custom notifications.")
      * @var int
      */
     public $isCustomNotification = 0;
 
+    #[OA\Property(description: 'Is this Group shown in the list of choices when onboarding a new user')]
     /**
-     * @SWG\Property(description="Is this Group shown in the list of choices when onboarding a new user")
      * @var int
      */
     public $isShownForAddUser = 0;
 
+    #[OA\Property(description: 'Default Home page for new users')]
     /**
-     * @SWG\Property(description="Default Home page for new users")
      * @var string
      */
     public $defaultHomepageId;
 
+    #[OA\Property(description: 'Features this User Group has direct access to', type: 'array', items: new OA\Items(type: 'string'))]
     /**
-     * @SWG\Property(description="Features this User Group has direct access to", @SWG\Items(type="string"))
      * @var array
      */
     public $features = [];
@@ -435,13 +435,13 @@ class UserGroup
                  :description, 
                  :libraryQuota, 
                  :isSystemNotification, 
-                 :isDisplayNotification,
-                 :isDataSetNotification,
-                 :isLayoutNotification,
-                 :isLibraryNotification,
-                 :isReportNotification,
-                 :isScheduleNotification,
-                 :isCustomNotification,
+                 :isDisplayNotification, 
+                 :isDataSetNotification, 
+                 :isLayoutNotification, 
+                 :isLibraryNotification, 
+                 :isReportNotification, 
+                 :isScheduleNotification, 
+                 :isCustomNotification, 
                  :isShownForAddUser,
                  :defaultHomepageId
               )

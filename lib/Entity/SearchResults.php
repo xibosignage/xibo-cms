@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -21,11 +21,12 @@
  */
 namespace Xibo\Entity;
 
-/**
- * @SWG\Definition()
- */
+use OpenApi\Attributes as OA;
+
+#[OA\Schema(schema: 'SearchResults')]
 class SearchResults implements \JsonSerializable
 {
+    #[OA\Property(type: 'array', items: new OA\Items(ref: '#/components/schemas/SearchResult'))]
     public $data = [];
 
     public function jsonSerialize(): array

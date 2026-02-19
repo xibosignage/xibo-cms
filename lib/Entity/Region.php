@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -24,6 +24,7 @@ namespace Xibo\Entity;
 
 
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
 use Xibo\Factory\ActionFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\PermissionFactory;
@@ -40,101 +41,98 @@ use Xibo\Support\Exception\NotFoundException;
 /**
  * Class Region
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema(schema: 'Region')]
 class Region implements \JsonSerializable
 {
     use EntityTrait;
 
+    #[OA\Property(description: 'The ID of this region')]
     /**
-     * @SWG\Property(description="The ID of this region")
      * @var int
      */
     public $regionId;
 
+    #[OA\Property(description: 'The Layout ID this region belongs to')]
     /**
-     * @SWG\Property(description="The Layout ID this region belongs to")
      * @var int
      */
     public $layoutId;
 
+    #[OA\Property(description: 'The userId of the User that owns this Region')]
     /**
-     * @SWG\Property(description="The userId of the User that owns this Region")
      * @var int
      */
     public $ownerId;
 
+    #[OA\Property(description: 'Region Type, zone, playlist, frame or canvas')]
     /**
-     * @SWG\Property(description="Region Type, zone, playlist, frame or canvas")
      * @var string
      */
     public $type;
 
+    #[OA\Property(description: 'The name of this Region')]
     /**
-     * @SWG\Property(description="The name of this Region")
      * @var string
      */
     public $name;
 
+    #[OA\Property(description: 'Width of the region')]
     /**
-     * @SWG\Property(description="Width of the region")
      * @var double
      */
     public $width;
 
+    #[OA\Property(description: 'Height of the Region')]
     /**
-     * @SWG\Property(description="Height of the Region")
      * @var double
      */
     public $height;
 
+    #[OA\Property(description: 'The top coordinate of the Region')]
     /**
-     * @SWG\Property(description="The top coordinate of the Region")
      * @var double
      */
     public $top;
 
+    #[OA\Property(description: 'The left coordinate of the Region')]
     /**
-     * @SWG\Property(description="The left coordinate of the Region")
      * @var double
      */
     public $left;
 
+    #[OA\Property(description: 'The z-index of the Region to control Layering')]
     /**
-     * @SWG\Property(description="The z-index of the Region to control Layering")
      * @var int
      */
     public $zIndex;
 
+    #[OA\Property(description: 'The syncKey of this Region')]
     /**
-     * @SWG\Property(description="The syncKey of this Region")
      * @var string
      */
     public $syncKey;
 
+    #[OA\Property(description: 'An array of Region Options', type: 'array', items: new OA\Items(ref: '#/components/schemas/RegionOption'))]
     /**
-     * @SWG\Property(description="An array of Region Options")
      * @var RegionOption[]
      */
     public $regionOptions = [];
 
+    #[OA\Property(description: 'An array of Permissions', type: 'array', items: new OA\Items(ref: '#/components/schemas/Permission'))]
     /**
-     * @SWG\Property(description="An array of Permissions")
      * @var Permission[]
      */
     public $permissions = [];
 
+    #[OA\Property(description: 'A read-only estimate of this Regions\'s total duration in seconds. This is valid when the parent layout status is 1 or 2.')]
     /**
      * @var int
-     * @SWG\Property(
-     *  description="A read-only estimate of this Regions's total duration in seconds. This is valid when the parent layout status is 1 or 2."
-     * )
      */
     public $duration;
 
+    #[OA\Property(description: 'Flag, whether this region is used as an interactive drawer attached to a layout.')]
     /**
-     * @SWG\Property(description="Flag, whether this region is used as an interactive drawer attached to a layout.")
      * @var int
      */
     public $isDrawer = 0;
@@ -148,11 +146,9 @@ class Region implements \JsonSerializable
      */
     public $tempId = null;
 
+    #[OA\Property(description: 'This Regions Playlist - null if getPlaylist() has not been called.', ref: '#/components/schemas/Playlist')]
     /**
      * @var Playlist|null
-     * @SWG\Property(
-     *   description="This Regions Playlist - null if getPlaylist() has not been called."
-     * )
      */
     public $regionPlaylist = null;
 
