@@ -510,6 +510,20 @@ class Library extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="modifiedDateFrom",
+     *      in="query",
+     *      description="Start date for filtering media by modified date",
+     *      type="date",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="modifiedDateTo",
+     *      in="query",
+     *      description="End date for filtering media by modified date",
+     *      type="date",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="sortBy",
      *      in="query",
      *      description="Specifies which field the results are sorted by. Used together with sortDir",
@@ -2787,6 +2801,8 @@ class Library extends Base
             'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
             'unreleasedOnly' => $parsedQueryParams->getCheckbox('unreleasedOnly'),
             'unusedOnly' => $parsedQueryParams->getCheckbox('unusedOnly'),
+            'modifiedDateFrom' => $parsedQueryParams->getDate('modifiedDateFrom'),
+            'modifiedDateTo' => $parsedQueryParams->getDate('modifiedDateTo'),
         ], $parsedQueryParams));
     }
 
