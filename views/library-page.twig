@@ -406,7 +406,6 @@
             var validExtensions = mediaData.validExtensions;
             var folderId = mediaData.folderId;
             var mediaName = mediaData.mediaName;
-            var mediaFileName = mediaData.mediaFileName;
 
             // Append
             var replaceButton = $('<button class="btn btn-warning">{% trans "Replace" %}</button>');
@@ -416,7 +415,7 @@
                 // Open the upload dialog with our options.
                 openUploadForm({
                     url: "{{ url_for("library.add") }}",
-                    title: "{% trans "Upload media to replace " %}" + "\"<strong>" + mediaName + "</strong>\" [<i>" + mediaFileName + "</i>]",
+                    title: "{% trans "Upload media to replace " %}" + "\"<strong>" + mediaName + "</strong>\"",
                     buttons: {
                         main: {
                             label: "{% trans "Done" %}",
