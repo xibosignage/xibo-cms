@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -222,6 +222,8 @@ class Soap7 extends Soap6
                                     'M',
                                     intval($row['mediaId']),
                                     $row['storedAs'],
+                                    null,
+                                    $this->display->isPwa(),
                                 ),
                             ];
                         }
