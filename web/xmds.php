@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -246,6 +246,7 @@ if (isset($_GET['file'])) {
                         $replacementFile->realId,
                         $replacementFile->path,
                         $file->fileType === 'fontCss' ? 'font' : 'asset',
+                        true,
                     );
                     $cssFile = str_replace(
                         $match,

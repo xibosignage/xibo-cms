@@ -259,7 +259,7 @@ class Soap7 extends Soap6
             throw new \SoapFault('Receiver', 'Requested an invalid file.');
         } catch (\Exception $e) {
             if ($e instanceof \SoapFault) {
-                return $e;
+                throw $e;
             }
 
             $this->getLog()->error('Unknown error during getData. E = ' . $e->getMessage());
