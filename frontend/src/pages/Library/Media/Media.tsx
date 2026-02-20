@@ -70,7 +70,7 @@ import { useOwner } from '@/hooks/useOwner';
 import EditMediaModal from '@/pages/Library/Media/components/EditMediaModal';
 import { useMediaFilterOptions } from '@/pages/Library/Media/hooks/useMediaFilterOptions';
 import { fetchContextButtons, selectFolder } from '@/services/folderApi';
-import { cloneMedia, deleteMedia, downloadMedia } from '@/services/mediaApi';
+import { cloneMedia, deleteMedia, downloadMedia, downloadMediaAsZip } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
 
 export default function Media() {
@@ -306,6 +306,7 @@ export default function Media() {
   const handleDownload = async (row: Media) => {
     try {
       await downloadMedia(row.mediaId, row.storedAs);
+      notify.success(t('Download started!'));
     } catch (error) {
       console.error('Download failed', error);
     }
@@ -462,26 +463,77 @@ export default function Media() {
     t,
     onDelete: () => {
       const allItems = getAllSelectedItems();
+
+      if (allItems.length === 0) {
+        return;
+      }
+
       setItemsToDelete(allItems);
       setDeleteError(null);
       openModal('delete');
     },
     onMove: () => {
       const allItems = getAllSelectedItems();
+
+      if (allItems.length === 0) {
+        return;
+      }
+
       setItemsToMove(allItems);
       openModal('move');
     },
     onShare: () => {
       const allItems = getAllSelectedItems();
       const ids = allItems.map((i) => i.mediaId);
+
+      if (ids.length === 0) {
+        return;
+      }
+
       setShareEntityIds(ids);
       openModal('share');
     },
-    onDownload: () => {
+    onDownload: async () => {
       const allItems = getAllSelectedItems();
-      // TODO: Download multiple items
-      console.log('Download multiple items');
-      console.log(allItems);
+
+      if (allItems.length === 0) {
+        return;
+      }
+
+      try {
+        if (allItems.length === 1) {
+          // If 1 item, normal download
+          const item = allItems[0];
+
+          if (item) {
+            await downloadMedia(item.mediaId, item.fileName);
+            notify.success(t('Download started!'));
+          }
+        } else {
+          notify.info(
+            t('Zipping {{count}} files. You can continue using the app.', {
+              count: allItems.length,
+            }),
+          );
+
+          // Multiple items download
+          const itemsToZip = allItems.map((item) => {
+            return {
+              mediaId: item.mediaId,
+              fileName: item.fileName || item.name,
+            };
+          });
+
+          setRowSelection({});
+
+          await downloadMediaAsZip(itemsToZip, 'media_page_export.zip');
+
+          notify.success(t('ZIP file generated and download started!'));
+        }
+      } catch (error) {
+        console.error('Failed to package media files:', error);
+        notify.error(t('An error occurred while zipping the files.'));
+      }
     },
   });
 
