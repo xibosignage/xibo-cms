@@ -628,7 +628,7 @@ export default function Media() {
           </div>
         )}
 
-        <div className="flex-1 min-h-0 flex flex-col">
+        <div className="min-h-0 flex flex-col">
           {viewMode === 'table' ? (
             <DataTable
               columns={columns}

@@ -21,13 +21,14 @@
 
 import type { LucideIcon } from 'lucide-react';
 import { MoreVertical } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { useState, useRef, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
 import { useClickOutside } from '@/hooks/useClickOutside';
 import { useCloseOnScroll } from '@/hooks/useCloseOnScroll';
+import { getDropdownPosition } from '@/utils/getDropdownPosition';
 
 export interface DataTableRowAction<TData> {
   label?: string;
@@ -42,8 +43,6 @@ interface DataTableRowActionsProps<TData> {
   row: TData;
   actions: DataTableRowAction<TData>[];
 }
-
-const DROPDOWN_WIDTH = 180;
 
 export default function DataTableRowActions<TData>({
   row,
@@ -69,20 +68,24 @@ export default function DataTableRowActions<TData>({
 
   const toggleOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
-
-    if (!open && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setCoords({
-        top: rect.bottom + 2,
-        left: rect.right - DROPDOWN_WIDTH,
-      });
-    }
-    setOpen(!open);
+    setOpen((prev) => !prev);
   };
 
-  if (!actions || actions.length === 0) {
-    return null;
-  }
+  useLayoutEffect(() => {
+    if (!open || !buttonRef.current || !dropdownRef.current) return;
+
+    const rect = buttonRef.current.getBoundingClientRect();
+    const dropdownHeight = dropdownRef.current.offsetHeight;
+    const dropdownWidth = dropdownRef.current.offsetWidth;
+
+    const { top, left } = getDropdownPosition({
+      triggerRect: rect,
+      dropdownHeight,
+      dropdownWidth,
+    });
+
+    setCoords({ top, left });
+  }, [open]);
 
   return (
     <div className="relative inline-block text-left">

@@ -126,7 +126,7 @@ export function DataGrid<TData>({
         </div>
       </div>
 
-      <div className="flex flex-col bg-white overflow-hidden relative flex-1 min-h-0">
+      <div className="flex flex-col bg-white overflow-hidden relative flex-1 min-h-0 mb-2">
         {showLoading && (
           <div className="absolute inset-0 bg-white/60 z-50 flex items-center justify-center backdrop-blur-sm">
             <div className="flex flex-col items-center">
