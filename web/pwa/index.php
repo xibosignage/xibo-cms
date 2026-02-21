@@ -109,6 +109,7 @@ $app->post('/log', ['\Xibo\Controller\Pwa', 'submitLog'])->setName('pwa.submitLo
 $app->post('/stats', ['\Xibo\Controller\Pwa', 'submitStats'])->setName('pwa.submitStats');
 $app->post('/screenshot', ['\Xibo\Controller\Pwa', 'submitScreenshot'])->setName('pwa.submitScreenshot');
 $app->post('/mediaInventory', ['\Xibo\Controller\Pwa', 'mediaInventory'])->setName('pwa.mediaInventory');
+$app->post('/fault', ['\Xibo\Controller\Pwa', 'reportFaults'])->setName('pwa.reportFaults');
 
 // Run App
 try {

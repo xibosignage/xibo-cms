@@ -489,6 +489,36 @@ class Pwa extends Base
         }
     }
 
+    /**
+     * Report player faults to CMS for dashboard alerts.
+     *
+     * Delegates to Soap6::reportFaults() which authenticates, decodes the
+     * JSON fault array, and populates the player_faults table.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return Response JSON success acknowledgement
+     * @throws GeneralException
+     */
+    public function reportFaults(Request $request, Response $response): Response
+    {
+        $params = $this->getSanitizer($request->getParsedBody());
+
+        try {
+            $display = $this->authenticateDisplay($request);
+            $soap = $this->getSoap($this->getVersion($request));
+            $soap->reportFaults(
+                $params->getString('serverKey'),
+                $display->license,
+                $params->getString('fault'),
+            );
+
+            return $this->jsonSuccess($response);
+        } catch (\SoapFault $e) {
+            throw new GeneralException($e->getMessage());
+        }
+    }
+
     // ─── Private helpers ────────────────────────────────────────────
 
     /**
