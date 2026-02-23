@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import { vi, beforeEach } from 'vitest';
@@ -87,7 +87,9 @@ describe('Media page', () => {
   });
 
   test('verifies initial UI elements and successful load', async () => {
-    renderMediaPage(); 
+    await act(async () => {
+      renderMediaPage(); 
+    }); 
 
     // Covers: Verify default view mode is Table View.
     expect(screen.getByTitle('Table View')).toBeInTheDocument();
@@ -126,7 +128,7 @@ describe('Media page', () => {
     expect(document.querySelector('.no-results')).toBeInTheDocument(); 
   });
 
-  test('verifies loading state while fetching data', () => {
+  test('verifies loading state while fetching data', async () => {
     // Override mock to simulate loading state
     (useMediaData as any).mockReturnValue({
       data: undefined,
@@ -135,13 +137,15 @@ describe('Media page', () => {
       error: null,
     });
     
-    renderMediaPage();
+    await act(async () => {
+      renderMediaPage(); 
+    });
 
     // Covers: Verify loading state/spinner while fetching data.
     expect(document.querySelector('.animate-spin')).toBeInTheDocument();
   });
 
-  test('verifies error message when API fails', () => {
+  test('verifies error message when API fails', async () => {
     // Override mock to simulate error state
     (useMediaData as any).mockReturnValue({
       data: undefined,
@@ -150,7 +154,9 @@ describe('Media page', () => {
       error: new Error('API connection failed'),
     });
     
-    renderMediaPage();
+    await act(async () => {
+      renderMediaPage(); 
+    });
 
     // Covers: Verify error message when API fails.
     const alert = screen.getByRole('alert');
@@ -160,7 +166,9 @@ describe('Media page', () => {
 
   test('opens Add Media modal and simulates file upload', async () => {
     const user = userEvent.setup();
-    renderMediaPage();
+    await act(async () => {
+      renderMediaPage(); 
+    });
 
     const addMediaButton = screen.getByRole('button', { name: 'Add Media' });
     expect(addMediaButton).toBeInTheDocument();
