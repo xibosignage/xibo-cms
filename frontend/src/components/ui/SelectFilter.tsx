@@ -138,7 +138,7 @@ export default function SelectFilter({
         className={twMerge(
           'absolute z-50 mt-1 min-w-full transition-all duration-200 ease-linear flex bg-xibo-white overflow-hidden rounded-lg border border-gray-200 shadow-lg',
           open
-            ? 'max-h-[400px] opacity-100 top-[68px] right-0'
+            ? 'max-h-[700px] opacity-100 top-[68px] right-0'
             : 'max-h-0 opacity-0 top-[60px] pointer-events-none',
         )}
       >
@@ -190,15 +190,18 @@ export default function SelectFilter({
           className={twMerge(
             'transition-all duration-1000 ease-out overflow-hidden',
             openDatePicker
-              ? 'opacity-100 translate-y-0 max-w-[500px] max-h-[500px]'
-              : 'opacity-0 -translate-y-2 max-w-0 max-h-0 pointer-events-none',
+              ? 'opacity-100 max-w-[380px] max-h-[500px]'
+              : 'opacity-0 max-w-0 max-h-0 pointer-events-none',
           )}
         >
           <div className="pb-4 box-border">
             <DatePicker
+              mode="range"
               onCancel={() => setOpenDatePicker(false)}
-              onApply={(range) => {
-                handleDateApply(range);
+              onApply={(value) => {
+                if (value.type === 'range') {
+                  handleDateApply(value);
+                }
                 setOpenDatePicker(false);
                 setOpen(false);
               }}

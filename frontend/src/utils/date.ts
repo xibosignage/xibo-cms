@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { ExpiryValue } from '@/components/ui/forms/ExpiryDateSelect';
+export type ExpiryValue = { type: 'preset'; value: string } | { type: 'datePicked'; date: Date };
 
 export function formatDateTime(date: Date) {
   return new Intl.DateTimeFormat('sv-SE', {
@@ -71,7 +71,7 @@ export function expiryToDateTime(expiry?: ExpiryValue): string | undefined {
         return undefined;
     }
   } else {
-    date = expiry.to;
+    date = expiry.date;
   }
   return formatDateTime(date);
 }
@@ -86,9 +86,8 @@ export function expiresToExpiryValue(expires?: string | number): ExpiryValue | u
   const date = new Date(timestamp * 1000);
 
   return {
-    type: 'range',
-    from: date,
-    to: date,
+    type: 'datePicked',
+    date: date,
   };
 }
 

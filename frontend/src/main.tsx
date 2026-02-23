@@ -35,6 +35,7 @@ import '@fontsource/inter/600.css';
 import '@fontsource/inter/700.css';
 import '@/styles/global.css';
 import '@/styles/print.css';
+import '@/styles/date-picker.css';
 import '@/lib/i18n';
 
 const queryClient = new QueryClient({
