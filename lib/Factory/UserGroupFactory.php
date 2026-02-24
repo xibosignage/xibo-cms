@@ -999,24 +999,28 @@ class UserGroupFactory extends BaseFactory
             $this->homepages = [
                 'statusdashboard.view' => new Homepage(
                     'statusdashboard.view',
+                    '/statusdashboard',
                     'dashboard.status',
                     __('Status Dashboard'),
                     __('Status Dashboard showing key platform metrics, usually for an administrator.')
                 ),
                 'icondashboard.view' => new Homepage(
                     'icondashboard.view',
+                    '/icondashboard',
                     '',
                     __('Icon Dashboard'),
                     __('Icon Dashboard showing an easy access set of feature icons the user can access.')
                 ),
                 'mediamanager.view' => new Homepage(
                     'mediamanager.view',
+                    '/mediamanager',
                     'dashboard.media.manager',
                     __('Media Manager Dashboard'),
                     __('Media Manager Dashboard showing all Widgets the user has access to modify.')
                 ),
                 'playlistdashboard.view' => new Homepage(
                     'playlistdashboard.view',
+                    '/playlistdashboard',
                     'dashboard.playlist',
                     __('Playlist Dashboard'),
                     __('Playlist Dashboard showing all Playlists configured in Layouts the user has access to modify.')
@@ -1048,23 +1052,32 @@ class UserGroupFactory extends BaseFactory
 
     /**
      * @param string $homepage
+     * @param string $url
      * @param string $title
      * @param string $description
      * @param string $feature
      * @return $this
      */
-    public function registerCustomHomepage(string $homepage, string $title, string $description, string $feature)
+    public function registerCustomHomepage(
+        string $homepage,
+        string $url,
+        string $title,
+        string $description,
+        string $feature
+    )
     {
         $this->getHomepages();
 
         if (!array_key_exists($homepage, $this->homepages)) {
             $this->homepages[$homepage] = new Homepage(
                 $homepage,
+                $url,
                 $feature,
                 $title,
                 $description
             );
         }
+
         return $this;
     }
 }

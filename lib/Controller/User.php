@@ -235,8 +235,11 @@ class User extends Base
         ];
         $settings['accountId'] = defined('ACCOUNT_ID') ? constant('ACCOUNT_ID') : null;
 
+        $homePageUrl = $this->userGroupFactory->getHomepageByName($this->getUser()->homePageId)->url;
+
         // TODO: output some settings
         return $response->withJson(array_merge($this->getUser()->toArray(), [
+            'homePageUrl' => $homePageUrl,
             'settings' => $settings,
             'features' => $this->getUserFeatures()
         ]));

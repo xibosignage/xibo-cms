@@ -31,6 +31,7 @@ class Homepage implements \JsonSerializable
     use EntityTrait;
 
     public $homepage;
+    public $url;
     public $feature;
     public $title;
     public $description;
@@ -38,13 +39,15 @@ class Homepage implements \JsonSerializable
     /**
      * Homepage constructor.
      * @param $homepage
+     * @param $url
      * @param $feature
      * @param $title
      * @param $description
      */
-    public function __construct($homepage, $feature, $title, $description)
+    public function __construct($homepage, $url, $feature, $title, $description)
     {
         $this->homepage = $homepage;
+        $this->url = $url;
         $this->feature = $feature;
         $this->title = $title;
         $this->description = $description;
