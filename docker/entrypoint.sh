@@ -321,7 +321,8 @@ then
         # Replace the web alias without changing the chromeos alias
         echo "Setting up CMS alias"
         /bin/sed -i \
-          "s|Alias.*/var/www/cms/web$|Alias $CMS_ALIAS /var/www/cms/web|" /etc/apache2/sites-enabled/000-default.conf
+          "/Alias.*\/chromeos/! s|.*Alias.*$|Alias $CMS_ALIAS /var/www/cms/web|" \
+          /etc/apache2/sites-enabled/000-default.conf
 
         echo "Settings up htaccess"
         /bin/cp /tmp/.htaccess /var/www/cms/web/.htaccess
