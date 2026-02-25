@@ -28,16 +28,13 @@
  * 3. Check if sidebar is closed if hamburger icon is clicked
  * 4. Check if no main menus are present when sidebar is closed
  */
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { describe, it, expect, vi } from 'vitest';
 
 import SidebarMenu from '../SideBar';
 
 import { UserProvider } from '@/context/UserContext';
-import type { User } from '@/types/user';
-import { UserType } from '@/types/user';
-import { hasFeature } from '@/utils/permissions';
 
 // --- DEFINE DATA (Just a regular variable now) ---
 const mockSettings = {
@@ -91,21 +88,18 @@ const superAdminUser = {
 const mockToggleSidebar = vi.fn();
 
 describe('Sidebar Menu (The Navigation Bar)', () => {
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('should show the correct menu names when open', () => {
     render(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       <UserProvider initialUser={superAdminUser as any}>
         <MemoryRouter>
-        <SidebarMenu
-          isCollapsed={false}
-          toggleSidebar={mockToggleSidebar}
-        />
-      </MemoryRouter>
-      </UserProvider>
+          <SidebarMenu isCollapsed={false} toggleSidebar={mockToggleSidebar} />
+        </MemoryRouter>
+      </UserProvider>,
     );
 
     const expectedMenuItems = [
@@ -118,7 +112,7 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
       'Reporting',
       'Advanced',
       'Developer',
-      'Settings'
+      'Settings',
     ];
 
     expectedMenuItems.forEach((name) => {
@@ -129,15 +123,12 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
 
   it('should expand the main menus and display the submenus and its corresponding links', () => {
     render(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       <UserProvider initialUser={superAdminUser as any}>
         <MemoryRouter>
-        <SidebarMenu
-          isCollapsed={false}
-          toggleSidebar={mockToggleSidebar}
-        />
-      </MemoryRouter>
-      </UserProvider>
-      
+          <SidebarMenu isCollapsed={false} toggleSidebar={mockToggleSidebar} />
+        </MemoryRouter>
+      </UserProvider>,
     );
 
     const menuStructure = [
@@ -145,8 +136,8 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
         main: 'Schedule',
         subs: [
           { name: 'Event', href: '/schedule/view' },
-          { name: 'Dayparting', href: '/dayparting/view' }
-        ]
+          { name: 'Dayparting', href: '/dayparting/view' },
+        ],
       },
       {
         main: 'Design',
@@ -154,16 +145,16 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
           { name: 'Campaign', href: '/campaign/view' },
           { name: 'Layouts', href: '/layout/view' },
           { name: 'Templates', href: '/template/view' },
-          { name: 'Resolutions', href: '/resolution/view' }
-        ]
+          { name: 'Resolutions', href: '/resolution/view' },
+        ],
       },
       {
         main: 'Library',
         subs: [
           { name: 'Playlists', href: '/playlist/view' },
           { name: 'Media', href: '/library/media' },
-          { name: 'Datasets', href: '/dataset/view' }
-        ]
+          { name: 'Datasets', href: '/dataset/view' },
+        ],
       },
       {
         main: 'Displays',
@@ -171,8 +162,8 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
           { name: 'Add Displays', href: '/display/view' },
           { name: 'Display Groups', href: '/displaygroup/view' },
           { name: 'Sync Groups', href: '/syncgroup/view' },
-          { name: 'Commands', href: '/command/view' }
-        ]
+          { name: 'Commands', href: '/command/view' },
+        ],
       },
       {
         main: 'Administration',
@@ -185,33 +176,31 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
           { name: 'Tasks', href: '/task/view' },
           { name: 'Tags', href: '/tag/view' },
           { name: 'Folders', href: '/folders/view' },
-          { name: 'Fonts', href: '/fonts/view' }
-        ]
+          { name: 'Fonts', href: '/fonts/view' },
+        ],
       },
       {
         main: 'Reporting',
         subs: [
           { name: 'All Reports', href: '/report/view' },
           { name: 'Report Schedules', href: '/report/reportschedule/view' },
-          { name: 'Saved Reports', href: '/report/savedreport/view' }
-        ]
+          { name: 'Saved Reports', href: '/report/savedreport/view' },
+        ],
       },
       {
         main: 'Advanced',
         subs: [
           // Note: "Log" usually points to savedreport based on your earlier HTML dump
-          { name: 'Log', href: '/log/view' }, 
+          { name: 'Log', href: '/log/view' },
           { name: 'Sessions', href: '/sessions/view' },
           { name: 'Audit Trail', href: '/audit/view' },
-          { name: 'Report Fault', href: '/fault/view' }
-        ]
+          { name: 'Report Fault', href: '/fault/view' },
+        ],
       },
       {
-        main: 'Developer', 
-        subs: [
-          {name: 'Developer', href: '/developer/template/view'}
-        ]
-      }
+        main: 'Developer',
+        subs: [{ name: 'Developer', href: '/developer/template/view' }],
+      },
     ];
 
     menuStructure.forEach((group) => {
@@ -219,30 +208,30 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
       fireEvent.click(mainLabels[0]!);
 
       group.subs.forEach((subItem) => {
-        const link = screen.getByRole('link', { name: new RegExp(subItem.name, "i") });
-        
+        const link = screen.getByRole('link', { name: new RegExp(subItem.name, 'i') });
+
         expect(link).toHaveAttribute('href', subItem.href);
         expect(link).toBeVisible();
       });
     });
 
     const settingsLinks = screen.getAllByRole('link', { name: 'Settings' });
-    
-    expect(settingsLinks.find(l => l.getAttribute('href') === '/displayprofile/view')).toBeVisible();
-    
-    expect(settingsLinks.find(l => l.getAttribute('href') === '/admin/view')).toBeVisible();
+
+    expect(
+      settingsLinks.find((l) => l.getAttribute('href') === '/displayprofile/view'),
+    ).toBeVisible();
+
+    expect(settingsLinks.find((l) => l.getAttribute('href') === '/admin/view')).toBeVisible();
   });
 
   it('should try to close when the hamburger button is clicked', () => {
     render(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       <UserProvider initialUser={superAdminUser as any}>
         <MemoryRouter>
-        <SidebarMenu
-          isCollapsed={false}
-          toggleSidebar={mockToggleSidebar}
-        />
-      </MemoryRouter>
-      </UserProvider>
+          <SidebarMenu isCollapsed={false} toggleSidebar={mockToggleSidebar} />
+        </MemoryRouter>
+      </UserProvider>,
     );
 
     const buttons = screen.getAllByRole('button');
@@ -255,14 +244,12 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
 
   it('should hide the text labels when collapsed', () => {
     render(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       <UserProvider initialUser={superAdminUser as any}>
         <MemoryRouter>
-        <SidebarMenu 
-          isCollapsed={true} 
-          toggleSidebar={mockToggleSidebar} 
-        />
-      </MemoryRouter>
-      </UserProvider>
+          <SidebarMenu isCollapsed={true} toggleSidebar={mockToggleSidebar} />
+        </MemoryRouter>
+      </UserProvider>,
     );
 
     const mainLabel = screen.queryByText((content, element) => {

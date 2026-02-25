@@ -515,6 +515,20 @@ class Library extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
+        name: 'modifiedDateFrom',
+        description: 'Start date for filtering media by modified date',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'date')
+    )]
+    #[OA\Parameter(
+        name: 'modifiedDateTo',
+        description: 'End date for filtering media by modified date',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'date')
+    )]
+    #[OA\Parameter(
         name: 'sortBy',
         description: 'Specifies which field the results are sorted by. Used together with sortDir',
         in: 'query',
@@ -2788,6 +2802,8 @@ class Library extends Base
             'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
             'unreleasedOnly' => $parsedQueryParams->getCheckbox('unreleasedOnly'),
             'unusedOnly' => $parsedQueryParams->getCheckbox('unusedOnly'),
+            'modifiedDateFrom' => $parsedQueryParams->getDate('modifiedDateFrom'),
+            'modifiedDateTo' => $parsedQueryParams->getDate('modifiedDateTo'),
         ], $parsedQueryParams));
     }
 

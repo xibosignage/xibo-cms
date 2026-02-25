@@ -145,11 +145,7 @@ function renderSidebar({
   return render(
     <UserProvider initialUser={user}>
       <MemoryRouter initialEntries={initialEntries}>
-        <SidebarMenu
-          isCollapsed={false}
-          toggleSidebar={vi.fn()}
-          closeMobileDrawer={vi.fn()}
-        />
+        <SidebarMenu isCollapsed={false} toggleSidebar={vi.fn()} closeMobileDrawer={vi.fn()} />
       </MemoryRouter>
     </UserProvider>,
   );
@@ -188,8 +184,15 @@ describe('SidebarMenu — Permissions', () => {
       renderSidebar({ user: superAdminUser });
 
       const expectedLabels = [
-        'Dashboard', 'Schedule', 'Design', 'Library', 'Displays',
-        'Administration', 'Reporting', 'Advanced', 'Developer',
+        'Dashboard',
+        'Schedule',
+        'Design',
+        'Library',
+        'Displays',
+        'Administration',
+        'Reporting',
+        'Advanced',
+        'Developer',
       ];
 
       for (const label of expectedLabels) {
@@ -207,7 +210,14 @@ describe('SidebarMenu — Permissions', () => {
 
       renderSidebar({ user: groupAdminUser });
 
-      const shouldSee = ['Dashboard', 'Schedule', 'Design', 'Library', 'Displays', 'Administration'];
+      const shouldSee = [
+        'Dashboard',
+        'Schedule',
+        'Design',
+        'Library',
+        'Displays',
+        'Administration',
+      ];
       const shouldNotSee = ['Reporting', 'Advanced', 'Developer'];
 
       console.log('\n  Should SEE:');
@@ -220,7 +230,9 @@ describe('SidebarMenu — Permissions', () => {
       console.log('\n  Should NOT see:');
       for (const label of shouldNotSee) {
         const visible = getVisibleByText(label);
-        console.log(`    "${label}" — visible: ${visible.length} (expected 0) ${visible.length === 0 ? '✓' : '✗'}`);
+        console.log(
+          `    "${label}" — visible: ${visible.length} (expected 0) ${visible.length === 0 ? '✓' : '✗'}`,
+        );
         expect(visible).toHaveLength(0);
       }
     });
@@ -228,7 +240,14 @@ describe('SidebarMenu — Permissions', () => {
     // Verifies sublink visibility: GroupAdmin has users.view and usergroup.view
     test('GroupAdmin sees Users and User Groups under Administration', () => {
       console.log('--- Test: GroupAdmin Administration sublinks ---');
-      console.log('User:', groupAdminUser.userName, '| has users.view:', groupAdminUser.features['users.view'], '| has usergroup.view:', groupAdminUser.features['usergroup.view']);
+      console.log(
+        'User:',
+        groupAdminUser.userName,
+        '| has users.view:',
+        groupAdminUser.features['users.view'],
+        '| has usergroup.view:',
+        groupAdminUser.features['usergroup.view'],
+      );
 
       renderSidebar({ user: groupAdminUser });
       fireEvent.click(getChevronButton('Administration'));
@@ -245,7 +264,13 @@ describe('SidebarMenu — Permissions', () => {
     // GroupAdmin should fail the validator and not see these items
     test('GroupAdmin does not see SuperAdmin-only administration items', () => {
       console.log('--- Test: GroupAdmin cannot see SuperAdmin-only items ---');
-      console.log('User:', groupAdminUser.userName, '| Type:', UserType[groupAdminUser.userTypeId], '(not SuperAdmin)');
+      console.log(
+        'User:',
+        groupAdminUser.userName,
+        '| Type:',
+        UserType[groupAdminUser.userTypeId],
+        '(not SuperAdmin)',
+      );
       console.log('  "Applications" requires: validator isSuperAdmin');
       console.log('  "Folders" requires: validator isSuperAdmin');
 
@@ -254,7 +279,9 @@ describe('SidebarMenu — Permissions', () => {
 
       for (const label of ['Applications', 'Folders']) {
         const visible = getVisibleByText(label);
-        console.log(`  "${label}" — visible: ${visible.length} (expected 0) ${visible.length === 0 ? '✓' : '✗'}`);
+        console.log(
+          `  "${label}" — visible: ${visible.length} (expected 0) ${visible.length === 0 ? '✓' : '✗'}`,
+        );
         expect(visible).toHaveLength(0);
       }
     });
@@ -288,7 +315,14 @@ describe('SidebarMenu — Permissions', () => {
       renderSidebar({ user: regularUser });
 
       const shouldSee = ['Dashboard', 'Schedule', 'Library'];
-      const shouldNotSee = ['Design', 'Displays', 'Administration', 'Reporting', 'Advanced', 'Developer'];
+      const shouldNotSee = [
+        'Design',
+        'Displays',
+        'Administration',
+        'Reporting',
+        'Advanced',
+        'Developer',
+      ];
 
       console.log('\n  Should SEE:');
       for (const label of shouldSee) {
@@ -300,7 +334,9 @@ describe('SidebarMenu — Permissions', () => {
       console.log('\n  Should NOT see:');
       for (const label of shouldNotSee) {
         const visible = getVisibleByText(label);
-        console.log(`    "${label}" — visible: ${visible.length} (expected 0) ${visible.length === 0 ? '✓' : '✗'}`);
+        console.log(
+          `    "${label}" — visible: ${visible.length} (expected 0) ${visible.length === 0 ? '✓' : '✗'}`,
+        );
         expect(visible).toHaveLength(0);
       }
     });
@@ -309,8 +345,16 @@ describe('SidebarMenu — Permissions', () => {
     test('Regular user sees only Event under Schedule (not Dayparting)', () => {
       console.log('--- Test: Regular user Schedule sublinks ---');
       console.log('User:', regularUser.userName);
-      console.log('  has schedule.view:', regularUser.features['schedule.view'], '(needed for Event)');
-      console.log('  has daypart.view:', regularUser.features['daypart.view'] ?? 'undefined', '(needed for Dayparting)');
+      console.log(
+        '  has schedule.view:',
+        regularUser.features['schedule.view'],
+        '(needed for Event)',
+      );
+      console.log(
+        '  has daypart.view:',
+        regularUser.features['daypart.view'] ?? 'undefined',
+        '(needed for Dayparting)',
+      );
 
       renderSidebar({ user: regularUser });
       fireEvent.click(getChevronButton('Schedule'));
@@ -321,7 +365,9 @@ describe('SidebarMenu — Permissions', () => {
       expect(eventVisible.length).toBeGreaterThanOrEqual(1);
 
       const daypartVisible = getVisibleByText('Dayparting');
-      console.log(`  "Dayparting" — visible: ${daypartVisible.length} (expected 0) ${daypartVisible.length === 0 ? '✓' : '✗'}`);
+      console.log(
+        `  "Dayparting" — visible: ${daypartVisible.length} (expected 0) ${daypartVisible.length === 0 ? '✓' : '✗'}`,
+      );
       expect(daypartVisible).toHaveLength(0);
     });
 
@@ -329,10 +375,26 @@ describe('SidebarMenu — Permissions', () => {
     test('Regular user sees only Media under Library', () => {
       console.log('--- Test: Regular user Library sublinks ---');
       console.log('User:', regularUser.userName);
-      console.log('  has library.view:', regularUser.features['library.view'], '(needed for Media)');
-      console.log('  has playlist.view:', regularUser.features['playlist.view'] ?? 'undefined', '(needed for Playlists)');
-      console.log('  has dataset.view:', regularUser.features['dataset.view'] ?? 'undefined', '(needed for Datasets)');
-      console.log('  has menuBoard.view:', regularUser.features['menuBoard.view'] ?? 'undefined', '(needed for Menu Boards)');
+      console.log(
+        '  has library.view:',
+        regularUser.features['library.view'],
+        '(needed for Media)',
+      );
+      console.log(
+        '  has playlist.view:',
+        regularUser.features['playlist.view'] ?? 'undefined',
+        '(needed for Playlists)',
+      );
+      console.log(
+        '  has dataset.view:',
+        regularUser.features['dataset.view'] ?? 'undefined',
+        '(needed for Datasets)',
+      );
+      console.log(
+        '  has menuBoard.view:',
+        regularUser.features['menuBoard.view'] ?? 'undefined',
+        '(needed for Menu Boards)',
+      );
 
       renderSidebar({ user: regularUser });
       fireEvent.click(getChevronButton('Library'));
@@ -344,7 +406,9 @@ describe('SidebarMenu — Permissions', () => {
 
       for (const label of ['Playlists', 'Datasets', 'Menu Boards']) {
         const visible = getVisibleByText(label);
-        console.log(`  "${label}" — visible: ${visible.length} (expected 0) ${visible.length === 0 ? '✓' : '✗'}`);
+        console.log(
+          `  "${label}" — visible: ${visible.length} (expected 0) ${visible.length === 0 ? '✓' : '✗'}`,
+        );
         expect(visible).toHaveLength(0);
       }
     });
@@ -370,7 +434,9 @@ describe('SidebarMenu — Permissions', () => {
       renderSidebar({ user: noLibraryUser, initialEntries: ['/library/media'] });
 
       const libraryVisible = getVisibleByText('Library');
-      console.log(`  "Library" — visible: ${libraryVisible.length} (expected 0) ${libraryVisible.length === 0 ? '✓' : '✗'}`);
+      console.log(
+        `  "Library" — visible: ${libraryVisible.length} (expected 0) ${libraryVisible.length === 0 ? '✓' : '✗'}`,
+      );
       expect(libraryVisible).toHaveLength(0);
     });
   });
