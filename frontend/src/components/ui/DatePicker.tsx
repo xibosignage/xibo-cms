@@ -92,8 +92,8 @@ export default function DatePicker({ onApply, onCancel, value, mode }: DatePicke
     if (mode === 'range' && range?.from && range?.to) {
       onApply({
         type: 'range',
-        from: applyTime(range.from),
-        to: applyTime(range.to),
+        from: new Date(range.from),
+        to: new Date(range.to),
       });
     }
   };
@@ -139,31 +139,36 @@ export default function DatePicker({ onApply, onCancel, value, mode }: DatePicke
       </div>
 
       {/* Time picker */}
-      <div className="px-3 pb-3 flex justify-center">
-        <div className="flex items-center gap-x-2">
-          <select value={hour} onChange={(e) => setHour(e.target.value)} className={timeClass}>
-            {HOURS.map((h) => (
-              <option key={h}>{h}</option>
-            ))}
-          </select>
-          <span className="text-gray-500 font-semibold">:</span>
-          <select value={minute} onChange={(e) => setMinute(e.target.value)} className={timeClass}>
-            {MINUTES.map((m) => (
-              <option key={m}>{m}</option>
-            ))}
-          </select>
-          <select
-            value={period}
-            onChange={(e) => setPeriod(e.target.value as 'AM' | 'PM')}
-            className={timeClass}
-          >
-            {PERIODS.map((p) => (
-              <option key={p}>{p}</option>
-            ))}
-          </select>
+      {mode === 'single' && (
+        <div className="px-3 pb-3 flex justify-center">
+          <div className="flex items-center gap-x-2">
+            <select value={hour} onChange={(e) => setHour(e.target.value)} className={timeClass}>
+              {HOURS.map((h) => (
+                <option key={h}>{h}</option>
+              ))}
+            </select>
+            <span className="text-gray-500 font-semibold">:</span>
+            <select
+              value={minute}
+              onChange={(e) => setMinute(e.target.value)}
+              className={timeClass}
+            >
+              {MINUTES.map((m) => (
+                <option key={m}>{m}</option>
+              ))}
+            </select>
+            <select
+              value={period}
+              onChange={(e) => setPeriod(e.target.value as 'AM' | 'PM')}
+              className={timeClass}
+            >
+              {PERIODS.map((p) => (
+                <option key={p}>{p}</option>
+              ))}
+            </select>
+          </div>
         </div>
-      </div>
-
+      )}
       {/* Footer */}
       <div className="flex justify-between items-center p-4 border-t border-gray-200">
         <p className="text-xs text-gray-600">

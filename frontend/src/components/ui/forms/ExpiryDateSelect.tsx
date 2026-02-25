@@ -113,11 +113,11 @@ export default function ExpiryDateSelect({
           <CalendarCheck2Icon size={16} />
         </span>
         <span className="p-3 flex-1 text-sm cursor-pointer">
-          {!value
+          {value && value.type === 'never'
             ? t('Never Expire')
-            : value.type === 'preset'
+            : value?.type === 'preset'
               ? t(value.value)
-              : `${value.date.toLocaleDateString()}`}
+              : value?.date.toLocaleString()}
         </span>
         <button
           type="button"
@@ -153,12 +153,16 @@ export default function ExpiryDateSelect({
                     key={option}
                     type="button"
                     className="text-left p-2 rounded-lg hover:bg-gray-100 font-medium cursor-pointer"
-                    onClick={() =>
-                      onSelect({
-                        type: 'preset',
-                        value: option,
-                      })
-                    }
+                    onClick={() => {
+                      if (option === 'Never Expire') {
+                        onSelect({ type: 'never' });
+                      } else {
+                        onSelect({
+                          type: 'preset',
+                          value: option,
+                        });
+                      }
+                    }}
                   >
                     {t(option)}
                   </button>

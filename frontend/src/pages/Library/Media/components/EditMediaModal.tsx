@@ -65,9 +65,7 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
   const { t } = useTranslation();
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [openSelect, setOpenSelect] = useState<null | OpenSelect>(null);
-  const [expiry, setExpiry] = useState<ExpiryValue | undefined>(() =>
-    expiresToExpiryValue(data.expires),
-  );
+  const [expiry, setExpiry] = useState<ExpiryValue>(expiresToExpiryValue(data.expires));
 
   const [isSaving, setIsSaving] = useState(false);
   const [draft, setDraft] = useState<MediaDraft>(() => ({
@@ -121,7 +119,7 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
       orientation: draft.orientation,
       enableStat: draft.enableStat,
       expires,
-      mediaNoExpiryDate: expires === undefined ? 1 : 0,
+      mediaNoExpiryDate: expiry?.type === 'never' ? 1 : 0,
       folderId: draft.folderId,
     });
 
