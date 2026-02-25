@@ -27,147 +27,22 @@
  * 2. Feature flags (e.g., 'library.view', 'schedule.view')
  * 3. Validator functions (e.g., isSuperAdmin checks on specific routes)
  */
-import { fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { fireEvent, screen } from '@testing-library/react';
 
-import SidebarMenu from '../SideBar';
+import {
+  createGroupAdmin,
+  createUser,
+  displayManagerUser,
+  getChevronButton,
+  getVisibleByText,
+  groupAdminUser,
+  regularUser,
+  renderSidebar,
+  superAdminUser,
+} from './sidebarTestUtils';
 
-import { UserProvider } from '@/context/UserContext';
-import type { User } from '@/types/user';
-import { UserType } from '@/types/user';
+import { type User } from '@/types/user';
 import { hasFeature } from '@/utils/permissions';
-
-// ---------- Shared mock settings used across all test users ----------
-const mockSettings = {
-  defaultTimezone: 'UTC',
-  defaultLanguage: 'en',
-  DATE_FORMAT_JS: 'YYYY-MM-DD',
-  TIME_FORMAT_JS: 'HH:mm',
-};
-
-// SuperAdmin: has ALL feature flags — should see every sidebar section and sublink
-const superAdminUser: User = {
-  userId: 1,
-  userName: 'superadmin',
-  userTypeId: UserType.SuperAdmin,
-  groupId: 1,
-  settings: mockSettings,
-  features: {
-    'schedule.view': true,
-    'daypart.view': true,
-    'campaign.view': true,
-    'layout.view': true,
-    'template.view': true,
-    'resolution.view': true,
-    'library.view': true,
-    'playlist.view': true,
-    'dataset.view': true,
-    'menuBoard.view': true,
-    'displays.view': true,
-    'displaygroup.view': true,
-    'display.syncView': true,
-    'displayprofile.view': true,
-    'playersoftware.view': true,
-    'command.view': true,
-    'users.view': true,
-    'usergroup.view': true,
-    'module.view': true,
-    'transition.view': true,
-    'task.view': true,
-    'tag.view': true,
-    'font.view': true,
-    'report.view': true,
-    'report.scheduling': true,
-    'report.saving': true,
-    'log.view': true,
-    'sessions.view': true,
-    'auditlog.view': true,
-    'fault.view': true,
-    'developer.edit': true,
-  },
-};
-
-// GroupAdmin: has most view features but lacks admin-only ones
-// (e.g., no module.view, report.view, developer.edit — so no Reporting, Advanced, Developer sections)
-const groupAdminUser: User = {
-  userId: 2,
-  userName: 'groupadmin',
-  userTypeId: UserType.GroupAdmin,
-  groupId: 2,
-  settings: mockSettings,
-  features: {
-    'schedule.view': true,
-    'daypart.view': true,
-    'campaign.view': true,
-    'layout.view': true,
-    'template.view': true,
-    'resolution.view': true,
-    'library.view': true,
-    'playlist.view': true,
-    'dataset.view': true,
-    'menuBoard.view': true,
-    'displays.view': true,
-    'displaygroup.view': true,
-    'display.syncView': true,
-    'displayprofile.view': true,
-    'playersoftware.view': true,
-    'command.view': true,
-    'users.view': true,
-    'usergroup.view': true,
-  },
-};
-
-// Regular user: minimal features — only schedule.view and library.view
-// Should only see Dashboard (always visible), Schedule, and Library
-const regularUser: User = {
-  userId: 3,
-  userName: 'user',
-  userTypeId: UserType.User,
-  groupId: 3,
-  settings: mockSettings,
-  features: {
-    'schedule.view': true,
-    'library.view': true,
-  },
-};
-
-/**
- * Renders the SidebarMenu wrapped in required providers (UserProvider + MemoryRouter).
- * Defaults to SuperAdmin user at the root route.
- */
-function renderSidebar({
-  initialEntries = ['/'],
-  user = superAdminUser,
-}: {
-  initialEntries?: string[];
-  user?: User;
-} = {}) {
-  return render(
-    <UserProvider initialUser={user}>
-      <MemoryRouter initialEntries={initialEntries}>
-        <SidebarMenu isCollapsed={false} toggleSidebar={vi.fn()} closeMobileDrawer={vi.fn()} />
-      </MemoryRouter>
-    </UserProvider>,
-  );
-}
-
-/**
- * Locates the expand/collapse chevron button for a sidebar section.
- * Traverses from the label text up to the sidebar item container,
- * then finds the nested button that toggles sublink visibility.
- */
-function getChevronButton(labelText: string) {
-  const label = screen.getByText(labelText);
-  const sidebarItemDiv = label.closest('.flex.cursor-pointer')!;
-  return sidebarItemDiv.querySelector('button')!;
-}
-
-/**
- * Helper: finds visible text elements (excludes popup/tooltip elements)
- */
-function getVisibleByText(text: string) {
-  return screen.queryAllByText(text).filter((el) => !el.closest('.pointer-events-none'));
-}
 
 describe('SidebarMenu — Permissions', () => {
   // ====================================================================
@@ -177,10 +52,6 @@ describe('SidebarMenu — Permissions', () => {
   describe('Permission-based filtering', () => {
     // SuperAdmin has every feature flag, so all top-level sections should render
     test('SuperAdmin sees all navigation items', () => {
-      console.log('--- Test: SuperAdmin sees all navigation items ---');
-      console.log('User:', superAdminUser.userName, '| Type:', UserType[superAdminUser.userTypeId]);
-      console.log('Features count:', Object.keys(superAdminUser.features).length);
-
       renderSidebar({ user: superAdminUser });
 
       const expectedLabels = [
@@ -197,247 +68,471 @@ describe('SidebarMenu — Permissions', () => {
 
       for (const label of expectedLabels) {
         const matches = screen.getAllByText(label);
-        console.log(`  "${label}" — found ${matches.length} element(s) ✓`);
         expect(matches.length).toBeGreaterThanOrEqual(1);
       }
     });
 
-    // GroupAdmin lacks report/module/developer features, so those sections should be hidden
+    // GroupAdmin has schedule/library/layout/playlist/users — no displays, reporting, or advanced
     test('GroupAdmin sees allowed sections, not restricted ones', () => {
-      console.log('--- Test: GroupAdmin sees allowed vs restricted ---');
-      console.log('User:', groupAdminUser.userName, '| Type:', UserType[groupAdminUser.userTypeId]);
-      console.log('Features:', Object.keys(groupAdminUser.features).join(', '));
-
       renderSidebar({ user: groupAdminUser });
 
-      const shouldSee = [
-        'Dashboard',
-        'Schedule',
-        'Design',
-        'Library',
-        'Displays',
-        'Administration',
-      ];
-      const shouldNotSee = ['Reporting', 'Advanced', 'Developer'];
+      const shouldSee = ['Dashboard', 'Schedule', 'Design', 'Library', 'Administration'];
+      const shouldNotSee = ['Displays', 'Reporting', 'Advanced', 'Developer'];
 
-      console.log('\n  Should SEE:');
       for (const label of shouldSee) {
         const matches = screen.getAllByText(label);
-        console.log(`    "${label}" — found ${matches.length} element(s) ✓`);
         expect(matches.length).toBeGreaterThanOrEqual(1);
       }
 
-      console.log('\n  Should NOT see:');
       for (const label of shouldNotSee) {
         const visible = getVisibleByText(label);
-        console.log(
-          `    "${label}" — visible: ${visible.length} (expected 0) ${visible.length === 0 ? '✓' : '✗'}`,
-        );
         expect(visible).toHaveLength(0);
       }
     });
 
-    // Verifies sublink visibility: GroupAdmin has users.view and usergroup.view
-    test('GroupAdmin sees Users and User Groups under Administration', () => {
-      console.log('--- Test: GroupAdmin Administration sublinks ---');
-      console.log(
-        'User:',
-        groupAdminUser.userName,
-        '| has users.view:',
-        groupAdminUser.features['users.view'],
-        '| has usergroup.view:',
-        groupAdminUser.features['usergroup.view'],
-      );
-
+    // GroupAdmin has users.view but not usergroup.view — only Users sublink should appear
+    test('GroupAdmin sees Users but not User Groups under Administration', () => {
       renderSidebar({ user: groupAdminUser });
       fireEvent.click(getChevronButton('Administration'));
-      console.log('  Expanded "Administration" menu');
 
-      for (const label of ['Users', 'User Groups']) {
-        const visible = getVisibleByText(label);
-        console.log(`  "${label}" — visible: ${visible.length} ✓`);
-        expect(visible.length).toBeGreaterThanOrEqual(1);
-      }
+      const usersVisible = getVisibleByText('Users');
+      expect(usersVisible.length).toBeGreaterThanOrEqual(1);
+
+      const userGroupsVisible = getVisibleByText('User Groups');
+      expect(userGroupsVisible).toHaveLength(0);
     });
 
     // "Applications" and "Folders" use a validator (isSuperAdmin), not a feature flag
     // GroupAdmin should fail the validator and not see these items
     test('GroupAdmin does not see SuperAdmin-only administration items', () => {
-      console.log('--- Test: GroupAdmin cannot see SuperAdmin-only items ---');
-      console.log(
-        'User:',
-        groupAdminUser.userName,
-        '| Type:',
-        UserType[groupAdminUser.userTypeId],
-        '(not SuperAdmin)',
-      );
-      console.log('  "Applications" requires: validator isSuperAdmin');
-      console.log('  "Folders" requires: validator isSuperAdmin');
-
       renderSidebar({ user: groupAdminUser });
       fireEvent.click(getChevronButton('Administration'));
 
       for (const label of ['Applications', 'Folders']) {
         const visible = getVisibleByText(label);
-        console.log(
-          `  "${label}" — visible: ${visible.length} (expected 0) ${visible.length === 0 ? '✓' : '✗'}`,
-        );
         expect(visible).toHaveLength(0);
       }
     });
 
-    // GroupAdmin has all Library-related features, so every Library sublink should appear
-    test('GroupAdmin expands Library and sees all sublinks', () => {
-      console.log('--- Test: GroupAdmin Library sublinks ---');
-      console.log('User:', groupAdminUser.userName);
-      console.log('  has playlist.view:', groupAdminUser.features['playlist.view']);
-      console.log('  has library.view:', groupAdminUser.features['library.view']);
-      console.log('  has dataset.view:', groupAdminUser.features['dataset.view']);
-      console.log('  has menuBoard.view:', groupAdminUser.features['menuBoard.view']);
-
+    // GroupAdmin has library.view and playlist.view but not dataset.view or menuBoard.view
+    test('GroupAdmin expands Library and sees Media and Playlists only', () => {
       renderSidebar({ user: groupAdminUser });
       fireEvent.click(getChevronButton('Library'));
-      console.log('  Expanded "Library" menu');
 
-      for (const label of ['Playlists', 'Media', 'Datasets', 'Menu Boards']) {
+      for (const label of ['Media', 'Playlists']) {
         const visible = getVisibleByText(label);
-        console.log(`  "${label}" — visible: ${visible.length} ✓`);
         expect(visible.length).toBeGreaterThanOrEqual(1);
+      }
+
+      for (const label of ['Datasets', 'Menu Boards']) {
+        const visible = getVisibleByText(label);
+        expect(visible).toHaveLength(0);
       }
     });
 
-    // Regular user only has schedule.view and library.view — most sections should be hidden
-    test('Regular user sees only Dashboard, Schedule, and Library', () => {
-      console.log('--- Test: Regular user limited visibility ---');
-      console.log('User:', regularUser.userName, '| Type:', UserType[regularUser.userTypeId]);
-      console.log('Features:', Object.keys(regularUser.features).join(', '));
+    // schedule.view grants Event but not Dayparting (no daypart.view)
+    test('GroupAdmin sees only Event under Schedule', () => {
+      renderSidebar({ user: groupAdminUser });
+      fireEvent.click(getChevronButton('Schedule'));
 
+      const eventVisible = getVisibleByText('Event');
+      expect(eventVisible.length).toBeGreaterThanOrEqual(1);
+
+      const daypartVisible = getVisibleByText('Dayparting');
+      expect(daypartVisible).toHaveLength(0);
+    });
+
+    // layout.view grants Layouts but not Campaign, Templates, or Resolutions
+    test('GroupAdmin sees only Layouts under Design', () => {
+      renderSidebar({ user: groupAdminUser });
+      fireEvent.click(getChevronButton('Design'));
+
+      const layoutsVisible = getVisibleByText('Layouts');
+      expect(layoutsVisible.length).toBeGreaterThanOrEqual(1);
+
+      for (const label of ['Campaign', 'Templates', 'Resolutions']) {
+        const visible = getVisibleByText(label);
+        expect(visible).toHaveLength(0);
+      }
+    });
+
+    // Regular user has schedule/library/layout/playlist/users — sees Design too, but not Displays/Admin/Reporting/Advanced/Developer
+    test('Regular user sees correct top-level sections', () => {
       renderSidebar({ user: regularUser });
 
-      const shouldSee = ['Dashboard', 'Schedule', 'Library'];
-      const shouldNotSee = [
-        'Design',
-        'Displays',
-        'Administration',
-        'Reporting',
-        'Advanced',
-        'Developer',
-      ];
+      const shouldSee = ['Dashboard', 'Schedule', 'Design', 'Library'];
+      const shouldNotSee = ['Displays', 'Administration', 'Reporting', 'Advanced', 'Developer'];
 
-      console.log('\n  Should SEE:');
       for (const label of shouldSee) {
         const matches = screen.getAllByText(label);
-        console.log(`    "${label}" — found ${matches.length} element(s) ✓`);
         expect(matches.length).toBeGreaterThanOrEqual(1);
       }
 
-      console.log('\n  Should NOT see:');
       for (const label of shouldNotSee) {
         const visible = getVisibleByText(label);
-        console.log(
-          `    "${label}" — visible: ${visible.length} (expected 0) ${visible.length === 0 ? '✓' : '✗'}`,
-        );
         expect(visible).toHaveLength(0);
       }
     });
 
     // schedule.view grants access to "Event", but daypart.view is needed for "Dayparting"
     test('Regular user sees only Event under Schedule (not Dayparting)', () => {
-      console.log('--- Test: Regular user Schedule sublinks ---');
-      console.log('User:', regularUser.userName);
-      console.log(
-        '  has schedule.view:',
-        regularUser.features['schedule.view'],
-        '(needed for Event)',
-      );
-      console.log(
-        '  has daypart.view:',
-        regularUser.features['daypart.view'] ?? 'undefined',
-        '(needed for Dayparting)',
-      );
-
       renderSidebar({ user: regularUser });
       fireEvent.click(getChevronButton('Schedule'));
-      console.log('  Expanded "Schedule" menu');
 
       const eventVisible = getVisibleByText('Event');
-      console.log(`  "Event" — visible: ${eventVisible.length} ✓`);
       expect(eventVisible.length).toBeGreaterThanOrEqual(1);
 
       const daypartVisible = getVisibleByText('Dayparting');
-      console.log(
-        `  "Dayparting" — visible: ${daypartVisible.length} (expected 0) ${daypartVisible.length === 0 ? '✓' : '✗'}`,
-      );
       expect(daypartVisible).toHaveLength(0);
     });
 
-    // library.view only covers "Media"; Playlists, Datasets, Menu Boards need separate features
-    test('Regular user sees only Media under Library', () => {
-      console.log('--- Test: Regular user Library sublinks ---');
-      console.log('User:', regularUser.userName);
-      console.log(
-        '  has library.view:',
-        regularUser.features['library.view'],
-        '(needed for Media)',
-      );
-      console.log(
-        '  has playlist.view:',
-        regularUser.features['playlist.view'] ?? 'undefined',
-        '(needed for Playlists)',
-      );
-      console.log(
-        '  has dataset.view:',
-        regularUser.features['dataset.view'] ?? 'undefined',
-        '(needed for Datasets)',
-      );
-      console.log(
-        '  has menuBoard.view:',
-        regularUser.features['menuBoard.view'] ?? 'undefined',
-        '(needed for Menu Boards)',
-      );
-
+    // library.view covers Media, playlist.view covers Playlists; Datasets and Menu Boards need separate features
+    test('Regular user sees Media and Playlists under Library', () => {
       renderSidebar({ user: regularUser });
       fireEvent.click(getChevronButton('Library'));
-      console.log('  Expanded "Library" menu');
 
-      const mediaVisible = getVisibleByText('Media');
-      console.log(`  "Media" — visible: ${mediaVisible.length} ✓`);
-      expect(mediaVisible.length).toBeGreaterThanOrEqual(1);
-
-      for (const label of ['Playlists', 'Datasets', 'Menu Boards']) {
+      for (const label of ['Media', 'Playlists']) {
         const visible = getVisibleByText(label);
-        console.log(
-          `  "${label}" — visible: ${visible.length} (expected 0) ${visible.length === 0 ? '✓' : '✗'}`,
-        );
+        expect(visible.length).toBeGreaterThanOrEqual(1);
+      }
+
+      for (const label of ['Datasets', 'Menu Boards']) {
+        const visible = getVisibleByText(label);
         expect(visible).toHaveLength(0);
       }
     });
 
+    // layout.view grants Layouts but not Campaign, Templates, or Resolutions
+    test('Regular user sees only Layouts under Design', () => {
+      renderSidebar({ user: regularUser });
+      fireEvent.click(getChevronButton('Design'));
+
+      const layoutsVisible = getVisibleByText('Layouts');
+      expect(layoutsVisible.length).toBeGreaterThanOrEqual(1);
+
+      for (const label of ['Campaign', 'Templates', 'Resolutions']) {
+        const visible = getVisibleByText(label);
+        expect(visible).toHaveLength(0);
+      }
+    });
+
+    // users.view is true but canViewUsers validator also requires GroupAdmin or SuperAdmin type
+    // Regular user (userTypeId: 3) fails the type check — Administration must be hidden
+    test('Regular user cannot see Administration despite having users.view', () => {
+      renderSidebar({ user: regularUser });
+
+      const adminVisible = getVisibleByText('Administration');
+      expect(adminVisible).toHaveLength(0);
+    });
+
+    // canViewUsers is a strict AND: feature flag AND user type must both pass.
+    // The previous test proves: feature true + wrong type → hidden.
+    // This test proves the complement: correct type + feature false → hidden.
+    // Together they show neither condition alone is sufficient.
+    test('GroupAdmin with users.view disabled cannot see Administration', () => {
+      const user = createGroupAdmin({ 'users.view': false });
+
+      renderSidebar({ user });
+
+      const adminVisible = getVisibleByText('Administration');
+      expect(adminVisible).toHaveLength(0);
+    });
+
     // Edge case: navigating directly to a Library URL should NOT bypass permission checks
     test('User without library.view cannot see Library even when navigating to /library/media', () => {
-      const noLibraryUser: User = {
+      const noLibraryUser = createUser({
         userId: 4,
         userName: 'nolibrary',
-        userTypeId: UserType.User,
         groupId: 4,
-        settings: mockSettings,
-        features: {
-          'schedule.view': true,
-        },
-      };
+        features: { 'schedule.view': true },
+      });
 
-      console.log('--- Test: No library.view user at /library/media ---');
-      console.log('User:', noLibraryUser.userName);
-      console.log('Features:', Object.keys(noLibraryUser.features).join(', '));
-      console.log('URL: /library/media (should not grant access)');
-
-      renderSidebar({ user: noLibraryUser, initialEntries: ['/library/media'] });
+      renderSidebar({ user: noLibraryUser, initialRoute: '/library/media' });
 
       const libraryVisible = getVisibleByText('Library');
-      console.log(
-        `  "Library" — visible: ${libraryVisible.length} (expected 0) ${libraryVisible.length === 0 ? '✓' : '✗'}`,
-      );
       expect(libraryVisible).toHaveLength(0);
+    });
+
+    // Display Manager: display-focused user — sees Schedule, Displays, Reporting, Advanced
+    // but NOT Design, Library, Administration, or Developer
+    test('Display Manager sees correct top-level sections', () => {
+      renderSidebar({ user: displayManagerUser });
+
+      const shouldSee = ['Dashboard', 'Schedule', 'Displays', 'Reporting', 'Advanced'];
+      const shouldNotSee = ['Design', 'Library', 'Administration', 'Developer'];
+
+      for (const label of shouldSee) {
+        const matches = screen.getAllByText(label);
+        expect(matches.length).toBeGreaterThanOrEqual(1);
+      }
+
+      for (const label of shouldNotSee) {
+        const visible = getVisibleByText(label);
+        expect(visible).toHaveLength(0);
+      }
+    });
+
+    // schedule.view grants Event but not Dayparting (requires daypart.view)
+    test('Display Manager sees only Event under Schedule', () => {
+      renderSidebar({ user: displayManagerUser });
+      fireEvent.click(getChevronButton('Schedule'));
+
+      const eventVisible = getVisibleByText('Event');
+      expect(eventVisible.length).toBeGreaterThanOrEqual(1);
+
+      const daypartVisible = getVisibleByText('Dayparting');
+      expect(daypartVisible).toHaveLength(0);
+    });
+
+    // Display Manager has display-related features: displays.view, displaygroup.view,
+    // displayprofile.view, playersoftware.view, command.view — but NOT display.syncView
+    test('Display Manager sees correct sublinks under Displays', () => {
+      renderSidebar({ user: displayManagerUser });
+      fireEvent.click(getChevronButton('Displays'));
+
+      for (const label of [
+        'Add Displays',
+        'Display Groups',
+        'Settings',
+        'Player Versions',
+        'Commands',
+      ]) {
+        const visible = getVisibleByText(label);
+        expect(visible.length).toBeGreaterThanOrEqual(1);
+      }
+
+      const syncVisible = getVisibleByText('Sync Groups');
+      expect(syncVisible).toHaveLength(0);
+    });
+
+    // report.view grants All Reports but not Report Schedules or Saved Reports
+    test('Display Manager sees only All Reports under Reporting', () => {
+      renderSidebar({ user: displayManagerUser });
+      fireEvent.click(getChevronButton('Reporting'));
+
+      const allReportsVisible = getVisibleByText('All Reports');
+      expect(allReportsVisible.length).toBeGreaterThanOrEqual(1);
+
+      for (const label of ['Report Schedules', 'Saved Reports']) {
+        const visible = getVisibleByText(label);
+        expect(visible).toHaveLength(0);
+      }
+    });
+
+    // log.view grants Log but not Sessions, Audit Trail, or Report Fault
+    test('Display Manager sees only Log under Advanced', () => {
+      renderSidebar({ user: displayManagerUser });
+      fireEvent.click(getChevronButton('Advanced'));
+
+      const logVisible = getVisibleByText('Log');
+      expect(logVisible.length).toBeGreaterThanOrEqual(1);
+
+      for (const label of ['Sessions', 'Audit Trail', 'Report Fault']) {
+        const visible = getVisibleByText(label);
+        expect(visible).toHaveLength(0);
+      }
+    });
+  });
+
+  // ====================================================================
+  // Edge cases: minimal and inconsistent user data.
+  // These guard against regressions in the filtering logic when the
+  // feature object is empty, sparse, or missing entirely.
+  // ====================================================================
+  describe('Edge cases — minimal and missing data', () => {
+    const ALL_SECTIONS = [
+      'Schedule',
+      'Design',
+      'Library',
+      'Displays',
+      'Administration',
+      'Reporting',
+      'Advanced',
+      'Developer',
+    ];
+
+    // A user with no features at all should see only Dashboard.
+    // All other sections require at least one gated sublink to be visible.
+    test('User with no features sees only Dashboard', () => {
+      const user = createUser({ features: {} });
+
+      renderSidebar({ user });
+
+      const dashboardVisible = screen.getAllByText('Dashboard');
+      expect(dashboardVisible.length).toBeGreaterThanOrEqual(1);
+
+      for (const label of ALL_SECTIONS) {
+        const visible = getVisibleByText(label);
+        expect(visible).toHaveLength(0);
+      }
+    });
+
+    // A user with a single feature should only unlock the corresponding section.
+    // All other sections must remain hidden.
+    test('User with only schedule.view sees Dashboard and Schedule only', () => {
+      const user = createUser({ features: { 'schedule.view': true } });
+
+      renderSidebar({ user });
+
+      for (const label of ['Dashboard', 'Schedule']) {
+        const visible = screen.getAllByText(label);
+        expect(visible.length).toBeGreaterThanOrEqual(1);
+      }
+
+      const hiddenSections = ALL_SECTIONS.filter((s) => s !== 'Schedule');
+      for (const label of hiddenSections) {
+        const visible = getVisibleByText(label);
+        expect(visible).toHaveLength(0);
+      }
+    });
+
+    // NOTE: createUser({ features: undefined }) does NOT produce features: undefined —
+    // the factory applies `features ?? {}` so undefined becomes {}.
+    // To simulate a truly malformed API response the factory must be bypassed.
+
+    // features: undefined — API omitted the field entirely.
+    // hasFeature guards: `if (!user.features) return false`
+    test('User with undefined features object sees only Dashboard without crashing', () => {
+      const user = { ...createUser(), features: undefined } as unknown as User;
+
+      renderSidebar({ user });
+
+      const dashboardVisible = screen.getAllByText('Dashboard');
+      expect(dashboardVisible.length).toBeGreaterThanOrEqual(1);
+
+      for (const label of ALL_SECTIONS) {
+        const visible = getVisibleByText(label);
+        expect(visible).toHaveLength(0);
+      }
+    });
+
+    // features: null — API returned an explicit null (common in JSON APIs).
+    // hasFeature guards: `if (!user.features) return false` — null is falsy, handled identically.
+    test('User with null features object sees only Dashboard without crashing', () => {
+      const user = { ...createUser(), features: null } as unknown as User;
+
+      renderSidebar({ user });
+
+      const dashboardVisible = screen.getAllByText('Dashboard');
+      expect(dashboardVisible.length).toBeGreaterThanOrEqual(1);
+
+      for (const label of ALL_SECTIONS) {
+        const visible = getVisibleByText(label);
+        expect(visible).toHaveLength(0);
+      }
+    });
+  });
+
+  // ====================================================================
+  // Parent visibility derived from child flags.
+  // No parent section has its own feature gate — visibility is derived
+  // entirely from children. A single accessible child must surface the parent.
+  // This guards against a common regression where a "primary" child flag
+  // is accidentally treated as the parent gate.
+  // ====================================================================
+  describe('Parent visibility derived from child flags', () => {
+    // report.view is the "obvious" flag for Reporting, but report.saving is equally valid.
+    // If only report.saving is true, Reporting must still appear — with only Saved Reports inside.
+    test('Reporting appears when only report.saving is true (not report.view)', () => {
+      const user = createUser({ features: { 'report.saving': true } });
+
+      renderSidebar({ user });
+
+      const reportingVisible = screen.getAllByText('Reporting');
+      expect(reportingVisible.length).toBeGreaterThanOrEqual(1);
+
+      fireEvent.click(getChevronButton('Reporting'));
+
+      const savedReportsVisible = getVisibleByText('Saved Reports');
+      expect(savedReportsVisible.length).toBeGreaterThanOrEqual(1);
+
+      for (const label of ['All Reports', 'Report Schedules']) {
+        const visible = getVisibleByText(label);
+        expect(visible).toHaveLength(0);
+      }
+    });
+
+    // Users/Applications/etc. are the "obvious" Administration items,
+    // but font.view alone is enough to surface the Administration section.
+    test('Administration appears when only font.view is true', () => {
+      const user = createUser({ features: { 'font.view': true } });
+
+      renderSidebar({ user });
+
+      const adminVisible = screen.getAllByText('Administration');
+      expect(adminVisible.length).toBeGreaterThanOrEqual(1);
+
+      fireEvent.click(getChevronButton('Administration'));
+
+      const fontsVisible = getVisibleByText('Fonts');
+      expect(fontsVisible.length).toBeGreaterThanOrEqual(1);
+
+      for (const label of ['Users', 'User Groups', 'Modules', 'Transitions', 'Tasks', 'Tags']) {
+        const visible = getVisibleByText(label);
+        expect(visible).toHaveLength(0);
+      }
+    });
+  });
+
+  // ====================================================================
+  // Parent section hidden when all children hidden.
+  // If every child is filtered out, the parent must not render as an
+  // empty container. Tested by taking a real user with known visible
+  // children and disabling exactly those children via factory overrides.
+  // ====================================================================
+  describe('Parent section hidden when all children hidden', () => {
+    // GroupAdmin has library.view and playlist.view true; dataset.view and
+    // menuBoard.view are already false. Disabling the remaining two removes
+    // all Library children — Library itself must disappear.
+    test('Library hidden when all Library children disabled', () => {
+      const user = createGroupAdmin({ 'library.view': false, 'playlist.view': false });
+
+      renderSidebar({ user });
+
+      const libraryVisible = getVisibleByText('Library');
+      expect(libraryVisible).toHaveLength(0);
+
+      // Other accessible sections are unaffected
+      for (const label of ['Schedule', 'Design', 'Administration']) {
+        const visible = screen.getAllByText(label);
+        expect(visible.length).toBeGreaterThanOrEqual(1);
+      }
+    });
+
+    // GroupAdmin has schedule.view true; daypart.view is already false.
+    // Disabling schedule.view removes the only Schedule child (Event) —
+    // Schedule itself must disappear.
+    test('Schedule hidden when all Schedule children disabled', () => {
+      const user = createGroupAdmin({ 'schedule.view': false });
+
+      renderSidebar({ user });
+
+      const scheduleVisible = getVisibleByText('Schedule');
+      expect(scheduleVisible).toHaveLength(0);
+
+      // Other accessible sections are unaffected
+      for (const label of ['Design', 'Library', 'Administration']) {
+        const visible = screen.getAllByText(label);
+        expect(visible.length).toBeGreaterThanOrEqual(1);
+      }
+    });
+
+    // GroupAdmin has layout.view true; campaign.view, template.view, resolution.view
+    // are already false. Disabling layout.view removes the only Design child (Layouts) —
+    // Design itself must disappear.
+    test('Design hidden when all Design children disabled', () => {
+      const user = createGroupAdmin({ 'layout.view': false });
+
+      renderSidebar({ user });
+
+      const designVisible = getVisibleByText('Design');
+      expect(designVisible).toHaveLength(0);
+
+      // Other accessible sections are unaffected
+      for (const label of ['Schedule', 'Library', 'Administration']) {
+        const visible = screen.getAllByText(label);
+        expect(visible.length).toBeGreaterThanOrEqual(1);
+      }
     });
   });
 
@@ -447,27 +542,15 @@ describe('SidebarMenu — Permissions', () => {
   // including edge cases like missing keys and undefined features.
   // ====================================================================
   describe('hasFeature', () => {
-    /** Creates a minimal User with the given feature flags */
-    const makeUser = (features: Record<string, boolean> = {}): User => ({
-      userId: 1,
-      userName: 'test',
-      userTypeId: UserType.User,
-      groupId: 1,
-      settings: mockSettings,
-      features,
-    });
-
     test('returns true when feature is enabled', () => {
-      const user = makeUser({ 'library.view': true });
+      const user = createUser({ features: { 'library.view': true } });
       const result = hasFeature(user, 'library.view');
-      console.log('hasFeature({ library.view: true }, "library.view") →', result);
       expect(result).toBe(true);
     });
 
     test('returns false when feature is disabled', () => {
-      const user = makeUser({ 'library.view': false });
+      const user = createUser({ features: { 'library.view': false } });
       const result = hasFeature(user, 'library.view');
-      console.log('hasFeature({ library.view: false }, "library.view") →', result);
       expect(result).toBe(false);
     });
   });
