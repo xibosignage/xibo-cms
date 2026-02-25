@@ -32,10 +32,13 @@ import { fireEvent, screen } from '@testing-library/react';
 import {
   createGroupAdmin,
   createUser,
-  displayManagerUser,
   getChevronButton,
   getVisibleByText,
   groupAdminUser,
+  displayManagerUser,
+  contentManagerUser,
+  playlistManagerUser,
+  scheduleManagerUser,
   regularUser,
   renderSidebar,
   superAdminUser,
@@ -531,6 +534,151 @@ describe('SidebarMenu — Permissions', () => {
       // Other accessible sections are unaffected
       for (const label of ['Schedule', 'Library', 'Administration']) {
         const visible = screen.getAllByText(label);
+        expect(visible.length).toBeGreaterThanOrEqual(1);
+      }
+    });
+  });
+
+  // ====================================================================
+  // Content Manager: a Regular User whose permissions are scoped to
+  // content creation only — Design, Library, and Administration (via
+  // tag.view).
+  // ====================================================================
+  describe('Content Manager', () => {
+    // Content Manager has Design, Library, and tag.view — no Schedule, Displays, Reporting, Advanced
+    test('Content Manager sees correct top-level sections', () => {
+      renderSidebar({ user: contentManagerUser });
+
+      const shouldSee = ['Dashboard', 'Design', 'Library', 'Administration'];
+      const shouldNotSee = ['Schedule', 'Displays', 'Reporting', 'Advanced', 'Developer'];
+
+      for (const label of shouldSee) {
+        const matches = screen.getAllByText(label);
+        expect(matches.length).toBeGreaterThanOrEqual(1);
+      }
+
+      for (const label of shouldNotSee) {
+        const visible = getVisibleByText(label);
+        expect(visible).toHaveLength(0);
+      }
+    });
+
+    // Content Manager has all four Design features: campaign.view, layout.view,
+    // template.view, resolution.view — all sublinks should appear
+    test('Content Manager sees all sublinks under Design', () => {
+      renderSidebar({ user: contentManagerUser });
+      fireEvent.click(getChevronButton('Design'));
+
+      for (const label of ['Campaign', 'Layouts', 'Templates', 'Resolutions']) {
+        const visible = getVisibleByText(label);
+        expect(visible.length).toBeGreaterThanOrEqual(1);
+      }
+    });
+
+    // library.view → Media, playlist.view → Playlists, dataset.view → Datasets
+    // menuBoard.view is false — Menu Boards must not appear
+    test('Content Manager sees Media, Playlists and Datasets under Library but not Menu Boards', () => {
+      renderSidebar({ user: contentManagerUser });
+      fireEvent.click(getChevronButton('Library'));
+
+      for (const label of ['Media', 'Playlists', 'Datasets']) {
+        const visible = getVisibleByText(label);
+        expect(visible.length).toBeGreaterThanOrEqual(1);
+      }
+
+      const menuBoardsVisible = getVisibleByText('Menu Boards');
+      expect(menuBoardsVisible).toHaveLength(0);
+    });
+
+    // tag.view alone must surface the Administration section.
+    // Only Tags should appear — no Users, User Groups, Modules, Transitions, Tasks, or Fonts.
+    test('Administration appears for Content Manager via tag.view only — Tags is the only sublink', () => {
+      renderSidebar({ user: contentManagerUser });
+      fireEvent.click(getChevronButton('Administration'));
+
+      const tagsVisible = getVisibleByText('Tags');
+      expect(tagsVisible.length).toBeGreaterThanOrEqual(1);
+
+      for (const label of [
+        'Users',
+        'User Groups',
+        'Modules',
+        'Transitions',
+        'Tasks',
+        'Fonts',
+        'Settings',
+        'Applications',
+        'Folders',
+      ]) {
+        const visible = getVisibleByText(label);
+        expect(visible).toHaveLength(0);
+      }
+    });
+  });
+
+  // ====================================================================
+  // Playlist Manager
+  // ====================================================================
+  describe('Playlist Manager', () => {
+    // playlist.view is false — the sidebar Playlists link requires it.
+    // dashboard.playlist is a dashboard widget flag, not a sidebar nav flag.
+    // No sidebar section has a passing feature gate, so only Dashboard renders.
+    test('Playlist Manager sees only Dashboard', () => {
+      renderSidebar({ user: playlistManagerUser });
+
+      const dashboardVisible = screen.getAllByText('Dashboard');
+      expect(dashboardVisible.length).toBeGreaterThanOrEqual(1);
+
+      for (const label of [
+        'Schedule',
+        'Design',
+        'Library',
+        'Displays',
+        'Administration',
+        'Reporting',
+        'Advanced',
+        'Developer',
+      ]) {
+        const visible = getVisibleByText(label);
+        expect(visible).toHaveLength(0);
+      }
+    });
+  });
+
+  // ====================================================================
+  // Schedule Manager: scoped entirely to event scheduling.
+  // ====================================================================
+  describe('Schedule Manager', () => {
+    // schedule.view and daypart.view are both true — Schedule is the only
+    // accessible section beyond Dashboard
+    test('Schedule Manager sees only Dashboard and Schedule', () => {
+      renderSidebar({ user: scheduleManagerUser });
+
+      for (const label of ['Dashboard', 'Schedule']) {
+        const matches = screen.getAllByText(label);
+        expect(matches.length).toBeGreaterThanOrEqual(1);
+      }
+
+      for (const label of [
+        'Design',
+        'Library',
+        'Displays',
+        'Administration',
+        'Reporting',
+        'Advanced',
+        'Developer',
+      ]) {
+        const visible = getVisibleByText(label);
+        expect(visible).toHaveLength(0);
+      }
+    });
+
+    test('Schedule Manager sees both Event and Dayparting under Schedule', () => {
+      renderSidebar({ user: scheduleManagerUser });
+      fireEvent.click(getChevronButton('Schedule'));
+
+      for (const label of ['Event', 'Dayparting']) {
+        const visible = getVisibleByText(label);
         expect(visible.length).toBeGreaterThanOrEqual(1);
       }
     });

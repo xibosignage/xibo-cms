@@ -28,6 +28,9 @@ import SidebarMenu from '../SideBar';
 import superAdminData from './__fixtures__/xibo_admin.json';
 import displayManagerData from './__fixtures__/xibo_display_manager.json';
 import groupAdminData from './__fixtures__/xibo_group_admin.json';
+import contentManagerData from './__fixtures__/xibo_content_manager.json';
+import playlistManagerData from './__fixtures__/xibo_playlist_manager.json';
+import scheduleManagerData from './__fixtures__/xibo_schedule_manager.json';
 import regularUserData from './__fixtures__/xibo_user.json';
 
 import { UserProvider } from '@/context/UserContext';
@@ -95,6 +98,42 @@ export function createRegularUser(featureOverrides: Partial<UserFeatures> = {}):
   };
 }
 
+/** Creates a Content Manager user from API /user/me */
+export function createContentManager(featureOverrides: Partial<UserFeatures> = {}): User {
+  return {
+    userId: contentManagerData.userId,
+    userName: contentManagerData.userName,
+    userTypeId: contentManagerData.userTypeId as UserType,
+    groupId: contentManagerData.groupId,
+    settings: mockSettings,
+    features: { ...contentManagerData.features, ...featureOverrides },
+  };
+}
+
+/** Creates a Playlist Manager user from API /user/me */
+export function createPlaylistManager(featureOverrides: Partial<UserFeatures> = {}): User {
+  return {
+    userId: playlistManagerData.userId,
+    userName: playlistManagerData.userName,
+    userTypeId: playlistManagerData.userTypeId as UserType,
+    groupId: playlistManagerData.groupId,
+    settings: mockSettings,
+    features: { ...playlistManagerData.features, ...featureOverrides },
+  };
+}
+
+/** Creates a Schedule Manager user from API /user/me */
+export function createScheduleManager(featureOverrides: Partial<UserFeatures> = {}): User {
+  return {
+    userId: scheduleManagerData.userId,
+    userName: scheduleManagerData.userName,
+    userTypeId: scheduleManagerData.userTypeId as UserType,
+    groupId: scheduleManagerData.groupId,
+    settings: mockSettings,
+    features: { ...scheduleManagerData.features, ...featureOverrides },
+  };
+}
+
 /** Creates a Display Manager user from API /user/me */
 export function createDisplayManager(featureOverrides: Partial<UserFeatures> = {}): User {
   return {
@@ -111,6 +150,9 @@ export function createDisplayManager(featureOverrides: Partial<UserFeatures> = {
 export const superAdminUser = createSuperAdmin();
 export const groupAdminUser = createGroupAdmin();
 export const regularUser = createRegularUser();
+export const contentManagerUser = createContentManager();
+export const playlistManagerUser = createPlaylistManager();
+export const scheduleManagerUser = createScheduleManager();
 export const displayManagerUser = createDisplayManager();
 
 export function renderSidebar({
