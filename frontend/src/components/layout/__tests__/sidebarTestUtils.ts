@@ -26,9 +26,9 @@ import { MemoryRouter } from 'react-router-dom';
 import SidebarMenu from '../SideBar';
 
 import superAdminData from './__fixtures__/xibo_admin.json';
+import contentManagerData from './__fixtures__/xibo_content_manager.json';
 import displayManagerData from './__fixtures__/xibo_display_manager.json';
 import groupAdminData from './__fixtures__/xibo_group_admin.json';
-import contentManagerData from './__fixtures__/xibo_content_manager.json';
 import playlistManagerData from './__fixtures__/xibo_playlist_manager.json';
 import scheduleManagerData from './__fixtures__/xibo_schedule_manager.json';
 import regularUserData from './__fixtures__/xibo_user.json';

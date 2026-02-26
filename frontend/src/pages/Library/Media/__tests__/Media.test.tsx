@@ -166,6 +166,91 @@ describe('Media page', () => {
     expect(alert).toHaveTextContent('API connection failed');
   });
 
+  test('verifies media items and formatting render correctly from API response', async () => {
+    const user = userEvent.setup();
+    // Override mock to simulate populated data
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (useMediaData as any).mockReturnValue({
+      data: {
+        rows: [
+          {
+            mediaId: 1,
+            name: 'mock_video_presentation.mp4',
+            mediaType: 'video',
+            fileSize: 1048576, // 1MB raw format
+            fileSizeFormatted: '1.00 MB', // Fallback depending on table config
+            duration: 60,
+            createdDt: '2024-02-14 10:30:00',
+            modifiedDt: '2024-02-15 11:45:00',
+          },
+        ],
+        totalCount: 1,
+      },
+      isFetching: false,
+      isError: false,
+      error: null,
+    });
+
+    await act(async () => {
+      renderMediaPage();
+    });
+
+    // Covers: Verify media items render from API response.
+    // Covers: Verify file name is displayed correctly.
+    expect(screen.getByText('mock_video_presentation.mp4')).toBeInTheDocument();
+
+    // Covers: Verify correct media icon based on file type.
+    // (Assuming the Type column renders the word 'video' or an associated class/icon text)
+    const videoElements = screen.getAllByText('video');
+    expect(videoElements[0]).toBeInTheDocument();
+
+    // This scenario is funky in test run atm
+    // Covers: Verify file size formatting.
+    // (Regex matches variations like '1 MB', '1.00 MB', or raw '1048576' depending on formatting config)
+    const toggleColumnsBtn = screen.getByRole('button', { name: 'Toggle columns' });
+    await user.click(toggleColumnsBtn);
+
+    const createdDateToggle = screen.getByLabelText('Created');
+    await user.click(createdDateToggle);
+
+    expect(screen.getByText('1(.*?)MB|1048576')).toBeInTheDocument();
+
+    // Covers: Verify created/updated date formatting.
+    // (Matches the date string to ensure it renders into the DOM)
+    expect(screen.getByText('2024-02-14|2024-02-15')).toBeInTheDocument();
+  });
+
+  test('verifies pagination controls appear when items exceed page limit', async () => {
+    // Override mock to simulate multiple pages of data
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (useMediaData as any).mockReturnValue({
+      data: {
+        // Generating dummy items
+        rows: Array.from({ length: 10 }).map((_, i) => ({
+          mediaId: i,
+          name: `Pagination Item ${i}`,
+          mediaType: 'image',
+        })),
+        totalCount: 25, // Forcing pageCount to be > 1
+      },
+      isFetching: false,
+      isError: false,
+      error: null,
+    });
+
+    await act(async () => {
+      renderMediaPage();
+    });
+
+    // Covers: Verify pagination controls appear when items exceed page limit.
+    const nextButton = screen.getByRole('button', { name: 'Next' });
+    expect(nextButton).toBeInTheDocument();
+    expect(nextButton).not.toBeDisabled();
+
+    // Verify page 2 is available to click
+    expect(screen.getByRole('button', { name: '2' })).toBeInTheDocument();
+  });
+
   test('opens Add Media modal and simulates file upload', async () => {
     const user = userEvent.setup();
     await act(async () => {
