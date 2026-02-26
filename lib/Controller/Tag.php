@@ -224,7 +224,7 @@ class Tag extends Base
 
 
             //Show buttons for non system tags
-            if ($tag->isSystem === 0) {
+            if ($tag->isSystem === 0 && $this->getUser()->isSuperAdmin()) {
                 // Edit the Tag
                 $tag->buttons[] = [
                     'id' => 'tag_button_edit',
