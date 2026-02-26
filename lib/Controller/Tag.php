@@ -327,7 +327,7 @@ class Tag extends Base
      */
     public function add(Request $request, Response $response)
     {
-        if (!$this->getUser()->featureEnabled('tag.tagging')) {
+        if (!$this->getUser()->isSuperAdmin()) {
             throw new AccessDeniedException();
         }
 
@@ -482,7 +482,7 @@ class Tag extends Base
      */
     public function edit(Request $request, Response $response, $id)
     {
-        if (!$this->getUser()->featureEnabled('tag.tagging')) {
+        if (!$this->getUser()->isSuperAdmin()) {
             throw new AccessDeniedException();
         }
 
@@ -610,7 +610,7 @@ class Tag extends Base
      */
     public function delete(Request $request, Response $response, $id)
     {
-        if (!$this->getUser()->featureEnabled('tag.tagging')) {
+        if (!$this->getUser()->isSuperAdmin()) {
             throw new AccessDeniedException();
         }
 
