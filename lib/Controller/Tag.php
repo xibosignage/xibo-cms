@@ -610,7 +610,7 @@ class Tag extends Base
      */
     public function delete(Request $request, Response $response, $id)
     {
-        if (!$this->getUser()->isSuperAdmin()) {
+        if (!$this->getUser()->featureEnabled('tag.tagging')) {
             throw new AccessDeniedException();
         }
 
