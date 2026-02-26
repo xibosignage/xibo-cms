@@ -1048,18 +1048,12 @@ class UserGroupFactory extends BaseFactory
 
     /**
      * @param string $homepage
-     * @param string $url
      * @param string $title
      * @param string $description
      * @param string $feature
      * @return $this
      */
-    public function registerCustomHomepage(
-        string $homepage,
-        string $title,
-        string $description,
-        string $feature
-    )
+    public function registerCustomHomepage(string $homepage, string $title, string $description, string $feature)
     {
         $this->getHomepages();
 
@@ -1071,7 +1065,6 @@ class UserGroupFactory extends BaseFactory
                 $description
             );
         }
-
         return $this;
     }
 }
