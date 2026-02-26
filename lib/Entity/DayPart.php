@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 namespace Xibo\Entity;
 
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Xibo\Event\DayPartDeleteEvent;
 use Xibo\Factory\ScheduleFactory;
@@ -35,17 +36,16 @@ use Xibo\Support\Exception\NotFoundException;
 /**
  * Class DayPart
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class DayPart implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="The ID of this Daypart")
      * @var int
      */
+    #[OA\Property(description: 'The ID of this Daypart')]
     public $dayPartId;
     public $name;
     public $description;
@@ -57,15 +57,15 @@ class DayPart implements \JsonSerializable
     public $exceptions;
 
     /**
-     * @SWG\Property(description="A readonly flag determining whether this DayPart is always")
      * @var int
      */
+    #[OA\Property(description: 'A readonly flag determining whether this DayPart is always')]
     public $isAlways = 0;
 
     /**
-     * @SWG\Property(description="A readonly flag determining whether this DayPart is custom")
      * @var int
      */
+    #[OA\Property(description: 'A readonly flag determining whether this DayPart is custom')]
     public $isCustom = 0;
 
     /** @var Carbon $adjustedStart Adjusted start datetime */

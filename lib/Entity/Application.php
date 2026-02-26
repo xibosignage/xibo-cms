@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -24,6 +24,7 @@
 namespace Xibo\Entity;
 
 use League\OAuth2\Server\Entities\ClientEntityInterface;
+use OpenApi\Attributes as OA;
 use Xibo\Factory\ApplicationRedirectUriFactory;
 use Xibo\Factory\ApplicationScopeFactory;
 use Xibo\Helper\Random;
@@ -34,77 +35,64 @@ use Xibo\Storage\StorageServiceInterface;
 /**
  * Class Application
  * @package Xibo\Entity
- *
- * @SWG\Definition
  */
+#[OA\Schema]
 class Application implements \JsonSerializable, ClientEntityInterface
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(
-     *  description="Application Key"
-     * )
      * @var string
      */
+    #[OA\Property(description: 'Application Key')]
     public $key;
 
     /**
-     * @SWG\Property(
-     *  description="Private Secret Key"
-     * )
      * @var string
      */
+    #[OA\Property(description: 'Private Secret Key')]
     public $secret;
 
     /**
-     * @SWG\Property(
-     *  description="Application Name"
-     * )
      * @var string
      */
+    #[OA\Property(description: 'Application Name')]
     public $name;
     
     /**
-     * @SWG\Property(
-     *  description="Application Owner"
-     * )
      * @var string
      */
+    #[OA\Property(description: 'Application Owner')]
     public $owner;
 
     /**
-     * @SWG\Property(
-     *  description="Application Session Expiry"
-     * )
      * @var int
      */
+    #[OA\Property(description: 'Application Session Expiry')]
     public $expires;
 
     /**
-     * @SWG\Property(
-     *  description="The Owner of this Application"
-     * )
      * @var int
      */
+    #[OA\Property(description: 'The Owner of this Application')]
     public $userId;
 
     /**
-     * @SWG\Property(description="Flag indicating whether to allow the authorizationCode Grant Type")
      * @var int
      */
+    #[OA\Property(description: 'Flag indicating whether to allow the authorizationCode Grant Type')]
     public $authCode = 0;
 
     /**
-     * @SWG\Property(description="Flag indicating whether to allow the clientCredentials Grant Type")
      * @var int
      */
+    #[OA\Property(description: 'Flag indicating whether to allow the clientCredentials Grant Type')]
     public $clientCredentials = 0;
 
     /**
-     * @SWG\Property(description="Flag indicating whether this Application will be confidential or not (can it keep a secret?)")
      * @var int
      */
+    #[OA\Property(description: 'Flag indicating whether this Application will be confidential or not (can it keep a secret?)')]
     public $isConfidential = 1;
 
     /** * @var ApplicationRedirectUri[] */
@@ -114,34 +102,34 @@ class Application implements \JsonSerializable, ClientEntityInterface
     public $scopes = [];
 
     /**
-     * @SWG\Property(description="Application description")
      * @var string
      */
+    #[OA\Property(description: 'Application description')]
     public $description;
     /**
-     * @SWG\Property(description="Path to Application logo")
      * @var string
      */
+    #[OA\Property(description: 'Path to Application logo')]
     public $logo;
     /**
-     * @SWG\Property(description="Path to Application Cover Image")
      * @var string
      */
+    #[OA\Property(description: 'Path to Application Cover Image')]
     public $coverImage;
     /**
-     * @SWG\Property(description="Company name associated with this Application")
      * @var string
      */
+    #[OA\Property(description: 'Company name associated with this Application')]
     public $companyName;
     /**
-     * @SWG\Property(description="URL to Application terms")
      * @var string
      */
+    #[OA\Property(description: 'URL to Application terms')]
     public $termsUrl;
     /**
-     * @SWG\Property(description="URL to Application privacy policy")
      * @var string
      */
+    #[OA\Property(description: 'URL to Application privacy policy')]
     public $privacyUrl;
 
     /** @var ApplicationRedirectUriFactory */

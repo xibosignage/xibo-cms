@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,6 +23,7 @@
 namespace Xibo\Entity;
 
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\LogServiceInterface;
@@ -30,65 +31,46 @@ use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class representing widget data
- * @SWG\Definition()
  */
+#[OA\Schema]
 class WidgetData implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(
-     *     property="id",
-     *     description="The ID"
-     * )
      * @var int|null
      */
+    #[OA\Property(property: 'id', description: 'The ID')]
     public ?int $id = null;
 
     /**
-     * @SWG\Property(
-     *     property="widgetId",
-     *     description="The Widget ID"
-     * )
      * @var int
      */
+    #[OA\Property(property: 'widgetId', description: 'The Widget ID')]
     public int $widgetId;
 
     /**
-     * @SWG\Property(
-     *     property="data",
-     *     description="Array of data properties depending on the widget data type this data is for",
-     *     @SWG\Items(type="string")
-     * )
      * @var array
      */
+    #[OA\Property(property: 'data', description: 'Array of data properties depending on the widget data type this data is for', items: new OA\Items(type: 'string'))]
     public array $data;
 
     /**
-     * @SWG\Property(
-     *     property="displayOrder",
-     *     description="The Display Order"
-     * )
      * @var int
      */
+    #[OA\Property(property: 'displayOrder', description: 'The Display Order')]
     public int $displayOrder;
 
     /**
-     * @SWG\Property(
-     *     property="createdDt",
-     *     description="The datetime this entity was created"
-     * )
      * @var ?string
      */
+    #[OA\Property(property: 'createdDt', description: 'The datetime this entity was created')]
     public ?string $createdDt;
 
     /**
-     * @SWG\Property(
-     *     property="modifiedDt",
-     *     description="The datetime this entity was last modified"
-     * )
      * @var ?string
      */
+    #[OA\Property(property: 'modifiedDt', description: 'The datetime this entity was last modified')]
     public ?string $modifiedDt;
 
     /**

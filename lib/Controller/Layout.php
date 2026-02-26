@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -25,6 +25,7 @@ use Carbon\Carbon;
 use GuzzleHttp\Psr7\Stream;
 use Intervention\Image\ImageManagerStatic as Img;
 use Mimey\MimeTypes;
+use OpenApi\Attributes as OA;
 use Parsedown;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
@@ -48,7 +49,6 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetDataFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\Environment;
 use Xibo\Helper\LayoutUploadHandler;
 use Xibo\Helper\Profiler;
 use Xibo\Helper\SendFile;
@@ -60,7 +60,6 @@ use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Widget\Render\WidgetDownloader;
-use Xibo\Widget\SubPlaylistItem;
 
 /**
  * Class Layout
@@ -277,74 +276,60 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/layout',
+        operationId: 'layoutAdd',
+        description: 'Add a new Layout to the CMS',
+        summary: 'Add a Layout',
+        tags: ['layout']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'name', description: 'The layout name', type: 'string'),
+                    new OA\Property(property: 'description', description: 'The layout description', type: 'string'),
+                    new OA\Property(
+                        property: 'layoutId',
+                        description: 'If the Layout should be created with a Template, provide the ID, otherwise don\'t provide', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'resolutionId',
+                        description: 'If a Template is not provided, provide the resolutionId for this Layout.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'returnDraft',
+                        description: 'Should we return the Draft Layout or the Published Layout on Success?', // phpcs:ignore
+                        type: 'boolean'
+                    ),
+                    new OA\Property(property: 'code', description: 'Code identifier for this Layout', type: 'string'),
+                    new OA\Property(
+                        property: 'folderId',
+                        description: 'Folder ID to which this object should be assigned to',
+                        type: 'integer'
+                    )
+                ]
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add a Layout
-     * @SWG\Post(
-     *  path="/layout",
-     *  operationId="layoutAdd",
-     *  tags={"layout"},
-     *  summary="Add a Layout",
-     *  description="Add a new Layout to the CMS",
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="The layout name",
-     *      type="string",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="The layout description",
-     *      type="string",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      in="formData",
-     *      description="If the Layout should be created with a Template, provide the ID, otherwise don't provide",
-     *      type="integer",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="resolutionId",
-     *      in="formData",
-     *      description="If a Template is not provided, provide the resolutionId for this Layout.",
-     *      type="integer",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="returnDraft",
-     *      in="formData",
-     *      description="Should we return the Draft Layout or the Published Layout on Success?",
-     *      type="boolean",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="code",
-     *      in="formData",
-     *      description="Code identifier for this Layout",
-     *      type="string",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="formData",
-     *      description="Folder ID to which this object should be assigned to",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Layout"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response
@@ -501,6 +486,54 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/layout/{layoutId}',
+        operationId: 'layoutEdit',
+        description: 'Edit a Layout',
+        summary: 'Edit Layout',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'name', description: 'The Layout Name', type: 'string'),
+                    new OA\Property(property: 'description', description: 'The Layout Description', type: 'string'),
+                    new OA\Property(property: 'tags', description: 'A comma separated list of Tags', type: 'string'),
+                    new OA\Property(
+                        property: 'retired',
+                        description: 'A flag indicating whether this Layout is retired.',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'enableStat',
+                        description: 'Flag indicating whether the Layout stat is enabled',
+                        type: 'integer'
+                    ),
+                    new OA\Property(property: 'code', description: 'Code identifier for this Layout', type: 'string'),
+                    new OA\Property(
+                        property: 'folderId',
+                        description: 'Folder ID to which this object should be assigned to',
+                        type: 'integer'
+                    )
+                ],
+                required: ['name']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout')
+    )]
     /**
      * Edit Layout
      * @param Request $request
@@ -512,73 +545,6 @@ class Layout extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Put(
-     *  path="/layout/{layoutId}",
-     *  operationId="layoutEdit",
-     *  summary="Edit Layout",
-     *  description="Edit a Layout",
-     *  tags={"layout"},
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      type="integer",
-     *      in="path",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="The Layout Name",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="The Layout Description",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="tags",
-     *      in="formData",
-     *      description="A comma separated list of Tags",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="retired",
-     *      in="formData",
-     *      description="A flag indicating whether this Layout is retired.",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="enableStat",
-     *      in="formData",
-     *      description="Flag indicating whether the Layout stat is enabled",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="code",
-     *      in="formData",
-     *      description="Code identifier for this Layout",
-     *      type="string",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="formData",
-     *      description="Folder ID to which this object should be assigned to",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Layout")
-     *  )
-     * )
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -680,6 +646,55 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/layout/background/{layoutId}',
+        operationId: 'layoutEditBackground',
+        description: 'Edit a Layout Background',
+        summary: 'Edit Layout Background',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'backgroundColor',
+                        description: 'A HEX color to use as the background color of this Layout.',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'backgroundImageId',
+                        description: 'A media ID to use as the background image for this Layout.',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'backgroundzIndex',
+                        description: 'The Layer Number to use for the background.',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'resolutionId',
+                        description: 'The Resolution ID to use on this Layout.',
+                        type: 'integer'
+                    )
+                ],
+                required: ['backgroundColor', 'backgroundzIndex']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout')
+    )]
     /**
      * Edit Layout Background
      * @param Request $request
@@ -687,52 +702,6 @@ class Layout extends Base
      * @param $id
      * @return \Slim\Http\Response
      * @throws \Xibo\Support\Exception\GeneralException
-     * @SWG\Put(
-     *  path="/layout/background/{layoutId}",
-     *  operationId="layoutEditBackground",
-     *  summary="Edit Layout Background",
-     *  description="Edit a Layout Background",
-     *  tags={"layout"},
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      type="integer",
-     *      in="path",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="backgroundColor",
-     *      in="formData",
-     *      description="A HEX color to use as the background color of this Layout.",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="backgroundImageId",
-     *      in="formData",
-     *      description="A media ID to use as the background image for this Layout.",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="backgroundzIndex",
-     *      in="formData",
-     *      description="The Layer Number to use for the background.",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="resolutionId",
-     *      in="formData",
-     *      description="The Resolution ID to use on this Layout.",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Layout")
-     *  )
-     * )
      */
     public function editBackground(Request $request, Response $response, $id): Response
     {
@@ -802,32 +771,37 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/layout/applyTemplate/{layoutId}',
+        operationId: 'layoutApplyTemplate',
+        description: 'Apply a new Template to an existing Layout, replacing it.',
+        summary: 'Apply Template',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'templateId',
+                        description: 'If the Layout should be created with a Template, provide the ID, otherwise don\'t provide', // phpcs:ignore
+                        type: 'integer'
+                    )
+                ]
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Apply a template to a Layout
-     * @SWG\Put(
-     *  path="/layout/applyTemplate/{layoutId}",
-     *  operationId="layoutApplyTemplate",
-     *  tags={"layout"},
-     *  summary="Apply Template",
-     *  description="Apply a new Template to an existing Layout, replacing it.",
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      type="integer",
-     *      in="path",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="templateId",
-     *      in="formData",
-     *      description="If the Layout should be created with a Template, provide the ID, otherwise don't provide",
-     *      type="integer",
-     *      required=false
-     *  ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response
@@ -1033,6 +1007,20 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(
+        path: '/layout/{layoutId}',
+        operationId: 'layoutDelete',
+        description: 'Delete a Layout',
+        summary: 'Delete Layout',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Deletes a layout
      * @param Request $request
@@ -1044,24 +1032,6 @@ class Layout extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Delete(
-     *  path="/layout/{layoutId}",
-     *  operationId="layoutDelete",
-     *  tags={"layout"},
-     *  summary="Delete Layout",
-     *  description="Delete a Layout",
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      in="path",
-     *      description="The Layout ID to Delete",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     function delete(Request $request, Response $response, $id)
     {
@@ -1087,6 +1057,32 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/layout/{layoutId}',
+        operationId: 'layoutClear',
+        description: 'Clear a draft layouts canvas of all widgets and elements, leaving it blank.',
+        summary: 'Clear Layout',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        description: 'The Layout ID to Clear, must be a draft.',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Clears a layout
      * @param Request $request
@@ -1094,31 +1090,6 @@ class Layout extends Base
      * @param $id
      * @return \Slim\Http\Response
      * @throws \Xibo\Support\Exception\GeneralException
-     *
-     * @SWG\Post(
-     *  path="/layout/{layoutId}",
-     *  operationId="layoutClear",
-     *  tags={"layout"},
-     *  summary="Clear Layout",
-     *  description="Clear a draft layouts canvas of all widgets and elements, leaving it blank.",
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      in="path",
-     *      description="The Layout ID to Clear, must be a draft.",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Layout"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      */
     public function clear(Request $request, Response $response, $id): Response
     {
@@ -1165,6 +1136,21 @@ class Layout extends Base
 
         return $this->render($request, $response);
     }
+
+    #[OA\Put(
+        path: '/layout/retire/{layoutId}',
+        operationId: 'layoutRetire',
+        description: 'Retire a Layout so that it isn\'t available to Schedule. Existing Layouts will still be played', // phpcs:ignore
+        summary: 'Retire Layout',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Retires a layout
      * @param Request $request
@@ -1176,24 +1162,6 @@ class Layout extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Put(
-     *  path="/layout/retire/{layoutId}",
-     *  operationId="layoutRetire",
-     *  tags={"layout"},
-     *  summary="Retire Layout",
-     *  description="Retire a Layout so that it isn't available to Schedule. Existing Layouts will still be played",
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      in="path",
-     *      description="The Layout ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     function retire(Request $request, Response $response, $id)
     {
@@ -1262,6 +1230,20 @@ class Layout extends Base
 
     }
 
+    #[OA\Put(
+        path: '/layout/unretire/{layoutId}',
+        operationId: 'layoutUnretire',
+        description: 'Retire a Layout so that it isn\'t available to Schedule. Existing Layouts will still be played', // phpcs:ignore
+        summary: 'Unretire Layout',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Unretires a layout
      * @param Request $request
@@ -1273,24 +1255,6 @@ class Layout extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Put(
-     *  path="/layout/unretire/{layoutId}",
-     *  operationId="layoutUnretire",
-     *  tags={"layout"},
-     *  summary="Unretire Layout",
-     *  description="Retire a Layout so that it isn't available to Schedule. Existing Layouts will still be played",
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      in="path",
-     *      description="The Layout ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     function unretire(Request $request, Response $response, $id)
     {
@@ -1323,6 +1287,36 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/layout/setenablestat/{layoutId}',
+        operationId: 'layoutSetEnableStat',
+        description: 'Set Enable Stats Collection? to use for the collection of Proof of Play statistics for a Layout.', // phpcs:ignore
+        summary: 'Enable Stats Collection',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'enableStat',
+                        description: 'Flag indicating whether the Layout stat is enabled',
+                        type: 'integer'
+                    )
+                ],
+                required: ['enableStat']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Set Enable Stats Collection of a layout
      * @param Request $request
@@ -1334,31 +1328,6 @@ class Layout extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Put(
-     *  path="/layout/setenablestat/{layoutId}",
-     *  operationId="layoutSetEnableStat",
-     *  tags={"layout"},
-     *  summary="Enable Stats Collection",
-     *  description="Set Enable Stats Collection? to use for the collection of Proof of Play statistics for a Layout.",
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      in="path",
-     *      description="The Layout ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="enableStat",
-     *      in="formData",
-     *      description="Flag indicating whether the Layout stat is enabled",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     function setEnableStat(Request $request, Response $response, $id)
     {
@@ -1418,122 +1387,121 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/layout',
+        operationId: 'layoutSearch',
+        description: 'Search for Layouts viewable by this user',
+        summary: 'Search Layouts',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        description: 'Filter by Layout Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'parentId',
+        description: 'Filter by parent Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'showDrafts',
+        description: 'Flag indicating whether to show drafts',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'layout',
+        description: 'Filter by partial Layout name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'userId',
+        description: 'Filter by user Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'retired',
+        description: 'Filter by retired flag',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'tags',
+        description: 'Filter by Tags',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'exactTags',
+        description: 'A flag indicating whether to treat the tags filter as an exact match',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'logicalOperator',
+        description: 'When filtering by multiple Tags, which logical operator should be used? AND|OR',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'ownerUserGroupId',
+        description: 'Filter by users in this UserGroupId',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'publishedStatusId',
+        description: 'Filter by published status id, 1 - Published, 2 - Draft',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'embed',
+        description: 'Embed related data such as regions, playlists, widgets, tags, campaigns, permissions',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'campaignId',
+        description: 'Get all Layouts for a given campaignId',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'folderId',
+        description: 'Filter by Folder ID',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Layout')
+        )
+    )]
     /**
      * Shows the Layout Grid
-     *
-     * @SWG\Get(
-     *  path="/layout",
-     *  operationId="layoutSearch",
-     *  tags={"layout"},
-     *  summary="Search Layouts",
-     *  description="Search for Layouts viewable by this user",
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      in="query",
-     *      description="Filter by Layout Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="parentId",
-     *      in="query",
-     *      description="Filter by parent Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="showDrafts",
-     *      in="query",
-     *      description="Flag indicating whether to show drafts",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="layout",
-     *      in="query",
-     *      description="Filter by partial Layout name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="userId",
-     *      in="query",
-     *      description="Filter by user Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="retired",
-     *      in="query",
-     *      description="Filter by retired flag",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="tags",
-     *      in="query",
-     *      description="Filter by Tags",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="exactTags",
-     *      in="query",
-     *      description="A flag indicating whether to treat the tags filter as an exact match",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="logicalOperator",
-     *      in="query",
-     *      description="When filtering by multiple Tags, which logical operator should be used? AND|OR",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ownerUserGroupId",
-     *      in="query",
-     *      description="Filter by users in this UserGroupId",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="publishedStatusId",
-     *      in="query",
-     *      description="Filter by published status id, 1 - Published, 2 - Draft",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="embed",
-     *      in="query",
-     *      description="Embed related data such as regions, playlists, widgets, tags, campaigns, permissions",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="campaignId",
-     *      in="query",
-     *      description="Get all Layouts for a given campaignId",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="query",
-     *      description="Filter by Folder ID",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/Layout")
-     *      )
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response
@@ -1977,7 +1945,6 @@ class Layout extends Base
                             ['name' => 'commit-method', 'value' => 'delete'],
                             ['name' => 'id', 'value' => 'layout_button_delete'],
                             ['name' => 'text', 'value' => __('Delete')],
-                            ['name' => 'sort-group', 'value' => 1],
                             ['name' => 'rowtitle', 'value' => $layout->layout]
                         ]
                     ];
@@ -2159,6 +2126,54 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/layout/copy/{layoutId}',
+        operationId: 'layoutCopy',
+        description: 'Copy a Layout, providing a new name if applicable',
+        summary: 'Copy Layout',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        description: 'The Layout ID to Copy',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'name', description: 'The name for the new Layout', type: 'string'),
+                    new OA\Property(
+                        property: 'description',
+                        description: 'The Description for the new Layout',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'copyMediaFiles',
+                        description: 'Flag indicating whether to make new Copies of all Media Files assigned to the Layout being Copied', // phpcs:ignore
+                        type: 'integer'
+                    )
+                ],
+                required: ['name', 'copyMediaFiles']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Copies a layout
      * @param Request $request
@@ -2172,51 +2187,6 @@ class Layout extends Base
      * @throws \Xibo\Support\Exception\ConfigurationException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
-     * @SWG\Post(
-     *  path="/layout/copy/{layoutId}",
-     *  operationId="layoutCopy",
-     *  tags={"layout"},
-     *  summary="Copy Layout",
-     *  description="Copy a Layout, providing a new name if applicable",
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      in="path",
-     *      description="The Layout ID to Copy",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="The name for the new Layout",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="The Description for the new Layout",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="copyMediaFiles",
-     *      in="formData",
-     *      description="Flag indicating whether to make new Copies of all Media Files assigned to the Layout being Copied",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Layout"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      */
     public function copy(Request $request, Response $response, $id)
     {
@@ -2325,35 +2295,43 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/layout/{layoutId}/tag',
+        operationId: 'layoutTag',
+        description: 'Tag a Layout with one or more tags',
+        summary: 'Tag Layout',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        description: 'The Layout Id to Tag',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'tag',
+                        description: 'An array of tags',
+                        items: new OA\Items(type: 'string'),
+                        type: 'array'
+                    )
+                ],
+                required: ['tag']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout')
+    )]
     /**
-     * @SWG\Post(
-     *  path="/layout/{layoutId}/tag",
-     *  operationId="layoutTag",
-     *  tags={"layout"},
-     *  summary="Tag Layout",
-     *  description="Tag a Layout with one or more tags",
-     * @SWG\Parameter(
-     *      name="layoutId",
-     *      in="path",
-     *      description="The Layout Id to Tag",
-     *      type="integer",
-     *      required=true
-     *   ),
-     * @SWG\Parameter(
-     *      name="tag",
-     *      in="formData",
-     *      description="An array of tags",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(type="string")
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Layout")
-     *  )
-     * )
-     *
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -2401,35 +2379,43 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/layout/{layoutId}/untag',
+        operationId: 'layoutUntag',
+        description: 'Untag a Layout with one or more tags',
+        summary: 'Untag Layout',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        description: 'The Layout Id to Untag',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['tag'],
+                properties: [
+                    new OA\Property(
+                        property: 'tag',
+                        description: 'An array of tags',
+                        type: 'array',
+                        items: new OA\Items(type: 'string')
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout')
+    )]
     /**
-     * @SWG\Post(
-     *  path="/layout/{layoutId}/untag",
-     *  operationId="layoutUntag",
-     *  tags={"layout"},
-     *  summary="Untag Layout",
-     *  description="Untag a Layout with one or more tags",
-     * @SWG\Parameter(
-     *      name="layoutId",
-     *      in="path",
-     *      description="The Layout Id to Untag",
-     *      type="integer",
-     *      required=true
-     *   ),
-     * @SWG\Parameter(
-     *      name="tag",
-     *      in="formData",
-     *      description="An array of tags",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(type="string")
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Layout")
-     *  )
-     * )
-     *
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -2476,6 +2462,25 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/layout/status/{layoutId}',
+        operationId: 'layoutStatus',
+        description: 'Calculate the Layout status and return a Layout',
+        summary: 'Layout Status',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        description: 'The Layout Id to get the status',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout')
+    )]
     /**
      * Layout Status
      * @param Request $request
@@ -2486,25 +2491,6 @@ class Layout extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Get(
-     *  path="/layout/status/{layoutId}",
-     *  operationId="layoutStatus",
-     *  tags={"layout"},
-     *  summary="Layout Status",
-     *  description="Calculate the Layout status and return a Layout",
-     * @SWG\Parameter(
-     *      name="layoutId",
-     *      in="path",
-     *      description="The Layout Id to get the status",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Layout")
-     *  )
-     * )
      */
     public function status(Request $request, Response $response, $id)
     {
@@ -2653,25 +2639,6 @@ class Layout extends Base
 
     /**
      * TODO: Not sure how to document this.
-     * SWG\Post(
-     *  path="/layout/import",
-     *  operationId="layoutImport",
-     *  tags={"layout"},
-     *  summary="Import Layout",
-     *  description="Upload and Import a Layout",
-     *  consumes="multipart/form-data",
-     *  SWG\Parameter(
-     *      name="file",
-     *      in="formData",
-     *      description="The file",
-     *      type="file",
-     *      required=true
-     *   ),
-     * @SWG\Response(
-     *      response=200,
-     *      description="successful operation"
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response
@@ -2839,28 +2806,27 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/layout/checkout/{layoutId}',
+        operationId: 'layoutCheckout',
+        description: 'Checkout a Layout so that it can be edited. The original Layout will still be played',
+        summary: 'Checkout Layout',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        description: 'The Layout ID',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout')
+    )]
     /**
      * Checkout Layout
-     *
-     * @SWG\Put(
-     *  path="/layout/checkout/{layoutId}",
-     *  operationId="layoutCheckout",
-     *  tags={"layout"},
-     *  summary="Checkout Layout",
-     *  description="Checkout a Layout so that it can be edited. The original Layout will still be played",
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      in="path",
-     *      description="The Layout ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Layout")
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response
@@ -2928,42 +2894,47 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/layout/publish/{layoutId}',
+        operationId: 'layoutPublish',
+        description: 'Publish a Layout, discarding the original',
+        summary: 'Publish Layout',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        description: 'The Layout ID',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'publishNow',
+                        description: 'Flag, indicating whether to publish layout now',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'publishDate',
+                        description: 'The date/time at which layout should be published',
+                        type: 'string'
+                    )
+                ]
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout')
+    )]
     /**
      * Publish Layout
-     *
-     * @SWG\Put(
-     *  path="/layout/publish/{layoutId}",
-     *  operationId="layoutPublish",
-     *  tags={"layout"},
-     *  summary="Publish Layout",
-     *  description="Publish a Layout, discarding the original",
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      in="path",
-     *      description="The Layout ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="publishNow",
-     *      in="formData",
-     *      description="Flag, indicating whether to publish layout now",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="publishDate",
-     *      in="formData",
-     *      description="The date/time at which layout should be published",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Layout")
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response
@@ -3082,28 +3053,27 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/layout/discard/{layoutId}',
+        operationId: 'layoutDiscard',
+        description: 'Discard a Layout restoring the original',
+        summary: 'Discard Layout',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        in: 'path',
+        description: 'The Layout ID',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout')
+    )]
     /**
      * Discard Layout
-     *
-     * @SWG\Put(
-     *  path="/layout/discard/{layoutId}",
-     *  operationId="layoutDiscard",
-     *  tags={"layout"},
-     *  summary="Discard Layout",
-     *  description="Discard a Layout restoring the original",
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      in="path",
-     *      description="The Layout ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Layout")
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response
@@ -3428,61 +3398,64 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/layout/fullscreen',
+        operationId: 'layoutAddFullScreen',
+        description: 'Add a new full screen Layout with specified Media/Playlist',
+        summary: 'Add a Full Screen Layout',
+        tags: ['layout']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'id',
+                        description: 'The Media or Playlist ID that should be added to this Layout',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'type',
+                        description: 'The type of Layout to be created = media or playlist',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'resolutionId',
+                        description: 'The Id of the resolution for this Layout, defaults to 1080p for playlist and closest resolution match for Media', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'backgroundColor',
+                        description: 'A HEX color to use as the background color of this Layout. Default is black #000', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'layoutDuration',
+                        description: 'Use with media type, to specify the duration this Media should play in one loop', // phpcs:ignore
+                        type: 'boolean'
+                    )
+                ],
+                required: ['id', 'type']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Create a Layout with full screen Region with Media/Playlist specific Widget
      * This is called as a first step when scheduling Media/Playlist eventType
-     * @SWG\Post(
-     *  path="/layout/fullscreen",
-     *  operationId="layoutAddFullScreen",
-     *  tags={"layout"},
-     *  summary="Add a Full Screen Layout",
-     *  description="Add a new full screen Layout with specified Media/Playlist",
-     *  @SWG\Parameter(
-     *      name="id",
-     *      in="formData",
-     *      description="The Media or Playlist ID that should be added to this Layout",
-     *      type="integer",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="type",
-     *      in="formData",
-     *      description="The type of Layout to be created = media or playlist",
-     *      type="string",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="resolutionId",
-     *      in="formData",
-     *      description="The Id of the resolution for this Layout, defaults to 1080p for playlist and closest resolution match for Media",
-     *      type="integer",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="backgroundColor",
-     *      in="formData",
-     *      description="A HEX color to use as the background color of this Layout. Default is black #000",
-     *      type="string",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="layoutDuration",
-     *      in="formData",
-     *      description="Use with media type, to specify the duration this Media should play in one loop",
-     *      type="boolean",
-     *      required=false
-     *  ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Layout"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return Response|ResponseInterface

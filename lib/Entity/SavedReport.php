@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -22,6 +22,7 @@
 
 namespace Xibo\Entity;
 
+use OpenApi\Attributes as OA;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -31,95 +32,94 @@ use Xibo\Storage\StorageServiceInterface;
 /**
 * Class SavedReport
 * @package Xibo\Entity
-*
-* @SWG\Definition()
 */
+#[OA\Schema]
 class SavedReport implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="Saved report ID")
      * @var int
      */
+    #[OA\Property(description: 'Saved report ID')]
     public $savedReportId;
 
     /**
-     * @SWG\Property(description="Saved report name As")
      * @var string
      */
+    #[OA\Property(description: 'Saved report name As')]
     public $saveAs;
 
     /**
-     * @SWG\Property(description="Report schedule Id of the saved report")
      * @var int
      */
+    #[OA\Property(description: 'Report schedule Id of the saved report')]
     public $reportScheduleId;
 
     /**
-     * @SWG\Property(description="Report schedule name of the saved report")
      * @var string
      */
+    #[OA\Property(description: 'Report schedule name of the saved report')]
     public $reportScheduleName;
 
     /**
-     * @SWG\Property(description="Report name")
      * @var string
      */
+    #[OA\Property(description: 'Report name')]
     public $reportName;
 
     /**
-     * @SWG\Property(description="Saved report generated on")
      * @var string
      */
+    #[OA\Property(description: 'Saved report generated on')]
     public $generatedOn;
 
     /**
-     * @SWG\Property(description="The username of the User that owns this saved report")
      * @var string
      */
+    #[OA\Property(description: 'The username of the User that owns this saved report')]
     public $owner;
 
     /**
-     * @SWG\Property(description="The ID of the User that owns this saved report")
      * @var int
      */
+    #[OA\Property(description: 'The ID of the User that owns this saved report')]
     public $userId;
 
     /**
-     * @SWG\Property(description="Original name of the saved report media file")
      * @var string
      */
+    #[OA\Property(description: 'Original name of the saved report media file')]
     public $originalFileName;
 
     /**
-     * @SWG\Property(description="Stored As")
      * @var string
      */
+    #[OA\Property(description: 'Stored As')]
     public $storedAs;
 
     /**
-     * @SWG\Property(description="Schema Version")
      * @var int
      */
+    #[OA\Property(description: 'Schema Version')]
     public $schemaVersion = 2;
 
     /**
-     * @SWG\Property(description="The Saved Report file name")
      * @var string
      */
+    #[OA\Property(description: 'The Saved Report file name')]
     public $fileName;
 
     /**
-     * @SWG\Property(description="The Saved Report file size in bytes")
      * @var int
      */
+    #[OA\Property(description: 'The Saved Report file size in bytes')]
     public $size;
 
     /**
-     * @SWG\Property(description="A MD5 checksum of the stored Saved Report file")
      * @var string
      */
+    #[OA\Property(description: 'A MD5 checksum of the stored Saved Report file')]
     public $md5;
 
     /**

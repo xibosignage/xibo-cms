@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -25,6 +25,7 @@ namespace Xibo\Controller;
 
 use Carbon\Carbon;
 use Carbon\Exceptions\InvalidDateException;
+use OpenApi\Attributes as OA;
 use PicoFeed\Syndication\Rss20FeedBuilder;
 use PicoFeed\Syndication\Rss20ItemBuilder;
 use Slim\Http\Response as Response;
@@ -101,6 +102,28 @@ class DataSetRss extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/dataset/{dataSetId}/rss',
+        operationId: 'dataSetRSSSearch',
+        description: 'Search RSSs for DataSet',
+        summary: 'Search RSSs',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        description: 'The DataSet ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/DataSetRss')
+        )
+    )]
     /**
      * Search
      * @param Request $request
@@ -111,28 +134,6 @@ class DataSetRss extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Get(
-     *  path="/dataset/{dataSetId}/rss",
-     *  operationId="dataSetRSSSearch",
-     *  tags={"dataset"},
-     *  summary="Search RSSs",
-     *  description="Search RSSs for DataSet",
-     *  @SWG\Parameter(
-     *      name="dataSetId",
-     *      in="path",
-     *      description="The DataSet ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/DataSetRss")
-     *      )
-     *  )
-     * )
      */
     public function grid(Request $request, Response $response, $id)
     {
@@ -221,6 +222,60 @@ class DataSetRss extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/dataset/{dataSetId}/rss',
+        operationId: 'dataSetRssAdd',
+        description: 'Add a RSS to a DataSet',
+        summary: 'Add RSS',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        description: 'The DataSet ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'title', description: 'The title for the RSS', type: 'string'),
+                    new OA\Property(property: 'author', description: 'The author for the RSS', type: 'string'),
+                    new OA\Property(
+                        property: 'summaryColumnId',
+                        description: 'The columnId to be used as each item summary',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'contentColumnId',
+                        description: 'The columnId to be used as each item content',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'publishedDateColumnId',
+                        description: 'The columnId to be used as each item published date',
+                        type: 'integer'
+                    )
+                ],
+                required: ['title', 'author', 'summaryColumnId', 'contentColumnId', 'publishedDateColumnId']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DataSetRss'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add
      * @param Request $request
@@ -232,65 +287,6 @@ class DataSetRss extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Post(
-     *  path="/dataset/{dataSetId}/rss",
-     *  operationId="dataSetRssAdd",
-     *  tags={"dataset"},
-     *  summary="Add RSS",
-     *  description="Add a RSS to a DataSet",
-     *  @SWG\Parameter(
-     *      name="dataSetId",
-     *      in="path",
-     *      description="The DataSet ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="title",
-     *      in="formData",
-     *      description="The title for the RSS",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="title",
-     *      in="formData",
-     *      description="The author for the RSS",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="summaryColumnId",
-     *      in="formData",
-     *      description="The columnId to be used as each item summary",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="contentColumnId",
-     *      in="formData",
-     *      description="The columnId to be used as each item content",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="publishedDateColumnId",
-     *      in="formData",
-     *      description="The columnId to be used as each item published date",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/DataSetRss"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      */
     public function add(Request $request, Response $response, $id)
     {
@@ -440,6 +436,57 @@ class DataSetRss extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/dataset/{dataSetId}/rss/{rssId}',
+        operationId: 'dataSetRssEdit',
+        description: 'Edit DataSet Rss Feed',
+        summary: 'Edit Rss',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        description: 'The DataSet ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'rssId',
+        description: 'The RSS ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'title', description: 'The title for the RSS', type: 'string'),
+                    new OA\Property(property: 'author', description: 'The author for the RSS', type: 'string'),
+                    new OA\Property(
+                        property: 'summaryColumnId',
+                        description: 'The rssId to be used as each item summary',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'contentColumnId',
+                        description: 'The columnId to be used as each item content',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'publishedDateColumnId',
+                        description: 'The columnId to be used as each item published date',
+                        type: 'integer'
+                    ),
+                    new OA\Property(property: 'regeneratePsk', description: 'Regenerate the PSK?', type: 'integer')
+                ],
+                required: ['title', 'author', 'summaryColumnId', 'contentColumnId', 'publishedDateColumnId', 'regeneratePsk'] // phpcs:ignore
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Edit
      * @param Request $request
@@ -453,73 +500,6 @@ class DataSetRss extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Put(
-     *  path="/dataset/{dataSetId}/rss/{rssId}",
-     *  operationId="dataSetRssEdit",
-     *  tags={"dataset"},
-     *  summary="Edit Rss",
-     *  description="Edit DataSet Rss Feed",
-     *  @SWG\Parameter(
-     *      name="dataSetId",
-     *      in="path",
-     *      description="The DataSet ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="rssId",
-     *      in="path",
-     *      description="The RSS ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="title",
-     *      in="formData",
-     *      description="The title for the RSS",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="title",
-     *      in="formData",
-     *      description="The author for the RSS",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="summaryColumnId",
-     *      in="formData",
-     *      description="The rssId to be used as each item summary",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="contentColumnId",
-     *      in="formData",
-     *      description="The columnId to be used as each item content",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="publishedDateColumnId",
-     *      in="formData",
-     *      description="The columnId to be used as each item published date",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="regeneratePsk",
-     *      in="formData",
-     *      description="Regenerate the PSK?",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function edit(Request $request, Response $response, $id, $rssId)
     {
@@ -598,6 +578,28 @@ class DataSetRss extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(
+        path: '/dataset/{dataSetId}/rss/{rssId}',
+        operationId: 'dataSetRSSDelete',
+        description: 'Delete DataSet RSS',
+        summary: 'Delete RSS',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        description: 'The DataSet ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'rssId',
+        description: 'The RSS ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete
      * @param Request $request
@@ -610,31 +612,6 @@ class DataSetRss extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Delete(
-     *  path="/dataset/{dataSetId}/rss/{rssId}",
-     *  operationId="dataSetRSSDelete",
-     *  tags={"dataset"},
-     *  summary="Delete RSS",
-     *  description="Delete DataSet RSS",
-     *  @SWG\Parameter(
-     *      name="dataSetId",
-     *      in="path",
-     *      description="The DataSet ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="rssId",
-     *      in="path",
-     *      description="The RSS ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function delete(Request $request, Response $response, $id, $rssId)
     {

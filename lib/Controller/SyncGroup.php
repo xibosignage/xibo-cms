@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -65,54 +66,56 @@ class SyncGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/syncgroups',
+        operationId: 'syncGroupSearch',
+        summary: 'Get Sync Groups',
+        tags: ['syncGroup']
+    )]
+    #[OA\Parameter(
+        name: 'syncGroupId',
+        description: 'Filter by syncGroup Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'name',
+        description: 'Filter by syncGroup Name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'ownerId',
+        description: 'Filter by Owner ID',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'folderId',
+        description: 'Filter by Folder ID',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'a successful response',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/SyncGroup')
+        ),
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ]
+    )]
     /**
-     * @SWG\Get(
-     *  path="/syncgroups",
-     *  summary="Get Sync Groups",
-     *  tags={"syncGroup"},
-     *  operationId="syncGroupSearch",
-     *  @SWG\Parameter(
-     *      name="syncGroupId",
-     *      in="query",
-     *      description="Filter by syncGroup Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="query",
-     *      description="Filter by syncGroup Name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ownerId",
-     *      in="query",
-     *      description="Filter by Owner ID",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="query",
-     *      description="Filter by Folder ID",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="a successful response",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/SyncGroup")
-     *      ),
-     *      @SWG\Header(
-     *          header="X-Total-Count",
-     *          description="The total number of records",
-     *          type="integer"
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return Response|ResponseInterface
@@ -207,46 +210,49 @@ class SyncGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/syncgroup/add',
+        operationId: 'syncGroupAdd',
+        description: 'Add a new Sync Group to the CMS',
+        summary: 'Add a Sync Group',
+        tags: ['syncGroup']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'name', description: 'The Sync Group Name', type: 'string'),
+                    new OA\Property(
+                        property: 'syncPublisherPort',
+                        description: 'The publisher port number on which sync group members will communicate - default 9590', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'folderId',
+                        description: 'Folder ID to which this object should be assigned to',
+                        type: 'integer'
+                    )
+                ],
+                required: ['name']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DisplayGroup'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new DisplayGroup',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Adds a Sync Group
-     * @SWG\Post(
-     *  path="/syncgroup/add",
-     *  operationId="syncGroupAdd",
-     *  tags={"syncGroup"},
-     *  summary="Add a Sync Group",
-     *  description="Add a new Sync Group to the CMS",
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="The Sync Group Name",
-     *      type="string",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="syncPublisherPort",
-     *      in="formData",
-     *      description="The publisher port number on which sync group members will communicate - default 9590",
-     *      type="integer",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="formData",
-     *      description="Folder ID to which this object should be assigned to",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/DisplayGroup"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new DisplayGroup",
-     *          type="string"
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return Response|ResponseInterface
@@ -331,43 +337,45 @@ class SyncGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/syncgroup/{syncGroupId}/members',
+        operationId: 'syncGroupMembers',
+        description: 'Adds the provided Displays to the Sync Group',
+        summary: 'Assign one or more Displays to a Sync Group',
+        tags: ['syncGroup']
+    )]
+    #[OA\Parameter(
+        name: 'syncGroupId',
+        description: 'The Sync Group to assign to',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'displayId',
+                        description: 'The Display Ids to assign',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'unassignDisplayId',
+                        description: 'An optional array of Display IDs to unassign',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    )
+                ],
+                required: ['displayId']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
-     * @SWG\Post(
-     *  path="/syncgroup/{syncGroupId}/members",
-     *  operationId="syncGroupMembers",
-     *  tags={"syncGroup"},
-     *  summary="Assign one or more Displays to a Sync Group",
-     *  description="Adds the provided Displays to the Sync Group",
-     *  @SWG\Parameter(
-     *      name="syncGroupId",
-     *      type="integer",
-     *      in="path",
-     *      description="The Sync Group to assign to",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="displayId",
-     *      type="array",
-     *      in="formData",
-     *      description="The Display Ids to assign",
-     *      required=true,
-     *      @SWG\Items(
-     *          type="integer"
-     *      )
-     *  ),
-     *  @SWG\Parameter(
-     *      name="unassignDisplayId",
-     *      in="formData",
-     *      description="An optional array of Display IDs to unassign",
-     *      type="array",
-     *      required=false,
-     *      @SWG\Items(type="integer")
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -460,74 +468,71 @@ class SyncGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/syncgroup/{syncGroupId}/edit',
+        operationId: 'syncGroupEdit',
+        description: 'Edit an existing Sync Group',
+        summary: 'Edit a Sync Group',
+        tags: ['syncGroup']
+    )]
+    #[OA\Parameter(
+        name: 'syncGroupId',
+        description: 'The Sync Group to assign to',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'name', description: 'The Sync Group Name', type: 'string'),
+                    new OA\Property(
+                        property: 'syncPublisherPort',
+                        description: 'The publisher port number on which sync group members will communicate - default 9590', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'syncSwitchDelay',
+                        description: 'The delay (in ms) when displaying the changes in content - default 750', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'syncVideoPauseDelay',
+                        description: 'The delay (in ms) before unpausing the video on start - default 100', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'leadDisplayId',
+                        description: 'The ID of the Display that belongs to this Sync Group and should act as a Lead Display', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'folderId',
+                        description: 'Folder ID to which this object should be assigned to',
+                        type: 'integer'
+                    )
+                ],
+                required: ['name', 'leadDisplayId']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DisplayGroup'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new DisplayGroup',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Edits a Sync Group
-     * @SWG\Post(
-     *  path="/syncgroup/{syncGroupId}/edit",
-     *  operationId="syncGroupEdit",
-     *  tags={"syncGroup"},
-     *  summary="Edit a Sync Group",
-     *  description="Edit an existing Sync Group",
-     *  @SWG\Parameter(
-     *      name="syncGroupId",
-     *      type="integer",
-     *      in="path",
-     *      description="The Sync Group to assign to",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="The Sync Group Name",
-     *      type="string",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="syncPublisherPort",
-     *      in="formData",
-     *      description="The publisher port number on which sync group members will communicate - default 9590",
-     *      type="integer",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="syncSwitchDelay",
-     *      in="formData",
-     *      description="The delay (in ms) when displaying the changes in content - default 750",
-     *      type="integer",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="syncVideoPauseDelay",
-     *      in="formData",
-     *      description="The delay (in ms) before unpausing the video on start - default 100",
-     *      type="integer",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="leadDisplayId",
-     *      in="formData",
-     *      description="The ID of the Display that belongs to this Sync Group and should act as a Lead Display",
-     *      type="integer",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="formData",
-     *      description="Folder ID to which this object should be assigned to",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/DisplayGroup"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new DisplayGroup",
-     *          type="string"
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -608,25 +613,22 @@ class SyncGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(
+        path: '/syncgroup/{syncGroupId}/delete',
+        operationId: 'syncGroupDelete',
+        description: 'Delete an existing Sync Group identified by its Id',
+        summary: 'Delete a Sync Group',
+        tags: ['syncGroup']
+    )]
+    #[OA\Parameter(
+        name: 'syncGroupId',
+        description: 'The syncGroupId to delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
-     * @SWG\Delete(
-     *  path="/syncgroup/{syncGroupId}/delete",
-     *  operationId="syncGroupDelete",
-     *  tags={"syncGroup"},
-     *  summary="Delete a Sync Group",
-     *  description="Delete an existing Sync Group identified by its Id",
-     *  @SWG\Parameter(
-     *      name="syncGroupId",
-     *      type="integer",
-     *      in="path",
-     *      description="The syncGroupId to delete",
-     *      required=true
-     *  ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -656,35 +658,35 @@ class SyncGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/syncgroup/{syncGroupId}/displays',
+        operationId: 'syncGroupDisplays',
+        summary: 'Get members of this sync group',
+        tags: ['syncGroup']
+    )]
+    #[OA\Parameter(
+        name: 'syncGroupId',
+        description: 'The syncGroupId to delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'eventId',
+        description: 'Filter by event ID - return will include Layouts Ids scheduled against each group member', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'a successful response',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/SyncGroup')
+        )
+    )]
     /**
-     * @SWG\Get(
-     *  path="/syncgroup/{syncGroupId}/displays",
-     *  summary="Get members of this sync group",
-     *  tags={"syncGroup"},
-     *  operationId="syncGroupDisplays",
-     *  @SWG\Parameter(
-     *      name="syncGroupId",
-     *      type="integer",
-     *      in="path",
-     *      description="The syncGroupId to delete",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="eventId",
-     *      in="query",
-     *      description="Filter by event ID - return will include Layouts Ids scheduled against each group member",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="a successful response",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/SyncGroup")
-     *      ),
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @param $id

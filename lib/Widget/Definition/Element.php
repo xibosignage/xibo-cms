@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,20 +22,31 @@
 
 namespace Xibo\Widget\Definition;
 
+use OpenApi\Attributes as OA;
+
 /**
- * @SWG\Definition()
  * A class representing an instance of an element template
  */
+#[OA\Schema(schema: 'Element')]
 class Element implements \JsonSerializable
 {
+    #[OA\Property()]
     public $id;
+    #[OA\Property()]
     public $top;
+    #[OA\Property()]
     public $left;
+    #[OA\Property()]
     public $width;
+    #[OA\Property()]
     public $height;
+    #[OA\Property()]
     public $rotation;
+    #[OA\Property()]
     public $layer;
+    #[OA\Property()]
     public $elementGroupId;
+    #[OA\Property(type: 'array', items: new OA\Items(type: 'string'))]
     public $properties = [];
 
     /** @inheritDoc */

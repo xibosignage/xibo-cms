@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,6 +23,7 @@
 
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Event\CommandDeleteEvent;
@@ -67,73 +68,71 @@ class Command extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/command',
+        operationId: 'commandSearch',
+        description: 'Search this users Commands',
+        summary: 'Command Search',
+        tags: ['command']
+    )]
+    #[OA\Parameter(
+        name: 'commandId',
+        description: 'Filter by Command Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'command',
+        description: 'Filter by Command Name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'code',
+        description: 'Filter by Command Code',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'useRegexForName',
+        description: 'Flag (0,1). When filtering by multiple commands in command filter, should we use regex?', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'useRegexForCode',
+        description: 'Flag (0,1). When filtering by multiple codes in code filter, should we use regex?', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'logicalOperatorName',
+        description: 'When filtering by multiple commands in command filter, which logical operator should be used? AND|OR', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'logicalOperatorCode',
+        description: 'When filtering by multiple codes in code filter, which logical operator should be used? AND|OR', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Command')
+        )
+    )]
     /**
-     * @SWG\Get(
-     *  path="/command",
-     *  operationId="commandSearch",
-     *  tags={"command"},
-     *  summary="Command Search",
-     *  description="Search this users Commands",
-     *  @SWG\Parameter(
-     *      name="commandId",
-     *      in="query",
-     *      description="Filter by Command Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="command",
-     *      in="query",
-     *      description="Filter by Command Name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="code",
-     *      in="query",
-     *      description="Filter by Command Code",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="useRegexForName",
-     *      in="query",
-     *      description="Flag (0,1). When filtering by multiple commands in command filter, should we use regex?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *    name="useRegexForCode",
-     *     in="query",
-     *     description="Flag (0,1). When filtering by multiple codes in code filter, should we use regex?",
-     *     type="integer",
-     *     required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="logicalOperatorName",
-     *      in="query",
-     *      description="When filtering by multiple commands in command filter,
-     * which logical operator should be used? AND|OR",
-     *      type="string",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="logicalOperatorCode",
-     *      in="query",
-     *      description="When filtering by multiple codes in code filter,
-     * which logical operator should be used? AND|OR",
-     *      type="string",
-     *      required=false
-     *  ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/Command")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -318,76 +317,73 @@ class Command extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/command',
+        operationId: 'commandAdd',
+        description: 'Add a Command',
+        summary: 'Command Add',
+        tags: ['command']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'command',
+                        description: 'The Command Name',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'description',
+                        description: 'A description for the command',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'code',
+                        description: 'A unique code for this command',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'commandString',
+                        description: 'The Command String for this Command. Can be overridden on Display Settings.', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'validationString',
+                        description: 'The Validation String for this Command. Can be overridden on Display Settings.', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'availableOn',
+                        description: 'An array of Player types this Command is available on, empty for all.', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'createAlertOn',
+                        description: 'On command execution, when should a Display alert be created? success, failure, always or never', // phpcs:ignore
+                        type: 'string'
+                    )
+                ],
+                required: ['command', 'code']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Command'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add Command
-     *
-     * @SWG\Post(
-     *  path="/command",
-     *  operationId="commandAdd",
-     *  tags={"command"},
-     *  summary="Command Add",
-     *  description="Add a Command",
-     *  @SWG\Parameter(
-     *      name="command",
-     *      in="formData",
-     *      description="The Command Name",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="A description for the command",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="code",
-     *      in="formData",
-     *      description="A unique code for this command",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="commandString",
-     *      in="formData",
-     *      description="The Command String for this Command. Can be overridden on Display Settings.",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="validationString",
-     *      in="formData",
-     *      description="The Validation String for this Command. Can be overridden on Display Settings.",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="availableOn",
-     *      in="formData",
-     *      description="An array of Player types this Command is available on, empty for all.",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="createAlertOn",
-     *      in="formData",
-     *      description="On command execution, when should a Display alert be created?
-     * success, failure, always or never",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Command"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response
@@ -426,6 +422,66 @@ class Command extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/command/{commandId}',
+        operationId: 'commandEdit',
+        description: 'Edit the provided command',
+        summary: 'Edit Command',
+        tags: ['command']
+    )]
+    #[OA\Parameter(
+        name: 'commandId',
+        description: 'The Command Id to Edit',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'command',
+                        description: 'The Command Name',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'description',
+                        description: 'A description for the command',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'commandString',
+                        description: 'The Command String for this Command. Can be overridden on Display Settings.', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'validationString',
+                        description: 'The Validation String for this Command. Can be overridden on Display Settings.', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'availableOn',
+                        description: 'An array of Player types this Command is available on, empty for all.', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'createAlertOn',
+                        description: 'On command execution, when should a Display alert be created? success, failure, always or never', // phpcs:ignore
+                        type: 'string'
+                    )
+                ],
+                required: ['command']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Command')
+    )]
     /**
      * Edit Command
      * @param Request $request
@@ -436,69 +492,6 @@ class Command extends Base
      * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws NotFoundException
-     *
-     * @SWG\Put(
-     *  path="/command/{commandId}",
-     *  operationId="commandEdit",
-     *  tags={"command"},
-     *  summary="Edit Command",
-     *  description="Edit the provided command",
-     *  @SWG\Parameter(
-     *      name="commandId",
-     *      in="path",
-     *      description="The Command Id to Edit",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="command",
-     *      in="formData",
-     *      description="The Command Name",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="A description for the command",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="commandString",
-     *      in="formData",
-     *      description="The Command String for this Command. Can be overridden on Display Settings.",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="validationString",
-     *      in="formData",
-     *      description="The Validation String for this Command. Can be overridden on Display Settings.",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="availableOn",
-     *      in="formData",
-     *      description="An array of Player types this Command is available on, empty for all.",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="createAlertOn",
-     *      in="formData",
-     *      description="On command execution, when should a Display alert be created?
-     * success, failure, always or never",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Command")
-     *  )
-     * )
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -533,6 +526,24 @@ class Command extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(
+        path: '/command/{commandId}',
+        operationId: 'commandDelete',
+        description: 'Delete the provided command',
+        summary: 'Delete Command',
+        tags: ['command']
+    )]
+    #[OA\Parameter(
+        name: 'commandId',
+        description: 'The Command Id to Delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 204,
+        description: 'successful operation'
+    )]
     /**
      * Delete Command
      * @param Request $request
@@ -543,24 +554,6 @@ class Command extends Base
      * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws NotFoundException
-     * @SWG\Delete(
-     *  path="/command/{commandId}",
-     *  operationId="commandDelete",
-     *  tags={"command"},
-     *  summary="Delete Command",
-     *  description="Delete the provided command",
-     *  @SWG\Parameter(
-     *      name="commandId",
-     *      in="path",
-     *      description="The Command Id to Delete",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function delete(Request $request, Response $response, $id)
     {

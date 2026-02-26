@@ -22,6 +22,7 @@
 import http from '@/lib/api';
 import type { Media } from '@/types/media';
 import { incrementFileName, incrementName } from '@/utils/stringUtils';
+import ZipWorker from '@/workers/zipWorker?worker';
 
 export interface FetchMediaRequest {
   start: number;
@@ -253,6 +254,52 @@ export async function downloadMedia(mediaId: number | string, fileName: string):
 
   link.parentNode?.removeChild(link);
   window.URL.revokeObjectURL(url);
+}
+
+export async function downloadMediaAsZip(
+  items: Array<{ mediaId: number | string; fileName: string }>,
+  zipFileName: string = 'media_export.zip',
+): Promise<void> {
+  const filePayloads = await Promise.all(
+    items.map(async (item) => {
+      const blob = await fetchMediaBlob(item.mediaId);
+      return { fileName: item.fileName, blob };
+    }),
+  );
+
+  // Wrap the worker in a promise
+  return new Promise((resolve, reject) => {
+    // Init the worker
+    const worker = new ZipWorker();
+
+    // Listen for the response
+    worker.onmessage = (e: MessageEvent) => {
+      if (e.data.status === 'success') {
+        const zipBlob = e.data.blob;
+
+        const url = window.URL.createObjectURL(zipBlob);
+        const link = document.createElement('a');
+
+        link.href = url;
+        link.setAttribute('download', zipFileName);
+
+        document.body.appendChild(link); // Required for Firefox
+        link.click();
+
+        link.parentNode?.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        worker.terminate();
+        resolve();
+      } else {
+        worker.terminate();
+        reject(new Error(e.data.error));
+      }
+    };
+
+    // Send the blobs to the worker
+    worker.postMessage({ files: filePayloads });
+  });
 }
 
 export interface CloneMediaRequest {

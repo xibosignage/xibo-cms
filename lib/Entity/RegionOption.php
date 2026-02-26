@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -22,33 +22,33 @@
 
 
 namespace Xibo\Entity;
+use OpenApi\Attributes as OA;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class RegionOption
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema(schema: 'RegionOption')]
 class RegionOption implements \JsonSerializable
 {
     use EntityTrait;
 
+    #[OA\Property(description: 'The regionId that this Option applies to')]
     /**
-     * @SWG\Property(description="The regionId that this Option applies to")
      * @var int
      */
     public $regionId;
 
+    #[OA\Property(description: 'The option name')]
     /**
-     * @SWG\Property(description="The option name")
      * @var string
      */
     public $option;
 
+    #[OA\Property(description: 'The option value')]
     /**
-     * @SWG\Property(description="The option value")
      * @var string
      */
     public $value;

@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -22,6 +22,7 @@
 
 namespace Xibo\Entity;
 
+use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -30,65 +31,64 @@ use Xibo\Support\Exception\InvalidArgumentException;
 /**
  * Class Resolution
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class Resolution implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="The ID of this Resolution")
      * @var int
      */
+    #[OA\Property(description: 'The ID of this Resolution')]
     public $resolutionId;
 
     /**
-     * @SWG\Property(description="The resolution name")
      * @var string
      */
+    #[OA\Property(description: 'The resolution name')]
     public $resolution;
 
     /**
-     * @SWG\Property(description="The display width of the resolution")
      * @var double
      */
+    #[OA\Property(description: 'The display width of the resolution')]
     public $width;
 
     /**
-     * @SWG\Property(description="The display height of the resolution")
      * @var double
      */
+    #[OA\Property(description: 'The display height of the resolution')]
     public $height;
 
     /**
-     * @SWG\Property(description="The designer width of the resolution")
      * @var double
      */
+    #[OA\Property(description: 'The designer width of the resolution')]
     public $designerWidth;
 
     /**
-     * @SWG\Property(description="The designer height of the resolution")
      * @var double
      */
+    #[OA\Property(description: 'The designer height of the resolution')]
     public $designerHeight;
 
     /**
-     * @SWG\Property(description="The layout schema version")
      * @var int
      */
+    #[OA\Property(description: 'The layout schema version')]
     public $version = 2;
 
     /**
-     * @SWG\Property(description="A flag indicating whether this resolution is enabled or not")
      * @var int
      */
+    #[OA\Property(description: 'A flag indicating whether this resolution is enabled or not')]
     public $enabled = 1;
 
     /**
-     * @SWG\Property(description="The userId who owns this Resolution")
      * @var int
      */
+    #[OA\Property(description: 'The userId who owns this Resolution')]
     public $userId;
 
     /**

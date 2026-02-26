@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -23,6 +23,7 @@ namespace Xibo\Controller;
 
 
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Helper\Session;
@@ -47,24 +48,23 @@ class Clock extends Base
         $this->session = $session;
     }
 
+    #[OA\Get(
+        path: '/clock',
+        operationId: 'clock',
+        description: 'The Time',
+        summary: 'The current CMS time',
+        tags: ['misc']
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful response',
+        content: new OA\JsonContent(
+            type: 'object',
+            additionalProperties: new OA\AdditionalProperties(type: 'string')
+        )
+    )]
     /**
      * Gets the Time
-     *
-     * @SWG\Get(
-     *  path="/clock",
-     *  operationId="clock",
-     *  tags={"misc"},
-     *  description="The Time",
-     *  summary="The current CMS time",
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful response",
-     *      @SWG\Schema(
-     *          type="object",
-     *          additionalProperties={"title":"time", "type":"string"}
-     *      )
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response

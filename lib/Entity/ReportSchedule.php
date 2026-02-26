@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -21,6 +21,7 @@
  */
 
 namespace Xibo\Entity;
+use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -29,9 +30,8 @@ use Xibo\Support\Exception\InvalidArgumentException;
 /**
  * Class ReportSchedule
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class ReportSchedule implements \JsonSerializable
 {
     use EntityTrait;
@@ -57,15 +57,15 @@ class ReportSchedule implements \JsonSerializable
     public $message;
 
     /**
-     * @SWG\Property(description="The username of the User that owns this report schedule")
      * @var string
      */
+    #[OA\Property(description: 'The username of the User that owns this report schedule')]
     public $owner;
 
     /**
-     * @SWG\Property(description="The ID of the User that owns this report schedule")
      * @var int
      */
+    #[OA\Property(description: 'The ID of the User that owns this report schedule')]
     public $userId;
 
     /**

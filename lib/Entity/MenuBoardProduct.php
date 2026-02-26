@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 
 namespace Xibo\Entity;
 
+use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\MenuBoardProductOptionFactory;
 use Xibo\Service\LogServiceInterface;
@@ -30,88 +31,90 @@ use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Widget\DataType\Product;
 
 /**
- * @SWG\Definition()
+ * Class MenuBoardProduct
+ * @package Xibo\Entity
  */
+#[OA\Schema]
 class MenuBoardProduct implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="The Menu Board Product Id")
      * @var int
      */
+    #[OA\Property(description: 'The Menu Board Product Id')]
     public $menuProductId;
 
     /**
-     * @SWG\Property(description="The Menu Board Category Id")
      * @var int
      */
+    #[OA\Property(description: 'The Menu Board Category Id')]
     public $menuCategoryId;
 
     /**
-     * @SWG\Property(description="The Menu Board Id")
      * @var int
      */
+    #[OA\Property(description: 'The Menu Board Id')]
     public $menuId;
 
     /**
-     * @SWG\Property(description="The Menu Board Category name")
      * @var string
      */
+    #[OA\Property(description: 'The Menu Board Category name')]
     public $name;
 
     /**
-     * @SWG\Property(description="The Menu Board Product price")
      * @var double
      */
+    #[OA\Property(description: 'The Menu Board Product price')]
     public $price;
 
     /**
-     * @SWG\Property(description="The Menu Board Product description")
      * @var string
      */
+    #[OA\Property(description: 'The Menu Board Product description')]
     public $description;
 
     /**
-     * @SWG\Property(description="The Menu Board Product code identifier")
      * @var string
      */
+    #[OA\Property(description: 'The Menu Board Product code identifier')]
     public $code;
 
     /**
-     * @SWG\Property(description="The Menu Board Product display order, used for sorting")
      * @var int
      */
+    #[OA\Property(description: 'The Menu Board Product display order, used for sorting')]
     public $displayOrder;
 
     /**
-     * @SWG\Property(description="The Menu Board Product availability")
      * @var int
      */
+    #[OA\Property(description: 'The Menu Board Product availability')]
     public $availability;
 
     /**
-     * @SWG\Property(description="The Menu Board Product allergy information")
      * @var string
      */
+    #[OA\Property(description: 'The Menu Board Product allergy information')]
     public $allergyInfo;
 
     /**
-     * @SWG\Property(description="The Menu Board Product allergy information")
      * @var int
      */
+    #[OA\Property(description: 'The Menu Board Product allergy information')]
     public $calories;
 
     /**
-     * @SWG\Property(description="The Menu Board Product associated mediaId")
      * @var int
      */
+    #[OA\Property(description: 'The Menu Board Product associated mediaId')]
     public $mediaId;
 
     /**
-     * @SWG\Property(description="The Menu Board Product array of options", @SWG\Items(type="string"))
      * @var MenuBoardProductOption[]
      */
+    #[OA\Property(description: 'The Menu Board Product array of options', items: new OA\Items(type: 'string'))]
     public $productOptions;
 
     /**

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\FolderFactory;
@@ -60,61 +61,55 @@ class Folder extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/folders',
+        operationId: 'folderSearch',
+        description: 'Returns JSON representation of the Folder tree',
+        summary: 'Search Folders',
+        tags: ['folder']
+    )]
+    #[OA\Parameter(
+        name: 'folderId',
+        description: 'Use with gridView, Filter by Folder Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'gridView',
+        description: 'Flag (0, 1), Show Folders in a standard grid response',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'folderName',
+        description: 'Use with gridView, Filter by Folder name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'exactFolderName',
+        description: 'Use with gridView, Filter by exact Folder name match',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Folder')
+        )
+    )]
     /**
      * Returns JSON representation of the Folder tree
      *
-     * @SWG\Get(
-     *  path="/folders",
-     *  operationId="folderSearch",
-     *  tags={"folder"},
-     *  summary="Search Folders",
-     *  description="Returns JSON representation of the Folder tree",
-     *  @SWG\Parameter(
-     *         name="folderId",
-     *         in="path",
-     *         description="Show usage details for the specified Folder Id",
-     *         type="integer",
-     *         required=false
-     *     ),
-     *  @SWG\Parameter(
-     *        name="gridView",
-     *        in="query",
-     *        description="Flag (0, 1), Show Folders in a standard grid response",
-     *        type="integer",
-     *        required=false
-     *     ),
-     *  @SWG\Parameter(
-     *       name="folderId",
-     *       in="query",
-     *       description="Use with gridView, Filter by Folder Id",
-     *       type="integer",
-     *       required=false
-     *    ),
-     *   @SWG\Parameter(
-     *       name="folderName",
-     *       in="query",
-     *       description="Use with gridView, Filter by Folder name",
-     *       type="string",
-     *       required=false
-     *    ),
-     *   @SWG\Parameter(
-     *       name="exactFolderName",
-     *       in="query",
-     *       description="Use with gridView, Filter by exact Folder name match",
-     *       type="integer",
-     *       required=false
-     *    ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/Folder")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
+     * @param int|null $folderId
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws \Xibo\Support\Exception\GeneralException
      */
@@ -218,37 +213,38 @@ class Folder extends Base
         $folder->children = $childrenDetails;
     }
 
+    #[OA\Post(
+        path: '/folders',
+        operationId: 'folderAdd',
+        description: 'Add a new Folder to the specified parent Folder',
+        summary: 'Add Folder',
+        tags: ['folder']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'text', description: 'Folder Name', type: 'string'),
+                    new OA\Property(
+                        property: 'parentId',
+                        description: 'The ID of the parent Folder, if not provided, Folder will be added under Root Folder', // phpcs:ignore
+                        type: 'string'
+                    )
+                ],
+                required: ['text']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Folder')
+    )]
     /**
      * Add a new Folder
      *
-     * @SWG\Post(
-     *  path="/folders",
-     *  operationId="folderAdd",
-     *  tags={"folder"},
-     *  summary="Add Folder",
-     *  description="Add a new Folder to the specified parent Folder",
-     *  @SWG\Parameter(
-     *      name="text",
-     *      in="formData",
-     *      description="Folder Name",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="parentId",
-     *      in="formData",
-     *      description="The ID of the parent Folder, if not provided, Folder will be added under Root Folder",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          @SWG\Items(ref="#/definitions/Folder")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -276,37 +272,40 @@ class Folder extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/folders/{folderId}',
+        operationId: 'folderEdit',
+        description: 'Edit existing Folder',
+        summary: 'Edit Folder',
+        tags: ['folder']
+    )]
+    #[OA\Parameter(
+        name: 'folderId',
+        description: 'Folder ID to edit',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'text', description: 'Folder Name', type: 'string')
+                ],
+                required: ['text']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Folder')
+    )]
     /**
      * Edit existing Folder
      *
-     * @SWG\Put(
-     *  path="/folders/{folderId}",
-     *  operationId="folderEdit",
-     *  tags={"folder"},
-     *  summary="Edit Folder",
-     *  description="Edit existing Folder",
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="path",
-     *      description="Folder ID to edit",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="text",
-     *      in="formData",
-     *      description="Folder Name",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          @SWG\Items(ref="#/definitions/Folder")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @param $folderId
@@ -344,30 +343,24 @@ class Folder extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(
+        path: '/folders/{folderId}',
+        operationId: 'folderDelete',
+        description: 'Delete existing Folder',
+        summary: 'Delete Folder',
+        tags: ['folder']
+    )]
+    #[OA\Parameter(
+        name: 'folderId',
+        description: 'Folder ID to edit',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete existing Folder
      *
-     * @SWG\Delete(
-     *  path="/folders/{folderId}",
-     *  operationId="folderDelete",
-     *  tags={"folder"},
-     *  summary="Delete Folder",
-     *  description="Delete existing Folder",
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="path",
-     *      description="Folder ID to edit",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          @SWG\Items(ref="#/definitions/Folder")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @param $folderId

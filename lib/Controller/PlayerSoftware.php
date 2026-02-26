@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\DisplayFactory;
@@ -219,6 +220,21 @@ class PlayerSoftware extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(
+        path: '/playersoftware/{versionId}',
+        operationId: 'playerSoftwareDelete',
+        description: 'Delete Version file from the Library and Player Versions table',
+        summary: 'Delete Version',
+        tags: ['Player Software']
+    )]
+    #[OA\Parameter(
+        name: 'versionId',
+        description: 'The Version ID to Delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete Version
      * @param Request $request
@@ -230,24 +246,6 @@ class PlayerSoftware extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Delete(
-     *  path="/playersoftware/{versionId}",
-     *  operationId="playerSoftwareDelete",
-     *  tags={"Player Software"},
-     *  summary="Delete Version",
-     *  description="Delete Version file from the Library and Player Versions table",
-     *  @SWG\Parameter(
-     *      name="versionId",
-     *      in="path",
-     *      description="The Version ID to Delete",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function delete(Request $request, Response $response, $id)
     {
@@ -311,6 +309,42 @@ class PlayerSoftware extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/playersoftware/{versionId}',
+        operationId: 'playersoftwareEdit',
+        description: 'Edit a Player Version file information',
+        summary: 'Edit Player Version',
+        tags: ['Player Software']
+    )]
+    #[OA\Parameter(
+        name: 'versionId',
+        description: 'The Version ID to Edit',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'playerShowVersion',
+                        description: 'The Name of the player version application, this will be displayed in Version dropdowns in Display Profile and Display', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'version', description: 'The Version number', type: 'string'),
+                    new OA\Property(property: 'code', description: 'The Code number', type: 'integer')
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Media')
+    )]
     /**
      * Edit Player Version
      * @param Request $request
@@ -321,46 +355,6 @@ class PlayerSoftware extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Put(
-     *  path="/playersoftware/{versionId}",
-     *  operationId="playersoftwareEdit",
-     *  tags={"Player Software"},
-     *  summary="Edit Player Version",
-     *  description="Edit a Player Version file information",
-     *  @SWG\Parameter(
-     *      name="versionId",
-     *      in="path",
-     *      description="The Version ID to Edit",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="playerShowVersion",
-     *      in="formData",
-     *      description="The Name of the player version application, this will be displayed in Version dropdowns in Display Profile and Display",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="version",
-     *      in="formData",
-     *      description="The Version number",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="code",
-     *      in="formData",
-     *      description="The Code number",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Media")
-     *  )
-     * )
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -533,27 +527,33 @@ class PlayerSoftware extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/playersoftware',
+        operationId: 'playersoftwareUpload',
+        description: 'Upload a new Player version file',
+        summary: 'Player Software Upload',
+        tags: ['Player Software']
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'multipart/form-data',
+            schema: new OA\Schema(
+                required: ['files'],
+                properties: [
+                    new OA\Property(
+                        property: 'files',
+                        description: 'The Uploaded File',
+                        type: 'string',
+                        format: 'binary'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(response: 200, description: 'successful operation')]
     /**
      * Player Software Upload
-     *
-     * @SWG\Post(
-     *  path="/playersoftware",
-     *  operationId="playersoftwareUpload",
-     *  tags={"Player Software"},
-     *  summary="Player Software Upload",
-     *  description="Upload a new Player version file",
-     *  @SWG\Parameter(
-     *      name="files",
-     *      in="formData",
-     *      description="The Uploaded File",
-     *      type="file",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation"
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response
@@ -656,38 +656,41 @@ class PlayerSoftware extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/playersoftware/download/{id}',
+        operationId: 'playersoftwareDownload',
+        description: 'Download Player Version file',
+        summary: 'Download Player Version file',
+        tags: ['Player Software']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The Player Version ID to Download',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Sendfile',
+                description: 'Apache Send file header - if enabled.',
+                schema: new OA\Schema(type: 'string')
+            ),
+            new OA\Header(
+                header: 'X-Accel-Redirect',
+                description: 'nginx send file header - if enabled.',
+                schema: new OA\Schema(type: 'string')
+            )
+        ],
+        content: new OA\MediaType(
+            mediaType: 'application/octet-stream',
+            schema: new OA\Schema(type: 'string', format: 'binary')
+        )
+    )]
     /**
-     * @SWG\Get(
-     *  path="/playersoftware/download/{id}",
-     *  operationId="playersoftwareDownload",
-     *  tags={"Player Software"},
-     *  summary="Download Player Version file",
-     *  description="Download Player Version file",
-     *  produces={"application/octet-stream"},
-     *  @SWG\Parameter(
-     *      name="id",
-     *      in="path",
-     *      description="The Player Version ID to Download",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(type="file"),
-     *      @SWG\Header(
-     *          header="X-Sendfile",
-     *          description="Apache Send file header - if enabled.",
-     *          type="string"
-     *      ),
-     *      @SWG\Header(
-     *          header="X-Accel-Redirect",
-     *          description="nginx send file header - if enabled.",
-     *          type="string"
-     *      )
-     *  )
-     * )
-     *
      * @param Request $request
      * @param Response $response
      * @param $id

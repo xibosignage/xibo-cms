@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,6 +23,7 @@
 
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\DataSetFactory;
@@ -86,6 +87,21 @@ class DataSetData extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/dataset/data/{dataSetId}',
+        operationId: 'dataSetData',
+        description: 'Get Data for DataSet',
+        summary: 'DataSet Data',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        description: 'The DataSet ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 200, description: 'successful operation')]
     /**
      * Grid
      * @param Request $request
@@ -96,24 +112,6 @@ class DataSetData extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Get(
-     *  path="/dataset/data/{dataSetId}",
-     *  operationId="dataSetData",
-     *  tags={"dataset"},
-     *  summary="DataSet Data",
-     *  description="Get Data for DataSet",
-     *  @SWG\Parameter(
-     *      name="dataSetId",
-     *      in="path",
-     *      description="The DataSet ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function grid(Request $request, Response $response, $id)
     {
@@ -208,6 +206,47 @@ class DataSetData extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/dataset/data/{dataSetId}',
+        operationId: 'dataSetDataAdd',
+        description: 'Add a row of Data to a DataSet',
+        summary: 'Add Row',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        description: 'The DataSet ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'dataSetColumnId_ID',
+                        description: 'Parameter for each dataSetColumnId in the DataSet',
+                        type: 'string'
+                    )
+                ],
+                required: ['dataSetColumnId_ID']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add
      * @param Request $request
@@ -220,36 +259,6 @@ class DataSetData extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
-     * @SWG\Post(
-     *  path="/dataset/data/{dataSetId}",
-     *  operationId="dataSetDataAdd",
-     *  tags={"dataset"},
-     *  summary="Add Row",
-     *  description="Add a row of Data to a DataSet",
-     *  @SWG\Parameter(
-     *      name="dataSetId",
-     *      in="path",
-     *      description="The DataSet ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="dataSetColumnId_ID",
-     *      in="formData",
-     *      description="Parameter for each dataSetColumnId in the DataSet",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      */
     public function add(Request $request, Response $response, $id)
     {
@@ -359,6 +368,44 @@ class DataSetData extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/dataset/data/{dataSetId}/{rowId}',
+        operationId: 'dataSetDataEdit',
+        description: 'Edit a row of Data to a DataSet',
+        summary: 'Edit Row',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        description: 'The DataSet ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'rowId',
+        description: 'The Row ID of the Data to Edit',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'dataSetColumnId_ID',
+                        description: 'Parameter for each dataSetColumnId in the DataSet',
+                        type: 'string'
+                    )
+                ],
+                required: ['dataSetColumnId_ID']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(response: 200, description: 'successful operation')]
     /**
      * Edit Row
      * @param Request $request
@@ -373,38 +420,6 @@ class DataSetData extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
-     * @SWG\Put(
-     *  path="/dataset/data/{dataSetId}/{rowId}",
-     *  operationId="dataSetDataEdit",
-     *  tags={"dataset"},
-     *  summary="Edit Row",
-     *  description="Edit a row of Data to a DataSet",
-     *  @SWG\Parameter(
-     *      name="dataSetId",
-     *      in="path",
-     *      description="The DataSet ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="rowId",
-     *      in="path",
-     *      description="The Row ID of the Data to Edit",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="dataSetColumnId_ID",
-     *      in="formData",
-     *      description="Parameter for each dataSetColumnId in the DataSet",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function edit(Request $request, Response $response, $id, $rowId)
     {
@@ -523,6 +538,28 @@ class DataSetData extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(
+        path: '/dataset/data/{dataSetId}/{rowId}',
+        operationId: 'dataSetDataDelete',
+        description: 'Delete a row of Data to a DataSet',
+        summary: 'Delete Row',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'dataSetId',
+        description: 'The DataSet ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'rowId',
+        description: 'The Row ID of the Data to Delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete Row
      * @param Request $request
@@ -537,31 +574,6 @@ class DataSetData extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
-     * @SWG\Delete(
-     *  path="/dataset/data/{dataSetId}/{rowId}",
-     *  operationId="dataSetDataDelete",
-     *  tags={"dataset"},
-     *  summary="Delete Row",
-     *  description="Delete a row of Data to a DataSet",
-     *  @SWG\Parameter(
-     *      name="dataSetId",
-     *      in="path",
-     *      description="The DataSet ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="rowId",
-     *      in="path",
-     *      description="The Row ID of the Data to Delete",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function delete(Request $request, Response $response, $id, $rowId)
     {

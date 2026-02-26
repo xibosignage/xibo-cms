@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 namespace Xibo\Entity;
 
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Event\DisplayGroupLoadEvent;
@@ -43,9 +44,8 @@ use Xibo\Support\Exception\NotFoundException;
 /**
  * Class Display
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class Display implements \JsonSerializable
 {
     public static $STATUS_DONE = 1;
@@ -56,490 +56,490 @@ class Display implements \JsonSerializable
     use TagLinkTrait;
 
     /**
-     * @SWG\Property(description="The ID of this Display")
      * @var int
      */
+    #[OA\Property(description: "The ID of this Display")]
     public $displayId;
 
     /**
-     * @SWG\Property(description="The Display Type ID of this Display")
      * @var int
      */
+    #[OA\Property(description: "The Display Type ID of this Display")]
     public $displayTypeId;
 
     /**
-     * @SWG\Property(description="The Venue ID of this Display")
      * @var int
      */
+    #[OA\Property(description: "The Venue ID of this Display")]
     public $venueId;
 
     /**
-     * @SWG\Property(description="The Location Address of this Display")
      * @var string
      */
+    #[OA\Property(description: "The Location Address of this Display")]
     public $address;
 
     /**
-     * @SWG\Property(description="Is this Display mobile?")
      * @var int
      */
+    #[OA\Property(description: "Is this Display mobile?")]
     public $isMobile;
 
     /**
-     * @SWG\Property(description="The Languages supported in this display location")
      * @var string
      */
+    #[OA\Property(description: "The Languages supported in this display location")]
     public $languages;
 
     /**
-     * @SWG\Property(description="The type of this Display")
      * @var string
      */
+    #[OA\Property(description: "The type of this Display")]
     public $displayType;
 
     /**
-     * @SWG\Property(description="The screen size of this Display")
      * @var int
      */
+    #[OA\Property(description: "The screen size of this Display")]
     public $screenSize;
 
     /**
-     * @SWG\Property(description="Is this Display Outdoor?")
      * @var int
      */
+    #[OA\Property(description: "Is this Display Outdoor?")]
     public $isOutdoor;
 
     /**
-     * @SWG\Property(description="The custom ID (an Id of any external system) of this Display")
      * @var string
      */
+    #[OA\Property(description: "The custom ID (an Id of any external system) of this Display")]
     public $customId;
 
     /**
-     * @SWG\Property(description="The Cost Per Play of this Display")
      * @var double
      */
+    #[OA\Property(description: "The Cost Per Play of this Display")]
     public $costPerPlay;
 
     /**
-     * @SWG\Property(description="The Impressions Per Play of this Display")
      * @var double
      */
+    #[OA\Property(description: "The Impressions Per Play of this Display")]
     public $impressionsPerPlay;
 
     /**
-     * @SWG\Property(description="Optional Reference 1")
      * @var string
      */
+    #[OA\Property(description: "Optional Reference 1")]
     public $ref1;
 
     /**
-     * @SWG\Property(description="Optional Reference 2")
      * @var string
      */
+    #[OA\Property(description: "Optional Reference 2")]
     public $ref2;
 
     /**
-     * @SWG\Property(description="Optional Reference 3")
      * @var string
      */
+    #[OA\Property(description: "Optional Reference 3")]
     public $ref3;
 
     /**
-     * @SWG\Property(description="Optional Reference 4")
      * @var string
      */
+    #[OA\Property(description: "Optional Reference 4")]
     public $ref4;
 
     /**
-     * @SWG\Property(description="Optional Reference 5")
      * @var string
      */
+    #[OA\Property(description: "Optional Reference 5")]
     public $ref5;
 
     /**
-     * @SWG\Property(description="Flag indicating whether this Display is recording Auditing Information from XMDS")
      * @var int
      */
+    #[OA\Property(description: "Flag indicating whether this Display is recording Auditing Information from XMDS")]
     public $auditingUntil;
 
     /**
-     * @SWG\Property(description="The Name of this Display")
      * @var string
      */
+    #[OA\Property(description: "The Name of this Display")]
     public $display;
 
     /**
-     * @SWG\Property(description="The Description of this Display")
      * @var string
      */
+    #[OA\Property(description: "The Description of this Display")]
     public $description;
 
     /**
-     * @SWG\Property(description="The ID of the Default Layout")
      * @var int
      */
+    #[OA\Property(description: "The ID of the Default Layout")]
     public $defaultLayoutId = 4;
 
     /**
-     * @SWG\Property(description="The Display Unique Identifier also called hardware key")
      * @var string
      */
+    #[OA\Property(description: "The Display Unique Identifier also called hardware key")]
     public $license;
 
     /**
-     * @SWG\Property(description="A flag indicating whether this Display is licensed or not")
      * @var int
      */
+    #[OA\Property(description: "A flag indicating whether this Display is licensed or not")]
     public $licensed;
     private $currentlyLicensed;
 
     /**
-     * @SWG\Property(description="A flag indicating whether this Display is currently logged in")
      * @var int
      */
+    #[OA\Property(description: "A flag indicating whether this Display is currently logged in")]
     public $loggedIn;
 
     /**
-     * @SWG\Property(description="A timestamp in CMS time for the last time the Display accessed XMDS")
      * @var int
      */
+    #[OA\Property(description: "A timestamp in CMS time for the last time the Display accessed XMDS")]
     public $lastAccessed;
 
     /**
-     * @SWG\Property(description="A flag indicating whether the default layout is interleaved with the Schedule")
      * @var int
      */
+    #[OA\Property(description: "A flag indicating whether the default layout is interleaved with the Schedule")]
     public $incSchedule;
 
     /**
-     * @SWG\Property(description="A flag indicating whether the Display will send email alerts.")
      * @var int
      */
+    #[OA\Property(description: "A flag indicating whether the Display will send email alerts.")]
     public $emailAlert;
 
     /**
-     * @SWG\Property(description="A timeout in seconds for the Display to send email alerts.")
      * @var int
      */
+    #[OA\Property(description: "A timeout in seconds for the Display to send email alerts.")]
     public $alertTimeout;
 
     /**
-     * @SWG\Property(description="The MAC Address of the Display")
      * @var string
      */
+    #[OA\Property(description: "The MAC Address of the Display")]
     public $clientAddress;
 
     /**
-     * @SWG\Property(description="The media inventory status of the Display")
      * @var int
      */
+    #[OA\Property(description: "The media inventory status of the Display")]
     public $mediaInventoryStatus;
 
     /**
-     * @SWG\Property(description="The current Mac Address of the Player")
      * @var string
      */
+    #[OA\Property(description: "The current Mac Address of the Player")]
     public $macAddress;
 
     /**
-     * @SWG\Property(description="A timestamp indicating the last time the Mac Address changed")
      * @var int
      */
+    #[OA\Property(description: "A timestamp indicating the last time the Mac Address changed")]
     public $lastChanged;
 
     /**
-     * @SWG\Property(description="A count of Mac Address changes")
      * @var int
      */
+    #[OA\Property(description: "A count of Mac Address changes")]
     public $numberOfMacAddressChanges;
 
     /**
-     * @SWG\Property(description="A timestamp indicating the last time a WOL command was sent")
      * @var int
      */
+    #[OA\Property(description: "A timestamp indicating the last time a WOL command was sent")]
     public $lastWakeOnLanCommandSent;
 
     /**
-     * @SWG\Property(description="A flag indicating whether Wake On Lan is enabled")
      * @var int
      */
+    #[OA\Property(description: "A flag indicating whether Wake On Lan is enabled")]
     public $wakeOnLanEnabled;
 
     /**
-     * @SWG\Property(description="A h:i string indicating the time to send a WOL command")
      * @var string
      */
+    #[OA\Property(description: "A h:i string indicating the time to send a WOL command")]
     public $wakeOnLanTime;
 
     /**
-     * @SWG\Property(description="The broad cast address for this Display")
      * @var string
      */
+    #[OA\Property(description: "The broad cast address for this Display")]
     public $broadCastAddress;
 
     /**
-     * @SWG\Property(description="The secureOn WOL settings for this display.")
      * @var string
      */
+    #[OA\Property(description: "The secureOn WOL settings for this display.")]
     public $secureOn;
 
     /**
-     * @SWG\Property(description="The CIDR WOL settings for this display")
      * @var string
      */
+    #[OA\Property(description: "The CIDR WOL settings for this display")]
     public $cidr;
 
     /**
-     * @SWG\Property(description="The display Latitude")
      * @var double
      */
+    #[OA\Property(description: "The display Latitude")]
     public $latitude;
 
     /**
-     * @SWG\Property(description="The display longitude")
      * @var double
      */
+    #[OA\Property(description: "The display longitude")]
     public $longitude;
 
     /**
-     * @SWG\Property(description="A string representing the player type")
      * @var string
      */
+    #[OA\Property(description: "A string representing the player type")]
     public $clientType;
 
     /**
-     * @SWG\Property(description="A string representing the player version")
      * @var string
      */
+    #[OA\Property(description: "A string representing the player version")]
     public $clientVersion;
 
     /**
-     * @SWG\Property(description="A number representing the Player version code")
      * @var int
      */
+    #[OA\Property(description: "A number representing the Player version code")]
     public $clientCode;
 
     /**
-     * @SWG\Property(description="The display settings profile ID for this Display")
      * @var int
      */
+    #[OA\Property(description: "The display settings profile ID for this Display")]
     public $displayProfileId;
 
     /**
-     * @SWG\Property(description="The current layout ID reported via XMDS")
      * @var int
      */
+    #[OA\Property(description: "The current layout ID reported via XMDS")]
     public $currentLayoutId;
 
     /**
-     * @SWG\Property(description="A flag indicating that a screen shot should be taken by the Player")
      * @var int
      */
+    #[OA\Property(description: "A flag indicating that a screen shot should be taken by the Player")]
     public $screenShotRequested;
 
     /**
-     * @SWG\Property(description="The number of bytes of storage available on the device.")
      * @var int
      */
+    #[OA\Property(description: "The number of bytes of storage available on the device.")]
     public $storageAvailableSpace;
 
     /**
-     * @SWG\Property(description="The number of bytes of storage in total on the device")
      * @var int
      */
+    #[OA\Property(description: "The number of bytes of storage in total on the device")]
     public $storageTotalSpace;
 
     /**
-     * @SWG\Property(description="The ID of the Display Group for this Device")
      * @var int
      */
+    #[OA\Property(description: "The ID of the Display Group for this Device")]
     public $displayGroupId;
 
     /**
-     * @SWG\Property(description="The current layout")
      * @var string
      */
+    #[OA\Property(description: "The current layout")]
     public $currentLayout;
 
     /**
-     * @SWG\Property(description="The default layout")
      * @var string
      */
+    #[OA\Property(description: "The default layout")]
     public $defaultLayout;
 
     /**
-     * @SWG\Property(description="The Display Groups this Display belongs to")
      * @var DisplayGroup[]
      */
+    #[OA\Property(description: "The Display Groups this Display belongs to")]
     public $displayGroups = [];
 
     /**
-     * @SWG\Property(description="The Player Subscription Channel")
      * @var string
      */
+    #[OA\Property(description: "The Player Subscription Channel")]
     public $xmrChannel;
 
     /**
-     * @SWG\Property(description="The Player Public Key")
      * @var string
      */
+    #[OA\Property(description: "The Player Public Key")]
     public $xmrPubKey;
 
     /**
-     * @SWG\Property(description="The last command success, 0 = failure, 1 = success, 2 = unknown")
      * @var int
      */
+    #[OA\Property(description: "The last command success, 0 = failure, 1 = success, 2 = unknown")]
     public $lastCommandSuccess = 0;
 
     /**
-     * @SWG\Property(description="The Device Name for the device hardware associated with this Display")
      * @var string
      */
+    #[OA\Property(description: "The Device Name for the device hardware associated with this Display")]
     public $deviceName;
 
     /**
-     * @SWG\Property(description="The Display Timezone, or empty to use the CMS timezone")
      * @var string
      */
+    #[OA\Property(description: "The Display Timezone, or empty to use the CMS timezone")]
     public $timeZone;
 
     /**
-     * @SWG\Property(description="Tags associated with this Display, array of TagLink objects")
      * @var TagLink[]
      */
+    #[OA\Property(description: "Tags associated with this Display, array of TagLink objects")]
     public $tags = [];
 
     /**
-     * @SWG\Property(description="The configuration options that will overwrite Display Profile Config")
      * @var string|array
      */
+    #[OA\Property(description: "The configuration options that will overwrite Display Profile Config")]
     public $overrideConfig = [];
 
     /**
-     * @SWG\Property(description="The display bandwidth limit")
      * @var int
      */
+    #[OA\Property(description: "The display bandwidth limit")]
     public $bandwidthLimit;
 
     /**
-     * @SWG\Property(description="The new CMS Address")
      * @var string
      */
+    #[OA\Property(description: "The new CMS Address")]
     public $newCmsAddress;
 
     /**
-     * @SWG\Property(description="The new CMS Key")
      * @var string
      */
+    #[OA\Property(description: "The new CMS Key")]
     public $newCmsKey;
 
     /**
-     * @SWG\Property(description="The orientation of the Display, either landscape or portrait")
      * @var string
      */
+    #[OA\Property(description: "The orientation of the Display, either landscape or portrait")]
     public $orientation;
 
     /**
-     * @SWG\Property(description="The resolution of the Display expressed as a string in the format WxH")
      * @var string
      */
+    #[OA\Property(description: "The resolution of the Display expressed as a string in the format WxH")]
     public $resolution;
 
     /**
-     * @SWG\Property(description="Status of the commercial licence for this Display. 0 - Not licensed, 1 - licensed, 2 - trial licence, 3 - not applicable")
      * @var int
      */
+    #[OA\Property(description: "Status of the commercial licence for this Display. 0 - Not licensed, 1 - licensed, 2 - trial licence, 3 - not applicable")]
     public $commercialLicence;
 
     /**
-     * @SWG\Property(description="The TeamViewer serial number for this Display")
      * @var string
      */
+    #[OA\Property(description: "The TeamViewer serial number for this Display")]
     public $teamViewerSerial;
 
     /**
-     * @SWG\Property(description="The Webkey serial number for this Display")
      * @var string
      */
+    #[OA\Property(description: "The Webkey serial number for this Display")]
     public $webkeySerial;
 
     /**
-     * @SWG\Property(description="A comma separated list of groups/users with permissions to this Display")
      * @var string
      */
+    #[OA\Property(description: "A comma separated list of groups/users with permissions to this Display")]
     public $groupsWithPermissions;
 
     /**
-     * @SWG\Property(description="The datetime this entity was created")
      * @var string
      */
+    #[OA\Property(description: "The datetime this entity was created")]
     public $createdDt;
 
     /**
-     * @SWG\Property(description="The datetime this entity was last modified")
      * @var string
      */
+    #[OA\Property(description: "The datetime this entity was last modified")]
     public $modifiedDt;
 
     /**
-     * @SWG\Property(description="The id of the Folder this Display belongs to")
      * @var int
      */
+    #[OA\Property(description: "The id of the Folder this Display belongs to")]
     public $folderId;
 
     /**
-     * @SWG\Property(description="The id of the Folder responsible for providing permissions for this Display")
      * @var int
      */
+    #[OA\Property(description: "The id of the Folder responsible for providing permissions for this Display")]
     public $permissionsFolderId;
 
     /**
-     * @SWG\Property(description="The count of Player reported faults")
      * @var int
      */
+    #[OA\Property(description: "The count of Player reported faults")]
     public $countFaults;
 
     /**
-     * @SWG\Property(description="LAN IP Address, if available on the Player")
      * @var string
      */
+    #[OA\Property(description: "LAN IP Address, if available on the Player")]
     public $lanIpAddress;
 
     /**
-     * @SWG\Property(description="The Display Group ID this Display is synced to")
      * @var int
      */
+    #[OA\Property(description: "The Display Group ID this Display is synced to")]
     public $syncGroupId;
 
     /**
-     * @SWG\Property(description="The OS version of the Display")
      * @var string
      */
+    #[OA\Property(description: "The OS version of the Display")]
     public $osVersion;
 
     /**
-     * @SWG\Property(description="The SDK version of the Display")
      * @var string
      */
+    #[OA\Property(description: "The SDK version of the Display")]
     public $osSdk;
 
     /**
-     * @SWG\Property(description="The manufacturer of the Display")
      * @var string
      */
+    #[OA\Property(description: "The manufacturer of the Display")]
     public $manufacturer;
 
     /**
-     * @SWG\Property(description="The brand of the Display")
      * @var string
      */
+    #[OA\Property(description: "The brand of the Display")]
     public $brand;
 
     /**
-     * @SWG\Property(description="The model of the Display")
      * @var string
      */
+    #[OA\Property(description: "The model of the Display")]
     public $model;
 
     /** @var array The configuration from the Display Profile  */

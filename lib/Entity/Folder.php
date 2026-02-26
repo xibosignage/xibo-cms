@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 
 namespace Xibo\Entity;
 
+use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\PermissionFactory;
@@ -32,46 +33,46 @@ use Xibo\Support\Exception\InvalidArgumentException;
 /**
  * Class Folder
  * @package Xibo\Entity
- * @SWG\Definition()
  */
+#[OA\Schema]
 class Folder implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="The ID of this Folder")
      * @var int
      */
+    #[OA\Property(description: "The ID of this Folder")]
     public $id;
 
     /**
-     * @SWG\Property(description="The type of folder (home or root)")
      * @var string
      */
+    #[OA\Property(description: "The type of folder (home or root)")]
     public $type;
 
     /**
-     * @SWG\Property(description="The name of this Folder")
      * @var string
      */
+    #[OA\Property(description: "The name of this Folder")]
     public $text;
 
     /**
-     * @SWG\Property(description="The folderId of the parent of this Folder")
      * @var int
      */
+    #[OA\Property(description: "The folderId of the parent of this Folder")]
     public $parentId;
 
     /**
-     * @SWG\Property(description="Flag indicating whether this is root Folder")
      * @var int
      */
+    #[OA\Property(description: "Flag indicating whether this is root Folder")]
     public $isRoot;
 
     /**
-     * @SWG\Property(description="An array of children folderIds")
      * @var string
      */
+    #[OA\Property(description: "An array of children folderIds")]
     public $children;
 
     public $permissionsFolderId;

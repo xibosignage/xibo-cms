@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\DayPartFactory;
@@ -72,45 +73,45 @@ class DayPart extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/daypart',
+        operationId: 'dayPartSearch',
+        description: 'Search dayparts',
+        summary: 'Daypart Search',
+        tags: ['dayPart']
+    )]
+    #[OA\Parameter(
+        name: 'dayPartId',
+        description: 'The dayPart ID to Search',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'name',
+        description: 'The name of the dayPart to Search',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'embed',
+        description: 'Embed related data such as exceptions',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/DayPart')
+        )
+    )]
     /**
      *  Search
      *
-     * @SWG\Get(
-     *  path="/daypart",
-     *  operationId="dayPartSearch",
-     *  tags={"dayPart"},
-     *  summary="Daypart Search",
-     *  description="Search dayparts",
-     *  @SWG\Parameter(
-     *      name="dayPartId",
-     *      in="query",
-     *      description="The dayPart ID to Search",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="query",
-     *      description="The name of the dayPart to Search",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="embed",
-     *      in="query",
-     *      description="Embed related data such as exceptions",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/DayPart")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -296,77 +297,72 @@ class DayPart extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/daypart',
+        operationId: 'dayPartAdd',
+        description: 'Add a Daypart',
+        summary: 'Daypart Add',
+        tags: ['dayPart']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'name', description: 'The Daypart Name', type: 'string'),
+                    new OA\Property(
+                        property: 'description',
+                        description: 'A description for the dayPart',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'startTime',
+                        description: 'The start time for this day part',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'endTime',
+                        description: 'The end time for this day part',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'exceptionDays',
+                        description: 'String array of exception days',
+                        items: new OA\Items(type: 'string'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'exceptionStartTimes',
+                        description: 'String array of exception start times to match the exception days',
+                        items: new OA\Items(type: 'string'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'exceptionEndTimes',
+                        description: 'String array of exception end times to match the exception days',
+                        items: new OA\Items(type: 'string'),
+                        type: 'array'
+                    )
+                ],
+                required: ['name', 'startTime', 'endTime']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DayPart'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add
-     * @SWG\Post(
-     *  path="/daypart",
-     *  operationId="dayPartAdd",
-     *  tags={"dayPart"},
-     *  summary="Daypart Add",
-     *  description="Add a Daypart",
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="The Daypart Name",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="A description for the dayPart",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="startTime",
-     *      in="formData",
-     *      description="The start time for this day part",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="endTime",
-     *      in="formData",
-     *      description="The end time for this day part",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="exceptionDays",
-     *      in="formData",
-     *      description="String array of exception days",
-     *      type="array",
-     *      required=false,
-     *      @SWG\Items(type="string")
-     *   ),
-     *  @SWG\Parameter(
-     *      name="exceptionStartTimes",
-     *      in="formData",
-     *      description="String array of exception start times to match the exception days",
-     *      type="array",
-     *      required=false,
-     *      @SWG\Items(type="string")
-     *   ),
-     *  @SWG\Parameter(
-     *      name="exceptionEndTimes",
-     *      in="formData",
-     *      description="String array of exception end times to match the exception days",
-     *      type="array",
-     *      required=false,
-     *      @SWG\Items(type="string")
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/DayPart"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -394,6 +390,70 @@ class DayPart extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/daypart/{dayPartId}',
+        operationId: 'dayPartEdit',
+        description: 'Edit a Daypart',
+        summary: 'Daypart Edit',
+        tags: ['dayPart']
+    )]
+    #[OA\Parameter(
+        name: 'dayPartId',
+        description: 'The Daypart Id',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'name', description: 'The Daypart Name', type: 'string'),
+                    new OA\Property(
+                        property: 'description',
+                        description: 'A description for the dayPart',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'startTime',
+                        description: 'The start time for this day part',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'endTime',
+                        description: 'The end time for this day part',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'exceptionDays',
+                        description: 'String array of exception days',
+                        items: new OA\Items(type: 'string'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'exceptionStartTimes',
+                        description: 'String array of exception start times to match the exception days',
+                        items: new OA\Items(type: 'string'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'exceptionEndTimes',
+                        description: 'String array of exception end times to match the exception days',
+                        items: new OA\Items(type: 'string'),
+                        type: 'array'
+                    )
+                ],
+                required: ['name', 'startTime', 'endTime']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DayPart')
+    )]
     /**
      * Edit
      * @param Request $request
@@ -405,77 +465,6 @@ class DayPart extends Base
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      * @throws \Xibo\Support\Exception\NotFoundException
-     * @SWG\Put(
-     *  path="/daypart/{dayPartId}",
-     *  operationId="dayPartEdit",
-     *  tags={"dayPart"},
-     *  summary="Daypart Edit",
-     *  description="Edit a Daypart",
-     *  @SWG\Parameter(
-     *      name="dayPartId",
-     *      in="path",
-     *      description="The Daypart Id",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="The Daypart Name",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="A description for the dayPart",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="startTime",
-     *      in="formData",
-     *      description="The start time for this day part",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="endTime",
-     *      in="formData",
-     *      description="The end time for this day part",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="exceptionDays",
-     *      in="formData",
-     *      description="String array of exception days",
-     *      type="array",
-     *      required=false,
-     *      @SWG\Items(type="string")
-     *   ),
-     *  @SWG\Parameter(
-     *      name="exceptionStartTimes",
-     *      in="formData",
-     *      description="String array of exception start times to match the exception days",
-     *      type="array",
-     *      required=false,
-     *      @SWG\Items(type="string")
-     *   ),
-     *  @SWG\Parameter(
-     *      name="exceptionEndTimes",
-     *      in="formData",
-     *      description="String array of exception end times to match the exception days",
-     *      type="array",
-     *      required=false,
-     *      @SWG\Items(type="string")
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/DayPart")
-     *  )
-     * )
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -565,6 +554,21 @@ class DayPart extends Base
         }
     }
 
+    #[OA\Delete(
+        path: '/daypart/{dayPartId}',
+        operationId: 'dayPartDelete',
+        description: 'Delete the provided dayPart',
+        summary: 'Delete DayPart',
+        tags: ['dayPart']
+    )]
+    #[OA\Parameter(
+        name: 'dayPartId',
+        description: 'The Daypart Id to Delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete
      * @param Request $request
@@ -575,24 +579,6 @@ class DayPart extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
-     * @SWG\Delete(
-     *  path="/daypart/{dayPartId}",
-     *  operationId="dayPartDelete",
-     *  tags={"dayPart"},
-     *  summary="Delete DayPart",
-     *  description="Delete the provided dayPart",
-     *  @SWG\Parameter(
-     *      name="dayPartId",
-     *      in="path",
-     *      description="The Daypart Id to Delete",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function delete(Request $request, Response $response, $id)
     {

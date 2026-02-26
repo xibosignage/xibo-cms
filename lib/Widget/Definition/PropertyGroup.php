@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,15 +22,21 @@
 
 namespace Xibo\Widget\Definition;
 
+use OpenApi\Attributes as OA;
+
 /**
  * A class representing an instance of a group property to put a property in assigned Tab
- * @SWG\Definition()
  */
+#[OA\Schema(schema: 'PropertyGroup')]
 class PropertyGroup implements \JsonSerializable
 {
+    #[OA\Property()]
     public $id;
+    #[OA\Property()]
     public $expanded;
+    #[OA\Property()]
     public $title;
+    #[OA\Property()]
     public $helpText;
 
     /** @inheritDoc */

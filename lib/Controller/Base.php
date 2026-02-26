@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -21,7 +21,9 @@
  */
 
 namespace Xibo\Controller;
+
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -51,6 +53,56 @@ use Xibo\Support\Exception\InvalidArgumentException;
  * Base for all Controllers.
  *
  */
+#[OA\Info(
+    version: '4.0',
+    description: "Xibo CMS API.\n       Using HTTP formData requests.\n       All PUT requests require Content-Type:application/x-www-form-urlencoded header.", // phpcs:ignore
+    title: 'Xibo API',
+    termsOfService: 'https://xibosignage.com/legal',
+    contact: new OA\Contact(email: 'info@xibo.org.uk'),
+    license: new OA\License(name: 'AGPLv3 or later', url: 'https://www.gnu.org/licenses/')
+)]
+#[OA\Server(url: '/api')]
+#[OA\SecurityScheme(
+    securityScheme: 'auth',
+    type: 'oauth2',
+    flows: [
+        new OA\Flow(
+            authorizationUrl: '/api/authorize',
+            tokenUrl: '/api/authorize/access_token',
+            flow: 'authorizationCode',
+            scopes: ['read:all' => 'read access', 'write:all' => 'write access']
+        )
+    ]
+)]
+#[OA\ExternalDocumentation(
+    description: 'Manual',
+    url: 'https://xibosignage.com/manual'
+)]
+#[OA\Tag(name: 'misc', description: 'Miscellaneous')]
+#[OA\Tag(name: 'schedule', description: 'Schedule')]
+#[OA\Tag(name: 'notification', description: 'Notifications')]
+#[OA\Tag(name: 'layout', description: 'Layouts')]
+#[OA\Tag(name: 'region', description: 'Regions')]
+#[OA\Tag(name: 'playlist', description: 'Playlists')]
+#[OA\Tag(name: 'widget', description: 'Widgets')]
+#[OA\Tag(name: 'campaign', description: 'Campaigns')]
+#[OA\Tag(name: 'template', description: 'Templates')]
+#[OA\Tag(name: 'resolution', description: 'Resolutions')]
+#[OA\Tag(name: 'library', description: 'Library')]
+#[OA\Tag(name: 'display', description: 'Displays')]
+#[OA\Tag(name: 'displayGroup', description: 'Display Groups')]
+#[OA\Tag(name: 'displayprofile', description: 'Display Settings')]
+#[OA\Tag(name: 'dataset', description: 'DataSets')]
+#[OA\Tag(name: 'folder', description: 'Folders')]
+#[OA\Tag(name: 'statistics', description: 'Statistics')]
+#[OA\Tag(name: 'user', description: 'Users')]
+#[OA\Tag(name: 'usergroup', description: 'User Groups')]
+#[OA\Tag(name: 'module', description: 'Modules and Widgets')]
+#[OA\Tag(name: 'command', description: 'Commands')]
+#[OA\Tag(name: 'dayPart', description: 'Dayparting')]
+#[OA\Tag(name: 'Player Software')]
+#[OA\Tag(name: 'tags', description: 'Tags')]
+#[OA\Tag(name: 'menuBoard', description: 'Menu Boards - feature preview, please do not use in production.')] // phpcs:ignore
 class Base
 {
     use DataTablesDotNetTrait;

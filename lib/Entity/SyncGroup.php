@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,6 +23,7 @@
 namespace Xibo\Entity;
 
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\PermissionFactory;
@@ -34,86 +35,88 @@ use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
- * @SWG\Definition()
+ * Class SyncGroup
+ * @package Xibo\Entity
  */
+#[OA\Schema]
 class SyncGroup implements \JsonSerializable
 {
     use EntityTrait;
     /**
-     * @SWG\Property(description="The ID of this Entity")
      * @var int
      */
+    #[OA\Property(description: 'The ID of this Entity')]
     public $syncGroupId;
     /**
-     * @SWG\Property(description="The name of this Entity")
      * @var string
      */
+    #[OA\Property(description: 'The name of this Entity')]
     public $name;
     /**
-     * @SWG\Property(description="The datetime this entity was created")
      * @var string
      */
+    #[OA\Property(description: 'The datetime this entity was created')]
     public $createdDt;
     /**
-     * @SWG\Property(description="The datetime this entity was last modified")
      * @var ?string
      */
+    #[OA\Property(description: 'The datetime this entity was last modified')]
     public $modifiedDt;
     /**
-     * @SWG\Property(description="The ID of the user that last modified this sync group")
      * @var int
      */
+    #[OA\Property(description: 'The ID of the user that last modified this sync group')]
     public $modifiedBy;
     /**
-     * @SWG\Property(description="The name of the user that last modified this sync group")
      * @var string
      */
+    #[OA\Property(description: 'The name of the user that last modified this sync group')]
     public $modifiedByName;
     /**
-     * @SWG\Property(description="The ID of the owner of this sync group")
      * @var int
      */
+    #[OA\Property(description: 'The ID of the owner of this sync group')]
     public $ownerId;
     /**
-     * @SWG\Property(description="The name of the owner of this sync group")
      * @var string
      */
+    #[OA\Property(description: 'The name of the owner of this sync group')]
     public $owner;
     /**
-     * @SWG\Property(description="The publisher port number")
      * @var int
      */
+    #[OA\Property(description: 'The publisher port number')]
     public $syncPublisherPort = 9590;
     /**
-     * @SWG\Property(description="The delay (in ms) when displaying the changes in content")
      * @var int
      */
+    #[OA\Property(description: 'The delay (in ms) when displaying the changes in content')]
     public $syncSwitchDelay = 750;
     /**
-     * @SWG\Property(description="The delay (in ms) before unpausing the video on start.")
      * @var int
      */
+    #[OA\Property(description: 'The delay (in ms) before unpausing the video on start.')]
     public $syncVideoPauseDelay = 100;
     /**
-     * @SWG\Property(description="The ID of the lead Display for this sync group")
      * @var int
      */
+    #[OA\Property(description: 'The ID of the lead Display for this sync group')]
     public $leadDisplayId;
     /**
-     * @SWG\Property(description="The name of the lead Display for this sync group")
      * @var string
      */
+    #[OA\Property(description: 'The name of the lead Display for this sync group')]
     public $leadDisplay;
     /**
-     * @SWG\Property(description="The id of the Folder this Sync Group belongs to")
      * @var int
      */
+    #[OA\Property(description: 'The id of the Folder this Sync Group belongs to')]
     public $folderId;
 
     /**
-     * @SWG\Property(description="The id of the Folder responsible for providing permissions for this Sync Group")
      * @var int
      */
+    #[OA\Property(description: 'The id of the Folder responsible for providing permissions for this Sync Group')]
     public $permissionsFolderId;
 
 
@@ -438,12 +441,12 @@ class SyncGroup implements \JsonSerializable
 
             if ($display->syncGroupId === $this->syncGroupId) {
                 $this->getStore()->update('UPDATE `display` SET `display`.syncGroupId = NULL WHERE `display`.displayId = :displayId', [
-                    'displayId' => $display->displayId
+                    'displayId' => $this->displayId
                 ]);
 
                 $this->getStore()->update(' DELETE FROM `schedule_sync` WHERE `schedule_sync`.displayId = :displayId
                     AND `schedule_sync`.eventId IN (SELECT eventId FROM schedule WHERE schedule.syncGroupId = :syncGroupId)', [
-                    'displayId' => $display->displayId,
+                    'displayId' => $this->displayId,
                     'syncGroupId' => $this->syncGroupId
                 ]);
             }

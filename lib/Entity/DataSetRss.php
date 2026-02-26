@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -24,6 +24,7 @@
 namespace Xibo\Entity;
 
 
+use OpenApi\Attributes as OA;
 use Xibo\Helper\Random;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -31,9 +32,8 @@ use Xibo\Storage\StorageServiceInterface;
 /**
  * Class DataSetRss
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class DataSetRss implements \JsonSerializable
 {
     use EntityTrait;

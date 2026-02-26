@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\ActionFactory;
@@ -75,101 +76,98 @@ class Action  extends Base
     }
 
 
+    #[OA\Get(
+        path: '/action',
+        operationId: 'actionSearch',
+        description: 'Search all Actions this user has access to',
+        summary: 'Search Actions',
+        tags: ['action']
+    )]
+    #[OA\Parameter(
+        name: 'actionId',
+        description: 'Filter by Action Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'ownerId',
+        description: 'Filter by Owner Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'triggerType',
+        description: 'Filter by Action trigger type',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'triggerCode',
+        description: 'Filter by Action trigger code',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'actionType',
+        description: 'Filter by Action type',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'source',
+        description: 'Filter by Action source',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'sourceId',
+        description: 'Filter by Action source Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'target',
+        description: 'Filter by Action target',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'targetId',
+        description: 'Filter by Action target Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        description: 'Return all actions pertaining to a particular Layout',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'sourceOrTargetId',
+        description: 'Return all actions related to a source or target with the provided ID', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Action'))
+    )]
     /**
      * Returns a Grid of Actions
      *
-     * @SWG\Get(
-     *  path="/action",
-     *  operationId="actionSearch",
-     *  tags={"action"},
-     *  summary="Search Actions",
-     *  description="Search all Actions this user has access to",
-     *  @SWG\Parameter(
-     *      name="actionId",
-     *      in="query",
-     *      description="Filter by Action Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ownerId",
-     *      in="query",
-     *      description="Filter by Owner Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="triggerType",
-     *      in="query",
-     *      description="Filter by Action trigger type",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="triggerCode",
-     *      in="query",
-     *      description="Filter by Action trigger code",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="actionType",
-     *      in="query",
-     *      description="Filter by Action type",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="source",
-     *      in="query",
-     *      description="Filter by Action source",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="sourceId",
-     *      in="query",
-     *      description="Filter by Action source Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="target",
-     *      in="query",
-     *      description="Filter by Action target",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="targetId",
-     *      in="query",
-     *      description="Filter by Action target Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      in="query",
-     *      description="Return all actions pertaining to a particular Layout",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="sourceOrTargetId",
-     *      in="query",
-     *      description="Return all actions related to a source or target with the provided ID",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/Action")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -235,96 +233,85 @@ class Action  extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/action',
+        operationId: 'actionAdd',
+        description: 'Add a new Action',
+        summary: 'Add Action',
+        tags: ['action']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'layoutId',
+                        description: 'LayoutId associted with this Action',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'actionType',
+                        description: 'Action type, next, previous, navLayout, navWidget',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'target',
+                        description: 'Target for this action, screen or region',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'targetId',
+                        description: 'The id of the target for this action - regionId if the target is set to region', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'source',
+                        description: 'Source for this action layout, region or widget',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'sourceId',
+                        description: 'The id of the source object, layoutId, regionId or widgetId',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'triggerType',
+                        description: 'Action trigger type, touch or webhook',
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'triggerCode', description: 'Action trigger code', type: 'string'),
+                    new OA\Property(
+                        property: 'widgetId',
+                        description: 'For navWidget actionType, the WidgetId to navigate to',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'layoutCode',
+                        description: 'For navLayout, the Layout Code identifier to navigate to',
+                        type: 'string'
+                    )
+                ],
+                required: ['layoutId', 'actionType', 'target']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Action'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add a new Action
      *
-     * @SWG\Post(
-     *  path="/action",
-     *  operationId="actionAdd",
-     *  tags={"action"},
-     *  summary="Add Action",
-     *  description="Add a new Action",
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      in="formData",
-     *      description="LayoutId associted with this Action",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="actionType",
-     *      in="formData",
-     *      description="Action type, next, previous, navLayout, navWidget",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="target",
-     *      in="formData",
-     *      description="Target for this action, screen or region",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="targetId",
-     *      in="formData",
-     *      description="The id of the target for this action - regionId if the target is set to region",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="source",
-     *      in="formData",
-     *      description="Source for this action layout, region or widget",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="sourceId",
-     *      in="formData",
-     *      description="The id of the source object, layoutId, regionId or widgetId",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="triggerType",
-     *      in="formData",
-     *      description="Action trigger type, touch or webhook",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="triggerCode",
-     *      in="formData",
-     *      description="Action trigger code",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="widgetId",
-     *      in="formData",
-     *      description="For navWidget actionType, the WidgetId to navigate to",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="layoutCode",
-     *      in="formData",
-     *      description="For navLayout, the Layout Code identifier to navigate to",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Action"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -390,103 +377,91 @@ class Action  extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/action/{actionId}',
+        operationId: 'actionEdit',
+        description: 'Edit a new Action',
+        summary: 'Edit Action',
+        tags: ['action']
+    )]
+    #[OA\Parameter(
+        name: 'actionId',
+        description: 'Action ID to edit',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'layoutId',
+                        description: 'LayoutId associted with this Action',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'actionType',
+                        description: 'Action type, next, previous, navLayout, navWidget',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'target',
+                        description: 'Target for this action, screen or region',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'targetId',
+                        description: 'The id of the target for this action - regionId if the target is set to region', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'source',
+                        description: 'Source for this action layout, region or widget',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'sourceId',
+                        description: 'The id of the source object, layoutId, regionId or widgetId',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'triggerType',
+                        description: 'Action trigger type, touch or webhook',
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'triggerCode', description: 'Action trigger code', type: 'string'),
+                    new OA\Property(
+                        property: 'widgetId',
+                        description: 'For navWidget actionType, the WidgetId to navigate to',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'layoutCode',
+                        description: 'For navLayout, the Layout Code identifier to navigate to',
+                        type: 'string'
+                    )
+                ],
+                required: ['layoutId', 'actionType', 'target', 'source', 'sourceId', 'triggerType']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Action'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Edit Action
-     *
-     * @SWG\PUT(
-     *  path="/action/{actionId}",
-     *  operationId="actionAdd",
-     *  tags={"action"},
-     *  summary="Add Action",
-     *  description="Add a new Action",
-     *  @SWG\Parameter(
-     *      name="actionId",
-     *      in="path",
-     *      description="Action ID to edit",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      in="formData",
-     *      description="LayoutId associted with this Action",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="actionType",
-     *      in="formData",
-     *      description="Action type, next, previous, navLayout, navWidget",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="target",
-     *      in="formData",
-     *      description="Target for this action, screen or region",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="targetId",
-     *      in="formData",
-     *      description="The id of the target for this action - regionId if the target is set to region",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="source",
-     *      in="formData",
-     *      description="Source for this action layout, region or widget",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="sourceId",
-     *      in="formData",
-     *      description="The id of the source object, layoutId, regionId or widgetId",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="triggerType",
-     *      in="formData",
-     *      description="Action trigger type, touch or webhook",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="triggerCode",
-     *      in="formData",
-     *      description="Action trigger code",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="widgetId",
-     *      in="formData",
-     *      description="For navWidget actionType, the WidgetId to navigate to",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="layoutCode",
-     *      in="formData",
-     *      description="For navLayout, the Layout Code identifier to navigate to",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Action"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response
@@ -533,6 +508,21 @@ class Action  extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(
+        path: '/action/{actionId}',
+        operationId: 'actionDelete',
+        description: 'Delete an existing Action',
+        summary: 'Delete Action',
+        tags: ['action']
+    )]
+    #[OA\Parameter(
+        name: 'actionId',
+        description: 'The Action ID to Delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete Action
      * @param Request $request
@@ -540,25 +530,6 @@ class Action  extends Base
      * @param int $id
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws GeneralException
-     *
-     * @SWG\Delete(
-     *  path="/action/{actionId}",
-     *  operationId="actionDelete",
-     *  tags={"action"},
-     *  summary="Delete Action",
-     *  description="Delete an existing Action",
-     *  @SWG\Parameter(
-     *      name="actionId",
-     *      in="path",
-     *      description="The Action ID to Delete",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function delete(Request $request, Response $response, int $id) : Response
     {

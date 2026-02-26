@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Interfaces\PoolInterface;
@@ -97,50 +98,50 @@ class DisplayProfile extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/displayprofile',
+        operationId: 'displayProfileSearch',
+        description: 'Search this users Display Profiles',
+        summary: 'Display Profile Search',
+        tags: ['displayprofile']
+    )]
+    #[OA\Parameter(
+        name: 'displayProfileId',
+        description: 'Filter by DisplayProfile Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'displayProfile',
+        description: 'Filter by DisplayProfile Name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'type',
+        description: 'Filter by DisplayProfile Type (windows|android|lg)',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'embed',
+        description: 'Embed related data such as config,commands,configWithDefault',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/DisplayProfile')
+        )
+    )]
     /**
-     * @SWG\Get(
-     *  path="/displayprofile",
-     *  operationId="displayProfileSearch",
-     *  tags={"displayprofile"},
-     *  summary="Display Profile Search",
-     *  description="Search this users Display Profiles",
-     *  @SWG\Parameter(
-     *      name="displayProfileId",
-     *      in="query",
-     *      description="Filter by DisplayProfile Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="displayProfile",
-     *      in="query",
-     *      description="Filter by DisplayProfile Name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="type",
-     *      in="query",
-     *      description="Filter by DisplayProfile Type (windows|android|lg)",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="embed",
-     *      in="query",
-     *      description="Embed related data such as config,commands,configWithDefault",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/DisplayProfile")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -251,47 +252,50 @@ class DisplayProfile extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/displayprofile',
+        operationId: 'displayProfileAdd',
+        description: 'Add a Display Profile',
+        summary: 'Add Display Profile',
+        tags: ['displayprofile']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'name', description: 'The Name of the Display Profile', type: 'string'),
+                    new OA\Property(
+                        property: 'type',
+                        description: 'The Client Type this Profile will apply to',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'isDefault',
+                        description: 'Flag indicating if this is the default profile for the client type',
+                        type: 'integer'
+                    )
+                ],
+                required: ['name', 'type', 'isDefault']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DisplayProfile'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Display Profile Add
      *
-     * @SWG\Post(
-     *  path="/displayprofile",
-     *  operationId="displayProfileAdd",
-     *  tags={"displayprofile"},
-     *  summary="Add Display Profile",
-     *  description="Add a Display Profile",
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="The Name of the Display Profile",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="type",
-     *      in="formData",
-     *      description="The Client Type this Profile will apply to",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isDefault",
-     *      in="formData",
-     *      description="Flag indicating if this is the default profile for the client type",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/DisplayProfile"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -395,6 +399,43 @@ class DisplayProfile extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/displayprofile/{displayProfileId}',
+        operationId: 'displayProfileEdit',
+        description: 'Edit a Display Profile',
+        summary: 'Edit Display Profile',
+        tags: ['displayprofile']
+    )]
+    #[OA\Parameter(
+        name: 'displayProfileId',
+        description: 'The Display Profile ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'name', description: 'The Name of the Display Profile', type: 'string'),
+                    new OA\Property(
+                        property: 'type',
+                        description: 'The Client Type this Profile will apply to',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'isDefault',
+                        description: 'Flag indicating if this is the default profile for the client type',
+                        type: 'integer'
+                    )
+                ],
+                required: ['name', 'type', 'isDefault']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Edit
      * @param Request $request
@@ -406,45 +447,6 @@ class DisplayProfile extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\InvalidArgumentException
-     * @SWG\Put(
-     *  path="/displayprofile/{displayProfileId}",
-     *  operationId="displayProfileEdit",
-     *  tags={"displayprofile"},
-     *  summary="Edit Display Profile",
-     *  description="Edit a Display Profile",
-     *  @SWG\Parameter(
-     *      name="displayProfileId",
-     *      in="path",
-     *      description="The Display Profile ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="The Name of the Display Profile",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="type",
-     *      in="formData",
-     *      description="The Client Type this Profile will apply to",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isDefault",
-     *      in="formData",
-     *      description="Flag indicating if this is the default profile for the client type",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -539,6 +541,21 @@ class DisplayProfile extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(
+        path: '/displayprofile/{displayProfileId}',
+        operationId: 'displayProfileDelete',
+        description: 'Delete an existing Display Profile',
+        summary: 'Delete Display Profile',
+        tags: ['displayprofile']
+    )]
+    #[OA\Parameter(
+        name: 'displayProfileId',
+        description: 'The Display Profile ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete Display Profile
      * @param Request $request
@@ -550,24 +567,6 @@ class DisplayProfile extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\InvalidArgumentException
-     * @SWG\Delete(
-     *  path="/displayprofile/{displayProfileId}",
-     *  operationId="displayProfileDelete",
-     *  tags={"displayprofile"},
-     *  summary="Delete Display Profile",
-     *  description="Delete an existing Display Profile",
-     *  @SWG\Parameter(
-     *      name="displayProfileId",
-     *      in="path",
-     *      description="The Display Profile ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     function delete(Request $request, Response $response, $id)
     {
@@ -615,6 +614,39 @@ class DisplayProfile extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/displayprofile/{displayProfileId}/copy',
+        operationId: 'displayProfileCopy',
+        description: 'Copy an existing Display Profile',
+        summary: 'Copy Display Profile',
+        tags: ['displayprofile']
+    )]
+    #[OA\Parameter(
+        name: 'displayProfileId',
+        description: 'The Display Profile ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'name',
+        description: 'The name for the copy',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DisplayProfile'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Copy Display Profile
      * @param Request $request
@@ -626,37 +658,6 @@ class DisplayProfile extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\InvalidArgumentException
-     * @SWG\Post(
-     *  path="/displayprofile/{displayProfileId}/copy",
-     *  operationId="displayProfileCopy",
-     *  tags={"displayprofile"},
-     *  summary="Copy Display Profile",
-     *  description="Copy an existing Display Profile",
-     *  @SWG\Parameter(
-     *      name="displayProfileId",
-     *      in="path",
-     *      description="The Display Profile ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="path",
-     *      description="The name for the copy",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/DisplayProfile"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      */
     public function copy(Request $request, Response $response, $id)
     {

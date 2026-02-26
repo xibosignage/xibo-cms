@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -25,6 +25,7 @@ namespace Xibo\Entity;
 
 
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -40,166 +41,149 @@ use Xibo\Support\Exception\NotFoundException;
 /**
  * Class DisplayGroup
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class DisplayGroup implements \JsonSerializable
 {
     use EntityTrait;
     use TagLinkTrait;
 
     /**
-     * @SWG\Property(
-     *  description="The displayGroup Id"
-     * )
      * @var int
      */
+    #[OA\Property(description: "The displayGroup Id")]
     public $displayGroupId;
 
     /**
-     * @SWG\Property(
-     *  description="The displayGroup Name"
-     * )
      * @var string
      */
+    #[OA\Property(description: "The displayGroup Name")]
     public $displayGroup;
 
     /**
-     * @SWG\Property(
-     *  description="The displayGroup Description"
-     * )
      * @var string
      */
+    #[OA\Property(description: "The displayGroup Description")]
     public $description;
 
     /**
-     * @SWG\Property(
-     *  description="A flag indicating whether this displayGroup is a single display displayGroup",
-     * )
      * @var int
      */
+    #[OA\Property(description: "A flag indicating whether this displayGroup is a single display displayGroup")]
     public $isDisplaySpecific = 0;
 
     /**
-     * @SWG\Property(
-     *  description="A flag indicating whether this displayGroup is dynamic",
-     * )
      * @var int
      */
+    #[OA\Property(description: "A flag indicating whether this displayGroup is dynamic")]
     public $isDynamic = 0;
 
     /**
-     * @SWG\Property(
-     *  description="Criteria for this dynamic group. A comma separated set of regular expressions to apply",
-     * )
      * @var string
      */
+    #[OA\Property(description: "Criteria for this dynamic group. A comma separated set of regular expressions to apply")]
     public $dynamicCriteria;
 
     /**
-     * @SWG\Property(description="Which logical operator should be used when filtering by multiple dynamic criteria? OR|AND")
      * @var string
      */
+    #[OA\Property(description: "Which logical operator should be used when filtering by multiple dynamic criteria? OR|AND")]
     public $dynamicCriteriaLogicalOperator;
 
     /**
-     * @SWG\Property(
-     *  description="Criteria for this dynamic group. A comma separated set of tags to apply",
-     * )
      * @var string
      */
+    #[OA\Property(description: "Criteria for this dynamic group. A comma separated set of tags to apply")]
     public $dynamicCriteriaTags;
 
     /**
-     * @SWG\Property(description="Flag indicating whether to filter by exact Tag match")
      * @var int
      */
+    #[OA\Property(description: "Flag indicating whether to filter by exact Tag match")]
     public $dynamicCriteriaExactTags;
 
     /**
-     * @SWG\Property(description="Which logical operator should be used when filtering by multiple Tags? OR|AND")
      * @var string
      */
+    #[OA\Property(description: "Which logical operator should be used when filtering by multiple Tags? OR|AND")]
     public $dynamicCriteriaTagsLogicalOperator;
 
     /**
-     * @SWG\Property(
-     *  description="The UserId who owns this display group",
-     * )
      * @var int
      */
+    #[OA\Property(description: "The UserId who owns this display group")]
     public $userId = 0;
 
     /**
-     * @SWG\Property(description="Tags associated with this Display Group, array of TagLink objects")
      * @var TagLink[]
      */
+    #[OA\Property(description: "Tags associated with this Display Group, array of TagLink objects")]
     public $tags = [];
 
     /**
-     * @SWG\Property(description="The display bandwidth limit")
      * @var int
      */
+    #[OA\Property(description: "The display bandwidth limit")]
     public $bandwidthLimit;
 
     /**
-     * @SWG\Property(description="A comma separated list of groups/users with permissions to this DisplayGroup")
      * @var string
      */
+    #[OA\Property(description: "A comma separated list of groups/users with permissions to this DisplayGroup")]
     public $groupsWithPermissions;
 
     /**
-     * @SWG\Property(description="The datetime this entity was created")
      * @var string
      */
+    #[OA\Property(description: "The datetime this entity was created")]
     public $createdDt;
 
     /**
-     * @SWG\Property(description="The datetime this entity was last modified")
      * @var string
      */
+    #[OA\Property(description: "The datetime this entity was last modified")]
     public $modifiedDt;
 
     /**
-     * @SWG\Property(description="The id of the Folder this Display Group belongs to")
      * @var int
      */
+    #[OA\Property(description: "The id of the Folder this Display Group belongs to")]
     public $folderId;
 
     /**
-     * @SWG\Property(description="The id of the Folder responsible for providing permissions for this Display Group")
      * @var int
      */
+    #[OA\Property(description: "The id of the Folder responsible for providing permissions for this Display Group")]
     public $permissionsFolderId;
 
     /**
-     * @SWG\Property(description="Optional Reference 1")
      * @var string
      */
+    #[OA\Property(description: "Optional Reference 1")]
     public $ref1;
 
     /**
-     * @SWG\Property(description="Optional Reference 2")
      * @var string
      */
+    #[OA\Property(description: "Optional Reference 2")]
     public $ref2;
 
     /**
-     * @SWG\Property(description="Optional Reference 3")
      * @var string
      */
+    #[OA\Property(description: "Optional Reference 3")]
     public $ref3;
 
     /**
-     * @SWG\Property(description="Optional Reference 4")
      * @var string
      */
+    #[OA\Property(description: "Optional Reference 4")]
     public $ref4;
 
     /**
-     * @SWG\Property(description="Optional Reference 5")
      * @var string
      */
+    #[OA\Property(description: "Optional Reference 5")]
     public $ref5;
 
     // Child Items the Display Group is linked to

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -24,6 +24,7 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\UserGroup;
@@ -150,43 +151,43 @@ class Notification extends Base
         }
     }
 
+    #[OA\Get(
+        path: '/notification',
+        operationId: 'notificationSearch',
+        description: 'Search this users Notifications',
+        summary: 'Notification Search',
+        tags: ['notification']
+    )]
+    #[OA\Parameter(
+        name: 'notificationId',
+        description: 'Filter by Notification Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'subject',
+        description: 'Filter by Subject',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'embed',
+        description: 'Embed related data such as userGroups,displayGroups',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Notification')
+        )
+    )]
     /**
-     * @SWG\Get(
-     *  path="/notification",
-     *  operationId="notificationSearch",
-     *  tags={"notification"},
-     *  summary="Notification Search",
-     *  description="Search this users Notifications",
-     *  @SWG\Parameter(
-     *      name="notificationId",
-     *      in="query",
-     *      description="Filter by Notification Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="subject",
-     *      in="query",
-     *      description="Filter by Subject",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="embed",
-     *      in="query",
-     *      description="Embed related data such as userGroups,displayGroups",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/Notification")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -491,70 +492,63 @@ class Notification extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/notification',
+        operationId: 'notificationAdd',
+        description: 'Add a Notification',
+        summary: 'Notification Add',
+        tags: ['notification']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'subject', description: 'The Subject', type: 'string'),
+                    new OA\Property(property: 'body', description: 'The Body', type: 'string'),
+                    new OA\Property(
+                        property: 'releaseDt',
+                        description: 'ISO date representing the release date for this notification',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'isInterrupt',
+                        description: 'Flag indication whether this notification should interrupt the web portal nativation/login', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'displayGroupIds',
+                        description: 'The display group ids to assign this notification to',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'userGroupIds',
+                        description: 'The user group ids to assign to this notification',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    )
+                ],
+                required: ['subject', 'isInterrupt', 'displayGroupIds', 'userGroupIds']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Notification'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add Notification
      *
-     * @SWG\Post(
-     *  path="/notification",
-     *  operationId="notificationAdd",
-     *  tags={"notification"},
-     *  summary="Notification Add",
-     *  description="Add a Notification",
-     *  @SWG\Parameter(
-     *      name="subject",
-     *      in="formData",
-     *      description="The Subject",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="body",
-     *      in="formData",
-     *      description="The Body",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="releaseDt",
-     *      in="formData",
-     *      description="ISO date representing the release date for this notification",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isInterrupt",
-     *      in="formData",
-     *      description="Flag indication whether this notification should interrupt the web portal nativation/login",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="displayGroupIds",
-     *      in="formData",
-     *      description="The display group ids to assign this notification to",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(type="integer")
-     *   ),
-     *  @SWG\Parameter(
-     *      name="userGroupIds",
-     *      in="formData",
-     *      description="The user group ids to assign to this notification",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(type="integer")
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Notification"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -644,6 +638,60 @@ class Notification extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/notification/{notificationId}',
+        operationId: 'notificationEdit',
+        description: 'Edit a Notification',
+        summary: 'Notification Edit',
+        tags: ['notification']
+    )]
+    #[OA\Parameter(
+        name: 'notificationId',
+        description: 'The NotificationId',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'subject', description: 'The Subject', type: 'string'),
+                    new OA\Property(property: 'body', description: 'The Body', type: 'string'),
+                    new OA\Property(
+                        property: 'releaseDt',
+                        description: 'ISO date representing the release date for this notification',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'isInterrupt',
+                        description: 'Flag indication whether this notification should interrupt the web portal nativation/login', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'displayGroupIds',
+                        description: 'The display group ids to assign this notification to',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'userGroupIds',
+                        description: 'The user group ids to assign to this notification',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    )
+                ],
+                required: ['subject', 'releaseDt', 'isInterrupt', 'displayGroupIds', 'userGroupIds']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Notification')
+    )]
     /**
      * Edit Notification
      * @param Request $request
@@ -654,69 +702,6 @@ class Notification extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
-     * @SWG\Put(
-     *  path="/notification/{notificationId}",
-     *  operationId="notificationEdit",
-     *  tags={"notification"},
-     *  summary="Notification Edit",
-     *  description="Edit a Notification",
-     *  @SWG\Parameter(
-     *      name="notificationId",
-     *      in="path",
-     *      description="The NotificationId",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="subject",
-     *      in="formData",
-     *      description="The Subject",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="body",
-     *      in="formData",
-     *      description="The Body",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="releaseDt",
-     *      in="formData",
-     *      description="ISO date representing the release date for this notification",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isInterrupt",
-     *      in="formData",
-     *      description="Flag indication whether this notification should interrupt the web portal nativation/login",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="displayGroupIds",
-     *      in="formData",
-     *      description="The display group ids to assign this notification to",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(type="integer")
-     *   ),
-     *  @SWG\Parameter(
-     *      name="userGroupIds",
-     *      in="formData",
-     *      description="The user group ids to assign to this notification",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(type="integer")
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Notification")
-     *  )
-     * )
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -766,6 +751,21 @@ class Notification extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(
+        path: '/notification/{notificationId}',
+        operationId: 'notificationDelete',
+        description: 'Delete the provided notification',
+        summary: 'Delete Notification',
+        tags: ['notification']
+    )]
+    #[OA\Parameter(
+        name: 'notificationId',
+        description: 'The Notification Id to Delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete Notification
      * @param Request $request
@@ -776,24 +776,6 @@ class Notification extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
-     * @SWG\Delete(
-     *  path="/notification/{notificationId}",
-     *  operationId="notificationDelete",
-     *  tags={"notification"},
-     *  summary="Delete Notification",
-     *  description="Delete the provided notification",
-     *  @SWG\Parameter(
-     *      name="notificationId",
-     *      in="path",
-     *      description="The Notification Id to Delete",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function delete(Request $request, Response $response, $id)
     {

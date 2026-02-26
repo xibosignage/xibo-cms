@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 namespace Xibo\Entity;
 
 use Carbon\Carbon;
+use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\CampaignFactory;
@@ -46,9 +47,8 @@ use Xibo\Support\Sanitizer\SanitizerInterface;
 /**
  * Class Schedule
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class Schedule implements \JsonSerializable
 {
     use EntityTrait;
@@ -68,180 +68,135 @@ class Schedule implements \JsonSerializable
     public static $DATE_MAX = 2147483647;
 
     /**
-     * @SWG\Property(
-     *  description="The ID of this Event"
-     * )
      * @var int
      */
+    #[OA\Property(description: "The ID of this Event")]
     public $eventId;
 
     /**
-     * @SWG\Property(
-     *  description="The Event Type ID"
-     * )
      * @var int
      */
+    #[OA\Property(description: "The Event Type ID")]
     public $eventTypeId;
 
     /**
-     * @SWG\Property(
-     *  description="The CampaignID this event is for"
-     * )
      * @var int
      */
+    #[OA\Property(description: "The CampaignID this event is for")]
     public $campaignId;
 
     /**
-     * @SWG\Property(
-     *  description="The CommandId this event is for"
-     * )
      * @var int
      */
+    #[OA\Property(description: "The CommandId this event is for")]
     public $commandId;
 
     /**
-     * @SWG\Property(
-     *  description="Display Groups assigned to this Scheduled Event.",
-     *  type="array",
-     *  @SWG\Items(ref="#/definitions/DisplayGroup")
-     * )
      * @var DisplayGroup[]
      */
+    #[OA\Property(description: "Display Groups assigned to this Scheduled Event.", type: "array", items: new OA\Items(ref: "#/components/schemas/DisplayGroup"))]
     public $displayGroups = [];
 
     /**
-     * @SWG\Property(
-     *  description="Schedule Reminders assigned to this Scheduled Event.",
-     *  type="array",
-     *  @SWG\Items(ref="#/definitions/ScheduleReminder")
-     * )
      * @var ScheduleReminder[]
      */
+    #[OA\Property(description: "Schedule Reminders assigned to this Scheduled Event.", type: "array", items: new OA\Items(ref: "#/components/schemas/ScheduleReminder"))]
     public $scheduleReminders = [];
 
     /**
-     * @SWG\Property(
-     *  description="Schedule Criteria assigned to this Scheduled Event.",
-     *  type="array",
-     *  @SWG\Items(ref="#/definitions/ScheduleCriteria")
-     * )
      * @var ScheduleCriteria[]
      */
+    #[OA\Property(description: "Schedule Criteria assigned to this Scheduled Event.", type: "array", items: new OA\Items(ref: "#/components/schemas/ScheduleCriteria"))]
     public $criteria = [];
 
     /**
-     * @SWG\Property(
-     *  description="The userId that owns this event."
-     * )
      * @var int
      */
+    #[OA\Property(description: "The userId that owns this event.")]
     public $userId;
 
     /**
-     * @SWG\Property(
-     *  description="A Unix timestamp representing the from date of this event in CMS time."
-     * )
      * @var int
      */
+    #[OA\Property(description: "A Unix timestamp representing the from date of this event in CMS time.")]
     public $fromDt;
 
     /**
-     * @SWG\Property(
-     *  description="A Unix timestamp representing the to date of this event in CMS time."
-     * )
      * @var int
      */
+    #[OA\Property(description: "A Unix timestamp representing the to date of this event in CMS time.")]
     public $toDt;
 
     /**
-     * @SWG\Property(
-     *  description="Integer indicating the event priority."
-     * )
      * @var int
      */
+    #[OA\Property(description: "Integer indicating the event priority.")]
     public $isPriority;
 
     /**
-     * @SWG\Property(
-     *  description="The display order for this event."
-     * )
      * @var int
      */
+    #[OA\Property(description: "The display order for this event.")]
     public $displayOrder;
 
     /**
-     * @SWG\Property(
-     *  description="If this event recurs when what is the recurrence period.",
-     *  enum={"None", "Minute", "Hour", "Day", "Week", "Month", "Year"}
-     * )
      * @var string
      */
+    #[OA\Property(description: "If this event recurs when what is the recurrence period.", enum: ["None", "Minute", "Hour", "Day", "Week", "Month", "Year"])]
     public $recurrenceType;
 
     /**
-     * @SWG\Property(
-     *  description="If this event recurs when what is the recurrence frequency.",
-     * )
      * @var int
      */
+    #[OA\Property(description: "If this event recurs when what is the recurrence frequency.")]
     public $recurrenceDetail;
 
     /**
-     * @SWG\Property(
-     *  description="A Unix timestamp indicating the end time of the recurring events."
-     * )
      * @var int
      */
+    #[OA\Property(description: "A Unix timestamp indicating the end time of the recurring events.")]
     public $recurrenceRange;
 
     /**
-     * @SWG\Property(description="Recurrence repeats on days - 0 to 7 where 0 is a monday")
      * @var string
      */
+    #[OA\Property(description: "Recurrence repeats on days - 0 to 7 where 0 is a monday")]
     public $recurrenceRepeatsOn;
 
     /**
-     * @SWG\Property(description="Recurrence monthly repeats on - 0 is day of month, 1 is weekday of week")
      * @var int
      */
+    #[OA\Property(description: "Recurrence monthly repeats on - 0 is day of month, 1 is weekday of week")]
     public $recurrenceMonthlyRepeatsOn;
 
     /**
-     * @SWG\Property(
-     *  description="The Campaign/Layout Name",
-     *  readOnly=true
-     * )
      * @var string
      */
+    #[OA\Property(description: "The Campaign/Layout Name", readOnly: true)]
     public $campaign;
 
     /**
-     * @SWG\Property(
-     *  description="The Command Name",
-     *  readOnly=true
-     * )
      * @var string
      */
+    #[OA\Property(description: "The Command Name", readOnly: true)]
     public $command;
 
     /**
-     * @SWG\Property(
-     *  description="The Day Part Id"
-     * )
      * @var int
      */
+    #[OA\Property(description: "The Day Part Id")]
     public $dayPartId;
 
     /**
-     * @SWG\Property(description="Is this event an always on event?")
      * @var int
      */
+    #[OA\Property(description: "Is this event an always on event?")]
     public $isAlways;
 
     /**
-     * @SWG\Property(description="Does this event have custom from/to date times?")
      * @var int
      */
+    #[OA\Property(description: "Does this event have custom from/to date times?")]
     public $isCustom;
 
     /**
@@ -251,124 +206,124 @@ class Schedule implements \JsonSerializable
     public $lastRecurrenceWatermark;
 
     /**
-     * @SWG\Property(description="Flag indicating whether the event should be synchronised across displays")
      * @var int
      */
+    #[OA\Property(description: "Flag indicating whether the event should be synchronised across displays")]
     public $syncEvent = 0;
 
     /**
-     * @SWG\Property(description="Flag indicating whether the event will sync to the Display timezone")
      * @var int
      */
+    #[OA\Property(description: "Flag indicating whether the event will sync to the Display timezone")]
     public $syncTimezone;
 
     /**
-     * @SWG\Property(description="Seconds (0-3600) of each full hour that is scheduled that this Layout should occupy")
      * @var int
      */
+    #[OA\Property(description: "Seconds (0-3600) of each full hour that is scheduled that this Layout should occupy")]
     public $shareOfVoice;
 
     /**
-     * @SWG\Property(description="The maximum number of plays per hour per display for this event")
      * @var int
      */
+    #[OA\Property(description: "The maximum number of plays per hour per display for this event")]
     public $maxPlaysPerHour;
 
     /**
-     * @SWG\Property(description="Flag (0-1), whether this event is using Geo Location")
      * @var int
      */
+    #[OA\Property(description: "Flag (0-1), whether this event is using Geo Location")]
     public $isGeoAware;
 
     /**
-     * @SWG\Property(description="Geo JSON representing the area of this event")
      * @var string
      */
+    #[OA\Property(description: "Geo JSON representing the area of this event")]
     public $geoLocation;
 
     /**
-     * @SWG\Property(description="For Action event type, Action trigger code")
      * @var string
      */
+    #[OA\Property(description: "For Action event type, Action trigger code")]
     public $actionTriggerCode;
 
     /**
-     * @SWG\Property(description="For Action event type, the type of the Action (navigate to Layout or Command)")
      * @var string
      */
+    #[OA\Property(description: "For Action event type, the type of the Action (navigate to Layout or Command)")]
     public $actionType;
 
     /**
-     * @SWG\Property(description="For Action event type and navigate to Layout Action type, the Layout code")
      * @var string
      */
+    #[OA\Property(description: "For Action event type and navigate to Layout Action type, the Layout code")]
     public $actionLayoutCode;
 
     /**
-     * @SWG\Property(description="If the schedule should be considered part of a larger campaign")
      * @var int
      */
+    #[OA\Property(description: "If the schedule should be considered part of a larger campaign")]
     public $parentCampaignId;
 
     /**
-     * @SWG\Property(description="For sync events, the id the the sync group")
      * @var int
      */
+    #[OA\Property(description: "For sync events, the id the the sync group")]
     public $syncGroupId;
 
     /**
-     * @SWG\Property(description="For data connector events, the dataSetId")
      * @var int
      */
+    #[OA\Property(description: "For data connector events, the dataSetId")]
     public $dataSetId;
 
     /**
-     * @SWG\Property(description="For data connector events, the data set parameters")
      * @var int
      */
+    #[OA\Property(description: "For data connector events, the data set parameters")]
     public $dataSetParams;
 
     /**
-     * @SWG\Property(description="The userId of the user that last modified this Schedule")
      * @var int
      */
+    #[OA\Property(description: "The userId of the user that last modified this Schedule")]
     public $modifiedBy;
     public $modifiedByName;
 
     /**
-     * @SWG\Property(description="The Date this Schedule was created on")
      * @var string
      */
+    #[OA\Property(description: "The Date this Schedule was created on")]
     public $createdOn;
 
     /**
-     * @SWG\Property(description="The Date this Schedule was las updated on")
      * @var string
      */
+    #[OA\Property(description: "The Date this Schedule was las updated on")]
     public $updatedOn;
 
     /**
-     * @SWG\Property(description="The name of this Scheduled Event")
      * @var string
      */
+    #[OA\Property(description: "The name of this Scheduled Event")]
     public $name;
 
     /**
-     * @SWG\Property(description="The resolutionId of this Fullscreen Scheduled Event")
      * @var int
      */
+    #[OA\Property(description: "The resolutionId of this Fullscreen Scheduled Event")]
     public int $resolutionId;
 
     /**
-     * @SWG\Property(description="The duration of this Fullscreen Scheduled Event")
      * @var int
      */
+    #[OA\Property(description: "The duration of this Fullscreen Scheduled Event")]
     public int $layoutDuration;
 
     /**
-     * @SWG\Property(description="The background color of this Fullscreen Scheduled Event")
      * @var string
      */
+    #[OA\Property(description: "The background color of this Fullscreen Scheduled Event")]
     public string $backgroundColor;
 
     /**

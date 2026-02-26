@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,6 +23,7 @@
 
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Event\RegionAddedEvent;
@@ -117,6 +118,51 @@ class Region extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/region/{id}',
+        operationId: 'regionAdd',
+        description: 'Add a Region to a Layout',
+        summary: 'Add Region',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The Layout ID to add the Region to',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'type',
+                        description: 'The type of region this should be, zone, frame, playlist or canvas. Default = frame.', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'width', description: 'The Width, default 250', type: 'integer'),
+                    new OA\Property(property: 'height', description: 'The Height', type: 'integer'),
+                    new OA\Property(property: 'top', description: 'The Top Coordinate', type: 'integer'),
+                    new OA\Property(property: 'left', description: 'The Left Coordinate', type: 'integer')
+                ]
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Region'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add a region
      * @param Request $request
@@ -128,65 +174,6 @@ class Region extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws ControllerNotImplemented
-     * @SWG\Post(
-     *  path="/region/{id}",
-     *  operationId="regionAdd",
-     *  tags={"layout"},
-     *  summary="Add Region",
-     *  description="Add a Region to a Layout",
-     *  @SWG\Parameter(
-     *      name="id",
-     *      in="path",
-     *      description="The Layout ID to add the Region to",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="type",
-     *      in="formData",
-     *      description="The type of region this should be, zone, frame, playlist or canvas. Default = frame.",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="width",
-     *      in="formData",
-     *      description="The Width, default 250",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="height",
-     *      in="formData",
-     *      description="The Height",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="top",
-     *      in="formData",
-     *      description="The Top Coordinate",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="left",
-     *      in="formData",
-     *      description="The Left Coordinate",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Region"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      */
     public function add(Request $request, Response $response, $id)
     {
@@ -239,6 +226,61 @@ class Region extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/region/{id}',
+        operationId: 'regionEdit',
+        description: 'Edit Region',
+        summary: 'Edit Region',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The Region ID to Edit',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'width', description: 'The Width, default 250', type: 'integer'),
+                    new OA\Property(property: 'height', description: 'The Height', type: 'integer'),
+                    new OA\Property(property: 'top', description: 'The Top Coordinate', type: 'integer'),
+                    new OA\Property(property: 'left', description: 'The Left Coordinate', type: 'integer'),
+                    new OA\Property(property: 'zIndex', description: 'The Layer for this Region', type: 'integer'),
+                    new OA\Property(
+                        property: 'transitionType',
+                        description: 'The Transition Type. Must be a valid transition code as returned by /transition', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'transitionDuration',
+                        description: 'The transition duration in milliseconds if required by the transition type', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'transitionDirection',
+                        description: 'The transition direction if required by the transition type.', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'loop',
+                        description: 'Flag indicating whether this region should loop if there is only 1 media item in the timeline', // phpcs:ignore
+                        type: 'integer'
+                    )
+                ],
+                required: ['loop']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Region')
+    )]
     /**
      * @param Request $request
      * @param Response $response
@@ -249,88 +291,6 @@ class Region extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws ControllerNotImplemented
-     * @SWG\Put(
-     *  path="/region/{id}",
-     *  operationId="regionEdit",
-     *  tags={"layout"},
-     *  summary="Edit Region",
-     *  description="Edit Region",
-     *  @SWG\Parameter(
-     *      name="id",
-     *      in="path",
-     *      description="The Region ID to Edit",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="width",
-     *      in="formData",
-     *      description="The Width, default 250",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="height",
-     *      in="formData",
-     *      description="The Height",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="top",
-     *      in="formData",
-     *      description="The Top Coordinate",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="left",
-     *      in="formData",
-     *      description="The Left Coordinate",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="zIndex",
-     *      in="formData",
-     *      description="The Layer for this Region",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="transitionType",
-     *      in="formData",
-     *      description="The Transition Type. Must be a valid transition code as returned by /transition",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="transitionDuration",
-     *      in="formData",
-     *      description="The transition duration in milliseconds if required by the transition type",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="transitionDirection",
-     *      in="formData",
-     *      description="The transition direction if required by the transition type.",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="loop",
-     *      in="formData",
-     *      description="Flag indicating whether this region should loop if there is only 1 media item in the timeline",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Region")
-     *  )
-     * )
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -389,6 +349,21 @@ class Region extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(
+        path: '/region/{regionId}',
+        operationId: 'regionDelete',
+        description: 'Delete an existing region',
+        summary: 'Region Delete',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'regionId',
+        description: 'The Region ID to Delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete a region
      * @param Request $request
@@ -400,24 +375,6 @@ class Region extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws ControllerNotImplemented
-     * @SWG\Delete(
-     *  path="/region/{regionId}",
-     *  operationId="regionDelete",
-     *  tags={"layout"},
-     *  summary="Region Delete",
-     *  description="Delete an existing region",
-     *  @SWG\Parameter(
-     *      name="regionId",
-     *      in="path",
-     *      description="The Region ID to Delete",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function delete(Request $request, Response $response, $id)
     {
@@ -444,6 +401,42 @@ class Region extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/region/position/all/{layoutId}',
+        operationId: 'regionPositionAll',
+        description: 'Position all regions for a Layout',
+        summary: 'Position Regions',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'layoutId',
+        description: 'The Layout ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'regions',
+                        description: 'Array of regions and their new positions. Each array element should be json encoded and have regionId, top, left, width and height.', // phpcs:ignore
+                        items: new OA\Items(type: 'string'),
+                        type: 'array'
+                    )
+                ],
+                required: ['regions']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout')
+    )]
     /**
      * Update Positions
      * @param Request $request
@@ -455,35 +448,6 @@ class Region extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws ControllerNotImplemented
-     * @SWG\Put(
-     *  path="/region/position/all/{layoutId}",
-     *  operationId="regionPositionAll",
-     *  tags={"layout"},
-     *  summary="Position Regions",
-     *  description="Position all regions for a Layout",
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      in="path",
-     *      description="The Layout ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="regions",
-     *      in="formData",
-     *      description="Array of regions and their new positions. Each array element should be json encoded and have regionId, top, left, width and height.",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(
-     *          type="string"
-     *      )
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Layout")
-     *  )
-     * )
      */
     function positionAll(Request $request, Response $response, $id)
     {
@@ -671,33 +635,34 @@ class Region extends Base
         ];
     }
 
+    #[OA\Post(
+        path: '/region/drawer/{id}',
+        operationId: 'regionDrawerAdd',
+        description: 'Add a drawer Region to a Layout',
+        summary: 'Add drawer Region',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The Layout ID to add the Region to',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Region'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add a drawer
-
-     * @SWG\Post(
-     *  path="/region/drawer/{id}",
-     *  operationId="regionDrawerAdd",
-     *  tags={"layout"},
-     *  summary="Add drawer Region",
-     *  description="Add a drawer Region to a Layout",
-     *  @SWG\Parameter(
-     *      name="id",
-     *      in="path",
-     *      description="The Layout ID to add the Region to",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Region"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response
@@ -757,6 +722,37 @@ class Region extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/region/drawer/{id}',
+        operationId: 'regionDrawerSave',
+        description: 'Save Drawer',
+        summary: 'Save Drawer',
+        tags: ['layout']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The Drawer ID to Save',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'width', description: 'The Width, default 250', type: 'integer'),
+                    new OA\Property(property: 'height', description: 'The Height', type: 'integer')
+                ]
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Region')
+    )]
     /**
      * @param Request $request
      * @param Response $response
@@ -767,40 +763,6 @@ class Region extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws ControllerNotImplemented
-     *
-     * @SWG\Put(
-     *  path="/region/drawer/{id}",
-     *  operationId="regionDrawerSave",
-     *  tags={"layout"},
-     *  summary="Save Drawer",
-     *  description="Save Drawer",
-     *  @SWG\Parameter(
-     *      name="id",
-     *      in="path",
-     *      description="The Drawer ID to Save",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="width",
-     *      in="formData",
-     *      description="The Width, default 250",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="height",
-     *      in="formData",
-     *      description="The Height",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Region")
-     *  )
-     * )
      */
     public function saveDrawer(Request $request, Response $response, $id)
     {

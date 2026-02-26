@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,64 +22,65 @@
 
 namespace Xibo\Entity;
 
+use OpenApi\Attributes as OA;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Application Request
- * @SWG\Definition()
  */
+#[OA\Schema]
 class ApplicationRequest implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="The request ID")
      * @var int
      */
+    #[OA\Property(description: 'The request ID')]
     public $requestId;
 
     /**
-     * @SWG\Property(description="The user ID")
      * @var int
      */
+    #[OA\Property(description: 'The user ID')]
     public $userId;
 
     /**
-     * @SWG\Property(description="The application ID")
      * @var string
      */
+    #[OA\Property(description: 'The application ID')]
     public $applicationId;
 
     /**
-     * @SWG\Property(description="The request route")
      * @var string
      */
+    #[OA\Property(description: 'The request route')]
     public $url;
 
     /**
-     * @SWG\Property(description="The request method")
      * @var string
      */
+    #[OA\Property(description: 'The request method')]
     public $method;
 
     /**
-     * @SWG\Property(description="The request start time")
      * @var string
      */
+    #[OA\Property(description: 'The request start time')]
     public $startTime;
 
     /**
-     * @SWG\Property(description="The request end time")
      * @var string
      */
+    #[OA\Property(description: 'The request end time')]
     public $endTime;
 
     /**
-     * @SWG\Property(description="The request duration")
      * @var int
      */
+    #[OA\Property(description: 'The request duration')]
     public $duration;
 
     /**

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -73,19 +74,19 @@ class Module extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/module',
+        operationId: 'moduleSearch',
+        description: 'Get a list of all modules available to this CMS',
+        summary: 'Module Search',
+        tags: ['module']
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Module')
+    )]
     /**
-     * @SWG\Get(
-     *  path="/module",
-     *  operationId="moduleSearch",
-     *  tags={"module"},
-     *  summary="Module Search",
-     *  description="Get a list of all modules available to this CMS",
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Module")
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -147,26 +148,26 @@ class Module extends Base
     }
 
     // phpcs:disable
+    #[OA\Get(
+        path: '/module/properties/{id}',
+        operationId: 'getModuleProperties',
+        description: 'Get a module properties which are needed to for the editWidget call',
+        summary: 'Get Module Properties',
+        tags: ['module']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The ModuleId',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Property')
+    )]
     /**
-     * @SWG\Get(
-     *  path="/module/properties/{id}",
-     *  operationId="getModuleProperties",
-     *  tags={"module"},
-     *  summary="Get Module Properties",
-     *  description="Get a module properties which are needed to for the editWidget call",
-     *  @SWG\Parameter(
-     *      name="id",
-     *      in="path",
-     *      description="The ModuleId",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Property")
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -321,33 +322,33 @@ class Module extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/module/templates/{dataType}',
+        operationId: 'moduleTemplateSearch',
+        description: 'Get a list of templates available for a particular data type',
+        summary: 'Module Template Search',
+        tags: ['module']
+    )]
+    #[OA\Parameter(
+        name: 'dataType',
+        description: 'DataType to return templates for',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'type',
+        description: 'Type to return templates for',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'An array of module templates for the provided datatype',
+        content: new OA\JsonContent(ref: '#/components/schemas/ModuleTemplate')
+    )]
     /**
-     * @SWG\Get(
-     *  path="/module/templates/{dataType}",
-     *  operationId="moduleTemplateSearch",
-     *  tags={"module"},
-     *  summary="Module Template Search",
-     *  description="Get a list of templates available for a particular data type",
-     *  @SWG\Parameter(
-     *      name="dataType",
-     *      in="path",
-     *      description="DataType to return templates for",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="type",
-     *      in="query",
-     *      description="Type to return templates for",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="An array of module templates for the provided datatype",
-     *      @SWG\Schema(ref="#/definitions/ModuleTemplate")
-     *  )
-     * )
      * @param \Slim\Http\ServerRequest $request
      * @param \Slim\Http\Response $response
      * @param string $dataType
@@ -374,36 +375,36 @@ class Module extends Base
     }
 
     // phpcs:disable
+    #[OA\Get(
+        path: '/module/template/{dataType}/properties/{id}',
+        operationId: 'getModuleTemplateProperties',
+        description: 'Get a module template properties which are needed to for the editWidget call',
+        summary: 'Get Module Template Properties',
+        tags: ['module']
+    )]
+    #[OA\Parameter(
+        name: 'dataType',
+        description: 'The Template DataType',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The Template Id',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'object',
+            additionalProperties: new OA\AdditionalProperties(type: 'string')
+        )
+    )]
     /**
-     * @SWG\Get(
-     *  path="/module/template/{dataType}/properties/{id}",
-     *  operationId="getModuleProperties",
-     *  tags={"module"},
-     *  summary="Get Module Template Properties",
-     *  description="Get a module template properties which are needed to for the editWidget call",
-     *  @SWG\Parameter(
-     *      name="dataType",
-     *      in="path",
-     *      description="The Template DataType",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="id",
-     *      in="path",
-     *      description="The Template Id",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="object",
-     *          additionalProperties={"id":"string", "type":"string", "title":"string", "helpText":"string", "options":"array"}
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @param string $dataType

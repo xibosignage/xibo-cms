@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -21,27 +21,41 @@
  */
 namespace Xibo\Entity;
 
+use OpenApi\Attributes as OA;
 use Xibo\Connector\ProviderDetails;
 
-/**
- * @SWG\Definition()
- */
+#[OA\Schema(schema: 'SearchResult')]
 class SearchResult implements \JsonSerializable
 {
+    #[OA\Property()]
     public $title;
+    #[OA\Property()]
     public $description;
+    #[OA\Property()]
     public $thumbnail;
+    #[OA\Property()]
     public $source;
+    #[OA\Property()]
     public $type;
+    #[OA\Property()]
     public $id;
+    #[OA\Property()]
     public $download;
+    #[OA\Property()]
     public $fileSize;
+    #[OA\Property()]
     public $width;
+    #[OA\Property()]
     public $height;
+    #[OA\Property()]
     public $orientation;
+    #[OA\Property()]
     public $duration;
+    #[OA\Property()]
     public $videoThumbnailUrl;
+    #[OA\Property(type: 'array', items: new OA\Items(type: 'string'))]
     public $tags = [];
+    #[OA\Property()]
     public $isFeatured = 0;
 
     /** @var ProviderDetails */

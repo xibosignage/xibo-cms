@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,32 +22,34 @@
 
 namespace Xibo\Widget\Definition;
 
+use OpenApi\Attributes as OA;
+
 /**
  * Option: typically used when paired with a dropdown
- * @SWG\Definition()
  */
+#[OA\Schema(schema: 'Option')]
 class Option implements \JsonSerializable
 {
+    #[OA\Property(description: 'Name')]
     /**
-     * @SWG\Property(description="Name")
      * @var string
      */
     public $name;
 
+    #[OA\Property(description: 'Image: optional image asset')]
     /**
-     * @SWG\Property(description="Image: optional image asset")
      * @var string
      */
     public $image;
 
+    #[OA\Property(description: 'Set', type: 'array', items: new OA\Items(type: 'string'))]
     /**
-     * @SWG\Property(description="Set")
      * @var string[]
      */
     public $set = [];
 
+    #[OA\Property(description: 'Title: shown in the dropdown/select')]
     /**
-     * * @SWG\Property(description="Title: shown in the dropdown/select")
      * @var string
      */
     public $title;

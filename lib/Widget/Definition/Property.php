@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -25,6 +25,7 @@ namespace Xibo\Widget\Definition;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use Illuminate\Support\Str;
+use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\ValueTooLargeException;
@@ -32,30 +33,30 @@ use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * A Property
- * @SWG\Definition()
  */
+#[OA\Schema(schema: 'Property')]
 class Property implements \JsonSerializable
 {
+    #[OA\Property(description: 'ID, saved as a widget option')]
     /**
-     * @SWG\Property(description="ID, saved as a widget option")
      * @var string
      */
     public $id;
 
+    #[OA\Property(description: 'Type, determines the field type')]
     /**
-     * @SWG\Property(description="Type, determines the field type")
      * @var string
      */
     public $type;
 
+    #[OA\Property(description: 'Title: shown in the property panel')]
     /**
-     * @SWG\Property(description="Title: shown in the property panel")
      * @var string
      */
     public $title;
 
+    #[OA\Property(description: 'Help Text: shown in the property panel')]
     /**
-     * @SWG\Property(description="Help Text: shown in the property panel")
      * @var string
      */
     public $helpText;
@@ -63,9 +64,9 @@ class Property implements \JsonSerializable
     /** @var \Xibo\Widget\Definition\Rule  */
     public $validation;
 
+    #[OA\Property(description: 'An optional default value')]
     /**
-     * @SWG\Property()
-     * @var string An optional default value
+     * @var string
      */
     public $default;
 

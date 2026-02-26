@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,42 +22,53 @@
 
 namespace Xibo\Widget\Definition;
 
+use OpenApi\Attributes as OA;
+
 /**
- * @SWG\Definition()
  * A Stencil is a template which is rendered in the server and/or client
  * it can optionally have properties and/or elements
  */
+#[OA\Schema(schema: 'Stencil')]
 class Stencil implements \JsonSerializable
 {
+    #[OA\Property(type: 'array', items: new OA\Items(ref: '#/components/schemas/Element'))]
     /** @var \Xibo\Widget\Definition\Element[] */
     public $elements = [];
 
+    #[OA\Property()]
     /** @var string|null */
     public $twig;
 
+    #[OA\Property()]
     /** @var string|null */
     public $hbs;
 
+    #[OA\Property()]
     /** @var string|null */
     public $head;
 
+    #[OA\Property()]
     /** @var string|null */
     public $style;
 
+    #[OA\Property()]
     /** @var string|null */
     public $hbsId;
 
+    #[OA\Property()]
     /** @var double Optional positional information if contained as part of an element group */
     public $width;
 
+    #[OA\Property()]
     /** @var double Optional positional information if contained as part of an element group */
     public $height;
 
+    #[OA\Property()]
     /** @var double Optional positional information if contained as part of an element group */
     public $gapBetweenHbs;
 
+    #[OA\Property(description: 'An array of element groups', type: 'array', items: new OA\Items(ref: '#/components/schemas/ElementGroup'))]
     /**
-     * @SWG\Property(description="An array of element groups")
      * @var \Xibo\Widget\Definition\ElementGroup[]
      */
     public $elementGroups = [];

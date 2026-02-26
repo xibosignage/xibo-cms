@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -27,6 +27,7 @@ use GeoJson\Feature\FeatureCollection;
 use GeoJson\Geometry\Point;
 use GuzzleHttp\Client;
 use Intervention\Image\ImageManagerStatic as Img;
+use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use RobThree\Auth\TwoFactorAuth;
 use Slim\Http\Response as Response;
@@ -172,17 +173,14 @@ class Display extends Base
         $this->dayPartFactory = $dayPartFactory;
     }
 
+    #[OA\Get(
+        path: '/displayvenue',
+        operationId: 'displayVenueSearch',
+        summary: 'Get Display Venues',
+        tags: ['displayVenue']
+    )]
+    #[OA\Response(response: 200, description: 'a successful response')]
     /**
-     * @SWG\Get(
-     *  path="/displayvenue",
-     *  summary="Get Display Venues",
-     *  tags={"displayVenue"},
-     *  operationId="displayVenueSearch",
-     *  @SWG\Response(
-     *      response=200,
-     *      description="a successful response",
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -508,164 +506,163 @@ class Display extends Base
         ];
     }
 
+    #[OA\Get(
+        path: '/display',
+        operationId: 'displaySearch',
+        description: 'Search Displays for this User',
+        summary: 'Display Search',
+        tags: ['display']
+    )]
+    #[OA\Parameter(
+        name: 'displayId',
+        description: 'Filter by Display Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupId',
+        description: 'Filter by DisplayGroup Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'display',
+        description: 'Filter by Display Name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'tags',
+        description: 'Filter by tags',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'exactTags',
+        description: 'A flag indicating whether to treat the tags filter as an exact match',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'logicalOperator',
+        description: 'When filtering by multiple Tags, which logical operator should be used? AND|OR',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'macAddress',
+        description: 'Filter by Mac Address',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'hardwareKey',
+        description: 'Filter by Hardware Key',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'clientVersion',
+        description: 'Filter by Client Version',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'clientType',
+        description: 'Filter by Client Type',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'clientCode',
+        description: 'Filter by Client Code',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'embed',
+        description: 'Embed related data, namely displaygroups. A comma separated list of child objects to embed.', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'authorised',
+        description: 'Filter by authorised flag',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'displayProfileId',
+        description: 'Filter by Display Profile',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'mediaInventoryStatus',
+        description: 'Filter by Display Status ( 1 - up to date, 2 - downloading, 3 - Out of date)',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'loggedIn',
+        description: 'Filter by Logged In flag',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'lastAccessed',
+        description: 'Filter by Display Last Accessed date, expects date in Y-m-d H:i:s format',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'folderId',
+        description: 'Filter by Folder ID',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'xmrRegistered',
+        description: 'Filter by whether XMR is registed (1 or 0)',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'isPlayerSupported',
+        description: 'Filter by whether the player is supported (1 or 0)',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Display')
+        )
+    )]
     /**
      * Grid of Displays
-     *
-     * @SWG\Get(
-     *  path="/display",
-     *  operationId="displaySearch",
-     *  tags={"display"},
-     *  summary="Display Search",
-     *  description="Search Displays for this User",
-     *  @SWG\Parameter(
-     *      name="displayId",
-     *      in="query",
-     *      description="Filter by Display Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="displayGroupId",
-     *      in="query",
-     *      description="Filter by DisplayGroup Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="display",
-     *      in="query",
-     *      description="Filter by Display Name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="tags",
-     *      in="query",
-     *      description="Filter by tags",
-     *      type="string",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="exactTags",
-     *      in="query",
-     *      description="A flag indicating whether to treat the tags filter as an exact match",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="logicalOperator",
-     *      in="query",
-     *      description="When filtering by multiple Tags, which logical operator should be used? AND|OR",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="macAddress",
-     *      in="query",
-     *      description="Filter by Mac Address",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="hardwareKey",
-     *      in="query",
-     *      description="Filter by Hardware Key",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="clientVersion",
-     *      in="query",
-     *      description="Filter by Client Version",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="clientType",
-     *      in="query",
-     *      description="Filter by Client Type",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="clientCode",
-     *      in="query",
-     *      description="Filter by Client Code",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="embed",
-     *      in="query",
-     *      description="Embed related data, namely displaygroups. A comma separated list of child objects to embed.",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="authorised",
-     *      in="query",
-     *      description="Filter by authorised flag",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="displayProfileId",
-     *      in="query",
-     *      description="Filter by Display Profile",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  *  @SWG\Parameter(
-     *      name="mediaInventoryStatus",
-     *      in="query",
-     *      description="Filter by Display Status ( 1 - up to date, 2 - downloading, 3 - Out of date)",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  *  @SWG\Parameter(
-     *      name="loggedIn",
-     *      in="query",
-     *      description="Filter by Logged In flag",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  *  @SWG\Parameter(
-     *      name="lastAccessed",
-     *      in="query",
-     *      description="Filter by Display Last Accessed date, expects date in Y-m-d H:i:s format",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="query",
-     *      description="Filter by Folder ID",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *       name="xmrRegistered",
-     *       in="query",
-     *       description="Filter by whether XMR is registed (1 or 0)",
-     *       type="integer",
-     *       required=false
-     *    ),
-     *  @SWG\Parameter(
-     *       name="isPlayerSupported",
-     *       in="query",
-     *       description="Filter by whether the player is supported (1 or 0)",
-     *       type="integer",
-     *       required=false
-     *    ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/Display")
-     *      )
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response
@@ -1513,6 +1510,180 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/display/{displayId}',
+        operationId: 'displayEdit',
+        description: 'Edit a Display',
+        summary: 'Display Edit',
+        tags: ['display']
+    )]
+    #[OA\Parameter(
+        name: 'displayId',
+        description: 'The Display ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: [
+                    'display',
+                    'defaultLayoutId',
+                    'licensed',
+                    'license',
+                    'incSchedule',
+                    'emailAlert',
+                    'wakeOnLanEnabled'
+                ],
+                properties: [
+                    new OA\Property(property: 'display', description: 'The Display Name', type: 'string'),
+                    new OA\Property(property: 'description', description: 'A description of the Display', type: 'string'),
+                    new OA\Property(
+                        property: 'tags',
+                        description: 'A comma separated list of tags for this item',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'auditingUntil',
+                        description: 'A date this Display records auditing information until.',
+                        type: 'string',
+                        format: 'date-time'
+                    ),
+                    new OA\Property(
+                        property: 'defaultLayoutId',
+                        description: 'A Layout ID representing the Default Layout for this Display.',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'licensed',
+                        description: 'Flag indicating whether this display is licensed.',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'license',
+                        description: 'The hardwareKey to use as the licence key for this Display',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'incSchedule',
+                        description: 'Flag indicating whether the Default Layout should be included in the Schedule', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'emailAlert',
+                        description: 'Flag indicating whether the Display generates up/down email alerts.',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'alertTimeout',
+                        description: 'How long in seconds should this display wait before alerting when it hasn\'t connected. Override for the collection interval.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'wakeOnLanEnabled',
+                        description: 'Flag indicating if Wake On LAN is enabled for this Display',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'wakeOnLanTime',
+                        description: 'A h:i string representing the time that the Display should receive its Wake on LAN command', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'broadCastAddress',
+                        description: 'The BroadCast Address for this Display - used by Wake On LAN',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'secureOn',
+                        description: 'The secure on configuration for this Display',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'cidr',
+                        description: 'The CIDR configuration for this Display',
+                        type: 'integer'
+                    ),
+                    new OA\Property(property: 'latitude', description: 'The Latitude of this Display', type: 'number'),
+                    new OA\Property(property: 'longitude', description: 'The Longitude of this Display', type: 'number'),
+                    new OA\Property(
+                        property: 'timeZone',
+                        description: 'The timezone for this display, or empty to use the CMS timezone',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'languages',
+                        description: 'An array of languages supported in this display location',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'displayProfileId',
+                        description: 'The Display Settings Profile ID',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'displayTypeId',
+                        description: 'The Display Type ID of this Display',
+                        type: 'integer'
+                    ),
+                    new OA\Property(property: 'screenSize', description: 'The screen size of this Display', type: 'number'),
+                    new OA\Property(property: 'venueId', description: 'The Venue ID of this Display', type: 'integer'),
+                    new OA\Property(property: 'address', description: 'The Location Address of this Display', type: 'string'),
+                    new OA\Property(property: 'isMobile', description: 'Is this Display mobile?', type: 'integer'),
+                    new OA\Property(property: 'isOutdoor', description: 'Is this Display Outdoor?', type: 'integer'),
+                    new OA\Property(property: 'costPerPlay', description: 'The Cost Per Play of this Display', type: 'number'),
+                    new OA\Property(
+                        property: 'impressionsPerPlay',
+                        description: 'The Impressions Per Play of this Display',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'customId',
+                        description: 'The custom ID (an Id of any external system) of this Display',
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'ref1', description: 'Reference 1', type: 'string'),
+                    new OA\Property(property: 'ref2', description: 'Reference 2', type: 'string'),
+                    new OA\Property(property: 'ref3', description: 'Reference 3', type: 'string'),
+                    new OA\Property(property: 'ref4', description: 'Reference 4', type: 'string'),
+                    new OA\Property(property: 'ref5', description: 'Reference 5', type: 'string'),
+                    new OA\Property(
+                        property: 'clearCachedData',
+                        description: 'Clear all Cached data for this display',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'rekeyXmr',
+                        description: 'Clear the cached XMR configuration and send a rekey',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'teamViewerSerial',
+                        description: 'The TeamViewer serial number for this Display, if applicable',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'webkeySerial',
+                        description: 'The Webkey serial number for this Display, if applicable',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'folderId',
+                        description: 'Folder ID to which this object should be assigned to',
+                        type: 'integer'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Display')
+    )]
     /**
      * Display Edit
      * @param Request $request
@@ -1524,299 +1695,6 @@ class Display extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Put(
-     *  path="/display/{displayId}",
-     *  operationId="displayEdit",
-     *  tags={"display"},
-     *  summary="Display Edit",
-     *  description="Edit a Display",
-     *  @SWG\Parameter(
-     *      name="displayId",
-     *      in="path",
-     *      description="The Display ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="display",
-     *      in="formData",
-     *      description="The Display Name",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="A description of the Display",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="tags",
-     *      in="formData",
-     *      description="A comma separated list of tags for this item",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="auditingUntil",
-     *      in="formData",
-     *      description="A date this Display records auditing information until.",
-     *      type="string",
-     *      format="date-time",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="defaultLayoutId",
-     *      in="formData",
-     *      description="A Layout ID representing the Default Layout for this Display.",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="licensed",
-     *      in="formData",
-     *      description="Flag indicating whether this display is licensed.",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="license",
-     *      in="formData",
-     *      description="The hardwareKey to use as the licence key for this Display",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="incSchedule",
-     *      in="formData",
-     *      description="Flag indicating whether the Default Layout should be included in the Schedule",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="emailAlert",
-     *      in="formData",
-     *      description="Flag indicating whether the Display generates up/down email alerts.",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="alertTimeout",
-     *      in="formData",
-     *      description="How long in seconds should this display wait before alerting when it hasn't connected. Override for the collection interval.",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="wakeOnLanEnabled",
-     *      in="formData",
-     *      description="Flag indicating if Wake On LAN is enabled for this Display",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="wakeOnLanTime",
-     *      in="formData",
-     *      description="A h:i string representing the time that the Display should receive its Wake on LAN command",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="broadCastAddress",
-     *      in="formData",
-     *      description="The BroadCast Address for this Display - used by Wake On LAN",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="secureOn",
-     *      in="formData",
-     *      description="The secure on configuration for this Display",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="cidr",
-     *      in="formData",
-     *      description="The CIDR configuration for this Display",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="latitude",
-     *      in="formData",
-     *      description="The Latitude of this Display",
-     *      type="number",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="longitude",
-     *      in="formData",
-     *      description="The Longitude of this Display",
-     *      type="number",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="timeZone",
-     *      in="formData",
-     *      description="The timezone for this display, or empty to use the CMS timezone",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="languages",
-     *      in="formData",
-     *      description="An array of languages supported in this display location",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="displayProfileId",
-     *      in="formData",
-     *      description="The Display Settings Profile ID",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="displayTypeId",
-     *      in="formData",
-     *      description="The Display Type ID of this Display",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="screenSize",
-     *      in="formData",
-     *      description="The screen size of this Display",
-     *      type="number",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="venueId",
-     *      in="formData",
-     *      description="The Venue ID of this Display",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="address",
-     *      in="formData",
-     *      description="The Location Address of this Display",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isMobile",
-     *      in="formData",
-     *      description="Is this Display mobile?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isOutdoor",
-     *      in="formData",
-     *      description="Is this Display Outdoor?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="costPerPlay",
-     *      in="formData",
-     *      description="The Cost Per Play of this Display",
-     *      type="number",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="impressionsPerPlay",
-     *      in="formData",
-     *      description="The Impressions Per Play of this Display",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="customId",
-     *      in="formData",
-     *      description="The custom ID (an Id of any external system) of this Display",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ref1",
-     *      in="formData",
-     *      description="Reference 1",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ref2",
-     *      in="formData",
-     *      description="Reference 2",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ref3",
-     *      in="formData",
-     *      description="Reference 3",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ref4",
-     *      in="formData",
-     *      description="Reference 4",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ref5",
-     *      in="formData",
-     *      description="Reference 5",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="clearCachedData",
-     *      in="formData",
-     *      description="Clear all Cached data for this display",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="rekeyXmr",
-     *      in="formData",
-     *      description="Clear the cached XMR configuration and send a rekey",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="teamViewerSerial",
-     *      in="formData",
-     *      description="The TeamViewer serial number for this Display, if applicable",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="webkeySerial",
-     *      in="formData",
-     *      description="The Webkey serial number for this Display, if applicable",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="formData",
-     *      description="Folder ID to which this object should be assigned to",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Display")
-     *  )
-     * )
      */
     function edit(Request $request, Response $response, $id)
     {
@@ -1942,6 +1820,21 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(
+        path: '/display/{displayId}',
+        operationId: 'displayDelete',
+        description: 'Delete a Display',
+        summary: 'Display Delete',
+        tags: ['display']
+    )]
+    #[OA\Parameter(
+        name: 'displayId',
+        description: 'The Display ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete a display
      * @param Request $request
@@ -1952,24 +1845,6 @@ class Display extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Delete(
-     *  path="/display/{displayId}",
-     *  operationId="displayDelete",
-     *  tags={"display"},
-     *  summary="Display Delete",
-     *  description="Delete a Display",
-     *  @SWG\Parameter(
-     *      name="displayId",
-     *      in="path",
-     *      description="The Display ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     function delete(Request $request, Response $response, $id)
     {
@@ -2295,6 +2170,25 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/display/requestscreenshot/{displayId}',
+        operationId: 'displayRequestScreenshot',
+        description: 'Notify the display that the CMS would like a screen shot to be sent.',
+        summary: 'Request Screen Shot',
+        tags: ['display']
+    )]
+    #[OA\Parameter(
+        name: 'displayId',
+        description: 'The Display ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Display')
+    )]
     /**
      * Request ScreenShot
      * @param Request $request
@@ -2305,25 +2199,6 @@ class Display extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Put(
-     *  path="/display/requestscreenshot/{displayId}",
-     *  operationId="displayRequestScreenshot",
-     *  tags={"display"},
-     *  summary="Request Screen Shot",
-     *  description="Notify the display that the CMS would like a screen shot to be sent.",
-     *  @SWG\Parameter(
-     *      name="displayId",
-     *      in="path",
-     *      description="The Display ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Display")
-     *  )
-     * )
      */
     public function requestScreenShot(Request $request, Response $response, $id): Response
     {
@@ -2384,6 +2259,21 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/display/wol/{displayId}',
+        operationId: 'displayWakeOnLan',
+        description: 'Send a Wake On LAN packet to this Display',
+        summary: 'Issue WOL',
+        tags: ['display']
+    )]
+    #[OA\Parameter(
+        name: 'displayId',
+        description: 'The Display ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Wake this display using a WOL command
      * @param Request $request
@@ -2394,24 +2284,6 @@ class Display extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Post(
-     *  path="/display/wol/{displayId}",
-     *  operationId="displayWakeOnLan",
-     *  tags={"display"},
-     *  summary="Issue WOL",
-     *  description="Send a Wake On LAN packet to this Display",
-     *  @SWG\Parameter(
-     *      name="displayId",
-     *      in="path",
-     *      description="The Display ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function wakeOnLan(Request $request, Response $response, $id)
     {
@@ -2619,6 +2491,21 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/display/authorise/{displayId}',
+        operationId: 'displayToggleAuthorise',
+        description: 'Toggle authorised for the Display.',
+        summary: 'Toggle authorised',
+        tags: ['display']
+    )]
+    #[OA\Parameter(
+        name: 'displayId',
+        description: 'The Display ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Toggle Authorise on this Display
      * @param Request $request
@@ -2629,24 +2516,6 @@ class Display extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Put(
-     *  path="/display/authorise/{displayId}",
-     *  operationId="displayToggleAuthorise",
-     *  tags={"display"},
-     *  summary="Toggle authorised",
-     *  description="Toggle authorised for the Display.",
-     *  @SWG\Parameter(
-     *      name="displayId",
-     *      in="path",
-     *      description="The Display ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function toggleAuthorise(Request $request, Response $response, $id)
     {
@@ -2702,6 +2571,33 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/display/defaultlayout/{displayId}',
+        operationId: 'displayDefaultLayout',
+        description: 'Set the default Layout on this Display',
+        summary: 'Set Default Layout',
+        tags: ['display']
+    )]
+    #[OA\Parameter(
+        name: 'displayId',
+        description: 'The Display ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'layoutId', description: 'The Layout ID', type: 'integer')
+                ],
+                required: ['layoutId']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Set the Default Layout for this Display
      * @param Request $request
@@ -2712,31 +2608,6 @@ class Display extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Put(
-     *  path="/display/defaultlayout/{displayId}",
-     *  operationId="displayDefaultLayout",
-     *  tags={"display"},
-     *  summary="Set Default Layout",
-     *  description="Set the default Layout on this Display",
-     *  @SWG\Parameter(
-     *      name="displayId",
-     *      in="path",
-     *      description="The Display ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      in="formData",
-     *      description="The Layout ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function setDefaultLayout(Request $request, Response $response, $id)
     {
@@ -3015,27 +2886,23 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/display/licenceCheck/{displayId}',
+        operationId: 'displayLicenceCheck',
+        description: 'Ask this Player to check its Commercial Licence',
+        summary: 'Licence Check',
+        tags: ['display']
+    )]
+    #[OA\Parameter(
+        name: 'displayId',
+        description: 'The Display ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Check commercial licence
-     *
-     * @SWG\Put(
-     *  summary="Licence Check",
-     *  path="/display/licenceCheck/{displayId}",
-     *  operationId="displayLicenceCheck",
-     *  tags={"display"},
-     *  description="Ask this Player to check its Commercial Licence",
-     *  @SWG\Parameter(
-     *      name="displayId",
-     *      in="path",
-     *      description="The Display ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response
@@ -3070,30 +2937,29 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/display/status/{id}',
+        operationId: 'displayStatus',
+        description: 'Get the display status window for this Display.',
+        summary: 'Display Status',
+        tags: ['display']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'Display Id',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(type: 'string')
+        )
+    )]
     /**
-     * @SWG\Get(
-     *  path="/display/status/{id}",
-     *  operationId="displayStatus",
-     *  tags={"display"},
-     *  summary="Display Status",
-     *  description="Get the display status window for this Display.",
-     *  @SWG\Parameter(
-     *      name="id",
-     *      in="path",
-     *      description="Display Id",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(type="string")
-     *      )
-     *  )
-     * )
-     *
      * @param Request $request
      * @param Response $response
      * @param int $id displayId
@@ -3140,27 +3006,23 @@ class Display extends Base
     }
 
 
+    #[OA\Put(
+        path: '/display/purgeAll/{displayId}',
+        operationId: 'displayPurgeAll',
+        description: 'Ask this Player to purge all Media from its local storage and request fresh files from CMS.', // phpcs:ignore
+        summary: 'Purge All',
+        tags: ['display']
+    )]
+    #[OA\Parameter(
+        name: 'displayId',
+        description: 'The Display ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Purge All
-     *
-     * @SWG\Put(
-     *  summary="Purge All",
-     *  path="/display/purgeAll/{displayId}",
-     *  operationId="displayPurgeAll",
-     *  tags={"display"},
-     *  description="Ask this Player to purge all Media from its local storage and request fresh files from CMS.",
-     *  @SWG\Parameter(
-     *      name="displayId",
-     *      in="path",
-     *      description="The Display ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response

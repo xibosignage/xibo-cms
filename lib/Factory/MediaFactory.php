@@ -926,6 +926,17 @@ class MediaFactory extends BaseFactory
             $params['duration'] = $duration['variable'];
         }
 
+        // Modified Date filter
+        if ($sanitizedFilter->getDate('modifiedDateFrom') !== null) {
+            $body .= ' AND media.modifiedDt >= :modifiedDateFrom ';
+            $params['modifiedDateFrom'] = $sanitizedFilter->getDate('modifiedDateFrom');
+        }
+
+        if ($sanitizedFilter->getDate('modifiedDateTo') !== null) {
+            $body .= ' AND media.modifiedDt <= :modifiedDateTo ';
+            $params['modifiedDateTo'] = $sanitizedFilter->getDate('modifiedDateTo');
+        }
+
         if ($sanitizedFilter->getInt('folderId') !== null) {
             $body .= ' AND media.folderId = :folderId ';
             $params['folderId'] = $sanitizedFilter->getInt('folderId');

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Event\DisplayGroupLoadEvent;
@@ -129,66 +130,66 @@ class Tag extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/tag',
+        operationId: 'tagSearch',
+        description: 'Search for Tags viewable by this user',
+        summary: 'Search Tags',
+        tags: ['tags']
+    )]
+    #[OA\Parameter(
+        name: 'tagId',
+        description: 'Filter by Tag Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'tag',
+        description: 'Filter by partial Tag',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'exactTag',
+        description: 'Filter by exact Tag',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'isSystem',
+        description: 'Filter by isSystem flag',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'isRequired',
+        description: 'Filter by isRequired flag',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'haveOptions',
+        description: 'Set to 1 to show only results that have options set',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Tag')
+        )
+    )]
     /**
      * Tag Search
      *
-     * @SWG\Get(
-     *  path="/tag",
-     *  operationId="tagSearch",
-     *  tags={"tags"},
-     *  summary="Search Tags",
-     *  description="Search for Tags viewable by this user",
-     *  @SWG\Parameter(
-     *      name="tagId",
-     *      in="query",
-     *      description="Filter by Tag Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="tag",
-     *      in="query",
-     *      description="Filter by partial Tag",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="exactTag",
-     *      in="query",
-     *      description="Filter by exact Tag",
-     *      type="string",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="isSystem",
-     *      in="query",
-     *      description="Filter by isSystem flag",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="isRequired",
-     *      in="query",
-     *      description="Filter by isRequired flag",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="haveOptions",
-     *      in="query",
-     *      description="Set to 1 to show only results that have options set",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/Tag")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -277,45 +278,45 @@ class Tag extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/tag',
+        operationId: 'tagAdd',
+        description: 'Add a new Tag',
+        summary: 'Add a new Tag',
+        tags: ['tags']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'name', description: 'Tag name', type: 'string'),
+                    new OA\Property(
+                        property: 'isRequired',
+                        description: 'A flag indicating whether value selection on assignment is required',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'options',
+                        description: 'A comma separated string of Tag options',
+                        type: 'string'
+                    )
+                ]
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Tag')
+        )
+    )]
     /**
      * Add a Tag
      *
-     * @SWG\Post(
-     *  path="/tag",
-     *  operationId="tagAdd",
-     *  tags={"tags"},
-     *  summary="Add a new Tag",
-     *  description="Add a new Tag",
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="Tag name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="isRequired",
-     *      in="formData",
-     *      description="A flag indicating whether value selection on assignment is required",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="options",
-     *      in="formData",
-     *      description="A comma separated string of Tag options",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/Tag")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -366,46 +367,51 @@ class Tag extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/tag/{tagId}',
+        operationId: 'tagEdit',
+        description: 'Edit existing Tag',
+        summary: 'Edit existing Tag',
+        tags: ['tags']
+    )]
+    #[OA\Parameter(
+        name: 'tagId',
+        description: 'The Tag ID to Edit',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'name', description: 'Tag name', type: 'string'),
+                    new OA\Property(
+                        property: 'isRequired',
+                        description: 'A flag indicating whether value selection on assignment is required',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'options',
+                        description: 'A comma separated string of Tag options',
+                        type: 'string'
+                    )
+                ]
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Tag')
+        )
+    )]
     /**
      * Edit a Tag
-     *
-     * @SWG\Put(
-     *  path="/tag/{tagId}",
-     *  operationId="tagEdit",
-     *  tags={"tags"},
-     *  summary="Edit existing Tag",
-     *  description="Edit existing Tag",
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="Tag name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="isRequired",
-     *      in="formData",
-     *      description="A flag indicating whether value selection on assignment is required",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="options",
-     *      in="formData",
-     *      description="A comma separated string of Tag options",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/Tag")
-     *      )
-     *  )
-     * )
-     *
      *
      * @param Request $request
      * @param Response $response
@@ -574,27 +580,23 @@ class Tag extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(
+        path: '/tag/{tagId}',
+        operationId: 'tagDelete',
+        description: 'Delete a Tag',
+        summary: 'Delete Tag',
+        tags: ['tags']
+    )]
+    #[OA\Parameter(
+        name: 'tagId',
+        description: 'The Tag ID to delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete Tag
-     *
-     * @SWG\Delete(
-     *  path="/tag/{tagId}",
-     *  operationId="tagDelete",
-     *  tags={"tags"},
-     *  summary="Delete Tag",
-     *  description="Delete a Tag",
-     *  @SWG\Parameter(
-     *      name="tagId",
-     *      in="path",
-     *      description="The Tag ID to delete",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -48,7 +48,7 @@ class LinkSigner
         $type,
         $itemId,
         string $storedAs,
-        string $fileType = null,
+        ?string $fileType = null,
         bool $isRequestFromPwa = false,
     ): string {
         // Start with the base url, which should correctly account for running with a CMS_ALIAS

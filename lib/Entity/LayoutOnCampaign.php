@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,9 +22,12 @@
 
 namespace Xibo\Entity;
 
+use OpenApi\Attributes as OA;
+
 /**
- * @SWG\Definition("Layout linked to a Campaign")
+ * Layout linked to a Campaign
  */
+#[OA\Schema]
 class LayoutOnCampaign implements \JsonSerializable
 {
     use EntityTrait;
@@ -39,32 +42,32 @@ class LayoutOnCampaign implements \JsonSerializable
     public $geoFence;
 
     /**
-     * @SWG\Property(description="The Layout name (readonly)")
      * @var string
      */
+    #[OA\Property(description: 'The Layout name (readonly)')]
     public $layout;
 
     /**
-     * @SWG\Property(description="The Layout campaignId (readonly)")
      * @var string
      */
+    #[OA\Property(description: 'The Layout campaignId (readonly)')]
     public $layoutCampaignId;
 
     /**
-     * @SWG\Property(description="The owner id (readonly))")
      * @var integer
      */
+    #[OA\Property(description: 'The owner id (readonly))')]
     public $ownerId;
 
     /**
-     * @SWG\Property(description="The duration (readonly))")
      * @var integer
      */
+    #[OA\Property(description: 'The duration (readonly))')]
     public $duration;
 
     /**
-     * @SWG\Property(description="The dayPart (readonly)")
      * @var string
      */
+    #[OA\Property(description: 'The dayPart (readonly)')]
     public $dayPart;
 }

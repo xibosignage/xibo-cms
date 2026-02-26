@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 
 
 namespace Xibo\Entity;
+use OpenApi\Attributes as OA;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Service\LogServiceInterface;
@@ -31,123 +32,94 @@ use Xibo\Support\Exception\InvalidArgumentException;
 /**
  * Class Notification
  * @package Xibo\Entity
- *
- * @SWG\Definition()
  */
+#[OA\Schema]
 class Notification implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(
-     *  description="The Notifcation ID"
-     * )
      * @var int
      */
+    #[OA\Property(description: 'The Notifcation ID')]
     public $notificationId;
 
     /**
-     * @SWG\Property(
-     *  description="Create Date as Unix Timestamp"
-     * )
      * @var int
      */
+    #[OA\Property(description: 'Create Date as Unix Timestamp')]
     public $createDt;
 
     /**
-     * @SWG\Property(
-     *  description="Release Date as Unix Timestamp"
-     * )
      * @var int
      */
+    #[OA\Property(description: 'Release Date as Unix Timestamp')]
     public $releaseDt;
 
     /**
-     * @SWG\Property(
-     *  description="The subject line"
-     * )
      * @var string
      */
+    #[OA\Property(description: 'The subject line')]
     public $subject;
 
     /**
-     * @SWG\Property(
-     *  description="The Notification type"
-     * )
      * @var string
      */
+    #[OA\Property(description: 'The Notification type')]
     public $type;
 
     /**
-     * @SWG\Property(
-     *  description="The HTML body of the notification"
-     * )
      * @var string
      */
+    #[OA\Property(description: 'The HTML body of the notification')]
     public $body;
 
     /**
-     * @SWG\Property(
-     *  description="Should the notification interrupt the CMS UI on navigate/login"
-     * )
      * @var int
      */
+    #[OA\Property(description: 'Should the notification interrupt the CMS UI on navigate/login')]
     public $isInterrupt = 0;
 
     /**
-     * @SWG\Property(
-     *  description="Flag for system notification"
-     * )
      * @var int
      */
+    #[OA\Property(description: 'Flag for system notification')]
     public $isSystem = 0;
 
     /**
-     * @SWG\Property(
-     *  description="The Owner User Id"
-     * )
      * @var int
      */
+    #[OA\Property(description: 'The Owner User Id')]
     public $userId;
 
     /**
-     * @SWG\Property(
-     *  description="Attachment filename"
-     * )
      * @var string
      */
+    #[OA\Property(description: 'Attachment filename')]
     public $filename;
 
     /**
-     * @SWG\Property(
-     *  description="Attachment originalFileName"
-     * )
      * @var string
      */
+    #[OA\Property(description: 'Attachment originalFileName')]
     public $originalFileName;
 
     /**
-     * @SWG\Property(
-     *  description="Additional email addresses to which a saved report will be sent"
-     * )
      * @var string
      */
+    #[OA\Property(description: 'Additional email addresses to which a saved report will be sent')]
     public $nonusers;
 
     /**
-     * @SWG\Property(
-     *  description="User Group Notifications associated with this notification"
-     * )
      * @var UserGroup[]
      */
+    #[OA\Property(description: 'User Group Notifications associated with this notification')]
     public $userGroups = [];
 
     /**
-     * @SWG\Property(
-     *  description="Display Groups associated with this notification"
-     * )
      * @var DisplayGroup[]
      */
+    #[OA\Property(description: 'Display Groups associated with this notification')]
     public $displayGroups = [];
 
     /** @var  UserGroupFactory */

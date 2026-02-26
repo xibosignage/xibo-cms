@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,10 +23,10 @@ namespace Xibo\Controller;
 
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Entity\ScheduleReminder;
 use Xibo\Event\ScheduleCriteriaRequestEvent;
 use Xibo\Factory\CampaignFactory;
@@ -52,6 +52,15 @@ use Xibo\Support\Exception\NotFoundException;
  * Class Schedule
  * @package Xibo\Controller
  */
+#[OA\Schema(
+    schema: 'ScheduleCalendarData',
+    properties: [
+        new OA\Property(property: 'id', description: 'Event ID', type: 'integer'),
+        new OA\Property(property: 'title', description: 'Event Title', type: 'string'),
+        new OA\Property(property: 'sameDay', description: 'Does this event happen only on 1 day', type: 'integer'),
+        new OA\Property(property: 'event', ref: '#/components/schemas/Schedule')
+    ]
+)]
 class Schedule extends Base
 {
     /**
@@ -167,48 +176,46 @@ class Schedule extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/schedule/data/events',
+        operationId: 'scheduleCalendarData',
+        description: '⚠️ This endpoint is deprecated and will be removed in v5.0.',
+        deprecated: true,
+        summary: 'Generates the calendar that we draw events on',
+        tags: ['schedule']
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupIds',
+        description: 'The DisplayGroupIds to return the schedule for. [-1] for All.',
+        in: 'query',
+        required: true,
+        schema: new OA\Schema(items: new OA\Items(type: 'integer'), type: 'array')
+    )]
+    #[OA\Parameter(
+        name: 'from',
+        description: 'From Date in Y-m-d H:i:s format, if not provided defaults to start of the current month',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'to',
+        description: 'To Date in Y-m-d H:i:s format, if not provided defaults to start of the next month',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful response',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/ScheduleCalendarData')
+        )
+    )]
     /**
      * Generates the calendar that we draw events on
      * @deprecated - Deprecated API: This endpoint will be removed in v5.0
-     * @SWG\Get(
-     *  path="/schedule/data/events",
-     *  operationId="scheduleCalendarData",
-     *  description="⚠️ This endpoint is deprecated and will be removed in v5.0.",
-     *  tags={"schedule"},
-     *  deprecated=true,
-     *  @SWG\Parameter(
-     *      name="displayGroupIds",
-     *      description="The DisplayGroupIds to return the schedule for. [-1] for All.",
-     *      in="query",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(
-     *          type="integer"
-     *      )
-     *  ),
-     *  @SWG\Parameter(
-     *      name="from",
-     *      in="query",
-     *      required=false,
-     *      type="string",
-     *      description="From Date in Y-m-d H:i:s format, if not provided defaults to start of the current month"
-     *  ),
-     *  @SWG\Parameter(
-     *      name="to",
-     *      in="query",
-     *      required=false,
-     *      type="string",
-     *      description="To Date in Y-m-d H:i:s format, if not provided defaults to start of the next month"
-     *  ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful response",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/ScheduleCalendarData")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -407,30 +414,6 @@ class Schedule extends Base
                     }
                 }
 
-                /**
-                 * @SWG\Definition(
-                 *  definition="ScheduleCalendarData",
-                 *  @SWG\Property(
-                 *      property="id",
-                 *      type="integer",
-                 *      description="Event ID"
-                 *  ),
-                 *  @SWG\Property(
-                 *      property="title",
-                 *      type="string",
-                 *      description="Event Title"
-                 *  ),
-                 *  @SWG\Property(
-                 *      property="sameDay",
-                 *      type="integer",
-                 *      description="Does this event happen only on 1 day"
-                 *  ),
-                 *  @SWG\Property(
-                 *      property="event",
-                 *      ref="#/definitions/Schedule"
-                 *  )
-                 * )
-                 */
                 $events[] = [
                     'id' => $row->eventId,
                     'title' => $title,
@@ -449,6 +432,42 @@ class Schedule extends Base
         return $response->withJson(['success' => 1, 'result' => $events]);
     }
 
+    #[OA\Get(
+        path: '/schedule/{displayGroupId}/events',
+        operationId: 'scheduleCalendarDataDisplayGroup',
+        summary: 'Event List',
+        tags: ['schedule']
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupId',
+        description: 'The DisplayGroupId to return the event list for.',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(name: 'singlePointInTime', in: 'query', required: false, schema: new OA\Schema(type: 'integer'))]
+    #[OA\Parameter(
+        name: 'date',
+        description: 'Date in Y-m-d H:i:s',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'startDate',
+        description: 'Date in Y-m-d H:i:s',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'endDate',
+        description: 'Date in Y-m-d H:i:s',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(response: 200, description: 'successful response')]
     /**
      * Event List
      * @param Request $request
@@ -459,49 +478,6 @@ class Schedule extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws ControllerNotImplemented
-     * @SWG\Get(
-     *  path="/schedule/{displayGroupId}/events",
-     *  operationId="scheduleCalendarDataDisplayGroup",
-     *  tags={"schedule"},
-     *  @SWG\Parameter(
-     *      name="displayGroupId",
-     *      description="The DisplayGroupId to return the event list for.",
-     *      in="path",
-     *      type="integer",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="singlePointInTime",
-     *      in="query",
-     *      required=false,
-     *      type="integer",
-     *  ),
-     *  @SWG\Parameter(
-     *      name="date",
-     *      in="query",
-     *      required=false,
-     *      type="string",
-     *      description="Date in Y-m-d H:i:s"
-     *  ),
-     *  @SWG\Parameter(
-     *      name="startDate",
-     *      in="query",
-     *      required=false,
-     *      type="string",
-     *      description="Date in Y-m-d H:i:s"
-     *  ),
-     *  @SWG\Parameter(
-     *      name="endDate",
-     *      in="query",
-     *      required=false,
-     *      type="string",
-     *      description="Date in Y-m-d H:i:s"
-     *  ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful response"
-     *  )
-     * )
      */
     public function eventList(Request $request, Response $response, $id)
     {
@@ -878,237 +854,168 @@ class Schedule extends Base
         return $this->render($request, $response);
     }
 
-    /**
-     * Model to use for supplying key/value pairs to arrays
-     * @SWG\Definition(
-     *  definition="ScheduleReminderArray",
-     *  @SWG\Property(
-     *      property="reminder_value",
-     *      type="integer"
-     *  ),
-     *  @SWG\Property(
-     *      property="reminder_type",
-     *      type="integer"
-     *  ),
-     *  @SWG\Property(
-     *      property="reminder_option",
-     *      type="integer"
-     *  ),
-     *  @SWG\Property(
-     *      property="reminder_isEmailHidden",
-     *      type="integer"
-     *  )
-     * )
-     */
-
+    #[OA\Schema(
+        schema: 'ScheduleReminderArray',
+        properties: [
+            new OA\Property(property: 'reminder_value', type: 'integer'),
+            new OA\Property(property: 'reminder_type', type: 'integer'),
+            new OA\Property(property: 'reminder_option', type: 'integer'),
+            new OA\Property(property: 'reminder_isEmailHidden', type: 'integer')
+        ]
+    )]
+    #[OA\Post(
+        path: '/schedule',
+        operationId: 'scheduleAdd',
+        description: 'Add a new scheduled event for a Campaign/Layout to be shown on a Display Group/Display.',
+        summary: 'Add Schedule Event',
+        tags: ['schedule']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'eventTypeId',
+                        description: 'The Event Type Id to use for this Event.
+     * 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action, 7=Media Library, 8=Playlist', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'campaignId',
+                        description: 'The Campaign ID to use for this Event.
+     * If a Layout is needed then the Campaign specific ID for that Layout should be used.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'fullScreenCampaignId',
+                        description: 'For Media or Playlist event Type. The Layout specific Campaign ID to use for this Event.
+     * This needs to be the Layout created with layout/fullscreen function', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(property: 'commandId', description: 'The Command ID to use for this Event.', type: 'integer'),
+                    new OA\Property(property: 'mediaId', description: 'The Media ID to use for this Event.', type: 'integer'),
+                    new OA\Property(property: 'displayOrder', description: 'The display order for this event. ', type: 'integer'),
+                    new OA\Property(
+                        property: 'isPriority',
+                        description: 'An integer indicating the priority of this event. Normal events have a priority of 0.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'displayGroupIds',
+                        description: 'The Display Group IDs for this event. Display specific Group IDs should be used to schedule on single displays.', // phpcs:ignore
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'dayPartId',
+                        description: 'The Day Part for this event. Overrides supported are 0(custom) and 1(always). Defaulted to 0.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'syncTimezone',
+                        description: 'Should this schedule be synced to the resulting Display timezone?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'fromDt',
+                        description: 'The from date for this event.',
+                        format: 'date-time',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'toDt',
+                        description: 'The to date for this event.',
+                        format: 'date-time',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'recurrenceType',
+                        description: 'The type of recurrence to apply to this event.',
+                        enum: ['', 'Minute', 'Hour', 'Day', 'Week', 'Month', 'Year'],
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'recurrenceDetail', description: 'The interval for the recurrence.', type: 'integer'),
+                    new OA\Property(
+                        property: 'recurrenceRange',
+                        description: 'The end date for this events recurrence.',
+                        format: 'date-time',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'recurrenceRepeatsOn',
+                        description: 'The days of the week that this event repeats - weekly only',
+                        format: 'array',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'scheduleReminders',
+                        description: 'Array of Reminders for this event',
+                        items: new OA\Items(ref: '#/components/schemas/ScheduleReminderArray'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'isGeoAware',
+                        description: 'Flag (0-1), whether this event is using Geo Location',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'geoLocation',
+                        description: 'Array of comma separated strings each with comma separated pair of coordinates',
+                        items: new OA\Items(type: 'string'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'geoLocationJson',
+                        description: 'Valid GeoJSON string, use as an alternative to geoLocation parameter',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'actionType',
+                        description: 'For Action eventTypeId, the type of the action - command or navLayout',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'actionTriggerCode',
+                        description: 'For Action eventTypeId, the webhook trigger code for the Action',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'actionLayoutCode',
+                        description: 'For Action eventTypeId and navLayout actionType, the Layout Code identifier',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'dataSetId',
+                        description: 'For Data Connector eventTypeId, the DataSet ID',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'dataSetParams',
+                        description: 'For Data Connector eventTypeId, the DataSet params',
+                        type: 'string'
+                    )
+                ],
+                required: ['eventTypeId', 'displayOrder', 'isPriority', 'displayGroupIds', 'fromDt']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Schedule'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add Event
-     * @SWG\Post(
-     *  path="/schedule",
-     *  operationId="scheduleAdd",
-     *  tags={"schedule"},
-     *  summary="Add Schedule Event",
-     *  description="Add a new scheduled event for a Campaign/Layout to be shown on a Display Group/Display.",
-     *  @SWG\Parameter(
-     *      name="eventTypeId",
-     *      in="formData",
-     *      description="The Event Type Id to use for this Event.
-     * 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action, 7=Media Library, 8=Playlist",
-     *      type="integer",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="campaignId",
-     *      in="formData",
-     *      description="The Campaign ID to use for this Event.
-     * If a Layout is needed then the Campaign specific ID for that Layout should be used.",
-     *      type="integer",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="fullScreenCampaignId",
-     *      in="formData",
-     *      description="For Media or Playlist event Type. The Layout specific Campaign ID to use for this Event.
-     * This needs to be the Layout created with layout/fullscreen function",
-     *      type="integer",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="commandId",
-     *      in="formData",
-     *      description="The Command ID to use for this Event.",
-     *      type="integer",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="mediaId",
-     *      in="formData",
-     *      description="The Media ID to use for this Event.",
-     *      type="integer",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="displayOrder",
-     *      in="formData",
-     *      description="The display order for this event. ",
-     *      type="integer",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="isPriority",
-     *      in="formData",
-     *      description="An integer indicating the priority of this event. Normal events have a priority of 0.",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *   @SWG\Parameter(
-     *      name="displayGroupIds",
-     *      in="formData",
-     *      description="The Display Group IDs for this event. Display specific Group IDs should be used to schedule on single displays.",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(type="integer")
-     *   ),
-     *   @SWG\Parameter(
-     *      name="dayPartId",
-     *      in="formData",
-     *      description="The Day Part for this event. Overrides supported are 0(custom) and 1(always). Defaulted to 0.",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="syncTimezone",
-     *      in="formData",
-     *      description="Should this schedule be synced to the resulting Display timezone?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="fromDt",
-     *      in="formData",
-     *      description="The from date for this event.",
-     *      type="string",
-     *      format="date-time",
-     *      required=true
-     *   ),
-     *   @SWG\Parameter(
-     *      name="toDt",
-     *      in="formData",
-     *      description="The to date for this event.",
-     *      type="string",
-     *      format="date-time",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="recurrenceType",
-     *      in="formData",
-     *      description="The type of recurrence to apply to this event.",
-     *      type="string",
-     *      required=false,
-     *      enum={"", "Minute", "Hour", "Day", "Week", "Month", "Year"}
-     *   ),
-     *   @SWG\Parameter(
-     *      name="recurrenceDetail",
-     *      in="formData",
-     *      description="The interval for the recurrence.",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="recurrenceRange",
-     *      in="formData",
-     *      description="The end date for this events recurrence.",
-     *      type="string",
-     *      format="date-time",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="recurrenceRepeatsOn",
-     *      in="formData",
-     *      description="The days of the week that this event repeats - weekly only",
-     *      type="string",
-     *      format="array",
-     *      required=false,
-     *      @SWG\Items(type="integer")
-     *   ),
-     *   @SWG\Parameter(
-     *      name="scheduleReminders",
-     *      in="formData",
-     *      description="Array of Reminders for this event",
-     *      type="array",
-     *      required=false,
-     *      @SWG\Items(
-     *          ref="#/definitions/ScheduleReminderArray"
-     *      )
-     *   ),
-     *   @SWG\Parameter(
-     *      name="isGeoAware",
-     *      in="formData",
-     *      description="Flag (0-1), whether this event is using Geo Location",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="geoLocation",
-     *      in="formData",
-     *      description="Array of comma separated strings each with comma separated pair of coordinates",
-     *      type="array",
-     *      required=false,
-     *      @SWG\Items(type="string")
-     *   ),
-     *   @SWG\Parameter(
-     *      name="geoLocationJson",
-     *      in="formData",
-     *      description="Valid GeoJSON string, use as an alternative to geoLocation parameter",
-     *      type="string",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="actionType",
-     *      in="formData",
-     *      description="For Action eventTypeId, the type of the action - command or navLayout",
-     *      type="string",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="actionTriggerCode",
-     *      in="formData",
-     *      description="For Action eventTypeId, the webhook trigger code for the Action",
-     *      type="string",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="actionLayoutCode",
-     *      in="formData",
-     *      description="For Action eventTypeId and navLayout actionType, the Layout Code identifier",
-     *      type="string",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="dataSetId",
-     *      in="formData",
-     *      description="For Data Connector eventTypeId, the DataSet ID",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="dataSetParams",
-     *      in="formData",
-     *      description="For Data Connector eventTypeId, the DataSet params",
-     *      type="string",
-     *      required=false
-     *   ),
-     *   @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Schedule"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response
@@ -1543,6 +1450,21 @@ class Schedule extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(
+        path: '/schedulerecurrence/{eventId}',
+        operationId: 'schedulerecurrenceDelete',
+        description: 'Delete a Recurring Event of a Scheduled Event',
+        summary: 'Delete a Recurring Event',
+        tags: ['schedule']
+    )]
+    #[OA\Parameter(
+        name: 'eventId',
+        description: 'The Scheduled Event ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Deletes a recurring Event from all displays
      * @param Request $request
@@ -1553,24 +1475,6 @@ class Schedule extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws ControllerNotImplemented
-     * @SWG\Delete(
-     *  path="/schedulerecurrence/{eventId}",
-     *  operationId="schedulerecurrenceDelete",
-     *  tags={"schedule"},
-     *  summary="Delete a Recurring Event",
-     *  description="Delete a Recurring Event of a Scheduled Event",
-     *  @SWG\Parameter(
-     *      name="eventId",
-     *      in="path",
-     *      description="The Scheduled Event ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function deleteRecurrence(Request $request, Response $response, $id)
     {
@@ -1599,6 +1503,152 @@ class Schedule extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/schedule/{eventId}',
+        operationId: 'scheduleEdit',
+        description: 'Edit a scheduled event for a Campaign/Layout to be shown on a Display Group/Display.',
+        summary: 'Edit Schedule Event',
+        tags: ['schedule']
+    )]
+    #[OA\Parameter(
+        name: 'eventId',
+        description: 'The Scheduled Event ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'eventTypeId',
+                        description: 'The Event Type Id to use for this Event.
+     * 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'campaignId',
+                        description: 'The Campaign ID to use for this Event.
+     * If a Layout is needed then the Campaign specific ID for that Layout should be used.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(property: 'commandId', description: 'The Command ID to use for this Event.', type: 'integer'),
+                    new OA\Property(property: 'mediaId', description: 'The Media ID to use for this Event.', type: 'integer'),
+                    new OA\Property(property: 'displayOrder', description: 'The display order for this event. ', type: 'integer'),
+                    new OA\Property(
+                        property: 'isPriority',
+                        description: 'An integer indicating the priority of this event. Normal events have a priority of 0.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'displayGroupIds',
+                        description: 'The Display Group IDs for this event.
+     * Display specific Group IDs should be used to schedule on single displays.', // phpcs:ignore
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'dayPartId',
+                        description: 'The Day Part for this event. Overrides supported are 0(custom) and 1(always). Defaulted to 0.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'syncTimezone',
+                        description: 'Should this schedule be synced to the resulting Display timezone?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'fromDt',
+                        description: 'The from date for this event.',
+                        format: 'date-time',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'toDt',
+                        description: 'The to date for this event.',
+                        format: 'date-time',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'recurrenceType',
+                        description: 'The type of recurrence to apply to this event.',
+                        enum: ['', 'Minute', 'Hour', 'Day', 'Week', 'Month', 'Year'],
+                        type: 'string'
+                    ),
+                    new OA\Property(property: 'recurrenceDetail', description: 'The interval for the recurrence.', type: 'integer'),
+                    new OA\Property(
+                        property: 'recurrenceRange',
+                        description: 'The end date for this events recurrence.',
+                        format: 'date-time',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'recurrenceRepeatsOn',
+                        description: 'The days of the week that this event repeats - weekly only',
+                        format: 'array',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'scheduleReminders',
+                        description: 'Array of Reminders for this event',
+                        items: new OA\Items(ref: '#/components/schemas/ScheduleReminderArray'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'isGeoAware',
+                        description: 'Flag (0-1), whether this event is using Geo Location',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'geoLocation',
+                        description: 'Array of comma separated strings each with comma separated pair of coordinates',
+                        items: new OA\Items(type: 'string'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'geoLocationJson',
+                        description: 'Valid GeoJSON string, use as an alternative to geoLocation parameter',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'actionType',
+                        description: 'For Action eventTypeId, the type of the action - command or navLayout',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'actionTriggerCode',
+                        description: 'For Action eventTypeId, the webhook trigger code for the Action',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'actionLayoutCode',
+                        description: 'For Action eventTypeId and navLayout actionType, the Layout Code identifier',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'dataSetId',
+                        description: 'For Data Connector eventTypeId, the DataSet ID',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'dataSetParams',
+                        description: 'For Data Connector eventTypeId, the DataSet params',
+                        type: 'string'
+                    )
+                ],
+                required: ['eventTypeId', 'displayOrder', 'isPriority', 'displayGroupIds', 'fromDt']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Schedule')
+    )]
     /**
      * Edits an event
      * @param Request $request
@@ -1609,207 +1659,6 @@ class Schedule extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws ControllerNotImplemented
-     * @SWG\Put(
-     *  path="/schedule/{eventId}",
-     *  operationId="scheduleEdit",
-     *  tags={"schedule"},
-     *  summary="Edit Schedule Event",
-     *  description="Edit a scheduled event for a Campaign/Layout to be shown on a Display Group/Display.",
-     *  @SWG\Parameter(
-     *      name="eventId",
-     *      in="path",
-     *      description="The Scheduled Event ID",
-     *      type="integer",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="eventTypeId",
-     *      in="formData",
-     *      description="The Event Type Id to use for this Event.
-     * 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action",
-     *      type="integer",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="campaignId",
-     *      in="formData",
-     *      description="The Campaign ID to use for this Event.
-     * If a Layout is needed then the Campaign specific ID for that Layout should be used.",
-     *      type="integer",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="commandId",
-     *      in="formData",
-     *      description="The Command ID to use for this Event.",
-     *      type="integer",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="mediaId",
-     *      in="formData",
-     *      description="The Media ID to use for this Event.",
-     *      type="integer",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="displayOrder",
-     *      in="formData",
-     *      description="The display order for this event. ",
-     *      type="integer",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="isPriority",
-     *      in="formData",
-     *      description="An integer indicating the priority of this event. Normal events have a priority of 0.",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *   @SWG\Parameter(
-     *      name="displayGroupIds",
-     *      in="formData",
-     *      description="The Display Group IDs for this event.
-     * Display specific Group IDs should be used to schedule on single displays.",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(type="integer")
-     *   ),
-     *   @SWG\Parameter(
-     *      name="dayPartId",
-     *      in="formData",
-     *      description="The Day Part for this event. Overrides supported are 0(custom) and 1(always). Defaulted to 0.",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="syncTimezone",
-     *      in="formData",
-     *      description="Should this schedule be synced to the resulting Display timezone?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="fromDt",
-     *      in="formData",
-     *      description="The from date for this event.",
-     *      type="string",
-     *      format="date-time",
-     *      required=true
-     *   ),
-     *   @SWG\Parameter(
-     *      name="toDt",
-     *      in="formData",
-     *      description="The to date for this event.",
-     *      type="string",
-     *      format="date-time",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="recurrenceType",
-     *      in="formData",
-     *      description="The type of recurrence to apply to this event.",
-     *      type="string",
-     *      required=false,
-     *      enum={"", "Minute", "Hour", "Day", "Week", "Month", "Year"}
-     *   ),
-     *   @SWG\Parameter(
-     *      name="recurrenceDetail",
-     *      in="formData",
-     *      description="The interval for the recurrence.",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="recurrenceRange",
-     *      in="formData",
-     *      description="The end date for this events recurrence.",
-     *      type="string",
-     *      format="date-time",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="recurrenceRepeatsOn",
-     *      in="formData",
-     *      description="The days of the week that this event repeats - weekly only",
-     *      type="string",
-     *      format="array",
-     *      required=false,
-     *      @SWG\Items(type="integer")
-     *   ),
-     *   @SWG\Parameter(
-     *      name="scheduleReminders",
-     *      in="formData",
-     *      description="Array of Reminders for this event",
-     *      type="array",
-     *      required=false,
-     *      @SWG\Items(
-     *          ref="#/definitions/ScheduleReminderArray"
-     *      )
-     *   ),
-     *   @SWG\Parameter(
-     *      name="isGeoAware",
-     *      in="formData",
-     *      description="Flag (0-1), whether this event is using Geo Location",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="geoLocation",
-     *      in="formData",
-     *      description="Array of comma separated strings each with comma separated pair of coordinates",
-     *      type="array",
-     *      required=false,
-     *      @SWG\Items(type="string")
-     *   ),
-     *   @SWG\Parameter(
-     *      name="geoLocationJson",
-     *      in="formData",
-     *      description="Valid GeoJSON string, use as an alternative to geoLocation parameter",
-     *      type="string",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="actionType",
-     *      in="formData",
-     *      description="For Action eventTypeId, the type of the action - command or navLayout",
-     *      type="string",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="actionTriggerCode",
-     *      in="formData",
-     *      description="For Action eventTypeId, the webhook trigger code for the Action",
-     *      type="string",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="actionLayoutCode",
-     *      in="formData",
-     *      description="For Action eventTypeId and navLayout actionType, the Layout Code identifier",
-     *      type="string",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="dataSetId",
-     *      in="formData",
-     *      description="For Data Connector eventTypeId, the DataSet ID",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="dataSetParams",
-     *      in="formData",
-     *      description="For Data Connector eventTypeId, the DataSet params",
-     *      type="string",
-     *      required=false
-     *   ),
-     *   @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Schedule")
-     *  )
-     * )
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -2218,6 +2067,21 @@ class Schedule extends Base
         return $this->render($request,$response);
     }
 
+    #[OA\Delete(
+        path: '/schedule/{eventId}',
+        operationId: 'scheduleDelete',
+        description: 'Delete a Scheduled Event',
+        summary: 'Delete Event',
+        tags: ['schedule']
+    )]
+    #[OA\Parameter(
+        name: 'eventId',
+        description: 'The Scheduled Event ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Deletes an Event from all displays
      * @param Request $request
@@ -2228,24 +2092,6 @@ class Schedule extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws ControllerNotImplemented
-     * @SWG\Delete(
-     *  path="/schedule/{eventId}",
-     *  operationId="scheduleDelete",
-     *  tags={"schedule"},
-     *  summary="Delete Event",
-     *  description="Delete a Scheduled Event",
-     *  @SWG\Parameter(
-     *      name="eventId",
-     *      in="path",
-     *      description="The Scheduled Event ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function delete(Request $request, Response $response, $id)
     {
@@ -2320,73 +2166,68 @@ class Schedule extends Base
         };
     }
 
+    #[OA\Get(path: '/schedule', operationId: 'scheduleSearch', tags: ['schedule'])]
+    #[OA\Parameter(
+        name: 'eventTypeId',
+        description: 'Filter grid by eventTypeId.
+     * 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action, 7=Media Library, 8=Playlist', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'fromDt',
+        description: 'From Date in Y-m-d H:i:s format',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'toDt',
+        description: 'To Date in Y-m-d H:i:s format',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'geoAware',
+        description: 'Flag (0-1), whether to return events using Geo Location',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'recurring',
+        description: 'Flag (0-1), whether to return Recurring events',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'campaignId',
+        description: 'Filter events by specific campaignId',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupIds',
+        description: 'Filter events by an array of Display Group Ids',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(items: new OA\Items(type: 'integer'), type: 'array')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/Schedule')
+        )
+    )]
     /**
      * Generates the Schedule events grid
      *
-     * @SWG\Get(
-     *  path="/schedule",
-     *  operationId="scheduleSearch",
-     *  tags={"schedule"},
-     *  @SWG\Parameter(
-     *      name="eventTypeId",
-     *      in="query",
-     *      required=false,
-     *      type="integer",
-     *      description="Filter grid by eventTypeId.
-     * 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action, 7=Media Library, 8=Playlist"
-     *  ),
-     *  @SWG\Parameter(
-     *      name="fromDt",
-     *      in="query",
-     *      required=false,
-     *      type="string",
-     *      description="From Date in Y-m-d H:i:s format"
-     *  ),
-     *  @SWG\Parameter(
-     *      name="toDt",
-     *      in="query",
-     *      required=false,
-     *      type="string",
-     *      description="To Date in Y-m-d H:i:s format"
-     *  ),
-     *  @SWG\Parameter(
-     *      name="geoAware",
-     *      in="query",
-     *      required=false,
-     *      type="integer",
-     *      description="Flag (0-1), whether to return events using Geo Location"
-     *  ),
-     *  @SWG\Parameter(
-     *      name="recurring",
-     *      in="query",
-     *      required=false,
-     *      type="integer",
-     *      description="Flag (0-1), whether to return Recurring events"
-     *  ),
-     *  @SWG\Parameter(
-     *      name="campaignId",
-     *      in="query",
-     *      required=false,
-     *      type="integer",
-     *      description="Filter events by specific campaignId"
-     *  ),
-     *  @SWG\Parameter(
-     *      name="displayGroupIds",
-     *      in="query",
-     *      required=false,
-     *      type="array",
-     *      description="Filter events by an array of Display Group Ids",
-     *      @SWG\Items(type="integer")
-     *  ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/Schedule")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return ResponseInterface|Response

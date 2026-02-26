@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -156,103 +157,105 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/displaygroup',
+        operationId: 'displayGroupSearch',
+        summary: 'Get Display Groups',
+        tags: ['displayGroup']
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupId',
+        description: 'Filter by DisplayGroup Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'displayGroup',
+        description: 'Filter by DisplayGroup Name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'displayId',
+        description: 'Filter by DisplayGroups containing a specific display',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'nestedDisplayId',
+        description: 'Filter by DisplayGroups containing a specific display in there nesting',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'dynamicCriteria',
+        description: 'Filter by DisplayGroups containing a specific dynamic criteria',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'tags',
+        description: 'Filter by tags',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'exactTags',
+        description: 'A flag indicating whether to treat the tags filter as an exact match',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'logicalOperator',
+        description: 'When filtering by multiple Tags, which logical operator should be used? AND|OR',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'isDisplaySpecific',
+        description: 'Filter by whether the Display Group belongs to a Display or is user created',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'forSchedule',
+        description: 'Should the list be refined for only those groups the User can Schedule against?',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'folderId',
+        description: 'Filter by Folder ID',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'a successful response',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/DisplayGroup')
+        ),
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ]
+    )]
     /**
-     * @SWG\Get(
-     *  path="/displaygroup",
-     *  summary="Get Display Groups",
-     *  tags={"displayGroup"},
-     *  operationId="displayGroupSearch",
-     *  @SWG\Parameter(
-     *      name="displayGroupId",
-     *      in="query",
-     *      description="Filter by DisplayGroup Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="displayGroup",
-     *      in="query",
-     *      description="Filter by DisplayGroup Name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="displayId",
-     *      in="query",
-     *      description="Filter by DisplayGroups containing a specific display",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="nestedDisplayId",
-     *      in="query",
-     *      description="Filter by DisplayGroups containing a specific display in there nesting",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="dynamicCriteria",
-     *      in="query",
-     *      description="Filter by DisplayGroups containing a specific dynamic criteria",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="tags",
-     *      in="query",
-     *      description="Filter by tags",
-     *      type="string",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="exactTags",
-     *      in="query",
-     *      description="A flag indicating whether to treat the tags filter as an exact match",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="logicalOperator",
-     *      in="query",
-     *      description="When filtering by multiple Tags, which logical operator should be used? AND|OR",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isDisplaySpecific",
-     *      in="query",
-     *      description="Filter by whether the Display Group belongs to a Display or is user created",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="forSchedule",
-     *      in="query",
-     *      description="Should the list be refined for only those groups the User can Schedule against?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="query",
-     *      description="Filter by Folder ID",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="a successful response",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/DisplayGroup")
-     *      ),
-     *      @SWG\Header(
-     *          header="X-Total-Count",
-     *          description="The total number of records",
-     *          type="integer"
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -672,97 +675,84 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/displaygroup',
+        operationId: 'displayGroupAdd',
+        description: 'Add a new Display Group to the CMS',
+        summary: 'Add a Display Group',
+        tags: ['displayGroup']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'displayGroup', description: 'The Display Group Name', type: 'string'),
+                    new OA\Property(
+                        property: 'description',
+                        description: 'The Display Group Description',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'tags',
+                        description: 'A comma separated list of tags for this item',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'isDynamic',
+                        description: 'Flag indicating whether this DisplayGroup is Dynamic',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'dynamicCriteria',
+                        description: 'The filter criteria for this dynamic group. A comma separated set of regular expressions to apply', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'logicalOperatorName',
+                        description: 'When filtering by multiple dynamic criteria, which logical operator should be used? AND|OR', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'dynamicCriteriaTags',
+                        description: 'The filter criteria for this dynamic group. A comma separated set of regular expressions to apply', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'exactTags',
+                        description: 'When filtering by Tags, should we use exact match?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'logicalOperator',
+                        description: 'When filtering by Tags, which logical operator should be used? AND|OR',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'folderId',
+                        description: 'Folder ID to which this object should be assigned to',
+                        type: 'integer'
+                    )
+                ],
+                required: ['displayGroup', 'isDynamic']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DisplayGroup'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new DisplayGroup',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Adds a Display Group
-     * @SWG\Post(
-     *  path="/displaygroup",
-     *  operationId="displayGroupAdd",
-     *  tags={"displayGroup"},
-     *  summary="Add a Display Group",
-     *  description="Add a new Display Group to the CMS",
-     *  @SWG\Parameter(
-     *      name="displayGroup",
-     *      in="formData",
-     *      description="The Display Group Name",
-     *      type="string",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="The Display Group Description",
-     *      type="string",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="tags",
-     *      in="formData",
-     *      description="A comma separated list of tags for this item",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isDynamic",
-     *      in="formData",
-     *      description="Flag indicating whether this DisplayGroup is Dynamic",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="dynamicCriteria",
-     *      in="formData",
-     *      description="The filter criteria for this dynamic group.
-     * A comma separated set of regular expressions to apply",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="logicalOperatorName",
-     *      in="formData",
-     *      description="When filtering by multiple dynamic criteria, which logical operator should be used? AND|OR",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="dynamicCriteriaTags",
-     *      in="formData",
-     *      description="The filter criteria for this dynamic group.
-     * A comma separated set of regular expressions to apply",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="exactTags",
-     *      in="formData",
-     *      description="When filtering by Tags, should we use exact match?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="logicalOperator",
-     *      in="formData",
-     *      description="When filtering by Tags, which logical operator should be used? AND|OR",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="formData",
-     *      description="Folder ID to which this object should be assigned to",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/DisplayGroup"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new DisplayGroup",
-     *          type="string"
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -832,6 +822,87 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/displaygroup/{displayGroupId}',
+        operationId: 'displayGroupEdit',
+        description: 'Edit an existing Display Group identified by its Id',
+        summary: 'Edit a Display Group',
+        tags: ['displayGroup']
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupId',
+        description: 'The displayGroupId to edit.',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'displayGroup', description: 'The Display Group Name', type: 'string'),
+                    new OA\Property(
+                        property: 'description',
+                        description: 'The Display Group Description',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'tags',
+                        description: 'A comma separated list of tags for this item',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'isDynamic',
+                        description: 'Flag indicating whether this DisplayGroup is Dynamic',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'dynamicCriteria',
+                        description: 'The filter criteria for this dynamic group. A command separated set of regular expressions to apply', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'logicalOperatorName',
+                        description: 'When filtering by multiple dynamic criteria, which logical operator should be used? AND|OR', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'dynamicCriteriaTags',
+                        description: 'The filter criteria for this dynamic group. A comma separated set of regular expressions to apply', // phpcs:ignore
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'exactTags',
+                        description: 'When filtering by Tags, should we use exact match?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'logicalOperator',
+                        description: 'When filtering by Tags, which logical operator should be used? AND|OR',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'folderId',
+                        description: 'Folder ID to which this object should be assigned to',
+                        type: 'integer'
+                    ),
+                    new OA\Property(property: 'ref1', description: 'Reference 1', type: 'string'),
+                    new OA\Property(property: 'ref2', description: 'Reference 2', type: 'string'),
+                    new OA\Property(property: 'ref3', description: 'Reference 3', type: 'string'),
+                    new OA\Property(property: 'ref4', description: 'Reference 4', type: 'string'),
+                    new OA\Property(property: 'ref5', description: 'Reference 5', type: 'string')
+                ],
+                required: ['displayGroup', 'isDynamic']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DisplayGroup')
+    )]
     /**
      * Edits a Display Group
      * @param Request $request
@@ -842,132 +913,6 @@ class DisplayGroup extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Put(
-     *  path="/displaygroup/{displayGroupId}",
-     *  operationId="displayGroupEdit",
-     *  tags={"displayGroup"},
-     *  summary="Edit a Display Group",
-     *  description="Edit an existing Display Group identified by its Id",
-     *  @SWG\Parameter(
-     *      name="displayGroupId",
-     *      type="integer",
-     *      in="path",
-     *      description="The displayGroupId to edit.",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="displayGroup",
-     *      in="formData",
-     *      description="The Display Group Name",
-     *      type="string",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="The Display Group Description",
-     *      type="string",
-     *      required=false
-     *  ),
-     *  @SWG\Parameter(
-     *      name="tags",
-     *      in="formData",
-     *      description="A comma separated list of tags for this item",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isDynamic",
-     *      in="formData",
-     *      description="Flag indicating whether this DisplayGroup is Dynamic",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="dynamicCriteria",
-     *      in="formData",
-     *      description="The filter criteria for this dynamic group.
-     * A command separated set of regular expressions to apply",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="logicalOperatorName",
-     *      in="formData",
-     *      description="When filtering by multiple dynamic criteria, which logical operator should be used? AND|OR",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="dynamicCriteriaTags",
-     *      in="formData",
-     *      description="The filter criteria for this dynamic group.
-     * A comma separated set of regular expressions to apply",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="exactTags",
-     *      in="formData",
-     *      description="When filtering by Tags, should we use exact match?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="logicalOperator",
-     *      in="formData",
-     *      description="When filtering by Tags, which logical operator should be used? AND|OR",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="formData",
-     *      description="Folder ID to which this object should be assigned to",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ref1",
-     *      in="formData",
-     *      description="Reference 1",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ref2",
-     *      in="formData",
-     *      description="Reference 2",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ref3",
-     *      in="formData",
-     *      description="Reference 3",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ref4",
-     *      in="formData",
-     *      description="Reference 4",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="ref5",
-     *      in="formData",
-     *      description="Reference 5",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/DisplayGroup")
-     *  )
-     * )
      */
     public function edit(Request $request,Response $response, $id)
     {
@@ -1061,6 +1006,21 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(
+        path: '/displaygroup/{displayGroupId}',
+        operationId: 'displayGroupDelete',
+        description: 'Delete an existing Display Group identified by its Id',
+        summary: 'Delete a Display Group',
+        tags: ['displayGroup']
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupId',
+        description: 'The displayGroupId to delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Deletes a Group
      * @param Request $request
@@ -1071,24 +1031,6 @@ class DisplayGroup extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Delete(
-     *  path="/displaygroup/{displayGroupId}",
-     *  operationId="displayGroupDelete",
-     *  tags={"displayGroup"},
-     *  summary="Delete a Display Group",
-     *  description="Delete an existing Display Group identified by its Id",
-     *  @SWG\Parameter(
-     *      name="displayGroupId",
-     *      type="integer",
-     *      in="path",
-     *      description="The displayGroupId to delete",
-     *      required=true
-     *  ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     function delete(Request $request, Response $response, $id)
     {
@@ -1115,6 +1057,44 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/displaygroup/{displayGroupId}/display/assign',
+        operationId: 'displayGroupDisplayAssign',
+        description: 'Adds the provided Displays to the Display Group',
+        summary: 'Assign one or more Displays to a Display Group',
+        tags: ['displayGroup']
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupId',
+        description: 'The Display Group to assign to',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'displayId',
+                        description: 'The Display Ids to assign',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'unassignDisplayId',
+                        description: 'An optional array of Display IDs to unassign',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    )
+                ],
+                required: ['displayId']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Sets the Members of a group
      * @param Request $request
@@ -1126,42 +1106,6 @@ class DisplayGroup extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Post(
-     *  path="/displaygroup/{displayGroupId}/display/assign",
-     *  operationId="displayGroupDisplayAssign",
-     *  tags={"displayGroup"},
-     *  summary="Assign one or more Displays to a Display Group",
-     *  description="Adds the provided Displays to the Display Group",
-     *  @SWG\Parameter(
-     *      name="displayGroupId",
-     *      type="integer",
-     *      in="path",
-     *      description="The Display Group to assign to",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="displayId",
-     *      type="array",
-     *      in="formData",
-     *      description="The Display Ids to assign",
-     *      required=true,
-     *      @SWG\Items(
-     *          type="integer"
-     *      )
-     *  ),
-     *  @SWG\Parameter(
-     *      name="unassignDisplayId",
-     *      in="formData",
-     *      description="An optional array of Display IDs to unassign",
-     *      type="array",
-     *      required=false,
-     *      @SWG\Items(type="integer")
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function assignDisplay(Request $request, Response $response, $id)
     {
@@ -1259,6 +1203,38 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/displaygroup/{displayGroupId}/display/unassign',
+        operationId: 'displayGroupDisplayUnassign',
+        description: 'Removes the provided Displays from the Display Group',
+        summary: 'Unassigns one or more Displays to a Display Group',
+        tags: ['displayGroup']
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupId',
+        description: 'The Display Group to unassign from',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'displayId',
+                        description: 'The Display Ids to unassign',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    )
+                ],
+                required: ['displayId']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Unassign displays from a Display Group
      * @param Request $request
@@ -1270,34 +1246,6 @@ class DisplayGroup extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Post(
-     *  path="/displaygroup/{displayGroupId}/display/unassign",
-     *  operationId="displayGroupDisplayUnassign",
-     *  tags={"displayGroup"},
-     *  summary="Unassigns one or more Displays to a Display Group",
-     *  description="Removes the provided Displays from the Display Group",
-     *  @SWG\Parameter(
-     *      name="displayGroupId",
-     *      type="integer",
-     *      in="path",
-     *      description="The Display Group to unassign from",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="displayId",
-     *      type="array",
-     *      in="formData",
-     *      description="The Display Ids to unassign",
-     *      required=true,
-     *      @SWG\Items(
-     *          type="integer"
-     *      )
-     *  ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function unassignDisplay(Request $request, Response $response, $id)
     {
@@ -1351,6 +1299,44 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/displaygroup/{displayGroupId}/displayGroup/assign',
+        operationId: 'displayGroupDisplayGroupAssign',
+        description: 'Adds the provided DisplayGroups to the Display Group',
+        summary: 'Assign one or more DisplayGroups to a Display Group',
+        tags: ['displayGroup']
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupId',
+        description: 'The Display Group to assign to',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'displayGroupId',
+                        description: 'The displayGroup Ids to assign',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'unassignDisplayGroupId',
+                        description: 'An optional array of displayGroup IDs to unassign',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    )
+                ],
+                required: ['displayGroupId']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Sets the Members of a group
      * @param Request $request
@@ -1362,42 +1348,6 @@ class DisplayGroup extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Post(
-     *  path="/displaygroup/{displayGroupId}/displayGroup/assign",
-     *  operationId="displayGroupDisplayGroupAssign",
-     *  tags={"displayGroup"},
-     *  summary="Assign one or more DisplayGroups to a Display Group",
-     *  description="Adds the provided DisplayGroups to the Display Group",
-     *  @SWG\Parameter(
-     *      name="displayGroupId",
-     *      type="integer",
-     *      in="path",
-     *      description="The Display Group to assign to",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="displayGroupId",
-     *      type="array",
-     *      in="formData",
-     *      description="The displayGroup Ids to assign",
-     *      required=true,
-     *      @SWG\Items(
-     *          type="integer"
-     *      )
-     *  ),
-     *  @SWG\Parameter(
-     *      name="unassignDisplayGroupId",
-     *      in="formData",
-     *      description="An optional array of displayGroup IDs to unassign",
-     *      type="array",
-     *      required=false,
-     *      @SWG\Items(type="integer")
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function assignDisplayGroup(Request $request, Response $response, $id)
     {
@@ -1463,6 +1413,38 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/displaygroup/{displayGroupId}/displayGroup/unassign',
+        operationId: 'displayGroupDisplayGroupUnassign',
+        description: 'Removes the provided DisplayGroups from the Display Group',
+        summary: 'Unassigns one or more DisplayGroups to a Display Group',
+        tags: ['displayGroup']
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupId',
+        description: 'The Display Group to unassign from',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'displayGroupId',
+                        description: 'The DisplayGroup Ids to unassign',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    )
+                ],
+                required: ['displayGroupId']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Unassign DisplayGroups from a Display Group
      * @param Request $request
@@ -1474,34 +1456,6 @@ class DisplayGroup extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Post(
-     *  path="/displaygroup/{displayGroupId}/displayGroup/unassign",
-     *  operationId="displayGroupDisplayGroupUnassign",
-     *  tags={"displayGroup"},
-     *  summary="Unassigns one or more DisplayGroups to a Display Group",
-     *  description="Removes the provided DisplayGroups from the Display Group",
-     *  @SWG\Parameter(
-     *      name="displayGroupId",
-     *      type="integer",
-     *      in="path",
-     *      description="The Display Group to unassign from",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="displayGroupId",
-     *      type="array",
-     *      in="formData",
-     *      description="The DisplayGroup Ids to unassign",
-     *      required=true,
-     *      @SWG\Items(
-     *          type="integer"
-     *      )
-     *  ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function unassignDisplayGroup(Request $request, Response $response, $id)
     {
@@ -1580,6 +1534,44 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/displaygroup/{displayGroupId}/media/assign',
+        operationId: 'displayGroupMediaAssign',
+        description: 'Adds the provided Media to the Display Group',
+        summary: 'Assign one or more Media items to a Display Group',
+        tags: ['displayGroup']
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupId',
+        description: 'The Display Group to assign to',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'mediaId',
+                        description: 'The Media Ids to assign',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'unassignMediaId',
+                        description: 'Optional array of Media Id to unassign',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    )
+                ],
+                required: ['mediaId']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Assign Media
      * @param Request $request
@@ -1590,44 +1582,6 @@ class DisplayGroup extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Post(
-     *  path="/displaygroup/{displayGroupId}/media/assign",
-     *  operationId="displayGroupMediaAssign",
-     *  tags={"displayGroup"},
-     *  summary="Assign one or more Media items to a Display Group",
-     *  description="Adds the provided Media to the Display Group",
-     *  @SWG\Parameter(
-     *      name="displayGroupId",
-     *      type="integer",
-     *      in="path",
-     *      description="The Display Group to assign to",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="mediaId",
-     *      type="array",
-     *      in="formData",
-     *      description="The Media Ids to assign",
-     *      required=true,
-     *      @SWG\Items(
-     *          type="integer"
-     *      )
-     *  ),
-     *  @SWG\Parameter(
-     *      name="unassignMediaId",
-     *      type="array",
-     *      in="formData",
-     *      description="Optional array of Media Id to unassign",
-     *      required=false,
-     *      @SWG\Items(
-     *          type="integer"
-     *      )
-     *  ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function assignMedia(Request $request, Response $response, $id)
     {
@@ -1683,6 +1637,38 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/displaygroup/{displayGroupId}/media/unassign',
+        operationId: 'displayGroupMediaUnassign',
+        description: 'Removes the provided from the Display Group',
+        summary: 'Unassign one or more Media items from a Display Group',
+        tags: ['displayGroup']
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupId',
+        description: 'The Display Group to unassign from',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'mediaId',
+                        description: 'The Media Ids to unassign',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    )
+                ],
+                required: ['mediaId']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Unassign Media
      * @param Request $request
@@ -1693,34 +1679,6 @@ class DisplayGroup extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Post(
-     *  path="/displaygroup/{displayGroupId}/media/unassign",
-     *  operationId="displayGroupMediaUnassign",
-     *  tags={"displayGroup"},
-     *  summary="Unassign one or more Media items from a Display Group",
-     *  description="Removes the provided from the Display Group",
-     *  @SWG\Parameter(
-     *      name="displayGroupId",
-     *      type="integer",
-     *      in="path",
-     *      description="The Display Group to unassign from",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="mediaId",
-     *      type="array",
-     *      in="formData",
-     *      description="The Media Ids to unassign",
-     *      required=true,
-     *      @SWG\Items(
-     *          type="integer"
-     *      )
-     *  ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function unassignMedia(Request $request, Response $response, $id)
     {
@@ -1787,6 +1745,44 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/displaygroup/{displayGroupId}/layout/assign',
+        operationId: 'displayGroupLayoutsAssign',
+        description: 'Adds the provided Layouts to the Display Group',
+        summary: 'Assign one or more Layouts items to a Display Group',
+        tags: ['displayGroup']
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupId',
+        description: 'The Display Group to assign to',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'layoutId',
+                        description: 'The Layouts Ids to assign',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    ),
+                    new OA\Property(
+                        property: 'unassignLayoutId',
+                        description: 'Optional array of Layouts Id to unassign',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    )
+                ],
+                required: ['layoutId']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Assign Layouts
      * @param Request $request
@@ -1797,44 +1793,6 @@ class DisplayGroup extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Post(
-     *  path="/displaygroup/{displayGroupId}/layout/assign",
-     *  operationId="displayGroupLayoutsAssign",
-     *  tags={"displayGroup"},
-     *  summary="Assign one or more Layouts items to a Display Group",
-     *  description="Adds the provided Layouts to the Display Group",
-     *  @SWG\Parameter(
-     *      name="displayGroupId",
-     *      type="integer",
-     *      in="path",
-     *      description="The Display Group to assign to",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      type="array",
-     *      in="formData",
-     *      description="The Layouts Ids to assign",
-     *      required=true,
-     *      @SWG\Items(
-     *          type="integer"
-     *      )
-     *  ),
-     *  @SWG\Parameter(
-     *      name="unassignLayoutId",
-     *      type="array",
-     *      in="formData",
-     *      description="Optional array of Layouts Id to unassign",
-     *      required=false,
-     *      @SWG\Items(
-     *          type="integer"
-     *      )
-     *  ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function assignLayouts(Request $request, Response $response, $id)
     {
@@ -1888,6 +1846,38 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/displaygroup/{displayGroupId}/layout/unassign',
+        operationId: 'displayGroupLayoutUnassign',
+        description: 'Removes the provided from the Display Group',
+        summary: 'Unassign one or more Layout items from a Display Group',
+        tags: ['displayGroup']
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupId',
+        description: 'The Display Group to unassign from',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'layoutId',
+                        description: 'The Layout Ids to unassign',
+                        items: new OA\Items(type: 'integer'),
+                        type: 'array'
+                    )
+                ],
+                required: ['layoutId']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Unassign Layout
      * @param Request $request
@@ -1898,34 +1888,6 @@ class DisplayGroup extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Post(
-     *  path="/displaygroup/{displayGroupId}/layout/unassign",
-     *  operationId="displayGroupLayoutUnassign",
-     *  tags={"displayGroup"},
-     *  summary="Unassign one or more Layout items from a Display Group",
-     *  description="Removes the provided from the Display Group",
-     *  @SWG\Parameter(
-     *      name="displayGroupId",
-     *      type="integer",
-     *      in="path",
-     *      description="The Display Group to unassign from",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      type="array",
-     *      in="formData",
-     *      description="The Layout Ids to unassign",
-     *      required=true,
-     *      @SWG\Items(
-     *          type="integer"
-     *      )
-     *  ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function unassignLayouts(Request $request, Response $response, $id)
     {
@@ -1993,6 +1955,21 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/displaygroup/{displayGroupId}/action/collectNow',
+        operationId: 'displayGroupActionCollectNow',
+        description: 'Send the collect now action to this DisplayGroup',
+        summary: 'Action: Collect Now',
+        tags: ['displayGroup']
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupId',
+        description: 'The display group id',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Cause the player to collect now
      * @param Request $request
@@ -2003,24 +1980,6 @@ class DisplayGroup extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Post(
-     *  path="/displaygroup/{displayGroupId}/action/collectNow",
-     *  operationId="displayGroupActionCollectNow",
-     *  tags={"displayGroup"},
-     *  summary="Action: Collect Now",
-     *  description="Send the collect now action to this DisplayGroup",
-     *  @SWG\Parameter(
-     *      name="displayGroupId",
-     *      in="path",
-     *      description="The display group id",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function collectNow(Request $request, Response $response, $id)
     {
@@ -2047,6 +2006,21 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/displaygroup/{displayGroupId}/action/clearStatsAndLogs',
+        operationId: 'displayGroupActionClearStatsAndLogs',
+        description: 'Clear all stats and logs on this Group',
+        summary: 'Action: Clear Stats and Logs',
+        tags: ['displayGroup']
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupId',
+        description: 'The display group id',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Cause the player to collect now
      * @param Request $request
@@ -2057,24 +2031,6 @@ class DisplayGroup extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Post(
-     *  path="/displaygroup/{displayGroupId}/action/clearStatsAndLogs",
-     *  operationId="displayGroupActionClearStatsAndLogs",
-     *  tags={"displayGroup"},
-     *  summary="Action: Clear Stats and Logs",
-     *  description="Clear all stats and logs on this Group",
-     *  @SWG\Parameter(
-     *      name="displayGroupId",
-     *      in="path",
-     *      description="The display group id",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function clearStatsAndLogs(Request $request, Response $response, $id)
     {
@@ -2096,6 +2052,57 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/displaygroup/{displayGroupId}/action/changeLayout',
+        operationId: 'displayGroupActionChangeLayout',
+        description: 'Send a change layout action to the provided Display Group. This will be sent to Displays in that Group via XMR.', // phpcs:ignore
+        summary: 'Action: Change Layout',
+        tags: ['displayGroup']
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupId',
+        description: 'This can be either a Display Group or the Display specific Display Group',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'layoutId',
+                        description: 'The ID of the Layout to change to. Either this or a campaignId must be provided.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'campaignId',
+                        description: 'The Layout specific campaignId of the Layout to change to. Either this or a layoutId must be provided.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'duration',
+                        description: 'The duration in seconds for this Layout change to remain in effect, after which normal scheduling is resumed.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'downloadRequired',
+                        description: 'Flag indicating whether the player should perform a collect before playing the Layout.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'changeMode',
+                        description: 'Whether to queue or replace with this action. Queuing will keep the current change layout action and switch after it is finished. If no active change layout action is present, both options are actioned immediately', // phpcs:ignore
+                        type: 'string'
+                    )
+                ],
+                required: ['changeMode']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Change to a new Layout
      * @param Request $request
@@ -2107,59 +2114,6 @@ class DisplayGroup extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Post(
-     *  path="/displaygroup/{displayGroupId}/action/changeLayout",
-     *  operationId="displayGroupActionChangeLayout",
-     *  tags={"displayGroup"},
-     *  summary="Action: Change Layout",
-     *  description="Send a change layout action to the provided Display Group. This will be sent to Displays in that Group via XMR.",
-     *  @SWG\Parameter(
-     *      name="displayGroupId",
-     *      in="path",
-     *      description="This can be either a Display Group or the Display specific Display Group",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      in="formData",
-     *      description="The ID of the Layout to change to. Either this or a campaignId must be provided.",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="campaignId",
-     *      in="formData",
-     *      description="The Layout specific campaignId of the Layout to change to. Either this or a layoutId must be provided.",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="duration",
-     *      in="formData",
-     *      description="The duration in seconds for this Layout change to remain in effect, after which normal scheduling is resumed.",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="downloadRequired",
-     *      in="formData",
-     *      description="Flag indicating whether the player should perform a collect before playing the Layout.",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="changeMode",
-     *      in="formData",
-     *      description="Whether to queue or replace with this action. Queuing will keep the current change layout action and switch after it is finished. If no active change layout action is present, both options are actioned immediately",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function changeLayout(Request $request, Response $response, $id)
     {
@@ -2251,6 +2205,21 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/displaygroup/{displayGroupId}/action/revertToSchedule',
+        operationId: 'displayGroupActionRevertToSchedule',
+        description: 'Send the revert to schedule action to this DisplayGroup',
+        summary: 'Action: Revert to Schedule',
+        tags: ['displayGroup']
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupId',
+        description: 'This can be either a Display Group or the Display specific Display Group',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Cause the player to revert to its scheduled content
      * @param Request $request
@@ -2261,25 +2230,6 @@ class DisplayGroup extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     *
-     * @SWG\Post(
-     *  path="/displaygroup/{displayGroupId}/action/revertToSchedule",
-     *  operationId="displayGroupActionRevertToSchedule",
-     *  tags={"displayGroup"},
-     *  summary="Action: Revert to Schedule",
-     *  description="Send the revert to schedule action to this DisplayGroup",
-     *  @SWG\Parameter(
-     *      name="displayGroupId",
-     *      in="path",
-     *      description="This can be either a Display Group or the Display specific Display Group",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function revertToSchedule(Request $request, Response $response, $id)
     {
@@ -2301,6 +2251,52 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/displaygroup/{displayGroupId}/action/overlayLayout',
+        operationId: 'displayGroupActionOverlayLayout',
+        description: 'Send the overlay layout action to this DisplayGroup, you can pass layoutId or layout specific campaignId', // phpcs:ignore
+        summary: 'Action: Overlay Layout',
+        tags: ['displayGroup']
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupId',
+        description: 'This can be either a Display Group or the Display specific Display Group',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'layoutId',
+                        description: 'The ID of the Layout to change to. Either this or a campaignId must be provided.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'campaignId',
+                        description: 'The Layout specific campaignId of the Layout to change to. Either this or a layoutId must be provided.', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'duration',
+                        description: 'The duration in seconds for this Overlay to remain in effect',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'downloadRequired',
+                        description: 'Whether to queue or replace with this action. Queuing will keep the current change layout action and switch after it is finished. If no active change layout action is present, both options are actioned immediately', // phpcs:ignore
+                        type: 'integer'
+                    )
+                ],
+                required: ['layoutId']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Add an Overlay Layout
      * @param Request $request
@@ -2312,52 +2308,6 @@ class DisplayGroup extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Post(
-     *  path="/displaygroup/{displayGroupId}/action/overlayLayout",
-     *  operationId="displayGroupActionOverlayLayout",
-     *  tags={"displayGroup"},
-     *  summary="Action: Overlay Layout",
-     *  description="Send the overlay layout action to this DisplayGroup, you can pass layoutId or layout specific campaignId",
-     *  @SWG\Parameter(
-     *      name="displayGroupId",
-     *      in="path",
-     *      description="This can be either a Display Group or the Display specific Display Group",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="layoutId",
-     *      in="formData",
-     *      description="The ID of the Layout to change to. Either this or a campaignId must be provided.",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="campaignId",
-     *      in="formData",
-     *      description="The Layout specific campaignId of the Layout to change to. Either this or a layoutId must be provided.",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="duration",
-     *      in="formData",
-     *      description="The duration in seconds for this Overlay to remain in effect",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="downloadRequired",
-     *      in="formData",
-     *      description="Whether to queue or replace with this action. Queuing will keep the current change layout action and switch after it is finished. If no active change layout action is present, both options are actioned immediately",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function overlayLayout(Request $request, Response $response, $id)
     {
@@ -2485,6 +2435,33 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/displaygroup/{displayGroupId}/action/command',
+        operationId: 'displayGroupActionCommand',
+        description: 'Send a predefined command to this Group of Displays',
+        summary: 'Send Command',
+        tags: ['displayGroup']
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupId',
+        description: 'The display group id',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'commandId', description: 'The Command Id', type: 'integer')
+                ],
+                required: ['commandId']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * @param Request $request
      * @param Response $response
@@ -2494,31 +2471,6 @@ class DisplayGroup extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Post(
-     *  path="/displaygroup/{displayGroupId}/action/command",
-     *  operationId="displayGroupActionCommand",
-     *  tags={"displayGroup"},
-     *  summary="Send Command",
-     *  description="Send a predefined command to this Group of Displays",
-     *  @SWG\Parameter(
-     *      name="displayGroupId",
-     *      in="path",
-     *      description="The display group id",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="commandId",
-     *      in="formData",
-     *      description="The Command Id",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function command(Request $request, Response $response, $id)
     {
@@ -2583,6 +2535,64 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/displaygroup/{displayGroupId}/copy',
+        operationId: 'displayGroupCopy',
+        description: 'Copy an existing Display Group',
+        summary: 'Copy Display Group',
+        tags: ['displayGroup']
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupId',
+        description: 'The Display Group ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'displayGroup', description: 'The name for the copy', type: 'string'),
+                    new OA\Property(
+                        property: 'description',
+                        description: 'The description for the copy',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'copyMembers',
+                        description: 'Flag indicating whether to copy all display and display group members',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'copyAssignments',
+                        description: 'Flag indicating whether to copy all layout and media assignments',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'copyTags',
+                        description: 'Flag indicating whether to copy all tags',
+                        type: 'integer'
+                    )
+                ],
+                required: ['displayGroup']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DisplayGroup'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Copy Display Group
      * @param Request $request
@@ -2593,65 +2603,6 @@ class DisplayGroup extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Post(
-     *  path="/displaygroup/{displayGroupId}/copy",
-     *  operationId="displayGroupCopy",
-     *  tags={"displayGroup"},
-     *  summary="Copy Display Group",
-     *  description="Copy an existing Display Group",
-     *  @SWG\Parameter(
-     *      name="displayGroupId",
-     *      in="path",
-     *      description="The Display Group ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="displayGroup",
-     *      in="formData",
-     *      description="The name for the copy",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="The description for the copy",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="copyMembers",
-     *      in="formData",
-     *      description="Flag indicating whether to copy all display and display group members",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="copyAssignments",
-     *      in="formData",
-     *      description="Flag indicating whether to copy all layout and media assignments",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="copyTags",
-     *      in="formData",
-     *      description="Flag indicating whether to copy all tags",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/DisplayGroup"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      */
     public function copy(Request $request, Response $response, $id)
     {
@@ -2751,34 +2702,41 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/displaygroup/{id}/selectfolder',
+        operationId: 'displayGroupSelectFolder',
+        description: 'Select Folder for Display Group, can also be used with Display specific Display Group ID', // phpcs:ignore
+        summary: 'Display Group Select folder',
+        tags: ['displayGroup']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        description: 'The Display Group ID or Display specific Display Group ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'folderId',
+                        description: 'Folder ID to which this object should be assigned to',
+                        type: 'integer'
+                    )
+                ]
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DisplayGroup')
+    )]
     /**
-     *
-     * @SWG\Put(
-     *  path="/displaygroup/{id}/selectfolder",
-     *  operationId="displayGroupSelectFolder",
-     *  tags={"displayGroup"},
-     *  summary="Display Group Select folder",
-     *  description="Select Folder for Display Group, can also be used with Display specific Display Group ID",
-     *  @SWG\Parameter(
-     *      name="displayGroupId",
-     *      in="path",
-     *      description="The Display Group ID or Display specific Display Group ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="formData",
-     *      description="Folder ID to which this object should be assigned to",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/DisplayGroup")
-     *  )
-     * )
      *
      * @param Request $request
      * @param Response $response
@@ -2856,6 +2814,37 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/displaygroup/{displayGroupId}/action/triggerWebhook',
+        operationId: 'displayGroupActionTriggerWebhook',
+        description: 'Send the trigger webhook action to this DisplayGroup',
+        summary: 'Action: Trigger Web hook',
+        tags: ['displayGroup']
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupId',
+        description: 'The display group id',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'triggerCode',
+                        description: 'The trigger code that should be sent to the Player',
+                        type: 'string'
+                    )
+                ],
+                required: ['triggerCode']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Send a code to a Player to trigger a web hook associated with provided trigger code.
      *
@@ -2867,31 +2856,6 @@ class DisplayGroup extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @SWG\Post(
-     *  path="/displaygroup/{displayGroupId}/action/triggerWebhook",
-     *  operationId="displayGroupActionTriggerWebhook",
-     *  tags={"displayGroup"},
-     *  summary="Action: Trigger Web hook",
-     *  description="Send the trigger webhook action to this DisplayGroup",
-     *  @SWG\Parameter(
-     *      name="displayGroupId",
-     *      in="path",
-     *      description="The display group id",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="triggerCode",
-     *      in="formData",
-     *      description="The trigger code that should be sent to the Player",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      */
     public function triggerWebhook(Request $request, Response $response, $id)
     {
@@ -2922,46 +2886,37 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/displaygroup/criteria[/{displayGroupId}]',
+        operationId: 'ScheduleCriteriaUpdate',
+        description: 'Send criteria updates to the specified DisplayGroup or to all displays if displayGroupId is not                  provided.', // phpcs:ignore
+        summary: 'Action: Push Criteria Update',
+        tags: ['displayGroup']
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupId',
+        description: 'The display group id',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(
+                properties: [
+                    new OA\Property(property: 'metric', type: 'string'),
+                    new OA\Property(property: 'value', type: 'string'),
+                    new OA\Property(property: 'ttl', type: 'integer')
+                ],
+                type: 'object'
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(response: 204, description: 'Successful operation')]
+    #[OA\Response(response: 400, description: 'Invalid criteria format')]
     /**
-     * @SWG\Post(
-     *    path="/displaygroup/criteria[/{displayGroupId}]",
-     *    operationId="ScheduleCriteriaUpdate",
-     *    tags={"displayGroup"},
-     *    summary="Action: Push Criteria Update",
-     *    description="Send criteria updates to the specified DisplayGroup or to all displays if displayGroupId is not
-     *                  provided.",
-     *    @SWG\Parameter(
-     *        name="displayGroupId",
-     *        in="path",
-     *        description="The display group id",
-     *        type="integer",
-     *        required=true
-     *     ),
-     *    @SWG\Parameter(
-     *        name="criteriaUpdates",
-     *        in="body",
-     *        description="The criteria updates to send to the Player",
-     *        required=true,
-     *        @SWG\Schema(
-     *            type="array",
-     *            @SWG\Items(
-     *                type="object",
-     *                @SWG\Property(property="metric", type="string"),
-     *                @SWG\Property(property="value", type="string"),
-     *                @SWG\Property(property="ttl", type="integer")
-     *            )
-     *        )
-     *     ),
-     *    @SWG\Response(
-     *        response=204,
-     *        description="Successful operation"
-     *    ),
-     *    @SWG\Response(
-     *        response=400,
-     *        description="Invalid criteria format"
-     *    )
-     *   )
-     *
      * @param Request $request
      * @param Response $response
      * @param int $displayGroupId

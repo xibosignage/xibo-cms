@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,11 +22,11 @@
 
 namespace Xibo\Controller;
 
+use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\MenuBoardFactory;
-use Xibo\Factory\UserFactory;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -64,59 +64,59 @@ class MenuBoard extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/menuboards',
+        operationId: 'menuBoardSearch',
+        description: 'Search all Menu Boards this user has access to',
+        summary: 'Search Menu Boards',
+        tags: ['menuBoard']
+    )]
+    #[OA\Parameter(
+        name: 'menuId',
+        description: 'Filter by Menu board Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'userId',
+        description: 'Filter by Owner Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'folderId',
+        description: 'Filter by Folder Id',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'name',
+        description: 'Filter by name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'code',
+        description: 'Filter by code',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/MenuBoard')
+        )
+    )]
     /**
      * Returns a Grid of Menu Boards
      *
-     * @SWG\Get(
-     *  path="/menuboards",
-     *  operationId="menuBoardSearch",
-     *  tags={"menuBoard"},
-     *  summary="Search Menu Boards",
-     *  description="Search all Menu Boards this user has access to",
-     *  @SWG\Parameter(
-     *      name="menuId",
-     *      in="query",
-     *      description="Filter by Menu board Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="userId",
-     *      in="query",
-     *      description="Filter by Owner Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="query",
-     *      description="Filter by Folder Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="name",
-     *      in="query",
-     *      description="Filter by name",
-     *      type="string",
-     *      required=false
-     *   ),
-     *   @SWG\Parameter(
-     *      name="code",
-     *      in="query",
-     *      description="Filter by code",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/MenuBoard")
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -245,54 +245,43 @@ class MenuBoard extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Post(
+        path: '/menuboard',
+        operationId: 'menuBoardAdd',
+        description: 'Add a new Menu Board',
+        summary: 'Add Menu Board',
+        tags: ['menuBoard']
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'name', description: 'Menu Board name', type: 'string'),
+                    new OA\Property(property: 'description', description: 'Menu Board description', type: 'string'),
+                    new OA\Property(property: 'code', description: 'Menu Board code identifier', type: 'string'),
+                    new OA\Property(property: 'folderId', description: 'Menu Board Folder Id', type: 'integer')
+                ],
+                required: ['name']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/MenuBoard'),
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ]
+    )]
     /**
      * Add a new Menu Board
      *
-     * @SWG\Post(
-     *  path="/menuboard",
-     *  operationId="menuBoardAdd",
-     *  tags={"menuBoard"},
-     *  summary="Add Menu Board",
-     *  description="Add a new Menu Board",
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="Menu Board name",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="Menu Board description",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="code",
-     *      in="formData",
-     *      description="Menu Board code identifier",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="formData",
-     *      description="Menu Board Folder Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/MenuBoard"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -358,54 +347,37 @@ class MenuBoard extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/menuboard/{menuId}',
+        operationId: 'menuBoardEdit',
+        description: 'Edit existing Menu Board',
+        summary: 'Edit Menu Board',
+        tags: ['menuBoard']
+    )]
+    #[OA\Parameter(
+        name: 'menuId',
+        description: 'The Menu Board ID to Edit',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(property: 'name', description: 'Menu Board name', type: 'string'),
+                    new OA\Property(property: 'description', description: 'Menu Board description', type: 'string'),
+                    new OA\Property(property: 'code', description: 'Menu Board code identifier', type: 'string'),
+                    new OA\Property(property: 'folderId', description: 'Menu Board Folder Id', type: 'integer')
+                ],
+                required: ['name']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
-     * @SWG\Put(
-     *  path="/menuboard/{menuId}",
-     *  operationId="menuBoardEdit",
-     *  tags={"menuBoard"},
-     *  summary="Edit Menu Board",
-     *  description="Edit existing Menu Board",
-     *  @SWG\Parameter(
-     *      name="menuId",
-     *      in="path",
-     *      description="The Menu Board ID to Edit",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="Menu Board name",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="description",
-     *      in="formData",
-     *      description="Menu Board description",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="code",
-     *      in="formData",
-     *      description="Menu Board code identifier",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="formData",
-     *      description="Menu Board Folder Id",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
-     *
      * @param Request $request
      * @param Response $response
      * @param int $id
@@ -477,26 +449,22 @@ class MenuBoard extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Delete(
+        path: '/menuboard/{menuId}',
+        operationId: 'menuBoardDelete',
+        description: 'Delete existing Menu Board',
+        summary: 'Delete Menu Board',
+        tags: ['menuBoard']
+    )]
+    #[OA\Parameter(
+        name: 'menuId',
+        description: 'The Menu Board ID to Delete',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(response: 204, description: 'successful operation')]
     /**
-     * @SWG\Delete(
-     *  path="/menuboard/{menuId}",
-     *  operationId="menuBoardDelete",
-     *  tags={"menuBoard"},
-     *  summary="Delete Menu Board",
-     *  description="Delete existing Menu Board",
-     *  @SWG\Parameter(
-     *      name="menuId",
-     *      in="path",
-     *      description="The Menu Board ID to Delete",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
-     *
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -557,34 +525,42 @@ class MenuBoard extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Put(
+        path: '/menuboard/{id}/selectfolder',
+        operationId: 'menuBoardSelectFolder',
+        description: 'Select Folder for Menu Board',
+        summary: 'Menu Board Select folder',
+        tags: ['menuBoard']
+    )]
+    #[OA\Parameter(
+        name: 'menuId',
+        description: 'The Menu Board ID',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                properties: [
+                    new OA\Property(
+                        property: 'folderId',
+                        description: 'Folder ID to which this object should be assigned to',
+                        type: 'integer'
+                    )
+                ],
+                required: ['folderId']
+            )
+        ),
+        required: true
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/MenuBoard')
+    )]
     /**
-     * @SWG\Put(
-     *  path="/menuboard/{id}/selectfolder",
-     *  operationId="menuBoardSelectFolder",
-     *  tags={"menuBoard"},
-     *  summary="Menu Board Select folder",
-     *  description="Select Folder for Menu Board",
-     *  @SWG\Parameter(
-     *      name="menuId",
-     *      in="path",
-     *      description="The Menu Board ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="folderId",
-     *      in="formData",
-     *      description="Folder ID to which this object should be assigned to",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/MenuBoard")
-     *  )
-     * )
-     *
      * @param Request $request
      * @param Response $response
      * @param int $id
