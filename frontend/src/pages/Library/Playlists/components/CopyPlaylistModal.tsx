@@ -22,40 +22,40 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import TagInput from '@/components/ui/forms/TagInput';
+import Checkbox from '@/components/ui/forms/Checkbox';
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
-import type { Media } from '@/types/media';
-import type { Tag } from '@/types/tag';
+import type { Playlist } from '@/types/playlist';
 import { incrementName } from '@/utils/stringUtils';
 
-interface CopyMediaModalProps {
+interface CopyPlaylistModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (newName: string, tags: Tag[]) => void;
-  media: Media | null;
+  onConfirm: (newName: string, copyMediaFiles: boolean) => void;
+  playlist: Playlist | null;
   isLoading?: boolean;
   existingNames: string[];
 }
 
-export default function CopyMediaModal({
+export default function CopyPlaylistModal({
   isOpen,
   onClose,
   onConfirm,
-  media,
+  playlist,
   isLoading,
   existingNames,
-}: CopyMediaModalProps) {
+}: CopyPlaylistModalProps) {
   const { t } = useTranslation();
   const [newName, setNewName] = useState('');
-  const [newTags, setNewTags] = useState([] as Tag[]);
+  const [copyMediaFiles, setCopyMediaFiles] = useState(false);
   const [error, setError] = useState<string | undefined>();
 
   useEffect(() => {
-    if (media && isOpen) {
-      setNewName(incrementName(media.name));
+    if (playlist && isOpen) {
+      setNewName(incrementName(playlist.name));
+      setCopyMediaFiles(false);
     }
-  }, [media, isOpen]);
+  }, [playlist, isOpen]);
 
   const handleSave = () => {
     const trimmed = newName.trim();
@@ -68,12 +68,12 @@ export default function CopyMediaModal({
     const nameExists = existingNames.some((name) => name.toLowerCase() === trimmed.toLowerCase());
 
     if (nameExists) {
-      setError(t('A media item with this name already exists'));
+      setError(t('A playlist item with this name already exists'));
       return;
     }
 
     setError(undefined);
-    onConfirm(trimmed, newTags);
+    onConfirm(trimmed, copyMediaFiles);
   };
 
   if (!isOpen) {
@@ -83,7 +83,7 @@ export default function CopyMediaModal({
   return (
     <Modal
       isOpen={isOpen}
-      title={t('Copy Media')}
+      title={t('Copy Playlist')}
       onClose={onClose}
       size="sm"
       actions={[
@@ -102,17 +102,32 @@ export default function CopyMediaModal({
     >
       <div className="px-8 pb-8 space-y-4">
         <TextInput
-          name="name"
+          name="newName"
           value={newName}
           label={t('New name')}
+          helpText={t('The Name of the Playlist - (1 - 50 characters)')}
           error={error}
           onChange={(e) => {
             setNewName(e.target.value);
-            if (error) setError(undefined);
+            if (error) {
+              setError(undefined);
+            }
           }}
         />
 
-        <TagInput onChange={setNewTags} value={newTags}></TagInput>
+        <Checkbox
+          id="copyMediaFiles"
+          className="items-center"
+          title={t('Make new copies of all media on this playlist?')}
+          label={t(
+            'This will duplicate all media that is currently assigned to the Playlist being copied.',
+          )}
+          checked={copyMediaFiles}
+          classNameLabel="text-xs"
+          onChange={(e) => {
+            setCopyMediaFiles(!!e.target.checked);
+          }}
+        />
       </div>
     </Modal>
   );

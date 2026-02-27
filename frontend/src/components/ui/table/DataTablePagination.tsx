@@ -128,7 +128,7 @@ export function DataTablePagination<TData>({
             }
             const isCurrent = (page as number) === pagination.pageIndex + 1;
             return (
-              <div key={page} className="flex w-[37px] justify-center">
+              <div key={page} className="flex w-9.25 justify-center">
                 <button
                   type="button"
                   onClick={() => table.setPageIndex((page as number) - 1)}

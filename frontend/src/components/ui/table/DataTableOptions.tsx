@@ -35,7 +35,7 @@ interface DataTableOptionsProps<TData> {
   onRefresh?: () => void;
   onCSVExport?: () => void;
   columnVisibility?: VisibilityState;
-  viewMode?: 'table' | 'grid';
+  viewMode?: 'table' | 'grid' | null;
   onViewModeChange?: (mode: 'table' | 'grid') => void;
 }
 

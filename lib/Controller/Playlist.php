@@ -353,7 +353,7 @@ class Playlist extends Base
                 $playlist->setUnmatchedProperty('fullScreenCampaignId', $fullScreenCampaignId);
             }
 
-            if ($this->isApi($request)) {
+            if ($this->isApi($request) || $this->isJson($request)) {
                 continue;
             }
 

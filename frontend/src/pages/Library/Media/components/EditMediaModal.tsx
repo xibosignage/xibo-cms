@@ -153,8 +153,8 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
     >
       <div className="flex flex-col h-full overflow-y-hidden overflow-x-visible gap-3 p-4 pt-0">
         <div className="shrink-0 p-4 m-4 mt-0 flex gap-3 bg-slate-50 rounded-lg">
-          <div className="h-[150px] aspect-7/6 relative bg-gray-400 overflow-hidden rounded">
-            <div className="h-[150px] aspect-7/6 bg-gray-100 flex items-center justify-center rounded">
+          <div className="h-37.5 aspect-7/6 relative bg-gray-400 overflow-hidden rounded">
+            <div className="h-37.5 aspect-7/6 bg-gray-100 flex items-center justify-center rounded">
               {data.thumbnail ? (
                 <>
                   {isImageLoading && <div className="absolute inset-0 animate-pulse bg-gray-200" />}
@@ -278,7 +278,7 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
             }}
           />
 
-          {/* Inherit */}
+          {/* Enable Stats */}
           <SelectDropdown
             label="Enable Media Stats Collection?"
             value={draft.enableStat}

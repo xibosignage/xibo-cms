@@ -21,7 +21,6 @@
 
 import http from '@/lib/api';
 import type { Media } from '@/types/media';
-import { incrementFileName, incrementName } from '@/utils/stringUtils';
 import ZipWorker from '@/workers/zipWorker?worker';
 
 export interface FetchMediaRequest {
@@ -305,64 +304,27 @@ export async function downloadMediaAsZip(
 export interface CloneMediaRequest {
   mediaId: number | string;
   name: string;
-  fileName: string;
-  duration: number;
-  folderId?: number | string;
-  tags?: string[];
-  orientation?: 'portrait' | 'landscape';
-  expires?: string;
-  mediaNoExpiryDate?: number;
-  overrideName?: string;
+  tags?: string;
   signal?: AbortSignal;
 }
 
-export type CloneMediaResponse = Media;
+export async function cloneMedia({ mediaId, name, tags }: CloneMediaRequest): Promise<Media> {
+  const params = new URLSearchParams();
 
-export async function cloneMedia({
-  mediaId,
-  name,
-  fileName,
-  duration,
-  folderId = 1,
-  tags = [],
-  orientation,
-  expires,
-  mediaNoExpiryDate,
-  signal,
-  overrideName,
-}: CloneMediaRequest): Promise<Media> {
-  const blob = await fetchMediaBlob(mediaId);
+  params.append('name', name);
 
-  const clonedDisplayName = overrideName ?? incrementName(name);
-
-  const clonedFileName = incrementFileName(fileName);
-
-  const clonedFile = new File([blob], clonedFileName, {
-    type: blob.type,
-  });
-
-  const uploadResponse = await uploadMedia({
-    file: clonedFile,
-    folderId,
-    tags,
-    signal,
-  });
-
-  const uploadedFile = uploadResponse.data.files?.[0];
-  if (!uploadedFile) {
-    throw new Error('Upload media failed: no file returned');
+  if (tags !== undefined) {
+    params.append('tags', tags);
   }
 
-  return updateMedia(uploadedFile.mediaId, {
-    name: clonedDisplayName,
-    duration,
-    tags: tags.join(','),
-    orientation,
-    expires,
-    mediaNoExpiryDate,
-    retired: 0,
-    enableStat: 'Inherit',
+  const response = await http.post(`/library/copy/${mediaId}`, params.toString(), {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-Requested-With': 'XMLHttpRequest',
+    },
   });
+
+  return response.data;
 }
 
 export async function deleteMedia(mediaId: number | string, force: boolean = false): Promise<void> {

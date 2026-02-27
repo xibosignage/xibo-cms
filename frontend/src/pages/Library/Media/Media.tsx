@@ -74,6 +74,7 @@ import { useMediaFilterOptions } from '@/pages/Library/Media/hooks/useMediaFilte
 import { selectFolder } from '@/services/folderApi';
 import { cloneMedia, deleteMedia, downloadMedia, downloadMediaAsZip } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
+import type { Tag } from '@/types/tag';
 
 export default function Media() {
   const { t } = useTranslation();
@@ -339,21 +340,22 @@ export default function Media() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
-  const handleConfirmClone = async (newName: string) => {
-    if (!selectedMedia) return;
+  const handleConfirmClone = async (newName: string, tags: Tag[]) => {
+    if (!selectedMedia) {
+      return;
+    }
 
     try {
       setIsCloning(true);
 
+      const serializedTags = tags.map((t) => {
+        return t.value != '' ? `${t.tag}|${t.value}` : t.tag;
+      });
+
       await cloneMedia({
         mediaId: selectedMedia.mediaId,
-        name: selectedMedia.name,
-        fileName: selectedMedia.fileName,
-        duration: selectedMedia.duration,
-        tags: selectedMedia.tags?.map((t) => t.tag) ?? [],
-        folderId: selectedMedia.folderId,
-        orientation: selectedMedia.orientation,
-        overrideName: newName,
+        name: newName,
+        tags: serializedTags.join(','),
       });
 
       notify.success(t('Media copied successfully'));
@@ -856,6 +858,7 @@ export default function Media() {
         onClose={() => {
           closeModal();
           setShareEntityIds(null);
+          handleRefresh();
         }}
         openModal={isModalOpen('share')}
         entityType="media"
