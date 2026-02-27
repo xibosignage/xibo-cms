@@ -129,6 +129,9 @@ export default function ExpiryDateSelect({
           <ChevronDown size={14} />
         </button>
       </div>
+      <span className="text-xs text-gray-400 leading-snug flex mt-1">
+        {t('Set when this media is removed from all Layouts and widgets.')}
+      </span>
 
       {/* Dropdown */}
       {isOpen &&

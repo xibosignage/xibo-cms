@@ -47,6 +47,7 @@ import DeleteMediaModal from './components/DeleteMediaModal';
 import MediaCard from './components/MediaCard';
 import { MediaInfoPanel } from './components/MediaInfoPanel';
 import MediaPreviewer from './components/MediaPreviewer';
+import ReplaceFileModal from './components/ReplaceFileModal';
 import { UploadProgressDock } from './components/UploadProgressDock';
 import { useMediaData } from './hooks/useMediaData';
 
@@ -329,6 +330,11 @@ export default function Media() {
     openModal('edit');
   };
 
+  const openReplaceFileModal = (mediaId: number) => {
+    setSelectedMediaId(mediaId);
+    openModal('replace');
+  };
+
   const closeEditModal = () => {
     closeModal();
     setSelectedMediaId(null);
@@ -437,6 +443,7 @@ export default function Media() {
       setShowInfoPanel(true);
     },
     copyMedia: openCopyModal,
+    openReplaceModal: openReplaceFileModal,
   });
 
   const getAllSelectedItems = (): Media[] => {
@@ -572,6 +579,22 @@ export default function Media() {
     onDownload: handleDownload,
     openEditModal,
     onPreview: handlePreviewClick,
+    openMoveModal: canViewFolders
+      ? (media) => {
+          setItemsToMove([media] as Media[]);
+          openModal('move');
+        }
+      : undefined,
+    openShareModal: (mediaId) => {
+      setShareEntityIds(mediaId);
+      openModal('share');
+    },
+    openDetails: (mediaId) => {
+      setSelectedMediaId(mediaId);
+      setShowInfoPanel(true);
+    },
+    copyMedia: openCopyModal,
+    openReplaceModal: openReplaceFileModal,
   } as MediaActionsProps);
 
   const { filterOptions } = useMediaFilterOptions();
@@ -839,17 +862,30 @@ export default function Media() {
       />
 
       {selectedMedia && (
-        <EditMediaModal
-          openModal={isModalOpen('edit')}
-          onClose={closeEditModal}
-          onSave={(updatedMedia) => {
-            setMediaList((prev) =>
-              prev.map((m) => (m.mediaId === updatedMedia.mediaId ? updatedMedia : m)),
-            );
-            handleRefresh();
-          }}
-          data={selectedMedia}
-        />
+        <>
+          <EditMediaModal
+            openModal={isModalOpen('edit')}
+            onClose={closeEditModal}
+            onSave={(updatedMedia) => {
+              setMediaList((prev) =>
+                prev.map((m) => (m.mediaId === updatedMedia.mediaId ? updatedMedia : m)),
+              );
+              handleRefresh();
+            }}
+            data={selectedMedia}
+          />
+          <ReplaceFileModal
+            openModal={isModalOpen('replace')}
+            onClose={closeModal}
+            data={selectedMedia}
+            onSave={(updatedMedia) => {
+              setMediaList((prev) =>
+                prev.map((m) => (m.mediaId === updatedMedia.mediaId ? updatedMedia : m)),
+              );
+              handleRefresh();
+            }}
+          />
+        </>
       )}
       <ShareModal
         title={t('Share Media')}

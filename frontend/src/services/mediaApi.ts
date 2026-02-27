@@ -371,3 +371,62 @@ export async function deleteMedia(mediaId: number | string, force: boolean = fal
     headers: { 'X-Requested-With': 'XMLHttpRequest' },
   });
 }
+
+export interface ReplaceMediaRequest {
+  file: File;
+  oldMediaId: number;
+  name?: string;
+  folderId?: number | string;
+  tags?: string[];
+  updateInLayouts?: boolean;
+  deleteOldRevisions?: boolean;
+  onProgress?: (progress: number) => void;
+  signal?: AbortSignal;
+}
+
+export async function replaceMedia({
+  file,
+  oldMediaId,
+  name,
+  folderId = 1,
+  tags = [],
+  updateInLayouts = false,
+  deleteOldRevisions = false,
+  onProgress,
+  signal,
+}: ReplaceMediaRequest): Promise<{ data: UploadMediaResponse }> {
+  const formData = new FormData();
+
+  formData.append('files[]', file);
+  formData.append('name[]', name ?? file.name);
+
+  formData.append('oldMediaId', oldMediaId.toString());
+  formData.append('updateInLayouts', updateInLayouts ? '1' : '0');
+  formData.append('deleteOldRevisions', deleteOldRevisions ? '1' : '0');
+
+  if (folderId) {
+    formData.append('folderId', folderId.toString());
+  }
+
+  if (tags.length > 0) {
+    tags.forEach((tag) => formData.append('tags[]', tag));
+  } else {
+    formData.append('tags[]', '');
+  }
+
+  const response = await http.post<UploadMediaResponse>('/library', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+    signal,
+    onUploadProgress: (event) => {
+      if (onProgress && event.total) {
+        const percent = Math.round((event.loaded * 100) / event.total);
+        onProgress(percent);
+      }
+    },
+  });
+
+  return { data: response.data };
+}

@@ -19,14 +19,12 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { HelpCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Modal from '../../../../components/ui/modals/Modal';
-import { getMediaIcon, MEDIA_FORM_OPTIONS } from '../MediaConfig';
+import { MEDIA_FORM_OPTIONS } from '../MediaConfig';
 
-import Button from '@/components/ui/Button';
 import Checkbox from '@/components/ui/forms/Checkbox';
 import DurationInput from '@/components/ui/forms/DurationInput';
 import ExpiryDateSelect from '@/components/ui/forms/ExpiryDateSelect';
@@ -63,7 +61,6 @@ type OpenSelect = 'orientation' | 'expiry' | 'enableStat' | null;
 
 export default function EditMediaModal({ openModal, onClose, data, onSave }: EditMediaModalProps) {
   const { t } = useTranslation();
-  const [isImageLoading, setIsImageLoading] = useState(true);
   const [openSelect, setOpenSelect] = useState<null | OpenSelect>(null);
   const [expiry, setExpiry] = useState<ExpiryValue>(expiresToExpiryValue(data.expires));
 
@@ -80,8 +77,6 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
     retired: data.retired,
     updateInLayouts: data.updateInLayouts,
   }));
-
-  const Icon = getMediaIcon(data.mediaType);
 
   useEffect(() => {
     const initialExpiry = expiresToExpiryValue(data.expires);
@@ -152,59 +147,7 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
       ]}
     >
       <div className="flex flex-col h-full overflow-y-hidden overflow-x-visible gap-3 p-4 pt-0">
-        <div className="shrink-0 p-4 m-4 mt-0 flex gap-3 bg-slate-50 rounded-lg">
-          <div className="h-[150px] aspect-7/6 relative bg-gray-400 overflow-hidden rounded">
-            <div className="h-[150px] aspect-7/6 bg-gray-100 flex items-center justify-center rounded">
-              {data.thumbnail ? (
-                <>
-                  {isImageLoading && <div className="absolute inset-0 animate-pulse bg-gray-200" />}
-                  <img
-                    src={data.thumbnail}
-                    alt={data.fileName}
-                    onLoad={() => setIsImageLoading(false)}
-                    onError={() => setIsImageLoading(false)}
-                    className={`h-full w-full object-contain transition-opacity duration-300 ${
-                      isImageLoading ? 'opacity-0' : 'opacity-100'
-                    }`}
-                  />
-                </>
-              ) : (
-                <Icon className="w-10 h-10 text-gray-400" />
-              )}
-            </div>
-          </div>
-
-          <div className="flex flex-col justify-between flex-1">
-            <div>
-              <span className="text-sm text-gray-500 font-semibold flex items-center gap-1">
-                {t('FILE NAME')} <HelpCircle size={12} />
-              </span>
-              <span className="text-sm">{t(data.fileName)}</span>
-            </div>
-            <div>
-              <span className="text-sm text-gray-500 font-semibold flex items-center gap-1">
-                {t('FILE SIZE')} <HelpCircle size={12} />
-              </span>
-              <span className="text-sm">{t(data.fileSizeFormatted)}</span>
-            </div>
-            <div>
-              <span className="text-sm text-gray-500 font-semibold flex items-center gap-1">
-                {t('RESOLUTION')} <HelpCircle size={12} />
-              </span>
-              <span className="text-sm">
-                {data.width} x {data.height}
-              </span>
-            </div>
-          </div>
-
-          <div>
-            <Button variant="secondary" className="border-0 bg-transparent">
-              {t('Replace File')}
-            </Button>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-3 flex-1 min-h-0 p-4 overflow-y-auto pb-32">
+        <div className="flex flex-col gap-3 flex-1 min-h-0 p-4 overflow-y-auto pb-20">
           {/* Select Folder */}
           <div className="relative z-20">
             <SelectFolder
@@ -235,36 +178,38 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
           {/* Tags */}
           <TagInput
             value={draft.tags}
-            helpText={t('Tags (Comma-separated: Tag or Tag|Value)')}
+            helpText={t('Tags separated by commas. Use Tag|Value for tagged attributes.')}
             onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
           />
 
-          {/* Orientation */}
-          <SelectDropdown
-            label="Orientation"
-            value={draft.orientation}
-            placeholder="Select orientation"
-            options={MEDIA_FORM_OPTIONS.orientation}
-            isOpen={openSelect === 'orientation'}
-            onToggle={() =>
-              setOpenSelect((prev) => (prev === 'orientation' ? null : 'orientation'))
-            }
-            onSelect={(value) => {
-              setDraft((prev) => ({ ...prev, orientation: value as 'portrait' | 'landscape' }));
-              setOpenSelect(null);
-            }}
-          />
+          <div className="grid grid-cols-2 gap-2">
+            {/* Orientation */}
+            <SelectDropdown
+              label="Orientation"
+              value={draft.orientation}
+              placeholder="Select orientation"
+              options={MEDIA_FORM_OPTIONS.orientation}
+              isOpen={openSelect === 'orientation'}
+              onToggle={() =>
+                setOpenSelect((prev) => (prev === 'orientation' ? null : 'orientation'))
+              }
+              onSelect={(value) => {
+                setDraft((prev) => ({ ...prev, orientation: value as 'portrait' | 'landscape' }));
+                setOpenSelect(null);
+              }}
+            />
 
-          {/* Duration */}
-          <DurationInput
-            value={draft.duration}
-            onChange={(seconds) =>
-              setDraft((prev) => ({
-                ...prev,
-                duration: seconds,
-              }))
-            }
-          />
+            {/* Duration */}
+            <DurationInput
+              value={draft.duration}
+              onChange={(seconds) =>
+                setDraft((prev) => ({
+                  ...prev,
+                  duration: seconds,
+                }))
+              }
+            />
+          </div>
 
           {/* Expiry Date */}
           <ExpiryDateSelect
@@ -298,7 +243,7 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
           {/* Retired */}
           <Checkbox
             id="retired"
-            className="items-center"
+            className="items-center px-3 py-2.5"
             title={t('Retire this media?')}
             label={t(
               `Retired media remains on existing Layouts but is not available to assign to new Layouts.`,
@@ -309,7 +254,7 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
           />
           <Checkbox
             id="update"
-            className="items-center"
+            className="items-center px-3 py-2.5"
             title={t('Update this media in all layouts it is assigned to')}
             label={t(`Note: It will only be updated in layouts you have permission to edit.`)}
             checked={draft.updateInLayouts}
