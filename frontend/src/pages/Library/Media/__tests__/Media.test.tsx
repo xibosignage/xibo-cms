@@ -204,7 +204,6 @@ describe('Media page', () => {
     const videoElements = screen.getAllByText('video');
     expect(videoElements[0]).toBeInTheDocument();
 
-    // This scenario is funky in test run atm
     // Covers: Verify file size formatting.
     // (Regex matches variations like '1 MB', '1.00 MB', or raw '1048576' depending on formatting config)
     const toggleColumnsBtn = screen.getByRole('button', { name: 'Toggle columns' });
