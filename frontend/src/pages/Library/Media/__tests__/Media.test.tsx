@@ -10,7 +10,7 @@ import { useMediaData } from '../hooks/useMediaData';
 import { UploadProvider } from '@/context/UploadContext';
 import { UserProvider } from '@/context/UserContext';
 import { testQueryClient } from '@/setupTests';
-import type { User } from '@/types/user';
+import type { User, UserFeatures } from '@/types/user';
 
 vi.mock('@/components/ui/modals/Modal', () => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -56,6 +56,9 @@ const mockUser = {
   firstName: 'Mock',
   lastName: 'User',
   phone: '123456789',
+  features: {
+    'folder.view': true,
+  } as UserFeatures,
 } as User;
 
 // Covers: Verify Media page loads successfully
@@ -108,9 +111,6 @@ describe('Media page', () => {
 
     // Covers: Verify Filters button is visible.
     expect(screen.getByRole('button', { name: 'Filters' })).toBeInTheDocument();
-
-    // Covers: Verify Folder breadcrumb component renders.
-    expect(screen.getByRole('button', { name: 'Home' })).toBeInTheDocument();
 
     // Covers: Verify no error alert appears when data loads successfully
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();

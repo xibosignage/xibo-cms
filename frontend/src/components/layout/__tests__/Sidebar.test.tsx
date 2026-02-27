@@ -73,6 +73,7 @@ const superAdminUser = {
     'transition.view': true,
     'task.view': true,
     'tag.view': true,
+    'folder.view': true,
     'font.view': true,
     'report.view': true,
     'report.scheduling': true,

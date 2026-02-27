@@ -24,6 +24,6 @@ import { useUserContext } from '@/context/UserContext';
 export const usePermissions = () => {
   const { user } = useUserContext();
   return {
-    canViewFolders: !!user?.features['folder.view'],
+    canViewFolders: !!user?.features?.['folder.view'],
   };
 };
