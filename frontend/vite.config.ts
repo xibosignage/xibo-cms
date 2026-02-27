@@ -86,37 +86,11 @@ export default defineConfig(({ mode }) => ({
     outDir: path.resolve(__dirname, 'dist'),
     emptyOutDir: true,
     chunkSizeWarningLimit: 1000,
+    sourcemap: process.env.NODE_ENV === 'debug',
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          // Split node_modules into separate 'vendor' chunks
-          if (id.includes('node_modules')) {
-            // React Core
-            if (
-              id.includes('/react/') ||
-              id.includes('/react-dom/') ||
-              id.includes('/react-router-dom/')
-            ) {
-              return 'react-vendor';
-            }
-
-            // Preline UI
-            if (id.includes('/preline/')) {
-              return 'preline-vendor';
-            }
-
-            // Utils
-            if (
-              id.includes('/axios/') ||
-              id.includes('/papaparse/') ||
-              id.includes('/tailwind-merge/')
-            ) {
-              return 'utils-vendor';
-            }
-
-            // The rest
-            return 'vendor';
-          }
+        manualChunks: {
+          'react-core': ['react', 'react-dom', 'react-router-dom'],
         },
       },
     },
