@@ -213,11 +213,11 @@ describe('Media page', () => {
     const createdDateToggle = screen.getByLabelText('Created');
     await user.click(createdDateToggle);
 
-    expect(screen.getByText('1(.*?)MB|1048576')).toBeInTheDocument();
+    expect(screen.getByText(/1(.*?)MB|1048576/i)).toBeInTheDocument();
 
     // Covers: Verify created/updated date formatting.
     // (Matches the date string to ensure it renders into the DOM)
-    expect(screen.getByText('2024-02-14|2024-02-15')).toBeInTheDocument();
+    expect(screen.getByText(/2024-02-14|2024-02-15/i)).toBeInTheDocument();
   });
 
   test('verifies pagination controls appear when items exceed page limit', async () => {
