@@ -29,7 +29,6 @@ import { getMediaIcon, MEDIA_FORM_OPTIONS } from '../MediaConfig';
 import Button from '@/components/ui/Button';
 import Checkbox from '@/components/ui/forms/Checkbox';
 import DurationInput from '@/components/ui/forms/DurationInput';
-import type { ExpiryValue } from '@/components/ui/forms/ExpiryDateSelect';
 import ExpiryDateSelect from '@/components/ui/forms/ExpiryDateSelect';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
@@ -37,6 +36,7 @@ import TagInput from '@/components/ui/forms/TagInput';
 import { updateMedia } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
 import type { Tag } from '@/types/tag';
+import type { ExpiryValue } from '@/utils/date';
 import { expiresToExpiryValue, expiryToDateTime } from '@/utils/date';
 
 interface EditMediaModalProps {
@@ -65,9 +65,7 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
   const { t } = useTranslation();
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [openSelect, setOpenSelect] = useState<null | OpenSelect>(null);
-  const [expiry, setExpiry] = useState<ExpiryValue | undefined>(() =>
-    expiresToExpiryValue(data.expires),
-  );
+  const [expiry, setExpiry] = useState<ExpiryValue>(expiresToExpiryValue(data.expires));
 
   const [isSaving, setIsSaving] = useState(false);
   const [draft, setDraft] = useState<MediaDraft>(() => ({
@@ -121,7 +119,7 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
       orientation: draft.orientation,
       enableStat: draft.enableStat,
       expires,
-      mediaNoExpiryDate: expires === undefined ? 1 : 0,
+      mediaNoExpiryDate: expiry?.type === 'never' ? 1 : 0,
       folderId: draft.folderId,
     });
 

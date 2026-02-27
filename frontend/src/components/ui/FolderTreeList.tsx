@@ -37,6 +37,7 @@ import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
 import { useUserContext } from '@/context/UserContext';
+import { useDebounce } from '@/hooks/useDebounce';
 import {
   fetchContextButtons,
   fetchFolderTree,
@@ -46,7 +47,7 @@ import {
 import type { Folder } from '@/types/folder';
 
 export type FolderAction = 'create' | 'rename' | 'move' | 'share' | 'delete';
-type FolderTab = 'Home' | 'My Files';
+type FolderTab = 'Home' | 'Shared with me';
 
 interface FolderTreeListProps {
   selectedId?: number | null;
@@ -55,6 +56,8 @@ interface FolderTreeListProps {
   searchQuery: string;
   customSlot?: ReactNode;
   refreshTrigger?: number;
+  onRootResolved?: (rootId: number) => void;
+  onActiveTabChange?: (tab: 'Home' | 'Shared with me') => void;
 }
 
 const flattenTree = (nodes: Folder[]): Folder[] => {
@@ -67,37 +70,19 @@ const flattenTree = (nodes: Folder[]): Folder[] => {
   }
   return result;
 };
-
-const groupFoldersByOwner = (folders: Folder[], currentUserId: number = -1) => {
-  const groups: Record<number, { ownerName: string; folders: Folder[] }> = {};
-
-  for (const f of folders) {
-    if (f.type === 'disabled') continue;
-
-    const ownerId = f.ownerId ?? 0;
-    const ownerName = f.ownerName;
-
-    if (!groups[ownerId]) {
-      groups[ownerId] = { ownerName, folders: [] };
+const findSubtree = (nodes: Folder[], targetId: number): Folder | null => {
+  for (const node of nodes) {
+    if (node.id === targetId) {
+      return node;
     }
-    groups[ownerId].folders.push(f);
-  }
-
-  return Object.entries(groups)
-    .map(([idStr, group]) => ({
-      ownerId: Number(idStr),
-      ...group,
-      folders: group.folders.sort((a, b) => a.text.localeCompare(b.text)),
-    }))
-    .sort((a, b) => {
-      // Put current user on top
-      if (a.ownerId === currentUserId) {
-        return -1;
-      } else if (b.ownerId === currentUserId) {
-        return 1;
+    if (node.children && node.children.length > 0) {
+      const found = findSubtree(node.children, targetId);
+      if (found !== null) {
+        return found;
       }
-      return a.ownerName.localeCompare(b.ownerName);
-    });
+    }
+  }
+  return null;
 };
 
 const buildVisibleTree = (
@@ -127,17 +112,27 @@ export default function FolderTreeList({
   searchQuery,
   customSlot,
   refreshTrigger = 0,
+  onRootResolved,
+  onActiveTabChange,
 }: FolderTreeListProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
 
-  const currentUserId = user?.userId ?? -1;
+  const homeFolderId = user?.homeFolderId ?? 1;
 
   const [activeTab, setActiveTab] = useState<FolderTab>('Home');
   const [treeData, setTreeData] = useState<Folder[]>([]);
   const [searchResults, setSearchResults] = useState<Folder[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set([1]));
+  const [expandedIds, setExpandedIds] = useState<Set<number>>(
+    new Set([1, homeFolderId].filter((id): id is number => id != null)),
+  );
+
+  const debouncedQuery = useDebounce(searchQuery, 300);
+
+  const rootFolder = treeData.find((folder) => folder.isRoot === 1);
+  const showHomeTab =
+    rootFolder !== undefined && homeFolderId != null && homeFolderId !== rootFolder.id;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -146,8 +141,8 @@ export default function FolderTreeList({
       setIsLoading(true);
 
       try {
-        if (searchQuery.trim()) {
-          const results = await searchFolders(searchQuery, controller.signal);
+        if (debouncedQuery.trim()) {
+          const results = await searchFolders(debouncedQuery, controller.signal);
           setSearchResults(results);
         } else {
           const tree = await fetchFolderTree(controller.signal);
@@ -166,44 +161,124 @@ export default function FolderTreeList({
 
     loadTree();
     return () => controller.abort();
-  }, [searchQuery, activeTab, refreshTrigger]);
+  }, [debouncedQuery, refreshTrigger]);
+
+  // Sync home folder into expandedIds once user context resolves
+  useEffect(() => {
+    if (user?.homeFolderId != null) {
+      setExpandedIds((prev) => new Set([...prev, user.homeFolderId as number]));
+    }
+  }, [user?.homeFolderId]);
+
+  useEffect(() => {
+    if (rootFolder?.id != null) {
+      onRootResolved?.(rootFolder.id);
+    }
+  }, [rootFolder?.id, onRootResolved]);
+
+  // Default to home tab if exists
+  const activeTabRef = useRef(activeTab);
+  activeTabRef.current = activeTab;
+
+  useEffect(() => {
+    if (treeData.length === 0) {
+      return;
+    }
+
+    if (!showHomeTab && activeTabRef.current === 'Home') {
+      setActiveTab('Shared with me');
+      onActiveTabChange?.('Shared with me');
+    }
+  }, [showHomeTab, treeData.length, onActiveTabChange]);
 
   const toggleExpand = (id: number, e?: React.MouseEvent) => {
     e?.stopPropagation();
     setExpandedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };
 
-  const rawData = searchQuery.trim() ? searchResults : treeData;
+  const isSearching = searchQuery.trim().length > 0;
+  const homeRoot = homeFolderId != null ? findSubtree(treeData, homeFolderId) : null;
+  const homeIds =
+    isSearching && activeTab === 'Home' && homeRoot != null
+      ? new Set(flattenTree([homeRoot]).map((f) => f.id))
+      : new Set<number>();
+  const filteredData = isSearching
+    ? activeTab === 'Home'
+      ? searchResults.filter((folder) => homeIds.has(folder.id))
+      : searchResults
+    : treeData;
+  const hasData = filteredData.length > 0;
+  const isInitialLoad = isLoading && !hasData;
+  const isRefreshing = isLoading && hasData;
+
+  const availableTabs = (['Home', 'Shared with me'] as FolderTab[]).filter((tab) => {
+    if (tab === 'Home') {
+      return showHomeTab;
+    }
+    return true;
+  });
+
   let content: ReactNode;
 
-  if (activeTab === 'Home' && !searchQuery.trim()) {
-    // Home view
-    const flatFolders = flattenTree(rawData);
-    const groupedFolders = groupFoldersByOwner(flatFolders, currentUserId);
-
+  if (isSearching) {
+    // Search results
     content = (
-      <div className="flex flex-col gap-2">
-        {groupedFolders.map((group) => (
-          <UserGroupSection
-            key={group.ownerId}
-            group={group}
-            isCurrentUser={group.ownerId === currentUserId}
-            defaultOpen={group.ownerId === currentUserId}
-            selectedId={selectedId}
+      <div className="flex flex-col space-y-0.5 select-none">
+        {filteredData.map((folder) => (
+          <FolderItem
+            key={folder.id}
+            folder={{ ...folder, depth: 0, hasChildren: false, isExpanded: false }}
+            isSelected={selectedId === folder.id}
             onSelect={onSelect}
             onAction={onAction}
+            onToggle={() => {}}
+          />
+        ))}
+      </div>
+    );
+  } else if (activeTab === 'Home' && homeRoot) {
+    const homeRootExpanded = expandedIds.has(homeRoot.id);
+    const visibleList = homeRootExpanded
+      ? buildVisibleTree(homeRoot.children ?? [], expandedIds)
+      : [];
+
+    content = (
+      <div className="flex flex-col space-y-0.5 select-none">
+        <FolderItem
+          key={homeRoot.id}
+          folder={{
+            ...homeRoot,
+            depth: 0,
+            hasChildren: (homeRoot.children?.length ?? 0) > 0,
+            isExpanded: homeRootExpanded,
+          }}
+          isSelected={selectedId === homeRoot.id}
+          onSelect={onSelect}
+          onAction={onAction}
+          onToggle={(e) => toggleExpand(homeRoot.id, e)}
+        />
+        {visibleList.map((folder) => (
+          <FolderItem
+            key={folder.id}
+            folder={{ ...folder, depth: folder.depth + 1 }}
+            isSelected={selectedId === folder.id}
+            onSelect={onSelect}
+            onAction={onAction}
+            onToggle={(e) => toggleExpand(folder.id, e)}
           />
         ))}
       </div>
     );
   } else {
-    // My Files view
-    const visibleList = buildVisibleTree(rawData, expandedIds);
+    const visibleList = buildVisibleTree(filteredData, expandedIds);
 
     content = (
       <div className="flex flex-col space-y-0.5 select-none">
@@ -221,33 +296,34 @@ export default function FolderTreeList({
     );
   }
 
-  const hasData = rawData.length > 0;
-  const isInitialLoad = isLoading && !hasData;
-  const isRefreshing = isLoading && hasData;
-
   return (
-    <div className="flex flex-col h-full overflow-hidden gap-2">
-      <div className="flex gap-x-1 px-2 pt-2 border-b border-gray-100 bg-white shrink-0">
-        {(['Home', 'My Files'] as FolderTab[]).map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            onClick={() => setActiveTab(tab)}
-            className={`flex items-center gap-2 px-3 py-2 text-sm font-semibold transition-all rounded-t-lg border-b-2 ${
-              activeTab === tab
-                ? 'text-xibo-blue-600 border-xibo-blue-600 font-medium'
-                : 'text-gray-500 border-transparent hover:text-xibo-blue-500'
-            }`}
-          >
-            {tab === 'Home' && <Home size={14} />}
-            {t(tab)}
-          </button>
-        ))}
-      </div>
+    <div className="flex flex-col h-full overflow-hidden gap-2 pt-2">
+      {availableTabs.length > 1 && (
+        <div className="flex gap-x-1 px-2 pt-2 border-b border-gray-100 bg-white shrink-0">
+          {availableTabs.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => {
+                setActiveTab(tab);
+                onActiveTabChange?.(tab);
+              }}
+              className={`flex items-center gap-2 px-3 py-2 text-sm font-semibold transition-all rounded-t-lg border-b-2 ${
+                activeTab === tab
+                  ? 'text-xibo-blue-600 border-xibo-blue-600 font-medium'
+                  : 'text-gray-500 border-transparent hover:text-xibo-blue-500'
+              }`}
+            >
+              {tab === 'Home' && <Home size={14} />}
+              {t(tab)}
+            </button>
+          ))}
+        </div>
+      )}
 
       {customSlot && <div className="flex flex-col gap-2 shrink-0">{customSlot}</div>}
 
-      <div className="flex-1 overflow-auto min-h-0 min-w-0 pb-4">
+      <div className="flex-1 overflow-auto min-h-0 min-w-0 pb-4 relative">
         {/* Init loader */}
         {isInitialLoad && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-gray-400 z-20 bg-white">
@@ -275,89 +351,12 @@ export default function FolderTreeList({
         {/* Overlay loader */}
         {isRefreshing && (
           <div className="absolute inset-0 flex items-center justify-center z-10">
-            {/* Optional: Add a small white pill background for contrast */}
             <div className="bg-white/80 p-2 rounded-full shadow-sm backdrop-blur-sm">
               <Loader2 className="w-6 h-6 animate-spin text-xibo-blue-500" />
             </div>
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function UserGroupSection({
-  group,
-  isCurrentUser,
-  defaultOpen,
-  selectedId,
-  onSelect,
-  onAction,
-}: {
-  group: { ownerId: number; ownerName: string; folders: Folder[] };
-  isCurrentUser: boolean;
-  defaultOpen: boolean;
-  selectedId?: number | null;
-  onSelect: (f: Folder) => void;
-  onAction?: (action: FolderAction, f: Folder) => void;
-}) {
-  const { t } = useTranslation();
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-  const { user } = useUserContext();
-
-  // TODO: temporary name
-  let displayName = group.ownerName || 'User';
-  if (isCurrentUser) {
-    if (user?.firstName || user?.lastName) {
-      displayName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim();
-    } else if (user?.userName) {
-      displayName = user.userName;
-    } else {
-      displayName = t('Me');
-    }
-  }
-
-  return (
-    <div className="flex flex-col">
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className={twMerge(
-          'flex px-3 py-2 gap-3 items-center cursor-pointer',
-          isCurrentUser ? 'bg-gray-100' : '',
-        )}
-      >
-        <div className="text-blue-800 bg-blue-100 rounded-full text-xs font-semibold flex justify-center items-center min-w-[26px] min-h-[26px] flex-1 leading-4.5">
-          {displayName[0]}
-        </div>
-
-        <span className="truncate w-full text-gray-800 text-sm font-semibold leading-[21px] flex items-start">
-          {displayName}
-        </span>
-
-        <ChevronDown
-          size={16}
-          className={`text-gray-800 transition-transform duration-200 ${
-            isOpen ? 'rotate-180' : 'rotate-0'
-          }`}
-        />
-      </button>
-
-      {isOpen && (
-        <div className="flex flex-col space-y-0.5 pl-2 animate-in slide-in-from-top-1 duration-200">
-          {group.folders.map((folder) => (
-            <FolderItem
-              key={folder.id}
-              folder={{ ...folder, depth: 0, hasChildren: false, isExpanded: false }}
-              isSelected={selectedId === folder.id}
-              onSelect={onSelect}
-              onAction={onAction}
-              onToggle={() => {}}
-              forceIcon={FolderIcon}
-            />
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -378,6 +377,8 @@ function FolderItem({
   forceIcon?: LucideIcon;
 }) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
+  const homeFolderId = user?.homeFolderId;
   const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
   const [permissions, setPermissions] = useState<FolderPermissions | null>(null);
   const [loadingPerms, setLoadingPerms] = useState(false);
@@ -413,13 +414,19 @@ function FolderItem({
         setMenuPosition(null);
       }
     };
-    if (menuPosition) window.addEventListener('mousedown', handleClick);
+    if (menuPosition) {
+      window.addEventListener('mousedown', handleClick);
+    }
     return () => window.removeEventListener('mousedown', handleClick);
   }, [menuPosition]);
 
   let Icon = forceIcon;
   if (!Icon) {
-    Icon = folder.hasChildren && folder.isExpanded ? FolderOpen : FolderIcon;
+    if (folder.id === homeFolderId) {
+      Icon = Home;
+    } else {
+      Icon = folder.hasChildren && folder.isExpanded ? FolderOpen : FolderIcon;
+    }
   }
 
   return (
@@ -441,9 +448,11 @@ function FolderItem({
         <div className="flex-1 flex items-center py-2 px-3 gap-2 overflow-hidden">
           <Icon
             size={16}
-            className={`shrink-0 transition-colors ${
-              isSelected ? 'text-xibo-blue-500 fill-xibo-blue-200' : 'text-gray-800'
-            }`}
+            className={twMerge(
+              'shrink-0 transition-colors',
+              isSelected ? 'text-xibo-blue-500' : 'text-gray-800',
+              isSelected && folder.id !== homeFolderId ? 'fill-xibo-blue-200' : '',
+            )}
           />
           <span className="truncate text-sm font-semibold">{folder.text}</span>
         </div>
@@ -464,7 +473,7 @@ function FolderItem({
         </div>
       </div>
 
-      {/* Overflow menu*/}
+      {/* Context menu */}
       {menuPosition && (
         <div
           ref={menuRef}

@@ -21,14 +21,25 @@
 
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
-import { DayPicker } from 'react-day-picker';
+import { DayPicker, getDefaultClassNames } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
-import { twMerge } from 'tailwind-merge';
 
 import Button from './Button';
 
-interface DatePickerProps {
-  onApply: (range: { from: Date; to: Date }) => void;
+export type DatePickerMode = 'single' | 'range';
+
+export interface DatePickerProps {
+  mode: DatePickerMode;
+  value?: {
+    date?: Date;
+    from?: Date;
+    to?: Date;
+  };
+
+  onApply: (
+    value: { type: 'single'; date: Date } | { type: 'range'; from: Date; to: Date },
+  ) => void;
+
   onCancel: () => void;
 }
 
@@ -44,8 +55,14 @@ function to24Hour(hour: string, period: 'AM' | 'PM') {
   return h === 12 ? 12 : h + 12;
 }
 
-export default function DatePicker({ onApply, onCancel }: DatePickerProps) {
-  const [range, setRange] = useState<DateRange | undefined>();
+export default function DatePicker({ onApply, onCancel, value, mode }: DatePickerProps) {
+  const defaultClassNames = getDefaultClassNames();
+  const [single, setSingle] = useState<Date | undefined>(value?.date);
+  const [range, setRange] = useState<DateRange | undefined>({
+    from: value?.from,
+    to: value?.to,
+  });
+
   const [hour, setHour] = useState('12');
   const [minute, setMinute] = useState('00');
   const [period, setPeriod] = useState<'AM' | 'PM'>('PM');
@@ -53,97 +70,125 @@ export default function DatePicker({ onApply, onCancel }: DatePickerProps) {
   const timeClass =
     'h-[32px] font-semibold w-[70px] rounded-lg border border-gray-200 px-3 text-xs bg-white';
 
+  // helper to apply time to date
+  const applyTime = (date: Date) => {
+    const h24 = to24Hour(hour, period);
+    const d = new Date(date);
+    d.setHours(h24);
+    d.setMinutes(Number(minute));
+    d.setSeconds(0);
+    d.setMilliseconds(0);
+    return d;
+  };
+
   const handleApply = () => {
-    if (!range?.from || !range?.to) return;
+    if (mode === 'single' && single) {
+      onApply({
+        type: 'single',
+        date: applyTime(single),
+      });
+    }
 
-    const hours24 = to24Hour(hour, period);
-    const minutes = Number(minute);
+    if (mode === 'range' && range?.from && range?.to) {
+      onApply({
+        type: 'range',
+        from: new Date(range.from),
+        to: new Date(range.to),
+      });
+    }
+  };
 
-    const from = new Date(range.from);
-    const to = new Date(range.to);
-
-    from.setHours(hours24, minutes, 0, 0);
-    to.setHours(hours24, minutes, 0, 0);
-
-    onApply({ from, to });
+  const commonClassNames = {
+    months: 'flex flex-col items-center',
+    caption: 'flex items-center justify-center mb-2 px-1',
+    caption_label: 'font-medium text-gray-800 text-sm',
+    month_caption: 'w-full flex justify-center h-[36px] items-center text-[20px] font-semibold',
+    nav: 'flex items-center justify-between w-full absolute top-0',
+    nav_button:
+      'h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-700',
   };
 
   return (
     <div className="w-[380px]">
       <div className="p-3 bg-white">
-        <DayPicker
-          mode="range"
-          selected={range}
-          onSelect={setRange}
-          numberOfMonths={1}
-          className="text-sm flex flex-col datepicker"
-          classNames={{
-            months: 'flex flex-col items-center',
-            caption: 'flex items-center justify-center mb-2 px-1',
-            caption_label: 'font-medium text-gray-800 text-sm',
-            month_caption:
-              'w-ful flex justify-center h-[36px] items-center text-[20px] font-semibold',
-            nav: 'flex items-center justify-between w-full absolute top-0',
-            chevron: 'fill-gray-400',
-            nav_button:
-              'h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-700',
-            selected: `bg-blue-600`,
-          }}
-        />
+        {mode === 'single' ? (
+          <DayPicker
+            mode="single"
+            selected={single}
+            onSelect={setSingle}
+            numberOfMonths={1}
+            disabled={{ before: new Date() }}
+            className="text-sm flex flex-col datepicker"
+            classNames={commonClassNames}
+          />
+        ) : (
+          <DayPicker
+            mode="range"
+            selected={range}
+            onSelect={setRange}
+            numberOfMonths={1}
+            disabled={{ after: new Date() }}
+            className="datepicker"
+            classNames={{
+              ...commonClassNames,
+              day_button: `${defaultClassNames.day_button} text-sm`,
+              selected: 'text-sm',
+            }}
+          />
+        )}
       </div>
-      <div className="px-3 pb-3 flex justify-center">
-        <div className="flex w- items-center gap-x-2">
-          {/* Hour */}
-          <select
-            value={hour}
-            onChange={(e) => setHour(e.target.value)}
-            className={twMerge(timeClass)}
-          >
-            {HOURS.map((h) => (
-              <option key={h} value={h}>
-                {h}
-              </option>
-            ))}
-          </select>
 
-          <span className="text-gray-500 font-semibold">:</span>
-
-          {/* Minute */}
-          <select
-            value={minute}
-            onChange={(e) => setMinute(e.target.value)}
-            className={twMerge(timeClass)}
-          >
-            {MINUTES.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
-
-          {/* AM / PM */}
-          <select
-            value={period}
-            onChange={(e) => setPeriod(e.target.value as 'AM' | 'PM')}
-            className={twMerge(timeClass)}
-          >
-            {PERIODS.map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
+      {/* Time picker */}
+      {mode === 'single' && (
+        <div className="px-3 pb-3 flex justify-center">
+          <div className="flex items-center gap-x-2">
+            <select value={hour} onChange={(e) => setHour(e.target.value)} className={timeClass}>
+              {HOURS.map((h) => (
+                <option key={h}>{h}</option>
+              ))}
+            </select>
+            <span className="text-gray-500 font-semibold">:</span>
+            <select
+              value={minute}
+              onChange={(e) => setMinute(e.target.value)}
+              className={timeClass}
+            >
+              {MINUTES.map((m) => (
+                <option key={m}>{m}</option>
+              ))}
+            </select>
+            <select
+              value={period}
+              onChange={(e) => setPeriod(e.target.value as 'AM' | 'PM')}
+              className={timeClass}
+            >
+              {PERIODS.map((p) => (
+                <option key={p}>{p}</option>
+              ))}
+            </select>
+          </div>
         </div>
-      </div>
-      <div className="flex justify-between items-center px-4 border-t border-gray-200 pt-4">
-        <p className="mt-2 text-xs text-gray-600">
-          {range && range.from?.toLocaleDateString()} – {range && range.to?.toLocaleDateString()}
+      )}
+      {/* Footer */}
+      <div className="flex justify-between items-center p-4 border-t border-gray-200">
+        <p className="text-xs text-gray-600">
+          {mode === 'single' && single && single.toLocaleDateString()}
+
+          {mode === 'range' && range?.from && (
+            <>
+              {range.from.toLocaleDateString()}
+              {range.to ? ` – ${range.to.toLocaleDateString()}` : ''}
+            </>
+          )}
         </p>
-        <div className="gap-x-2.5 flex">
+        <div className="flex gap-x-2.5">
           <Button variant="secondary" onClick={onCancel}>
             Cancel
           </Button>
-          <Button onClick={handleApply} disabled={!range?.from || !range?.to}>
+          <Button
+            onClick={handleApply}
+            disabled={mode === 'single' ? !single : !range?.from || !range?.to}
+          >
             Apply
           </Button>
         </div>

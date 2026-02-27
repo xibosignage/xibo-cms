@@ -35,7 +35,7 @@ interface MediaPreviewerProps {
   mediaType?: string | null;
   fileName?: string | undefined;
   onMove?: () => void;
-  onShare: (id: number) => void;
+  onShare?: (id: number) => void;
   onDownload: () => void;
   onClose: () => void;
   mediaData?: Media | null;
@@ -137,20 +137,24 @@ export default function MediaPreviewer({
           <h3 className="font-semibold text-sm truncate">{fileName}</h3>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={onMove}
-            className="flex justify-center items-center cursor-pointer rounded-lg hover:bg-white/10"
-            title={t('Move')}
-          >
-            <FolderInput className="p-1" />
-          </button>
-          <button
-            onClick={() => onShare(mediaId as number)}
-            className="flex justify-center items-center cursor-pointer rounded-lg hover:bg-white/10"
-            title={t('Share')}
-          >
-            <UserPlus2 className="p-1" />
-          </button>
+          {onMove && (
+            <button
+              onClick={onMove}
+              className="flex justify-center items-center cursor-pointer rounded-lg hover:bg-white/10"
+              title={t('Move')}
+            >
+              <FolderInput className="p-1" />
+            </button>
+          )}
+          {onShare && (
+            <button
+              onClick={() => onShare(mediaId as number)}
+              className="flex justify-center items-center cursor-pointer rounded-lg hover:bg-white/10"
+              title={t('Share')}
+            >
+              <UserPlus2 className="p-1" />
+            </button>
+          )}
           <button
             onClick={onDownload}
             className="flex justify-center items-center cursor-pointer rounded-lg hover:bg-white/10"

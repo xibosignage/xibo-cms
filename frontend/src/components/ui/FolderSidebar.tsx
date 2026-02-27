@@ -19,15 +19,17 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { FolderPlus, Search, X } from 'lucide-react';
-import { useState } from 'react';
+import { FolderPlus, X } from 'lucide-react';
+import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
 import Button from './Button';
+import FolderSearchInput from './FolderSearchInput';
 import FolderTreeList from './FolderTreeList';
 import Checkbox from './forms/Checkbox';
 
+import { useUserContext } from '@/context/UserContext';
 import type { ActionType } from '@/hooks/useFolderActions';
 import type { Folder } from '@/types/folder';
 
@@ -51,19 +53,31 @@ export default function FolderSidebar({
   onAction,
 }: FolderSidebarProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
+  const searchId = useId();
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<'Home' | 'Shared with me'>('Home');
+  const [rootFolderId, setRootFolderId] = useState<number | null>(null);
+
+  const homeFolderId = user?.homeFolderId ?? null;
 
   const handleAction = (action: string, folder: Folder) => {
     onAction(action as ActionType, folder);
   };
 
-  const handleCreateRoot = () => {
-    handleAction('create', { id: 1 } as Folder);
+  const handleCreateFolder = () => {
+    const targetId = activeTab === 'Home' && homeFolderId != null ? homeFolderId : rootFolderId;
+
+    if (targetId == null) {
+      return;
+    }
+
+    handleAction('create', { id: targetId } as Folder);
   };
 
   const handleAllItemsToggle = () => {
     if (selectedFolderId === null) {
-      onSelect({ id: 1, text: t('Root Folder') });
+      onSelect({ id: rootFolderId ?? 1, text: t('Root Folder') });
     } else {
       onSelect({ id: null, text: t('All Items') });
     }
@@ -73,12 +87,10 @@ export default function FolderSidebar({
     <>
       <div
         className={`bg-white border-r border-gray-200 flex flex-col h-full gap-5 transition-[max-width,opacity] duration-300 ease-in-out overflow-hidden whitespace-nowrap w-fit ${
-          isOpen
-            ? 'max-w-[248px] sm:max-w-[340px] xl:max-w-[600px] opacity-100'
-            : 'max-w-0 opacity-0 border-none'
+          isOpen ? 'max-w-62 sm:max-w-85 xl:max-w-150 opacity-100' : 'max-w-0 opacity-0 border-none'
         } ${className}`}
       >
-        <div className="flex flex-col h-full min-w-[248px] sm:min-w-[300px]">
+        <div className="flex flex-col h-full min-w-62 sm:min-w-75">
           {/* Header */}
           <div className="flex items-center justify-between px-3 py-2 relative bg-gray-100 shrink-0">
             <div className="text-sm uppercase font-semibold text-gray-500 truncate">
@@ -101,27 +113,22 @@ export default function FolderSidebar({
               searchQuery={searchQuery}
               refreshTrigger={refreshTrigger}
               onAction={handleAction}
+              onRootResolved={setRootFolderId}
+              onActiveTabChange={setActiveTab}
               customSlot={
                 <>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                      <Search className="w-4 h-4 text-gray-500 group-focus-within:text-xibo-blue-500 transition-colors" />
-                    </div>
-                    <input
-                      name="folderTreeSearch"
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder={t('Search Folder')}
-                      className="block py-3 pl-9 pr-4 w-full text-gray-500 rounded-lg border-gray-200 bg-white text-sm leading-[21px] focus:ring-xibo-blue-500 focus:border-x-xibo-blue-500"
-                    />
-                  </div>
+                  <FolderSearchInput
+                    id={searchId}
+                    value={searchQuery}
+                    onChange={setSearchQuery}
+                    placeholder={t('Search Folder')}
+                  />
 
                   <Button
                     variant="tertiary"
                     className="flex items-center justify-center w-full"
                     leftIcon={FolderPlus}
-                    onClick={handleCreateRoot}
+                    onClick={handleCreateFolder}
                   >
                     {t('New Folder')}
                   </Button>

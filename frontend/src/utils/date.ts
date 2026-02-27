@@ -19,7 +19,10 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { ExpiryValue } from '@/components/ui/forms/ExpiryDateSelect';
+export type ExpiryValue =
+  | { type: 'never' }
+  | { type: 'preset'; value: string }
+  | { type: 'datePicked'; date: Date };
 
 export function formatDateTime(date: Date) {
   return new Intl.DateTimeFormat('sv-SE', {
@@ -39,16 +42,13 @@ function daysFromNow(days: number) {
   return new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 }
 
-export function expiryToDateTime(expiry?: ExpiryValue): string | undefined {
-  if (!expiry) return undefined;
+export function expiryToDateTime(expiry: ExpiryValue): string | undefined {
+  if (expiry.type === 'never') return undefined;
 
   let date: Date;
 
   if (expiry.type === 'preset') {
     switch (expiry.value) {
-      case 'Never Expire':
-        return undefined;
-
       case 'End of Today': {
         date = new Date();
         date.setHours(23, 59, 59, 0);
@@ -71,24 +71,26 @@ export function expiryToDateTime(expiry?: ExpiryValue): string | undefined {
         return undefined;
     }
   } else {
-    date = expiry.to;
+    date = expiry.date;
   }
+
   return formatDateTime(date);
 }
 
-export function expiresToExpiryValue(expires?: string | number): ExpiryValue | undefined {
-  if (!expires || expires === '0') return undefined;
+export function expiresToExpiryValue(expires?: string): ExpiryValue {
+  if (!expires) return { type: 'never' };
 
-  const timestamp = typeof expires === 'string' ? Number(expires) : expires;
+  const iso = expires.replace(' ', 'T');
 
-  if (Number.isNaN(timestamp)) return undefined;
+  const date = new Date(iso);
 
-  const date = new Date(timestamp * 1000);
+  if (isNaN(date.getTime())) {
+    return { type: 'never' };
+  }
 
   return {
-    type: 'range',
-    from: date,
-    to: date,
+    type: 'datePicked',
+    date,
   };
 }
 

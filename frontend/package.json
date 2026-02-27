@@ -1,7 +1,7 @@
 {
-  "name": "frontend",
+  "name": "xibo-cms-frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "5.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -68,6 +68,7 @@
     "jsdom": "^28.0.0",
     "postcss": "^8.5.6",
     "prettier": "^3.6.2",
+    "rollup-plugin-visualizer": "^6.0.5",
     "tailwindcss": "^4.1.17",
     "tsx": "^4.20.5",
     "typescript": "~5.8.3",
@@ -78,5 +79,11 @@
   },
   "engines": {
     "node": ">=22.0.0"
+  },
+  "overrides": {
+    "minimatch": "^10.2.1",
+    "@eslint/eslintrc": {
+      "ajv": "^6.12.6"
+    }
   }
 }

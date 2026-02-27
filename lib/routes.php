@@ -491,6 +491,22 @@ $app->group('', function (RouteCollectorProxy $group) {
         ->setName('user.homeFolder');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['users.modify']));
 
+// Dashboards
+$app->get('/icondashboard', ['\Xibo\Controller\IconDashboard', 'displayPage'])
+    ->setName('icondashboard.view');
+
+$app->get('/statusdashboard', ['\Xibo\Controller\StatusDashboard', 'displayPage'])
+    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.status']))
+    ->setName('statusdashboard.view');
+
+$app->get('/mediamanager', ['\Xibo\Controller\MediaManager', 'displayPage'])
+    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.media.manager']))
+    ->setName('mediamanager.view');
+
+$app->get('/playlistdashboard', ['\Xibo\Controller\PlaylistDashboard', 'displayPage'])
+    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.playlist']))
+    ->setName('playlistdashboard.view');
+
 /**
  * User Group
  */

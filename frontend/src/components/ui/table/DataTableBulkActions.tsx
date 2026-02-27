@@ -37,28 +37,31 @@ export function DataTableBulkActions<TData>({
           className="cursor-pointer rounded-full px-2 py-1 flex gap-2 items-center text-gray-600 hover:bg-gray-200 focus:bg-gray-300"
           title={t('Clear selection')}
         >
-          <X className="size-[21px]" />
+          <X className="size-5.25" />
           <span className="text-sm leading-normal whitespace-nowrap">
             {selectedCount} {t('Selected')}
           </span>
         </button>
       </div>
 
-      {actions.map((action, idx) => (
-        <button
-          key={idx}
-          onClick={() => action.onClick(selectedRows)}
-          className={twMerge(
-            'cursor-pointer flex justify-center size-6 items-center text-sm font-medium rounded-lg border border-transparent focus:outline-hidden disabled:opacity-50 disabled:pointer-events-none',
-            action.variant === 'danger'
-              ? 'text-red-600 hover:bg-red-50 focus:bg-red-100'
-              : 'text-gray-600 hover:bg-gray-200 focus:bg-gray-300',
-          )}
-          title={action.label}
-        >
-          {action.icon && <action.icon className="w-4 h-4"></action.icon>}
-        </button>
-      ))}
+      {actions.map(
+        (action, idx) =>
+          action.onClick && (
+            <button
+              key={idx}
+              onClick={() => action.onClick(selectedRows)}
+              className={twMerge(
+                'cursor-pointer flex justify-center size-6 items-center text-sm font-medium rounded-lg border border-transparent focus:outline-hidden disabled:opacity-50 disabled:pointer-events-none',
+                action.variant === 'danger'
+                  ? 'text-red-600 hover:bg-red-50 focus:bg-red-100'
+                  : 'text-gray-600 hover:bg-gray-200 focus:bg-gray-300',
+              )}
+              title={action.label}
+            >
+              {action.icon && <action.icon className="w-4 h-4"></action.icon>}
+            </button>
+          ),
+      )}
     </div>
   );
 }

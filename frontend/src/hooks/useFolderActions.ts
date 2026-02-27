@@ -142,8 +142,8 @@ export function useFolderActions({ onSuccess }: UseFolderActionsProps = {}) {
         notify.info(t('Folder "{{name}}" deleted', { name: activeFolder.text }));
         closeAction();
 
-        // Select Root (ID:1)
-        onSuccess?.({ id: 1, text: t('Root Folder') });
+        // Select home folder
+        onSuccess?.({ id: -1, text: t('Root Folder') });
 
         onSuccess?.();
       } else {

@@ -32,8 +32,8 @@ import { useTranslation } from 'react-i18next';
 
 import ShareModal from '../../../components/ui/modals/ShareModal';
 
-import type { ModalType } from './MediaConfig';
-import { getMediaItemActions } from './MediaConfig';
+import type { MediaActionsProps, ModalType } from './MediaConfig';
+import { filterMediaByPermission, getMediaItemActions } from './MediaConfig';
 import {
   getMediaColumns,
   getBulkActions,
@@ -64,18 +64,23 @@ import MoveModal from '@/components/ui/modals/MoveModal';
 import { DataGrid } from '@/components/ui/table/DataGrid';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useUploadContext } from '@/context/UploadContext';
+import { useUserContext } from '@/context/UserContext';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { useOwner } from '@/hooks/useOwner';
+import { usePermissions } from '@/hooks/usePermissions';
 import EditMediaModal from '@/pages/Library/Media/components/EditMediaModal';
 import { useMediaFilterOptions } from '@/pages/Library/Media/hooks/useMediaFilterOptions';
-import { fetchContextButtons, selectFolder } from '@/services/folderApi';
+import { selectFolder } from '@/services/folderApi';
 import { cloneMedia, deleteMedia, downloadMedia, downloadMediaAsZip } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
 
 export default function Media() {
   const { t } = useTranslation();
+  const { user } = useUserContext();
   const queryClient = useQueryClient();
+  const canViewFolders = usePermissions()?.canViewFolders;
+  const homeFolderId = user?.homeFolderId ?? 1;
 
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -94,10 +99,12 @@ export default function Media() {
   const [showInfoPanel, setShowInfoPanel] = useState(false);
 
   const [isAddModalOpen, setAddModalOpen] = useState(false);
-  const [selectedFolderId, setSelectedFolderId] = useState<number | null>(1);
-  const [selectedFolderName, setSelectedFolderName] = useState(t('Root Folder'));
-  const [canAddToFolder, setCanAddToFolder] = useState(false);
 
+  const [selectedFolderId, setSelectedFolderId] = useState<number | null>(() => {
+    return canViewFolders ? homeFolderId : null;
+  });
+
+  const [selectedFolderName, setSelectedFolderName] = useState(t('Root Folder'));
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
 
@@ -107,9 +114,7 @@ export default function Media() {
   const [isCloning, setIsCloning] = useState(false);
 
   const [itemsToMove, setItemsToMove] = useState<Media[]>([]);
-
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
-
   const [selectedMediaId, setSelectedMediaId] = useState<number | null>(null);
 
   const debouncedFilter = useDebounce(globalFilter, 500);
@@ -120,6 +125,10 @@ export default function Media() {
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
   const isModalOpen = (name: ModalType) => activeModal === name;
+
+  const targetUploadFolderId = canViewFolders ? (selectedFolderId ?? homeFolderId) : homeFolderId;
+
+  const canAddToFolder = targetUploadFolderId !== null;
 
   // Data fetching
   const {
@@ -132,7 +141,7 @@ export default function Media() {
     sorting,
     filter: debouncedFilter,
     advancedFilters: filterInputs,
-    folderId: selectedFolderId,
+    folderId: canViewFolders ? selectedFolderId : null,
   });
 
   // Computed values
@@ -146,6 +155,11 @@ export default function Media() {
     onSuccess: (targetFolder) => {
       setFolderRefreshTrigger((prev) => prev + 1);
 
+      // Select home folder
+      if (targetFolder?.id === -1) {
+        targetFolder.id = homeFolderId;
+      }
+
       if (targetFolder) {
         handleFolderChange({ id: targetFolder.id, text: targetFolder.text });
       } else {
@@ -157,33 +171,6 @@ export default function Media() {
   useEffect(() => {
     setMediaList(data ?? []);
   }, [data]);
-
-  // Check selected folder permission to add media
-  useEffect(() => {
-    if (selectedFolderId === null) {
-      setCanAddToFolder(false);
-      return;
-    }
-
-    let active = true;
-
-    fetchContextButtons(selectedFolderId)
-      .then((perms) => {
-        if (active) {
-          setCanAddToFolder(perms.create || false);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to fetch folder permissions', err);
-        if (active) {
-          setCanAddToFolder(false);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [selectedFolderId]);
 
   // Update the selected cache when data loads or selection changes
   useEffect(() => {
@@ -209,10 +196,10 @@ export default function Media() {
     });
   }, [mediaList, rowSelection]);
 
-  const uploadStateRef = useRef({ selectedFolderId, canCreate: canAddToFolder });
+  const uploadStateRef = useRef({ targetId: targetUploadFolderId, canCreate: canAddToFolder });
   useEffect(() => {
-    uploadStateRef.current = { selectedFolderId, canCreate: canAddToFolder };
-  }, [selectedFolderId, canAddToFolder]);
+    uploadStateRef.current = { targetId: targetUploadFolderId, canCreate: canAddToFolder };
+  }, [targetUploadFolderId, canAddToFolder]);
 
   const selectedMedia = mediaList.find((m) => m.mediaId === selectedMediaId) ?? null;
   const existingNames = mediaList.map((m) => m.name);
@@ -237,13 +224,13 @@ export default function Media() {
 
   // Handles dropping files anywhere on the screen
   const onGlobalDrop = (acceptedFiles: File[]) => {
-    const { selectedFolderId: currentId, canCreate: hasPermission } = uploadStateRef.current;
+    const { targetId, canCreate } = uploadStateRef.current;
 
-    if (acceptedFiles.length > 0 && currentId != null && hasPermission) {
+    if (acceptedFiles.length > 0 && canCreate) {
       setAddModalOpen(true);
-      addFiles(acceptedFiles, currentId);
+      addFiles(acceptedFiles, targetId);
       notify.success(t('Files added to queue'));
-    } else if (currentId != null && !hasPermission) {
+    } else if (!canCreate) {
       notify.error(t('You do not have permission to upload to this folder'));
     }
   };
@@ -260,11 +247,11 @@ export default function Media() {
   });
 
   const handleManualAddFiles = (files: File[]) => {
-    if (!selectedFolderId || !canAddToFolder) {
+    if (!canAddToFolder) {
       return;
     }
 
-    addFiles(files, selectedFolderId);
+    addFiles(files, targetUploadFolderId);
   };
 
   const handleDelete = (id: number) => {
@@ -404,9 +391,6 @@ export default function Media() {
         handleRefresh();
         closeModal();
       } else {
-        // Some failed
-        console.error('Failed to move some items:', failures);
-
         if (failures.length === itemsToMove.length) {
           notify.error(t('Failed to move items.'));
         } else {
@@ -438,10 +422,12 @@ export default function Media() {
     onDelete: handleDelete,
     onDownload: handleDownload,
     openEditModal,
-    openMoveModal: (media) => {
-      setItemsToMove([media] as Media[]);
-      openModal('move');
-    },
+    openMoveModal: canViewFolders
+      ? (media) => {
+          setItemsToMove([media] as Media[]);
+          openModal('move');
+        }
+      : undefined,
     openShareModal: (mediaId) => {
       setShareEntityIds(mediaId);
       openModal('share');
@@ -456,39 +442,67 @@ export default function Media() {
   const getAllSelectedItems = (): Media[] => {
     return Object.keys(rowSelection)
       .map((id) => selectionCache[id])
-      .filter((item): item is Media => !!item); // Filter out any missing data
+      .filter((item): item is Media => !!item);
   };
 
   const bulkActions = getBulkActions({
     t,
     onDelete: () => {
-      const allItems = getAllSelectedItems();
+      const permittedItems = filterMediaByPermission(
+        getAllSelectedItems(),
+        (item: Media) => item.userPermissions.delete,
+        t,
+        t('delete'),
+      );
 
-      if (allItems.length === 0) {
+      if (permittedItems.length === 0) {
         return;
       }
 
-      setItemsToDelete(allItems);
+      setItemsToDelete(permittedItems);
       setDeleteError(null);
       openModal('delete');
     },
-    onMove: () => {
-      const allItems = getAllSelectedItems();
+    onMove: canViewFolders
+      ? () => {
+          const allItems = getAllSelectedItems();
+          const permittedItems = allItems.filter((item) => item.userPermissions.edit);
 
-      if (allItems.length === 0) {
-        return;
-      }
+          if (permittedItems.length === 0) {
+            notify.warning(t('You do not have permission to move any of the selected items.'));
+            return;
+          }
 
-      setItemsToMove(allItems);
-      openModal('move');
-    },
+          if (permittedItems.length < allItems.length) {
+            notify.info(
+              t('{{count}} items were skipped due to lack of permissions.', {
+                count: allItems.length - permittedItems.length,
+              }),
+            );
+          }
+
+          setItemsToMove(permittedItems);
+          openModal('move');
+        }
+      : undefined,
     onShare: () => {
       const allItems = getAllSelectedItems();
-      const ids = allItems.map((i) => i.mediaId);
+      const permittedItems = allItems.filter((item) => item.userPermissions.modifyPermissions);
 
-      if (ids.length === 0) {
+      if (permittedItems.length === 0) {
+        notify.warning(t('You do not have permission to share any of the selected items.'));
         return;
       }
+
+      if (permittedItems.length < allItems.length) {
+        notify.info(
+          t('{{count}} items were skipped due to lack of permissions.', {
+            count: allItems.length - permittedItems.length,
+          }),
+        );
+      }
+
+      const ids = permittedItems.map((i) => i.mediaId);
 
       setShareEntityIds(ids);
       openModal('share');
@@ -502,7 +516,7 @@ export default function Media() {
 
       try {
         if (allItems.length === 1) {
-          // If 1 item, normal download
+          // Normal single-file download
           const item = allItems[0];
 
           if (item) {
@@ -510,13 +524,13 @@ export default function Media() {
             notify.success(t('Download started!'));
           }
         } else {
+          // Multiple items ZIP download
           notify.info(
             t('Zipping {{count}} files. You can continue using the app.', {
               count: allItems.length,
             }),
           );
 
-          // Multiple items download
           const itemsToZip = allItems.map((item) => {
             return {
               mediaId: item.mediaId,
@@ -558,7 +572,7 @@ export default function Media() {
     onDownload: handleDownload,
     openEditModal,
     onPreview: handlePreviewClick,
-  });
+  } as MediaActionsProps);
 
   const { filterOptions } = useMediaFilterOptions();
 
@@ -569,46 +583,39 @@ export default function Media() {
     >
       <input {...getGlobalInputProps()} />
 
-      <FolderSidebar
-        isOpen={showFolderSidebar}
-        selectedFolderId={selectedFolderId}
-        onSelect={handleFolderChange}
-        onClose={() => setShowFolderSidebar(false)}
-        onAction={folderActions.openAction}
-        refreshTrigger={folderRefreshTrigger}
-      />
+      {canViewFolders && (
+        <FolderSidebar
+          isOpen={showFolderSidebar}
+          selectedFolderId={selectedFolderId}
+          onSelect={handleFolderChange}
+          onClose={() => setShowFolderSidebar(false)}
+          onAction={folderActions.openAction}
+          refreshTrigger={folderRefreshTrigger}
+        />
+      )}
 
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
         {isGlobalDragActive && !isAddModalOpen && (
           <div className="absolute bottom-14 left-1/2 -translate-x-1/2 z-50 justify-center flex flex-col items-center gap-3 mb-0">
-            {selectedFolderId != null ? (
-              canAddToFolder ? (
-                <>
-                  <span className="inline-flex justify-center items-center size-15.5 shadow-lg rounded-full border-7 animate-bounce border-blue-50 bg-xibo-blue-100 text-blue-800">
-                    <Upload className="shrink-0 size-6.5" />
-                  </span>
-                  <div className="bg-slate-50 border border-gray-200 px-4 py-2 shadow-lg rounded-full flex justify-center items-center gap-2">
-                    <span className="text-sm text-gray-800">{t('Upload files to ')}</span>
-                    <span className="text-xibo-blue-600 font-semibold flex">
-                      <div className="size-6.5 flex justify-center items-center">
-                        <Folder className="size-4" />
-                      </div>
-                      {`"${selectedFolderName}"`}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <div className="bg-slate-50 border border-gray-200 px-4 py-2 shadow-lg rounded-full flex justify-center items-center">
-                  <span className="text-sm font-bold text-red-800">
-                    {t('You cannot upload files to')}
-                    <span className="ml-1">"{selectedFolderName}"</span>
+            {canAddToFolder ? (
+              <>
+                <span className="inline-flex justify-center items-center size-15.5 shadow-lg rounded-full border-7 animate-bounce border-blue-50 bg-xibo-blue-100 text-blue-800">
+                  <Upload className="shrink-0 size-6.5" />
+                </span>
+                <div className="bg-slate-50 border border-gray-200 px-4 py-2 shadow-lg rounded-full flex justify-center items-center gap-2">
+                  <span className="text-sm text-gray-800">{t('Upload files to ')}</span>
+                  <span className="text-xibo-blue-600 font-semibold flex">
+                    <div className="size-6.5 flex justify-center items-center">
+                      <Folder className="size-4" />
+                    </div>
+                    {canViewFolders ? `"${selectedFolderName}"` : t('Home Folder')}
                   </span>
                 </div>
-              )
+              </>
             ) : (
               <div className="bg-slate-50 border border-gray-200 px-4 py-2 shadow-lg rounded-full flex justify-center items-center">
                 <span className="text-sm font-bold text-red-800">
-                  {t('Remove filter "All Items" to upload to a folder!')}
+                  {t('You cannot upload files here')}
                 </span>
               </div>
             )}
@@ -626,14 +633,16 @@ export default function Media() {
 
         <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
           <div className="w-full lg:flex-1 md:min-w-0">
-            <FolderBreadcrumb
-              currentFolderId={selectedFolderId}
-              onNavigate={handleFolderChange}
-              isSidebarOpen={showFolderSidebar}
-              onToggleSidebar={() => setShowFolderSidebar(!showFolderSidebar)}
-              onAction={folderActions.openAction}
-              refreshTrigger={folderRefreshTrigger}
-            />
+            {canViewFolders && (
+              <FolderBreadcrumb
+                currentFolderId={selectedFolderId}
+                onNavigate={handleFolderChange}
+                isSidebarOpen={showFolderSidebar}
+                onToggleSidebar={() => setShowFolderSidebar(!showFolderSidebar)}
+                onAction={folderActions.openAction}
+                refreshTrigger={folderRefreshTrigger}
+              />
+            )}
           </div>
 
           <div className="flex items-center gap-2 w-full xl:w-115 lg:w-75 shrink-0">
@@ -749,6 +758,7 @@ export default function Media() {
           )}
         </div>
       </div>
+
       <MediaInfoPanel
         open={showInfoPanel}
         onClose={() => {
@@ -761,6 +771,7 @@ export default function Media() {
         folderName={selectedFolderName}
         loading={loading}
       />
+
       <Modal
         isOpen={isAddModalOpen}
         onClose={handleCancelUpload}
@@ -769,12 +780,14 @@ export default function Media() {
         size="lg"
       >
         <div className="flex flex-col gap-3 p-8 pt-0">
-          <SelectFolder
-            selectedId={selectedFolderId}
-            onSelect={(folder) => {
-              setSelectedFolderId(folder.id);
-            }}
-          />
+          {canViewFolders && (
+            <SelectFolder
+              selectedId={selectedFolderId}
+              onSelect={(folder) => {
+                setSelectedFolderId(folder.id);
+              }}
+            />
+          )}
 
           <FileUploader
             queue={queue}
@@ -785,13 +798,9 @@ export default function Media() {
             updateFileData={updateFileData}
             isUploading={false}
             maxSize={2 * 1024 * 1024 * 1024}
-            disabled={!canAddToFolder || selectedFolderId === null}
+            disabled={!canAddToFolder}
             onUrlUpload={(url) => {
-              if (!selectedFolderId) {
-                return;
-              }
-
-              addUrlToQueue(url, selectedFolderId);
+              addUrlToQueue(url, targetUploadFolderId);
             }}
           />
         </div>
@@ -806,27 +815,33 @@ export default function Media() {
         onClose={() => {
           setPreviewItem(null);
         }}
-        onShare={(mediaId) => {
-          setShareEntityIds(mediaId);
-          openModal('share');
-        }}
-        onMove={() => {
-          if (!previewItem) {
-            return;
-          }
+        onShare={
+          previewItem?.userPermissions?.modifyPermissions
+            ? (mediaId) => {
+                setShareEntityIds(mediaId);
+                openModal('share');
+              }
+            : undefined
+        }
+        onMove={
+          canViewFolders
+            ? () => {
+                if (!previewItem) {
+                  return;
+                }
 
-          setItemsToMove([previewItem]);
-          openModal('move');
-        }}
+                setItemsToMove([previewItem]);
+                openModal('move');
+              }
+            : undefined
+        }
         folderName={selectedFolderName}
       />
 
       {selectedMedia && (
         <EditMediaModal
           openModal={isModalOpen('edit')}
-          onClose={() => {
-            closeEditModal();
-          }}
+          onClose={closeEditModal}
           onSave={(updatedMedia) => {
             setMediaList((prev) =>
               prev.map((m) => (m.mediaId === updatedMedia.mediaId ? updatedMedia : m)),

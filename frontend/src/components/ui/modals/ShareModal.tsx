@@ -64,6 +64,7 @@ interface ShareModalProps {
   onClose: () => void;
   entityType: string;
   entityId: number | number[] | null;
+  showOwner?: boolean;
   currentOwnerId?: number | null;
 }
 
@@ -80,6 +81,7 @@ export default function ShareModal({
   onClose,
   entityType,
   entityId,
+  showOwner = true,
   currentOwnerId,
 }: ShareModalProps) {
   const { t } = useTranslation();
@@ -369,7 +371,7 @@ export default function ShareModal({
         ]}
       >
         <div className="flex flex-col min-h-[60vh] px-8 gap-y-3 py-8">
-          {!Array.isArray(entityId) && (
+          {!Array.isArray(entityId) && showOwner && (
             <SelectDropdown
               label="Select Owner"
               value={user as string}

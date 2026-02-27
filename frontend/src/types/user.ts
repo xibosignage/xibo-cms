@@ -48,6 +48,8 @@ export interface User {
   lastName?: string;
   phone?: string;
 
+  homeFolderId?: number;
+
   features: UserFeatures;
   settings: UserSettings;
 
