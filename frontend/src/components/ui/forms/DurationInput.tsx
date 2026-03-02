@@ -68,43 +68,44 @@ export default function DurationInput({ value, onChange }: DurationInputProps) {
   }, [value]);
 
   return (
-    <div className="relative flex flex-col">
+    <div className="flex flex-col justify-end">
       <label className="text-xs font-semibold text-gray-500">{t('Duration')}</label>
 
-      <input
-        type="text"
-        inputMode="numeric"
-        placeholder="00:00:00"
-        className="border-gray-200 text-sm rounded-lg px-3 py-2 pr-9 tracking-wider"
-        value={displayValue}
-        onChange={(e) => {
-          const val = e.target.value.replace(/[^\d:]/g, '');
-          setDisplayValue(val);
-        }}
-        onBlur={() => {
-          const seconds = parseTimeToSeconds(displayValue);
-          onChange(seconds);
-          setDisplayValue(formatSeconds(seconds));
-        }}
-      />
-      <div className="absolute mb-0.5 mr-1.5 bottom-0 right-0 flex flex-col">
-        <button
-          type="button"
-          onClick={increment}
-          className="h-4 w-6 flex items-center justify-center rounded-t text-gray-500 cursor-pointer"
-          aria-label="Increase duration"
-        >
-          <ChevronUp size={14} />
-        </button>
-
-        <button
-          type="button"
-          onClick={decrement}
-          className="h-4 w-6 flex items-center justify-center rounded-b text-gray-500 cursor-pointer"
-          aria-label="Decrease duration"
-        >
-          <ChevronDown size={14} />
-        </button>
+      <div className="relative flex">
+        <input
+          type="text"
+          inputMode="numeric"
+          placeholder="00:00:00"
+          className="border-gray-200 text-sm rounded-lg px-3 pl-3 pr-9 mb-1 tracking-wider h-11.25 w-full"
+          value={displayValue}
+          onChange={(e) => {
+            const val = e.target.value.replace(/[^\d:]/g, '');
+            setDisplayValue(val);
+          }}
+          onBlur={() => {
+            const seconds = parseTimeToSeconds(displayValue);
+            onChange(seconds);
+            setDisplayValue(formatSeconds(seconds));
+          }}
+        />
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 px-1 py-1 flex flex-col justify-center border-l h-11 border-gray-200 -mt-0.5">
+          <button
+            type="button"
+            onClick={increment}
+            className="h-4 w-6 flex items-center justify-center rounded-t text-gray-500 cursor-pointer hover:text-gray-700"
+            aria-label="Increase duration"
+          >
+            <ChevronUp size={14} />
+          </button>
+          <button
+            type="button"
+            onClick={decrement}
+            className="h-4 w-6 flex items-center justify-center rounded-b text-gray-500 cursor-pointer hover:text-gray-700"
+            aria-label="Decrease duration"
+          >
+            <ChevronDown size={14} />
+          </button>
+        </div>
       </div>
     </div>
   );

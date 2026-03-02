@@ -36,6 +36,7 @@ import {
   CalendarClock,
   Info,
   Trash2,
+  FileSymlink,
 } from 'lucide-react';
 import { type ComponentProps, type ElementType } from 'react';
 
@@ -115,7 +116,7 @@ export type ActionItem =
 
 type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
 
-export type ModalType = 'edit' | 'share' | 'delete' | 'copy' | 'move' | null;
+export type ModalType = 'edit' | 'share' | 'delete' | 'copy' | 'move' | 'replace' | null;
 
 export const INITIAL_FILTER_STATE: MediaFilterInput = {
   type: '',
@@ -276,6 +277,7 @@ export interface MediaActionsProps {
   openMoveModal?: (row: Media | Media[]) => void;
   openDetails?: (id: number) => void;
   copyMedia?: (row: number) => void;
+  openReplaceModal: (id: number) => void;
 }
 
 export const getMediaItemActions = ({
@@ -287,6 +289,7 @@ export const getMediaItemActions = ({
   openMoveModal,
   openDetails,
   copyMedia,
+  openReplaceModal,
 }: MediaActionsProps): ((media: Media) => ActionItem[]) => {
   return (media: Media) => {
     const actions: ActionItem[] = [];
@@ -317,6 +320,14 @@ export const getMediaItemActions = ({
         label: t('Edit'),
         icon: Edit,
         onClick: () => openEditModal(media),
+      });
+    }
+
+    if (canEdit) {
+      actions.push({
+        label: t('Replace File'),
+        icon: FileSymlink,
+        onClick: () => openReplaceModal(media.mediaId),
       });
     }
 

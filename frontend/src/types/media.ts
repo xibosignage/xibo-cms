@@ -53,6 +53,7 @@ export interface Media {
   expires: string;
   updateInLayouts: boolean;
   userPermissions: MediaPermissions;
+  deleteOldRevisions: boolean;
 }
 
 export type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
