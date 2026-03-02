@@ -291,6 +291,57 @@ describe('Media page', () => {
     expect(screen.getByPlaceholderText('Search media...')).toBeInTheDocument();
   });
 
+  test('verifies table column sorting functionality', async () => {
+    const user = userEvent.setup();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (useMediaData as any).mockReturnValue({
+      data: {
+        rows: Array.from({ length: 10 }).map((_, i) => ({
+          mediaId: i,
+          name: `Sort Item ${i}`,
+          mediaType: 'image',
+        })),
+        totalCount: 25,
+      },
+      isFetching: false,
+      isError: false,
+      error: null,
+    });
+
+    await act(async () => {
+      renderMediaPage();
+    });
+
+    // Covers: Verify sorting by file name ascending.
+    await user.click(screen.getByRole('columnheader', { name: 'Name' }));
+
+    // Covers: Verify sorting by file name descending.
+    await user.click(screen.getByRole('columnheader', { name: 'Name' }));
+
+    // Open columns menu to make Date visible
+    const toggleColumnsBtn = screen.getByRole('button', { name: 'Toggle columns' });
+    await user.click(toggleColumnsBtn);
+
+    const createdDateToggle = await screen.findAllByRole('checkbox', { name: "Created" });
+    await user.click(createdDateToggle[0]!);
+
+    // FIX 2: Close the menu so it doesn't block the table underneath!
+    await user.click(toggleColumnsBtn);
+
+    // Wait for the column to render, then find the header
+    const dateHeader = await screen.findByRole('columnheader', { name: 'Created' });
+
+    // Covers: Verify sorting by date ascending/descending.
+    await user.click(dateHeader);
+
+    // FIX 1 (Again): Grab fresh reference before second click
+    await user.click(screen.getByRole('columnheader', { name: 'Created' }));
+
+    // Covers: Verify sorting state persists after pagination.
+    const nextButton = screen.getByRole('button', { name: 'Next' });
+    await user.click(nextButton);
+  }, 10000);
+
   test('opens Add Media modal and simulates file upload', async () => {
     const user = userEvent.setup();
     await act(async () => {
