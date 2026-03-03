@@ -1,0 +1,47 @@
+# Dockerfile.test
+# Test variant of the Xibo CMS image that includes:
+#   - PHPUnit and dev composer dependencies
+#   - tests/ directory with seed layout ZIPs
+#   - phpunit.xml configuration
+#
+# Usage:
+#   podman build -f Dockerfile.test -t xibo-cms-test:latest .
+#
+# This image extends the production/PWA image and layers on test resources.
+# It is intended for seeding the database and running the XMDS PHPUnit tests.
+
+# Stage 1: Install composer dev dependencies
+FROM docker.io/library/composer AS composer
+COPY ./composer.json /app
+COPY ./composer.lock /app
+RUN composer install --no-interaction
+
+# Tidy up vendor (same as production, but keep test-related packages)
+WORKDIR /app/vendor
+RUN find -type d -name '.git' -exec rm -r {} + 2>/dev/null; \
+    find -type d -name 'benchmarks' -depth -exec rm -r {} + 2>/dev/null; \
+    find -type d -name 'smoketests' -depth -exec rm -r {} + 2>/dev/null; \
+    find -type d -name 'demo' -depth -exec rm -r {} + 2>/dev/null; \
+    find -type d -name 'doc' -depth -exec rm -r {} + 2>/dev/null; \
+    find -type d -name 'docs' -depth -exec rm -r {} + 2>/dev/null; \
+    find -type d -name 'examples' -depth -exec rm -r {} + 2>/dev/null; \
+    true
+
+# Stage 2: Layer test resources onto the production image
+FROM ghcr.io/xibo-players/xibo-cms:develop
+
+# Overlay composer vendor directory (includes PHPUnit and dev dependencies)
+# This replaces the --no-dev vendor with the full vendor including dev deps
+COPY --from=composer /app/vendor /var/www/cms/vendor
+
+# Copy test files
+COPY --chown=www-data:www-data tests/ /var/www/cms/tests/
+COPY --chown=www-data:www-data phpunit.xml /var/www/cms/phpunit.xml
+
+# The seed-database.task and SeedDatabaseTask.php are already in the base image
+# (tasks/ directory and lib/XTR/ are not stripped by production Dockerfile)
+
+# Ensure correct ownership
+RUN chown -R www-data:www-data /var/www/cms/vendor /var/www/cms/tests
+
+CMD ["/entrypoint.sh"]
