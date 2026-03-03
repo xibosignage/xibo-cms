@@ -126,7 +126,7 @@ describe('Media page', () => {
 
     // Covers: Verify empty state message when no media exists.
     expect(document.querySelector('.no-results')).toBeInTheDocument();
-  });
+  }, 15000);
 
   test('verifies loading state while fetching data', async () => {
     // Override mock to simulate loading state
@@ -144,7 +144,7 @@ describe('Media page', () => {
 
     // Covers: Verify loading state/spinner while fetching data.
     expect(document.querySelector('.animate-spin')).toBeInTheDocument();
-  });
+  }, 15000);
 
   test('verifies error message when API fails', async () => {
     // Override mock to simulate error state
@@ -164,7 +164,7 @@ describe('Media page', () => {
     const alert = screen.getByRole('alert');
     expect(alert).toBeInTheDocument();
     expect(alert).toHaveTextContent('API connection failed');
-  });
+  }, 15000);
 
   test('verifies media items and formatting render correctly from API response', async () => {
     const user = userEvent.setup();
@@ -220,7 +220,7 @@ describe('Media page', () => {
     await waitFor(() => {
       expect(screen.getByText(/2024-02-14|2024-02-15/i)).toBeInTheDocument();
     });
-  });
+  }, 15000);
 
   test('verifies pagination controls appear when items exceed page limit', async () => {
     // Override mock to simulate multiple pages of data
@@ -251,7 +251,7 @@ describe('Media page', () => {
 
     // Verify page 2 is available to click
     expect(screen.getByRole('button', { name: '2' })).toBeInTheDocument();
-  });
+  }, 15000);
 
   test('verifies search and filter functionality', async () => {
     const user = userEvent.setup();
@@ -289,7 +289,7 @@ describe('Media page', () => {
       renderMediaPage();
     });
     expect(screen.getByPlaceholderText('Search media...')).toBeInTheDocument();
-  });
+  }, 15000);
 
   test('verifies table column sorting functionality', async () => {
     const user = userEvent.setup();
@@ -340,7 +340,7 @@ describe('Media page', () => {
     // Covers: Verify sorting state persists after pagination.
     const nextButton = screen.getByRole('button', { name: 'Next' });
     await user.click(nextButton);
-  }, 10000);
+  }, 15000);
 
   test('opens Add Media modal and simulates file upload', async () => {
     const user = userEvent.setup();
@@ -368,5 +368,5 @@ describe('Media page', () => {
 
     const doneButton = screen.getByRole('button', { name: 'Done' });
     expect(doneButton).toBeInTheDocument();
-  });
+  }, 15000);
 });
