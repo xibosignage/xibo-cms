@@ -418,14 +418,6 @@ class Controllers
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
-            '\Xibo\Controller\Pwa' => function (ContainerInterface $c) {
-                $controller = new \Xibo\Controller\Pwa(
-                    $c->get('displayFactory'),
-                    $c,
-                );
-                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
-                return $controller;
-            },
             '\Xibo\Controller\Region' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Region(
                     $c->get('regionFactory'),

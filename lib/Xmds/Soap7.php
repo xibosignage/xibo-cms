@@ -148,6 +148,14 @@ class Soap7 extends Soap6
 
                     $widgetDataProviderCache = $this->moduleFactory->createWidgetDataProviderCache();
 
+                    $this->getLog()->info('GetData: widgetId=' . $widgetId
+                        . ', type=' . $widget->type
+                        . ', cacheKey=' . $cacheKey
+                        . ', stashKey=/widget/'
+                        . ($dataProvider->getDataType() ?: $dataProvider->getDataSource())
+                        . '/' . md5($cacheKey)
+                        . ', displayId=' . $this->display->displayId);
+
                     // We do not pass a modifiedDt in here because we always expect to be cached.
                     if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, null, false)) {
                         throw new NotFoundException('Cache not ready');
@@ -223,7 +231,6 @@ class Soap7 extends Soap6
                                     intval($row['mediaId']),
                                     $row['storedAs'],
                                     null,
-                                    $this->display->isPwa(),
                                 ),
                             ];
                         }

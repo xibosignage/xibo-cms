@@ -31,7 +31,6 @@ use Stash\Invalidation;
 use Stash\Item;
 use Xibo\Entity\Display;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\LinkSigner;
 use Xibo\Helper\ObjectVars;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Support\Exception\GeneralException;
@@ -402,20 +401,7 @@ class WidgetDataProviderCache
             if (Str::startsWith($match, 'mediaId')) {
                 $value = explode('=', $match);
                 if (array_key_exists($value[1], $storedAs)) {
-                    if ($display->isPwa()) {
-                        $url = LinkSigner::generateSignedLink(
-                            $display,
-                            $encryptionKey,
-                            $cdnUrl,
-                            'M',
-                            $value[1],
-                            $storedAs[$value[1]],
-                            null,
-                            true,
-                        );
-                    } else {
-                        $url = $storedAs[$value[1]];
-                    }
+                    $url = $storedAs[$value[1]];
                     $data = str_replace('[[' . $match . ']]', $url, $data);
                 } else {
                     $data = str_replace('[[' . $match . ']]', '', $data);
