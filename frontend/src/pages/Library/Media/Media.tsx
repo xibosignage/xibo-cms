@@ -809,7 +809,9 @@ export default function Media() {
             <SelectFolder
               selectedId={selectedFolderId}
               onSelect={(folder) => {
-                setSelectedFolderId(folder.id);
+                if (folder) {
+                  setSelectedFolderId(folder.id);
+                }
               }}
             />
           )}

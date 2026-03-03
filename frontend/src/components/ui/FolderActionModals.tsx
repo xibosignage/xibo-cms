@@ -63,7 +63,7 @@ export default function FolderActionModals({ folderActions }: FolderActionModals
             className="w-full border-gray-200 rounded-lg text-sm"
             value={formState.inputText}
             placeholder={t('Add folder name')}
-            onChange={(e) => formState.setInputText(e.target.value)}
+            onChange={(val) => formState.setInputText(val)}
           />
         </div>
       </Modal>
@@ -91,7 +91,7 @@ export default function FolderActionModals({ folderActions }: FolderActionModals
             className="w-full border-gray-200 rounded-lg text-sm"
             value={formState.inputText}
             placeholder={t('Add folder name')}
-            onChange={(e) => formState.setInputText(e.target.value)}
+            onChange={(val) => formState.setInputText(val)}
           />
         </div>
       </Modal>
@@ -118,7 +118,7 @@ export default function FolderActionModals({ folderActions }: FolderActionModals
           </div>
           <SelectFolder
             selectedId={formState.moveTargetId}
-            onSelect={(folder) => formState.setMoveTargetId(folder.id)}
+            onSelect={(folder) => folder && formState.setMoveTargetId(folder.id)}
           />
           <Checkbox
             id="merge-folder"

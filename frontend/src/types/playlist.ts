@@ -39,4 +39,11 @@ export interface Playlist {
   expires: number;
   updateInLayouts: boolean;
   isDynamic: boolean;
+  filterMediaName: string;
+  logicalOperatorName: 'OR' | 'AND';
+  filterMediaTag: Tag[];
+  exactTags: boolean;
+  logicalOperator: 'OR' | 'AND';
+  filterFolderId: number | null;
+  maxNumberOfItems: number;
 }

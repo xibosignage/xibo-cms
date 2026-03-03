@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { ChevronDown, Loader2 } from 'lucide-react';
+import { ChevronDown, Loader2, X } from 'lucide-react';
 import { useEffect, useRef, useState, useLayoutEffect, useCallback, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
@@ -32,11 +32,17 @@ import type { Folder } from '@/types/folder';
 
 interface SelectFolderProps {
   selectedId?: number | null;
-  onSelect: (folder: { id: number; text: string }) => void;
+  placeholder?: string;
+  onSelect: (folder: { id: number; text: string } | null) => void;
   onAction?: (action: FolderAction, folder: Folder) => void;
 }
 
-export default function SelectFolder({ selectedId, onSelect, onAction }: SelectFolderProps) {
+export default function SelectFolder({
+  selectedId,
+  placeholder,
+  onSelect,
+  onAction,
+}: SelectFolderProps) {
   const { t } = useTranslation();
   const generatedId = useId();
   const searchInputId = `${generatedId}_search`;
@@ -49,6 +55,16 @@ export default function SelectFolder({ selectedId, onSelect, onAction }: SelectF
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const handleClear = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    setInitialName(null);
+    setFolderSearch('');
+    setIsOpen(false);
+
+    onSelect(null);
+  };
   useEffect(() => {
     if (!selectedId) {
       setInitialName(null);
@@ -189,7 +205,7 @@ export default function SelectFolder({ selectedId, onSelect, onAction }: SelectF
       return <span className="text-gray-800">{t('Folder #{{id}}', { id: selectedId })}</span>;
     }
 
-    return <span className="text-gray-400">{t('Select a folder')}</span>;
+    return <span className="text-gray-400">{placeholder || t('Select a folder')}</span>;
   };
 
   return (
@@ -201,7 +217,7 @@ export default function SelectFolder({ selectedId, onSelect, onAction }: SelectF
       {/* Portal Trigger */}
       <div
         className="w-full border border-gray-200 rounded-lg flex items-center bg-white transition-shadow hover:shadow-sm cursor-pointer h-10.5"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => setIsOpen((prev) => !prev)}
       >
         <button
           type="button"
@@ -209,12 +225,24 @@ export default function SelectFolder({ selectedId, onSelect, onAction }: SelectF
         >
           {renderLabel()}
         </button>
+        <div className="flex items-center pr-3 h-full gap-1.5">
+          {selectedId ? (
+            <button
+              type="button"
+              onClick={handleClear}
+              className="px-3 text-gray-400 hover:text-red-500 transition-colors flex items-center h-full focus:outline-none"
+              aria-label={t('Clear selection')}
+            >
+              <X size={14} />
+            </button>
+          ) : null}
 
-        <div className="px-3 text-gray-500">
-          <ChevronDown
-            size={14}
-            className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-          />
+          <div className="pl-3 text-gray-500 flex items-center h-full">
+            <ChevronDown
+              size={14}
+              className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+            />
+          </div>
         </div>
       </div>
 

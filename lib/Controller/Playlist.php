@@ -702,7 +702,7 @@ class Playlist extends Base
         // Capture these as dynamic filter criteria
         if ($playlist->isDynamic === 1) {
             if (empty($nameFilter) && empty($tagFilter) && empty($folderIdFilter)) {
-                throw new InvalidArgumentException(__('No filters have been set for this dynamic Playlist, please click the Filters tab to define'));
+                throw new InvalidArgumentException(__('No filters have been set for this dynamic Playlist!'));
             }
             $playlist->filterMediaName = $nameFilter;
             $playlist->filterMediaNameLogicalOperator = $nameFilterLogicalOperator;
@@ -935,7 +935,7 @@ class Playlist extends Base
             $filterFolderId = $sanitizedParams->getString('filterFolderId');
 
             if (empty($filterMediaName) && empty($filterMediaTag) && empty($filterFolderId)) {
-                throw new InvalidArgumentException(__('No filters have been set for this dynamic Playlist, please click the Filters tab to define'));
+                throw new InvalidArgumentException(__('No filters have been set for this dynamic Playlist!'));
             }
             $playlist->filterMediaName = $filterMediaName;
             $playlist->filterMediaNameLogicalOperator = $sanitizedParams->getString('logicalOperatorName');

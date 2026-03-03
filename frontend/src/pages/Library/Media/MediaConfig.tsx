@@ -53,6 +53,7 @@ import {
 } from '@/components/ui/table/cells';
 import { APP_ROUTES, generateTabNavigation } from '@/config/appRoutes';
 import type { Media } from '@/types/media';
+import type { Tag } from '@/types/tag';
 
 const libraryRoute = APP_ROUTES.find((route) => {
   if (route.path === 'library') {
@@ -64,17 +65,18 @@ const libraryRoute = APP_ROUTES.find((route) => {
 export const LIBRARY_TABS = libraryRoute ? generateTabNavigation(libraryRoute) : [];
 
 export interface MediaFilterInput {
-  type: string;
-  ownerId: string;
-  ownerUserGroupId: string;
-  orientation: string;
+  type?: string;
+  ownerId?: string;
+  ownerUserGroupId?: string;
+  orientation?: string;
   retired?: number;
-  lastModified: string;
-}
-
-interface ApiTag {
-  tagId: number;
-  tag: string;
+  lastModified?: string;
+  media?: string;
+  tags?: string;
+  exactTags?: boolean;
+  folderId?: number;
+  logicalOperator?: 'OR' | 'AND';
+  logicalOperatorName?: 'OR' | 'AND';
 }
 
 export const getMediaIcon = (mediaType: string) => {
@@ -242,14 +244,14 @@ export const ACCEPTED_MIME_TYPES = {
   'video/x-ms-wmv': ['.wmv'],
 };
 
-const formatDuration = (seconds: number) => {
+export const formatDuration = (seconds: number) => {
   if (typeof seconds != 'number') {
     return '-';
   }
   return new Date(seconds * 1000).toISOString().slice(11, 19);
 };
 
-const getStatusTypeFromMediaType = (mediaType: string) => {
+export const getStatusTypeFromMediaType = (mediaType: string) => {
   const type = mediaType?.toLowerCase();
   switch (type) {
     case 'image':
@@ -474,7 +476,7 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
       enableSorting: false,
       size: 150,
       cell: (info) => {
-        const tags = info.getValue<ApiTag[]>() || [];
+        const tags = info.getValue<Tag[]>() || [];
         const formattedTags = tags.map((tag) => ({
           id: tag.tagId,
           label: tag.tag,

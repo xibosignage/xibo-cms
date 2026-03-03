@@ -37,7 +37,7 @@ export const mediaQueryKeys = {
 interface UseMediaParams {
   pagination: PaginationState;
   sorting: SortingState;
-  filter: string;
+  filter?: string;
   folderId: number | null;
   advancedFilters: MediaFilterInput;
 }

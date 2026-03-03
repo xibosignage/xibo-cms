@@ -58,7 +58,7 @@ export function DataTablePagination<TData>({
   usePreline();
 
   return (
-    <div className="flex gap-3 items-center data-table-pagination">
+    <div className="flex gap-3 items-center data-table-pagination p-2 pt-0">
       {/* Page size selector */}
       <div className="flex items-center gap-2 data-table-pagination-picker">
         <div className="hs-dropdown relative inline-flex [--placement:top-left]">

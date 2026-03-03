@@ -159,8 +159,8 @@ export default function ReplaceFileModal({
       <div className="flex flex-col h-full overflow-y-hidden overflow-x-visible gap-3 p-3 pt-0">
         <div className=" border border-gray-200 mx-4 rounded-lg">
           <div className="shrink-0 p-4 flex gap-3">
-            <div className="h-[150px] aspect-7/6 relative bg-gray-400 rounded-lg">
-              <div className="h-[150px] aspect-7/6 bg-gray-100 flex items-center justify-center rounded">
+            <div className="h-37.5 aspect-7/6 relative bg-gray-400 rounded-lg">
+              <div className="h-37.5 aspect-7/6 bg-gray-100 flex items-center justify-center rounded">
                 {data.thumbnail ? (
                   <>
                     {isImageLoading && (

@@ -35,9 +35,10 @@ interface Tag {
 interface TagsProps {
   tags: Tag[];
   limit?: number;
+  noTagsPlaceholder?: string;
 }
 
-export function TagsCell({ tags, limit = 2 }: TagsProps) {
+export function TagsCell({ tags, limit = 2, noTagsPlaceholder = '' }: TagsProps) {
   const safeTags = tags || [];
   const visibleTags = safeTags.slice(0, limit);
   const remainingTags = safeTags.slice(limit);
@@ -74,7 +75,7 @@ export function TagsCell({ tags, limit = 2 }: TagsProps) {
   };
 
   if (!tags?.length) {
-    return <span className="text-gray-800"></span>;
+    return <span className="text-gray-800">{noTagsPlaceholder}</span>;
   }
 
   return (

@@ -106,8 +106,8 @@ export default function CopyMediaModal({
           value={newName}
           label={t('New name')}
           error={error}
-          onChange={(e) => {
-            setNewName(e.target.value);
+          onChange={(val) => {
+            setNewName(val);
             if (error) setError(undefined);
           }}
         />

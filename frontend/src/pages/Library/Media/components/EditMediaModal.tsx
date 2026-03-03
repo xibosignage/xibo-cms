@@ -155,7 +155,7 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
               onSelect={(folder) => {
                 setDraft((prev) => ({
                   ...prev,
-                  folderId: Number(folder.id),
+                  folderId: Number(folder?.id),
                 }));
               }}
             />

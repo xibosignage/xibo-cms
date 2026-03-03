@@ -55,6 +55,8 @@ export default function CopyPlaylistModal({
       setNewName(incrementName(playlist.name));
       setCopyMediaFiles(false);
     }
+
+    setError(undefined);
   }, [playlist, isOpen]);
 
   const handleSave = () => {
@@ -107,8 +109,8 @@ export default function CopyPlaylistModal({
           label={t('New name')}
           helpText={t('The Name of the Playlist - (1 - 50 characters)')}
           error={error}
-          onChange={(e) => {
-            setNewName(e.target.value);
+          onChange={(val) => {
+            setNewName(val);
             if (error) {
               setError(undefined);
             }

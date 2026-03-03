@@ -63,10 +63,11 @@ export function DataTableOptions<TData>({
   const columns = table.getAllLeafColumns().filter((column) => column.getCanHide());
 
   const isTableMode = viewMode === 'table';
+  const isGridMode = viewMode === 'grid';
 
   return (
     <div className="flex gap-3">
-      {columns.length > 0 && isTableMode && (
+      {columns.length > 0 && !isGridMode && (
         <div className="relative" ref={dropdownRef}>
           <Button
             type="button"

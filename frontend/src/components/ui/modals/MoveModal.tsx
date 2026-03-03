@@ -117,6 +117,7 @@ export default function MoveModal({
         onClose();
       }}
       size="sm"
+      error={error}
       actions={[
         {
           label: t('Cancel'),
