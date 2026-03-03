@@ -208,6 +208,33 @@ class RequiredFileFactory extends BaseFactory
 
     /**
      * @param int $displayId
+     * @param int $realId The realId of this dependency
+     * @return RequiredFile
+     * @throws NotFoundException
+     */
+    public function getByDisplayAndDependencyRealId($displayId, int $realId): RequiredFile
+    {
+        $result = $this->getStore()->select('
+            SELECT *
+              FROM `requiredfile`
+             WHERE `displayId` = :displayId
+                AND `type` = :type
+                AND `realId` = :realId
+        ', [
+            'displayId' => $displayId,
+            'type' => 'P',
+            'realId' => $realId,
+        ]);
+
+        if (count($result) <= 0) {
+            throw new NotFoundException(__('Required file not found'));
+        }
+
+        return $this->createEmpty()->hydrate($result[0], $this->hydrate);
+    }
+
+    /**
+     * @param int $displayId
      * @param string $id The itemId of this dependency
      * @return RequiredFile
      * @throws NotFoundException

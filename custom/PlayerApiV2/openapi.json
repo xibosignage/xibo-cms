@@ -1,0 +1,589 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Xibo Player API v2",
+    "description": "RESTful API for Xibo player communication. Replaces the legacy SOAP/XML XMDS interface with JWT-authenticated JSON endpoints.\n\nPlayers register as `clientType='linux'` and receive bare filenames in widget HTML. The SDK service worker intercepts these from widget iframes and routes them to the appropriate v2 API endpoints.",
+    "version": "2.0.0",
+    "contact": {
+      "name": "Pau Aliagas",
+      "email": "linuxnow@gmail.com"
+    },
+    "license": {
+      "name": "AGPLv3 or later",
+      "url": "https://www.gnu.org/licenses/agpl-3.0.html"
+    }
+  },
+  "servers": [
+    {
+      "url": "/api/v2/player",
+      "description": "Player API v2 base path"
+    }
+  ],
+  "tags": [
+    { "name": "Public", "description": "No authentication required" },
+    { "name": "Display", "description": "Display registration and management" },
+    { "name": "Media", "description": "Media files, layouts, and dependencies" },
+    { "name": "Schedule", "description": "Schedule and widget data" },
+    { "name": "Reporting", "description": "Status, logs, stats, screenshots, faults" }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["Public"],
+        "summary": "Health check",
+        "description": "API availability probe. The SDK uses this to detect v2 API support before attempting v2 endpoints.",
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "description": "API is available",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "version": { "type": "integer", "example": 2 },
+                    "status": { "type": "string", "example": "ok" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth": {
+      "post": {
+        "tags": ["Public"],
+        "summary": "Authenticate display",
+        "description": "Validates serverKey + hardwareKey, checks the display is licensed, then issues a short-lived JWT token.",
+        "operationId": "auth",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["serverKey", "hardwareKey"],
+                "properties": {
+                  "serverKey": { "type": "string", "description": "CMS server key" },
+                  "hardwareKey": { "type": "string", "description": "Display hardware key (license)" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": { "type": "string", "description": "JWT bearer token" },
+                    "expiresIn": { "type": "integer", "description": "Token lifetime in seconds" },
+                    "expiresAt": { "type": "integer", "description": "Token expiry Unix timestamp" },
+                    "displayId": { "type": "integer", "description": "Authenticated display ID" }
+                  }
+                }
+              }
+            }
+          },
+          "403": { "description": "Invalid credentials or display not licensed" }
+        }
+      }
+    },
+    "/displays": {
+      "post": {
+        "tags": ["Display"],
+        "summary": "Register display",
+        "description": "Creates or re-registers a display. Returns display configuration.",
+        "operationId": "registerDisplay",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "displayName": { "type": "string" },
+                  "clientType": { "type": "string", "example": "linux" },
+                  "clientVersion": { "type": "string" },
+                  "clientCode": { "type": "integer" },
+                  "operatingSystem": { "type": "string" },
+                  "macAddress": { "type": "string" },
+                  "xmrChannel": { "type": "string" },
+                  "xmrPubKey": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Display registered successfully" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/displays/{id}": {
+      "get": {
+        "tags": ["Display"],
+        "summary": "Get display settings",
+        "description": "Returns display configuration without re-registering.",
+        "operationId": "getDisplay",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/displayId" }
+        ],
+        "responses": {
+          "200": { "description": "Display settings" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Token does not match requested display" }
+        }
+      },
+      "put": {
+        "tags": ["Display"],
+        "summary": "Update display",
+        "description": "Updates display metadata (name, client version, etc) via re-registration.",
+        "operationId": "updateDisplay",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/displayId" }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "displayName": { "type": "string" },
+                  "clientType": { "type": "string" },
+                  "clientVersion": { "type": "string" },
+                  "clientCode": { "type": "integer" },
+                  "operatingSystem": { "type": "string" },
+                  "macAddress": { "type": "string" },
+                  "xmrChannel": { "type": "string" },
+                  "xmrPubKey": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Display updated" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/displays/{id}/media": {
+      "get": {
+        "tags": ["Media"],
+        "summary": "Get required media files",
+        "description": "Returns categorized JSON: `{ media: [...], layouts: [...], widgets: [...], dependencies: [...] }`",
+        "operationId": "getRequiredMedia",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/displayId" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Required files list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "media": { "type": "array", "items": { "$ref": "#/components/schemas/RequiredFile" } },
+                    "layouts": { "type": "array", "items": { "$ref": "#/components/schemas/RequiredFile" } },
+                    "widgets": { "type": "array", "items": { "$ref": "#/components/schemas/WidgetFile" } },
+                    "dependencies": { "type": "array", "items": { "$ref": "#/components/schemas/RequiredFile" } }
+                  }
+                }
+              }
+            }
+          },
+          "304": { "description": "Not modified (ETag match)" }
+        }
+      }
+    },
+    "/displays/{id}/schedule": {
+      "get": {
+        "tags": ["Schedule"],
+        "summary": "Get schedule",
+        "description": "Returns structured JSON schedule (server-side XML→JSON parsing).",
+        "operationId": "getSchedule",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/displayId" }
+        ],
+        "responses": {
+          "200": { "description": "Schedule data" },
+          "304": { "description": "Not modified (ETag match)" }
+        }
+      }
+    },
+    "/datasets/{id}/data": {
+      "get": {
+        "tags": ["Schedule"],
+        "summary": "Get dataset data",
+        "description": "Returns widget dataset data as JSON.",
+        "operationId": "getDatasetData",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "Widget ID" }
+        ],
+        "responses": {
+          "200": { "description": "Dataset data" },
+          "503": { "description": "Cache not ready", "headers": { "Retry-After": { "schema": { "type": "integer" } } } }
+        }
+      }
+    },
+    "/data/{id}.json": {
+      "get": {
+        "tags": ["Schedule"],
+        "summary": "Get dataset data (bare-filename route)",
+        "description": "Same as `/datasets/{id}/data` — handles bare `42.json` filenames from widget HTML. The service worker intercepts `42.json` fetch requests and routes them here.",
+        "operationId": "getDataJson",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "Widget ID" }
+        ],
+        "responses": {
+          "200": { "description": "Dataset data" },
+          "503": { "description": "Cache not ready" }
+        }
+      }
+    },
+    "/widgets/{id}/resource": {
+      "get": {
+        "tags": ["Schedule"],
+        "summary": "Get widget HTML resource (query params)",
+        "operationId": "getWidgetResource",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Media ID" },
+          { "name": "layoutId", "in": "query", "required": true, "schema": { "type": "integer" } },
+          { "name": "regionId", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Widget HTML", "content": { "text/html": {} } }
+        }
+      }
+    },
+    "/widgets/{layoutId}/{regionId}/{mediaId}": {
+      "get": {
+        "tags": ["Schedule"],
+        "summary": "Get widget HTML resource (path-based)",
+        "operationId": "getWidgetResourceByPath",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "layoutId", "in": "path", "required": true, "schema": { "type": "integer" } },
+          { "name": "regionId", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "mediaId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Widget HTML", "content": { "text/html": {} } }
+        }
+      }
+    },
+    "/media/{id}": {
+      "get": {
+        "tags": ["Media"],
+        "summary": "Download media file (by ID)",
+        "description": "JWT-authenticated file download. Supports Apache X-Sendfile and Nginx X-Accel-Redirect.",
+        "operationId": "downloadMedia",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "Media ID" },
+          { "name": "type", "in": "query", "schema": { "type": "string", "enum": ["M", "L", "P"], "default": "M" } }
+        ],
+        "responses": {
+          "200": { "description": "File content" },
+          "404": { "description": "File not found" },
+          "429": { "description": "Bandwidth exceeded" }
+        }
+      }
+    },
+    "/media/file/{storedAs}": {
+      "get": {
+        "tags": ["Media"],
+        "summary": "Download media file (by storedAs filename)",
+        "description": "Looks up media by its `storedAs` filename (the `path` column in `requiredfile` table). Used by the SDK service worker to resolve bare filenames from widget HTML (e.g. `1234_abcd.png`).",
+        "operationId": "downloadMediaByFilename",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "storedAs", "in": "path", "required": true, "schema": { "type": "string" }, "description": "The storedAs filename (e.g. 1234_abcd.png)" }
+        ],
+        "responses": {
+          "200": { "description": "File content" },
+          "404": { "description": "File not found in requiredfile table" },
+          "429": { "description": "Bandwidth exceeded" }
+        }
+      }
+    },
+    "/layouts/{id}": {
+      "get": {
+        "tags": ["Media"],
+        "summary": "Download layout XLF",
+        "operationId": "downloadLayout",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Layout XLF", "content": { "text/xml": {} } },
+          "404": { "description": "Layout not found" }
+        }
+      }
+    },
+    "/dependencies/{filename}": {
+      "get": {
+        "tags": ["Media"],
+        "summary": "Download player dependency",
+        "description": "Downloads fonts, JS bundles, CSS, and other player dependencies by filename.",
+        "operationId": "downloadDependency",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "filename", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Dependency filename (e.g. fonts.css, bundle.min.js)" }
+        ],
+        "responses": {
+          "200": { "description": "Dependency file content" },
+          "404": { "description": "Dependency not found" }
+        }
+      }
+    },
+    "/displays/{id}/weather": {
+      "get": {
+        "tags": ["Schedule"],
+        "summary": "Get weather data",
+        "description": "Returns weather data based on the display's configured coordinates.",
+        "operationId": "getWeather",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/displayId" }
+        ],
+        "responses": {
+          "200": { "description": "Weather data" }
+        }
+      }
+    },
+    "/displays/{id}/status": {
+      "put": {
+        "tags": ["Reporting"],
+        "summary": "Update display status",
+        "operationId": "updateStatus",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/displayId" }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": { "type": "string", "description": "JSON-encoded status string" },
+                  "statusData": { "type": "object", "description": "Status as object (alternative to status string)" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" }
+        }
+      }
+    },
+    "/displays/{id}/logs": {
+      "post": {
+        "tags": ["Reporting"],
+        "summary": "Submit log entries",
+        "operationId": "submitLogs",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/displayId" }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "logXml": { "type": "string", "description": "XML-formatted log entries" },
+                  "logs": { "type": "array", "items": { "type": "object" }, "description": "JSON array of log entries (alternative to logXml)" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" }
+        }
+      }
+    },
+    "/displays/{id}/stats": {
+      "post": {
+        "tags": ["Reporting"],
+        "summary": "Submit proof-of-play statistics",
+        "operationId": "submitStats",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/displayId" }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "statXml": { "type": "string" },
+                  "stats": { "type": "array", "items": { "type": "object" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" }
+        }
+      }
+    },
+    "/displays/{id}/screenshot": {
+      "post": {
+        "tags": ["Reporting"],
+        "summary": "Submit screenshot",
+        "operationId": "submitScreenshot",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/displayId" }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["screenshot"],
+                "properties": {
+                  "screenshot": { "type": "string", "format": "byte", "description": "Base64-encoded screenshot" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" }
+        }
+      }
+    },
+    "/displays/{id}/inventory": {
+      "put": {
+        "tags": ["Reporting"],
+        "summary": "Update media inventory",
+        "operationId": "updateInventory",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/displayId" }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "inventory": { "type": "string", "description": "XML-formatted inventory" },
+                  "inventoryItems": { "type": "array", "items": { "type": "object" }, "description": "JSON array (alternative)" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" }
+        }
+      }
+    },
+    "/displays/{id}/faults": {
+      "post": {
+        "tags": ["Reporting"],
+        "summary": "Report player faults",
+        "operationId": "reportFaults",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/displayId" }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": ["fault"],
+                "properties": {
+                  "fault": { "type": "string", "description": "JSON-encoded fault data" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token obtained from POST /auth"
+      }
+    },
+    "parameters": {
+      "displayId": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "integer" },
+        "description": "Display ID (must match JWT token's displayId)"
+      }
+    },
+    "schemas": {
+      "RequiredFile": {
+        "type": "object",
+        "properties": {
+          "id": { "oneOf": [{ "type": "integer" }, { "type": "string" }] },
+          "type": { "type": "string" },
+          "md5": { "type": "string", "nullable": true },
+          "fileSize": { "type": "integer" },
+          "saveAs": { "type": "string", "nullable": true },
+          "url": { "type": "string", "description": "Relative API URL to download" }
+        }
+      },
+      "WidgetFile": {
+        "type": "object",
+        "properties": {
+          "id": { "oneOf": [{ "type": "integer" }, { "type": "string" }] },
+          "md5": { "type": "string", "nullable": true },
+          "updateInterval": { "type": "integer" },
+          "url": { "type": "string" }
+        }
+      }
+    },
+    "responses": {
+      "Success": {
+        "description": "Operation successful",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": { "type": "boolean", "example": true }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

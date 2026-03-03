@@ -80,6 +80,15 @@ class ListenersMiddleware implements MiddlewareInterface
         // Set connectors
         self::setListeners($app);
 
+        // Register XMDS dependency listeners for Player API v2
+        // (must run inside middleware chain, not at bootstrap, because
+        // factories like fontFactory/playerVersionFactory need the DB
+        // connection initialised by Storage/State middleware)
+        $name = $app->getContainer()->get('name');
+        if ($name === 'PLAYER-API-V2') {
+            self::setXmdsListeners($app);
+        }
+
         // Next middleware
         return $handler->handle($request);
     }
