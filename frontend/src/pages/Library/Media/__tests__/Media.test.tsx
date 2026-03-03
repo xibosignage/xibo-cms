@@ -325,7 +325,6 @@ describe('Media page', () => {
     const createdDateToggle = await screen.findAllByRole('checkbox', { name: "Created" });
     await user.click(createdDateToggle[0]!);
 
-    // FIX 2: Close the menu so it doesn't block the table underneath!
     await user.click(toggleColumnsBtn);
 
     // Wait for the column to render, then find the header
@@ -334,7 +333,6 @@ describe('Media page', () => {
     // Covers: Verify sorting by date ascending/descending.
     await user.click(dateHeader);
 
-    // FIX 1 (Again): Grab fresh reference before second click
     await user.click(screen.getByRole('columnheader', { name: 'Created' }));
 
     // Covers: Verify sorting state persists after pagination.
