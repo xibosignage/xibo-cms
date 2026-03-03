@@ -327,10 +327,26 @@ export async function cloneMedia({ mediaId, name, tags }: CloneMediaRequest): Pr
   return response.data;
 }
 
-export async function deleteMedia(mediaId: number | string, force: boolean = false): Promise<void> {
+export type DeleteMediaOptions = {
+  forceDelete?: boolean;
+  purge?: boolean;
+};
+
+export async function deleteMedia(
+  mediaId: number | string,
+  options: DeleteMediaOptions = {},
+): Promise<void> {
+  const body = new URLSearchParams();
+
+  body.append('forceDelete', options.forceDelete ? '1' : '0');
+  body.append('purge', options.purge ? '1' : '0');
+
   await http.delete(`/library/${mediaId}`, {
-    params: { forceDelete: force ? 1 : 0 },
-    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    data: body,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-Requested-With': 'XMLHttpRequest',
+    },
   });
 }
 

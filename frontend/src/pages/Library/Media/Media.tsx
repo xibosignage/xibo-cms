@@ -265,14 +265,19 @@ export default function Media() {
     openModal('delete');
   };
 
-  const confirmDelete = async () => {
+  const confirmDelete = async (options: { allLayouts: boolean; purgeList: boolean }) => {
     if (itemsToDelete.length === 0 || isDeleting) return;
 
     try {
       setIsDeleting(true);
 
       const results = await Promise.allSettled(
-        itemsToDelete.map((item) => deleteMedia(item.mediaId)),
+        itemsToDelete.map((item) =>
+          deleteMedia(item.mediaId, {
+            forceDelete: options.allLayouts,
+            purge: options.purgeList,
+          }),
+        ),
       );
 
       const failed = results.filter((r) => r.status === 'rejected');
