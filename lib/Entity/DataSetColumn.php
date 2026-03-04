@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -330,11 +330,9 @@ class DataSetColumn implements \JsonSerializable
         ) {
             try {
                 $count = 0;
-                $formula = str_ireplace(
-                    Sql::DISALLOWED_KEYWORDS,
-                    '',
+                $formula = Sql::cleanup(
                     htmlspecialchars_decode($this->formula, ENT_QUOTES),
-                    $count
+                    $count,
                 );
 
                 if ($count > 0) {

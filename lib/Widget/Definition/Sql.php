@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -42,5 +42,57 @@ class Sql
         'REVOKE',
         'CREATE',
         'DROP',
+        'UNION',
+        'HAVING',
+        'GROUP',
+        'INTO',
+        'OUTFILE',
+        'DUMPFILE',
+        'PROCEDURE',
+        'SLEEP',
+        'BENCHMARK',
+        '--',
+        '#',
+        '/*',
+        '*/',
+        'INFORMATION_SCHEMA',
+        'LOAD_FILE',
+        'LOCK',
+        'EXECUTE',
+        'PREPARE',
+        'DEALLOCATE',
+        'SHOW',
+        'DESCRIBE',
+        'EXPLAIN',
+        'CALL',
+        'HANDLER',
+        'RENAME',
+        'SHUTDOWN',
+        'SET',
+        'USE',
+        'FLUSH',
+        'KILL',
+        'OPTIMIZE',
+        'REPAIR',
+        'ANALYZE',
+        'CHECK',
+        'CHECKSUM',
     ];
+
+    /**
+     * Cleanup SQL
+     * @param string $sql the SQL to clean
+     * @param int $total the total number of replacements
+     * @return string
+     */
+    public static function cleanup(string $sql, int &$total = 0): string
+    {
+        $count = 0;
+        do {
+            $sql = str_ireplace(self::DISALLOWED_KEYWORDS, '', $sql, $count);
+            $total += $count;
+        } while ($count > 0);
+
+        return $sql;
+    }
 }

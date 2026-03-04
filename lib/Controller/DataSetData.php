@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -146,8 +146,8 @@ class DataSetData extends Base
         }
         $filter = trim($filter, 'AND');
 
-        // Work out the limits
-        $filter = $this->gridRenderFilter(['filter' => $request->getParam('filter', $filter)], $sanitizedParams);
+        // Datatables filtering, sorting and paging.
+        $filter = $this->gridRenderFilter(['filter' => $filter], $sanitizedParams);
 
         try {
             $data = $dataSet->getData(
@@ -161,17 +161,21 @@ class DataSetData extends Base
                 $params,
             );
         } catch (\Exception $e) {
-            $data = ['exception' => __('Error getting DataSet data, failed with following message: ') . $e->getMessage()];
-            $this->getLog()->error('Error getting DataSet data, failed with following message: ' . $e->getMessage());
+            $this->getLog()->error('grid: failed to query dataset getData, e = ' . $e->getMessage());
             $this->getLog()->debug($e->getTraceAsString());
+
+            throw new InvalidArgumentException(
+                sprintf(__('Error getting DataSet data, failed with following message: %s'), $e->getMessage())
+            );
         }
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($data);
 
         // Output the count of records for paging purposes
-        if ($dataSet->countLast() != 0)
+        if ($dataSet->countLast() != 0) {
             $this->getState()->recordsTotal = $dataSet->countLast();
+        }
 
         // Set this dataSet as being active
         $dataSet->setActive();

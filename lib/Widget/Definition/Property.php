@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -480,7 +480,7 @@ class Property implements \JsonSerializable
             case 'text':
                 if ($this->variant === 'sql') {
                     // Handle raw SQL clauses
-                    return str_ireplace(Sql::DISALLOWED_KEYWORDS, '', $params->getParam($key));
+                    return Sql::cleanup($params->getParam($key));
                 } else {
                     return $params->getString($key);
                 }

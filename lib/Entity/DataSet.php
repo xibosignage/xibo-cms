@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -453,9 +453,7 @@ class DataSet implements \JsonSerializable
                 if ($column->heading == $heading) {
                     // Formula column?
                     if ($column->dataSetColumnTypeId == 2) {
-                        $select .= str_replace(
-                            Sql::DISALLOWED_KEYWORDS,
-                            '',
+                        $select .= Sql::cleanup(
                             htmlspecialchars_decode($column->formula, ENT_QUOTES)
                         ) . ' AS `' . $column->heading . '`,';
                     } else {
@@ -617,11 +615,9 @@ class DataSet implements \JsonSerializable
                 }
 
                 $count = 0;
-                $formula = str_ireplace(
-                    Sql::DISALLOWED_KEYWORDS,
-                    '',
+                $formula = Sql::cleanup(
                     htmlspecialchars_decode($column->formula, ENT_QUOTES),
-                    $count
+                    $count,
                 );
 
                 if ($count > 0) {
@@ -650,7 +646,7 @@ class DataSet implements \JsonSerializable
         if ($filter != '') {
             // Support display filtering.
             $filter = str_replace('[DisplayId]', $displayId, $filter);
-            $filter = str_ireplace(Sql::DISALLOWED_KEYWORDS, '', $filter);
+            $filter = Sql::cleanup($filter);
 
             $body .= ' AND ' . $filter;
         }
