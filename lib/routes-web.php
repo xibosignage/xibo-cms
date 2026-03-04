@@ -110,6 +110,9 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 $app->get('/drawer/notification/show/{id}', ['\Xibo\Controller\Notification','show'])->setName('notification.show');
 $app->get('/drawer/notification/interrupt/{id}', ['\Xibo\Controller\Notification','interrupt'])->setName('notification.interrupt');
 $app->get('/notification/export/{id}', ['\Xibo\Controller\Notification','exportAttachment'])->setName('notification.exportattachment');
+$app->get('/notification/show/preview/{id}', ['\Xibo\Controller\Notification','showPreview'])
+    ->addMiddleware(new \Xibo\Middleware\TokenAuthMiddleware($app->getContainer()))
+    ->setName('notification.showPreview');
 
 $app->get('/notification/view', ['\Xibo\Controller\Notification','displayPage'])
     ->add(new FeatureAuth($app->getContainer(), ['notification.centre']))

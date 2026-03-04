@@ -33,9 +33,11 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserNotificationFactory;
 use Xibo\Helper\AttachmentUploadHandler;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\SendFile;
 use Xibo\Service\DisplayNotifyService;
 use Xibo\Service\MediaService;
+use Xibo\Service\JwtServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
 
@@ -73,7 +75,8 @@ class Notification extends Base
         $userNotificationFactory,
         $displayGroupFactory,
         $userGroupFactory,
-        $displayNotifyService
+        $displayNotifyService,
+        private readonly JwtServiceInterface $jwtService,
     ) {
         $this->notificationFactory = $notificationFactory;
         $this->userNotificationFactory = $userNotificationFactory;
@@ -143,11 +146,56 @@ class Notification extends Base
         if ($params->getCheckbox('multiSelect')) {
             return $response->withStatus(201);
         } else {
+            $baseUrl = (new HttpsDetect())->getBaseUrl($request);
+
             $this->getState()->template = 'notification-form-show';
-            $this->getState()->setData(['notification' => $notification]);
+
+            $this->getState()->setData([
+                'notification' => $notification,
+                'notificationUrl' => $baseUrl . '/notification/show/preview/' . $notification->notificationId,
+                'notificationJwt' => $this->jwtService->generateJwt(
+                    'Notification',
+                    'notification',
+                    $notification->notificationId,
+                    '/notification/show/preview/' . $notification->notificationId,
+                    3600,
+                )->toString(),
+            ]);
 
             return $this->render($request, $response);
         }
+    }
+
+    /**
+     * Show a notification preview
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function showPreview(Request $request, Response $response, $id)
+    {
+        $notification = $this->userNotificationFactory->getByNotificationId($id);
+        $token = $request->getAttribute('authedToken');
+
+        if (empty($token)) {
+            throw new AccessDeniedException();
+        }
+
+        if (!$token->isPermittedFor('notification') || !$token->isIdentifiedBy($notification->notificationId)) {
+            throw new AccessDeniedException();
+        }
+
+        $this->getState()->template = 'notification-form-preview';
+
+        $this->getState()->setData([
+            'notificationBody' => $notification->body,
+        ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -569,7 +617,7 @@ class Notification extends Base
 
         $notification = $this->notificationFactory->createEmpty();
         $notification->subject = $sanitizedParams->getString('subject');
-        $notification->body = $request->getParam('body', '');
+        $notification->body = $sanitizedParams->getHtml('body');
         $notification->createDt = Carbon::now()->format('U');
         $notification->releaseDt = $sanitizedParams->getDate('releaseDt');
 

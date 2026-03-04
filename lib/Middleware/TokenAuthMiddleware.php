@@ -74,6 +74,7 @@ class TokenAuthMiddleware implements MiddlewareInterface
         // Are we a JWT?
         $previewToken = $request->getHeader('X-PREVIEW-JWT')[0] ?? null;
         $jwt = $params->getString('jwt', ['default' => $previewToken]);
+
         if (!empty($jwt)) {
             // Yes, validate the JWT
             try {
@@ -81,7 +82,7 @@ class TokenAuthMiddleware implements MiddlewareInterface
                 $token = $this->getJwtService()->validateJwt($jwt);
 
                 // Check claims.
-                if (!$token->hasBeenIssuedBy('Preview')) {
+                if (!$token->hasBeenIssuedBy('Preview') && !$token->hasBeenIssuedBy('Notification')) {
                     throw new AccessDeniedException(__('Invalid URL'));
                 }
 
