@@ -68,7 +68,13 @@ export interface CreatePlaylistRequest {
   tags?: string;
   isDynamic?: boolean;
   enableStat?: string;
-  playlistNoExpiryDate?: number;
+  filterMediaName?: string;
+  logicalOperatorName?: 'OR' | 'AND';
+  filterMediaTag?: string;
+  exactTags?: boolean;
+  logicalOperator?: 'OR' | 'AND';
+  filterFolderId?: number | null;
+  maxNumberOfItems?: number;
 }
 
 export async function createPlaylist(data: UpdatePlaylistRequest): Promise<Playlist> {
@@ -81,12 +87,34 @@ export async function createPlaylist(data: UpdatePlaylistRequest): Promise<Playl
     params.append('tags', data.tags);
   }
 
-  if (data.isDynamic) {
-    params.append('isDynamic', data.isDynamic.toString());
-  }
-
   if (data.folderId) {
     params.append('folderId', data.folderId.toString());
+  }
+
+  if (data.isDynamic) {
+    params.append('isDynamic', data.isDynamic.toString());
+
+    if (data.filterMediaName) {
+      params.append('filterMediaName', data.filterMediaName);
+    }
+    if (data.logicalOperatorName) {
+      params.append('logicalOperatorName', data.logicalOperatorName);
+    }
+    if (data.filterMediaTag !== undefined) {
+      params.append('filterMediaTag', data.filterMediaTag);
+    }
+    if (data.exactTags !== undefined) {
+      params.append('exactTags', data.exactTags ? '1' : '0');
+    }
+    if (data.logicalOperator) {
+      params.append('logicalOperator', data.logicalOperator);
+    }
+    if (data.filterFolderId) {
+      params.append('filterFolderId', data.filterFolderId.toString());
+    }
+    if (data.maxNumberOfItems !== undefined) {
+      params.append('maxNumberOfItems', data.maxNumberOfItems.toString());
+    }
   }
 
   const response = await http.post(`/playlist`, params.toString(), {
@@ -105,7 +133,6 @@ export interface UpdatePlaylistRequest {
   tags?: string;
   isDynamic?: boolean;
   enableStat?: string;
-  playlistNoExpiryDate?: number;
   filterMediaName?: string;
   logicalOperatorName?: 'OR' | 'AND';
   filterMediaTag?: string;

@@ -33,7 +33,6 @@ export interface Playlist {
   valid: boolean;
   tags: Tag[];
   duration: number;
-  playlistNoExpiryDate: string;
   enableStat: string;
   retired: boolean;
   expires: number;
