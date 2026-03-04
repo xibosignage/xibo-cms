@@ -54,6 +54,7 @@ export interface UploadItem {
   enableStat?: string;
   retired?: number;
   retryCount?: number;
+  thumbnailBlob?: Blob;
 }
 
 interface UseUploadQueueReturn {
@@ -93,7 +94,10 @@ export const useUploadQueue = (defaultFolderId: number = 1): UseUploadQueueRetur
     setQueue((prev) => [...prev, ...newItems]);
   };
 
-  const updateFileData = (id: string, data: { name?: string; tags?: string }) => {
+  const updateFileData = (
+    id: string,
+    data: { name?: string; tags?: string; thumbnailBlob?: Blob },
+  ) => {
     setQueue((prev) =>
       prev.map((item) =>
         item.id === id
@@ -103,6 +107,8 @@ export const useUploadQueue = (defaultFolderId: number = 1): UseUploadQueueRetur
               tags: data.tags ?? item.tags,
               isDirty: true, // Marks item for sync if upload is done or in progress
               retryCount: 0,
+              thumbnailBlob:
+                data.thumbnailBlob !== undefined ? data.thumbnailBlob : item.thumbnailBlob,
             }
           : item,
       ),

@@ -70,10 +70,17 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { useOwner } from '@/hooks/useOwner';
 import { usePermissions } from '@/hooks/usePermissions';
+import type { UploadItem } from '@/hooks/useUploadQueue';
 import EditMediaModal from '@/pages/Library/Media/components/EditMediaModal';
 import { useMediaFilterOptions } from '@/pages/Library/Media/hooks/useMediaFilterOptions';
 import { selectFolder } from '@/services/folderApi';
-import { cloneMedia, deleteMedia, downloadMedia, downloadMediaAsZip } from '@/services/mediaApi';
+import {
+  cloneMedia,
+  deleteMedia,
+  downloadMedia,
+  downloadMediaAsZip,
+  uploadThumbnail,
+} from '@/services/mediaApi';
 import type { Media } from '@/types/media';
 import type { Tag } from '@/types/tag';
 
@@ -307,6 +314,26 @@ export default function Media() {
 
   const handleStartUpload = async () => {
     await saveMetadata();
+
+    const thumbnailPromises = queue
+      .filter((item): item is UploadItem & { mediaId: number; thumbnailBlob: Blob } => {
+        return !!item.thumbnailBlob && !!item.mediaId;
+      })
+      .map((item) =>
+        uploadThumbnail({
+          mediaId: item.mediaId,
+          image: item.thumbnailBlob,
+        }),
+      );
+
+    if (thumbnailPromises.length > 0) {
+      try {
+        await Promise.allSettled(thumbnailPromises);
+      } catch (error) {
+        console.error('Failed to save some thumbnails', error);
+        notify.error(t('Some thumbnails failed to save.'));
+      }
+    }
 
     const hasPending = queue.some(
       (item) => item.status === 'uploading' || item.status === 'pending',

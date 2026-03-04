@@ -175,6 +175,31 @@ export async function uploadMediaFromUrl({
   return { data: response.data };
 }
 
+export interface UploadThumbnailRequest {
+  mediaId: number;
+  image: Blob;
+}
+
+export async function uploadThumbnail({ mediaId, image }: UploadThumbnailRequest): Promise<void> {
+  const base64Image = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Failed to read blob as Base64'));
+    reader.readAsDataURL(image);
+  });
+
+  const params = new URLSearchParams();
+  params.append('mediaId', mediaId.toString());
+  params.append('image', base64Image);
+
+  await http.post('/library/thumbnail', params.toString(), {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+  });
+}
+
 export interface UpdateMediaRequest {
   name: string;
   folderId?: number | null;
