@@ -127,7 +127,7 @@
     "select2-bootstrap-theme": "0.1.0-beta.10",
     "selecto": "^1.26.3",
     "toastr": "~2.1.4",
-    "underscore": "^1.13.7",
+    "underscore": "^1.13.8",
     "xibo-interactive-control": "git+https://github.com/xibosignage/xibo-interactive-control.git#675ce4ac297625d7d94d4b867002693a234f4e84"
   }
 }
