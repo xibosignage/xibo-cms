@@ -35,6 +35,10 @@ import type { ComponentType } from 'react';
 
 import type { TabNavItem } from '@/components/ui/TabNav';
 import type { User } from '@/types/user';
+import { filterRoutesByUser } from '@/utils/permissions';
+
+// TODO: Hardcoded for now, change to default page later
+export const DEFAULT_INTERNAL_ROUTE = '/library/media';
 
 enum UserType {
   SuperAdmin = 1,
@@ -62,12 +66,14 @@ const canViewUsers = (user: User) => {
   return !!(hasFeature && isAdmin);
 };
 
-export const generateTabNavigation = (parentRoute: AppRoute): TabNavItem[] => {
-  if (!parentRoute.subLinks) {
+export const generateTabNavigation = (parentRoute: AppRoute, user: User | null): TabNavItem[] => {
+  if (!parentRoute.subLinks || !user) {
     return [];
   }
 
-  return parentRoute.subLinks.map((subLink) => {
+  const authorizedSubLinks = filterRoutesByUser(parentRoute.subLinks, user);
+
+  return authorizedSubLinks.map((subLink) => {
     const absolutePath = `/${parentRoute.path}/${subLink.path}`;
 
     return {

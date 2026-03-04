@@ -26,7 +26,8 @@ import { requireAuthLoader } from './loaders';
 
 import RootLayout from '@/app/RootLayout';
 import WithPageWrapper from '@/app/WithPageWrapper';
-import { APP_ROUTES } from '@/config/appRoutes';
+import ProtectedRoute from '@/components/layout/ProtectedRoute';
+import { APP_ROUTES, DEFAULT_INTERNAL_ROUTE } from '@/config/appRoutes';
 import type { AppRoute } from '@/config/appRoutes';
 
 const flattenRoutes = (routes: AppRoute[], base = ''): RouteObject[] => {
@@ -36,7 +37,13 @@ const flattenRoutes = (routes: AppRoute[], base = ''): RouteObject[] => {
     if (route.lazy) {
       acc.push({
         path: fullPath,
-        lazy: route.lazy,
+        element: <ProtectedRoute route={route} />,
+        children: [
+          {
+            index: true,
+            lazy: route.lazy,
+          },
+        ],
       });
     }
 
@@ -65,7 +72,7 @@ export const router = createBrowserRouter(
             // For now it redirect to media page
             {
               index: true,
-              element: <Navigate to="/library/media" replace />,
+              element: <Navigate to={DEFAULT_INTERNAL_ROUTE} replace />,
             },
             ...flattenRoutes(APP_ROUTES),
           ],

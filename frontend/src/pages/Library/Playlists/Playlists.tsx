@@ -36,7 +36,6 @@ import {
   getPlaylistColumns,
   getBulkActions,
   INITIAL_FILTER_STATE,
-  LIBRARY_TABS,
   type PlaylistFilterInput,
 } from './PlaylistsConfig';
 import AddAndEditPlaylistModal from './components/AddAndEditPlaylistModal';
@@ -55,6 +54,7 @@ import TabNav from '@/components/ui/TabNav';
 import MoveModal from '@/components/ui/modals/MoveModal';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { fetchContextButtons, selectFolder } from '@/services/folderApi';
 import { clonePlaylist, deletePlaylist } from '@/services/playlistApi';
@@ -387,6 +387,8 @@ export default function Playlist() {
 
   const { filterOptions } = usePlaylistFilterOptions();
 
+  const libraryTabs = useFilteredTabs('library');
+
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
       <FolderSidebar
@@ -399,7 +401,7 @@ export default function Playlist() {
       />
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
         <div className="flex flex-row justify-between py-4 items-center gap-4">
-          <TabNav activeTab="Playlists" navigation={LIBRARY_TABS} />
+          <TabNav activeTab="Playlists" navigation={libraryTabs} />
           <div className="flex items-center gap-2 md:mb-0">
             <Button
               variant="primary"

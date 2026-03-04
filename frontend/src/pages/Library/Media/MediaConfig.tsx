@@ -51,18 +51,8 @@ import {
   ActionsCell,
   TagsCell,
 } from '@/components/ui/table/cells';
-import { APP_ROUTES, generateTabNavigation } from '@/config/appRoutes';
 import type { Media } from '@/types/media';
 import type { Tag } from '@/types/tag';
-
-const libraryRoute = APP_ROUTES.find((route) => {
-  if (route.path === 'library') {
-    return true;
-  }
-  return false;
-});
-
-export const LIBRARY_TABS = libraryRoute ? generateTabNavigation(libraryRoute) : [];
 
 export interface MediaFilterInput {
   type?: string;

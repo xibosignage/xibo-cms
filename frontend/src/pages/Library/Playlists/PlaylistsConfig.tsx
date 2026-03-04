@@ -41,17 +41,7 @@ import {
   TagsCell,
   CheckMarkCell,
 } from '@/components/ui/table/cells';
-import { APP_ROUTES, generateTabNavigation } from '@/config/appRoutes';
 import type { Playlist } from '@/types/playlist';
-
-const libraryRoute = APP_ROUTES.find((route) => {
-  if (route.path === 'library') {
-    return true;
-  }
-  return false;
-});
-
-export const LIBRARY_TABS = libraryRoute ? generateTabNavigation(libraryRoute) : [];
 
 export interface PlaylistFilterInput {
   userId: string;

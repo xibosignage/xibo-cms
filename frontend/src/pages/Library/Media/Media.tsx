@@ -38,7 +38,6 @@ import {
   getMediaColumns,
   getBulkActions,
   INITIAL_FILTER_STATE,
-  LIBRARY_TABS,
   type MediaFilterInput,
   ACCEPTED_MIME_TYPES,
 } from './MediaConfig';
@@ -67,6 +66,7 @@ import { DataTable } from '@/components/ui/table/DataTable';
 import { useUploadContext } from '@/context/UploadContext';
 import { useUserContext } from '@/context/UserContext';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { useOwner } from '@/hooks/useOwner';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -601,6 +601,8 @@ export default function Media() {
 
   const { filterOptions } = useMediaFilterOptions();
 
+  const libraryTabs = useFilteredTabs('library');
+
   return (
     <section
       {...getGlobalRootProps()}
@@ -648,7 +650,7 @@ export default function Media() {
         )}
 
         <div className="flex flex-row justify-between py-4 items-center gap-4">
-          <TabNav activeTab="Media" navigation={LIBRARY_TABS} />
+          <TabNav activeTab="Media" navigation={libraryTabs} />
           <div className="flex items-center gap-2 md:mb-0">
             <Button variant="primary" onClick={() => setAddModalOpen(true)} leftIcon={Plus}>
               {t('Add Media')}
