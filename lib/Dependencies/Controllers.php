@@ -369,7 +369,7 @@ class Controllers
                     $c->get('userNotificationFactory'),
                     $c->get('displayGroupFactory'),
                     $c->get('userGroupFactory'),
-                    $c->get('displayNotifyService'),
+                    $c->get('displayNotifyService')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
