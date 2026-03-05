@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,7 +23,6 @@
 
 namespace Xibo\Factory;
 
-use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Pool;
 use Psr\Http\Message\ResponseInterface;
@@ -31,6 +30,7 @@ use Xibo\Entity\Media;
 use Xibo\Entity\User;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Environment;
+use Xibo\Helper\Guzzle\SafeClient;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -255,7 +255,7 @@ class MediaFactory extends BaseFactory
             // Create a generator and Pool
             $log = $this->getLog();
             $queue = $this->remoteDownloadQueue;
-            $client = new Client($this->config->getGuzzleProxy(['timeout' => 0]));
+            $client = SafeClient::getSafeClient($this->config->getGuzzleProxy(['timeout' => 0]));
 
             $downloads = function () use ($client, $queue) {
                 foreach ($queue as $media) {

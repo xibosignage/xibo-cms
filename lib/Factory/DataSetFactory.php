@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,13 +23,13 @@
 namespace Xibo\Factory;
 
 use Carbon\Carbon;
-use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
+use Xibo\Helper\Guzzle\SafeClient;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -360,7 +360,7 @@ class DataSetFactory extends BaseFactory
         $maxMemory = Environment::getMemoryLimitBytes() / 2;
 
         // Guzzle for this and add proxy support.
-        $client = new Client($this->config->getGuzzleProxy());
+        $client = SafeClient::getSafeClient($this->config->getGuzzleProxy());
 
         $result = new \stdClass();
         $result->entries = [];
