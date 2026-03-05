@@ -370,7 +370,6 @@ class Controllers
                     $c->get('displayGroupFactory'),
                     $c->get('userGroupFactory'),
                     $c->get('displayNotifyService'),
-                    $c->get('jwtService'),
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;

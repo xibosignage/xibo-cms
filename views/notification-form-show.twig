@@ -41,7 +41,7 @@
                     sandbox="allow-scripts"
                     frameborder="0"
                     id="notification_{{notification.notificationId}}"
-                    src="{{ notificationUrl }}?jwt={{ notificationJwt }}"
+                    srcdoc="{{ notification.body | e('html_attr') }}"
                     style="width: 100%; height: 150px; border: none;"
                 ></iframe>
             <p><a href="{{ url_for("notification.exportattachment", {id: notification.notificationId}) }}">{{ notification.originalFileName }}</a> </p>
