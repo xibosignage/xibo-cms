@@ -58,7 +58,7 @@ export function DataTablePagination<TData>({
   usePreline();
 
   return (
-    <div className="flex gap-3 items-center data-table-pagination">
+    <div className="flex gap-3 items-center data-table-pagination p-2 pt-0">
       {/* Page size selector */}
       <div className="flex items-center gap-2 data-table-pagination-picker">
         <div className="hs-dropdown relative inline-flex [--placement:top-left]">
@@ -128,7 +128,7 @@ export function DataTablePagination<TData>({
             }
             const isCurrent = (page as number) === pagination.pageIndex + 1;
             return (
-              <div key={page} className="flex w-[37px] justify-center">
+              <div key={page} className="flex w-9.25 justify-center">
                 <button
                   type="button"
                   onClick={() => table.setPageIndex((page as number) - 1)}

@@ -66,7 +66,7 @@ interface DataTableProps<TData, TValue> {
     columnVisibility?: VisibilityState;
   };
   onRefresh?: () => void;
-  viewMode?: 'table' | 'grid';
+  viewMode?: 'table' | 'grid' | null;
   onViewModeChange?: (mode: 'table' | 'grid') => void;
   getRowId?: (originalRow: TData, index: number, parent?: Row<TData>) => string;
   hideToolbar?: boolean;
@@ -235,9 +235,11 @@ export function DataTable<TData, TValue>({
       {!hideToolbar && (
         <div className="flex justify-between data-table-header flex-none mt-5">
           <div className="flex items-center gap-3">
-            <div className="text-gray-500 font-sans text-sm font-semibold leading-normal tracking-tight uppercase">
-              {t('Table View')}
-            </div>
+            {viewMode && (
+              <div className="text-gray-500 font-sans text-sm font-semibold leading-normal tracking-tight uppercase">
+                {t('Table View')}
+              </div>
+            )}
             {selectedCount > 0 && bulkActions.length > 0 && (
               <DataTableBulkActions
                 selectedCount={selectedCount}
@@ -276,12 +278,11 @@ export function DataTable<TData, TValue>({
         <div className="overflow-auto w-full printable-table-container flex-1 min-h-0 mb-2">
           <table
             className={twMerge(
-              'border-separate border-spacing-0 bg-white',
-              'w-full min-w-full mb-2',
+              'border-separate border-spacing-0 bg-white w-full min-w-full',
               // Fix for header width with no results
               table.getRowModel().rows.length === 0
-                ? 'table-auto min-h-full'
-                : 'table-fixed h-auto',
+                ? 'table-auto h-full'
+                : 'table-fixed h-auto mb-2',
             )}
             style={{
               minWidth: table.getRowModel().rows.length === 0 ? '100%' : table.getTotalSize(),
@@ -389,7 +390,7 @@ export function DataTable<TData, TValue>({
                 <tr>
                   <td colSpan={columns.length} className="text-center text-gray-500 no-results">
                     {!loading && (
-                      <div className="flex flex-col items-center justify-center gap-3">
+                      <div className="flex flex-col items-center justify-center gap-3 h-full min-h-64">
                         <div className="inline-flex justify-center items-center size-15.5 rounded-full bg-gray-100 text-gray-500 border-7 border-gray-50">
                           <FileSearch2 className="shrink-0 size-5" />
                         </div>

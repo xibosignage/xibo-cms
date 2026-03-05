@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { LucideIcon } from 'lucide-react';
+import { CircleX, type LucideIcon } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { twMerge } from 'tailwind-merge';
 
@@ -51,6 +51,7 @@ interface ModalProps {
   className?: string;
   scrollable?: boolean;
   isPending?: boolean;
+  error?: string;
 }
 
 export default function Modal({
@@ -64,6 +65,7 @@ export default function Modal({
   closeOnOverlay,
   scrollable = true,
   isPending = false,
+  error,
 }: ModalProps) {
   useKeydown('Escape', onClose, isOpen);
 
@@ -113,6 +115,26 @@ export default function Modal({
         >
           {children}
         </div>
+
+        {/* Error */}
+        {error && (
+          <div
+            className="bg-red-50 border border-red-200 text-sm text-red-800 rounded-lg mx-4 my-3 p-4"
+            role="alert"
+            aria-labelledby="hs-with-list-label"
+          >
+            <div className="flex">
+              <div className="shrink-0">
+                <CircleX size={18} />
+              </div>
+              <div className="ms-4">
+                <h3 id="hs-with-list-label" className="text-sm font-semibold">
+                  {error}
+                </h3>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
         {actions && actions.length > 0 && (

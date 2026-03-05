@@ -21,7 +21,6 @@
 
 import http from '@/lib/api';
 import type { Media } from '@/types/media';
-import { incrementFileName, incrementName } from '@/utils/stringUtils';
 import ZipWorker from '@/workers/zipWorker?worker';
 
 export interface FetchMediaRequest {
@@ -176,6 +175,31 @@ export async function uploadMediaFromUrl({
   return { data: response.data };
 }
 
+export interface UploadThumbnailRequest {
+  mediaId: number;
+  image: Blob;
+}
+
+export async function uploadThumbnail({ mediaId, image }: UploadThumbnailRequest): Promise<void> {
+  const base64Image = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Failed to read blob as Base64'));
+    reader.readAsDataURL(image);
+  });
+
+  const params = new URLSearchParams();
+  params.append('mediaId', mediaId.toString());
+  params.append('image', base64Image);
+
+  await http.post('/library/thumbnail', params.toString(), {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+  });
+}
+
 export interface UpdateMediaRequest {
   name: string;
   folderId?: number | null;
@@ -305,64 +329,27 @@ export async function downloadMediaAsZip(
 export interface CloneMediaRequest {
   mediaId: number | string;
   name: string;
-  fileName: string;
-  duration: number;
-  folderId?: number | string;
-  tags?: string[];
-  orientation?: 'portrait' | 'landscape';
-  expires?: string;
-  mediaNoExpiryDate?: number;
-  overrideName?: string;
+  tags?: string;
   signal?: AbortSignal;
 }
 
-export type CloneMediaResponse = Media;
+export async function cloneMedia({ mediaId, name, tags }: CloneMediaRequest): Promise<Media> {
+  const params = new URLSearchParams();
 
-export async function cloneMedia({
-  mediaId,
-  name,
-  fileName,
-  duration,
-  folderId = 1,
-  tags = [],
-  orientation,
-  expires,
-  mediaNoExpiryDate,
-  signal,
-  overrideName,
-}: CloneMediaRequest): Promise<Media> {
-  const blob = await fetchMediaBlob(mediaId);
+  params.append('name', name);
 
-  const clonedDisplayName = overrideName ?? incrementName(name);
-
-  const clonedFileName = incrementFileName(fileName);
-
-  const clonedFile = new File([blob], clonedFileName, {
-    type: blob.type,
-  });
-
-  const uploadResponse = await uploadMedia({
-    file: clonedFile,
-    folderId,
-    tags,
-    signal,
-  });
-
-  const uploadedFile = uploadResponse.data.files?.[0];
-  if (!uploadedFile) {
-    throw new Error('Upload media failed: no file returned');
+  if (tags !== undefined) {
+    params.append('tags', tags);
   }
 
-  return updateMedia(uploadedFile.mediaId, {
-    name: clonedDisplayName,
-    duration,
-    tags: tags.join(','),
-    orientation,
-    expires,
-    mediaNoExpiryDate,
-    retired: 0,
-    enableStat: 'Inherit',
+  const response = await http.post(`/library/copy/${mediaId}`, params.toString(), {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-Requested-With': 'XMLHttpRequest',
+    },
   });
+
+  return response.data;
 }
 
 export async function deleteMedia(mediaId: number | string, force: boolean = false): Promise<void> {
@@ -370,4 +357,63 @@ export async function deleteMedia(mediaId: number | string, force: boolean = fal
     params: { forceDelete: force ? 1 : 0 },
     headers: { 'X-Requested-With': 'XMLHttpRequest' },
   });
+}
+
+export interface ReplaceMediaRequest {
+  file: File;
+  oldMediaId: number;
+  name?: string;
+  folderId?: number | string;
+  tags?: string[];
+  updateInLayouts?: boolean;
+  deleteOldRevisions?: boolean;
+  onProgress?: (progress: number) => void;
+  signal?: AbortSignal;
+}
+
+export async function replaceMedia({
+  file,
+  oldMediaId,
+  name,
+  folderId = 1,
+  tags = [],
+  updateInLayouts = false,
+  deleteOldRevisions = false,
+  onProgress,
+  signal,
+}: ReplaceMediaRequest): Promise<{ data: UploadMediaResponse }> {
+  const formData = new FormData();
+
+  formData.append('files[]', file);
+  formData.append('name[]', name ?? file.name);
+
+  formData.append('oldMediaId', oldMediaId.toString());
+  formData.append('updateInLayouts', updateInLayouts ? '1' : '0');
+  formData.append('deleteOldRevisions', deleteOldRevisions ? '1' : '0');
+
+  if (folderId) {
+    formData.append('folderId', folderId.toString());
+  }
+
+  if (tags.length > 0) {
+    tags.forEach((tag) => formData.append('tags[]', tag));
+  } else {
+    formData.append('tags[]', '');
+  }
+
+  const response = await http.post<UploadMediaResponse>('/library', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+    signal,
+    onUploadProgress: (event) => {
+      if (onProgress && event.total) {
+        const percent = Math.round((event.loaded * 100) / event.total);
+        onProgress(percent);
+      }
+    },
+  });
+
+  return { data: response.data };
 }

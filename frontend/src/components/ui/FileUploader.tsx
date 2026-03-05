@@ -28,8 +28,10 @@ import {
   Globe,
   LockKeyhole,
   Info,
+  Camera,
+  X,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useDropzone, type FileRejection, type DropEvent } from 'react-dropzone';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
@@ -41,13 +43,17 @@ import Button from '@/components/ui/Button';
 import { usePreline } from '@/hooks/usePreline';
 import type { UploadItem } from '@/hooks/useUploadQueue';
 import type { Tag } from '@/types/tag';
+import { captureVideoFrame } from '@/utils/captureVideoFrame';
 
 interface FileUploaderProps {
   queue: UploadItem[];
   addFiles: (files: File[]) => void;
   removeFile: (id: string) => void;
   clearQueue: () => void;
-  updateFileData: (id: string, data: { displayName?: string; tags?: string }) => void;
+  updateFileData: (
+    id: string,
+    data: { displayName?: string; tags?: string; thumbnailBlob?: Blob },
+  ) => void;
   isUploading: boolean;
   acceptedFileTypes?: Record<string, string[]>;
   maxSize?: number;
@@ -58,7 +64,7 @@ interface FileUploaderProps {
 interface RowProps {
   item: UploadItem;
   onRemove: () => void;
-  onUpdate: (data: { name?: string; tags?: string }) => void;
+  onUpdate: (data: { name?: string; tags?: string; thumbnailBlob?: Blob }) => void;
 }
 
 const parseTagsFromString = (str: string | undefined): Tag[] => {
@@ -122,6 +128,21 @@ function UploadItemRow({ item, onRemove, onUpdate }: RowProps) {
   const isCompleted = item.status === 'completed';
   const isUploading = item.status === 'uploading';
 
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [hasCaptured, setHasCaptured] = useState(false);
+
+  const [isEditingThumb, setIsEditingThumb] = useState(false);
+
+  const [blobPreview, setBlobPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (item.thumbnailBlob) {
+      const url = URL.createObjectURL(item.thumbnailBlob);
+      setBlobPreview(url);
+      return () => URL.revokeObjectURL(url);
+    }
+  }, [item.thumbnailBlob]);
+
   // Debounce - name
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -138,6 +159,17 @@ function UploadItemRow({ item, onRemove, onUpdate }: RowProps) {
     const serialized = serializeTagsToString(newTags);
     if (serialized !== item.tags) {
       onUpdate({ tags: serialized });
+    }
+  };
+
+  const handleCaptureThumbnail = async () => {
+    if (videoRef.current) {
+      const blob = await captureVideoFrame(videoRef.current);
+      if (blob) {
+        onUpdate({ thumbnailBlob: blob });
+        setHasCaptured(true);
+        setIsEditingThumb(false);
+      }
     }
   };
 
@@ -164,9 +196,53 @@ function UploadItemRow({ item, onRemove, onUpdate }: RowProps) {
     }
 
     if (preview) {
-      if (item.file && item.file.type.startsWith('video/')) {
-        return <video src={preview} className="size-full object-cover rounded" />;
+      // If it's video, and we have a thumbnail
+      if (item.file?.type.startsWith('video/') && blobPreview) {
+        return (
+          <div className="relative size-full group">
+            <img
+              src={blobPreview}
+              alt="Captured thumbnail"
+              className="size-full object-cover rounded"
+            />
+            <button
+              type="button"
+              onClick={() => setIsEditingThumb(true)}
+              className="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded"
+              title={t('Retake thumbnail')}
+            >
+              <Camera className="size-5" />
+            </button>
+          </div>
+        );
       }
+
+      // Video before having thumbnail
+      if (item.file?.type.startsWith('video/')) {
+        return (
+          <div className="size-full bg-black flex items-center justify-center relative rounded overflow-hidden">
+            <span className="text-white text-xs">{t('Loading...')}</span>
+            <video
+              ref={videoRef}
+              src={preview}
+              className="opacity-0 absolute inset-0 pointer-events-none"
+              muted
+              preload="metadata"
+              onLoadedMetadata={() => {
+                if (videoRef.current && !hasCaptured) {
+                  videoRef.current.currentTime = 1;
+                }
+              }}
+              onSeeked={() => {
+                if (!hasCaptured) {
+                  handleCaptureThumbnail();
+                }
+              }}
+            />
+          </div>
+        );
+      }
+
       return (
         <img src={preview} alt={item.displayName} className="size-full object-cover rounded" />
       );
@@ -179,77 +255,123 @@ function UploadItemRow({ item, onRemove, onUpdate }: RowProps) {
   };
 
   return (
-    <div className="p-4 md:px-4 md:py-5 border-b border-gray-200 bg-slate-50 flex flex-col md:flex-row gap-4 items-center relative">
-      <button
-        onClick={onRemove}
-        title={t('Remove File')}
-        className="absolute right-0 top-0 p-1 text-red-500 hover:bg-red-100 hover:text-red-800 rounded-lg z-10"
-      >
-        <MinusCircle className="size-4" />
-      </button>
+    <>
+      <div className="p-4 md:px-4 md:py-5 border-b border-gray-200 bg-slate-50 flex flex-col md:flex-row gap-4 items-center relative">
+        <button
+          onClick={onRemove}
+          title={t('Remove File')}
+          className="absolute right-0 top-0 p-1 text-red-500 hover:bg-red-100 hover:text-red-800 rounded-lg z-10"
+        >
+          <MinusCircle className="size-4" />
+        </button>
 
-      <div className="flex gap-3 w-full md:w-auto">
-        <div className="thumb size-17.5 rounded text-xibo-blue-600 bg-gray-400 border border-xibo-blue-200/50 overflow-hidden">
-          {renderThumbnail()}
-        </div>
-
-        <div className="flex flex-row gap-3 flex-1">
-          <div className="flex flex-col gap-1 w-full md:w-50">
-            <label className="block text-sm font-medium text-gray-500">{t('Name')}</label>
-            <input
-              type="text"
-              disabled={isUploading}
-              value={localName}
-              onChange={(e) => setLocalName(e.target.value)}
-              className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none"
-              placeholder={t('File Name')}
-            />
+        <div className="flex gap-3 w-full md:w-auto">
+          <div className="thumb size-17.5 rounded text-xibo-blue-600 bg-gray-400 border border-xibo-blue-200/50 overflow-hidden">
+            {renderThumbnail()}
           </div>
 
-          <div className="flex flex-col w-full md:w-70">
-            <TagInput value={tagObjects} onChange={handleTagsChange} disabled={isUploading} />
-          </div>
-        </div>
-      </div>
-
-      {(isUploading || isError || isCompleted) && (
-        <div className="flex flex-col w-full md:flex-1 min-w-0 mt-2 md:mt-0">
-          <div className="flex justify-between items-center gap-4 mb-1">
-            <span className="truncate text-sm font-semibold text-gray-800 min-w-0 block">
-              {item.displayName}
-            </span>
-            <span className="text-sm text-gray-500 whitespace-nowrap shrink-0">
-              {formatFileSize(item, t)}
-            </span>
-          </div>
-
-          <div className="flex gap-2 items-center">
-            <div className="bg-gray-200 h-2.5 rounded-full w-full overflow-hidden">
-              <div
-                className={twMerge(
-                  'h-full transition-all duration-300 rounded-full',
-                  isError ? 'bg-red-600' : 'bg-xibo-blue-600',
-                )}
-                style={{ width: `${item.progress}%` }}
+          <div className="flex flex-row gap-3 flex-1">
+            <div className="flex flex-col gap-1 w-full md:w-50">
+              <label className="block text-sm font-medium text-gray-500">{t('Name')}</label>
+              <input
+                type="text"
+                disabled={isUploading}
+                value={localName}
+                onChange={(e) => setLocalName(e.target.value)}
+                className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none"
+                placeholder={t('File Name')}
               />
             </div>
-            <div
-              className={`text-sm font-semibold w-11 text-right shrink-0 ${
-                isError ? 'text-red-600' : isCompleted ? 'text-xibo-blue-600' : 'text-gray-800'
-              }`}
-            >
-              {item.progress}%
+
+            <div className="flex flex-col w-full md:w-70">
+              <TagInput value={tagObjects} onChange={handleTagsChange} disabled={isUploading} />
+            </div>
+          </div>
+        </div>
+
+        {(isUploading || isError || isCompleted) && (
+          <div className="flex flex-col w-full md:flex-1 min-w-0 mt-2 md:mt-0">
+            <div className="flex justify-between items-center gap-4 mb-1">
+              <span className="truncate text-sm font-semibold text-gray-800 min-w-0 block">
+                {item.displayName}
+              </span>
+              <span className="text-sm text-gray-500 whitespace-nowrap shrink-0">
+                {formatFileSize(item, t)}
+              </span>
+            </div>
+
+            <div className="flex gap-2 items-center">
+              <div className="bg-gray-200 h-2.5 rounded-full w-full overflow-hidden">
+                <div
+                  className={twMerge(
+                    'h-full transition-all duration-300 rounded-full',
+                    isError ? 'bg-red-600' : 'bg-xibo-blue-600',
+                  )}
+                  style={{ width: `${item.progress}%` }}
+                />
+              </div>
+              <div
+                className={`text-sm font-semibold w-11 text-right shrink-0 ${
+                  isError ? 'text-red-600' : isCompleted ? 'text-xibo-blue-600' : 'text-gray-800'
+                }`}
+              >
+                {item.progress}%
+              </div>
+            </div>
+
+            {item.error && (
+              <p className="text-[11px] text-red-600 font-bold font-mono mt-1 wrap-break-word">
+                {item.error}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {isEditingThumb && (
+        <div className="fixed inset-0 z-100 flex flex-col bg-black/90 h-dvh backdrop-blur-sm">
+          <div className="flex w-full px-5 py-3 text-white justify-between items-center border-b border-white/10">
+            <div className="flex w-full items-center gap-3">
+              <button
+                onClick={() => setIsEditingThumb(false)}
+                className="cursor-pointer rounded-lg hover:bg-white/10 transition-colors"
+                title={t('Cancel')}
+              >
+                <X className="p-1 size-7" />
+              </button>
+              <h3 className="font-semibold text-sm truncate">
+                <span className="text-gray-400 font-normal ml-2">{item.displayName}</span>
+              </h3>
+            </div>
+
+            <div className="flex items-center gap-3 shrink-0">
+              <p className="text-xs text-gray-400 hidden sm:block mr-2">
+                {t(
+                  'Scroll through the progress bar or play and pause to select a still to be used as the video file thumbnail.',
+                )}
+              </p>
+
+              <Button leftIcon={Camera} onClick={handleCaptureThumbnail} title={t('Capture Frame')}>
+                {t('Capture')}
+              </Button>
             </div>
           </div>
 
-          {item.error && (
-            <p className="text-[11px] text-red-600 font-bold font-mono mt-1 wrap-break-word">
-              {item.error}
-            </p>
-          )}
+          <div className="flex flex-1 min-h-0">
+            <div className="flex-1 w-full p-4 md:p-8 flex justify-center items-center overflow-hidden min-h-0">
+              <video
+                ref={videoRef}
+                src={preview!}
+                className="max-h-full max-w-full shadow-2xl rounded-sm"
+                controls
+                autoPlay
+                muted
+              />
+            </div>
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 

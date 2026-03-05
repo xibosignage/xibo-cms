@@ -36,6 +36,7 @@ import {
   CalendarClock,
   Info,
   Trash2,
+  FileSymlink,
 } from 'lucide-react';
 import { type ComponentProps, type ElementType } from 'react';
 
@@ -50,23 +51,22 @@ import {
   ActionsCell,
   TagsCell,
 } from '@/components/ui/table/cells';
-import { APP_ROUTES } from '@/config/appRoutes';
 import type { Media } from '@/types/media';
-
-export const LIBRARY_TABS = APP_ROUTES.find((r) => r.path === 'library')?.subLinks || [];
+import type { Tag } from '@/types/tag';
 
 export interface MediaFilterInput {
-  type: string;
-  ownerId: string;
-  ownerUserGroupId: string;
-  orientation: string;
+  type?: string;
+  ownerId?: string;
+  ownerUserGroupId?: string;
+  orientation?: string;
   retired?: number;
-  lastModified: string;
-}
-
-interface ApiTag {
-  tagId: number;
-  tag: string;
+  lastModified?: string;
+  media?: string;
+  tags?: string;
+  exactTags?: boolean;
+  folderId?: number;
+  logicalOperator?: 'OR' | 'AND';
+  logicalOperatorName?: 'OR' | 'AND';
 }
 
 export const getMediaIcon = (mediaType: string) => {
@@ -108,7 +108,7 @@ export type ActionItem =
 
 type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
 
-export type ModalType = 'edit' | 'share' | 'delete' | 'copy' | 'move' | null;
+export type ModalType = 'edit' | 'share' | 'delete' | 'copy' | 'move' | 'replace' | null;
 
 export const INITIAL_FILTER_STATE: MediaFilterInput = {
   type: '',
@@ -118,6 +118,7 @@ export const INITIAL_FILTER_STATE: MediaFilterInput = {
   lastModified: '',
 };
 
+// TODO: Needs translation
 export const BASE_FILTER_KEYS: FilterConfigItem<MediaFilterInput>[] = [
   {
     label: 'Type',
@@ -186,12 +187,8 @@ export const BASE_FILTER_KEYS: FilterConfigItem<MediaFilterInput>[] = [
   },
 ];
 
+// TODO: Needs translation
 export const MEDIA_FORM_OPTIONS = {
-  folders: {
-    myFiles: ['Folder 1', 'Folder 2', 'Folder 3'],
-    home: ['USER 1', 'USER 2', 'USER 3', 'USER 4'],
-  },
-
   expiryDates: ['Never Expire', 'End of Today', 'In 7 Days', 'In 14 Days', 'In 30 Days'],
 
   orientation: [
@@ -237,12 +234,14 @@ export const ACCEPTED_MIME_TYPES = {
   'video/x-ms-wmv': ['.wmv'],
 };
 
-const formatDuration = (seconds: number) => {
-  if (!seconds) return '-';
+export const formatDuration = (seconds: number) => {
+  if (typeof seconds != 'number') {
+    return '-';
+  }
   return new Date(seconds * 1000).toISOString().slice(11, 19);
 };
 
-const getStatusTypeFromMediaType = (mediaType: string) => {
+export const getStatusTypeFromMediaType = (mediaType: string) => {
   const type = mediaType?.toLowerCase();
   switch (type) {
     case 'image':
@@ -270,6 +269,7 @@ export interface MediaActionsProps {
   openMoveModal?: (row: Media | Media[]) => void;
   openDetails?: (id: number) => void;
   copyMedia?: (row: number) => void;
+  openReplaceModal: (id: number) => void;
 }
 
 export const getMediaItemActions = ({
@@ -281,6 +281,7 @@ export const getMediaItemActions = ({
   openMoveModal,
   openDetails,
   copyMedia,
+  openReplaceModal,
 }: MediaActionsProps): ((media: Media) => ActionItem[]) => {
   return (media: Media) => {
     const actions: ActionItem[] = [];
@@ -311,6 +312,14 @@ export const getMediaItemActions = ({
         label: t('Edit'),
         icon: Edit,
         onClick: () => openEditModal(media),
+      });
+    }
+
+    if (canEdit) {
+      actions.push({
+        label: t('Replace File'),
+        icon: FileSymlink,
+        onClick: () => openReplaceModal(media.mediaId),
       });
     }
 
@@ -438,7 +447,7 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
     {
       accessorKey: 'name',
       header: t('Name'),
-      size: 240,
+      size: 200,
       enableHiding: false,
       cell: (info) => <TextCell weight="bold">{info.getValue<string>()}</TextCell>,
     },
@@ -457,7 +466,7 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
       enableSorting: false,
       size: 150,
       cell: (info) => {
-        const tags = info.getValue<ApiTag[]>() || [];
+        const tags = info.getValue<Tag[]>() || [];
         const formattedTags = tags.map((tag) => ({
           id: tag.tagId,
           label: tag.tag,
@@ -506,7 +515,7 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
     {
-      accessorKey: 'ownerId',
+      accessorKey: 'owner',
       header: t('Owner'),
       size: 150,
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
@@ -545,9 +554,16 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
     },
     {
       accessorKey: 'enableStat',
-      header: t('Stats?'),
+      header: t('Stats'),
       size: 100,
-      cell: (info) => <StatusCell label={info.getValue() as string} type="neutral" />,
+      cell: (info) => {
+        const value = info.getValue();
+        if (value === 'Inherit') {
+          return <StatusCell label={info.getValue() as string} type="neutral" />;
+        } else {
+          return <CheckMarkCell active={info.getValue() === 'on'} />;
+        }
+      },
     },
     {
       accessorKey: 'createdDt',

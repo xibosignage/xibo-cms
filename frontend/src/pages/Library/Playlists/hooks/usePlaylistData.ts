@@ -23,32 +23,32 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
 import type { AxiosError } from 'axios';
 
-import type { MediaFilterInput } from '../MediaConfig';
+import type { PlaylistFilterInput } from '../PlaylistsConfig';
 
-import type { FetchMediaRequest } from '@/services/mediaApi';
-import { fetchMedia } from '@/services/mediaApi';
+import type { FetchPlaylistRequest } from '@/services/playlistApi';
+import { fetchPlaylist } from '@/services/playlistApi';
 import { resolveLastModified } from '@/utils/date';
 
-export const mediaQueryKeys = {
-  all: ['media'] as const,
-  list: (params: Record<string, unknown>) => [...mediaQueryKeys.all, 'list', params] as const,
+export const playlistQueryKeys = {
+  all: ['playlist'] as const,
+  list: (params: Record<string, unknown>) => [...playlistQueryKeys.all, 'list', params] as const,
 };
 
-interface UseMediaParams {
+interface UsePlaylistParams {
   pagination: PaginationState;
   sorting: SortingState;
-  filter?: string;
+  filter: string;
   folderId: number | null;
-  advancedFilters: MediaFilterInput;
+  advancedFilters: PlaylistFilterInput;
 }
 
-export const useMediaData = ({
+export const usePlaylistData = ({
   pagination,
   sorting,
   filter,
   folderId,
   advancedFilters,
-}: UseMediaParams) => {
+}: UsePlaylistParams) => {
   // Combine settings into one object to create a unique cache key
   const queryParams = {
     pageIndex: pagination.pageIndex,
@@ -60,7 +60,7 @@ export const useMediaData = ({
   };
 
   return useQuery({
-    queryKey: mediaQueryKeys.list(queryParams),
+    queryKey: playlistQueryKeys.list(queryParams),
 
     queryFn: async ({ signal }) => {
       const startOffset = pagination.pageIndex * pagination.pageSize;
@@ -70,7 +70,7 @@ export const useMediaData = ({
 
       const { lastModified, ...restFilters } = advancedFilters;
 
-      const request: FetchMediaRequest = {
+      const request: FetchPlaylistRequest = {
         start: startOffset,
         length: pagination.pageSize,
         keyword: filter,
@@ -79,13 +79,13 @@ export const useMediaData = ({
         signal,
         ...restFilters,
         ...resolveLastModified(lastModified),
-      } as FetchMediaRequest;
+      } as FetchPlaylistRequest;
 
       if (typeof folderId === 'number') {
         request.folderId = folderId;
       }
 
-      return fetchMedia(request);
+      return fetchPlaylist(request);
     },
 
     placeholderData: keepPreviousData, // Keep showing previous page's data while the new page loads

@@ -34,6 +34,8 @@ interface TagInputProps {
   onChange: (tags: Tag[]) => void;
   className?: string;
   disabled?: boolean;
+  prefix?: React.ReactNode;
+  suffix?: React.ReactNode;
 }
 
 function TagInput({
@@ -44,6 +46,8 @@ function TagInput({
   placeholder,
   helpText,
   disabled = false,
+  prefix,
+  suffix,
 }: TagInputProps) {
   const { t } = useTranslation();
   const [input, setInput] = useState('');
@@ -95,47 +99,56 @@ function TagInput({
 
       <div
         className={twMerge(
-          'border border-gray-200 rounded-lg p-2 flex flex-wrap gap-2 items-center bg-white',
-          'transition-colors duration-200 ease-in-out',
-          'focus-within:border-blue-500 focus-within:ring-blue-500 focus-within:ring-1',
+          'flex rounded-lg bg-white border border-gray-200 overflow-hidden transition-colors',
+          'focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500',
           disabled && 'opacity-50 pointer-events-none bg-gray-50',
           className,
         )}
       >
-        {value.map((tagObj) => (
-          <span
-            key={tagObj.tag}
-            className="flex items-center gap-1 px-2 py-1 text-sm font-semibold border text-xibo-blue-600 border-xibo-blue-400 rounded-full"
-          >
-            {tagObj.tag}
-            <button
-              type="button"
-              onClick={() => removeTag(tagObj.tag)}
-              disabled={disabled}
-              className="text-blue-600 w-3 rounded-full h-3 center bg-blue-200 hover:text-gray-600"
+        {prefix && (
+          <div className="flex items-center border-e border-gray-200 shrink-0">{prefix}</div>
+        )}
+
+        <div className="flex-1 p-2 flex flex-wrap gap-2 items-center min-w-0">
+          {value.map((tagObj) => (
+            <span
+              key={tagObj.tag}
+              className="flex items-center gap-1 px-2 py-1 text-sm font-semibold border text-xibo-blue-600 border-xibo-blue-400 rounded-full"
             >
-              <X size={8} />
-            </button>
-          </span>
-        ))}
-        <input
-          className="flex-1 min-w-[120px] text-sm p-1 border-none outline-none focus:outline-none focus:ring-0 focus:shadow-none bg-transparent"
-          value={input}
-          disabled={disabled}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ',') {
-              e.preventDefault();
-              addTag(input);
-            } else if (e.key === 'Backspace' && !input && value.length > 0) {
-              const lastTag = value[value.length - 1];
-              if (lastTag) {
-                removeTag(lastTag.tag);
+              {tagObj.tag}
+              <button
+                type="button"
+                onClick={() => removeTag(tagObj.tag)}
+                disabled={disabled}
+                className="text-blue-600 w-3 rounded-full h-3 flex items-center justify-center bg-blue-200 hover:text-gray-600"
+              >
+                <X size={8} />
+              </button>
+            </span>
+          ))}
+          <input
+            className="flex-1 min-w-30 text-sm p-1 bg-transparent border-none outline-none focus:outline-none focus:ring-0"
+            value={input}
+            disabled={disabled}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ',') {
+                e.preventDefault();
+                addTag(input);
+              } else if (e.key === 'Backspace' && !input && value.length > 0) {
+                const lastTag = value[value.length - 1];
+                if (lastTag) {
+                  removeTag(lastTag.tag);
+                }
               }
-            }
-          }}
-          placeholder={value.length === 0 ? placeholder || t('Add tags') : ''}
-        />
+            }}
+            placeholder={value.length === 0 ? placeholder || t('Add tags') : ''}
+          />
+        </div>
+
+        {suffix && (
+          <div className="flex items-center border-s border-gray-200 shrink-0">{suffix}</div>
+        )}
       </div>
 
       {helpText && <span className="text-xs text-gray-400">{helpText}</span>}

@@ -21,39 +21,28 @@
 
 import type { Tag } from './tag';
 
-export interface MediaPermissions {
-  view?: number;
-  edit?: number;
-  delete?: number;
-  modifyPermissions?: number;
-}
-
-export interface Media {
+export interface Playlist {
   folderId: number;
-  storedAs: string;
-  mediaId: number;
+  playlistId: number;
   name: string;
-  thumbnail: string;
-  mediaType: MediaType;
   createdDt: string;
   modifiedDt: string;
   ownerId: string;
   width?: number;
   height?: number;
   valid: boolean;
-  fileName: string;
-  fileSizeFormatted: string;
-  orientation: 'portrait' | 'landscape';
   tags: Tag[];
-  fileSize: number;
   duration: number;
-  mediaNoExpiryDate: string;
   enableStat: string;
   retired: boolean;
-  expires: string;
+  expires: number;
   updateInLayouts: boolean;
-  userPermissions: MediaPermissions;
-  deleteOldRevisions: boolean;
+  isDynamic: boolean;
+  filterMediaName: string;
+  logicalOperatorName: 'OR' | 'AND';
+  filterMediaTag: Tag[];
+  exactTags: boolean;
+  logicalOperator: 'OR' | 'AND';
+  filterFolderId: number | null;
+  maxNumberOfItems: number;
 }
-
-export type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';

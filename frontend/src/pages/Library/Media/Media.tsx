@@ -38,7 +38,6 @@ import {
   getMediaColumns,
   getBulkActions,
   INITIAL_FILTER_STATE,
-  LIBRARY_TABS,
   type MediaFilterInput,
   ACCEPTED_MIME_TYPES,
 } from './MediaConfig';
@@ -47,6 +46,7 @@ import DeleteMediaModal from './components/DeleteMediaModal';
 import MediaCard from './components/MediaCard';
 import { MediaInfoPanel } from './components/MediaInfoPanel';
 import MediaPreviewer from './components/MediaPreviewer';
+import ReplaceFileModal from './components/ReplaceFileModal';
 import { UploadProgressDock } from './components/UploadProgressDock';
 import { useMediaData } from './hooks/useMediaData';
 
@@ -66,14 +66,23 @@ import { DataTable } from '@/components/ui/table/DataTable';
 import { useUploadContext } from '@/context/UploadContext';
 import { useUserContext } from '@/context/UserContext';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { useOwner } from '@/hooks/useOwner';
 import { usePermissions } from '@/hooks/usePermissions';
+import type { UploadItem } from '@/hooks/useUploadQueue';
 import EditMediaModal from '@/pages/Library/Media/components/EditMediaModal';
 import { useMediaFilterOptions } from '@/pages/Library/Media/hooks/useMediaFilterOptions';
 import { selectFolder } from '@/services/folderApi';
-import { cloneMedia, deleteMedia, downloadMedia, downloadMediaAsZip } from '@/services/mediaApi';
+import {
+  cloneMedia,
+  deleteMedia,
+  downloadMedia,
+  downloadMediaAsZip,
+  uploadThumbnail,
+} from '@/services/mediaApi';
 import type { Media } from '@/types/media';
+import type { Tag } from '@/types/tag';
 
 export default function Media() {
   const { t } = useTranslation();
@@ -306,6 +315,26 @@ export default function Media() {
   const handleStartUpload = async () => {
     await saveMetadata();
 
+    const thumbnailPromises = queue
+      .filter((item): item is UploadItem & { mediaId: number; thumbnailBlob: Blob } => {
+        return !!item.thumbnailBlob && !!item.mediaId;
+      })
+      .map((item) =>
+        uploadThumbnail({
+          mediaId: item.mediaId,
+          image: item.thumbnailBlob,
+        }),
+      );
+
+    if (thumbnailPromises.length > 0) {
+      try {
+        await Promise.allSettled(thumbnailPromises);
+      } catch (error) {
+        console.error('Failed to save some thumbnails', error);
+        notify.error(t('Some thumbnails failed to save.'));
+      }
+    }
+
     const hasPending = queue.some(
       (item) => item.status === 'uploading' || item.status === 'pending',
     );
@@ -329,6 +358,11 @@ export default function Media() {
     openModal('edit');
   };
 
+  const openReplaceFileModal = (mediaId: number) => {
+    setSelectedMediaId(mediaId);
+    openModal('replace');
+  };
+
   const closeEditModal = () => {
     closeModal();
     setSelectedMediaId(null);
@@ -339,21 +373,22 @@ export default function Media() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
-  const handleConfirmClone = async (newName: string) => {
-    if (!selectedMedia) return;
+  const handleConfirmClone = async (newName: string, tags: Tag[]) => {
+    if (!selectedMedia) {
+      return;
+    }
 
     try {
       setIsCloning(true);
 
+      const serializedTags = tags.map((t) => {
+        return t.value != '' ? `${t.tag}|${t.value}` : t.tag;
+      });
+
       await cloneMedia({
         mediaId: selectedMedia.mediaId,
-        name: selectedMedia.name,
-        fileName: selectedMedia.fileName,
-        duration: selectedMedia.duration,
-        tags: selectedMedia.tags?.map((t) => t.tag) ?? [],
-        folderId: selectedMedia.folderId,
-        orientation: selectedMedia.orientation,
-        overrideName: newName,
+        name: newName,
+        tags: serializedTags.join(','),
       });
 
       notify.success(t('Media copied successfully'));
@@ -437,6 +472,7 @@ export default function Media() {
       setShowInfoPanel(true);
     },
     copyMedia: openCopyModal,
+    openReplaceModal: openReplaceFileModal,
   });
 
   const getAllSelectedItems = (): Media[] => {
@@ -572,9 +608,27 @@ export default function Media() {
     onDownload: handleDownload,
     openEditModal,
     onPreview: handlePreviewClick,
+    openMoveModal: canViewFolders
+      ? (media) => {
+          setItemsToMove([media] as Media[]);
+          openModal('move');
+        }
+      : undefined,
+    openShareModal: (mediaId) => {
+      setShareEntityIds(mediaId);
+      openModal('share');
+    },
+    openDetails: (mediaId) => {
+      setSelectedMediaId(mediaId);
+      setShowInfoPanel(true);
+    },
+    copyMedia: openCopyModal,
+    openReplaceModal: openReplaceFileModal,
   } as MediaActionsProps);
 
   const { filterOptions } = useMediaFilterOptions();
+
+  const libraryTabs = useFilteredTabs('library');
 
   return (
     <section
@@ -623,7 +677,7 @@ export default function Media() {
         )}
 
         <div className="flex flex-row justify-between py-4 items-center gap-4">
-          <TabNav activeTab="Media" navigation={LIBRARY_TABS} />
+          <TabNav activeTab="Media" navigation={libraryTabs} />
           <div className="flex items-center gap-2 md:mb-0">
             <Button variant="primary" onClick={() => setAddModalOpen(true)} leftIcon={Plus}>
               {t('Add Media')}
@@ -784,7 +838,9 @@ export default function Media() {
             <SelectFolder
               selectedId={selectedFolderId}
               onSelect={(folder) => {
-                setSelectedFolderId(folder.id);
+                if (folder) {
+                  setSelectedFolderId(folder.id);
+                }
               }}
             />
           )}
@@ -839,23 +895,37 @@ export default function Media() {
       />
 
       {selectedMedia && (
-        <EditMediaModal
-          openModal={isModalOpen('edit')}
-          onClose={closeEditModal}
-          onSave={(updatedMedia) => {
-            setMediaList((prev) =>
-              prev.map((m) => (m.mediaId === updatedMedia.mediaId ? updatedMedia : m)),
-            );
-            handleRefresh();
-          }}
-          data={selectedMedia}
-        />
+        <>
+          <EditMediaModal
+            openModal={isModalOpen('edit')}
+            onClose={closeEditModal}
+            onSave={(updatedMedia) => {
+              setMediaList((prev) =>
+                prev.map((m) => (m.mediaId === updatedMedia.mediaId ? updatedMedia : m)),
+              );
+              handleRefresh();
+            }}
+            data={selectedMedia}
+          />
+          <ReplaceFileModal
+            openModal={isModalOpen('replace')}
+            onClose={closeModal}
+            data={selectedMedia}
+            onSave={(updatedMedia) => {
+              setMediaList((prev) =>
+                prev.map((m) => (m.mediaId === updatedMedia.mediaId ? updatedMedia : m)),
+              );
+              handleRefresh();
+            }}
+          />
+        </>
       )}
       <ShareModal
         title={t('Share Media')}
         onClose={() => {
           closeModal();
           setShareEntityIds(null);
+          handleRefresh();
         }}
         openModal={isModalOpen('share')}
         entityType="media"
