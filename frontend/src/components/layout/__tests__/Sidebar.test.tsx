@@ -152,7 +152,7 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
       {
         main: 'Library',
         subs: [
-          { name: 'Playlists', href: '/playlist/view' },
+          { name: 'Playlists', href: '/library/playlists' },
           { name: 'Media', href: '/library/media' },
           { name: 'Datasets', href: '/dataset/view' },
         ],
