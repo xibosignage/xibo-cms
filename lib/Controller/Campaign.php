@@ -1286,6 +1286,11 @@ class Campaign extends Base
     public function preview(Request $request, Response $response, $id)
     {
         $campaign = $this->campaignFactory->getById($id);
+
+        if (!$this->getUser()->checkViewable($campaign)) {
+            throw new AccessDeniedException(__('You do not have permissions to preview the campaign.'));
+        }
+
         $layouts = $this->layoutFactory->getByCampaignId($id);
         $duration = 0 ;
         $extendedLayouts = [];

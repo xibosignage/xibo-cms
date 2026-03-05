@@ -585,6 +585,11 @@ class Region extends Base
         // Load our region
         try {
             $region = $this->regionFactory->getById($id);
+
+            if (!$this->getUser()->checkViewable($region)) {
+                throw new AccessDeniedException(__('You do not have permissions to preview the layout.'));
+            }
+
             $region->load();
 
             // What type of region are we?
