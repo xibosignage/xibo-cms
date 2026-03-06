@@ -40,10 +40,25 @@ vi.mock('@/services/folderApi', async (importOriginal) => {
     ...actual,
     fetchContextButtons: vi.fn().mockResolvedValue({ create: true }),
     selectFolder: vi.fn(),
-    // Safety mock to prevent React Query from hanging on background retries
-    fetchFolderById: vi.fn().mockResolvedValue({ folderId: 1, name: 'Root' }), 
+    fetchFolderById: vi.fn().mockResolvedValue({
+      id: 1,
+      text: 'Root',
+      type: 'root',
+      parentId: 0,
+      isRoot: 1,
+      children: null,
+      ownerId: 1,
+      ownerName: 'MockUser',
+    }),
+    fetchFolderTree: vi.fn().mockResolvedValue([]),
+    searchFolders: vi.fn().mockResolvedValue([]),
   };
 });
+
+// Mock the media filter options hook to prevent making real network requests on every render
+vi.mock('@/pages/Library/Media/hooks/useMediaFilterOptions', () => ({
+  useMediaFilterOptions: vi.fn().mockReturnValue({ filterOptions: [], isLoading: false }),
+}));
 
 // Mock the data fetching hook to control loading/error/empty states
 vi.mock('../hooks/useMediaData', () => ({
@@ -169,7 +184,7 @@ describe('Media page', () => {
 
   test('verifies media items and formatting render correctly from API response', async () => {
     // delay: null disables the artificial human delay, making it run at machine speed
-    const user = userEvent.setup({ delay: null }); 
+    const user = userEvent.setup({ delay: null });
     // Override mock to simulate populated data
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (useMediaData as any).mockReturnValue({
@@ -255,9 +270,7 @@ describe('Media page', () => {
     const user = userEvent.setup({ delay: null });
 
     // Setup initial render
-    let unmountComponent: () => void;
-    const { unmount } = renderMediaPage();
-    unmountComponent = unmount;
+    const { unmount: unmountComponent } = renderMediaPage();
 
     const searchInput = await screen.findByPlaceholderText('Search media...');
 
@@ -309,32 +322,32 @@ describe('Media page', () => {
 
     // 2. Use fireEvent for instant, lag-free clicks
     const nameHeader = await screen.findByRole('columnheader', { name: /Name/i });
-    
+
     // Covers: Verify sorting by file name ascending.
     fireEvent.click(nameHeader);
-    
+
     // Covers: Verify sorting by file name descending.
     fireEvent.click(screen.getByRole('columnheader', { name: /Name/i }));
 
     const sizeHeader = await screen.findByRole('columnheader', { name: /Size/i });
     fireEvent.click(sizeHeader);
     fireEvent.click(screen.getByRole('columnheader', { name: /Size/i }));
-    
+
     // (SKIP FOR NOW, FLAKY)
     // // Because we provided `createdDt` dummy data, the column renders automatically!
     // // No need to click the dropdown menu at all!
     // const dateHeader = await screen.findByRole('columnheader', { name: /Created/i });
-    
+
     // // Covers: Verify sorting by date ascending.
     // fireEvent.click(dateHeader);
-    
+
     // // Covers: Verify sorting by date descending.
     // fireEvent.click(screen.getByRole('columnheader', { name: /Created/i }));
 
     // Covers: Verify sorting state persists after pagination.
     const nextButton = screen.getByRole('button', { name: /Next/i });
     fireEvent.click(nextButton);
-    
+
     // Final check to ensure it didn't crash
     expect(screen.getByRole('table')).toBeInTheDocument();
   });
