@@ -41,22 +41,24 @@ class SafeClient
         $stack = HandlerStack::create();
 
         // Add Ssrf protection
-        $stack->unshift(SsrfProtectionMiddleware::create(), 'ssrf_protection');
+        $stack->unshift(SsrfProtectionMiddleware::create([
+            'allow_local_network' => $config['xibo']['allow_local_network'] ?? false
+        ]), 'ssrf_protection');
 
         // Sensible default config
         //  - lower timeouts
-        //  - we must support redirects
+        //  - we must support redirects, but limit the number
         //  - http/https only
         $config = array_merge([
             'handler' => $stack,
             'timeout' => 10,
             'connect_timeout' => 5,
             'allow_redirects' => [
-                'max'             => 3,       // Strictly limit redirects to prevent infinite loops
-                'strict'          => false,
-                'referer'         => true,
-                'protocols'       => ['http', 'https'], // Redundant protection to ensure redirects don't swap to file://
-                'track_redirects' => false
+                'max' => 3,
+                'strict' => false,
+                'referer' => true,
+                'protocols' => ['http', 'https'],
+                'track_redirects' => false,
             ]
         ], $config);
 

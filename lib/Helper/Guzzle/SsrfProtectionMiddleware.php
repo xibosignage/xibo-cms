@@ -32,11 +32,15 @@ class SsrfProtectionMiddleware
 {
     /**
      * Creates a Guzzle middleware closure.
+     * @param array $config Middleware configuration options.
+     * Example: ['allow_local_network' => true]
      */
-    public static function create(): callable
+    public static function create(array $config = []): callable
     {
-        return function (callable $handler): callable {
-            return function (RequestInterface $request, array $options) use ($handler) {
+        $allowLocalNetwork = $config['allow_local_network'] ?? false;
+
+        return function (callable $handler) use ($allowLocalNetwork): callable {
+            return function (RequestInterface $request, array $options) use ($handler, $allowLocalNetwork) {
                 $uri = $request->getUri();
 
                 // 1. Strict Scheme Validation
@@ -48,22 +52,38 @@ class SsrfProtectionMiddleware
                 $host = $uri->getHost();
                 $port = $uri->getPort() ?: ($scheme === 'https' ? 443 : 80);
 
-                // Resolve Hostname to IP Address
-                $ip = gethostbyname($host);
+                // Strip brackets if the user provided a static IPv6 literal (e.g., [2001:db8::1])
+                $cleanHost = trim($host, '[]');
 
-                if ($ip === $host && !filter_var($host, FILTER_VALIDATE_IP)) {
-                    throw new \RuntimeException('DNS resolution failed for hostname: ' . $host);
+                // Check to see if the host provided is an IP aaddress
+                if (filter_var($cleanHost, FILTER_VALIDATE_IP)) {
+                    // It's a static IP (IPv4 or IPv6), no DNS lookup needed
+                    $ip = $cleanHost;
+                } else {
+                    // Not an IP, therefore a hostname
+                    // Try IPv4 (A record) first
+                    $ip = gethostbyname($cleanHost);
+
+                    if ($ip === $cleanHost) {
+                        // Fallback to IPv6 (AAAA record) using dns_get_record
+                        $records = dns_get_record($cleanHost, DNS_AAAA);
+                        if (!empty($records) && isset($records[0]['ipv6'])) {
+                            $ip = $records[0]['ipv6'];
+                        } else {
+                            throw new \RuntimeException('DNS resolution failed for hostname: ' . $cleanHost);
+                        }
+                    }
                 }
 
                 // Validate the IP Address against a blocklist
-                if (!self::isSafeIp($ip)) {
+                if (!self::isSafeIp($ip, $allowLocalNetwork)) {
                     throw new \RuntimeException('SSRF Protection triggered. Blocked request to restricted IP: ' . $ip);
                 }
 
                 // Pin the validated IP to prevent DNS Rebinding on this specific hop
                 // This tells cURL to bypass its own DNS lookup and use our validated IP
                 // CURLOPT_RESOLVE = 10203
-                $options['curl'][10203] = [$host . ':' . $port . ':' . $ip];
+                $options['curl'][10203] = [$cleanHost . ':' . $port . ':' . $ip];
 
                 // 5. Pass the modified request and options down to the cURL handler
                 return $handler($request, $options);
@@ -74,26 +94,57 @@ class SsrfProtectionMiddleware
     /**
      * Validates that an IP is publicly routable and not restricted.
      */
-    private static function isSafeIp(string $ip): bool
+    private static function isSafeIp(string $ip, bool $allowLocalNetwork): bool
     {
-        // Block Loopback (127.x.x.x) and RFC 1918 Private Networks (10.x, 172.16.x, 192.168.x)
-        if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+        // PHP's built-in filter securely handles Loopback, IPv4 RFC 1918,
+        // and IPv6 ULA (which natively blocks the AWS IPv6 metadata endpoint fd00:ec2::254)
+        // Base flags: Always block Reserved ranges (e.g., 240.0.0.0/4)
+        $flags = FILTER_FLAG_NO_RES_RANGE;
+
+        // If local networks are NOT allowed, add the private range block flag
+        if (!$allowLocalNetwork) {
+            $flags |= FILTER_FLAG_NO_PRIV_RANGE;
+        }
+
+        if (!filter_var($ip, FILTER_VALIDATE_IP, $flags)) {
             return false;
         }
 
+        // Defense in Depth: Explicit Blocks
         $ipLong = ip2long($ip);
-        if ($ipLong === false) {
-            return false;
-        }
 
-        // Block 169.254.0.0/16 (AWS/GCP/Azure Cloud Metadata)
-        if (($ipLong & ip2long('255.255.0.0')) === ip2long('169.254.0.0')) {
-            return false;
-        }
+        if ($ipLong !== false) {
+            // It's an IPv4 address
+            // ALWAYS Block Loopback (127.0.0.0/8) - Never trust local application access
+            if (($ipLong & ip2long('255.0.0.0')) === ip2long('127.0.0.0')) {
+                return false;
+            }
 
-        // Block 0.0.0.0/8 (Current network / localhost bypass)
-        if (($ipLong & ip2long('255.0.0.0')) === ip2long('0.0.0.0')) {
-            return false;
+            // ALWAYS Block Cloud Metadata (169.254.0.0/16)
+            if (($ipLong & ip2long('255.255.0.0')) === ip2long('169.254.0.0')) {
+                return false;
+            }
+
+            // ALWAYS Block Current Network (0.0.0.0/8)
+            if (($ipLong & ip2long('255.0.0.0')) === ip2long('0.0.0.0')) {
+                return false;
+            }
+        } else {
+            // It's an IPv6 address
+            $packedIp = inet_pton($ip);
+            if ($packedIp !== false) {
+                // ALWAYS Block IPv6 Loopback (::1)
+                if ($packedIp === inet_pton('::1')) {
+                    return false;
+                }
+
+                // ALWAYS Block AWS IPv6 Metadata Endpoint (fd00:ec2::254)
+                // When allow_local_network is true, PHP allows the ULA space (fc00::/7).
+                // AWS uses a ULA address for metadata, so we must explicitly block it.
+                if ($packedIp === inet_pton('fd00:ec2::254')) {
+                    return false;
+                }
+            }
         }
 
         return true;
