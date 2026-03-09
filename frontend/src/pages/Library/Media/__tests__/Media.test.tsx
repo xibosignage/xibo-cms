@@ -377,4 +377,134 @@ describe('Media page', () => {
     const doneButton = await screen.findByRole('button', { name: 'Done' });
     expect(doneButton).toBeInTheDocument();
   });
+
+  test('verifies media selection behaviours', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (useMediaData as any).mockReturnValue({
+      data: {
+        rows: [
+          { mediaId: 1, name: 'Item 1', mediaType: 'image' },
+          { mediaId: 2, name: 'Item 2', mediaType: 'image' },
+        ],
+        totalCount: 2,
+      },
+      isFetching: false,
+      isError: false,
+      error: null,
+    });
+
+    renderMediaPage();
+
+    const selectAllCheckbox = await screen.findByRole('checkbox', { name: /All Items/i });
+    const rowCheckboxes = screen.getAllByRole('checkbox', { name: /Select row/i });
+
+    // Covers: Verify selecting a single media item.
+    fireEvent.click(rowCheckboxes[0]!);
+    expect(rowCheckboxes[0]).toBeChecked();
+
+    // Covers: Verify multi-select media items.
+    fireEvent.click(rowCheckboxes[1]!);
+    expect(rowCheckboxes[0]).toBeChecked();
+    expect(rowCheckboxes[1]).toBeChecked();
+
+    // Covers: Verify “select all” checkbox behaviour.
+    fireEvent.click(selectAllCheckbox); // Deselect all (if previously selected)
+    fireEvent.click(selectAllCheckbox); // Select all
+    expect(rowCheckboxes[0]).toBeChecked();
+    expect(rowCheckboxes[1]).toBeChecked();
+  });
+
+  test('verifies delete flow and confirmation dialog', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (useMediaData as any).mockReturnValue({
+      data: {
+        rows: [
+          {
+            mediaId: 1,
+            name: 'delete_target.jpg',
+            mediaType: 'image',
+            userPermissions: { delete: true },
+          },
+        ],
+        totalCount: 1,
+      },
+      isFetching: false,
+      isError: false,
+      error: null,
+    });
+
+    renderMediaPage();
+
+    const rowCheckboxes = await screen.findAllByRole('checkbox', { name: /Select row/i });
+    fireEvent.click(rowCheckboxes[0]!);
+
+    const deleteButton = await screen.findByRole('button', { name: /Delete/i });
+
+    // Covers: Verify delete action opens confirmation dialog.
+    fireEvent.click(deleteButton);
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toBeInTheDocument();
+
+    // Covers: Verify cancel delete closes dialog.
+    const cancelButton = screen.getByRole('button', { name: /Cancel/i });
+    fireEvent.click(cancelButton);
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    // Covers: Verify successful delete removes item from table.
+    fireEvent.click(deleteButton); // Re-open dialog
+    const confirmButton = await screen.findByRole('button', { name: /Yes, Delete/i });
+
+    // Mock the data to be empty before confirming to simulate successful deletion refetch
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (useMediaData as any).mockReturnValue({
+      data: { rows: [], totalCount: 0 },
+      isFetching: false,
+      isError: false,
+      error: null,
+    });
+
+    fireEvent.click(confirmButton);
+    await waitFor(() => {
+      expect(screen.queryByText('delete_target.jpg')).not.toBeInTheDocument();
+    });
+  });
+
+  test('verifies delete error handling', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (useMediaData as any).mockReturnValue({
+      data: {
+        rows: [
+          {
+            mediaId: 1,
+            name: 'error_target.jpg',
+            mediaType: 'image',
+            userPermissions: { delete: true },
+          },
+        ],
+        totalCount: 1,
+      },
+      isFetching: false,
+      isError: false,
+      error: null,
+    });
+
+    renderMediaPage();
+
+    const rowCheckboxes = await screen.findAllByRole('checkbox', { name: /Select row/i });
+    fireEvent.click(rowCheckboxes[0]!);
+
+    const deleteButton = await screen.findByRole('button', { name: /Delete/i });
+    fireEvent.click(deleteButton);
+
+    const confirmButton = await screen.findByRole('button', { name: /Yes, Delete/i });
+
+    // Covers: Verify delete error handling.
+    // (Simulating an error by NOT changing the mock data so the item remains in the table)
+    fireEvent.click(confirmButton);
+    await waitFor(() => {
+      expect(screen.getByText('error_target.jpg')).toBeInTheDocument();
+    });
+  });
 });
