@@ -20,6 +20,7 @@
  */
 
 import { screen, fireEvent, waitFor } from '@testing-library/react';
+import React from 'react';
 import { vi, beforeEach } from 'vitest';
 
 import { mockMediaData, renderMediaPage } from './mediaTestUtils';
@@ -51,6 +52,18 @@ vi.mock('@/services/mediaApi', () => ({
   updateMedia: vi.fn().mockReturnValue(new Promise(() => {})),
   uploadThumbnail: vi.fn().mockReturnValue(new Promise(() => {})),
   deleteMedia: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
+  Trans: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+// The Media page saves and loads user preferences (column order, page size, etc.)
+// from the server via /user/pref - fake to return "no saved preferences".
+vi.mock('@/services/userApi', () => ({
+  fetchUserPreference: vi.fn().mockResolvedValue(null),
+  saveUserPreference: vi.fn().mockResolvedValue(undefined),
 }));
 
 // =============================================================================
