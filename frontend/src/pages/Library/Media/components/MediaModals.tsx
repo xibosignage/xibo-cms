@@ -165,28 +165,33 @@ export function MediaModals({
 
       {selection.selectedMedia && (
         <>
-          <EditMediaModal
-            openModal={isModalOpen('edit')}
-            onClose={actions.closeModal}
-            onSave={(updatedMedia) => {
-              actions.setMediaList((prev) =>
-                prev.map((m) => (m.mediaId === updatedMedia.mediaId ? updatedMedia : m)),
-              );
-              actions.handleRefresh();
-            }}
-            data={selection.selectedMedia}
-          />
-          <ReplaceFileModal
-            openModal={isModalOpen('replace')}
-            onClose={actions.closeModal}
-            data={selection.selectedMedia}
-            onSave={(updatedMedia) => {
-              actions.setMediaList((prev) =>
-                prev.map((m) => (m.mediaId === updatedMedia.mediaId ? updatedMedia : m)),
-              );
-              actions.handleRefresh();
-            }}
-          />
+          {isModalOpen('edit') && (
+            <EditMediaModal
+              openModal={isModalOpen('edit')}
+              onClose={actions.closeModal}
+              onSave={(updatedMedia) => {
+                actions.setMediaList((prev) =>
+                  prev.map((m) => (m.mediaId === updatedMedia.mediaId ? updatedMedia : m)),
+                );
+                actions.handleRefresh();
+              }}
+              data={selection.selectedMedia}
+            />
+          )}
+
+          {isModalOpen('replace') && (
+            <ReplaceFileModal
+              openModal={isModalOpen('replace')}
+              onClose={actions.closeModal}
+              data={selection.selectedMedia}
+              onSave={(updatedMedia) => {
+                actions.setMediaList((prev) =>
+                  prev.map((m) => (m.mediaId === updatedMedia.mediaId ? updatedMedia : m)),
+                );
+                actions.handleRefresh();
+              }}
+            />
+          )}
         </>
       )}
 

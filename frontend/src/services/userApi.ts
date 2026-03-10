@@ -82,7 +82,6 @@ export async function fetchUserPreference<T = Record<string, unknown>>(
 
   if (valueString) {
     try {
-      console.log(JSON.parse(valueString));
       return JSON.parse(valueString);
     } catch (error) {
       console.error('Failed to parse user preference:', error);

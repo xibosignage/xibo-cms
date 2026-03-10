@@ -31,6 +31,7 @@ import ExpiryDateSelect from '@/components/ui/forms/ExpiryDateSelect';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TagInput from '@/components/ui/forms/TagInput';
+import { COMMON_FORM_OPTIONS } from '@/config/commonForms';
 import { updateMedia } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
 import type { Tag } from '@/types/tag';
@@ -188,7 +189,7 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
               label="Orientation"
               value={draft.orientation}
               placeholder="Select orientation"
-              options={MEDIA_FORM_OPTIONS.orientation}
+              options={COMMON_FORM_OPTIONS.orientation}
               isOpen={openSelect === 'orientation'}
               onToggle={() =>
                 setOpenSelect((prev) => (prev === 'orientation' ? null : 'orientation'))
@@ -228,7 +229,7 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
             label="Enable Media Stats Collection?"
             value={draft.enableStat}
             placeholder="Inherit"
-            options={MEDIA_FORM_OPTIONS.inherit}
+            options={COMMON_FORM_OPTIONS.inherit}
             isOpen={openSelect === 'enableStat'}
             onToggle={() => setOpenSelect((prev) => (prev === 'enableStat' ? null : 'enableStat'))}
             onSelect={(value) => {

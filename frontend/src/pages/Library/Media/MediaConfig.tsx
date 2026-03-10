@@ -38,7 +38,7 @@ import {
   Trash2,
   FileSymlink,
 } from 'lucide-react';
-import { type ComponentProps, type ElementType } from 'react';
+import { type ComponentProps } from 'react';
 
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
 import { notify } from '@/components/ui/Notification';
@@ -51,8 +51,11 @@ import {
   ActionsCell,
   TagsCell,
 } from '@/components/ui/table/cells';
+import { COMMON_FORM_OPTIONS } from '@/config/commonForms';
 import type { Media } from '@/types/media';
+import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
+import { formatDuration } from '@/utils/formatters';
 
 export interface MediaFilterInput {
   type?: string;
@@ -88,27 +91,9 @@ export const getMediaIcon = (mediaType: string) => {
   }
 };
 
-export type ActionItem =
-  | {
-      isSeparator: true;
-      label?: never;
-      icon?: never;
-      onClick?: never;
-      variant?: never;
-      isQuickAction?: never;
-    }
-  | {
-      isSeparator?: false | undefined;
-      label: string;
-      icon?: ElementType;
-      onClick?: () => void;
-      variant?: 'default' | 'primary' | 'danger';
-      isQuickAction?: boolean;
-    };
-
 type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
 
-export type ModalType = 'edit' | 'share' | 'delete' | 'copy' | 'move' | 'replace' | null;
+export type ModalType = BaseModalType | 'replace' | null;
 
 export const INITIAL_FILTER_STATE: MediaFilterInput = {
   type: '',
@@ -153,11 +138,7 @@ export const BASE_FILTER_KEYS: FilterConfigItem<MediaFilterInput>[] = [
     label: 'Orientation',
     name: 'orientation',
     className: '',
-    options: [
-      { label: 'Portrait', value: 'portrait' },
-      { label: 'Landscape', value: 'landscape' },
-      { label: 'Square', value: 'square' },
-    ],
+    options: COMMON_FORM_OPTIONS.orientation,
   },
   {
     label: 'Retired',
@@ -177,30 +158,13 @@ export const BASE_FILTER_KEYS: FilterConfigItem<MediaFilterInput>[] = [
     className: '',
     shouldTranslateOptions: true,
     showAllOption: false,
-    options: [
-      { label: 'Any time', value: '' },
-      { label: 'Today', value: 'today' },
-      { label: 'Last 7 days', value: '7d' },
-      { label: 'Last 30 days', value: '30d' },
-      { label: 'This year', value: '1y' },
-    ],
+    options: COMMON_FORM_OPTIONS.lastModifiedFilter,
   },
 ];
 
 // TODO: Needs translation
 export const MEDIA_FORM_OPTIONS = {
   expiryDates: ['Never Expire', 'End of Today', 'In 7 Days', 'In 14 Days', 'In 30 Days'],
-
-  orientation: [
-    { label: 'Portrait', value: 'portrait' },
-    { label: 'Landscape', value: 'landscape' },
-  ],
-
-  inherit: [
-    { label: 'Off', value: 'off' },
-    { label: 'On', value: 'on' },
-    { label: 'Inherit', value: 'inherit' },
-  ],
 };
 
 export const ACCEPTED_MIME_TYPES = {
@@ -232,13 +196,6 @@ export const ACCEPTED_MIME_TYPES = {
   'video/mpeg': ['.mpg', '.mpeg'],
   'video/x-msvideo': ['.avi'],
   'video/x-ms-wmv': ['.wmv'],
-};
-
-export const formatDuration = (seconds: number) => {
-  if (typeof seconds != 'number') {
-    return '-';
-  }
-  return new Date(seconds * 1000).toISOString().slice(11, 19);
 };
 
 export const getStatusTypeFromMediaType = (mediaType: string) => {

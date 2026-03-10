@@ -24,9 +24,10 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { twMerge } from 'tailwind-merge';
 
-import { getMediaIcon, type ActionItem } from '../MediaConfig';
+import { getMediaIcon } from '../MediaConfig';
 
 import type { Media } from '@/types/media';
+import type { ActionItem } from '@/types/table';
 
 interface MediaCardProps {
   media: Media;
@@ -143,13 +144,13 @@ export default function MediaCard({
               className="w-full h-full object-cover transition-transform group-hover:scale-105"
             />
             {isPlayable && (
-              <div className="absolute flex items-center justify-center rounded-full bg-white/10 size-[38px]">
+              <div className="absolute flex items-center justify-center rounded-full bg-white/10 size-9.5">
                 <Play className="size-5 text-white fill-white" />
               </div>
             )}
           </div>
         ) : (
-          <div className="flex items-center justify-center size-[54px] text-gray-500">
+          <div className="flex items-center justify-center size-13.5 text-gray-500">
             <IconComponent className="size-full" />
           </div>
         )}
@@ -191,7 +192,7 @@ export default function MediaCard({
                 left: menuPosition.left,
                 transform: 'translate(-100%, -100%)',
               }}
-              className="fixed bg-white shadow-lg z-100 rounded-xl max-h-[250px] overflow-y-auto origin-bottom-right"
+              className="fixed bg-white shadow-lg z-100 rounded-xl max-h-62.5 overflow-y-auto origin-bottom-right"
               onClick={(e) => e.stopPropagation()}
             >
               {dropdownActions.map((action, idx) => {
