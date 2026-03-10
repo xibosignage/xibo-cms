@@ -30,7 +30,7 @@ import {
   Trash2,
   UserPlus2,
 } from 'lucide-react';
-import { type ComponentProps, type ElementType } from 'react';
+import { type ComponentProps } from 'react';
 
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
 import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
@@ -41,7 +41,11 @@ import {
   TagsCell,
   CheckMarkCell,
 } from '@/components/ui/table/cells';
+import { COMMON_FORM_OPTIONS } from '@/config/commonForms';
 import type { Playlist } from '@/types/playlist';
+import type { ActionItem, BaseModalType } from '@/types/table';
+import type { Tag } from '@/types/tag';
+import { formatDuration } from '@/utils/formatters';
 
 export interface PlaylistFilterInput {
   userId: string;
@@ -49,30 +53,7 @@ export interface PlaylistFilterInput {
   lastModified: string;
 }
 
-interface ApiTag {
-  tagId: number;
-  tag: string;
-}
-
-export type ActionItem =
-  | {
-      isSeparator: true;
-      label?: never;
-      icon?: never;
-      onClick?: never;
-      variant?: never;
-      isQuickAction?: never;
-    }
-  | {
-      isSeparator?: false | undefined;
-      label: string;
-      icon?: ElementType;
-      onClick?: () => void;
-      variant?: 'default' | 'primary' | 'danger';
-      isQuickAction?: boolean;
-    };
-
-export type ModalType = 'edit' | 'share' | 'delete' | 'copy' | 'move' | null;
+export type ModalType = BaseModalType | null;
 
 export const INITIAL_FILTER_STATE: PlaylistFilterInput = {
   userId: '',
@@ -103,36 +84,9 @@ export const BASE_FILTER_KEYS: FilterConfigItem<PlaylistFilterInput>[] = [
     className: '',
     shouldTranslateOptions: true,
     showAllOption: false,
-    options: [
-      { label: 'Any time', value: '' },
-      { label: 'Today', value: 'today' },
-      { label: 'Last 7 days', value: '7d' },
-      { label: 'Last 30 days', value: '30d' },
-      { label: 'This year', value: '1y' },
-    ],
+    options: COMMON_FORM_OPTIONS.lastModifiedFilter,
   },
 ];
-
-// TODO: Needs translation
-export const PLAYLIST_FORM_OPTIONS = {
-  orientation: [
-    { label: 'Portrait', value: 'portrait' },
-    { label: 'Landscape', value: 'landscape' },
-  ],
-
-  inherit: [
-    { label: 'Off', value: 'off' },
-    { label: 'On', value: 'on' },
-    { label: 'Inherit', value: 'inherit' },
-  ],
-};
-
-const formatDuration = (seconds: number) => {
-  if (typeof seconds != 'number') {
-    return '-';
-  }
-  return new Date(seconds * 1000).toISOString().slice(11, 19);
-};
 
 export interface PlaylistActionsProps {
   t: TFunction;
@@ -241,7 +195,7 @@ export const getPlaylistColumns = (props: PlaylistActionsProps): ColumnDef<Playl
       enableSorting: false,
       size: 150,
       cell: (info) => {
-        const tags = info.getValue<ApiTag[]>() || [];
+        const tags = info.getValue<Tag[]>() || [];
         const formattedTags = tags.map((tag) => ({
           id: tag.tagId,
           label: tag.tag,

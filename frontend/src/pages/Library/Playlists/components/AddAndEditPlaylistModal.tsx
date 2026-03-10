@@ -24,7 +24,6 @@ import { useEffect, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Modal from '../../../../components/ui/modals/Modal';
-import { PLAYLIST_FORM_OPTIONS } from '../PlaylistsConfig';
 
 import Checkbox from '@/components/ui/forms/Checkbox';
 import NumberInput from '@/components/ui/forms/NumberInput';
@@ -34,10 +33,10 @@ import TagInput from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { StatusCell, TagsCell, TextCell } from '@/components/ui/table/cells';
+import { COMMON_FORM_OPTIONS } from '@/config/commonForms';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { MediaFilterInput } from '@/pages/Library/Media/MediaConfig';
 import {
-  formatDuration,
   getStatusTypeFromMediaType,
   INITIAL_FILTER_STATE,
 } from '@/pages/Library/Media/MediaConfig';
@@ -46,6 +45,7 @@ import { updatePlaylist, createPlaylist } from '@/services/playlistApi';
 import type { Media } from '@/types/media';
 import type { Playlist } from '@/types/playlist';
 import type { Tag } from '@/types/tag';
+import { formatDuration } from '@/utils/formatters';
 
 interface AddAndEditPlaylistModalProps {
   type: 'add' | 'edit';
@@ -346,7 +346,7 @@ export default function AddAndEditPlaylistModal({
             label="Enable Playlist Stats Collection?"
             value={draft.enableStat}
             placeholder="Inherit"
-            options={PLAYLIST_FORM_OPTIONS.inherit}
+            options={COMMON_FORM_OPTIONS.inherit}
             isOpen={openSelect === 'enableStat'}
             onToggle={() => setOpenSelect((prev) => (prev === 'enableStat' ? null : 'enableStat'))}
             onSelect={(value) => {
