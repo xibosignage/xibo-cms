@@ -69,6 +69,8 @@ export default function Modal({
 }: ModalProps) {
   useKeydown('Escape', onClose, isOpen);
 
+  const titleId = title ? `modal-title-${title.replace(/\s+/g, '-').toLowerCase()}` : undefined;
+
   if (!isOpen) {
     return null;
   }
@@ -88,6 +90,7 @@ export default function Modal({
 
       <dialog
         open
+        aria-labelledby={titleId}
         className={twMerge(
           'relative flex flex-col w-full bg-white rounded-xl overflow-hidden outline-none max-h-[90vh] shadow-lg',
           sizeClasses[size],
@@ -102,7 +105,9 @@ export default function Modal({
         {/* Header */}
         {title && (
           <div className="shrink-0 p-8 pb-3">
-            <div className="text-lg font-semibold truncate">{title}</div>
+            <h2 id={titleId} className="text-lg font-semibold truncate">
+              {title}
+            </h2>
           </div>
         )}
 
