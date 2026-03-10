@@ -20,69 +20,44 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
-import {
-  type SortingState,
-  type PaginationState,
-  type RowSelectionState,
-} from '@tanstack/react-table';
+import type { RowSelectionState } from '@tanstack/react-table';
 import { Search, Filter, Folder, FilterX, Plus, Upload } from 'lucide-react';
-import { useEffect, useState, useRef } from 'react';
-import { useDropzone } from 'react-dropzone';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import ShareModal from '../../../components/ui/modals/ShareModal';
-
 import type { MediaActionsProps, ModalType } from './MediaConfig';
-import { filterMediaByPermission, getMediaItemActions } from './MediaConfig';
 import {
+  filterMediaByPermission,
+  getMediaItemActions,
   getMediaColumns,
   getBulkActions,
   INITIAL_FILTER_STATE,
   type MediaFilterInput,
-  ACCEPTED_MIME_TYPES,
 } from './MediaConfig';
-import CopyMediaModal from './components/CopyMediaModal';
-import DeleteMediaModal from './components/DeleteMediaModal';
 import MediaCard from './components/MediaCard';
-import { MediaInfoPanel } from './components/MediaInfoPanel';
+import { MediaModals } from './components/MediaModals';
 import MediaPreviewer from './components/MediaPreviewer';
-import ReplaceFileModal from './components/ReplaceFileModal';
-import { UploadProgressDock } from './components/UploadProgressDock';
+import { useMediaActions } from './hooks/useMediaActions';
 import { useMediaData } from './hooks/useMediaData';
+import { useMediaUpload } from './hooks/useMediaUpload';
 
 import Button from '@/components/ui/Button';
-import { FileUploader } from '@/components/ui/FileUploader';
 import FilterInputs from '@/components/ui/FilterInputs';
-import FolderActionModals from '@/components/ui/FolderActionModals';
 import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import FolderSidebar from '@/components/ui/FolderSidebar';
 import { notify } from '@/components/ui/Notification';
 import TabNav from '@/components/ui/TabNav';
-import SelectFolder from '@/components/ui/forms/SelectFolder';
-import Modal from '@/components/ui/modals/Modal';
-import MoveModal from '@/components/ui/modals/MoveModal';
 import { DataGrid } from '@/components/ui/table/DataGrid';
 import { DataTable } from '@/components/ui/table/DataTable';
-import { useUploadContext } from '@/context/UploadContext';
 import { useUserContext } from '@/context/UserContext';
-import { useDebounce } from '@/hooks/useDebounce';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { useOwner } from '@/hooks/useOwner';
 import { usePermissions } from '@/hooks/usePermissions';
-import type { UploadItem } from '@/hooks/useUploadQueue';
-import EditMediaModal from '@/pages/Library/Media/components/EditMediaModal';
+import { useTableState } from '@/hooks/useTableState';
 import { useMediaFilterOptions } from '@/pages/Library/Media/hooks/useMediaFilterOptions';
-import { selectFolder } from '@/services/folderApi';
-import {
-  cloneMedia,
-  deleteMedia,
-  downloadMedia,
-  downloadMediaAsZip,
-  uploadThumbnail,
-} from '@/services/mediaApi';
+import { downloadMedia, downloadMediaAsZip } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
-import type { Tag } from '@/types/tag';
 
 export default function Media() {
   const { t } = useTranslation();
@@ -91,53 +66,96 @@ export default function Media() {
   const canViewFolders = usePermissions()?.canViewFolders;
   const homeFolderId = user?.homeFolderId ?? 1;
 
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 10,
+  const {
+    pagination,
+    setPagination,
+    sorting,
+    setSorting,
+    columnVisibility,
+    setColumnVisibility,
+    viewMode,
+    setViewMode,
+    globalFilter,
+    debouncedFilter,
+    setGlobalFilter,
+    filterInputs,
+    setFilterInputs,
+    folderId: selectedFolderId,
+    setFolderId: setSelectedFolderId,
+    isHydrated,
+  } = useTableState<MediaFilterInput>('media_page', {
+    pagination: { pageIndex: 0, pageSize: 10 },
+    sorting: [],
+    columnVisibility: {
+      mediaId: false,
+      durationSeconds: false,
+      fileSize: false,
+      createdDt: false,
+      modifiedDt: false,
+      groupsWithPermissions: false,
+      revised: false,
+      released: false,
+      fileName: false,
+      expires: false,
+      enableStat: false,
+      ownerId: false,
+    },
+    viewMode: 'table',
+    globalFilter: '',
+    filterInputs: INITIAL_FILTER_STATE,
+    folderId: canViewFolders ? homeFolderId : null,
   });
 
   const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = useState('');
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [selectionCache, setSelectionCache] = useState<Record<string, Media>>({});
   const [openFilter, setOpenFilter] = useState(false);
   const [previewItem, setPreviewItem] = useState<Media | null>(null);
-  const [filterInputs, setFilterInput] = useState<MediaFilterInput>(INITIAL_FILTER_STATE);
-  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [showInfoPanel, setShowInfoPanel] = useState(false);
-
-  const [isAddModalOpen, setAddModalOpen] = useState(false);
-
-  const [selectedFolderId, setSelectedFolderId] = useState<number | null>(() => {
-    return canViewFolders ? homeFolderId : null;
-  });
 
   const [selectedFolderName, setSelectedFolderName] = useState(t('Root Folder'));
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
 
   const [itemsToDelete, setItemsToDelete] = useState<Media[]>([]);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isCloning, setIsCloning] = useState(false);
-
   const [itemsToMove, setItemsToMove] = useState<Media[]>([]);
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
   const [selectedMediaId, setSelectedMediaId] = useState<number | null>(null);
 
-  const debouncedFilter = useDebounce(globalFilter, 500);
-
-  const { queue, addFiles, removeFile, clearQueue, updateFileData, saveMetadata, addUrlToQueue } =
-    useUploadContext();
-
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
-  const isModalOpen = (name: ModalType) => activeModal === name;
 
   const targetUploadFolderId = canViewFolders ? (selectedFolderId ?? homeFolderId) : homeFolderId;
 
   const canAddToFolder = targetUploadFolderId !== null;
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['media'] });
+  };
+
+  const {
+    isAddModalOpen,
+    setAddModalOpen,
+    queue,
+    removeFile,
+    clearQueue,
+    updateFileData,
+    addUrlToQueue,
+    dropzone,
+    handleManualAddFiles,
+    handleStartUpload,
+    handleCancelUpload,
+  } = useMediaUpload({
+    targetUploadFolderId,
+    canAddToFolder,
+    handleRefresh,
+  });
+
+  const {
+    getRootProps: getGlobalRootProps,
+    getInputProps: getGlobalInputProps,
+    isDragActive: isGlobalDragActive,
+  } = dropzone;
 
   // Data fetching
   const {
@@ -151,6 +169,7 @@ export default function Media() {
     filter: debouncedFilter,
     advancedFilters: filterInputs,
     folderId: canViewFolders ? selectedFolderId : null,
+    enabled: isHydrated,
   });
 
   // Computed values
@@ -205,24 +224,12 @@ export default function Media() {
     });
   }, [mediaList, rowSelection]);
 
-  const uploadStateRef = useRef({ targetId: targetUploadFolderId, canCreate: canAddToFolder });
-  useEffect(() => {
-    uploadStateRef.current = { targetId: targetUploadFolderId, canCreate: canAddToFolder };
-  }, [targetUploadFolderId, canAddToFolder]);
-
   const selectedMedia = mediaList.find((m) => m.mediaId === selectedMediaId) ?? null;
   const existingNames = mediaList.map((m) => m.name);
-
   const ownerId = selectedMedia?.ownerId ? Number(selectedMedia.ownerId) : null;
-
   const { owner, loading } = useOwner({ ownerId });
 
   const getRowId = (row: Media) => row.mediaId.toString();
-
-  // Event handlers
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['media'] });
-  };
 
   const handleFolderChange = (folder: { id: number | null; text: string | '' }) => {
     setSelectedFolderId(folder.id);
@@ -231,77 +238,29 @@ export default function Media() {
     setRowSelection({});
   };
 
-  // Handles dropping files anywhere on the screen
-  const onGlobalDrop = (acceptedFiles: File[]) => {
-    const { targetId, canCreate } = uploadStateRef.current;
-
-    if (acceptedFiles.length > 0 && canCreate) {
-      setAddModalOpen(true);
-      addFiles(acceptedFiles, targetId);
-      notify.success(t('Files added to queue'));
-    } else if (!canCreate) {
-      notify.error(t('You do not have permission to upload to this folder'));
-    }
-  };
-
   const {
-    getRootProps: getGlobalRootProps,
-    getInputProps: getGlobalInputProps,
-    isDragActive: isGlobalDragActive,
-  } = useDropzone({
-    onDrop: onGlobalDrop,
-    noClick: true,
-    noKeyboard: true,
-    accept: ACCEPTED_MIME_TYPES,
+    isDeleting,
+    deleteError,
+    isCloning,
+    confirmDelete,
+    handleConfirmClone,
+    handleConfirmMove,
+  } = useMediaActions({
+    t,
+    handleRefresh,
+    closeModal,
+    setRowSelection,
+    setItemsToMove,
   });
-
-  const handleManualAddFiles = (files: File[]) => {
-    if (!canAddToFolder) {
-      return;
-    }
-
-    addFiles(files, targetUploadFolderId);
-  };
 
   const handleDelete = (id: number) => {
     const media = mediaList.find((m) => m.mediaId === id);
-    if (!media) return;
+    if (!media) {
+      return;
+    }
 
     setItemsToDelete([media]);
-    setDeleteError(null);
     openModal('delete');
-  };
-
-  const confirmDelete = async (options: { allLayouts: boolean; purgeList: boolean }) => {
-    if (itemsToDelete.length === 0 || isDeleting) return;
-
-    try {
-      setIsDeleting(true);
-
-      const results = await Promise.allSettled(
-        itemsToDelete.map((item) =>
-          deleteMedia(item.mediaId, {
-            forceDelete: options.allLayouts,
-            purge: options.purgeList,
-          }),
-        ),
-      );
-
-      const failed = results.filter((r) => r.status === 'rejected');
-
-      if (failed.length > 0) {
-        setDeleteError(`${failed.length} item(s) could not be deleted because they are in use.`);
-      }
-
-      setRowSelection({});
-      handleRefresh();
-      closeModal();
-    } catch (error) {
-      console.error(error);
-      setDeleteError('Some selected items are in use and cannot be deleted.');
-    } finally {
-      setIsDeleting(false);
-    }
   };
 
   const handleDownload = async (row: Media) => {
@@ -317,47 +276,6 @@ export default function Media() {
     setPreviewItem(row);
   };
 
-  const handleStartUpload = async () => {
-    await saveMetadata();
-
-    const thumbnailPromises = queue
-      .filter((item): item is UploadItem & { mediaId: number; thumbnailBlob: Blob } => {
-        return !!item.thumbnailBlob && !!item.mediaId;
-      })
-      .map((item) =>
-        uploadThumbnail({
-          mediaId: item.mediaId,
-          image: item.thumbnailBlob,
-        }),
-      );
-
-    if (thumbnailPromises.length > 0) {
-      try {
-        await Promise.allSettled(thumbnailPromises);
-      } catch (error) {
-        console.error('Failed to save some thumbnails', error);
-        notify.error(t('Some thumbnails failed to save.'));
-      }
-    }
-
-    const hasPending = queue.some(
-      (item) => item.status === 'uploading' || item.status === 'pending',
-    );
-
-    if (!hasPending) {
-      clearQueue();
-    }
-
-    setAddModalOpen(false);
-    handleRefresh();
-  };
-
-  const handleCancelUpload = () => {
-    clearQueue();
-    setAddModalOpen(false);
-    handleRefresh();
-  };
-
   const openEditModal = (media: Media) => {
     setSelectedMediaId(media.mediaId);
     openModal('edit');
@@ -368,87 +286,9 @@ export default function Media() {
     openModal('replace');
   };
 
-  const closeEditModal = () => {
-    closeModal();
-    setSelectedMediaId(null);
-  };
-
   const handleResetFilters = () => {
-    setFilterInput(INITIAL_FILTER_STATE);
+    setFilterInputs(INITIAL_FILTER_STATE);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-  };
-
-  const handleConfirmClone = async (newName: string, tags: Tag[]) => {
-    if (!selectedMedia) {
-      return;
-    }
-
-    try {
-      setIsCloning(true);
-
-      const serializedTags = tags.map((t) => {
-        return t.value != '' ? `${t.tag}|${t.value}` : t.tag;
-      });
-
-      await cloneMedia({
-        mediaId: selectedMedia.mediaId,
-        name: newName,
-        tags: serializedTags.join(','),
-      });
-
-      notify.success(t('Media copied successfully'));
-      handleRefresh();
-      closeModal();
-    } catch (error) {
-      console.error('Copy media failed', error);
-      notify.error(t('Failed to copy media'));
-    } finally {
-      setIsCloning(false);
-    }
-  };
-
-  const handleConfirmMove = async (newFolderId: number) => {
-    if (!itemsToMove || itemsToMove.length === 0) {
-      return;
-    }
-
-    const movePromises = itemsToMove.map((item) =>
-      selectFolder({
-        folderId: newFolderId,
-        targetId: item.mediaId,
-        targetType: 'library',
-      }),
-    );
-
-    try {
-      const results = await Promise.all(movePromises);
-      const failures = results.filter((res) => !res.success);
-
-      if (failures.length === 0) {
-        // All Success
-        notify.info(t('{{count}} items moved successfully!', { count: itemsToMove.length }));
-        setItemsToMove([]);
-        handleRefresh();
-        closeModal();
-      } else {
-        if (failures.length === itemsToMove.length) {
-          notify.error(t('Failed to move items.'));
-        } else {
-          notify.warning(
-            t('Moved {{success}} items, but {{fail}} failed.', {
-              success: itemsToMove.length - failures.length,
-              fail: failures.length,
-            }),
-          );
-          setItemsToMove([]);
-          handleRefresh();
-          closeModal();
-        }
-      }
-    } catch (error) {
-      console.error(error);
-      notify.error(t('An unexpected error occurred while moving items.'));
-    }
   };
 
   const openCopyModal = (mediaId: number) => {
@@ -501,7 +341,6 @@ export default function Media() {
       }
 
       setItemsToDelete(permittedItems);
-      setDeleteError(null);
       openModal('delete');
     },
     onMove: canViewFolders
@@ -591,21 +430,6 @@ export default function Media() {
       }
     },
   });
-
-  const addModalActions = [
-    {
-      label: t('Cancel'),
-      onClick: handleCancelUpload,
-      variant: 'secondary' as const,
-      className: 'bg-transparent',
-    },
-    {
-      label: t('Done'),
-      onClick: handleStartUpload,
-      variant: 'primary' as const,
-      disabled: queue.length === 0,
-    },
-  ];
 
   const getMediaActions = getMediaItemActions({
     t,
@@ -733,7 +557,7 @@ export default function Media() {
 
         <FilterInputs
           onChange={(name, value) => {
-            setFilterInput((prev) => ({ ...prev, [name]: value }));
+            setFilterInputs((prev) => ({ ...prev, [name]: value }));
             setPagination((prev) => ({ ...prev, pageIndex: 0 }));
           }}
           open={openFilter}
@@ -749,7 +573,13 @@ export default function Media() {
         )}
 
         <div className="min-h-0 flex flex-col">
-          {viewMode === 'table' ? (
+          {!isHydrated ? (
+            <div className="flex-1 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
+              <span className="text-gray-400 font-medium">
+                {t('Loading your layout preferences...')}
+              </span>
+            </div>
+          ) : viewMode === 'table' ? (
             <DataTable
               columns={columns}
               data={mediaList}
@@ -764,26 +594,9 @@ export default function Media() {
               rowSelection={rowSelection}
               onRowSelectionChange={setRowSelection}
               onRefresh={handleRefresh}
-              columnPinning={{
-                left: ['tableSelection'],
-                right: ['tableActions'],
-              }}
-              initialState={{
-                columnVisibility: {
-                  mediaId: false,
-                  durationSeconds: false,
-                  fileSize: false,
-                  createdDt: false,
-                  modifiedDt: false,
-                  groupsWithPermissions: false,
-                  revised: false,
-                  released: false,
-                  fileName: false,
-                  expires: false,
-                  enableStat: false,
-                  ownerId: false,
-                },
-              }}
+              columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
+              columnVisibility={columnVisibility}
+              onColumnVisibilityChange={setColumnVisibility}
               bulkActions={bulkActions}
               viewMode="table"
               onViewModeChange={setViewMode}
@@ -818,55 +631,6 @@ export default function Media() {
         </div>
       </div>
 
-      <MediaInfoPanel
-        open={showInfoPanel}
-        onClose={() => {
-          setSelectedMediaId(null);
-          setShowInfoPanel(false);
-        }}
-        mediaData={selectedMedia}
-        owner={owner}
-        applyVersionTwo
-        folderName={selectedFolderName}
-        loading={loading}
-      />
-
-      <Modal
-        isOpen={isAddModalOpen}
-        onClose={handleCancelUpload}
-        title={t('Add Media')}
-        actions={addModalActions}
-        size="lg"
-      >
-        <div className="flex flex-col gap-3 p-8 pt-0">
-          {canViewFolders && (
-            <SelectFolder
-              selectedId={selectedFolderId}
-              onSelect={(folder) => {
-                if (folder) {
-                  setSelectedFolderId(folder.id);
-                }
-              }}
-            />
-          )}
-
-          <FileUploader
-            queue={queue}
-            acceptedFileTypes={ACCEPTED_MIME_TYPES}
-            addFiles={handleManualAddFiles}
-            removeFile={removeFile}
-            clearQueue={clearQueue}
-            updateFileData={updateFileData}
-            isUploading={false}
-            maxSize={2 * 1024 * 1024 * 1024}
-            disabled={!canAddToFolder}
-            onUrlUpload={(url) => {
-              addUrlToQueue(url, targetUploadFolderId);
-            }}
-          />
-        </div>
-      </Modal>
-
       <MediaPreviewer
         mediaId={previewItem?.mediaId ?? null}
         mediaType={previewItem?.mediaType}
@@ -899,73 +663,55 @@ export default function Media() {
         folderName={selectedFolderName}
       />
 
-      {selectedMedia && (
-        <>
-          <EditMediaModal
-            openModal={isModalOpen('edit')}
-            onClose={closeEditModal}
-            onSave={(updatedMedia) => {
-              setMediaList((prev) =>
-                prev.map((m) => (m.mediaId === updatedMedia.mediaId ? updatedMedia : m)),
-              );
-              handleRefresh();
-            }}
-            data={selectedMedia}
-          />
-          <ReplaceFileModal
-            openModal={isModalOpen('replace')}
-            onClose={closeModal}
-            data={selectedMedia}
-            onSave={(updatedMedia) => {
-              setMediaList((prev) =>
-                prev.map((m) => (m.mediaId === updatedMedia.mediaId ? updatedMedia : m)),
-              );
-              handleRefresh();
-            }}
-          />
-        </>
-      )}
-      <ShareModal
-        title={t('Share Media')}
-        onClose={() => {
-          closeModal();
-          setShareEntityIds(null);
-          handleRefresh();
+      <MediaModals
+        actions={{
+          activeModal,
+          closeModal,
+          handleRefresh,
+          setMediaList,
+          deleteError,
+          isDeleting,
+          isCloning,
         }}
-        openModal={isModalOpen('share')}
-        entityType="media"
-        entityId={shareEntityIds ?? (selectedMedia?.mediaId || null)}
-      />
-
-      <UploadProgressDock isModalOpen={isAddModalOpen} />
-
-      <FolderActionModals folderActions={folderActions} />
-
-      <DeleteMediaModal
-        isOpen={isModalOpen('delete')}
-        onClose={closeModal}
-        onDelete={confirmDelete}
-        itemCount={itemsToDelete.length}
-        fileName={itemsToDelete.length === 1 ? itemsToDelete[0]?.name : undefined}
-        error={deleteError}
-        isLoading={isDeleting}
-      />
-
-      <CopyMediaModal
-        isOpen={isModalOpen('copy')}
-        onClose={closeModal}
-        onConfirm={handleConfirmClone}
-        media={selectedMedia}
-        isLoading={isCloning}
-        existingNames={existingNames}
-      />
-
-      <MoveModal
-        isOpen={isModalOpen('move')}
-        onClose={closeModal}
-        onConfirm={handleConfirmMove}
-        items={itemsToMove}
-        entityLabel={t('Media')}
+        selection={{
+          selectedMedia,
+          itemsToDelete,
+          itemsToMove,
+          existingNames,
+          shareEntityIds,
+          setShareEntityIds,
+        }}
+        handlers={{
+          confirmDelete: (opts) => confirmDelete(itemsToDelete, opts),
+          handleConfirmClone: (name, tags) => handleConfirmClone(selectedMedia, name, tags),
+          handleConfirmMove: (folderId) => handleConfirmMove(itemsToMove, folderId),
+        }}
+        upload={{
+          isOpen: isAddModalOpen,
+          setOpen: setAddModalOpen,
+          queue,
+          onStart: handleStartUpload,
+          onCancel: handleCancelUpload,
+          onManualAdd: handleManualAddFiles,
+          onUrlAdd: addUrlToQueue,
+          removeFile,
+          updateFileData,
+          clearQueue,
+          canAdd: canAddToFolder,
+          targetFolderId: targetUploadFolderId,
+          selectedFolderId,
+          setSelectedFolderId,
+          canViewFolders,
+        }}
+        infoPanel={{
+          isOpen: showInfoPanel,
+          setOpen: setShowInfoPanel,
+          setSelectedMediaId,
+          owner,
+          loading,
+          folderName: selectedFolderName,
+        }}
+        folderActions={folderActions}
       />
     </section>
   );

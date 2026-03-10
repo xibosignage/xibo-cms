@@ -40,6 +40,7 @@ interface UsePlaylistParams {
   filter: string;
   folderId: number | null;
   advancedFilters: PlaylistFilterInput;
+  enabled?: boolean;
 }
 
 export const usePlaylistData = ({
@@ -48,6 +49,7 @@ export const usePlaylistData = ({
   filter,
   folderId,
   advancedFilters,
+  enabled = true,
 }: UsePlaylistParams) => {
   // Combine settings into one object to create a unique cache key
   const queryParams = {
@@ -87,6 +89,8 @@ export const usePlaylistData = ({
 
       return fetchPlaylist(request);
     },
+
+    enabled,
 
     placeholderData: keepPreviousData, // Keep showing previous page's data while the new page loads
     staleTime: 1000 * 60 * 1, // Cache for 1 minute

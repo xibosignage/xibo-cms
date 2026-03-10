@@ -70,6 +70,8 @@ interface DataTableProps<TData, TValue> {
   onViewModeChange?: (mode: 'table' | 'grid') => void;
   getRowId?: (originalRow: TData, index: number, parent?: Row<TData>) => string;
   hideToolbar?: boolean;
+  columnVisibility?: VisibilityState;
+  onColumnVisibilityChange?: OnChangeFn<VisibilityState>;
 }
 
 const getCommonPinningStyles = <TData, TValue>(column: Column<TData, TValue>): CSSProperties => {
@@ -110,13 +112,14 @@ export function DataTable<TData, TValue>({
   loading = false,
   bulkActions = [],
   columnPinning = { left: [], right: [] },
-  initialState,
   enableSelection = true,
   onRefresh,
   viewMode,
   onViewModeChange,
   getRowId,
   hideToolbar = false,
+  columnVisibility,
+  onColumnVisibilityChange,
 }: DataTableProps<TData, TValue>) {
   const { t } = useTranslation();
 
@@ -149,10 +152,6 @@ export function DataTable<TData, TValue>({
     tableColumns = [selectColumnDef, ...columns];
   }
 
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
-    initialState?.columnVisibility || {},
-  );
-
   const table = useReactTable({
     data,
     columns: tableColumns,
@@ -171,7 +170,7 @@ export function DataTable<TData, TValue>({
     onPaginationChange,
     onSortingChange,
     onGlobalFilterChange,
-    onColumnVisibilityChange: setColumnVisibility,
+    onColumnVisibilityChange,
     columnResizeMode: 'onChange',
     manualPagination: true,
     manualSorting: true,

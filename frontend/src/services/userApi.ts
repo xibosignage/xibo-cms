@@ -47,3 +47,48 @@ export async function fetchUsers(
     totalCount: parseInt(response.headers['x-total-count'] ?? '0', 10),
   };
 }
+
+export interface SavePreferenceParams {
+  option: string;
+  value: Record<string, unknown>;
+}
+
+export async function saveUserPreference({ option, value }: SavePreferenceParams): Promise<void> {
+  const formData = new URLSearchParams();
+
+  formData.append('preference[0][option]', option);
+  formData.append('preference[0][value]', JSON.stringify(value));
+
+  await http.post('/user/pref', formData, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
+}
+
+export interface FetchPreferenceResponse {
+  option: string;
+  value: string;
+}
+
+export async function fetchUserPreference<T = Record<string, unknown>>(
+  preferenceKey: string,
+): Promise<T | null> {
+  const response = await http.get<FetchPreferenceResponse>('/user/pref', {
+    params: { preference: preferenceKey },
+  });
+
+  const valueString = response.data?.value;
+
+  if (valueString) {
+    try {
+      console.log(JSON.parse(valueString));
+      return JSON.parse(valueString);
+    } catch (error) {
+      console.error('Failed to parse user preference:', error);
+      return null;
+    }
+  }
+
+  return null;
+}

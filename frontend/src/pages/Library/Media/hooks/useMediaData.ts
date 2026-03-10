@@ -40,6 +40,7 @@ interface UseMediaParams {
   filter?: string;
   folderId: number | null;
   advancedFilters: MediaFilterInput;
+  enabled?: boolean;
 }
 
 export const useMediaData = ({
@@ -48,6 +49,7 @@ export const useMediaData = ({
   filter,
   folderId,
   advancedFilters,
+  enabled = true,
 }: UseMediaParams) => {
   // Combine settings into one object to create a unique cache key
   const queryParams = {
@@ -87,6 +89,8 @@ export const useMediaData = ({
 
       return fetchMedia(request);
     },
+
+    enabled,
 
     placeholderData: keepPreviousData, // Keep showing previous page's data while the new page loads
     staleTime: 1000 * 60 * 1, // Cache for 1 minute
