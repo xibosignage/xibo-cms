@@ -31,10 +31,9 @@ import { testQueryClient } from '@/setupTests';
 // Module mocks
 // -----------------------------------------------------------------------------
 
-vi.mock('@/components/ui/modals/Modal');
-vi.mock('@/services/folderApi');
-vi.mock('@/hooks/useDebounce');
-vi.mock('@/pages/Library/Media/hooks/useMediaFilterOptions');
+vi.mock('@/pages/Library/Media/hooks/useMediaFilterOptions', () => ({
+  useMediaFilterOptions: vi.fn().mockReturnValue({ filterOptions: [], isLoading: false }),
+}));
 vi.mock('../hooks/useMediaData');
 
 // -----------------------------------------------------------------------------
@@ -52,6 +51,14 @@ vi.mock('@/services/mediaApi', () => ({
   updateMedia: vi.fn().mockReturnValue(new Promise(() => {})),
   uploadThumbnail: vi.fn().mockReturnValue(new Promise(() => {})),
   deleteMedia: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('@/services/folderApi', () => ({
+  fetchFolderById: vi.fn().mockResolvedValue({ id: 1, text: 'Root' }),
+  fetchFolderTree: vi.fn().mockResolvedValue([]),
+  searchFolders: vi.fn().mockResolvedValue([]),
+  fetchContextButtons: vi.fn().mockResolvedValue({ create: true }),
+  selectFolder: vi.fn(),
 }));
 
 vi.mock('react-i18next', () => ({
