@@ -1,6 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { vi, beforeEach } from 'vitest';
 
@@ -11,6 +12,18 @@ import { UploadProvider } from '@/context/UploadContext';
 import { UserProvider } from '@/context/UserContext';
 import { testQueryClient } from '@/setupTests';
 import type { User, UserFeatures } from '@/types/user';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
+  Trans: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+// The Media page saves and loads user preferences (column order, page size, etc.)
+// from the server via /user/pref - fake to return "no saved preferences".
+vi.mock('@/services/userApi', () => ({
+  fetchUserPreference: vi.fn().mockResolvedValue(null),
+  saveUserPreference: vi.fn().mockResolvedValue(undefined),
+}));
 
 vi.mock('@/components/ui/modals/Modal', () => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

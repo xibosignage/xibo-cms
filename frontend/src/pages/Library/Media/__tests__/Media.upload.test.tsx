@@ -20,7 +20,7 @@
  */
 
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import React from 'react';
+import type React from 'react';
 import { vi, beforeEach } from 'vitest';
 
 import { mockMediaData, renderMediaPage } from './mediaTestUtils';
