@@ -586,7 +586,9 @@ class Region extends Base
         try {
             $region = $this->regionFactory->getById($id);
 
-            if (!$this->getUser()->checkViewable($region)) {
+            $layout = $this->layoutFactory->getById($region->layoutId);
+
+            if (!$this->getUser()->checkViewable($layout)) {
                 throw new AccessDeniedException(__('You do not have permissions to preview the layout.'));
             }
 
