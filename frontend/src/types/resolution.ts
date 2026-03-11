@@ -19,24 +19,14 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { TFunction } from 'i18next';
-
-export const getCommonFormOptions = (t: TFunction) => ({
-  orientation: [
-    { label: t('Portrait'), value: 'portrait' },
-    { label: t('Landscape'), value: 'landscape' },
-    { label: t('Square'), value: 'square' },
-  ],
-  inherit: [
-    { label: t('Off'), value: 'off' },
-    { label: t('On'), value: 'on' },
-    { label: t('Inherit'), value: 'inherit' },
-  ],
-  lastModifiedFilter: [
-    { label: t('Any time'), value: '' },
-    { label: t('Today'), value: 'today' },
-    { label: t('Last 7 days'), value: '7d' },
-    { label: t('Last 30 days'), value: '30d' },
-    { label: t('This year'), value: '1y' },
-  ],
-});
+export interface Resolution {
+  resolutionId: number;
+  resolution: string;
+  width: number;
+  height: number;
+  designerWidth?: number;
+  designerHeight?: number;
+  version?: number;
+  enabled: boolean;
+  userId?: number;
+}

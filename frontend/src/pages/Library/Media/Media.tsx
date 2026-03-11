@@ -455,7 +455,7 @@ export default function Media() {
     openReplaceModal: openReplaceFileModal,
   } as MediaActionsProps);
 
-  const { filterOptions } = useMediaFilterOptions();
+  const { filterOptions } = useMediaFilterOptions(t);
 
   const libraryTabs = useFilteredTabs('library');
 

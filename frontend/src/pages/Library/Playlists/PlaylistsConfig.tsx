@@ -41,7 +41,7 @@ import {
   TagsCell,
   CheckMarkCell,
 } from '@/components/ui/table/cells';
-import { COMMON_FORM_OPTIONS } from '@/config/commonForms';
+import { getCommonFormOptions } from '@/config/commonForms';
 import type { Playlist } from '@/types/playlist';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
@@ -61,30 +61,29 @@ export const INITIAL_FILTER_STATE: PlaylistFilterInput = {
   lastModified: '',
 };
 
-// TODO: Needs translation
-export const BASE_FILTER_KEYS: FilterConfigItem<PlaylistFilterInput>[] = [
+export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<PlaylistFilterInput>[] => [
   {
-    label: 'Owner',
+    label: t('Owner'),
     name: 'userId',
     className: '',
     shouldTranslateOptions: false,
     showAllOption: false,
-    options: [{ label: 'Select Owner', value: null }],
+    options: [{ label: t('Select Owner'), value: null }],
   },
   {
-    label: 'User Group',
+    label: t('User Group'),
     name: 'ownerUserGroupId',
     shouldTranslateOptions: false,
     showAllOption: false,
-    options: [{ label: 'Select Group', value: null }],
+    options: [{ label: t('Select Group'), value: null }],
   },
   {
-    label: 'Last Modified',
+    label: t('Last Modified'),
     name: 'lastModified',
     className: '',
     shouldTranslateOptions: true,
     showAllOption: false,
-    options: COMMON_FORM_OPTIONS.lastModifiedFilter,
+    options: getCommonFormOptions(t).lastModifiedFilter,
   },
 ];
 

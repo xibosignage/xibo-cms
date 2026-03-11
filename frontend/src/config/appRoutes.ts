@@ -136,7 +136,8 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'resolutions',
         labelKey: 'Resolutions',
-        externalURL: '/resolution/view',
+        lazy: () =>
+          import('@/pages/Design/Resolutions/Resolutions').then((m) => ({ Component: m.default })),
         feature: 'resolution.view',
       },
     ],

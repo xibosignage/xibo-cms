@@ -33,7 +33,7 @@ import TagInput from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { StatusCell, TagsCell, TextCell } from '@/components/ui/table/cells';
-import { COMMON_FORM_OPTIONS } from '@/config/commonForms';
+import { getCommonFormOptions } from '@/config/commonForms';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { MediaFilterInput } from '@/pages/Library/Media/MediaConfig';
 import {
@@ -346,7 +346,7 @@ export default function AddAndEditPlaylistModal({
             label="Enable Playlist Stats Collection?"
             value={draft.enableStat}
             placeholder="Inherit"
-            options={COMMON_FORM_OPTIONS.inherit}
+            options={getCommonFormOptions(t).inherit}
             isOpen={openSelect === 'enableStat'}
             onToggle={() => setOpenSelect((prev) => (prev === 'enableStat' ? null : 'enableStat'))}
             onSelect={(value) => {
