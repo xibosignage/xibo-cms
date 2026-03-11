@@ -97,6 +97,7 @@ RUN LC_ALL=C.UTF-8 DEBIAN_FRONTEND=noninteractive apt update && apt upgrade -y &
     openssl \
     cron \
     default-mysql-client \
+    qpdf \
     && dpkg-reconfigure --frontend noninteractive tzdata \
     && rm -rf /var/lib/apt/lists/*
 

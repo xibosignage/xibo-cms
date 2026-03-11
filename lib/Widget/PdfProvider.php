@@ -55,12 +55,23 @@ class PdfProvider implements WidgetProviderInterface
                     $this->getLog()->debug('fetchDuration: loading PDF file to get the number of pages, file: '
                         . $sourceFile);
 
-                    $mPdf = new Mpdf([
-                        'tempDir' => $widget->getLibraryTempPath(),
-                    ]);
-                    $pageCount = $mPdf->setSourceFile($sourceFile);
+                    // Try mPdf/FPDI first (works for unencrypted PDFs)
+                    try {
+                        $mPdf = new Mpdf([
+                            'tempDir' => $widget->getLibraryTempPath(),
+                        ]);
+                        $pageCount = $mPdf->setSourceFile($sourceFile);
+                    } catch (\Exception $fpdiException) {
+                        // FPDI fails on encrypted/password-protected PDFs.
+                        // Fall back to counting page objects in the raw PDF.
+                        $this->getLog()->info('fetchDuration: FPDI failed (' . $fpdiException->getMessage()
+                            . '), trying raw page count for: ' . $sourceFile);
+                        $pageCount = $this->countPdfPages($sourceFile);
+                    }
 
-                    $widget->setOptionValue('pageCount', 'attrib', $pageCount);
+                    if ($pageCount >= 1) {
+                        $widget->setOptionValue('pageCount', 'attrib', $pageCount);
+                    }
                 } catch (\Exception $e) {
                     $this->getLog()->error('fetchDuration: unable to get PDF page count, e: ' . $e->getMessage());
                 }
@@ -71,6 +82,40 @@ class PdfProvider implements WidgetProviderInterface
             $durationProvider->setDuration($durationProvider->getWidget()->calculatedDuration * $pageCount);
         }
         return $this;
+    }
+
+    /**
+     * Count pages in a PDF by parsing its raw bytes.
+     * Works with encrypted/password-protected PDFs where FPDI fails.
+     */
+    private function countPdfPages(string $filePath): int
+    {
+        $content = @file_get_contents($filePath);
+        if ($content === false) {
+            return 1;
+        }
+
+        // Method 1: Count /Type /Page leaf nodes (not /Type /Pages tree nodes)
+        $count = preg_match_all('/\/Type\s*\/Page[^s]/i', $content);
+        if ($count > 0) {
+            return $count;
+        }
+
+        // Method 2: Find /Count N in page tree root (largest value = total pages)
+        if (preg_match_all('/\/Count\s+(\d+)/', $content, $matches)) {
+            return (int)max($matches[1]);
+        }
+
+        // Method 3: Use qpdf if available (handles all encryption types)
+        $qpdfPath = trim(@shell_exec('which qpdf 2>/dev/null') ?? '');
+        if (!empty($qpdfPath)) {
+            $result = trim(@shell_exec($qpdfPath . ' --show-npages ' . escapeshellarg($filePath) . ' 2>/dev/null') ?? '');
+            if (is_numeric($result) && (int)$result > 0) {
+                return (int)$result;
+            }
+        }
+
+        return 1;
     }
 
     public function getDataCacheKey(DataProviderInterface $dataProvider): ?string
