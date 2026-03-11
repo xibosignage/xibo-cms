@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -178,6 +178,14 @@ class PlaylistFactory extends BaseFactory
     public function query($sortOrder = null, $filterBy = [])
     {
         $parsedFilter = $this->getSanitizer($filterBy);
+        $allowedColumns = [
+            'playlistId', 'name', 'duration', 'owner', 'isDynamic', 'enableStat', 'createdDt', 'modifiedDt'
+        ];
+
+        $sortOrder = ($sortOrder === null)
+            ? ['name']
+            : $this->buildSortQuery($sortOrder, $allowedColumns);
+
         $entries = [];
 
         $params = [];
@@ -202,6 +210,7 @@ class PlaylistFactory extends BaseFactory
                 `playlist`.enableStat,
                 `playlist`.folderId,
                 `playlist`.permissionsFolderId,
+                `folder`.folderName,
                 (
                 SELECT GROUP_CONCAT(DISTINCT `group`.group)
                   FROM `permission`
@@ -221,6 +230,8 @@ class PlaylistFactory extends BaseFactory
               FROM `playlist` 
                 LEFT OUTER JOIN `user` 
                 ON `user`.userId = `playlist`.ownerId
+                LEFT OUTER JOIN `folder`
+                ON `playlist`.folderId = `folder`.folderId
              WHERE 1 = 1 
         ';
 
@@ -350,6 +361,14 @@ class PlaylistFactory extends BaseFactory
             $params['exact'] = $parsedFilter->getString('playlistExact');
         }
 
+        if ($parsedFilter->getString('keyword') != null) {
+            // Fulltext search
+            $body .= $this->buildSearchQuery(
+                $parsedFilter->getString('keyword'),
+                $params
+            );
+        }
+
         // Not PlaylistId
         if ($parsedFilter->getInt('notPlaylistId', ['default' => 0]) != 0) {
             $body .= " AND playlist.playlistId <> :notPlaylistId ";
@@ -470,14 +489,21 @@ class PlaylistFactory extends BaseFactory
         }
 
         // Logged in user view permissions
-        $this->viewPermissionSql('Xibo\Entity\Playlist', $body, $params, 'playlist.playlistId', 'playlist.ownerId', $filterBy, '`playlist`.permissionsFolderId');
+        $this->viewPermissionSql(
+            'Xibo\Entity\Playlist',
+            $body,
+            $params,
+            'playlist.playlistId',
+            'playlist.ownerId',
+            $filterBy,
+            '`playlist`.permissionsFolderId'
+        );
 
         // Sorting?
         $order = '';
+
         if (is_array($sortOrder)) {
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
-        } else {
-            $order .= 'ORDER BY `playlist`.name ';
+            $order .= ' ORDER BY ' . implode(',', $sortOrder);
         }
 
         $limit = '';
@@ -508,5 +534,49 @@ class PlaylistFactory extends BaseFactory
         }
 
         return $entries;
+    }
+
+    /**
+     * Sanitize and build the search terms
+     * @param string $searchTerm
+     * @param array $params
+     * @return string
+     */
+    private function buildSearchQuery(string $searchTerm, array &$params): string
+    {
+        // Sanitize and handle multi-word search
+        $terms  = array_filter(array_map('trim', explode(',', $searchTerm)));
+        $search = implode(' ', $terms);
+
+        // Prepare fulltext search term
+        $body = ' AND (
+                        MATCH(
+                            playlist.name
+                        )
+                        AGAINST (:search IN BOOLEAN MODE)
+                        OR playlist.name LIKE :search_like
+                 ';
+
+        $params['search'] = $search;
+        $params['search_like'] = '%' . $search . '%';
+
+        // Filter numeric inputs and prepare ID search term
+        $ids = array_filter($terms, 'ctype_digit');
+
+        if (!empty($ids)) {
+            $placeholders = [];
+
+            foreach ($ids as $i => $id) {
+                $key = 'id_' . $i;
+                $placeholders[] = ':' . $key;
+                $params[$key] = (int) $id;
+            }
+
+            $body .= ' OR playlist.playlistId IN (' . implode(',', $placeholders) . ')';
+        }
+
+        $body .= ')';
+
+        return $body;
     }
 }

@@ -517,12 +517,22 @@ class MediaFactory extends BaseFactory
     public function query($sortOrder = null, $filterBy = [])
     {
         $sanitizedFilter = $this->getSanitizer($filterBy);
+        $allowedColumns = [
+            'mediaId', 'name', 'type', 'duration', 'fileSize', 'owner', 'sharing', 'released', 'fileName',
+            'enableStat', 'createdDt', 'modifiedDt', 'expires'
+        ];
+        $customColumns = [
+            'revised'           => '`parentId`',
+            'formattedDuration' => '`duration`',
+            'durationSeconds'   => '`duration`',
+            'fileSizeFormatted' => '`fileSize`',
+            'mediaType'         => 'media.`type`',
+            'resolution'        => '(media.`width` * media.`height`)'
+        ];
 
-        if ($sortOrder === null) {
-            $sortOrder = ['name'];
-        } else {
-            $sortOrder = $this->buildSortQuery($sortOrder);
-        }
+        $sortOrder = ($sortOrder === null)
+            ? ['name']
+            : $this->buildSortQuery($sortOrder, $allowedColumns, $customColumns);
 
         $entries = [];
         $params = [];
@@ -1019,59 +1029,6 @@ class MediaFactory extends BaseFactory
         }
 
         return $entries;
-    }
-
-    /**
-     * Sanitize and build the sort query
-     * @param array|null $sortOrder
-     * @return array|null
-     */
-    private function buildSortQuery(?array $sortOrder): ?array
-    {
-        $allowedColumns = [
-            'mediaId', 'name', 'type', 'duration', 'fileSize', 'owner', 'sharing', 'released', 'fileName',
-            'enableStat', 'createdDt', 'modifiedDt', 'expires'
-        ];
-
-        $columnMapping = [];
-
-        foreach ($allowedColumns as $col) {
-            $columnMapping[$col] = '`' . $col . '`';
-        }
-
-        // Map and add the other params in the allowed columns
-        $columnMapping += [
-            'revised'           => '`parentId`',
-            'formattedDuration' => '`duration`',
-            'durationSeconds'   => '`duration`',
-            'fileSizeFormatted' => '`fileSize`',
-            'mediaType'         => 'media.`type`',
-            'resolution'        => '(media.`width` * media.`height`)'
-        ];
-
-        $order = [];
-
-        foreach ($sortOrder as $sort) {
-            // Separate sort by and sort order
-            $sortArr = explode(' ', trim($sort), 2);
-
-            // Trim and sanitize sort by and normalize (remove table name if existing)
-            $columnParts = explode('.', str_replace('`', '', trim($sortArr[0])));
-            $column = end($columnParts);
-
-            // Check against the allowed columns
-            if (!isset($columnMapping[$column])) {
-                continue;
-            }
-
-            $dir = (isset($sortArr[1]) && strtoupper(trim($sortArr[1])) === 'DESC')
-                ? ' DESC'
-                : ' ASC';
-
-            $order[] = $columnMapping[$column] . $dir;
-        }
-
-        return $order ?? null;
     }
 
     /**
