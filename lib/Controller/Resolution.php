@@ -147,7 +147,7 @@ class Resolution extends Base
         foreach ($resolutions as $resolution) {
             /* @var \Xibo\Entity\Resolution $resolution */
 
-            if ($this->isApi($request))
+            if ($this->isApi($request) || $this->isJson($request))
                 break;
 
             $resolution->includeProperty('buttons');

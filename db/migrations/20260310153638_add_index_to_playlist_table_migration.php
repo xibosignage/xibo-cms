@@ -1,3 +1,4 @@
+<?php
 /*
  * Copyright (C) 2026 Xibo Signage Ltd
  *
@@ -19,24 +20,16 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { TFunction } from 'i18next';
+use Phinx\Migration\AbstractMigration;
 
-export const getCommonFormOptions = (t: TFunction) => ({
-  orientation: [
-    { label: t('Portrait'), value: 'portrait' },
-    { label: t('Landscape'), value: 'landscape' },
-    { label: t('Square'), value: 'square' },
-  ],
-  inherit: [
-    { label: t('Off'), value: 'off' },
-    { label: t('On'), value: 'on' },
-    { label: t('Inherit'), value: 'inherit' },
-  ],
-  lastModifiedFilter: [
-    { label: t('Any time'), value: '' },
-    { label: t('Today'), value: 'today' },
-    { label: t('Last 7 days'), value: '7d' },
-    { label: t('Last 30 days'), value: '30d' },
-    { label: t('This year'), value: '1y' },
-  ],
-});
+/**
+ * Add search index in Playlist Table
+ * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
+ */
+class AddIndexToPlaylistTableMigration extends AbstractMigration
+{
+    public function change(): void
+    {
+        $this->execute('ALTER TABLE playlist ADD FULLTEXT idx_playlist_search(name) WITH PARSER ngram');
+    }
+}

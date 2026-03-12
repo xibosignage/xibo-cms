@@ -19,16 +19,17 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import type { TFunction } from 'i18next';
 import { useState, useEffect } from 'react';
 
-import { BASE_FILTER_KEYS } from '../PlaylistsConfig';
+import { getBaseFilterKeys } from '../PlaylistsConfig';
 
 import type { FilterOption } from '@/components/ui/SelectFilter';
 import { fetchUsers } from '@/services/userApi';
 import { fetchUserGroups } from '@/services/userGroupApi';
 
-export function usePlaylistFilterOptions() {
-  const [filterOptions, setFilterOptions] = useState(BASE_FILTER_KEYS);
+export function usePlaylistFilterOptions(t: TFunction) {
+  const [filterOptions, setFilterOptions] = useState(() => getBaseFilterKeys(t));
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -55,7 +56,7 @@ export function usePlaylistFilterOptions() {
           value: group.groupId.toString(),
         }));
 
-        const mergedOptions = BASE_FILTER_KEYS.map((item) => {
+        const mergedOptions = getBaseFilterKeys(t).map((item) => {
           if (item.name === 'userId') {
             return {
               ...item,
@@ -86,7 +87,7 @@ export function usePlaylistFilterOptions() {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [t]);
 
   return { filterOptions, isLoading };
 }

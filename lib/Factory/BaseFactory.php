@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -502,5 +502,40 @@ class BaseFactory
         }
 
         $body .= ' ) ';
+    }
+
+    public function buildSortQuery(?array $sortOrder, $allowedColumns, $customColumns = []): ?array
+    {
+        $columnMapping = [];
+
+        foreach ($allowedColumns as $col) {
+            $columnMapping[$col] = '`' . $col . '`';
+        }
+
+        $columnMapping += $customColumns;
+
+        $order = [];
+
+        foreach ($sortOrder as $sort) {
+            // Separate sort by and sort order
+            $sortArr = explode(' ', trim($sort), 2);
+
+            // Trim and sanitize sort by and normalize (remove table name if existing)
+            $columnParts = explode('.', str_replace('`', '', trim($sortArr[0])));
+            $column = end($columnParts);
+
+            // Check against the allowed columns
+            if (!isset($columnMapping[$column])) {
+                continue;
+            }
+
+            $dir = (isset($sortArr[1]) && strtoupper(trim($sortArr[1])) === 'DESC')
+                ? ' DESC'
+                : ' ASC';
+
+            $order[] = $columnMapping[$column] . $dir;
+        }
+
+        return $order ?? null;
     }
 }

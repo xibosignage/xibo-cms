@@ -51,7 +51,7 @@ import {
   ActionsCell,
   TagsCell,
 } from '@/components/ui/table/cells';
-import { COMMON_FORM_OPTIONS } from '@/config/commonForms';
+import { getCommonFormOptions } from '@/config/commonForms';
 import type { Media } from '@/types/media';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
@@ -103,10 +103,9 @@ export const INITIAL_FILTER_STATE: MediaFilterInput = {
   lastModified: '',
 };
 
-// TODO: Needs translation
-export const BASE_FILTER_KEYS: FilterConfigItem<MediaFilterInput>[] = [
+export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<MediaFilterInput>[] => [
   {
-    label: 'Type',
+    label: t('Type'),
     name: 'type',
     className: '',
     shouldTranslateOptions: true,
@@ -120,7 +119,7 @@ export const BASE_FILTER_KEYS: FilterConfigItem<MediaFilterInput>[] = [
     ],
   },
   {
-    label: 'Owner',
+    label: t('Owner'),
     name: 'ownerId',
     className: '',
     shouldTranslateOptions: false,
@@ -128,20 +127,20 @@ export const BASE_FILTER_KEYS: FilterConfigItem<MediaFilterInput>[] = [
     options: [{ label: 'Select Owner', value: null }],
   },
   {
-    label: 'User Group',
+    label: t('User Group'),
     name: 'ownerUserGroupId',
     shouldTranslateOptions: false,
     showAllOption: false,
     options: [{ label: 'Select Group', value: null }],
   },
   {
-    label: 'Orientation',
+    label: t('Orientation'),
     name: 'orientation',
     className: '',
-    options: COMMON_FORM_OPTIONS.orientation,
+    options: getCommonFormOptions(t).orientation,
   },
   {
-    label: 'Retired',
+    label: t('Retired'),
     name: 'retired',
     className: 'max-w-auto md:max-w-[100px]',
     shouldTranslateOptions: true,
@@ -153,12 +152,12 @@ export const BASE_FILTER_KEYS: FilterConfigItem<MediaFilterInput>[] = [
     ],
   },
   {
-    label: 'Last Modified',
+    label: t('Last Modified'),
     name: 'lastModified',
     className: '',
     shouldTranslateOptions: true,
     showAllOption: false,
-    options: COMMON_FORM_OPTIONS.lastModifiedFilter,
+    options: getCommonFormOptions(t).lastModifiedFilter,
   },
 ];
 

@@ -19,15 +19,16 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import type { TFunction } from 'i18next';
 import { useState, useEffect } from 'react';
 
 import type { FilterOption } from '@/components/ui/SelectFilter';
-import { BASE_FILTER_KEYS } from '@/pages/Library/Media/MediaConfig';
+import { getBaseFilterKeys } from '@/pages/Library/Media/MediaConfig';
 import { fetchUsers } from '@/services/userApi';
 import { fetchUserGroups } from '@/services/userGroupApi';
 
-export function useMediaFilterOptions() {
-  const [filterOptions, setFilterOptions] = useState(BASE_FILTER_KEYS);
+export function useMediaFilterOptions(t: TFunction) {
+  const [filterOptions, setFilterOptions] = useState(() => getBaseFilterKeys(t));
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -54,7 +55,7 @@ export function useMediaFilterOptions() {
           value: group.groupId.toString(),
         }));
 
-        const mergedOptions = BASE_FILTER_KEYS.map((item) => {
+        const mergedOptions = getBaseFilterKeys(t).map((item) => {
           if (item.name === 'ownerId') {
             return {
               ...item,
@@ -85,7 +86,7 @@ export function useMediaFilterOptions() {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [t]);
 
   return { filterOptions, isLoading };
 }

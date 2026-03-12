@@ -25,38 +25,29 @@ import { Search, Filter, FilterX, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { ModalType } from './PlaylistsConfig';
+import type { ModalType } from './ResolutionsConfig';
 import {
-  getPlaylistColumns,
+  getResolutionColumns,
   getBulkActions,
   INITIAL_FILTER_STATE,
-  type PlaylistFilterInput,
-} from './PlaylistsConfig';
-import { PlaylistModals } from './components/PlaylistModals';
-import { usePlaylistActions } from './hooks/usePlaylistActions';
-import { usePlaylistData } from './hooks/usePlaylistData';
-import { usePlaylistFilterOptions } from './hooks/usePlaylistFilterOptions';
+  type ResolutionFilterInput,
+} from './ResolutionsConfig';
+import { ResolutionModals } from './components/ResolutionModals';
+import { useResolutionActions } from './hooks/useResolutionActions';
+import { useResolutionData } from './hooks/useResolutionData';
+import { useResolutionFilterOptions } from './hooks/useResolutionFilterOptions';
 
 import Button from '@/components/ui/Button';
 import FilterInputs from '@/components/ui/FilterInputs';
-import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
-import FolderSidebar from '@/components/ui/FolderSidebar';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
-import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
-import { useFolderActions } from '@/hooks/useFolderActions';
-import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
-import { fetchContextButtons } from '@/services/folderApi';
-import type { Playlist } from '@/types/playlist';
+import type { Resolution } from '@/types/resolution';
 
-export default function Playlist() {
+export default function Resolution() {
   const { t } = useTranslation();
-  const { user } = useUserContext();
   const queryClient = useQueryClient();
-  const canViewFolders = usePermissions()?.canViewFolders;
-  const homeFolderId = user?.homeFolderId ?? 1;
 
   const {
     pagination,
@@ -70,14 +61,12 @@ export default function Playlist() {
     setGlobalFilter,
     filterInputs,
     setFilterInputs,
-    folderId: selectedFolderId,
-    setFolderId: setSelectedFolderId,
     isHydrated,
-  } = useTableState<PlaylistFilterInput>('playlist_page', {
+  } = useTableState<ResolutionFilterInput>('resolution_page', {
     pagination: { pageIndex: 0, pageSize: 10 },
     sorting: [],
     columnVisibility: {
-      playlistId: true,
+      resolutionId: true,
       name: true,
       tags: true,
       duration: true,
@@ -93,23 +82,17 @@ export default function Playlist() {
     viewMode: 'table',
     globalFilter: '',
     filterInputs: INITIAL_FILTER_STATE,
-    folderId: canViewFolders ? homeFolderId : null,
   });
 
-  const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [selectionCache, setSelectionCache] = useState<Record<string, Playlist>>({});
+  const [selectionCache, setSelectionCache] = useState<Record<string, Resolution>>({});
   const [openFilter, setOpenFilter] = useState(false);
 
-  const [canAddToFolder, setCanAddToFolder] = useState(false);
-
-  const [showFolderSidebar, setShowFolderSidebar] = useState(false);
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
 
-  const [itemsToDelete, setItemsToDelete] = useState<Playlist[]>([]);
-  const [itemsToMove, setItemsToMove] = useState<Playlist[]>([]);
+  const [itemsToDelete, setItemsToDelete] = useState<Resolution[]>([]);
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
-  const [selectedPlaylistId, setSelectedPlaylistId] = useState<number | null>(null);
+  const [selectedResolutionId, setSelectedResolutionId] = useState<number | null>(null);
 
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
@@ -120,12 +103,11 @@ export default function Playlist() {
     isFetching,
     isError,
     error: queryError,
-  } = usePlaylistData({
+  } = useResolutionData({
     pagination,
     sorting,
     filter: debouncedFilter,
     advancedFilters: filterInputs,
-    folderId: selectedFolderId,
     enabled: isHydrated,
   });
 
@@ -134,54 +116,15 @@ export default function Playlist() {
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
 
-  const [playlistList, setPlaylistList] = useState<Playlist[]>([]);
-
-  const folderActions = useFolderActions({
-    onSuccess: (targetFolder) => {
-      setFolderRefreshTrigger((prev) => prev + 1);
-
-      if (targetFolder) {
-        handleFolderChange({ id: targetFolder.id, text: targetFolder.text });
-      } else {
-        handleRefresh();
-      }
-    },
-  });
+  const [resolutionList, setResolutionList] = useState<Resolution[]>([]);
 
   useEffect(() => {
-    setPlaylistList(data ?? []);
+    setResolutionList(data ?? []);
   }, [data]);
-
-  // Check selected folder permission to add playlist
-  useEffect(() => {
-    if (selectedFolderId === null) {
-      setCanAddToFolder(false);
-      return;
-    }
-
-    let active = true;
-
-    fetchContextButtons(selectedFolderId)
-      .then((perms) => {
-        if (active) {
-          setCanAddToFolder(perms.create || false);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to fetch folder permissions', err);
-        if (active) {
-          setCanAddToFolder(false);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [selectedFolderId]);
 
   // Update the selected cache when data loads or selection changes
   useEffect(() => {
-    if (!playlistList || playlistList.length === 0) {
+    if (!resolutionList || resolutionList.length === 0) {
       return;
     }
 
@@ -189,8 +132,8 @@ export default function Playlist() {
       const next = { ...prev };
       let hasChanges = false;
 
-      playlistList.forEach((item) => {
-        const id = item.playlistId.toString();
+      resolutionList.forEach((item) => {
+        const id = item.resolutionId.toString();
         if (rowSelection[id]) {
           if (!next[id]) {
             next[id] = item;
@@ -201,57 +144,43 @@ export default function Playlist() {
 
       return hasChanges ? next : prev;
     });
-  }, [playlistList, rowSelection]);
+  }, [resolutionList, rowSelection]);
 
-  const selectedPlaylist = playlistList.find((m) => m.playlistId === selectedPlaylistId) ?? null;
-  const existingNames = playlistList.map((m) => m.name);
+  const selectedResolution =
+    resolutionList.find((m) => m.resolutionId === selectedResolutionId) ?? null;
+  const existingNames = resolutionList.map((m) => m.resolution);
 
-  const getRowId = (row: Playlist) => {
-    return row.playlistId.toString();
+  const getRowId = (row: Resolution) => {
+    return row.resolutionId.toString();
   };
 
   // Event handlers
   const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['playlist'] });
+    queryClient.invalidateQueries({ queryKey: ['resolution'] });
   };
 
-  const handleFolderChange = (folder: { id: number | null; text: string | '' }) => {
-    setSelectedFolderId(folder.id);
-    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-    setRowSelection({});
-  };
-
-  const {
-    isDeleting,
-    deleteError,
-    setDeleteError,
-    isCloning,
-    confirmDelete,
-    handleConfirmClone,
-    handleConfirmMove,
-  } = usePlaylistActions({
+  const { isDeleting, deleteError, setDeleteError, confirmDelete } = useResolutionActions({
     t,
     handleRefresh,
     closeModal,
     setRowSelection,
-    setItemsToMove,
   });
 
   const handleDelete = (id: number) => {
-    const playlist = playlistList.find((m) => m.playlistId === id);
-    if (!playlist) return;
+    const resolution = resolutionList.find((m) => m.resolutionId === id);
+    if (!resolution) return;
 
-    setItemsToDelete([playlist]);
+    setItemsToDelete([resolution]);
     setDeleteError(null);
     openModal('delete');
   };
 
-  const openAddEditModal = (playlist: Playlist | null) => {
-    if (playlist) {
-      setSelectedPlaylistId(playlist.playlistId);
+  const openAddEditModal = (resolution: Resolution | null) => {
+    if (resolution) {
+      setSelectedResolutionId(resolution.resolutionId);
       openModal('edit');
     } else {
-      setSelectedPlaylistId(null);
+      setSelectedResolutionId(null);
       openModal('edit');
     }
   };
@@ -261,30 +190,16 @@ export default function Playlist() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
-  const openCopyModal = (playlistId: number) => {
-    setSelectedPlaylistId(playlistId);
-    openModal('copy');
-  };
-
-  const columns = getPlaylistColumns({
+  const columns = getResolutionColumns({
     t,
     onDelete: handleDelete,
     openAddEditModal,
-    openMoveModal: (playlist) => {
-      setItemsToMove([playlist] as Playlist[]);
-      openModal('move');
-    },
-    openShareModal: (playlistId) => {
-      setShareEntityIds(playlistId);
-      openModal('share');
-    },
-    copyPlaylist: openCopyModal,
   });
 
-  const getAllSelectedItems = (): Playlist[] => {
+  const getAllSelectedItems = (): Resolution[] => {
     return Object.keys(rowSelection)
       .map((id) => selectionCache[id])
-      .filter((item): item is Playlist => !!item); // Filter out any missing data
+      .filter((item): item is Resolution => !!item); // Filter out any missing data
   };
 
   const bulkActions = getBulkActions({
@@ -295,61 +210,31 @@ export default function Playlist() {
       setDeleteError(null);
       openModal('delete');
     },
-    onMove: () => {
-      const allItems = getAllSelectedItems();
-      setItemsToMove(allItems);
-      openModal('move');
-    },
-    onShare: () => {
-      const allItems = getAllSelectedItems();
-      const ids = allItems.map((i) => i.playlistId);
-      setShareEntityIds(ids);
-      openModal('share');
-    },
   });
 
-  const { filterOptions } = usePlaylistFilterOptions(t);
+  const { filterOptions } = useResolutionFilterOptions(t);
 
-  const libraryTabs = useFilteredTabs('library');
+  const libraryTabs = useFilteredTabs('design');
 
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
-      <FolderSidebar
-        isOpen={showFolderSidebar}
-        selectedFolderId={selectedFolderId}
-        onSelect={handleFolderChange}
-        onClose={() => setShowFolderSidebar(false)}
-        onAction={folderActions.openAction}
-        refreshTrigger={folderRefreshTrigger}
-      />
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
         <div className="flex flex-row justify-between py-4 items-center gap-4">
-          <TabNav activeTab="Playlists" navigation={libraryTabs} />
+          <TabNav activeTab="Resolutions" navigation={libraryTabs} />
           <div className="flex items-center gap-2 md:mb-0">
             <Button
               variant="primary"
               className="font-semibold"
-              disabled={!canAddToFolder || !isHydrated}
+              disabled={!isHydrated}
               onClick={() => openAddEditModal(null)}
               leftIcon={Plus}
             >
-              {t('New Playlist')}
+              {t('Add Resolution')}
             </Button>
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
-          <div className="w-full lg:flex-1 md:min-w-0">
-            <FolderBreadcrumb
-              currentFolderId={selectedFolderId}
-              onNavigate={handleFolderChange}
-              isSidebarOpen={showFolderSidebar}
-              onToggleSidebar={() => setShowFolderSidebar(!showFolderSidebar)}
-              onAction={folderActions.openAction}
-              refreshTrigger={folderRefreshTrigger}
-            />
-          </div>
-
+        <div className="flex flex-col lg:flex-row justify-end items-center gap-4">
           <div className="flex items-center gap-2 w-full xl:w-115 lg:w-75 shrink-0">
             <div className="relative flex-1 flex">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -363,7 +248,7 @@ export default function Playlist() {
                   setGlobalFilter(e.target.value);
                   setPagination((prev) => ({ ...prev, pageIndex: 0 }));
                 }}
-                placeholder={t('Search playlist...')}
+                placeholder={t('Search resolution...')}
                 className="py-2 px-3 pl-10 block h-11.25 bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none disabled:bg-gray-200"
               />
             </div>
@@ -381,8 +266,15 @@ export default function Playlist() {
 
         <FilterInputs
           onChange={(name, value) => {
-            setFilterInputs((prev) => ({ ...prev, [name]: value }));
-            setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+            setFilterInputs((prev) => {
+              return {
+                ...prev,
+                [name]: value === undefined || value === '' ? null : value,
+              } as ResolutionFilterInput;
+            });
+            setPagination((prev) => {
+              return { ...prev, pageIndex: 0 };
+            });
           }}
           open={openFilter}
           values={filterInputs}
@@ -406,7 +298,7 @@ export default function Playlist() {
           ) : (
             <DataTable
               columns={columns}
-              data={playlistList}
+              data={resolutionList}
               pageCount={pageCount}
               pagination={pagination}
               onPaginationChange={setPagination}
@@ -429,34 +321,26 @@ export default function Playlist() {
         </div>
       </div>
 
-      <PlaylistModals
+      <ResolutionModals
         actions={{
           activeModal,
           closeModal,
           handleRefresh,
-          setPlaylistList,
+          setResolutionList,
           deleteError,
           isDeleting,
-          isCloning,
         }}
         selection={{
-          selectedPlaylist,
-          selectedPlaylistId,
+          selectedResolution,
+          selectedResolutionId,
           itemsToDelete,
-          itemsToMove,
           existingNames,
           shareEntityIds,
           setShareEntityIds,
         }}
         handlers={{
           confirmDelete,
-          handleConfirmClone: (name, copyMedia) =>
-            handleConfirmClone(selectedPlaylist, name, copyMedia),
-          handleConfirmMove: (folderId) => {
-            handleConfirmMove(itemsToMove, folderId);
-          },
         }}
-        folderActions={folderActions}
       />
     </section>
   );

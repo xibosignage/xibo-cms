@@ -180,6 +180,13 @@ class Playlist extends Base
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
+        name: 'keyword',
+        description: 'Filter by Playlist name or ID',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
         name: 'userId',
         description: 'Filter by user Id',
         in: 'query',
@@ -228,6 +235,32 @@ class Playlist extends Base
         required: false,
         schema: new OA\Schema(type: 'integer')
     )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            enum: [
+                'playlistId',
+                'name',
+                'duration',
+                'owner',
+                'isDynamic',
+                'enableStat',
+                'createdDt',
+                'modifiedDt',
+            ],
+            type: 'string'
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(enum: ['asc', 'desc'], type: 'string')
+    )]
     #[OA\Response(
         response: 200,
         description: 'successful operation',
@@ -250,6 +283,7 @@ class Playlist extends Base
     {
         $this->getState()->template = 'grid';
         $sanitizedParams = $this->getSanitizer($request->getParams());
+        $playlistSortQuery = $this->gridRenderSort($sanitizedParams, $this->isJson($request));
 
         // Embed?
         $embed = ($sanitizedParams->getString('embed') != null)
@@ -257,9 +291,10 @@ class Playlist extends Base
             : [];
 
         // Playlists
-        $playlists = $this->playlistFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter([
+        $playlists = $this->playlistFactory->query($playlistSortQuery, $this->gridRenderFilter([
             'name' => $sanitizedParams->getString('name'),
             'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
+            'keyword' => $sanitizedParams->getString('keyword'),
             'userId' => $sanitizedParams->getInt('userId'),
             'tags' => $sanitizedParams->getString('tags'),
             'exactTags' => $sanitizedParams->getCheckbox('exactTags'),
@@ -346,208 +381,10 @@ class Playlist extends Base
                 }
             }
 
-
             if ($sanitizedParams->getCheckbox('fullScreenScheduleCheck')) {
                 $fullScreenCampaignId = $this->hasFullScreenLayout($playlist);
                 $playlist->setUnmatchedProperty('hasFullScreenLayout', (!empty($fullScreenCampaignId)));
                 $playlist->setUnmatchedProperty('fullScreenCampaignId', $fullScreenCampaignId);
-            }
-
-            if ($this->isApi($request) || $this->isJson($request)) {
-                continue;
-            }
-
-            $playlist->includeProperty('buttons');
-
-            switch ($playlist->enableStat) {
-                case 'On':
-                    $playlist->setUnmatchedProperty(
-                        'enableStatDescription',
-                        __('This Playlist has enable stat collection set to ON')
-                    );
-                    break;
-
-                case 'Off':
-                    $playlist->setUnmatchedProperty(
-                        'enableStatDescription',
-                        __('This Playlist has enable stat collection set to OFF')
-                    );
-                    break;
-
-                default:
-                    $playlist->setUnmatchedProperty(
-                        'enableStatDescription',
-                        __('This Playlist has enable stat collection set to INHERIT')
-                    );
-            }
-
-            // Only proceed if we have edit permissions
-            if ($this->getUser()->featureEnabled('playlist.modify')
-                && $this->getUser()->checkEditable($playlist)
-            ) {
-                if ($playlist->isDynamic === 0) {
-                    // Timeline edit
-                    $playlist->buttons[] = [
-                        'id' => 'playlist_timeline_button_edit',
-                        'class' => 'XiboCustomFormButton',
-                        'url' => $this->urlFor($request, 'playlist.timeline.form', ['id' => $playlist->playlistId]),
-                        'text' => __('Timeline')
-                    ];
-
-                    $playlist->buttons[] = ['divider' => true];
-                }
-
-                // Edit Button
-                $playlist->buttons[] = [
-                    'id' => 'playlist_button_edit',
-                    'url' => $this->urlFor($request, 'playlist.edit.form', ['id' => $playlist->playlistId]),
-                    'text' => __('Edit')
-                ];
-
-                // Copy Button
-                $playlist->buttons[] = [
-                    'id' => 'playlist_button_copy',
-                    'url' => $this->urlFor($request, 'playlist.copy.form', ['id' => $playlist->playlistId]),
-                    'text' => __('Copy')
-                ];
-
-                if ($this->getUser()->featureEnabled('folder.view')) {
-                    // Select Folder
-                    $playlist->buttons[] = [
-                        'id' => 'playlist_button_selectfolder',
-                        'url' => $this->urlFor($request, 'playlist.selectfolder.form', ['id' => $playlist->playlistId]),
-                        'text' => __('Select Folder'),
-                        'multi-select' => true,
-                        'dataAttributes' => [
-                            [
-                                'name' => 'commit-url',
-                                'value' => $this->urlFor($request, 'playlist.selectfolder', [
-                                    'id' => $playlist->playlistId
-                                ])
-                            ],
-                            ['name' => 'commit-method', 'value' => 'put'],
-                            ['name' => 'id', 'value' => 'playlist_button_selectfolder'],
-                            ['name' => 'text', 'value' => __('Move to Folder')],
-                            ['name' => 'rowtitle', 'value' => $playlist->name],
-                            ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
-                        ]
-                    ];
-                }
-
-                // Set Enable Stat
-                $playlist->buttons[] = [
-                    'id' => 'playlist_button_setenablestat',
-                    'url' => $this->urlFor($request, 'playlist.setenablestat.form', ['id' => $playlist->playlistId]),
-                    'text' => __('Enable stats collection?'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor($request, 'playlist.setenablestat', [
-                                'id' => $playlist->playlistId
-                            ])
-                        ],
-                        ['name' => 'commit-method', 'value' => 'put'],
-                        ['name' => 'id', 'value' => 'playlist_button_setenablestat'],
-                        ['name' => 'text', 'value' => __('Enable stats collection?')],
-                        ['name' => 'rowtitle', 'value' => $playlist->name],
-                        ['name' => 'form-callback', 'value' => 'setEnableStatMultiSelectFormOpen']
-                    ]
-                ];
-
-                $playlist->buttons[] = ['divider' => true];
-            }
-
-            // Extra buttons if have delete permissions
-            if ($this->getUser()->featureEnabled('playlist.modify')
-                && $this->getUser()->checkDeleteable($playlist)
-            ) {
-                // Delete Button
-                $playlist->buttons[] = [
-                    'id' => 'playlist_button_delete',
-                    'url' => $this->urlFor($request, 'playlist.delete.form', ['id' => $playlist->playlistId]),
-                    'text' => __('Delete'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor($request, 'playlist.delete', [
-                                'id' => $playlist->playlistId
-                            ])
-                        ],
-                        ['name' => 'commit-method', 'value' => 'delete'],
-                        ['name' => 'id', 'value' => 'playlist_button_delete'],
-                        ['name' => 'text', 'value' => __('Delete')],
-                        ['name' => 'sort-group', 'value' => 1],
-                        ['name' => 'rowtitle', 'value' => $playlist->name]
-                    ]
-                ];
-
-                $playlist->buttons[] = ['divider' => true];
-            }
-
-            // Extra buttons if we have modify permissions
-            if ($this->getUser()->featureEnabled('playlist.modify')
-                && $this->getUser()->checkPermissionsModifyable($playlist)
-            ) {
-                // Permissions button
-                $playlist->buttons[] = [
-                    'id' => 'playlist_button_permissions',
-                    'url' => $this->urlFor($request, 'user.permissions.form', [
-                        'entity' => 'Playlist',
-                        'id' => $playlist->playlistId
-                    ]),
-                    'text' => __('Share'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor($request, 'user.permissions.multi', [
-                                'entity' => 'Playlist',
-                                'id' => $playlist->playlistId
-                            ])
-                        ],
-                        ['name' => 'commit-method', 'value' => 'post'],
-                        ['name' => 'id', 'value' => 'playlist_button_permissions'],
-                        ['name' => 'text', 'value' => __('Share')],
-                        ['name' => 'rowtitle', 'value' => $playlist->name],
-                        ['name' => 'sort-group', 'value' => 2],
-                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        [
-                            'name' => 'custom-handler-url',
-                            'value' => $this->urlFor($request, 'user.permissions.multi.form', [
-                                'entity' => 'Playlist'
-                            ])
-                        ],
-                        ['name' => 'content-id-name', 'value' => 'playlistId']
-                    ]
-                ];
-            }
-
-            if ($this->getUser()->featureEnabled(['schedule.view', 'layout.view'])) {
-                $playlist->buttons[] = ['divider' => true];
-
-                $playlist->buttons[] = array(
-                    'id' => 'usage_report_button',
-                    'url' => $this->urlFor($request, 'playlist.usage.form', ['id' => $playlist->playlistId]),
-                    'text' => __('Usage Report')
-                );
-            }
-
-            // Schedule
-            if ($this->getUser()->featureEnabled('schedule.add')
-                && ($this->getUser()->checkEditable($playlist)
-                    || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1)
-            ) {
-                $playlist->buttons[] = [
-                    'id' => 'playlist_button_schedule',
-                    'url' => $this->urlFor(
-                        $request,
-                        'schedule.add.form',
-                        ['id' => $playlist->playlistId, 'from' => 'Playlist']
-                    ),
-                    'text' => __('Schedule')
-                ];
             }
         }
 
