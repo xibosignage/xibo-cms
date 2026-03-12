@@ -21,7 +21,7 @@
 
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import type React from 'react';
-import { vi, beforeEach } from 'vitest';
+import { test, vi, beforeEach } from 'vitest';
 
 import { mockEditMedia, mockMediaData, openEditModal, renderMediaPage } from './mediaTestUtils';
 
