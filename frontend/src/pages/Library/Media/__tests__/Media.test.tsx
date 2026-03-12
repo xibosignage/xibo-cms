@@ -520,4 +520,45 @@ describe('Media page', () => {
       expect(screen.getByText('error_target.jpg')).toBeInTheDocument();
     });
   });
+
+  test('verifies toggling between Table and Grid views', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (useMediaData as any).mockReturnValue({
+      data: {
+        rows: [{ mediaId: 1, name: 'toggle_target.jpg', mediaType: 'image' }],
+        totalCount: 1,
+      },
+      isFetching: false,
+      isError: false,
+      error: null,
+    });
+
+    renderMediaPage();
+
+    // Verify initial state is Table View
+    expect(await screen.findByRole('table')).toBeInTheDocument();
+
+    const gridViewBtn = screen.getByRole('button', { name: /Grid View/i });
+
+    // Covers: Verify clicking Grid View switches from Table → Grid view.
+    fireEvent.click(gridViewBtn);
+
+    // Covers: Verify Table View label disappears after switching to Grid view.
+    // (Checking that the table element and its column headers are removed from the DOM)
+    await waitFor(() => {
+      expect(screen.queryByRole('table')).not.toBeInTheDocument();
+      expect(screen.queryByRole('columnheader', { name: 'Name' })).not.toBeInTheDocument();
+    });
+
+    const tableViewBtn = screen.getByRole('button', { name: /Table View/i });
+
+    // Covers: Verify clicking Table View switches back from Grid → Table view.
+    fireEvent.click(tableViewBtn);
+
+    // Covers: Verify Table View label reappears after switching back.
+    await waitFor(() => {
+      expect(screen.getByRole('table')).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: 'Name' })).toBeInTheDocument();
+    });
+  });
 });
