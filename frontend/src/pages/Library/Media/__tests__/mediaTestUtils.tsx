@@ -20,7 +20,7 @@
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
 
@@ -87,6 +87,15 @@ export type UseMediaReturn = ReturnType<typeof useMediaData>;
 
 export const mockMediaData = (overrides: unknown) => {
   vi.mocked(useMediaData).mockReturnValue(overrides as UseMediaReturn);
+};
+
+// openEditModal: waits for the media row to appear (DataTable hydrated), then
+// clicks the Edit quick-action button and waits for the dialog.
+export const openEditModal = async () => {
+  await screen.findAllByText(mockEditMedia.name);
+  const editBtn = screen.getByRole('button', { name: 'Edit' });
+  fireEvent.click(editBtn);
+  return screen.findByRole('dialog', { name: 'Edit Media' });
 };
 
 // ---------------------------------------------------------------------------

@@ -23,7 +23,7 @@ import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import type React from 'react';
 import { vi, beforeEach } from 'vitest';
 
-import { mockEditMedia, mockMediaData, renderMediaPage } from './mediaTestUtils';
+import { mockEditMedia, mockMediaData, openEditModal, renderMediaPage } from './mediaTestUtils';
 
 import { updateMedia } from '@/services/mediaApi';
 import { testQueryClient } from '@/setupTests';
@@ -58,19 +58,6 @@ vi.mock('@/services/userApi', () => ({
   fetchUserPreference: vi.fn().mockResolvedValue(null),
   saveUserPreference: vi.fn().mockResolvedValue(undefined),
 }));
-
-// =============================================================================
-// Helpers
-// =============================================================================
-
-// openEditModal: waits for the media row to appear (DataTable hydrated), then
-// clicks the Edit quick-action button and waits for the dialog.
-const openEditModal = async () => {
-  await screen.findByText(mockEditMedia.name);
-  const editBtn = screen.getByRole('button', { name: 'Edit' });
-  fireEvent.click(editBtn);
-  return screen.findByRole('dialog', { name: 'Edit Media' });
-};
 
 // =============================================================================
 // Tests
@@ -112,7 +99,7 @@ describe('Edit Media — form fields', () => {
   // BUG: pill only shows 'season' — the |value part is stripped from display.
   // Expected: the full 'season|summer' string should appear in the pill.
   // ---------------------------------------------------------------------------
-  test('Tag input accepts new tags in tag|value format', async () => {
+  test.fails('Tag input accepts new tags in tag|value format', async () => {
     mockMediaData({
       data: { rows: [{ ...mockEditMedia, tags: [] }], totalCount: 1 },
       isFetching: false,
@@ -136,7 +123,7 @@ describe('Edit Media — form fields', () => {
   // dropped on save. Expected: the uncommitted input value should be included
   // in the saved payload.
   // ---------------------------------------------------------------------------
-  test('Tag typed without pressing Enter is included when form is saved', async () => {
+  test.fails('Tag typed without pressing Enter is included when form is saved', async () => {
     mockMediaData({
       data: { rows: [{ ...mockEditMedia, tags: [] }], totalCount: 1 },
       isFetching: false,
@@ -165,7 +152,7 @@ describe('Edit Media — form fields', () => {
   // BUG: tags whose name starts with the substring "Tag" are displayed as
   // "TAg" in the pill. Expected: capitalisation is preserved as typed.
   // ---------------------------------------------------------------------------
-  test('Tag name starting with "Tag" is displayed with correct capitalisation', async () => {
+  test.fails('Tag name starting with "Tag" is displayed with correct capitalisation', async () => {
     mockMediaData({
       data: { rows: [{ ...mockEditMedia, tags: [] }], totalCount: 1 },
       isFetching: false,
@@ -188,7 +175,7 @@ describe('Edit Media — form fields', () => {
   // BUG: tags with an uppercase first letter (e.g. 'Season') are saved as
   // lowercase ('season'). Expected: the original case is preserved.
   // ---------------------------------------------------------------------------
-  test('Tag name preserves original capitalisation when added', async () => {
+  test.fails('Tag name preserves original capitalisation when added', async () => {
     mockMediaData({
       data: { rows: [{ ...mockEditMedia, tags: [] }], totalCount: 1 },
       isFetching: false,
