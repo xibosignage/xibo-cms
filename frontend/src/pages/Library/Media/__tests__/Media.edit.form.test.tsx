@@ -149,10 +149,10 @@ describe('Edit Media — form fields', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // BUG: tags whose name starts with the substring "Tag" are displayed as
-  // "TAg" in the pill. Expected: capitalisation is preserved as typed.
+  // Tags whose name starts with "Tag" should display with the original
+  // capitalisation.
   // ---------------------------------------------------------------------------
-  test.fails('Tag name starting with "Tag" is displayed with correct capitalisation', async () => {
+  test('Tag name starting with "Tag" is displayed with correct capitalisation', async () => {
     mockMediaData({
       data: { rows: [{ ...mockEditMedia, tags: [] }], totalCount: 1 },
       isFetching: false,
@@ -172,10 +172,9 @@ describe('Edit Media — form fields', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // BUG: tags with an uppercase first letter (e.g. 'Season') are saved as
-  // lowercase ('season'). Expected: the original case is preserved.
+  // BUG: tags with Season|summer only saves Season.
   // ---------------------------------------------------------------------------
-  test.fails('Tag name preserves original capitalisation when added', async () => {
+  test('Tag name preserves original capitalisation when added', async () => {
     mockMediaData({
       data: { rows: [{ ...mockEditMedia, tags: [] }], totalCount: 1 },
       isFetching: false,

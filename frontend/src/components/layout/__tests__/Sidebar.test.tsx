@@ -146,7 +146,7 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
           { name: 'Campaign', href: '/campaign/view' },
           { name: 'Layouts', href: '/layout/view' },
           { name: 'Templates', href: '/template/view' },
-          { name: 'Resolutions', href: '/resolution/view' },
+          { name: 'Resolutions', href: '/design/resolutions' },
         ],
       },
       {
