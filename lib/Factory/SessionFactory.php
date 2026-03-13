@@ -102,6 +102,17 @@ class SessionFactory extends BaseFactory
             $params['lastAccessed'] = $sanitizedFilter->getDate('fromDt')->setTime(0, 0, 0)->format(DateFormatHelper::getSystemFormat());
         }
 
+        // Accessed Date filter
+        if ($sanitizedFilter->getDate('lastAccessedDateFrom') !== null) {
+            $body .= ' AND session.LastAccessed >= :lastAccessedDateFrom ';
+            $params['lastAccessedDateFrom'] = $sanitizedFilter->getDate('lastAccessedDateFrom');
+        }
+
+        if ($sanitizedFilter->getDate('lastAccessedDateTo') !== null) {
+            $body .= ' AND session.LastAccessed <= :lastAccessedDateTo ';
+            $params['lastAccessedDateTo'] = $sanitizedFilter->getDate('lastAccessedDateTo');
+        }
+
         if ($sanitizedFilter->getString('type') != null) {
 
             if ($sanitizedFilter->getString('type') == 'active') {

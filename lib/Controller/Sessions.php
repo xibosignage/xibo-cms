@@ -83,7 +83,9 @@ class Sessions extends Base
 
         $sessions = $this->sessionFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter([
             'type' => $sanitizedQueryParams->getString('type'),
-            'fromDt' => $sanitizedQueryParams->getString('fromDt')
+            'fromDt' => $sanitizedQueryParams->getString('fromDt'),
+            'lastAccessedDateFrom' => $sanitizedQueryParams->getString('lastAccessedDateFrom'),
+            'lastAccessedDateTo' => $sanitizedQueryParams->getString('lastAccessedDateTo'),
         ], $sanitizedQueryParams));
 
         foreach ($sessions as $row) {
@@ -93,7 +95,7 @@ class Sessions extends Base
             $row->lastAccessed =
                 Carbon::createFromTimeString($row->lastAccessed)?->format(DateFormatHelper::getSystemFormat());
 
-            if (!$this->isApi($request) && $this->getUser()->isSuperAdmin()) {
+            if ((!$this->isApi($request) && !$this->isJson($request)) && $this->getUser()->isSuperAdmin()) {
                 $row->includeProperty('buttons');
 
                 // No buttons on expired sessions

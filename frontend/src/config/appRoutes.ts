@@ -323,8 +323,9 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'sessions',
         labelKey: 'Sessions',
-        externalURL: '/sessions/view',
-        feature: 'sessions.view',
+        lazy: () =>
+          import('@/pages/Advanced/Sessions/Sessions').then((m) => ({ Component: m.default })),
+        feature: 'session.view',
       },
       {
         path: 'audit-trail',

@@ -157,7 +157,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("sessions.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("sessions.view") }}">{% trans "Sessions" %}</a></li>
+                <li class="sidebar-list"><a href="/prototype/advanced/sessions">{% trans "Sessions" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("auditlog.view") %}
