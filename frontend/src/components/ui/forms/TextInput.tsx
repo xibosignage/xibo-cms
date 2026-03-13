@@ -32,10 +32,13 @@ interface TextInputProps {
   error?: string;
   onChange: (value: string) => void;
   className?: string;
+  labelClassName?: string;
   wrapperClassName?: string;
   disabled?: boolean;
   prefix?: React.ReactNode;
   suffix?: React.ReactNode;
+  multiline?: boolean;
+  rows?: number;
 }
 
 export default function TextInput({
@@ -43,6 +46,7 @@ export default function TextInput({
   value,
   onChange,
   className,
+  labelClassName,
   wrapperClassName,
   label,
   placeholder,
@@ -51,13 +55,18 @@ export default function TextInput({
   disabled = false,
   prefix,
   suffix,
+  multiline = false,
+  rows,
 }: TextInputProps) {
   const { t } = useTranslation();
   const generatedId = useId();
 
   return (
     <div className={twMerge('flex flex-col gap-1 w-full', wrapperClassName)}>
-      <label htmlFor={generatedId} className="text-sm font-semibold text-gray-500 leading-4.5">
+      <label
+        htmlFor={generatedId}
+        className={twMerge('text-sm font-semibold text-gray-500 leading-4.5', labelClassName)}
+      >
         {!label ? t('Text') : label}
       </label>
       <div
@@ -72,20 +81,36 @@ export default function TextInput({
           <div className="flex items-center border-e border-gray-200 shrink-0">{prefix}</div>
         )}
 
-        <input
-          id={generatedId}
-          name={name}
-          value={value}
-          disabled={disabled}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder || t('Add text')}
-          className={twMerge(
-            'flex-1 p-3 text-sm font-normal text-gray-800 placeholder:text-gray-500',
-            'bg-transparent border-none outline-none focus:ring-0 focus:outline-none',
-            'disabled:text-gray-300 disabled:pointer-events-none',
-            className,
-          )}
-        />
+        {multiline ? (
+          <textarea
+            id={generatedId}
+            name={name}
+            value={value}
+            disabled={disabled}
+            rows={rows}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder || t('Add text')}
+            className={twMerge(
+              'flex-1 p-3 text-sm font-normal text-gray-800 placeholder:text-gray-500',
+              'bg-transparent border-none outline-none focus:ring-0 resize-none',
+              className,
+            )}
+          />
+        ) : (
+          <input
+            id={generatedId}
+            name={name}
+            value={value}
+            disabled={disabled}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder || t('Add text')}
+            className={twMerge(
+              'flex-1 p-3 text-sm font-normal text-gray-800 placeholder:text-gray-500',
+              'bg-transparent border-none outline-none focus:ring-0',
+              className,
+            )}
+          />
+        )}
 
         {suffix && (
           <div className="flex items-center border-s border-gray-200 shrink-0">{suffix}</div>

@@ -124,7 +124,8 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'layout',
         labelKey: 'Layouts',
-        externalURL: '/layout/view',
+        lazy: () =>
+          import('@/pages/Design/Layouts/Layouts').then((m) => ({ Component: m.default })),
         feature: 'layout.view',
       },
       {

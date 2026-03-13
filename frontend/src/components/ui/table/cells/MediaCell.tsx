@@ -51,7 +51,7 @@ export function MediaCell({ thumb, alt, mediaType, onPreview }: MediaProps) {
         type="button"
         title={t('Preview media')}
         aria-label={t('Preview media')}
-        className="cursor-pointer rounded-sm w-16 h-[47px] bg-gray-400 hover:bg-gray-300 focus:bg-gray-300 overflow-hidden"
+        className="cursor-pointer rounded-sm w-16 h-11.75 bg-gray-400 hover:bg-gray-300 focus:bg-gray-300 overflow-hidden"
         onClick={handlePreview}
       >
         {showThumbnail ? (

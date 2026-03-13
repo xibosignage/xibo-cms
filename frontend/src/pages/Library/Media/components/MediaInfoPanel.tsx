@@ -77,7 +77,7 @@ export function MediaInfoPanel({
           : 'bg-gray-800 border-l border-gray-700 rounded-xl',
 
         'transition-[max-width, opacity] duration-300 ease-in-out overflow-hidden',
-        open ? 'max-w-[248px] w-[248px] opacity-100' : 'max-w-0 opacity-0',
+        open ? 'max-w-62 w-62 opacity-100' : 'max-w-0 opacity-0',
       )}
     >
       {/* Header */}
@@ -99,7 +99,7 @@ export function MediaInfoPanel({
               <div className="flex gap-1 items-start">
                 <div
                   className={twMerge(
-                    ' uppercase h-[26px] w-[26px] text-[12px] center rounded-full font-semibold',
+                    ' uppercase h-6.5 w-6.5 text-[12px] center rounded-full font-semibold',
                     applyVersionTwo
                       ? 'bg-xibo-blue-100 text-xibo-blue-800'
                       : 'bg-xibo-blue-800/30 text-xibo-blue-500',
@@ -128,11 +128,8 @@ export function MediaInfoPanel({
               <span className={titleTextVersion}>{t('SHARING')}</span>
               <div className="flex gap-1 items-start">
                 {users?.map((user) => (
-                  <div
-                    className="h-[38px] w-[38px] center flex"
-                    key={`${user.userName}-${user.userId}`}
-                  >
-                    <div className="bg-xibo-blue-300 h-[26px] w-[26px] text-[12px] center rounded-full text-xibo-blue-800 font-semibold">
+                  <div className="h-9.5 w-9.5 center flex" key={`${user.userName}-${user.userId}`}>
+                    <div className="bg-xibo-blue-300 h-6.5 w-6.5 text-[12px] center rounded-full text-xibo-blue-800 font-semibold">
                       {user.userName.slice(0, 1)}
                     </div>
                   </div>

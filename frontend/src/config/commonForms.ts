@@ -39,4 +39,9 @@ export const getCommonFormOptions = (t: TFunction) => ({
     { label: t('Last 30 days'), value: '30d' },
     { label: t('This year'), value: '1y' },
   ],
+  retired: [
+    { label: t('Any'), value: null },
+    { label: t('No'), value: 0 },
+    { label: t('Yes'), value: 1 },
+  ],
 });
