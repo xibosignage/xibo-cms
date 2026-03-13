@@ -21,7 +21,11 @@
 
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
-import { DayPicker, getDefaultClassNames } from 'react-day-picker';
+import { getDefaultClassNames } from 'react-day-picker';
+import { DayPicker as GregorianDayPicker } from 'react-day-picker';
+import { enUS, faIR } from 'react-day-picker/locale';
+import { DayPicker as PersianDayPicker } from 'react-day-picker/persian';
+
 import 'react-day-picker/dist/style.css';
 
 import Button from './Button';
@@ -35,7 +39,7 @@ export interface DatePickerProps {
     from?: Date;
     to?: Date;
   };
-
+  isJalali?: boolean;
   onApply: (
     value: { type: 'single'; date: Date } | { type: 'range'; from: Date; to: Date },
   ) => void;
@@ -55,7 +59,13 @@ function to24Hour(hour: string, period: 'AM' | 'PM') {
   return h === 12 ? 12 : h + 12;
 }
 
-export default function DatePicker({ onApply, onCancel, value, mode }: DatePickerProps) {
+export default function DatePicker({
+  onApply,
+  onCancel,
+  value,
+  mode,
+  isJalali = false,
+}: DatePickerProps) {
   const defaultClassNames = getDefaultClassNames();
   const [single, setSingle] = useState<Date | undefined>(value?.date);
   const [range, setRange] = useState<DateRange | undefined>({
@@ -108,26 +118,34 @@ export default function DatePicker({ onApply, onCancel, value, mode }: DatePicke
       'h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-700',
   };
 
+  const ActivePicker = isJalali ? PersianDayPicker : GregorianDayPicker;
+  const activeLocale = isJalali ? faIR : enUS;
+  const layoutDirection = isJalali ? 'rtl' : 'ltr';
+
   return (
-    <div className="w-[380px]">
+    <div className="w-95">
       <div className="p-3 bg-white">
         {mode === 'single' ? (
-          <DayPicker
+          <ActivePicker
             mode="single"
             selected={single}
             onSelect={setSingle}
             numberOfMonths={1}
             disabled={{ before: new Date() }}
+            locale={activeLocale}
+            dir={layoutDirection}
             className="text-sm flex flex-col datepicker"
             classNames={commonClassNames}
           />
         ) : (
-          <DayPicker
+          <ActivePicker
             mode="range"
             selected={range}
             onSelect={setRange}
             numberOfMonths={1}
             disabled={{ after: new Date() }}
+            locale={activeLocale}
+            dir={layoutDirection}
             className="datepicker"
             classNames={{
               ...commonClassNames,
@@ -176,8 +194,12 @@ export default function DatePicker({ onApply, onCancel, value, mode }: DatePicke
 
           {mode === 'range' && range?.from && (
             <>
-              {range.from.toLocaleDateString()}
-              {range.to ? ` – ${range.to.toLocaleDateString()}` : ''}
+              {new Intl.DateTimeFormat(isJalali ? 'fa-IR' : 'en-US', { dateStyle: 'short' }).format(
+                range.from,
+              )}
+              {range.to
+                ? ` – ${new Intl.DateTimeFormat(isJalali ? 'fa-IR' : 'en-US', { dateStyle: 'short' }).format(range.to)}`
+                : ''}
             </>
           )}
         </p>

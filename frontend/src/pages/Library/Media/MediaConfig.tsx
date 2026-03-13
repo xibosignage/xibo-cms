@@ -157,6 +157,7 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<MediaFilterInp
     className: '',
     shouldTranslateOptions: true,
     showAllOption: false,
+    allowCustomRange: true,
     options: getCommonFormOptions(t).lastModifiedFilter,
   },
 ];

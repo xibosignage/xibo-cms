@@ -31,6 +31,8 @@ export interface FilterConfigItem<T> {
   shouldTranslateOptions?: boolean;
   showAllOption?: boolean;
   allLabel?: string;
+  allowCustomRange?: boolean;
+  isJalali?: boolean;
 }
 
 type FilterInputsProps<T> = {
@@ -55,7 +57,7 @@ export default function FilterInputs<T>({
         transition-all duration-300 ease-in-out w-full
         ${
           open
-            ? 'max-h-[600px] opacity-100 visible mt-4 overflow-visible'
+            ? 'max-h-150 opacity-100 visible mt-4 overflow-visible'
             : 'max-h-0 opacity-0 invisible mt-0 overflow-hidden'
         }
       `}
@@ -83,6 +85,8 @@ export default function FilterInputs<T>({
             shouldTranslateOptions={filter.shouldTranslateOptions}
             showAllOption={filter.showAllOption}
             allLabel={filter.allLabel}
+            allowCustomRange={filter.allowCustomRange}
+            isJalali={filter.isJalali}
           />
         ))}
       </div>

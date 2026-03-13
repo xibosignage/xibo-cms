@@ -44,6 +44,8 @@ type SelectFilterProps = {
   shouldTranslateOptions?: boolean;
   showAllOption?: boolean;
   allLabel?: string;
+  allowCustomRange?: boolean;
+  isJalali?: boolean;
 };
 
 export default function SelectFilter({
@@ -56,6 +58,8 @@ export default function SelectFilter({
   shouldTranslateOptions = false,
   showAllOption = true,
   allLabel = 'All',
+  allowCustomRange = false,
+  isJalali = false,
 }: SelectFilterProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -138,11 +142,11 @@ export default function SelectFilter({
         className={twMerge(
           'absolute z-50 mt-1 min-w-full transition-all duration-200 ease-linear flex bg-xibo-white overflow-hidden rounded-lg border border-gray-200 shadow-lg',
           open
-            ? 'max-h-[700px] opacity-100 top-[68px] right-0'
-            : 'max-h-0 opacity-0 top-[60px] pointer-events-none',
+            ? 'max-h-175 opacity-100 top-17 right-0'
+            : 'max-h-0 opacity-0 top-15 pointer-events-none',
         )}
       >
-        <ul className={twMerge(openDatePicker ? 'w-[200px] border-r border-gray-200' : 'w-full')}>
+        <ul className={twMerge(openDatePicker ? 'w-50 border-r border-gray-200' : 'w-full')}>
           {showAllOption && (
             <li
               onClick={() => {
@@ -186,28 +190,31 @@ export default function SelectFilter({
             </li>
           )}
         </ul>
-        <div
-          className={twMerge(
-            'transition-all duration-1000 ease-out overflow-hidden',
-            openDatePicker
-              ? 'opacity-100 max-w-[380px] max-h-[500px]'
-              : 'opacity-0 max-w-0 max-h-0 pointer-events-none',
-          )}
-        >
-          <div className="pb-4 box-border">
-            <DatePicker
-              mode="range"
-              onCancel={() => setOpenDatePicker(false)}
-              onApply={(value) => {
-                if (value.type === 'range') {
-                  handleDateApply(value);
-                }
-                setOpenDatePicker(false);
-                setOpen(false);
-              }}
-            />
+        {allowCustomRange && (
+          <div
+            className={twMerge(
+              'transition-all duration-1000 ease-out overflow-hidden',
+              openDatePicker
+                ? 'opacity-100 max-w-95 max-h-125'
+                : 'opacity-0 max-w-0 max-h-0 pointer-events-none',
+            )}
+          >
+            <div className="pb-4 box-border">
+              <DatePicker
+                mode="range"
+                isJalali={isJalali}
+                onCancel={() => setOpenDatePicker(false)}
+                onApply={(value) => {
+                  if (value.type === 'range') {
+                    handleDateApply(value);
+                  }
+                  setOpenDatePicker(false);
+                  setOpen(false);
+                }}
+              />
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
