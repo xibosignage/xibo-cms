@@ -684,7 +684,9 @@ class MediaFactory extends BaseFactory
             // Fulltext search
             $body .= $this->buildSearchQuery(
                 $sanitizedFilter->getString('keyword'),
-                $params
+                $params,
+                ['media.name', 'media.originalFileName', 'media.storedAs'],
+                'media.mediaId'
             );
         }
 
@@ -1029,49 +1031,5 @@ class MediaFactory extends BaseFactory
         }
 
         return $entries;
-    }
-
-    /**
-     * Sanitize and build the search terms
-     * @param string $searchTerm
-     * @param array $params
-     * @return string
-     */
-    private function buildSearchQuery(string $searchTerm, array &$params): string
-    {
-        // Sanitize and handle multi-word search
-        $terms  = array_filter(array_map('trim', explode(',', $searchTerm)));
-        $search = implode(' ', $terms);
-
-        // Prepare fulltext search term
-        $body = ' AND (
-                        MATCH(
-                            media.name,
-                            media.originalFileName,
-                            media.storedAs
-                        )
-                        AGAINST (:search IN BOOLEAN MODE)
-                 ';
-
-        $params['search'] = $search;
-
-        // Filter numeric inputs and prepare ID search term
-        $ids = array_filter($terms, 'ctype_digit');
-
-        if (!empty($ids)) {
-            $placeholders = [];
-
-            foreach ($ids as $i => $id) {
-                $key = 'id_' . $i;
-                $placeholders[] = ':' . $key;
-                $params[$key] = (int) $id;
-            }
-
-            $body .= ' OR media.mediaId IN (' . implode(',', $placeholders) . ')';
-        }
-
-        $body .= ')';
-
-        return $body;
     }
 }

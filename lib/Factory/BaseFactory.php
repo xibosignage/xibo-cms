@@ -538,4 +538,67 @@ class BaseFactory
 
         return $order ?? null;
     }
+
+    /**
+     * @param string $searchTerm
+     * @param array $params
+     * @param array $columnsToSearch
+     * @param string|null $idColumn
+     * @return string
+     */
+    public function buildSearchQuery(
+        string $searchTerm,
+        array &$params,
+        array $columnsToSearch,
+        ?string $idColumn = null
+    ): string {
+        // Sanitize and handle multi-word search
+        $terms = array_filter(array_map('trim', explode(',', $searchTerm)));
+        $search = implode(' ', $terms);
+
+        // Prepare fulltext search term
+        $body = ' AND (
+                    MATCH(' . implode(', ', $columnsToSearch) . ')
+                    AGAINST (:search IN BOOLEAN MODE)';
+
+        $params['search'] = $search;
+
+        // Fallback for short or alphanumeric terms
+        foreach ($terms as $i => $term) {
+            $isAlphaNumeric = preg_match('/[a-zA-Z]/', $term) && preg_match('/[0-9]/', $term);
+
+            if ($isAlphaNumeric || strlen($term) < 4) {
+                $key = 'like_' . $i;
+                $likeClauses = implode(
+                    ' OR ',
+                    array_map(fn($col) => $col . ' LIKE :' . $key, $columnsToSearch)
+                );
+
+                $body .= ' OR (' . $likeClauses . ')';
+
+                $params[$key] = '%' . $term . '%';
+            }
+        }
+
+        // Filter numeric inputs and search by ID column
+        if ($idColumn !== null) {
+            $ids = array_filter($terms, 'ctype_digit');
+
+            if (!empty($ids)) {
+                $placeholders = [];
+
+                foreach ($ids as $i => $id) {
+                    $key = 'id_' . $i;
+                    $placeholders[] = ':' . $key;
+                    $params[$key] = (int) $id;
+                }
+
+                $body .= ' OR ' . $idColumn . ' IN (' . implode(', ', $placeholders) . ')';
+            }
+        }
+
+        $body .= ')';
+
+        return $body;
+    }
 }

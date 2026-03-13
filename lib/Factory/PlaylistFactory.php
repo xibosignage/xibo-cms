@@ -365,7 +365,9 @@ class PlaylistFactory extends BaseFactory
             // Fulltext search
             $body .= $this->buildSearchQuery(
                 $parsedFilter->getString('keyword'),
-                $params
+                $params,
+                ['playlist.name'],
+                'playlist.playlistId'
             );
         }
 
@@ -534,49 +536,5 @@ class PlaylistFactory extends BaseFactory
         }
 
         return $entries;
-    }
-
-    /**
-     * Sanitize and build the search terms
-     * @param string $searchTerm
-     * @param array $params
-     * @return string
-     */
-    private function buildSearchQuery(string $searchTerm, array &$params): string
-    {
-        // Sanitize and handle multi-word search
-        $terms  = array_filter(array_map('trim', explode(',', $searchTerm)));
-        $search = implode(' ', $terms);
-
-        // Prepare fulltext search term
-        $body = ' AND (
-                        MATCH(
-                            playlist.name
-                        )
-                        AGAINST (:search IN BOOLEAN MODE)
-                        OR playlist.name LIKE :search_like
-                 ';
-
-        $params['search'] = $search;
-        $params['search_like'] = '%' . $search . '%';
-
-        // Filter numeric inputs and prepare ID search term
-        $ids = array_filter($terms, 'ctype_digit');
-
-        if (!empty($ids)) {
-            $placeholders = [];
-
-            foreach ($ids as $i => $id) {
-                $key = 'id_' . $i;
-                $placeholders[] = ':' . $key;
-                $params[$key] = (int) $id;
-            }
-
-            $body .= ' OR playlist.playlistId IN (' . implode(',', $placeholders) . ')';
-        }
-
-        $body .= ')';
-
-        return $body;
     }
 }
