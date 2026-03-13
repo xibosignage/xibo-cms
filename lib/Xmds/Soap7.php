@@ -313,14 +313,11 @@ class Soap7 extends Soap6
             // Dispatch an event to initialize weather data.
             $event = new XmdsWeatherRequestEvent($latitude, $longitude);
             $this->getDispatcher()->dispatch($event, XmdsWeatherRequestEvent::$NAME);
-        } else {
-            throw new \SoapFault(
-                'Receiver',
-                'Display coordinates is not configured'
-            );
+            return $event->getWeatherData();
         }
 
-        // return weather data
-        return $event->getWeatherData();
+        // No coordinates — return error in response instead of SoapFault.
+        // Players can log this; server avoids HTTP 500 on every collection.
+        return '<weather><error>Display has no coordinates configured</error></weather>';
     }
 }
