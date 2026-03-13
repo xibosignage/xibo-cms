@@ -99,19 +99,24 @@ export function resolveLastModified(value?: string | null) {
 
   const now = new Date();
 
-  const endOfToday = new Date();
-  endOfToday.setHours(23, 59, 59, 999);
-
-  if (value === 'today') {
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-
-    return {
-      modifiedDateFrom: formatDateTime(start),
-      modifiedDateTo: formatDateTime(endOfToday),
-    };
+  function startOfDay(date: Date) {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d;
   }
 
+  function endOfDay(date: Date) {
+    const d = new Date(date);
+    d.setHours(23, 59, 59, 999);
+    return d;
+  }
+
+  if (value === 'today') {
+    return {
+      modifiedDateFrom: formatDateTime(startOfDay(now)),
+      modifiedDateTo: formatDateTime(endOfDay(now)),
+    };
+  }
   const daysAgo = (days: number) => new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
   if (value === '7d') {
@@ -145,8 +150,8 @@ export function resolveLastModified(value?: string | null) {
     if (!from || !to) return {};
 
     return {
-      modifiedDateFrom: formatDateTime(new Date(from)),
-      modifiedDateTo: formatDateTime(new Date(to)),
+      modifiedDateFrom: formatDateTime(startOfDay(new Date(from))),
+      modifiedDateTo: formatDateTime(endOfDay(new Date(to))),
     };
   }
 
