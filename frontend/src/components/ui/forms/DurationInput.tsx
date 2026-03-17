@@ -26,6 +26,7 @@ import { useTranslation } from 'react-i18next';
 interface DurationInputProps {
   value: number;
   onChange: (seconds: number) => void;
+  error?: string;
 }
 
 function formatSeconds(seconds: number): string {
@@ -44,7 +45,7 @@ function parseTimeToSeconds(value: string): number {
   return h * 3600 + m * 60 + s;
 }
 
-export default function DurationInput({ value, onChange }: DurationInputProps) {
+export default function DurationInput({ value, onChange, error }: DurationInputProps) {
   const { t } = useTranslation();
   const [displayValue, setDisplayValue] = useState(formatSeconds(value));
   const STEP = 1;
@@ -68,7 +69,7 @@ export default function DurationInput({ value, onChange }: DurationInputProps) {
   }, [value]);
 
   return (
-    <div className="flex flex-col justify-end">
+    <div className="flex flex-col justify-end relative">
       <label className="text-xs font-semibold text-gray-500">{t('Duration')}</label>
 
       <div className="relative flex">
@@ -76,7 +77,7 @@ export default function DurationInput({ value, onChange }: DurationInputProps) {
           type="text"
           inputMode="numeric"
           placeholder="00:00:00"
-          className="border-gray-200 text-sm rounded-lg px-3 pl-3 pr-9 mb-1 tracking-wider h-11.25 w-full"
+          className="border-gray-200 text-sm rounded-lg px-3 pl-3 pr-9 tracking-wider h-11.25 w-full"
           value={displayValue}
           onChange={(e) => {
             const val = e.target.value.replace(/[^\d:]/g, '');
@@ -88,7 +89,7 @@ export default function DurationInput({ value, onChange }: DurationInputProps) {
             setDisplayValue(formatSeconds(seconds));
           }}
         />
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 px-1 py-1 flex flex-col justify-center border-l h-11 border-gray-200 -mt-0.5">
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 px-1 py-1 flex flex-col justify-center border-l h-11 border-gray-200">
           <button
             type="button"
             onClick={increment}
@@ -107,6 +108,7 @@ export default function DurationInput({ value, onChange }: DurationInputProps) {
           </button>
         </div>
       </div>
+      {error && <p className="text-xs absolute -bottom-4 text-red-600 mt-1">{error}</p>}
     </div>
   );
 }

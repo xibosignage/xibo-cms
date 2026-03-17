@@ -31,7 +31,9 @@ import ExpiryDateSelect from '@/components/ui/forms/ExpiryDateSelect';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TagInput from '@/components/ui/forms/TagInput';
+import TextInput from '@/components/ui/forms/TextInput';
 import { getCommonFormOptions } from '@/config/commonForms';
+import { mediaSchema } from '@/schema/media';
 import { updateMedia } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
 import type { Tag } from '@/types/tag';
@@ -44,6 +46,10 @@ interface EditMediaModalProps {
   onClose: () => void;
   onSave: (updated: Media) => void;
 }
+
+type MediaFormErrors = Partial<Record<keyof MediaDraft, string>> & {
+  _global?: string;
+};
 
 type MediaDraft = {
   name: string;
@@ -64,8 +70,16 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
   const { t } = useTranslation();
   const [openSelect, setOpenSelect] = useState<null | OpenSelect>(null);
   const [expiry, setExpiry] = useState<ExpiryValue>(expiresToExpiryValue(data.expires));
-
+  const [errors, setErrors] = useState<MediaFormErrors>({});
   const [isSaving, setIsSaving] = useState(false);
+
+  const clearError = (field: keyof MediaDraft) => {
+    setErrors((prev) => ({
+      ...prev,
+      [field]: undefined,
+    }));
+  };
+
   const [draft, setDraft] = useState<MediaDraft>(() => ({
     name: data.name,
     folderId: data.folderId ?? null,
@@ -100,30 +114,71 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
 
   const handleSave = async () => {
     if (isSaving) return;
+
+    const result = mediaSchema.safeParse(draft);
+    if (!result.success) {
+      const fieldErrors: Partial<MediaFormErrors> = {};
+
+      result.error.errors.forEach((err) => {
+        const field = err.path[0] as keyof MediaFormErrors;
+
+        if (field) {
+          fieldErrors[field] = err.message;
+        }
+      });
+
+      setErrors(fieldErrors);
+      return;
+    }
+
+    setErrors({});
     setIsSaving(true);
 
     const serializedTags = draft.tags.map((t) => (t.value != null ? `${t.tag}|${t.value}` : t.tag));
 
     const expires = expiryToDateTime(expiry);
 
-    const updatedMedia = await updateMedia(data.mediaId, {
-      name: draft.name,
-      duration: draft.duration,
-      retired: draft.retired ? 1 : 0,
-      updateInLayouts: draft.updateInLayouts ? 1 : 0,
-      tags: serializedTags.join(','),
-      orientation: draft.orientation,
-      enableStat: draft.enableStat,
-      expires,
-      mediaNoExpiryDate: expiry?.type === 'never' ? 1 : 0,
-      folderId: draft.folderId,
-    });
+    try {
+      const updatedMedia = await updateMedia(data.mediaId, {
+        name: draft.name,
+        duration: draft.duration,
+        retired: draft.retired ? 1 : 0,
+        updateInLayouts: draft.updateInLayouts ? 1 : 0,
+        tags: serializedTags.join(','),
+        orientation: draft.orientation,
+        enableStat: draft.enableStat,
+        expires,
+        mediaNoExpiryDate: expiry?.type === 'never' ? 1 : 0,
+        folderId: draft.folderId,
+      });
 
-    onSave({
-      ...data,
-      ...updatedMedia,
-    });
-    onClose();
+      onSave({
+        ...data,
+        ...updatedMedia,
+      });
+
+      onClose();
+    } catch (err) {
+      console.error('Failed to update media', err);
+      const apiError = err as {
+        response?: {
+          data?: {
+            message?: string;
+            errors?: Record<string, string>;
+          };
+        };
+      };
+
+      if (apiError.response?.data?.errors) {
+        setErrors(apiError.response.data.errors);
+      } else {
+        setErrors({
+          _global: apiError.response?.data?.message || t('Something went wrong. Please try again.'),
+        });
+      }
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -133,6 +188,7 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
       isOpen={openModal}
       isPending={isSaving}
       scrollable={false}
+      error={errors._global}
       actions={[
         {
           label: t('Cancel'),
@@ -163,18 +219,20 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
           </div>
 
           {/* Name */}
-          <div className="flex flex-col">
-            <label htmlFor="name" className="text-xs font-semibold text-gray-500 leading-5">
-              {t('Name')}
-            </label>
-            <input
-              id="name"
-              className="border-gray-200 text-sm rounded-lg"
-              name="name"
-              value={draft.name}
-              onChange={(e) => setDraft((prev) => ({ ...prev, name: e.target.value }))}
-            />
-          </div>
+          <TextInput
+            name="name"
+            label={t('Name')}
+            value={draft.name ?? ''}
+            onChange={(value) => {
+              setDraft((prev) => ({
+                ...prev,
+                name: value,
+              }));
+              clearError('name');
+            }}
+            labelClassName="text-xs"
+            error={errors.name}
+          />
 
           {/* Tags */}
           <TagInput

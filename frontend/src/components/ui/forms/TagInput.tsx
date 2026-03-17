@@ -36,6 +36,7 @@ interface TagInputProps {
   disabled?: boolean;
   prefix?: React.ReactNode;
   suffix?: React.ReactNode;
+  error?: string;
 }
 
 function TagInput({
@@ -48,6 +49,7 @@ function TagInput({
   disabled = false,
   prefix,
   suffix,
+  error,
 }: TagInputProps) {
   const { t } = useTranslation();
   const [input, setInput] = useState('');
@@ -151,7 +153,11 @@ function TagInput({
         )}
       </div>
 
-      {helpText && <span className="text-xs text-gray-400">{helpText}</span>}
+      {error ? (
+        <p className="text-xs text-red-600 ml-2 mt-1">{error}</p>
+      ) : (
+        helpText && <span className="text-xs text-gray-400">{helpText}</span>
+      )}
     </div>
   );
 }

@@ -44,6 +44,7 @@ interface SelectDropdownProps {
   optionLabel?: string;
   addOptionAvatar?: boolean;
   className?: string;
+  error?: string;
 }
 
 export default function SelectDropdown({
@@ -60,6 +61,7 @@ export default function SelectDropdown({
   optionLabel,
   className,
   addOptionAvatar,
+  error,
 }: SelectDropdownProps) {
   const { t } = useTranslation();
 
@@ -111,7 +113,11 @@ export default function SelectDropdown({
           ))}
         </div>
       </div>
-      <span className="text-xs text-gray-400 leading-snug flex mt-1">{helper}</span>
+      {error ? (
+        <p className="text-xs text-red-600 ml-2 mt-1">{error}</p>
+      ) : (
+        helper && <span className="text-xs text-gray-400 leading-snug flex mt-1">{helper}</span>
+      )}
     </div>
   );
 }
