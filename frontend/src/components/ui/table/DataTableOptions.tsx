@@ -128,8 +128,8 @@ export function DataTableOptions<TData>({
         </div>
       )}
 
-      {/* Show Print and CSV only on table mode */}
-      {isTableMode && (
+      {/* Don't Print and CSV on grid mode  */}
+      {!isGridMode && (
         <>
           <Button type="button" onClick={onPrint} variant="tertiary" leftIcon={Printer}>
             {t('Print')}

@@ -60,14 +60,14 @@ export function usePlaylistFilterOptions(t: TFunction) {
           if (item.name === 'userId') {
             return {
               ...item,
-              options: [...item.options, ...userOptions],
+              options: [...(item.options ?? []), ...userOptions],
             };
           }
 
           if (item.name === 'ownerUserGroupId') {
             return {
               ...item,
-              options: [...item.options, ...groupOptions],
+              options: [...(item.options ?? []), ...groupOptions],
             };
           }
 

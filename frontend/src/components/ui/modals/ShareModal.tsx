@@ -293,7 +293,9 @@ export default function ShareModal({
   }, [currentOwnerId]);
 
   const handleSave = () => {
-    if (!entityId) return;
+    if (!entityId) {
+      return;
+    }
 
     startTransition(async () => {
       try {
@@ -308,12 +310,13 @@ export default function ShareModal({
           };
         });
 
-        if (Array.isArray(entityId)) {
+        const isMultiSelect = Array.isArray(entityId);
+
+        if (isMultiSelect) {
           await saveMultiPermissions({
             entity: entityType,
             ids: entityId,
             groupIds: groupIdsPayload,
-            ownerId: user ? parseInt(user) : undefined,
           });
         } else {
           await savePermissions({

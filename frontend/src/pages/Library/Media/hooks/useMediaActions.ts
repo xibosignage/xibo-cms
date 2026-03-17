@@ -145,6 +145,7 @@ export function useMediaActions({
       }
 
       setItemsToMove([]);
+      setRowSelection({});
       handleRefresh();
       closeModal();
     } catch (error) {

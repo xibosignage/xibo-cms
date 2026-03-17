@@ -134,6 +134,7 @@ export function usePlaylistActions({
       }
 
       setItemsToMove([]);
+      setRowSelection({});
       handleRefresh();
       closeModal();
     } catch (error) {

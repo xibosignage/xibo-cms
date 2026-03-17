@@ -136,8 +136,8 @@ export function useLayoutActions({
       }
 
       setItemsToMove([]);
+      setRowSelection({});
       handleRefresh();
-
       closeModal();
     } catch (error) {
       console.error(error);

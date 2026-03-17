@@ -20,14 +20,17 @@
  */
 
 import Button from './Button';
+import InputFilter from './InputFilter';
 import type { FilterOption } from './SelectFilter';
 import SelectFilter from './SelectFilter';
 
 export interface FilterConfigItem<T> {
   label: string;
   name: keyof T & string;
+  placeholder?: string;
+  type?: 'select' | 'text' | 'number';
   className?: string;
-  options: FilterOption[];
+  options?: FilterOption[];
   shouldTranslateOptions?: boolean;
   showAllOption?: boolean;
   allLabel?: string;
@@ -73,22 +76,41 @@ export default function FilterInputs<T>({
           </Button>
         )}
 
-        {options.map((filter) => (
-          <SelectFilter
-            key={filter.name}
-            label={filter.label}
-            name={filter.name}
-            value={values[filter.name] as string}
-            onChange={(name, val) => onChange(name as keyof T & string, val)}
-            options={filter.options}
-            className={filter?.className}
-            shouldTranslateOptions={filter.shouldTranslateOptions}
-            showAllOption={filter.showAllOption}
-            allLabel={filter.allLabel}
-            allowCustomRange={filter.allowCustomRange}
-            isJalali={filter.isJalali}
-          />
-        ))}
+        {options.map((filter) => {
+          const filterType = filter.type || 'select';
+
+          if (filterType === 'text' || filterType === 'number') {
+            return (
+              <InputFilter
+                key={filter.name}
+                label={filter.label}
+                placeholder={filter.placeholder}
+                name={filter.name}
+                type={filterType}
+                value={values[filter.name] as string | number}
+                onChange={(name, val) => onChange(name as keyof T & string, val)}
+                className={filter.className}
+              />
+            );
+          }
+
+          return (
+            <SelectFilter
+              key={filter.name}
+              label={filter.label}
+              name={filter.name}
+              value={values[filter.name] as string}
+              onChange={(name, val) => onChange(name as keyof T & string, val)}
+              options={filter.options ?? []}
+              className={filter?.className}
+              shouldTranslateOptions={filter.shouldTranslateOptions}
+              showAllOption={filter.showAllOption}
+              allLabel={filter.allLabel}
+              allowCustomRange={filter.allowCustomRange}
+              isJalali={filter.isJalali}
+            />
+          );
+        })}
       </div>
     </div>
   );

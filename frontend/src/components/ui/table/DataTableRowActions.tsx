@@ -20,7 +20,7 @@
  */
 
 import type { LucideIcon } from 'lucide-react';
-import { MoreVertical } from 'lucide-react';
+import { ChevronRight, MoreVertical } from 'lucide-react';
 import { useState, useRef, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
@@ -34,6 +34,7 @@ export interface DataTableRowAction<TData> {
   label?: string;
   onClick?: (row: TData) => void;
   icon?: LucideIcon;
+  isNavigation?: boolean;
   variant?: 'default' | 'primary' | 'danger';
   isSeparator?: boolean;
   isQuickAction?: boolean;
@@ -138,7 +139,12 @@ export default function DataTableRowActions<TData>({
                         {action.icon && <action.icon />}
                       </span>
                     )}
-                    {action.label}
+                    <span className="flex-1 text-left truncate">{action.label}</span>
+                    {action.isNavigation && (
+                      <span className="w-4 h-4 flex items-center justify-center shrink-0 text-gray-400">
+                        <ChevronRight />
+                      </span>
+                    )}
                   </button>
                 );
               })}

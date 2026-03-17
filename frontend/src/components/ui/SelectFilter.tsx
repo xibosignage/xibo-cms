@@ -117,7 +117,7 @@ export default function SelectFilter({
   return (
     <div
       className={twMerge(
-        'flex flex-col gap-1 text-gray-500 w-full md:w-auto md:flex-1 md:basis-auto relative',
+        'flex flex-col gap-1 text-gray-500 w-full md:w-auto md:flex-1 min-w-0 relative',
         className,
       )}
       ref={ref}
@@ -126,7 +126,7 @@ export default function SelectFilter({
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center justify-between bg-white rounded-lg border border-gray-200 pl-4 text-left"
+        className="w-full flex items-center justify-between bg-white rounded-lg border border-gray-200 pl-4 text-left"
       >
         <span>{getDisplayLabel()}</span>
         <div

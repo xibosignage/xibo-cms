@@ -59,14 +59,14 @@ export function useMediaFilterOptions(t: TFunction) {
           if (item.name === 'ownerId') {
             return {
               ...item,
-              options: [...item.options, ...userOptions],
+              options: [...(item.options ?? []), ...userOptions],
             };
           }
 
           if (item.name === 'ownerUserGroupId') {
             return {
               ...item,
-              options: [...item.options, ...groupOptions],
+              options: [...(item.options ?? []), ...groupOptions],
             };
           }
 
