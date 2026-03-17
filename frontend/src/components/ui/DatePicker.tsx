@@ -189,7 +189,7 @@ export default function DatePicker({
       )}
       {/* Footer */}
       <div className="flex justify-between items-center p-4 border-t border-gray-200">
-        <p className="text-xs text-gray-600">
+        <p className="text-xs text-gray-600" data-testid="datepicker-selected">
           {mode === 'single' && single && single.toLocaleDateString()}
 
           {mode === 'range' && range?.from && (
