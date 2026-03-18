@@ -95,7 +95,7 @@ function TagInput({
 
   return (
     <div className="flex flex-col gap-1 relative w-full">
-      <label className="text-xs font-semibold text-gray-500 leading-5">
+      <label className="text-sm font-semibold text-gray-500 leading-5">
         {!label ? t('Tags') : label}
       </label>
 

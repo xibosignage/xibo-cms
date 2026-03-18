@@ -69,7 +69,7 @@ export default function SelectDropdown({
 
   return (
     <div className={twMerge('relative overflow-visible', className)}>
-      <label className="text-xs font-semibold text-gray-500">{t(label)}</label>
+      <label className="text-sm font-semibold text-gray-500">{t(label)}</label>
       <div
         className="w-full border bg-white border-gray-200 rounded-lg flex items-center cursor-pointer max-h-11.25"
         onClick={onToggle}
@@ -116,7 +116,11 @@ export default function SelectDropdown({
       {error ? (
         <p className="text-xs text-red-600 ml-2 mt-1">{error}</p>
       ) : (
-        helper && <span className="text-xs text-gray-400 leading-snug flex mt-1">{helper}</span>
+        helper && (
+          <span className="text-xs text-gray-400 leading-snug flex mt-1 whitespace-pre-line">
+            {helper}
+          </span>
+        )
       )}
     </div>
   );

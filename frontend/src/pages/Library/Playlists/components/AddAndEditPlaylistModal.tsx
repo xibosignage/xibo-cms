@@ -321,18 +321,13 @@ export default function AddAndEditPlaylistModal({
           </div>
 
           {/* Name */}
-          <div className="flex flex-col">
-            <label htmlFor="name" className="text-xs font-semibold text-gray-500 leading-5">
-              {t('Name')}
-            </label>
-            <input
-              id="name"
-              className="border-gray-200 text-sm rounded-lg"
-              name="name"
-              value={draft.name}
-              onChange={(e) => setDraft((prev) => ({ ...prev, name: e.target.value }))}
-            />
-          </div>
+          <TextInput
+            name="name"
+            label={t('Name')}
+            placeholder={t('Enter Name')}
+            value={draft.name}
+            onChange={(name) => setDraft((prev) => ({ ...prev, name: name }))}
+          />
 
           {/* Tags */}
           <TagInput

@@ -125,7 +125,6 @@ export default function CopyPlaylistModal({
             'This will duplicate all media that is currently assigned to the Playlist being copied.',
           )}
           checked={copyMediaFiles}
-          classNameLabel="text-xs"
           onChange={(e) => {
             setCopyMediaFiles(!!e.target.checked);
           }}

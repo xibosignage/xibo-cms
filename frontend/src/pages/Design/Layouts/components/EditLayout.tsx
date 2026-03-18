@@ -181,7 +181,6 @@ export default function EditLayout({ openModal, onClose, data, onSave }: EditLay
               }));
               clearError('name');
             }}
-            labelClassName="text-xs"
             error={errors.name}
           />
 
@@ -198,7 +197,6 @@ export default function EditLayout({ openModal, onClose, data, onSave }: EditLay
               }));
               clearError('description');
             }}
-            labelClassName="text-xs"
             multiline
             rows={3}
             error={errors.description}
@@ -234,7 +232,6 @@ export default function EditLayout({ openModal, onClose, data, onSave }: EditLay
               `Retired media remains on existing Layouts but is not available to assign to new Layouts.`,
             )}
             checked={draft.retired}
-            classNameLabel="text-xs"
             onChange={() => setDraft((prev) => ({ ...prev, retired: !prev.retired }))}
           />
           <Checkbox
@@ -243,7 +240,6 @@ export default function EditLayout({ openModal, onClose, data, onSave }: EditLay
             title={t('Update this media in all layouts it is assigned to')}
             label={t(`Note: It will only be updated in layouts you have permission to edit.`)}
             checked={draft.enableStat}
-            classNameLabel="text-xs"
             onChange={() => setDraft((prev) => ({ ...prev, enableStat: !prev.enableStat }))}
           />
         </div>

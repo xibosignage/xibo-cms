@@ -70,7 +70,7 @@ export default function DurationInput({ value, onChange, error }: DurationInputP
 
   return (
     <div className="flex flex-col justify-end relative">
-      <label className="text-xs font-semibold text-gray-500">{t('Duration')}</label>
+      <label className="text-sm font-semibold text-gray-500">{t('Duration')}</label>
 
       <div className="relative flex">
         <input

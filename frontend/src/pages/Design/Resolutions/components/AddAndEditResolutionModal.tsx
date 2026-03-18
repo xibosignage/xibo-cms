@@ -26,6 +26,7 @@ import Modal from '../../../../components/ui/modals/Modal';
 
 import Checkbox from '@/components/ui/forms/Checkbox';
 import NumberInput from '@/components/ui/forms/NumberInput';
+import TextInput from '@/components/ui/forms/TextInput';
 import { updateResolution, createResolution } from '@/services/resolutionApi';
 import type { Resolution } from '@/types/resolution';
 
@@ -163,18 +164,13 @@ export default function AddAndEditResolutionModal({
       <div className="flex flex-col h-full overflow-y-hidden overflow-x-visible gap-3 px-4">
         <div className="flex flex-col gap-3 flex-1 min-h-0 p-4 overflow-y-auto">
           {/* Name */}
-          <div className="flex flex-col">
-            <label htmlFor="name" className="text-xs font-semibold text-gray-500 leading-5">
-              {t('Name')}
-            </label>
-            <input
-              id="name"
-              className="border-gray-200 text-sm rounded-lg"
-              name="name"
-              value={draft.resolution}
-              onChange={(e) => setDraft((prev) => ({ ...prev, resolution: e.target.value }))}
-            />
-          </div>
+          <TextInput
+            name="name"
+            label={t('Name')}
+            placeholder={t('Enter Name')}
+            value={draft.resolution}
+            onChange={(resolution) => setDraft((prev) => ({ ...prev, resolution: resolution }))}
+          />
 
           <NumberInput
             name="width"

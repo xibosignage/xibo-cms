@@ -71,7 +71,7 @@ export default function DeleteLayoutModal({
             </div>
           </div>
           <h2 className="text-center text-lg font-semibold mb-2 text-red-800">
-            {itemCount === 1 ? t('Delete Playlist?') : t('Delete Playlists?')}
+            {itemCount === 1 ? t('Delete Layout?') : t('Delete Layouts?')}
           </h2>
         </div>
         <p className="text-center text-gray-500">
@@ -82,7 +82,7 @@ export default function DeleteLayoutModal({
           ) : (
             <>
               {t('Are you sure you want to delete ')}
-              <strong>{itemCount}</strong> {t('playlists')}?
+              <strong>{itemCount}</strong> {t('layouts')}?
             </>
           )}
         </p>
