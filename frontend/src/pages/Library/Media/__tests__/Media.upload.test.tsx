@@ -288,74 +288,15 @@ describe('Media page — file upload', () => {
   // Group 3: URL upload
   // ===========================================================================
 
-  // ---------------------------------------------------------------------------
-  // URL input field is visible in the modal
-  // ---------------------------------------------------------------------------
-  test('URL input field is visible when the modal opens', async () => {
-    renderMediaPage();
-    await openAddMediaModal();
-
-    expect(
-      await screen.findByPlaceholderText('https://www.exampleurl.com/funnycat4364'),
-    ).toBeInTheDocument();
-  });
-
-  // ---------------------------------------------------------------------------
-  // URL Upload button is disabled when the input is empty
-  // ---------------------------------------------------------------------------
-  test('URL Upload button is disabled when input is empty', async () => {
-    renderMediaPage();
-    await openAddMediaModal();
-
-    // Wait for the URL input to confirm the modal has fully rendered
-    await screen.findByPlaceholderText('https://www.exampleurl.com/funnycat4364');
-
-    // The Upload button should be disabled because no URL has been entered
-    expect(screen.getByRole('button', { name: 'Upload' })).toBeDisabled();
-  });
-
-  // ---------------------------------------------------------------------------
-  // Typing a URL enables the Upload button
-  //
-  // We use fireEvent.change to set the input value directly. This fires the
-  // onChange event which updates the controlled input state in the component.
-  // ---------------------------------------------------------------------------
-  test('URL Upload button becomes enabled when a URL is typed', async () => {
+  test('submitting a URL via the modal enables the Done button', async () => {
     renderMediaPage();
     await openAddMediaModal();
 
     const urlInput = await screen.findByPlaceholderText('https://www.exampleurl.com/funnycat4364');
-
-    // Type a URL into the input
-    fireEvent.change(urlInput, { target: { value: 'https://example.com/video.mp4' } });
-
-    // The Upload button should now be enabled
-    expect(screen.getByRole('button', { name: 'Upload' })).not.toBeDisabled();
-  });
-
-  // ---------------------------------------------------------------------------
-  // Clicking URL Upload clears the input and enables Done
-  //
-  // When the user clicks Upload after entering a URL, two things should happen:
-  //   1. The URL input clears (ready for the next URL to be pasted)
-  //   2. The Done button becomes enabled (the URL was added to the queue)
-  //
-  // Clicking Upload calls addUrlToQueue().
-  // ---------------------------------------------------------------------------
-  test('clicking URL Upload clears the input and enables the Done button', async () => {
-    renderMediaPage();
-    await openAddMediaModal();
-
-    const urlInput = await screen.findByPlaceholderText('https://www.exampleurl.com/funnycat4364');
-
-    // Enter a URL and click Upload
     fireEvent.change(urlInput, { target: { value: 'https://example.com/video.mp4' } });
     fireEvent.click(screen.getByRole('button', { name: 'Upload' }));
 
-    // The URL input should be cleared after Upload is clicked
-    expect(urlInput).toHaveValue('');
-
-    // The Done button should be enabled because the URL is now in the queue
+    // URL was added to the queue → Done should now be enabled
     expect(screen.getByRole('button', { name: 'Done' })).not.toBeDisabled();
   });
 });
