@@ -71,7 +71,7 @@ export default function Checkbox({
         <label
           htmlFor={id}
           className={twMerge(
-            'text-sm cursor-pointer text-gray-500 dark:text-neutral-400',
+            'text-xs cursor-pointer text-gray-500 dark:text-neutral-400',
             classNameLabel,
           )}
         >

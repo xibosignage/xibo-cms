@@ -210,7 +210,7 @@ export default function SelectFolder({
 
   return (
     <div className="relative" ref={containerRef}>
-      <label className="block text-xs font-semibold text-gray-500 mb-1">
+      <label className="block text-sm font-semibold text-gray-500 mb-1">
         {t('Select folder location')}
       </label>
 

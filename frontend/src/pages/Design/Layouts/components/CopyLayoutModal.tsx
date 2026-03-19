@@ -125,7 +125,6 @@ export default function CopyLayoutModal({
           placeholder={t('Add description')}
           helpText={t('Optional description for this layout')}
           onChange={(value) => setDescription(value)}
-          labelClassName="text-xs"
           multiline
           rows={3}
         />
@@ -137,7 +136,6 @@ export default function CopyLayoutModal({
             'This will duplicate all media that is currently assigned to the item being copied.',
           )}
           checked={copyMediaFiles}
-          classNameLabel="text-xs"
           onChange={(e) => {
             setCopyMediaFiles(!!e.target.checked);
           }}

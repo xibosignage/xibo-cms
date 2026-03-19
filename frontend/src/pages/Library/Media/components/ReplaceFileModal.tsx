@@ -223,7 +223,7 @@ export default function ReplaceFileModal({
           </div>
           {selectedFile && isSaving && (
             <div className="flex flex-col">
-              <span className="text-xs text-xibo-black font-semibold mt-1 block px-4">
+              <span className="text-sm text-xibo-black font-semibold mt-1 block px-4">
                 {selectedFile.name}
               </span>
               <div className="px-4 pb-3 flex items-center gap-4">
@@ -241,7 +241,7 @@ export default function ReplaceFileModal({
         <div className="flex flex-col gap-3 flex-1 min-h-0 p-4 overflow-y-auto">
           {/* Name */}
           <div className="flex flex-col">
-            <label htmlFor="name" className="text-xs font-semibold text-gray-500 leading-5">
+            <label htmlFor="name" className="text-sm font-semibold text-gray-500 leading-5">
               {t('Name')}
             </label>
             <input
@@ -267,7 +267,6 @@ export default function ReplaceFileModal({
                 `Overwrite the existing file. If unchecked, the old version is saved in the CMS.`,
               )}
               checked={draft.deleteOldRevisions}
-              classNameLabel="text-xs"
               onChange={() =>
                 setDraft((prev) => ({ ...prev, deleteOldRevisions: !prev.deleteOldRevisions }))
               }
@@ -278,7 +277,6 @@ export default function ReplaceFileModal({
               title={t('Update across all Layouts')}
               label={t(`Applies the change to every layout you have permission to edit.`)}
               checked={draft.updateInLayouts}
-              classNameLabel="text-xs"
               onChange={() =>
                 setDraft((prev) => ({ ...prev, updateInLayouts: !prev.updateInLayouts }))
               }

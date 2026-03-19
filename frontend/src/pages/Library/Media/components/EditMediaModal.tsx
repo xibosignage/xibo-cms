@@ -230,7 +230,6 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
               }));
               clearError('name');
             }}
-            labelClassName="text-xs"
             error={errors.name}
           />
 
@@ -308,7 +307,6 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
               `Retired media remains on existing Layouts but is not available to assign to new Layouts.`,
             )}
             checked={draft.retired}
-            classNameLabel="text-xs"
             onChange={() => setDraft((prev) => ({ ...prev, retired: !prev.retired }))}
           />
           <Checkbox
@@ -317,7 +315,6 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
             title={t('Update this media in all layouts it is assigned to')}
             label={t(`Note: It will only be updated in layouts you have permission to edit.`)}
             checked={draft.updateInLayouts}
-            classNameLabel="text-xs"
             onChange={() =>
               setDraft((prev) => ({ ...prev, updateInLayouts: !prev.updateInLayouts }))
             }

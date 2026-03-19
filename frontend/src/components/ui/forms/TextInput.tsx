@@ -39,6 +39,7 @@ interface TextInputProps {
   suffix?: React.ReactNode;
   multiline?: boolean;
   rows?: number;
+  type?: React.HTMLInputTypeAttribute;
 }
 
 export default function TextInput({
@@ -57,6 +58,7 @@ export default function TextInput({
   suffix,
   multiline = false,
   rows,
+  type,
 }: TextInputProps) {
   const { t } = useTranslation();
   const generatedId = useId();
@@ -104,6 +106,7 @@ export default function TextInput({
             disabled={disabled}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder || t('Add text')}
+            type={type || 'text'}
             className={twMerge(
               'flex-1 p-3 text-sm font-normal text-gray-800 placeholder:text-gray-500',
               'bg-transparent border-none outline-none focus:ring-0',
@@ -120,7 +123,7 @@ export default function TextInput({
       {error ? (
         <p className="text-xs text-red-600 ml-2 mt-1">{error}</p>
       ) : helpText ? (
-        <p className="text-xs text-gray-500 mt-1">{helpText}</p>
+        <p className="text-xs text-gray-500 mt-1 whitespace-pre-line">{helpText}</p>
       ) : null}
     </div>
   );

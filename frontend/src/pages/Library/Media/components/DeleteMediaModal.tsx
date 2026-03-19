@@ -117,7 +117,6 @@ export default function DeleteMediaModal({
             title={t('All Layouts')}
             label={t(`Force delete from any existing layouts, assignments, etc.`)}
             checked={checkedToDelete.allLayouts}
-            classNameLabel="text-xs"
             onChange={() =>
               setCheckedToDelete((prev) => ({ ...prev, allLayouts: !prev.allLayouts }))
             }
@@ -130,7 +129,6 @@ export default function DeleteMediaModal({
               `When set, each Display that has this Media in its local storage, will be notified to remove it.`,
             )}
             checked={checkedToDelete.purgeList}
-            classNameLabel="text-xs"
             onChange={() => setCheckedToDelete((prev) => ({ ...prev, purgeList: !prev.purgeList }))}
           />
         </div>
