@@ -36,6 +36,7 @@ vi.mock('@/pages/Library/Media/hooks/useMediaFilterOptions', () => ({
   useMediaFilterOptions: vi.fn().mockReturnValue({ filterOptions: [], isLoading: false }),
 }));
 vi.mock('../hooks/useMediaData');
+vi.mock('@/components/ui/modals/Modal');
 vi.mock('@/services/mediaApi', () => ({
   uploadMedia: vi.fn(),
   uploadMediaFromUrl: vi.fn(),
@@ -364,11 +365,7 @@ describe('Edit Media — form fields', () => {
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: '' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-    await waitFor(() => {
-      expect(updateMedia).toHaveBeenCalledWith(
-        mockEditMedia.mediaId,
-        expect.objectContaining({ name: '' }),
-      );
-    });
+    expect(await screen.findByText('Name is required')).toBeInTheDocument();
+    expect(updateMedia).not.toHaveBeenCalled();
   });
 });
