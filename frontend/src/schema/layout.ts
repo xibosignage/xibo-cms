@@ -19,20 +19,22 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import type { TFunction } from 'i18next';
 import { z } from 'zod';
 
-export const layoutSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, 'Name is required')
-    .max(250, 'Name must be at most 250 characters'),
+export const getLayoutSchema = (t: TFunction) =>
+  z.object({
+    name: z
+      .string()
+      .trim()
+      .min(1, t('Name is required'))
+      .max(100, t('Name must be at most 100 characters')),
 
-  description: z
-    .string()
-    .max(250, 'Description must be at most 250 characters')
-    .nullable()
-    .optional(),
+    description: z
+      .string()
+      .max(250, t('Description must be at most 250 characters'))
+      .nullable()
+      .optional(),
 
-  code: z.string().max(50, 'Code must be at most 50 characters').optional(),
-});
+    code: z.string().max(50, t('Code must be at most 50 characters')).optional(),
+  });

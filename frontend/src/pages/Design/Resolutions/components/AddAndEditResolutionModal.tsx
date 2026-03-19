@@ -26,6 +26,8 @@ import Modal from '../../../../components/ui/modals/Modal';
 
 import Checkbox from '@/components/ui/forms/Checkbox';
 import NumberInput from '@/components/ui/forms/NumberInput';
+import TextInput from '@/components/ui/forms/TextInput';
+import { getResolutionSchema } from '@/schema/resolution';
 import { updateResolution, createResolution } from '@/services/resolutionApi';
 import type { Resolution } from '@/types/resolution';
 
@@ -51,6 +53,8 @@ const DEFAULT_DRAFT: ResolutionDraft = {
   enabled: true,
 };
 
+type ResolutionFormErrors = Partial<Record<keyof ResolutionDraft, string>>;
+
 export default function AddAndEditResolutionModal({
   type,
   openModal,
@@ -60,7 +64,8 @@ export default function AddAndEditResolutionModal({
 }: AddAndEditResolutionModalProps) {
   const { t } = useTranslation();
   const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | undefined>();
+  const [formErrors, setFormErrors] = useState<ResolutionFormErrors>({});
+  const [apiError, setApiError] = useState<string | undefined>();
 
   const [draft, setDraft] = useState<ResolutionDraft>(() => {
     if (type === 'edit' && data) {
@@ -88,11 +93,30 @@ export default function AddAndEditResolutionModal({
       setDraft({ ...DEFAULT_DRAFT });
     }
 
-    setError(undefined);
+    setFormErrors({});
+    setApiError(undefined);
   }, [data, type]);
 
   const handleSave = () => {
     startTransition(async () => {
+      const schema = getResolutionSchema(t);
+      const result = schema.safeParse(draft);
+      if (!result.success) {
+        setApiError(undefined);
+        const fieldErrors = result.error.flatten().fieldErrors;
+        const mappedErrors: Partial<Record<keyof ResolutionDraft, string>> = {};
+
+        Object.entries(fieldErrors).forEach(([key, value]) => {
+          if (value?.[0]) {
+            mappedErrors[key as keyof ResolutionDraft] = value[0];
+          }
+        });
+
+        setFormErrors(mappedErrors);
+        return;
+      }
+
+      setFormErrors({});
       try {
         const payload = {
           resolution: draft.resolution,
@@ -125,11 +149,11 @@ export default function AddAndEditResolutionModal({
         const apiError = err as { response?: { data?: { message?: string } } };
 
         if (apiError.response?.data?.message) {
-          setError(apiError.response.data.message);
+          setApiError(apiError.response.data.message);
         } else if (err instanceof Error) {
-          setError(err.message);
+          setApiError(err.message);
         } else {
-          setError(t('An unexpected error occurred while saving the resolution.'));
+          setApiError(t('An unexpected error occurred while saving the resolution.'));
         }
       }
     });
@@ -145,7 +169,7 @@ export default function AddAndEditResolutionModal({
       isOpen={openModal}
       isPending={isPending}
       scrollable={false}
-      error={error}
+      error={apiError}
       actions={[
         {
           label: t('Cancel'),
@@ -163,18 +187,14 @@ export default function AddAndEditResolutionModal({
       <div className="flex flex-col h-full overflow-y-hidden overflow-x-visible gap-3 px-4">
         <div className="flex flex-col gap-3 flex-1 min-h-0 p-4 overflow-y-auto">
           {/* Name */}
-          <div className="flex flex-col">
-            <label htmlFor="name" className="text-xs font-semibold text-gray-500 leading-5">
-              {t('Name')}
-            </label>
-            <input
-              id="name"
-              className="border-gray-200 text-sm rounded-lg"
-              name="name"
-              value={draft.resolution}
-              onChange={(e) => setDraft((prev) => ({ ...prev, resolution: e.target.value }))}
-            />
-          </div>
+          <TextInput
+            name="name"
+            label={t('Name')}
+            placeholder={t('Enter Name')}
+            value={draft.resolution}
+            onChange={(resolution) => setDraft((prev) => ({ ...prev, resolution: resolution }))}
+            error={formErrors.resolution}
+          />
 
           <NumberInput
             name="width"
@@ -182,6 +202,7 @@ export default function AddAndEditResolutionModal({
             helpText={t('The Width for this Resolution.')}
             value={draft.width}
             onChange={(num) => setDraft((prev) => ({ ...prev, width: num }))}
+            error={formErrors.width}
           />
 
           <NumberInput
@@ -190,6 +211,7 @@ export default function AddAndEditResolutionModal({
             helpText={t('The Height for this Resolution.')}
             value={draft.height}
             onChange={(num) => setDraft((prev) => ({ ...prev, height: num }))}
+            error={formErrors.height}
           />
 
           {!addModal && (

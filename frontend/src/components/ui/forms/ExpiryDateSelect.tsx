@@ -103,7 +103,7 @@ export default function ExpiryDateSelect({
 
   return (
     <div className="relative overflow-visible">
-      <label className="text-xs font-semibold text-gray-500">{t('Expiry Date')}</label>
+      <label className="text-sm font-semibold text-gray-500">{t('Expiry Date')}</label>
       <div
         ref={containerRef}
         className="w-full border border-gray-200 rounded-lg flex items-center"

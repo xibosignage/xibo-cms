@@ -20,28 +20,12 @@
  */
 
 import type { TFunction } from 'i18next';
+import z from 'zod';
 
-export const getCommonFormOptions = (t: TFunction) => ({
-  orientation: [
-    { label: t('Portrait'), value: 'portrait' },
-    { label: t('Landscape'), value: 'landscape' },
-    { label: t('Square'), value: 'square' },
-  ],
-  inherit: [
-    { label: t('Off'), value: 'Off' },
-    { label: t('On'), value: 'On' },
-    { label: t('Inherit'), value: 'Inherit' },
-  ],
-  lastModifiedFilter: [
-    { label: t('Any time'), value: '' },
-    { label: t('Today'), value: 'today' },
-    { label: t('Last 7 days'), value: '7d' },
-    { label: t('Last 30 days'), value: '30d' },
-    { label: t('This year'), value: '1y' },
-  ],
-  retired: [
-    { label: t('Any'), value: null },
-    { label: t('No'), value: 0 },
-    { label: t('Yes'), value: 1 },
-  ],
-});
+export const getResolutionSchema = (t: TFunction) =>
+  z.object({
+    resolution: z.string().min(1, t('Name is required')),
+    width: z.number().min(1, t('Width must be greater than 0')),
+    height: z.number().min(1, t('Height must be greater than 0')),
+    enabled: z.boolean(),
+  });

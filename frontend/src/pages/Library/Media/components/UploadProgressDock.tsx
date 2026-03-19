@@ -67,7 +67,7 @@ export function UploadProgressDock({ isModalOpen }: UploadProgressDockProps) {
     : `${completed}/${total} items are still uploading`;
 
   const content = (
-    <div className="fixed bottom-0 right-[85px] w-[290px] z-60 shadow-lg shadow-black/15">
+    <div className="fixed bottom-0 right-21.25 w-72.5 z-60 shadow-lg shadow-black/15">
       <div className="rounded-t-xl overflow-hidden relative">
         {/* Header */}
         <div className="flex justify-between items-center bg-gray-100">
@@ -80,7 +80,7 @@ export function UploadProgressDock({ isModalOpen }: UploadProgressDockProps) {
               e.stopPropagation();
               setIsExpanded((prev) => !prev);
             }}
-            className="min-w-[38px] size-[38px] p-[11px] flex-1 text-gray-500 rounded-lg hover:bg-gray-200"
+            className="min-w-9.5 size-9.5 p-2.75 flex-1 text-gray-500 rounded-lg hover:bg-gray-200"
           >
             <ChevronDown className={`size-4 ${isExpanded ? 'rotate-0' : 'rotate-180'}`} />
           </button>
@@ -91,7 +91,7 @@ export function UploadProgressDock({ isModalOpen }: UploadProgressDockProps) {
                 e.stopPropagation();
                 handleDismiss();
               }}
-              className="min-w-[38px] size-[38px] p-[11px] flex-1 text-gray-500 rounded-lg hover:bg-gray-200"
+              className="min-w-9.5 size-9.5 p-2.75 flex-1 text-gray-500 rounded-lg hover:bg-gray-200"
             >
               <X className="size-4" />
             </button>
