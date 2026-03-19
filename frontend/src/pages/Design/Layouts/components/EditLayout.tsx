@@ -28,7 +28,7 @@ import Checkbox from '@/components/ui/forms/Checkbox';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TagInput from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
-import { layoutSchema } from '@/schema/layout';
+import { getLayoutSchema } from '@/schema/layout';
 import { updateLayout } from '@/services/layoutsApi';
 import type { Layout } from '@/types/layout';
 import type { Tag } from '@/types/tag';
@@ -60,7 +60,9 @@ export default function EditLayout({ openModal, onClose, data, onSave }: EditLay
   const { t } = useTranslation();
 
   const [isSaving, setIsSaving] = useState(false);
-  const [errors, setErrors] = useState<LayoutFormErrors>({});
+  const [formErrors, setFormErrors] = useState<LayoutFormErrors>({});
+  const [apiError, setApiError] = useState<string | undefined>();
+
   const [draft, setDraft] = useState<LayoutDraft>(() => ({
     name: data.name || data.layout,
     folderId: data.folderId,
@@ -84,7 +86,7 @@ export default function EditLayout({ openModal, onClose, data, onSave }: EditLay
   }, [data]);
 
   const clearError = (field: keyof LayoutFormErrors) => {
-    setErrors((prev) => ({
+    setFormErrors((prev) => ({
       ...prev,
       [field]: undefined,
     }));
@@ -93,12 +95,13 @@ export default function EditLayout({ openModal, onClose, data, onSave }: EditLay
   const handleSave = async () => {
     if (isSaving) return;
 
+    const layoutSchema = getLayoutSchema(t);
     const result = layoutSchema.safeParse(draft);
 
     if (!result.success) {
       const fieldErrors = result.error.flatten().fieldErrors;
 
-      setErrors({
+      setFormErrors({
         name: fieldErrors.name?.[0],
         description: fieldErrors.description?.[0],
         code: fieldErrors.code?.[0],
@@ -107,7 +110,7 @@ export default function EditLayout({ openModal, onClose, data, onSave }: EditLay
       return;
     }
 
-    setErrors({});
+    setFormErrors({});
 
     try {
       setIsSaving(true);
@@ -127,8 +130,17 @@ export default function EditLayout({ openModal, onClose, data, onSave }: EditLay
 
       onSave(updatedLayout);
       onClose();
-    } catch (error) {
-      console.error('Failed to update layout', error);
+    } catch (err) {
+      console.error('Failed to update layout', err);
+      const apiError = err as { response?: { data?: { message?: string } } };
+
+      if (apiError.response?.data?.message) {
+        setApiError(apiError.response.data.message);
+      } else if (err instanceof Error) {
+        setApiError(err.message);
+      } else {
+        setApiError(t('An unexpected error occurred while saving the playlist.'));
+      }
     } finally {
       setIsSaving(false);
     }
@@ -141,6 +153,7 @@ export default function EditLayout({ openModal, onClose, data, onSave }: EditLay
       isOpen={openModal}
       isPending={isSaving}
       scrollable={false}
+      error={apiError}
       actions={[
         {
           label: t('Cancel'),
@@ -181,7 +194,7 @@ export default function EditLayout({ openModal, onClose, data, onSave }: EditLay
               }));
               clearError('name');
             }}
-            error={errors.name}
+            error={formErrors.name}
           />
 
           <TextInput
@@ -199,7 +212,7 @@ export default function EditLayout({ openModal, onClose, data, onSave }: EditLay
             }}
             multiline
             rows={3}
-            error={errors.description}
+            error={formErrors.description}
           />
           {/* Tags */}
           <TagInput
@@ -220,7 +233,7 @@ export default function EditLayout({ openModal, onClose, data, onSave }: EditLay
                 code: value,
               }))
             }
-            error={errors.code}
+            error={formErrors.code}
           />
 
           {/* Retired */}

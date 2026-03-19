@@ -41,6 +41,7 @@ import {
   INITIAL_FILTER_STATE,
 } from '@/pages/Library/Media/MediaConfig';
 import { useMediaData } from '@/pages/Library/Media/hooks/useMediaData';
+import { getPlaylistSchema } from '@/schema/playlists';
 import { updatePlaylist, createPlaylist } from '@/services/playlistApi';
 import type { Media } from '@/types/media';
 import type { Playlist } from '@/types/playlist';
@@ -74,7 +75,7 @@ const DEFAULT_DRAFT: PlaylistDraft = {
   name: '',
   folderId: null,
   tags: [],
-  enableStat: 'off',
+  enableStat: 'Off',
   isDynamic: false,
   filterMediaName: '',
   logicalOperatorName: 'OR',
@@ -84,6 +85,8 @@ const DEFAULT_DRAFT: PlaylistDraft = {
   filterFolderId: null,
   maxNumberOfItems: 0,
 };
+
+type PlaylistFormErrors = Partial<Record<keyof PlaylistDraft, string>>;
 
 export default function AddAndEditPlaylistModal({
   type,
@@ -95,7 +98,8 @@ export default function AddAndEditPlaylistModal({
   const { t } = useTranslation();
   const [openSelect, setOpenSelect] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | undefined>();
+  const [formErrors, setFormErrors] = useState<PlaylistFormErrors>({});
+  const [apiError, setApiError] = useState<string | undefined>();
 
   const [draft, setDraft] = useState<PlaylistDraft>(() => {
     if (type === 'edit' && data) {
@@ -167,11 +171,31 @@ export default function AddAndEditPlaylistModal({
       setDraft({ ...DEFAULT_DRAFT });
     }
 
-    setError(undefined);
+    setApiError(undefined);
+    setFormErrors({});
   }, [data, type]);
 
   const handleSave = () => {
     startTransition(async () => {
+      const schema = getPlaylistSchema(t);
+      const result = schema.safeParse(draft);
+
+      if (!result.success) {
+        setApiError(undefined);
+        const fieldErrors = result.error.flatten().fieldErrors;
+        const mappedErrors: PlaylistFormErrors = {};
+
+        Object.entries(fieldErrors).forEach(([key, value]) => {
+          if (value?.[0]) {
+            mappedErrors[key as keyof PlaylistFormErrors] = value[0];
+          }
+        });
+
+        setFormErrors(mappedErrors);
+        return;
+      }
+
+      setFormErrors({});
       try {
         const serializedTags = draft.tags.map((t) =>
           t.value != null ? `${t.tag}|${t.value}` : t.tag,
@@ -202,11 +226,7 @@ export default function AddAndEditPlaylistModal({
           }
 
           const updatedPlaylist = await updatePlaylist(data.playlistId, payload);
-
-          onSave({
-            ...data,
-            ...updatedPlaylist,
-          });
+          onSave({ ...data, ...updatedPlaylist });
         } else {
           const newPlaylist = await createPlaylist(payload);
           onSave(newPlaylist);
@@ -219,15 +239,17 @@ export default function AddAndEditPlaylistModal({
         const apiError = err as { response?: { data?: { message?: string } } };
 
         if (apiError.response?.data?.message) {
-          setError(apiError.response.data.message);
+          setApiError(apiError.response.data.message);
         } else if (err instanceof Error) {
-          setError(err.message);
+          setApiError(err.message);
         } else {
-          setError(t('An unexpected error occurred while saving the playlist.'));
+          setApiError(t('An unexpected error occurred while saving the playlist.'));
         }
       }
     });
   };
+
+  console.log(formErrors);
 
   const hasActiveDynamicFilters = Boolean(
     draft.filterFolderId !== null ||
@@ -290,7 +312,7 @@ export default function AddAndEditPlaylistModal({
       isOpen={openModal}
       isPending={isPending}
       scrollable={false}
-      error={error}
+      error={apiError}
       actions={[
         {
           label: t('Cancel'),
@@ -327,6 +349,7 @@ export default function AddAndEditPlaylistModal({
             placeholder={t('Enter Name')}
             value={draft.name}
             onChange={(name) => setDraft((prev) => ({ ...prev, name: name }))}
+            error={formErrors.name}
           />
 
           {/* Tags */}
@@ -397,6 +420,7 @@ export default function AddAndEditPlaylistModal({
                       <option value="OR">OR</option>
                     </select>
                   }
+                  error={formErrors.filterMediaName}
                 />
 
                 <TagInput
@@ -442,6 +466,7 @@ export default function AddAndEditPlaylistModal({
                   )}
                   value={draft.maxNumberOfItems}
                   onChange={(num) => setDraft((prev) => ({ ...prev, maxNumberOfItems: num }))}
+                  error={formErrors.maxNumberOfItems}
                 />
 
                 {hasActiveDynamicFilters && (
