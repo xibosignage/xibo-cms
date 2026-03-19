@@ -69,7 +69,7 @@ const openDeleteModal = async () => {
   const checkboxes = await screen.findAllByRole('checkbox', { name: /Select row/i });
   fireEvent.click(checkboxes[0]!);
 
-  const deleteBtn = await screen.findByRole('button', { name: /^Delete$/i });
+  const deleteBtn = await screen.findByRole('button', { name: /Delete Selected/i });
   fireEvent.click(deleteBtn);
 
   return screen.findByRole('dialog');
