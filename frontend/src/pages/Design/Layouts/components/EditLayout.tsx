@@ -28,7 +28,7 @@ import Checkbox from '@/components/ui/forms/Checkbox';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TagInput from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
-import { layoutSchema } from '@/schema/layout';
+import { getLayoutSchema } from '@/schema/layout';
 import { updateLayout } from '@/services/layoutsApi';
 import type { Layout } from '@/types/layout';
 import type { Tag } from '@/types/tag';
@@ -93,6 +93,7 @@ export default function EditLayout({ openModal, onClose, data, onSave }: EditLay
   const handleSave = async () => {
     if (isSaving) return;
 
+    const layoutSchema = getLayoutSchema(t);
     const result = layoutSchema.safeParse(draft);
 
     if (!result.success) {

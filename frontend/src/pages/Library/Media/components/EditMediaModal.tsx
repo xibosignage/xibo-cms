@@ -33,7 +33,7 @@ import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TagInput from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import { getCommonFormOptions } from '@/config/commonForms';
-import { mediaSchema } from '@/schema/media';
+import { getMediaSchema } from '@/schema/media';
 import { updateMedia } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
 import type { Tag } from '@/types/tag';
@@ -115,7 +115,9 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
   const handleSave = async () => {
     if (isSaving) return;
 
+    const mediaSchema = getMediaSchema(t);
     const result = mediaSchema.safeParse(draft);
+
     if (!result.success) {
       const fieldErrors: Partial<MediaFormErrors> = {};
 
@@ -255,6 +257,7 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
                 setDraft((prev) => ({ ...prev, orientation: value as 'portrait' | 'landscape' }));
                 setOpenSelect(null);
               }}
+              error={errors.orientation}
             />
 
             {/* Duration */}
@@ -296,6 +299,7 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
             helper={t(
               `Enable the collection of Proof of Play statistics for this Media Item. Ensure that 'Enable Stats Collection' is set to 'On' in the Display Settings.`,
             )}
+            error={errors.enableStat}
           />
 
           {/* Retired */}

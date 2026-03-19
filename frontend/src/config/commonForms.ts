@@ -28,9 +28,9 @@ export const getCommonFormOptions = (t: TFunction) => ({
     { label: t('Square'), value: 'square' },
   ],
   inherit: [
-    { label: t('Off'), value: 'off' },
-    { label: t('On'), value: 'on' },
-    { label: t('Inherit'), value: 'inherit' },
+    { label: t('Off'), value: 'Off' },
+    { label: t('On'), value: 'On' },
+    { label: t('Inherit'), value: 'Inherit' },
   ],
   lastModifiedFilter: [
     { label: t('Any time'), value: '' },
