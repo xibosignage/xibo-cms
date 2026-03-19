@@ -47,9 +47,7 @@ interface EditMediaModalProps {
   onSave: (updated: Media) => void;
 }
 
-type MediaFormErrors = Partial<Record<keyof MediaDraft, string>> & {
-  _global?: string;
-};
+type MediaFormErrors = Partial<Record<keyof MediaDraft, string>>;
 
 type MediaDraft = {
   name: string;
@@ -70,11 +68,12 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
   const { t } = useTranslation();
   const [openSelect, setOpenSelect] = useState<null | OpenSelect>(null);
   const [expiry, setExpiry] = useState<ExpiryValue>(expiresToExpiryValue(data.expires));
-  const [errors, setErrors] = useState<MediaFormErrors>({});
+  const [apiError, setApiError] = useState<string | undefined>();
+  const [formErrors, setFormErrors] = useState<MediaFormErrors>({});
   const [isSaving, setIsSaving] = useState(false);
 
   const clearError = (field: keyof MediaDraft) => {
-    setErrors((prev) => ({
+    setFormErrors((prev) => ({
       ...prev,
       [field]: undefined,
     }));
@@ -129,11 +128,11 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
         }
       });
 
-      setErrors(fieldErrors);
+      setFormErrors(fieldErrors);
       return;
     }
 
-    setErrors({});
+    setFormErrors({});
     setIsSaving(true);
 
     const serializedTags = draft.tags.map((t) => (t.value != null ? `${t.tag}|${t.value}` : t.tag));
@@ -162,21 +161,14 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
       onClose();
     } catch (err) {
       console.error('Failed to update media', err);
-      const apiError = err as {
-        response?: {
-          data?: {
-            message?: string;
-            errors?: Record<string, string>;
-          };
-        };
-      };
+      const apiError = err as { response?: { data?: { message?: string } } };
 
-      if (apiError.response?.data?.errors) {
-        setErrors(apiError.response.data.errors);
+      if (apiError.response?.data?.message) {
+        setApiError(apiError.response.data.message);
+      } else if (err instanceof Error) {
+        setApiError(err.message);
       } else {
-        setErrors({
-          _global: apiError.response?.data?.message || t('Something went wrong. Please try again.'),
-        });
+        setApiError(t('An unexpected error occurred while saving the playlist.'));
       }
     } finally {
       setIsSaving(false);
@@ -190,7 +182,7 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
       isOpen={openModal}
       isPending={isSaving}
       scrollable={false}
-      error={errors._global}
+      error={apiError}
       actions={[
         {
           label: t('Cancel'),
@@ -232,7 +224,7 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
               }));
               clearError('name');
             }}
-            error={errors.name}
+            error={formErrors.name}
           />
 
           {/* Tags */}
@@ -257,7 +249,7 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
                 setDraft((prev) => ({ ...prev, orientation: value as 'portrait' | 'landscape' }));
                 setOpenSelect(null);
               }}
-              error={errors.orientation}
+              error={formErrors.orientation}
             />
 
             {/* Duration */}
@@ -299,7 +291,7 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
             helper={t(
               `Enable the collection of Proof of Play statistics for this Media Item. Ensure that 'Enable Stats Collection' is set to 'On' in the Display Settings.`,
             )}
-            error={errors.enableStat}
+            error={formErrors.enableStat}
           />
 
           {/* Retired */}
