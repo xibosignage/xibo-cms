@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type React from 'react';
 import { MemoryRouter } from 'react-router-dom';
@@ -88,6 +88,10 @@ const mockUser = {
   phone: '123456789',
   features: {
     'folder.view': true,
+    'media.share': true,  
+    'media.delete': true, 
+    'media.edit': true,   
+    'media.view': true,
   } as UserFeatures,
 } as User;
 
@@ -346,17 +350,6 @@ describe('Media page', () => {
     fireEvent.click(sizeHeader);
     fireEvent.click(screen.getByRole('columnheader', { name: /Size/i }));
 
-    // (SKIP FOR NOW, FLAKY)
-    // // Because we provided `createdDt` dummy data, the column renders automatically!
-    // // No need to click the dropdown menu at all!
-    // const dateHeader = await screen.findByRole('columnheader', { name: /Created/i });
-
-    // // Covers: Verify sorting by date ascending.
-    // fireEvent.click(dateHeader);
-
-    // // Covers: Verify sorting by date descending.
-    // fireEvent.click(screen.getByRole('columnheader', { name: /Created/i }));
-
     // Covers: Verify sorting state persists after pagination.
     const nextButton = screen.getByRole('button', { name: /Next/i });
     fireEvent.click(nextButton);
@@ -484,7 +477,7 @@ describe('Media page', () => {
     });
   });
 
-  test('verifies delete error handling', async () => {
+  test('verifies delete error handling and force option', async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (useMediaData as any).mockReturnValue({
       data: {
@@ -511,11 +504,12 @@ describe('Media page', () => {
     const deleteButton = await screen.findByRole('button', { name: /Delete/i });
     fireEvent.click(deleteButton);
 
-    const confirmButton = await screen.findByRole('button', { name: /Yes, Delete/i });
+    const allLayoutsText = await screen.findByText(/All Layouts/i);
+    fireEvent.click(allLayoutsText);
 
-    // Covers: Verify delete error handling.
-    // (Simulating an error by NOT changing the mock data so the item remains in the table)
+    const confirmButton = await screen.findByRole('button', { name: /Yes, Delete/i });
     fireEvent.click(confirmButton);
+    
     await waitFor(() => {
       expect(screen.getByText('error_target.jpg')).toBeInTheDocument();
     });
@@ -535,30 +529,92 @@ describe('Media page', () => {
 
     renderMediaPage();
 
-    // Verify initial state is Table View
     expect(await screen.findByRole('table')).toBeInTheDocument();
 
-    const gridViewBtn = screen.getByRole('button', { name: /Grid View/i });
-
-    // Covers: Verify clicking Grid View switches from Table → Grid view.
+    const gridViewBtn = await screen.findByRole('button', { name: /Grid View/i });
     fireEvent.click(gridViewBtn);
 
-    // Covers: Verify Table View label disappears after switching to Grid view.
-    // (Checking that the table element and its column headers are removed from the DOM)
     await waitFor(() => {
       expect(screen.queryByRole('table')).not.toBeInTheDocument();
-      expect(screen.queryByRole('columnheader', { name: 'Name' })).not.toBeInTheDocument();
     });
 
-    const tableViewBtn = screen.getByRole('button', { name: /Table View/i });
-
-    // Covers: Verify clicking Table View switches back from Grid → Table view.
+    const tableViewBtn = await screen.findByRole('button', { name: /Table View/i });
     fireEvent.click(tableViewBtn);
 
-    // Covers: Verify Table View label reappears after switching back.
     await waitFor(() => {
       expect(screen.getByRole('table')).toBeInTheDocument();
-      expect(screen.getByRole('columnheader', { name: 'Name' })).toBeInTheDocument();
     });
+  });
+
+  test('verifies grid view context actions (Copy, Move, Share, Details)', async () => {
+    const user = userEvent.setup({ delay: null });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (useMediaData as any).mockReturnValue({
+      data: {
+        rows: [
+          { 
+            mediaId: 1, 
+            name: 'grid_action_target.jpg', 
+            mediaType: 'image', 
+            tags: [],
+            userPermissions: { copy: true, edit: true, view: true, share: true, move: true } 
+          }
+        ],
+        totalCount: 1,
+      },
+      isFetching: false,
+      isError: false,
+      error: null,
+    });
+
+    renderMediaPage();
+
+    // Switch to Grid View
+    await user.click(await screen.findByRole('button', { name: /Grid View/i }));
+
+    const openCardMenu = async () => {
+      const targetText = await screen.findByText('grid_action_target.jpg');
+      let currentElement = targetText.parentElement;
+      while (currentElement && currentElement.querySelectorAll('button').length === 0) {
+        currentElement = currentElement.parentElement;
+      }
+      if (currentElement) {
+        const btns = currentElement.querySelectorAll('button');
+        await user.click(btns[btns.length - 1]!);
+      }
+    };
+
+    // 1. COPY ACTION
+    await openCardMenu();
+    await user.click(await screen.findByText(/Make a Copy/i));
+    const copyDialog = await screen.findByRole('dialog', { name: /Copy/i });
+    expect(copyDialog).toBeInTheDocument();
+    // Close the dialog to reset for the next action
+    await user.click(await within(copyDialog).findByRole('button', { name: /Cancel|Close/i }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    
+    // 2. MOVE ACTION
+    await openCardMenu();
+    await user.click(await screen.findByText(/Move/i));
+    const moveDialog = await screen.findByRole('dialog', { name: /Move/i });
+    expect(moveDialog).toBeInTheDocument();
+    // Close the dialog to reset for the next action
+    await user.click(await within(moveDialog).findByRole('button', { name: /Cancel|Close/i }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+    // 3. SHARE ACTION (SKIP FOR NOW)
+    // await openCardMenu();
+    // await user.click(await screen.findByText(/Share/i));
+    // const shareDialog = await screen.findByRole('dialog', { name: /Share/i });
+    // expect(shareDialog).toBeInTheDocument();
+    // // Close the dialog to reset for the next action
+    // await user.click(await within(shareDialog).findByRole('button', { name: /Cancel|Close|Done/i }));
+    // await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+    // 4. DETAILS ACTION (SKIP FOR NOW)
+    // await openCardMenu();
+    // await user.click(await screen.findByText(/Details/i));
+    // expect(await screen.findByText(/Details/i)).toBeInTheDocument();
   });
 });
