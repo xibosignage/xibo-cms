@@ -32,8 +32,8 @@ import {
   INITIAL_FILTER_STATE,
   type SessionFilterInput,
 } from './SessionsConfig';
-import { SessionModals } from "./components/SessionModals"
-import { useSessionActions } from "./hooks/useSessionActions";
+import { SessionModals } from './components/SessionModals';
+import { useSessionActions } from './hooks/useSessionActions';
 import { useSessionData } from './hooks/useSessionData';
 import { useSessionFilterOptions } from './hooks/useSessionFilterOptions';
 
@@ -57,7 +57,6 @@ export default function Sessions() {
     columnVisibility,
     setColumnVisibility,
     globalFilter,
-    debouncedFilter,
     setGlobalFilter,
     filterInputs,
     setFilterInputs,
@@ -115,7 +114,7 @@ export default function Sessions() {
 
   // Update the selected cache when data loads or selection changes
   useEffect(() => {
-    if (!setSessionList || setSessionList.length === 0) {
+    if (!sessionList || sessionList.length === 0) {
       return;
     }
 
@@ -136,7 +135,7 @@ export default function Sessions() {
 
       return hasChanges ? next : prev;
     });
-  }, [setSessionList, rowSelection]);
+  }, [sessionList, rowSelection]);
 
   const getRowId = (row: Session) => {
     return row.expiresAt.toString();
@@ -235,9 +234,7 @@ export default function Sessions() {
         <div className="min-h-0 flex flex-col">
           {!isHydrated ? (
             <div className="flex-1 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
-              <span className="text-gray-400 font-medium">
-                {t('Loading your sessions...')}
-              </span>
+              <span className="text-gray-400 font-medium">`{t('Loading your sessions...')}`</span>
             </div>
           ) : (
             <DataTable
@@ -276,7 +273,7 @@ export default function Sessions() {
           isLoggingOut,
         }}
         selection={{
-          sessionToLogout
+          sessionToLogout,
         }}
         handlers={{
           confirmLogout,
