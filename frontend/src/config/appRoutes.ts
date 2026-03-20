@@ -55,6 +55,7 @@ export interface AppRoute {
   subLinks?: AppRoute[];
   feature?: string;
   validator?: (user: User) => boolean;
+  hideFromMenu?: boolean;
 }
 
 const isSuperAdmin = (user: User) => user.userTypeId === UserType.SuperAdmin;
@@ -71,7 +72,9 @@ export const generateTabNavigation = (parentRoute: AppRoute, user: User | null):
     return [];
   }
 
-  const authorizedSubLinks = filterRoutesByUser(parentRoute.subLinks, user);
+  const authorizedSubLinks = filterRoutesByUser(parentRoute.subLinks, user).filter(
+    (route) => !route.hideFromMenu,
+  );
 
   return authorizedSubLinks.map((subLink) => {
     const absolutePath = `/${parentRoute.path}/${subLink.path}`;
