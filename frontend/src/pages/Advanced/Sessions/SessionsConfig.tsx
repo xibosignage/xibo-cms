@@ -25,9 +25,9 @@ import { LogOut } from 'lucide-react';
 import { type ComponentProps } from 'react';
 
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
-import { getCommonFormOptions } from '@/config/commonForms';
 import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
 import { TextCell, ActionsCell, CheckMarkCell } from '@/components/ui/table/cells';
+import { getCommonFormOptions } from '@/config/commonForms';
 import type { Session } from '@/types/session';
 import type { ActionItem, BaseModalType } from '@/types/table';
 
@@ -72,9 +72,9 @@ export interface SessionActionsProps {
 }
 
 export const getSessionItemActions = ({
-   t,
-   onLogout,
-  }: SessionActionsProps): ((session: Session) => ActionItem[]) => {
+  t,
+  onLogout,
+}: SessionActionsProps): ((session: Session) => ActionItem[]) => {
   return (session: Session) => [
     {
       label: t('Logout'),
@@ -135,12 +135,13 @@ export const getSessionColumns = (props: SessionActionsProps): ColumnDef<Session
       maxSize: 40,
       enableHiding: false,
       enableResizing: false,
-      cell: ({ row }) => !row.original.isExpired ? (
-        <ActionsCell
-          row={row}
-          actions={getActions(row.original) as ComponentProps<typeof ActionsCell>['actions']}
-        />
-      ) : null
+      cell: ({ row }) =>
+        !row.original.isExpired ? (
+          <ActionsCell
+            row={row}
+            actions={getActions(row.original) as ComponentProps<typeof ActionsCell>['actions']}
+          />
+        ) : null,
     },
   ];
 };

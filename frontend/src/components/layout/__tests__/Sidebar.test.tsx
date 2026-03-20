@@ -79,7 +79,7 @@ const superAdminUser = {
     'report.scheduling': true,
     'report.saving': true,
     'log.view': true,
-    // 'sessions.view': true,
+    'session.view': true,
     'auditlog.view': true,
     'fault.view': true,
     'developer.edit': true,
@@ -193,7 +193,7 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
         subs: [
           // Note: "Log" usually points to savedreport based on your earlier HTML dump
           { name: 'Log', href: '/log/view' },
-          // { name: 'Sessions', href: '/advanced/sessions' },
+          { name: 'Sessions', href: '/advanced/sessions' },
           { name: 'Audit Trail', href: '/audit/view' },
           { name: 'Report Fault', href: '/fault/view' },
         ],
