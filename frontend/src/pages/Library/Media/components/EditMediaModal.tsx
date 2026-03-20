@@ -62,11 +62,8 @@ type MediaDraft = {
   updateInLayouts: boolean;
 };
 
-type OpenSelect = 'orientation' | 'expiry' | 'enableStat' | null;
-
 export default function EditMediaModal({ openModal, onClose, data, onSave }: EditMediaModalProps) {
   const { t } = useTranslation();
-  const [openSelect, setOpenSelect] = useState<null | OpenSelect>(null);
   const [expiry, setExpiry] = useState<ExpiryValue>(expiresToExpiryValue(data.expires));
   const [apiError, setApiError] = useState<string | undefined>();
   const [formErrors, setFormErrors] = useState<MediaFormErrors>({});
@@ -241,13 +238,8 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
               value={draft.orientation}
               placeholder="Select orientation"
               options={getCommonFormOptions(t).orientation}
-              isOpen={openSelect === 'orientation'}
-              onToggle={() =>
-                setOpenSelect((prev) => (prev === 'orientation' ? null : 'orientation'))
-              }
               onSelect={(value) => {
                 setDraft((prev) => ({ ...prev, orientation: value as 'portrait' | 'landscape' }));
-                setOpenSelect(null);
               }}
               error={formErrors.orientation}
             />
@@ -268,11 +260,8 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
           <ExpiryDateSelect
             value={expiry}
             options={MEDIA_FORM_OPTIONS.expiryDates}
-            isOpen={openSelect === 'expiry'}
-            onToggle={() => setOpenSelect((prev) => (prev === 'expiry' ? null : 'expiry'))}
             onSelect={(value) => {
               setExpiry(value);
-              setOpenSelect(null);
             }}
           />
 
@@ -282,11 +271,8 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
             value={draft.enableStat}
             placeholder="Inherit"
             options={getCommonFormOptions(t).inherit}
-            isOpen={openSelect === 'enableStat'}
-            onToggle={() => setOpenSelect((prev) => (prev === 'enableStat' ? null : 'enableStat'))}
             onSelect={(value) => {
               setDraft((prev) => ({ ...prev, enableStat: value }));
-              setOpenSelect(null);
             }}
             helper={t(
               `Enable the collection of Proof of Play statistics for this Media Item. Ensure that 'Enable Stats Collection' is set to 'On' in the Display Settings.`,

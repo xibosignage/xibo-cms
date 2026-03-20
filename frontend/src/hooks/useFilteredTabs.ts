@@ -33,7 +33,9 @@ export function useFilteredTabs(parentRoutePath: string): TabNavItem[] {
     return [];
   }
 
-  const authorizedSubLinks = filterRoutesByUser(parentRoute.subLinks, user);
+  const authorizedSubLinks = filterRoutesByUser(parentRoute.subLinks, user).filter(
+    (route) => !route.hideFromMenu,
+  );
 
   return authorizedSubLinks.map((subLink) => {
     const absolutePath = `/${parentRoute.path}/${subLink.path}`;

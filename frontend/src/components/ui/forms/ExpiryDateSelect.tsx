@@ -19,9 +19,20 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import {
+  useFloating,
+  autoUpdate,
+  offset,
+  flip,
+  shift,
+  size,
+  useClick,
+  useDismiss,
+  useInteractions,
+  FloatingPortal,
+} from '@floating-ui/react';
 import { CalendarCheck2Icon, ChevronDown, ChevronRight } from 'lucide-react';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
@@ -32,87 +43,56 @@ import type { ExpiryValue } from '@/utils/date';
 interface ExpiryDateSelectProps {
   value?: ExpiryValue;
   options: string[];
-  isOpen: boolean;
-  onToggle: () => void;
   onSelect: (value: ExpiryValue) => void;
 }
 
-export default function ExpiryDateSelect({
-  value,
-  options,
-  isOpen,
-  onToggle,
-  onSelect,
-}: ExpiryDateSelectProps) {
+export default function ExpiryDateSelect({ value, options, onSelect }: ExpiryDateSelectProps) {
   const { t } = useTranslation();
+
+  const [isOpen, setIsOpen] = useState(false);
   const [openDatePicker, setOpenDatePicker] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
 
-  const updatePosition = useCallback(() => {
-    if (!isOpen || !containerRef.current || !dropdownRef.current) return;
+  const { refs, floatingStyles, context } = useFloating({
+    open: isOpen,
+    onOpenChange: (open) => {
+      setIsOpen(open);
+      if (!open) {
+        setOpenDatePicker(false);
+      }
+    },
+    placement: 'bottom-start',
+    whileElementsMounted: autoUpdate,
+    middleware: [
+      offset(4),
+      flip(),
+      shift(),
+      size({
+        apply({ rects, elements }) {
+          Object.assign(elements.floating.style, {
+            minWidth: `${rects.reference.width}px`,
+          });
+        },
+      }),
+    ],
+  });
 
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const dropdownRect = dropdownRef.current.getBoundingClientRect();
-
-    const viewportHeight = window.innerHeight;
-    const gap = 4;
-
-    const spaceBelow = viewportHeight - containerRect.bottom - gap;
-    const spaceAbove = containerRect.top - gap;
-
-    const contentHeight = dropdownRect.height || 240;
-
-    let top = containerRect.bottom + gap;
-    let transformOrigin = 'top';
-
-    if (spaceBelow < contentHeight && spaceAbove > spaceBelow) {
-      top = containerRect.top - contentHeight - gap;
-      transformOrigin = 'bottom';
-    }
-
-    Object.assign(dropdownRef.current.style, {
-      top: `${top}px`,
-      left: `${containerRect.left}px`,
-      width: `${containerRect.width}px`,
-      transformOrigin,
-      opacity: '1',
-    });
-  }, [isOpen]);
-
-  useLayoutEffect(() => {
-    if (!isOpen) return;
-
-    requestAnimationFrame(() => updatePosition());
-
-    const resizeObserver = new ResizeObserver(() => updatePosition());
-    if (dropdownRef.current) resizeObserver.observe(dropdownRef.current);
-
-    return () => resizeObserver.disconnect();
-  }, [isOpen, updatePosition]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const closeOnScroll = () => onToggle();
-
-    window.addEventListener('wheel', closeOnScroll, { passive: true });
-
-    return () => window.removeEventListener('wheel', closeOnScroll);
-  }, [isOpen, onToggle]);
+  const click = useClick(context);
+  const dismiss = useDismiss(context);
+  const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
 
   return (
     <div className="relative overflow-visible">
       <label className="text-sm font-semibold text-gray-500">{t('Expiry Date')}</label>
+
       <div
-        ref={containerRef}
-        className="w-full border border-gray-200 rounded-lg flex items-center"
-        onClick={onToggle}
+        ref={refs.setReference}
+        {...getReferenceProps()}
+        className="w-full border border-gray-200 rounded-lg flex items-center cursor-pointer bg-white"
       >
         <span className="p-3 text-gray-500 border-r text-sm border-gray-200">
           <CalendarCheck2Icon size={16} />
         </span>
-        <span className="p-3 flex-1 text-sm cursor-pointer">
+        <span className="p-3 flex-1 text-sm">
           {value && value.type === 'never'
             ? t('Never Expire')
             : value?.type === 'preset'
@@ -133,17 +113,13 @@ export default function ExpiryDateSelect({
         {t('Set when this media is removed from all Layouts and widgets.')}
       </span>
 
-      {/* Dropdown */}
-      {isOpen &&
-        createPortal(
+      <FloatingPortal>
+        {isOpen && (
           <div
-            ref={dropdownRef}
-            style={{
-              position: 'fixed',
-              zIndex: 9999,
-              opacity: 0,
-            }}
-            className="bg-white shadow-xl rounded-lg border border-gray-100 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-100"
+            ref={refs.setFloating}
+            style={floatingStyles}
+            {...getFloatingProps()}
+            className="z-9999 bg-white shadow-xl rounded-lg border border-gray-100 overflow-hidden flex flex-col"
           >
             <span className="bg-gray-100 p-2 text-sm font-semibold text-gray-500 uppercase flex w-full">
               {t('Select Expiry Date')}
@@ -165,12 +141,15 @@ export default function ExpiryDateSelect({
                           value: option,
                         });
                       }
+                      setIsOpen(false);
                     }}
                   >
                     {t(option)}
                   </button>
                 ))}
-                <div className="flex border-b border-gray-200" />
+
+                <div className="flex border-b border-gray-200 my-1" />
+
                 <button
                   type="button"
                   className="text-left p-2 rounded-lg hover:bg-gray-100 font-medium cursor-pointer flex justify-between items-center"
@@ -180,11 +159,15 @@ export default function ExpiryDateSelect({
                   <ChevronRight size={14} className="text-gray-500" />
                 </button>
               </div>
+
               {openDatePicker && (
                 <DatePicker
                   mode="single"
                   value={{ date: value?.type === 'datePicked' ? value.date : undefined }}
-                  onCancel={() => setOpenDatePicker(false)}
+                  disablePastDates={true}
+                  onCancel={() => {
+                    setOpenDatePicker(false);
+                  }}
                   onApply={(val) => {
                     if (val.type === 'single') {
                       onSelect({
@@ -192,14 +175,14 @@ export default function ExpiryDateSelect({
                         date: val.date,
                       });
                     }
-                    setOpenDatePicker(false);
+                    setIsOpen(false);
                   }}
                 />
               )}
             </div>
-          </div>,
-          document.body,
+          </div>
         )}
+      </FloatingPortal>
     </div>
   );
 }

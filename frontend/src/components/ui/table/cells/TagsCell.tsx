@@ -19,13 +19,20 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useState, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import {
+  useFloating,
+  autoUpdate,
+  offset,
+  flip,
+  shift,
+  useClick,
+  useDismiss,
+  useInteractions,
+  FloatingPortal,
+} from '@floating-ui/react';
+import { useState } from 'react';
 
 import Badge from '../../Badge';
-
-import { useClickOutside } from '@/hooks/useClickOutside';
-import { useCloseOnScroll } from '@/hooks/useCloseOnScroll';
 
 interface Tag {
   id: string | number;
@@ -45,34 +52,18 @@ export function TagsCell({ tags, limit = 2, noTagsPlaceholder = '' }: TagsProps)
   const remainingCount = safeTags.length - limit;
 
   const [isOpen, setIsOpen] = useState(false);
-  const [coords, setCoords] = useState({ top: 0, left: 0 });
 
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Close when clicking outside
-  useClickOutside(dropdownRef, (e) => {
-    const target = e.target as Node;
-    if (buttonRef.current && !buttonRef.current.contains(target)) {
-      setIsOpen(false);
-    }
+  const { refs, floatingStyles, context } = useFloating({
+    open: isOpen,
+    onOpenChange: setIsOpen,
+    placement: 'bottom-start',
+    whileElementsMounted: autoUpdate,
+    middleware: [offset(4), flip(), shift()],
   });
 
-  // Close when scrolling
-  useCloseOnScroll(isOpen, () => setIsOpen(false));
-
-  const toggleOpen = (e: React.MouseEvent) => {
-    e.stopPropagation();
-
-    if (!isOpen && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setCoords({
-        top: rect.bottom + 4,
-        left: rect.left,
-      });
-    }
-    setIsOpen(!isOpen);
-  };
+  const click = useClick(context);
+  const dismiss = useDismiss(context);
+  const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
 
   if (!tags?.length) {
     return <span className="text-gray-800">{noTagsPlaceholder}</span>;
@@ -89,9 +80,9 @@ export function TagsCell({ tags, limit = 2, noTagsPlaceholder = '' }: TagsProps)
       {remainingCount > 0 && (
         <>
           <button
-            ref={buttonRef}
+            ref={refs.setReference}
+            {...getReferenceProps()}
             type="button"
-            onClick={toggleOpen}
             className="hover:z-50 focus:outline-none"
           >
             <Badge className="cursor-pointer" type="light" variation="outline">
@@ -99,20 +90,16 @@ export function TagsCell({ tags, limit = 2, noTagsPlaceholder = '' }: TagsProps)
             </Badge>
           </button>
 
-          {isOpen &&
-            createPortal(
+          <FloatingPortal>
+            {isOpen && (
               <div
-                ref={dropdownRef}
-                style={{
-                  position: 'fixed',
-                  top: coords.top,
-                  left: coords.left,
-                }}
+                ref={refs.setFloating}
+                style={floatingStyles}
+                {...getFloatingProps()}
                 className={`
                   z-9999 min-w-60 p-2
                   bg-white shadow-xl rounded-lg border border-gray-100
                   dark:bg-neutral-800 dark:border-neutral-700
-                  animate-in fade-in zoom-in-95 duration-100
                 `}
                 role="menu"
               >
@@ -123,9 +110,9 @@ export function TagsCell({ tags, limit = 2, noTagsPlaceholder = '' }: TagsProps)
                     </Badge>
                   ))}
                 </div>
-              </div>,
-              document.body,
+              </div>
             )}
+          </FloatingPortal>
         </>
       )}
     </div>

@@ -96,7 +96,6 @@ export default function AddAndEditPlaylistModal({
   onSave,
 }: AddAndEditPlaylistModalProps) {
   const { t } = useTranslation();
-  const [openSelect, setOpenSelect] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [formErrors, setFormErrors] = useState<PlaylistFormErrors>({});
   const [apiError, setApiError] = useState<string | undefined>();
@@ -365,11 +364,8 @@ export default function AddAndEditPlaylistModal({
             value={draft.enableStat}
             placeholder="Inherit"
             options={getCommonFormOptions(t).inherit}
-            isOpen={openSelect === 'enableStat'}
-            onToggle={() => setOpenSelect((prev) => (prev === 'enableStat' ? null : 'enableStat'))}
             onSelect={(value) => {
               setDraft((prev) => ({ ...prev, enableStat: value }));
-              setOpenSelect(null);
             }}
             helper={t(
               `Enable the collection of Proof of Play statistics for this Playlist Item. Ensure that 'Enable Stats Collection' is set to 'On' in the Display Settings.`,

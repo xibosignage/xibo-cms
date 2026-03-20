@@ -19,16 +19,22 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import {
+  useFloating,
+  autoUpdate,
+  offset,
+  flip,
+  shift,
+  useClick,
+  useDismiss,
+  useInteractions,
+  FloatingPortal,
+} from '@floating-ui/react';
 import type { LucideIcon } from 'lucide-react';
 import { ChevronRight, MoreVertical } from 'lucide-react';
-import { useState, useRef, useLayoutEffect } from 'react';
-import { createPortal } from 'react-dom';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
-
-import { useClickOutside } from '@/hooks/useClickOutside';
-import { useCloseOnScroll } from '@/hooks/useCloseOnScroll';
-import { getDropdownPosition } from '@/utils/getDropdownPosition';
 
 export interface DataTableRowAction<TData> {
   label?: string;
@@ -51,65 +57,37 @@ export default function DataTableRowActions<TData>({
 }: DataTableRowActionsProps<TData>) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const [coords, setCoords] = useState({ top: 0, left: 0 });
 
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Close when clicking outside
-  useClickOutside(dropdownRef, (e) => {
-    const target = e.target as Node;
-    if (buttonRef.current && !buttonRef.current.contains(target)) {
-      setOpen(false);
-    }
+  const { refs, floatingStyles, context } = useFloating({
+    open: open,
+    onOpenChange: setOpen,
+    placement: 'bottom-end',
+    whileElementsMounted: autoUpdate,
+    middleware: [offset(4), flip(), shift()],
   });
 
-  // Close when scrolling
-  useCloseOnScroll(open, () => setOpen(false));
-
-  const toggleOpen = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setOpen((prev) => !prev);
-  };
-
-  useLayoutEffect(() => {
-    if (!open || !buttonRef.current || !dropdownRef.current) return;
-
-    const rect = buttonRef.current.getBoundingClientRect();
-    const dropdownHeight = dropdownRef.current.offsetHeight;
-    const dropdownWidth = dropdownRef.current.offsetWidth;
-
-    const { top, left } = getDropdownPosition({
-      triggerRect: rect,
-      dropdownHeight,
-      dropdownWidth,
-    });
-
-    setCoords({ top, left });
-  }, [open]);
+  const click = useClick(context);
+  const dismiss = useDismiss(context);
+  const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
 
   return (
     <div className="relative inline-block text-left">
       <button
-        ref={buttonRef}
-        onClick={toggleOpen}
+        ref={refs.setReference}
+        {...getReferenceProps()}
         className="p-1.5 text-gray-500 hover:bg-gray-50 focus:bg-gray-100 rounded-lg focus:outline-none transition-colors cursor-pointer"
         aria-label={t('More actions')}
-        aria-haspopup="true"
-        aria-expanded={open}
       >
         <MoreVertical className="w-4 h-4" />
       </button>
 
-      {open &&
-        createPortal(
+      <FloatingPortal>
+        {open && (
           <div
-            ref={dropdownRef}
-            style={{
-              top: coords.top,
-              left: coords.left,
-            }}
-            className="fixed bg-white shadow-lg z-100 rounded-xl overflow-hidden"
+            ref={refs.setFloating}
+            style={floatingStyles}
+            {...getFloatingProps()}
+            className="z-100 bg-white shadow-lg rounded-xl overflow-hidden min-w-40"
           >
             <div className="p-2">
               {actions.map((action, idx) => {
@@ -136,7 +114,7 @@ export default function DataTableRowActions<TData>({
                   >
                     {action.icon && (
                       <span className="w-4 h-4 flex items-center justify-center">
-                        {action.icon && <action.icon />}
+                        <action.icon />
                       </span>
                     )}
                     <span className="flex-1 text-left truncate">{action.label}</span>
@@ -149,9 +127,9 @@ export default function DataTableRowActions<TData>({
                 );
               })}
             </div>
-          </div>,
-          document.body,
+          </div>
         )}
+      </FloatingPortal>
     </div>
   );
 }

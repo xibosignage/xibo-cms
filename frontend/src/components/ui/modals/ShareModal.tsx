@@ -68,8 +68,6 @@ interface ShareModalProps {
   currentOwnerId?: number | null;
 }
 
-type OpenSelect = 'owner' | 'filter' | null;
-
 type OwnerOption = {
   label: string;
   value: string;
@@ -87,7 +85,6 @@ export default function ShareModal({
   const { t } = useTranslation();
   const [isPending, startTransition] = useTransition();
 
-  const [openSelect, setOpenSelect] = useState<null | OpenSelect>(null);
   const [user, setUser] = useState<string | null>(null);
   const [filter, setFilter] = useState('all');
 
@@ -380,11 +377,8 @@ export default function ShareModal({
               value={user as string}
               placeholder={ownerLoading ? t('Loading...') : t('Select Owner')}
               options={ownerOptions}
-              isOpen={openSelect === 'owner'}
-              onToggle={() => setOpenSelect((prev) => (prev === 'owner' ? null : 'owner'))}
               onSelect={(value) => {
                 setUser(value);
-                setOpenSelect(null);
               }}
               addLeftLabel
               leftLabelContent={
@@ -399,7 +393,6 @@ export default function ShareModal({
 
           <div className="flex relative gap-2 items-end px-3 py-5 bg-slate-50">
             <SelectDropdown
-              isOpen={openSelect === 'filter'}
               label="Filter by"
               placeholder="All"
               value={filter}
@@ -411,9 +404,7 @@ export default function ShareModal({
               onSelect={(value) => {
                 setFilter(value);
                 setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-                setOpenSelect(null);
               }}
-              onToggle={() => setOpenSelect((prev) => (prev === 'filter' ? null : 'filter'))}
               className="w-37.5"
             />
             <div className="relative flex-1 flex w-full mb-1">

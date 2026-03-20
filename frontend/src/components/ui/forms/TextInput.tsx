@@ -65,12 +65,14 @@ export default function TextInput({
 
   return (
     <div className={twMerge('flex flex-col gap-1 w-full', wrapperClassName)}>
-      <label
-        htmlFor={generatedId}
-        className={twMerge('text-sm font-semibold text-gray-500 leading-4.5', labelClassName)}
-      >
-        {!label ? t('Text') : label}
-      </label>
+      {label && (
+        <label
+          htmlFor={generatedId}
+          className={twMerge('text-sm font-semibold text-gray-500 leading-4.5', labelClassName)}
+        >
+          {label}
+        </label>
+      )}
       <div
         className={twMerge(
           'flex items-stretch rounded-lg bg-white border border-gray-200 overflow-hidden transition-colors',

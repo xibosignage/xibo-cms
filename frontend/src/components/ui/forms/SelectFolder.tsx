@@ -19,9 +19,20 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import {
+  useFloating,
+  autoUpdate,
+  offset,
+  flip,
+  shift,
+  size,
+  useClick,
+  useDismiss,
+  useInteractions,
+  FloatingPortal,
+} from '@floating-ui/react';
 import { ChevronDown, Loader2, X } from 'lucide-react';
-import { useEffect, useRef, useState, useLayoutEffect, useCallback, useId } from 'react';
-import { createPortal } from 'react-dom';
+import { useEffect, useState, useId } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import FolderSearchInput from '../FolderSearchInput';
@@ -52,8 +63,29 @@ export default function SelectFolder({
   const [isResolvingName, setIsResolvingName] = useState(false);
   const [folderSearch, setFolderSearch] = useState('');
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const { refs, floatingStyles, context } = useFloating({
+    open: isOpen,
+    onOpenChange: setIsOpen,
+    placement: 'bottom-start',
+    whileElementsMounted: autoUpdate,
+    middleware: [
+      offset(4),
+      flip(),
+      shift(),
+      size({
+        apply({ rects, elements, availableHeight }) {
+          Object.assign(elements.floating.style, {
+            width: `${rects.reference.width}px`,
+            maxHeight: `${Math.min(availableHeight, 400)}px`,
+          });
+        },
+      }),
+    ],
+  });
+
+  const click = useClick(context);
+  const dismiss = useDismiss(context);
+  const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
 
   const handleClear = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -65,6 +97,7 @@ export default function SelectFolder({
 
     onSelect(null);
   };
+
   useEffect(() => {
     if (!selectedId) {
       setInitialName(null);
@@ -94,99 +127,6 @@ export default function SelectFolder({
     };
   }, [selectedId]);
 
-  // Positioning
-  const updatePosition = useCallback(() => {
-    if (!isOpen || !containerRef.current || !dropdownRef.current) return;
-
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const dropdownRect = dropdownRef.current.getBoundingClientRect();
-    const viewportHeight = window.innerHeight;
-    const gap = 4;
-
-    // Dimensions
-    const contentHeight = dropdownRect.height || 300;
-    const spaceBelow = viewportHeight - containerRect.bottom - gap;
-    const spaceAbove = containerRect.top - gap;
-    const maxHeight = 400;
-
-    let top: number;
-    let finalMaxHeight = maxHeight;
-    let transformOrigin = 'top';
-
-    if (spaceBelow < contentHeight && spaceAbove > spaceBelow) {
-      top = containerRect.top - gap - Math.min(contentHeight, spaceAbove);
-      finalMaxHeight = Math.min(maxHeight, spaceAbove);
-      transformOrigin = 'bottom';
-    } else {
-      top = containerRect.bottom + gap;
-      finalMaxHeight = Math.min(maxHeight, spaceBelow);
-    }
-
-    Object.assign(dropdownRef.current.style, {
-      top: `${top}px`,
-      left: `${containerRect.left}px`,
-      width: `${containerRect.width}px`,
-      maxHeight: `${finalMaxHeight}px`,
-      opacity: '1',
-      transformOrigin,
-    });
-  }, [isOpen]);
-
-  useLayoutEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-
-    requestAnimationFrame(() => updatePosition());
-
-    const resizeObserver = new ResizeObserver(() => updatePosition());
-    if (dropdownRef.current) {
-      resizeObserver.observe(dropdownRef.current);
-    }
-
-    return () => resizeObserver.disconnect();
-  }, [isOpen, updatePosition]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleScroll = (event: Event) => {
-      if (dropdownRef.current && dropdownRef.current.contains(event.target as Node)) {
-        return;
-      }
-      setIsOpen(false);
-    };
-
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(target) &&
-        dropdownRef.current &&
-        !dropdownRef.current.contains(target)
-      ) {
-        setIsOpen(false);
-      }
-    };
-
-    const handleResize = () => setIsOpen(false);
-
-    document.addEventListener('mousedown', handleClickOutside);
-    window.addEventListener('resize', handleResize);
-
-    const scrollTimeout = setTimeout(() => {
-      window.addEventListener('scroll', handleScroll, true);
-    }, 100);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('scroll', handleScroll, true);
-      clearTimeout(scrollTimeout);
-    };
-  }, [isOpen]);
-
-  // Helper to get the text to display on the button
   const renderLabel = () => {
     if (isResolvingName) {
       return (
@@ -209,15 +149,15 @@ export default function SelectFolder({
   };
 
   return (
-    <div className="relative" ref={containerRef}>
+    <div className="relative">
       <label className="block text-sm font-semibold text-gray-500 mb-1">
         {t('Select folder location')}
       </label>
 
-      {/* Portal Trigger */}
       <div
+        ref={refs.setReference}
+        {...getReferenceProps()}
         className="w-full border border-gray-200 rounded-lg flex items-center bg-white transition-shadow hover:shadow-sm cursor-pointer h-10.5"
-        onClick={() => setIsOpen((prev) => !prev)}
       >
         <button
           type="button"
@@ -246,23 +186,19 @@ export default function SelectFolder({
         </div>
       </div>
 
-      {/* Portal Dropdown */}
-      {isOpen &&
-        createPortal(
+      <FloatingPortal>
+        {isOpen && (
           <div
-            ref={dropdownRef}
-            style={{
-              position: 'fixed',
-              zIndex: 9999,
-              opacity: 0,
-            }}
-            className="bg-white shadow-xl rounded-lg border border-gray-100 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-100"
+            ref={refs.setFloating}
+            style={floatingStyles}
+            {...getFloatingProps()}
+            className="z-9999 bg-white shadow-xl rounded-lg border border-gray-100 overflow-hidden flex flex-col"
           >
-            <div className="bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-500 uppercase w-fullshrink-0">
+            <div className="bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-500 uppercase w-full shrink-0">
               {t('Select Folder')}
             </div>
 
-            <div className="flex flex-col min-h-0 flex-1">
+            <div className="flex flex-col min-h-0 flex-1 overflow-y-auto">
               <FolderTreeList
                 selectedId={selectedId}
                 onSelect={(folder: Folder) => {
@@ -286,9 +222,9 @@ export default function SelectFolder({
                 }
               />
             </div>
-          </div>,
-          document.body,
+          </div>
         )}
+      </FloatingPortal>
     </div>
   );
 }

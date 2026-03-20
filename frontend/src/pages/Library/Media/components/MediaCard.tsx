@@ -19,9 +19,19 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import {
+  useFloating,
+  autoUpdate,
+  offset,
+  flip,
+  shift,
+  useClick,
+  useDismiss,
+  useInteractions,
+  FloatingPortal,
+} from '@floating-ui/react';
 import { Check, MoreVertical, Play } from 'lucide-react';
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { createPortal } from 'react-dom';
+import { useState } from 'react';
 import { twMerge } from 'tailwind-merge';
 
 import { getMediaIcon } from '../MediaConfig';
@@ -45,70 +55,30 @@ export default function MediaCard({
   actions,
 }: MediaCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
 
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const dropdownActions = actions;
   const isPlayable = media.mediaType === 'video' || media.mediaType === 'audio';
   const IconComponent = getMediaIcon(media.mediaType);
 
-  // Portal position
-  const updatePosition = useCallback(() => {
-    if (buttonRef.current && isMenuOpen) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      const scrollY = window.scrollY;
-      const scrollX = window.scrollX;
+  const { refs, floatingStyles, context } = useFloating({
+    open: isMenuOpen,
+    onOpenChange: setIsMenuOpen,
+    placement: 'top-end',
+    whileElementsMounted: autoUpdate,
+    middleware: [offset(4), flip(), shift()],
+  });
 
-      setMenuPosition({
-        top: rect.top + scrollY - 5,
-        left: rect.right + scrollX,
-      });
-    }
-  }, [isMenuOpen]);
-
-  // Update position or Portal on scroll
-  useEffect(() => {
-    if (isMenuOpen) {
-      updatePosition();
-      window.addEventListener('scroll', updatePosition, true);
-      window.addEventListener('resize', updatePosition);
-    }
-
-    return () => {
-      window.removeEventListener('scroll', updatePosition, true);
-      window.removeEventListener('resize', updatePosition);
-    };
-  }, [isMenuOpen, updatePosition]);
-
-  // We need a custom effect handler for click outside for a Portal
-  useEffect(() => {
-    if (!isMenuOpen) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(event.target as Node) &&
-        buttonRef.current &&
-        !buttonRef.current.contains(event.target as Node)
-      ) {
-        setIsMenuOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isMenuOpen]);
+  const click = useClick(context);
+  const dismiss = useDismiss(context);
+  const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
 
   return (
     <div
       className={twMerge(
-        'relative flex flex-col bg-white  rounded-lg border-2 group',
+        'relative flex flex-col bg-white rounded-lg border-2 group',
         isSelected ? 'bg-blue-100 border-blue-100' : 'border-slate-50 hover:bg-black/5',
         isMenuOpen ? 'z-10' : '',
       )}
     >
-      {/* Select checkbox */}
       <div
         className={twMerge(
           'absolute top-3 left-3 z-10 transition-opacity duration-200',
@@ -131,7 +101,6 @@ export default function MediaCard({
         </div>
       </div>
 
-      {/* Preview */}
       <div
         className="aspect-video w-full bg-gray-400 rounded-t-lg overflow-hidden cursor-pointer relative flex items-center justify-center"
         onClick={() => onPreview(media)}
@@ -156,24 +125,13 @@ export default function MediaCard({
         )}
       </div>
 
-      {/* Footer */}
       <div className="flex flex-1 p-2 justify-between items-center">
         <div className="text-sm font-medium text-gray-800 truncate" title={media.name}>
           {media.name}
         </div>
         <button
-          ref={buttonRef}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (!isMenuOpen && buttonRef.current) {
-              const rect = buttonRef.current.getBoundingClientRect();
-              setMenuPosition({
-                top: rect.top + window.scrollY - 5,
-                left: rect.right + window.scrollX,
-              });
-            }
-            setIsMenuOpen((prev) => !prev);
-          }}
+          ref={refs.setReference}
+          {...getReferenceProps()}
           className={twMerge(
             'size-6 flex items-center justify-center rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors cursor-pointer',
             isMenuOpen && 'bg-gray-100 text-gray-800',
@@ -182,26 +140,21 @@ export default function MediaCard({
           <MoreVertical className="size-4" />
         </button>
 
-        {/* Card actions */}
-        {isMenuOpen &&
-          createPortal(
+        <FloatingPortal>
+          {isMenuOpen && (
             <div
-              ref={menuRef}
-              style={{
-                top: menuPosition.top,
-                left: menuPosition.left,
-                transform: 'translate(-100%, -100%)',
-              }}
-              className="fixed bg-white shadow-lg z-100 rounded-xl max-h-62.5 overflow-y-auto origin-bottom-right"
-              onClick={(e) => e.stopPropagation()}
+              ref={refs.setFloating}
+              style={floatingStyles}
+              {...getFloatingProps()}
+              className="z-100 bg-white shadow-lg rounded-xl max-h-62.5 overflow-y-auto"
             >
-              {dropdownActions.map((action, idx) => {
+              {actions.map((action, idx) => {
                 if (action.isSeparator) {
                   return <div key={idx} className="my-1 h-px bg-gray-100" role="separator" />;
                 }
 
                 if (action.isQuickAction) {
-                  return;
+                  return null;
                 }
 
                 const Icon = action.icon;
@@ -226,9 +179,9 @@ export default function MediaCard({
                   </button>
                 );
               })}
-            </div>,
-            document.body,
+            </div>
           )}
+        </FloatingPortal>
       </div>
     </div>
   );

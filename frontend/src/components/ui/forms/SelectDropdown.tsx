@@ -19,10 +19,24 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import {
+  useFloating,
+  autoUpdate,
+  offset,
+  flip,
+  shift,
+  size,
+  useClick,
+  useDismiss,
+  useInteractions,
+  FloatingPortal,
+} from '@floating-ui/react';
 import { ChevronDown } from 'lucide-react';
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
+
 export type SelectOption = {
   label: string;
   value: string;
@@ -33,10 +47,8 @@ interface SelectDropdownProps {
   value?: string;
   placeholder?: string;
   options: SelectOption[];
-  isOpen: boolean;
   searchable?: boolean;
   searchPlaceholder?: string;
-  onToggle: () => void;
   onSelect: (value: string) => void;
   helper?: string;
   addLeftLabel?: boolean;
@@ -52,8 +64,6 @@ export default function SelectDropdown({
   value,
   placeholder = 'Select',
   options,
-  isOpen,
-  onToggle,
   onSelect,
   helper,
   addLeftLabel,
@@ -65,14 +75,41 @@ export default function SelectDropdown({
 }: SelectDropdownProps) {
   const { t } = useTranslation();
 
+  const [isOpen, setIsOpen] = useState(false);
+
   const selectedLabel = options.find((o) => o.value === value)?.label ?? '';
+
+  const { refs, floatingStyles, context } = useFloating({
+    open: isOpen,
+    onOpenChange: setIsOpen,
+    placement: 'bottom-start',
+    whileElementsMounted: autoUpdate,
+    middleware: [
+      offset(4),
+      flip(),
+      shift(),
+      size({
+        apply({ rects, elements }) {
+          Object.assign(elements.floating.style, {
+            width: `${rects.reference.width}px`,
+          });
+        },
+      }),
+    ],
+  });
+
+  const click = useClick(context);
+  const dismiss = useDismiss(context);
+  const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
 
   return (
     <div className={twMerge('relative overflow-visible', className)}>
       <label className="text-sm font-semibold text-gray-500">{t(label)}</label>
+
       <div
+        ref={refs.setReference}
+        {...getReferenceProps()}
         className="w-full border bg-white border-gray-200 rounded-lg flex items-center cursor-pointer max-h-11.25"
-        onClick={onToggle}
       >
         {addLeftLabel && leftLabelContent && (
           <div className="p-3 border-r text-sm border-gray-200 text-gray-500">
@@ -80,39 +117,53 @@ export default function SelectDropdown({
           </div>
         )}
         <span className="p-3 flex-1 text-sm capitalize">{selectedLabel || t(placeholder)}</span>
-        <span className="p-3 text-gray-500">
+        <span
+          className={twMerge(
+            'p-3 text-gray-500 transition-transform duration-300 ease-in-out',
+            isOpen ? 'rotate-180' : 'rotate-0',
+          )}
+        >
           <ChevronDown size={14} />
         </span>
       </div>
 
-      <div
-        className={`absolute top-17.5 w-full bg-white shadow-md rounded-lg overflow-clip transition-all duration-150 border border-gray-200 ease-in-out z-50
-          ${isOpen ? 'opacity-100 max-h-75' : 'opacity-0 max-h-0'}
-        `}
-      >
-        {optionLabel && (
-          <span className="bg-gray-100 p-2 text-sm font-semibold text-gray-500 uppercase w-full flex">
-            {t(optionLabel)}
-          </span>
+      <FloatingPortal>
+        {isOpen && (
+          <div
+            ref={refs.setFloating}
+            style={floatingStyles}
+            {...getFloatingProps()}
+            className="z-9999 bg-white shadow-md rounded-lg overflow-clip border border-gray-200 flex flex-col"
+          >
+            {optionLabel && (
+              <span className="bg-gray-100 p-2 text-sm font-semibold text-gray-500 uppercase w-full flex">
+                {t(optionLabel)}
+              </span>
+            )}
+            <div className="flex flex-col p-2 text-sm overflow-y-auto max-h-75">
+              {options.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  className="text-left p-2 rounded-lg hover:bg-gray-100 font-medium flex gap-2 items-center cursor-pointer"
+                  onClick={() => {
+                    onSelect(option.value);
+                    setIsOpen(false);
+                  }}
+                >
+                  {addOptionAvatar && (
+                    <div className="bg-xibo-blue-100 h-6.5 w-6.5 text-[12px] center rounded-full text-xibo-blue-800 font-semibold flex items-center justify-center">
+                      {option.label.slice(0, 1)}
+                    </div>
+                  )}
+                  {t(option.label)}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
-        <div className="flex flex-col p-2 text-sm">
-          {options.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              className="text-left p-2 rounded-lg hover:bg-gray-100 font-medium flex gap-2 items-center cursor-pointer"
-              onClick={() => onSelect(option.value)}
-            >
-              {addOptionAvatar && (
-                <div className="bg-xibo-blue-100 h-6.5 w-6.5 text-[12px] center rounded-full text-xibo-blue-800 font-semibold">
-                  {option.label.slice(0, 1)}
-                </div>
-              )}
-              {t(option.label)}
-            </button>
-          ))}
-        </div>
-      </div>
+      </FloatingPortal>
+
       {error ? (
         <p className="text-xs text-red-600 ml-2 mt-1">{error}</p>
       ) : (

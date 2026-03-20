@@ -50,7 +50,18 @@ export default function SidebarMenu({
   const [openMenu, setOpenMenu] = useState<string | null>(null);
 
   const visibleRoutes = useMemo(() => {
-    return user ? filterRoutesByUser(APP_ROUTES, user) : [];
+    if (!user) {
+      return [];
+    }
+
+    const userRoutes = filterRoutesByUser(APP_ROUTES, user);
+
+    return userRoutes
+      .filter((route) => !route.hideFromMenu)
+      .map((route) => ({
+        ...route,
+        subLinks: route.subLinks?.filter((sub) => !sub.hideFromMenu),
+      }));
   }, [user]);
 
   useEffect(() => {

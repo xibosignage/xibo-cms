@@ -32,7 +32,7 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const buttonVariant: Record<NonNullable<ButtonProps['variant']>, string> = {
   primary:
-    'text-white bg-xibo-blue-600 hover:bg-xibo-blue-700 focus:outline-4 focus:outline-blue-500/25 disabled:bg-blue-400 disabled:outline-0',
+    'text-white bg-xibo-blue-600 min-w-[100px] hover:bg-xibo-blue-700 focus:outline-4 focus:outline-blue-500/25 disabled:bg-blue-400 disabled:outline-0',
   secondary:
     'text-xibo-blue-600 border border-xibo-blue-600 bg-white hover:border-xibo-blue-800 hover:text-xibo-blue-800 focus:outline-4 focus:outline-blue-500/25 disabled:border-blue-200 disabled:text-blue-200 disabled:outline-0',
   tertiary:

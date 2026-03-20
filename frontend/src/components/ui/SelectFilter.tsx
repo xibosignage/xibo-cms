@@ -202,6 +202,7 @@ export default function SelectFilter({
             <div className="pb-4 box-border">
               <DatePicker
                 mode="range"
+                disableFutureDates={true}
                 isJalali={isJalali}
                 onCancel={() => setOpenDatePicker(false)}
                 onApply={(value) => {

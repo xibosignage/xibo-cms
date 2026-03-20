@@ -40,6 +40,8 @@ export interface DatePickerProps {
     to?: Date;
   };
   isJalali?: boolean;
+  disablePastDates?: boolean;
+  disableFutureDates?: boolean;
   onApply: (
     value: { type: 'single'; date: Date } | { type: 'range'; from: Date; to: Date },
   ) => void;
@@ -65,6 +67,8 @@ export default function DatePicker({
   value,
   mode,
   isJalali = false,
+  disablePastDates = false,
+  disableFutureDates = false,
 }: DatePickerProps) {
   const defaultClassNames = getDefaultClassNames();
   const [single, setSingle] = useState<Date | undefined>(value?.date);
@@ -79,6 +83,12 @@ export default function DatePicker({
 
   const timeClass =
     'h-[32px] font-semibold w-[70px] rounded-lg border border-gray-200 px-3 text-xs bg-white';
+
+  const getDisabledRules = () => {
+    if (disablePastDates) return { before: new Date() };
+    if (disableFutureDates) return { after: new Date() };
+    return undefined;
+  };
 
   // helper to apply time to date
   const applyTime = (date: Date) => {
@@ -131,7 +141,7 @@ export default function DatePicker({
             selected={single}
             onSelect={setSingle}
             numberOfMonths={1}
-            disabled={{ before: new Date() }}
+            disabled={getDisabledRules()}
             locale={activeLocale}
             dir={layoutDirection}
             className="text-sm flex flex-col datepicker"
@@ -143,7 +153,7 @@ export default function DatePicker({
             selected={range}
             onSelect={setRange}
             numberOfMonths={1}
-            disabled={{ after: new Date() }}
+            disabled={getDisabledRules()}
             locale={activeLocale}
             dir={layoutDirection}
             className="datepicker"
