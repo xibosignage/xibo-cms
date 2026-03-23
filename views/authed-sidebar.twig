@@ -42,7 +42,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("dataset.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("dataset.view") }}">{% trans "DataSets" %}</a></li>
+                <li class="sidebar-list"><a href="/prototype/library/datasets">{% trans "DataSets" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("menuBoard.view") %}

@@ -51,7 +51,7 @@ const ToastCard = ({ id, type, title, description, action }: ToastCardProps) => 
   const Icon = variant.icon;
 
   return (
-    <div className="flex w-full max-w-[400px] overflow-hidden rounded-sm bg-slate-900 shadow-xl ring-1 ring-black/5">
+    <div className="flex w-full max-w-100 overflow-hidden rounded-sm bg-slate-900 shadow-xl ring-1 ring-black/5">
       <div className={`flex w-12 items-center justify-center ${variant.base}`}>
         <Icon className="h-5 w-5 text-slate-200" />
       </div>
