@@ -147,12 +147,15 @@ class ResolutionFactory extends BaseFactory
     {
         $parsedFilter = $this->getSanitizer($filterBy);
 
-        if ($sortOrder === null) {
-            $sortOrder = ['resolution'];
-        }
+        // Sorting
+        $allowedColumns = ['resolutionId', 'resolution', 'width', 'height', 'enabled'];
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['resolution ASC']
+        );
 
         $entities = [];
-
         $params = [];
         $select  = '
           SELECT `resolution`.resolutionId,
@@ -234,12 +237,18 @@ class ResolutionFactory extends BaseFactory
             $params['userId'] = $parsedFilter->getInt('userId');
         }
 
-        // Sorting?
-        $order = '';
-
-        if (is_array($sortOrder)) {
-            $order .= ' ORDER BY ' . implode(',', $sortOrder);
+        if ($parsedFilter->getString('keyword') != null) {
+            // Fulltext search
+            $body .= $this->buildSearchQuery(
+                $parsedFilter->getString('keyword'),
+                $params,
+                ['resolution.resolution'],
+                ['resolution.resolutionId', 'resolution.intended_height', 'resolution.intended_width'],
+            );
         }
+
+        // Sorting?
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         $limit = '';
         // Paging
@@ -249,7 +258,6 @@ class ResolutionFactory extends BaseFactory
 
         // The final statements
         $sql = $select . $body . $order . $limit;
-
 
         foreach($this->getStore()->select($sql, $params) as $record) {
             $entities[] = $this->createEmpty()->hydrate($record, ['intProperties' => ['width', 'height', 'version', 'enabled']]);

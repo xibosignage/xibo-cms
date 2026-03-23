@@ -381,22 +381,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['template.add']));
 
 //
-// resolution
-//
-$app->get('/resolution/view', ['\Xibo\Controller\Resolution','displayPage'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['resolution.view']))
-    ->setName('resolution.view');
-
-$app->get('/resolution/form/add', ['\Xibo\Controller\Resolution','addForm'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['resolution.add']))
-    ->setName('resolution.add.form');
-
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/resolution/form/edit/{id}', ['\Xibo\Controller\Resolution', 'editForm'])->setName('resolution.edit.form');
-    $group->get('/resolution/form/delete/{id}', ['\Xibo\Controller\Resolution', 'deleteForm'])->setName('resolution.delete.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['resolution.modify']));
-
-//
 // dataset
 //
 $app->get('/dataset/view', ['\Xibo\Controller\DataSet','displayPage'])

@@ -182,9 +182,11 @@ class PlaylistFactory extends BaseFactory
             'playlistId', 'name', 'duration', 'owner', 'isDynamic', 'enableStat', 'createdDt', 'modifiedDt'
         ];
 
-        $sortOrder = ($sortOrder === null)
-            ? ['name']
-            : $this->buildSortQuery($sortOrder, $allowedColumns);
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['name ASC']
+        );
 
         $entries = [];
 
@@ -367,7 +369,7 @@ class PlaylistFactory extends BaseFactory
                 $parsedFilter->getString('keyword'),
                 $params,
                 ['playlist.name'],
-                'playlist.playlistId'
+                ['playlist.playlistId']
             );
         }
 
@@ -502,11 +504,7 @@ class PlaylistFactory extends BaseFactory
         );
 
         // Sorting?
-        $order = '';
-
-        if (is_array($sortOrder)) {
-            $order .= ' ORDER BY ' . implode(',', $sortOrder);
-        }
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         $limit = '';
         // Paging
