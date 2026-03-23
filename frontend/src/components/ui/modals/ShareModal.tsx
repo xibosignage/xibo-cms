@@ -105,6 +105,11 @@ export default function ShareModal({
   );
   const [loading, setLoading] = useState(false);
 
+  const sort = sorting[0];
+
+  const sortBy = sort?.id;
+  const sortDir = sort?.desc ? 'desc' : 'asc';
+
   useEffect(() => {
     if (!openModal) {
       setModifiedPermissions({});
@@ -155,6 +160,7 @@ export default function ShareModal({
       accessorKey: 'type',
       header: t('Type'),
       enableHiding: true,
+      enableSorting: true,
       cell: ({ row }) => {
         const value = row.original.type;
         if (!value) {
@@ -241,6 +247,8 @@ export default function ShareModal({
             length,
             type: filter as UserType,
             name: nameFilter || undefined,
+            sortBy,
+            sortDir,
           });
         } else {
           response = await fetchPermissions({
@@ -250,6 +258,8 @@ export default function ShareModal({
             length,
             type: filter as UserType,
             name: nameFilter || undefined,
+            sortBy,
+            sortDir,
           });
         }
 
@@ -283,6 +293,8 @@ export default function ShareModal({
     entityId,
     entityType,
     t,
+    sortBy,
+    sortDir,
   ]);
 
   useEffect(() => {

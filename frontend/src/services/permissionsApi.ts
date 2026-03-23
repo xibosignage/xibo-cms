@@ -71,6 +71,8 @@ export interface FetchPermissionsRequest {
   name?: string;
   type?: UserType;
   signal?: AbortSignal;
+  sortBy?: string;
+  sortDir?: string;
 }
 
 export interface FetchMultiPermissionsRequest {
@@ -81,6 +83,8 @@ export interface FetchMultiPermissionsRequest {
   start?: number;
   length?: number;
   signal?: AbortSignal;
+  sortBy?: string;
+  sortDir?: string;
 }
 
 export interface FetchPermissionsResponse {
@@ -109,6 +113,8 @@ const buildFetchParams = (options: {
   name?: string;
   type?: UserType;
   ids?: string;
+  sortBy?: string;
+  sortDir?: string;
 }) => {
   const params: Record<string, string | number> = {
     start: options.start ?? 0,
@@ -128,6 +134,14 @@ const buildFetchParams = (options: {
     params.isUserSpecific = 0;
   }
 
+  if (options.sortBy) {
+    params.sortBy = options.sortBy;
+  }
+
+  if (options.sortDir) {
+    params.sortDir = options.sortDir;
+  }
+
   return params;
 };
 
@@ -139,9 +153,11 @@ export async function fetchPermissions({
   name,
   type,
   signal,
+  sortBy,
+  sortDir,
 }: FetchPermissionsRequest): Promise<FetchPermissionsResponse> {
   const response = await http.get<PermissionEntry[]>(`/user/permissions/${entity}/${id}`, {
-    params: buildFetchParams({ start, length, name, type }),
+    params: buildFetchParams({ start, length, name, type, sortBy, sortDir }),
     signal,
   });
 
@@ -161,11 +177,13 @@ export async function fetchMultiPermissions({
   start,
   length,
   signal,
+  sortBy,
+  sortDir,
 }: FetchMultiPermissionsRequest): Promise<FetchPermissionsResponse> {
   const response = await http.get<Record<string, MultiPermissionItem>>(
     `/user/permissions/${entity}`,
     {
-      params: buildFetchParams({ ids: ids.join(','), name, start, length }),
+      params: buildFetchParams({ ids: ids.join(','), name, start, length, sortBy, sortDir }),
       signal,
     },
   );
