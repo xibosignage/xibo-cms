@@ -27,3 +27,5 @@ jobs:
           path-to-document: 'https://github.com/xibosignage/xibo/blob/main/cla-1.0.md'
           branch: 'main'
           allowlist: dependabot[bot]
+          remote-organization-name: xibosignage
+          remote-repository-name: xibo
