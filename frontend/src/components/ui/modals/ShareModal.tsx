@@ -108,7 +108,7 @@ export default function ShareModal({
   const sort = sorting[0];
 
   const sortBy = sort?.id;
-  const sortDir = sort?.desc ? 'desc' : 'asc';
+  const sortDir = sort ? (sort.desc ? 'desc' : 'asc') : undefined;
 
   useEffect(() => {
     if (!openModal) {
