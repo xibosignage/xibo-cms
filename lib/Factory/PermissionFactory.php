@@ -271,12 +271,22 @@ class PermissionFactory extends BaseFactory
             $params['isUserSpecific'] = $sanitizedFilter->getInt('isUserSpecific');
         }
 
-        $order = '';
-        if ($sortOrder == null) {
-            $order = 'ORDER BY joinedGroup.isEveryone DESC, joinedGroup.isUserSpecific, joinedGroup.`group`';
-        } else if (is_array($sortOrder)) {
-            $order = 'ORDER BY ' . implode(',', $sortOrder);
-        }
+        // Sorting
+        $customColumns = [
+            'name' => '`group`',
+            'type' => '`isUserSpecific`',
+        ];
+
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            [],
+            $customColumns,
+            ['resolution ASC']
+        );
+
+        $order = !empty($sortOrder)
+            ? 'ORDER BY ' . implode(',', $sortOrder)
+            : 'ORDER BY joinedGroup.isEveryone DESC, joinedGroup.isUserSpecific, joinedGroup.`group`';
 
         $limit = '';
         // Paging

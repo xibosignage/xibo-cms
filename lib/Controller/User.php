@@ -1420,8 +1420,24 @@ class User extends Base
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
         }
 
+        $userPermissionsSortQuery = $this->gridRenderSort(
+            $sanitizedParams,
+            $this->isJson($request),
+            'group'
+        );
+        $userPermissionsFilterBy = $this->gridRenderFilter([
+            'name' => $sanitizedParams->getString('name'),
+            'isUserSpecific' => $sanitizedParams->getInt('isUserSpecific')
+        ], $sanitizedParams);
+
         // List of all Groups with a view / edit / delete check box
-        $permissions = $this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $id, $this->gridRenderSort($sanitizedParams), $this->gridRenderFilter(['name' => $sanitizedParams->getString('name'), 'isUserSpecific' => $sanitizedParams->getInt('isUserSpecific')], $sanitizedParams));
+        $permissions = $this->permissionFactory->getAllByObjectId(
+            $this->getUser(),
+            $object->permissionsClass(),
+            $id,
+            $userPermissionsSortQuery,
+            $userPermissionsFilterBy
+        );
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($permissions);
