@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor, fireEvent, act, within } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type React from 'react';
 import { MemoryRouter } from 'react-router-dom';
@@ -88,9 +88,9 @@ const mockUser = {
   phone: '123456789',
   features: {
     'folder.view': true,
-    'media.share': true,  
-    'media.delete': true, 
-    'media.edit': true,   
+    'media.share': true,
+    'media.delete': true,
+    'media.edit': true,
     'media.view': true,
   } as UserFeatures,
 } as User;
@@ -344,7 +344,7 @@ describe('Media page', () => {
     expect(screen.getByRole('table')).toBeInTheDocument();
   });
 
- test('opens Add Media modal and simulates file upload', async () => {
+  test('opens Add Media modal and simulates file upload', async () => {
     const user = userEvent.setup({ delay: null });
     renderMediaPage();
 
@@ -375,8 +375,8 @@ describe('Media page', () => {
             mediaType: 'image',
             thumbnail: 'blob:fake-thumbnail-url',
             tags: [],
-            userPermissions: { view: true, edit: true, delete: true }
-          }
+            userPermissions: { view: true, edit: true, delete: true },
+          },
         ],
         totalCount: 1,
       },
@@ -400,7 +400,7 @@ describe('Media page', () => {
     // Check either the Table Row or a Grid Div for the thumbnail image
     const newRow = newEntry.closest('tr') || newEntry.closest('div');
     const newThumb = newRow?.querySelector('img');
-    expect(newThumb).toBeInTheDocument(); 
+    expect(newThumb).toBeInTheDocument();
   });
 
   test('verifies media selection behaviours and bulk actions', async () => {
@@ -444,8 +444,8 @@ describe('Media page', () => {
     expect(rowCheckboxes[1]).toBeChecked();
 
     // Covers: Verify “select all” checkbox behaviour.
-    fireEvent.click(selectAllCheckbox); 
-    fireEvent.click(selectAllCheckbox); 
+    fireEvent.click(selectAllCheckbox);
+    fireEvent.click(selectAllCheckbox);
     expect(rowCheckboxes[0]).toBeChecked();
     expect(rowCheckboxes[1]).toBeChecked();
   });
@@ -538,7 +538,7 @@ describe('Media page', () => {
 
     const confirmButton = await screen.findByRole('button', { name: /Yes, Delete/i });
     fireEvent.click(confirmButton);
-    
+
     await waitFor(() => {
       expect(screen.getByText('error_target.jpg')).toBeInTheDocument();
     });
@@ -582,15 +582,15 @@ describe('Media page', () => {
     (useMediaData as any).mockReturnValue({
       data: {
         rows: [
-          { 
-            mediaId: 1, 
+          {
+            mediaId: 1,
             name: '8.jpg', // Using the exact filename from your HTML snippet
-            mediaType: 'image', 
+            mediaType: 'image',
             downloadUrl: 'blob:http://localhost:5173/fake-blob',
             thumbnail: 'blob:http://localhost:5173/fake-blob-thumb',
             tags: [],
-            userPermissions: { view: true, edit: true } 
-          }
+            userPermissions: { view: true, edit: true },
+          },
         ],
         totalCount: 1,
       },
@@ -604,10 +604,10 @@ describe('Media page', () => {
     // Find the row and the actual <img> thumbnail inside it
     const targetText = await screen.findByText('8.jpg');
     const tableRow = targetText.closest('tr');
-    if (!tableRow) throw new Error("Could not find table row!");
+    if (!tableRow) throw new Error('Could not find table row!');
 
     const thumbnailImg = tableRow.querySelector('img');
-    if (!thumbnailImg) throw new Error("Could not find thumbnail image!");
+    if (!thumbnailImg) throw new Error('Could not find thumbnail image!');
 
     // Covers: Verify clicking media opens preview.
     await user.click(thumbnailImg);
@@ -623,11 +623,11 @@ describe('Media page', () => {
     expect(previewImages.length).toBeGreaterThanOrEqual(1);
 
     // Covers: Verify preview close action works.
-    // Because the "X" button has no aria-label, we find the <h3> heading, 
+    // Because the "X" button has no aria-label, we find the <h3> heading,
     // go up to the top bar container, and click the <button> next to it.
     const topBar = previewHeading.closest('div');
     const closePreviewBtn = topBar?.querySelector('button');
-    
+
     if (closePreviewBtn) {
       await user.click(closePreviewBtn);
     } else {
