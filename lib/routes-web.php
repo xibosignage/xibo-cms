@@ -599,14 +599,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['transition.view']));
 
 //
-// sessions
-//
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/sessions/view', ['\Xibo\Controller\Sessions','displayPage'])->setName('sessions.view');
-    $group->get('/sessions/form/logout/{id}', ['\Xibo\Controller\Sessions','confirmLogoutForm'])->setName('sessions.confirm.logout.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['session.view']));
-
-//
 // fault
 //
 $app->get('/fault/view', ['\Xibo\Controller\Fault','displayPage'])

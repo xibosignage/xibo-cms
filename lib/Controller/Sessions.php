@@ -63,95 +63,35 @@ class Sessions extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    function displayPage(Request $request, Response $response)
-    {
-        $this->getState()->template = 'sessions-page';
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
     public function grid(Request $request, Response $response): Response|\Psr\Http\Message\ResponseInterface
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
 
-        $sessions = $this->sessionFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter([
-            'type' => $sanitizedQueryParams->getString('type'),
-            'fromDt' => $sanitizedQueryParams->getString('fromDt'),
-            'lastAccessedDateFrom' => $sanitizedQueryParams->getString('lastAccessedDateFrom'),
-            'lastAccessedDateTo' => $sanitizedQueryParams->getString('lastAccessedDateTo'),
-        ], $sanitizedQueryParams));
+        // Construct the SQL
+        $sessionsSortQuery = $this->gridRenderSort(
+            $sanitizedQueryParams,
+            $this->isJson($request),
+            'lastAccessed'
+        );
+        $sessionsFilterQuery = $this->getSessionsFilter($sanitizedQueryParams);
 
-        foreach ($sessions as $row) {
-            /* @var \Xibo\Entity\Session $row */
+        $sessions = $this->sessionFactory->query($sessionsSortQuery, $sessionsFilterQuery);
 
+        foreach ($sessions as $session) {
             // Normalise the date
-            $row->lastAccessed =
-                Carbon::createFromTimeString($row->lastAccessed)?->format(DateFormatHelper::getSystemFormat());
-
-            if ((!$this->isApi($request) && !$this->isJson($request)) && $this->getUser()->isSuperAdmin()) {
-                $row->includeProperty('buttons');
-
-                // No buttons on expired sessions
-                if ($row->isExpired == 1) {
-                    continue;
-                }
-
-                // logout, current user/session
-                if ($row->userId === $this->getUser()->userId && session_id() === $row->sessionId) {
-                    $url = $this->urlFor($request, 'logout');
-                } else {
-                    // logout, different user/session
-                    $url = $this->urlFor(
-                        $request,
-                        'sessions.confirm.logout.form',
-                        ['id' => $row->userId]
-                    );
-                }
-
-                $row->buttons[] = [
-                    'id' => 'sessions_button_logout',
-                    'url' => $url,
-                    'text' => __('Logout')
-                ];
-            }
+            $session->lastAccessed =
+                Carbon::createFromTimeString($session->lastAccessed)?->format(DateFormatHelper::getSystemFormat());
+            $session->expiresAt =
+                Carbon::createFromTimestamp($session->expiresAt)?->format(DateFormatHelper::getSystemFormat());
+            $session->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($session));
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->sessionFactory->countLast();
-        $this->getState()->setData($sessions);
+        $recordsTotal = $this->sessionFactory->countLast();
 
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Confirm Logout Form
-     * @param Request $request
-     * @param Response $response
-     * @param int $id The UserID
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function confirmLogoutForm(Request $request, Response $response, $id)
-    {
-        if ($this->getUser()->userTypeId != 1) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'sessions-form-confirm-logout';
-        $this->getState()->setData([
-            'userId' => $id,
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $recordsTotal)
+            ->withJson($sessions);
     }
 
     /**
@@ -180,5 +120,20 @@ class Sessions extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Get the sessions filters
+     * @param $sanitizedQueryParams
+     * @return array
+     */
+    private function getSessionsFilter($sanitizedQueryParams): array
+    {
+        return $this->gridRenderFilter([
+            'type' => $sanitizedQueryParams->getString('type'),
+            'fromDt' => $sanitizedQueryParams->getString('fromDt'),
+            'lastAccessedDateFrom' => $sanitizedQueryParams->getString('lastAccessedDateFrom'),
+            'lastAccessedDateTo' => $sanitizedQueryParams->getString('lastAccessedDateTo'),
+        ], $sanitizedQueryParams);
     }
 }

@@ -33,23 +33,24 @@ import type { ActionItem, BaseModalType } from '@/types/table';
 
 export interface SessionFilterInput {
   type?: string | null;
-  fromDate?: string;
+  lastModified?: string;
 }
 
 export type ModalType = BaseModalType | null;
 
 export const INITIAL_FILTER_STATE: SessionFilterInput = {
   type: '',
-  fromDate: '',
+  lastModified: '',
 };
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<SessionFilterInput>[] => [
   {
     label: t('From Date'),
-    name: 'fromDate',
+    name: 'lastModified',
     className: '',
     shouldTranslateOptions: true,
     showAllOption: false,
+    allowCustomRange: true,
     options: getCommonFormOptions(t).lastModifiedFilter,
   },
   {
@@ -107,6 +108,7 @@ export const getSessionColumns = (props: SessionActionsProps): ColumnDef<Session
       accessorKey: 'userName',
       header: t('User Name'),
       size: 140,
+      accessorFn: (row) => row.userName ?? '',
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
     {

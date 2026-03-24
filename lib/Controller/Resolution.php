@@ -47,21 +47,6 @@ class Resolution extends Base
         $this->resolutionFactory = $resolutionFactory;
     }
 
-    /**
-     * Display the Resolution Page
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    function displayPage(Request $request, Response $response)
-    {
-        $this->getState()->template = 'resolution-page';
-
-        return $this->render($request, $response);
-    }
-
     #[OA\Get(
         path: '/resolution',
         operationId: 'resolutionSearch',

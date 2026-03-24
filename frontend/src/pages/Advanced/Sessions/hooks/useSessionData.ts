@@ -64,9 +64,9 @@ export const useSessionData = ({
       const sortBy = sorting?.[0]?.id;
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
 
-      const { fromDate, ...restFilters } = advancedFilters;
-      const lastAccessedDateFrom = resolveLastModified(fromDate).modifiedDateFrom;
-      const lastAccessedDateTo = resolveLastModified(fromDate).modifiedDateTo;
+      const { lastModified, ...restFilters } = advancedFilters;
+      const lastAccessedDateFrom = resolveLastModified(lastModified).modifiedDateFrom;
+      const lastAccessedDateTo = resolveLastModified(lastModified).modifiedDateTo;
 
       const request: FetchSessionRequest = {
         start: startOffset,
