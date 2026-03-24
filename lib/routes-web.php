@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -232,30 +232,9 @@ $app->get('/library/search', ['\Xibo\Controller\Library','search'])
 $app->get('/library/connector/list', ['\Xibo\Controller\Library','providersList'])
     ->setName('library.search.providers');
 
-$app->get('/library/view', ['\Xibo\Controller\Library','displayPage'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['library.view']))
-    ->setName('library.view');
-
-$app->get('/library/form/uploadUrl', ['\Xibo\Controller\Library','uploadFromUrlForm'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['library.add']))
-    ->setName('library.uploadUrl.form');
-
 $app->post('/library/connector/import', ['\Xibo\Controller\Library', 'connectorImport'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['library.add']))
     ->setName('library.connector.import');
-
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/library/form/edit/{id}', ['\Xibo\Controller\Library', 'editForm'])->setName('library.edit.form');
-    $group->get('/library/form/delete/{id}', ['\Xibo\Controller\Library', 'deleteForm'])->setName('library.delete.form');
-    $group->get('/library/form/tidy', ['\Xibo\Controller\Library', 'tidyForm'])->setName('library.tidy.form');
-    $group->get('/library/form/copy/{id}', ['\Xibo\Controller\Library','copyForm'])->setName('library.copy.form');
-    $group->get('/library/form/setenablestat/{id}', ['\Xibo\Controller\Library','setEnableStatForm'])->setName('library.setenablestat.form');
-    $group->get('/library/form/{id}/selectfolder', ['\Xibo\Controller\Library','selectFolderForm'])->setName('library.selectfolder.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['library.modify']));
-
-$app->get('/library/form/usage/{id}', ['\Xibo\Controller\Library','usageForm'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['schedule.view', 'layout.view']))
-    ->setName('library.usage.form');
 
 //
 // display
