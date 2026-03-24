@@ -77,6 +77,13 @@ class Resolution extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
+        name: 'keyword',
+        description: 'Filter by Resolution name, ID, height, or width',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
         name: 'resolution',
         description: 'Filter by Resolution Name',
         in: 'query',
@@ -111,6 +118,29 @@ class Resolution extends Base
         required: false,
         schema: new OA\Schema(type: 'integer')
     )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: [
+                'resolutionId',
+                'resolution',
+                'width',
+                'height',
+                'enabled',
+            ]
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
     #[OA\Response(
         response: 200,
         description: 'successful operation',
@@ -131,123 +161,28 @@ class Resolution extends Base
     function grid(Request $request, Response $response)
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
-        // Show enabled
-        $filter = [
-            'enabled' => $sanitizedQueryParams->getInt('enabled', ['default' => -1]),
-            'resolutionId' => $sanitizedQueryParams->getInt('resolutionId'),
-            'resolution' => $sanitizedQueryParams->getString('resolution'),
-            'partialResolution' => $sanitizedQueryParams->getString('partialResolution'),
-            'width' => $sanitizedQueryParams->getInt('width'),
-            'height' => $sanitizedQueryParams->getInt('height'),
-            'orientation' => $sanitizedQueryParams->getString('orientation')
-        ];
 
-        $resolutions = $this->resolutionFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter($filter, $sanitizedQueryParams));
+        // Construct the SQL
+        $resolutionSortQuery = $this->gridRenderSort(
+            $sanitizedQueryParams,
+            $this->isJson($request),
+            'resolution'
+        );
+        $resolutionFilterQuery = $this->getResolutionFilter($sanitizedQueryParams);
 
+        $resolutions = $this->resolutionFactory->query($resolutionSortQuery, $resolutionFilterQuery);
+
+        // Add user permissions
         foreach ($resolutions as $resolution) {
-            /* @var \Xibo\Entity\Resolution $resolution */
-
-            if ($this->isApi($request) || $this->isJson($request))
-                break;
-
-            $resolution->includeProperty('buttons');
-
-            if ($this->getUser()->featureEnabled('resolution.modify')
-                && $this->getUser()->checkEditable($resolution)
-            ) {
-                // Edit Button
-                $resolution->buttons[] = array(
-                    'id' => 'resolution_button_edit',
-                    'url' => $this->urlFor($request,'resolution.edit.form', ['id' => $resolution->resolutionId]),
-                    'text' => __('Edit')
-                );
-            }
-
-            if ($this->getUser()->featureEnabled('resolution.modify')
-                && $this->getUser()->checkDeleteable($resolution)
-            ) {
-                // Delete Button
-                $resolution->buttons[] = array(
-                    'id' => 'resolution_button_delete',
-                    'url' => $this->urlFor($request,'resolution.delete.form', ['id' => $resolution->resolutionId]),
-                    'text' => __('Delete')
-                );
-            }
+            $resolution->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($resolution));
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->setData($resolutions);
-        $this->getState()->recordsTotal = $this->resolutionFactory->countLast();
+        $recordsTotal = $this->resolutionFactory->countLast();
 
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Resolution Add
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    function addForm(Request $request, Response $response)
-    {
-        $this->getState()->template = 'resolution-form-add';
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Resolution Edit Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    function editForm(Request $request, Response $response, $id)
-    {
-        $resolution = $this->resolutionFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($resolution)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'resolution-form-edit';
-        $this->getState()->setData([
-            'resolution' => $resolution,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Resolution Delete Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    function deleteForm(Request $request, Response $response, $id)
-    {
-        $resolution = $this->resolutionFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($resolution)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'resolution-form-delete';
-        $this->getState()->setData([
-            'resolution' => $resolution,
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $recordsTotal)
+            ->withJson($resolutions);
     }
 
     #[OA\Post(
@@ -258,9 +193,11 @@ class Resolution extends Base
         tags: ['resolution']
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['resolution', 'width', 'height'],
                 properties: [
                     new OA\Property(property: 'resolution', description: 'A name for the Resolution', type: 'string'),
                     new OA\Property(
@@ -273,23 +210,21 @@ class Resolution extends Base
                         description: 'The Display Height of the Resolution',
                         type: 'integer'
                     )
-                ],
-                required: ['resolution', 'width', 'height']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(
         response: 201,
         description: 'successful operation',
-        content: new OA\JsonContent(ref: '#/components/schemas/Resolution'),
         headers: [
             new OA\Header(
                 header: 'Location',
                 description: 'Location of the new record',
                 schema: new OA\Schema(type: 'string')
             )
-        ]
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/Resolution')
     )]
     /**
      * Add Resolution
@@ -305,12 +240,14 @@ class Resolution extends Base
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        /* @var \Xibo\Entity\Resolution $resolution */
-        $resolution = $this->resolutionFactory->create($sanitizedParams->getString('resolution'),
+        $resolution = $this->resolutionFactory->create(
+            $sanitizedParams->getString('resolution'),
             $sanitizedParams->getInt('width'),
-            $sanitizedParams->getInt('height'));
+            $sanitizedParams->getInt('height')
+        );
 
         $resolution->userId = $this->getUser()->userId;
+
         $resolution->save();
 
         // Return
@@ -339,9 +276,11 @@ class Resolution extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['resolution', 'width', 'height'],
                 properties: [
                     new OA\Property(property: 'resolution', description: 'A name for the Resolution', type: 'string'),
                     new OA\Property(
@@ -354,11 +293,9 @@ class Resolution extends Base
                         description: 'The Display Height of the Resolution',
                         type: 'integer'
                     )
-                ],
-                required: ['resolution', 'width', 'height']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(
         response: 200,
@@ -391,6 +328,7 @@ class Resolution extends Base
         $resolution->width = $sanitizedParams->getInt('width');
         $resolution->height = $sanitizedParams->getInt('height');
         $resolution->enabled = $sanitizedParams->getCheckbox('enabled');
+
         $resolution->save();
 
         // Return
@@ -446,5 +384,24 @@ class Resolution extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Get the resolution filters
+     * @param $sanitizedQueryParams
+     * @return array
+     */
+    private function getResolutionFilter($sanitizedQueryParams): array
+    {
+        return $this->gridRenderFilter([
+            'enabled' => $sanitizedQueryParams->getInt('enabled', ['default' => -1]),
+            'resolutionId' => $sanitizedQueryParams->getInt('resolutionId'),
+            'resolution' => $sanitizedQueryParams->getString('resolution'),
+            'keyword' => $sanitizedQueryParams->getString('keyword'),
+            'partialResolution' => $sanitizedQueryParams->getString('partialResolution'),
+            'width' => $sanitizedQueryParams->getInt('width'),
+            'height' => $sanitizedQueryParams->getInt('height'),
+            'orientation' => $sanitizedQueryParams->getString('orientation')
+        ], $sanitizedQueryParams);
     }
 }

@@ -504,19 +504,33 @@ class BaseFactory
         $body .= ' ) ';
     }
 
-    public function buildSortQuery(?array $sortOrder, $allowedColumns, $customColumns = []): ?array
-    {
+    /**
+     * @param array|null $sortOrder - the sort value from gridRenderSort
+     * @param array $allowedColumns - sortable columns in datatable
+     * @param array $customColumns - computed or formatted columns in datatable
+     * @param array $defaultSort - default sorting
+     * @return array
+     */
+    public function buildSortQuery(
+        ?array $sortOrder,
+        array $allowedColumns,
+        array $customColumns = [],
+        array $defaultSort = []
+    ): array {
         $columnMapping = [];
 
         foreach ($allowedColumns as $col) {
             $columnMapping[$col] = '`' . $col . '`';
         }
 
-        $columnMapping += $customColumns;
+        // Handle custom columns
+        foreach ($customColumns as $col => $name) {
+            $columnMapping[$col] = $name;
+        }
 
         $order = [];
 
-        foreach ($sortOrder as $sort) {
+        foreach ($sortOrder ?? $defaultSort as $sort) {
             // Separate sort by and sort order
             $sortArr = explode(' ', trim($sort), 2);
 
@@ -536,69 +550,81 @@ class BaseFactory
             $order[] = $columnMapping[$column] . $dir;
         }
 
-        return $order ?? null;
+        return $order;
     }
 
     /**
-     * @param string $searchTerm
-     * @param array $params
-     * @param array $columnsToSearch
-     * @param string|null $idColumn
+     * @param string $searchTerm - the keyword search term
+     * @param array $params - the list of params from the SQL query
+     * @param array $textColumns - text columns to search
+     * @param array $numericColumns - numeric columns to search
      * @return string
      */
     public function buildSearchQuery(
         string $searchTerm,
         array &$params,
-        array $columnsToSearch,
-        ?string $idColumn = null
+        array $textColumns,
+        array $numericColumns,
     ): string {
-        // Sanitize and handle multi-word search
         $terms = array_filter(array_map('trim', explode(',', $searchTerm)));
-        $search = implode(' ', $terms);
+
+        if (empty($terms)) {
+            return '';
+        }
+
+        $fulltextTerms = [];
+        $fallbackTerms = [];
+        $conditions = [];
+
+        foreach ($terms as $term) {
+            if (preg_match('/^[a-zA-Z]+$/', $term) && strlen($term) >= 4) {
+                $fulltextTerms[] = $term;
+            } else {
+                $fallbackTerms[] = $term;
+            }
+        }
 
         // Prepare fulltext search term
-        $body = ' AND (
-                    MATCH(' . implode(', ', $columnsToSearch) . ')
-                    AGAINST (:search IN BOOLEAN MODE)';
-
-        $params['search'] = $search;
+        if (!empty($fulltextTerms)) {
+            $conditions[] = 'MATCH(' . implode(', ', $textColumns) . ') AGAINST (:search IN BOOLEAN MODE)';
+            $params['search'] = implode(' ', $fulltextTerms);
+        }
 
         // Fallback for short or alphanumeric terms
-        foreach ($terms as $i => $term) {
-            $isAlphaNumeric = preg_match('/[a-zA-Z]/', $term) && preg_match('/[0-9]/', $term);
+        foreach ($fallbackTerms as $i => $term) {
+            $key = 'like_' . $i;
+            $likeClauses = [];
 
-            if ($isAlphaNumeric || strlen($term) < 4) {
-                $key = 'like_' . $i;
-                $likeClauses = implode(
-                    ' OR ',
-                    array_map(fn($col) => $col . ' LIKE :' . $key, $columnsToSearch)
-                );
-
-                $body .= ' OR (' . $likeClauses . ')';
-
-                $params[$key] = '%' . $term . '%';
+            foreach ($textColumns as $col) {
+                $likeClauses[] = $col . ' LIKE :' . $key;
             }
+
+            $params[$key] = '%' . $term . '%';
+            $conditions[] = '(' . implode(' OR ', $likeClauses) . ')';
         }
 
-        // Filter numeric inputs and search by ID column
-        if ($idColumn !== null) {
-            $ids = array_filter($terms, 'ctype_digit');
+        $numericTerms = array_filter($terms, 'ctype_digit');
 
-            if (!empty($ids)) {
-                $placeholders = [];
+        // Filter numeric inputs and search by numeric columns
+        if (!empty($numericTerms)) {
+            $placeholders = [];
 
-                foreach ($ids as $i => $id) {
-                    $key = 'id_' . $i;
-                    $placeholders[] = ':' . $key;
-                    $params[$key] = (int) $id;
-                }
-
-                $body .= ' OR ' . $idColumn . ' IN (' . implode(', ', $placeholders) . ')';
+            foreach ($numericTerms as $i => $term) {
+                $key = 'num_' . $i;
+                $placeholders[] = ':' . $key;
+                $params[$key] = (int) $term;
             }
+
+            $inClause = 'IN (' . implode(', ', $placeholders) . ')';
+            $numericClauses = [];
+
+            foreach ($numericColumns as $col) {
+                $numericClauses[] = $col . ' ' . $inClause;
+            }
+
+            $conditions[] = '(' . implode(' OR ', $numericClauses) . ')';
         }
 
-        $body .= ')';
-
-        return $body;
+        return !empty($conditions) ? ' AND (' . implode(' OR ', $conditions) . ')' : '';
     }
 }

@@ -530,9 +530,12 @@ class MediaFactory extends BaseFactory
             'resolution'        => '(media.`width` * media.`height`)'
         ];
 
-        $sortOrder = ($sortOrder === null)
-            ? ['name']
-            : $this->buildSortQuery($sortOrder, $allowedColumns, $customColumns);
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            $customColumns,
+            ['name ASC']
+        );
 
         $entries = [];
         $params = [];
@@ -686,7 +689,7 @@ class MediaFactory extends BaseFactory
                 $sanitizedFilter->getString('keyword'),
                 $params,
                 ['media.name', 'media.originalFileName', 'media.storedAs'],
-                'media.mediaId'
+                ['media.mediaId']
             );
         }
 
@@ -979,11 +982,8 @@ class MediaFactory extends BaseFactory
         );
 
         // Sorting?
-        $order = '';
-        if (is_array($sortOrder)) {
-            $order .= ' ORDER BY ' . implode(',', $sortOrder);
-        }
-
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
+        
         $limit = '';
         // Paging
         if ($sanitizedFilter->hasParam('start') && $sanitizedFilter->hasParam('length')) {
