@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -132,9 +132,18 @@ class WidgetSyncTask implements TaskInterface
                         }
 
                         // Refresh the cache if needed.
-                        $isDisplaySpecific = str_contains($cacheKey, '%displayId%')
-                            || (str_contains($cacheKey, '%useDisplayLocation%')
-                                && $dataProvider->getProperty('useDisplayLocation') == 1);
+                        $isDisplaySpecific = false;
+
+                        if (str_contains($cacheKey, '%displayId%')) {
+                            $isDisplaySpecific = true;
+                        } else if (str_contains($cacheKey, '%useDisplayLocation%')) {
+                            // Decorate the module
+                            $module->decorateProperties($widget);
+
+                            if ($dataProvider->getProperty('useDisplayLocation') == 1) {
+                                $isDisplaySpecific = true;
+                            }
+                        }
 
                         // We're either assigning all media to all displays, or we're assigning them one by one
                         if ($isDisplaySpecific) {
