@@ -32,7 +32,6 @@ import ShareModal from '@/components/ui/modals/ShareModal';
 import type { useFolderActions } from '@/hooks/useFolderActions';
 import type { Layout } from '@/types/layout';
 import type { User } from '@/types/user';
-// import type { Tag } from '@/types/tag';
 
 interface LayoutModalsProps {
   actions: {
@@ -54,7 +53,6 @@ interface LayoutModalsProps {
   };
   handlers: {
     confirmDelete: (items: Layout[]) => void;
-    // handleConfirmClone: (newName: string, description: string, copyMedia: boolean) => void;
     handleConfirmClone: (newName: string, description: string, copyMedia: boolean) => void;
     handleConfirmMove: (newFolderId: number) => void;
   };

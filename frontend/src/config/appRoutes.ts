@@ -134,7 +134,8 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'templates',
         labelKey: 'Templates',
-        externalURL: '/template/view',
+        lazy: () =>
+          import('@/pages/Design/Templates/Templates').then((m) => ({ Component: m.default })),
         feature: 'template.view',
       },
       {
