@@ -76,30 +76,30 @@ export function useTemplateActions({
   };
 
   const handleConfirmClone = async (
-    selectedLayout: Template | null,
+    selectedTemplate: Template | null,
     newName: string,
     description: string,
     copyMediaFiles: boolean,
   ) => {
-    if (!selectedLayout) {
+    if (!selectedTemplate) {
       return;
     }
     try {
       setIsCloning(true);
 
-      await copyLayout(selectedLayout.layoutId, {
+      await copyLayout(selectedTemplate.layoutId, {
         name: newName,
         description,
         copyMediaFiles: copyMediaFiles ? 1 : 0,
       });
 
-      notify.success(t('Layout copied successfully'));
+      notify.success(t('Template copied successfully'));
       handleRefresh();
       closeModal();
-      console.log('copy layout', selectedLayout, newName, description, copyMediaFiles);
+      console.log('copy template', selectedTemplate, newName, description, copyMediaFiles);
     } catch (error) {
-      console.error('Copy layout failed', error);
-      notify.error(t('Failed to copy layout'));
+      console.error('Copy template failed', error);
+      notify.error(t('Failed to copy template'));
     } finally {
       setIsCloning(false);
     }

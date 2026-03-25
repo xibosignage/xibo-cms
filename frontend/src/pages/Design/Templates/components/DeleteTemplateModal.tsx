@@ -71,7 +71,7 @@ export default function DeleteTemplateModal({
             </div>
           </div>
           <h2 className="text-center text-lg font-semibold mb-2 text-red-800">
-            {itemCount === 1 ? t('Delete Layout?') : t('Delete Layouts?')}
+            {itemCount === 1 ? t('Delete Template?') : t('Delete Templates?')}
           </h2>
         </div>
         <p className="text-center text-gray-500">
@@ -82,7 +82,7 @@ export default function DeleteTemplateModal({
           ) : (
             <>
               {t('Are you sure you want to delete ')}
-              <strong>{itemCount}</strong> {t('layouts')}?
+              <strong>{itemCount}</strong> {t('templates')}?
             </>
           )}
         </p>

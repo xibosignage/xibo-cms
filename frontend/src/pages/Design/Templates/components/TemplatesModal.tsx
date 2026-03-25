@@ -53,7 +53,7 @@ interface TemplatesModalsProps {
   handlers: {
     confirmDelete: (items: Template[]) => void;
     handleConfirmMove: (newFolderId: number) => void;
-    handleConfirmClone: (newName: string, description: string, copyLayout: boolean) => void;
+    handleConfirmClone: (newName: string, description: string, copyTemplate: boolean) => void;
   };
   folderActions: ReturnType<typeof useFolderActions>;
 }
@@ -117,8 +117,8 @@ export function TemplateModals({
       <CopyTemplateModal
         isOpen={isModalOpen('copy')}
         onClose={actions.closeModal}
-        onConfirm={(name, description, copyLayout) =>
-          handlers.handleConfirmClone(name, description, copyLayout)
+        onConfirm={(name, description, copyTemplate) =>
+          handlers.handleConfirmClone(name, description, copyTemplate)
         }
         template={selection.selectedTemplate}
         isLoading={actions.isCloning}

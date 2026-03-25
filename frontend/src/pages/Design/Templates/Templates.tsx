@@ -409,7 +409,7 @@ export default function Templates() {
           {!isHydrated ? (
             <div className="flex-1 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
               <span className="text-gray-400 font-medium">
-                {t('Loading your layout preferences...')}
+                {t('Loading your template preferences...')}
               </span>
             </div>
           ) : (
@@ -460,8 +460,8 @@ export default function Templates() {
         handlers={{
           confirmDelete,
           handleConfirmMove: (folderId) => handleConfirmMove(itemsToMove, folderId),
-          handleConfirmClone: (name, description, copyLayout) =>
-            handleConfirmClone(selectedTemplate, name, description, copyLayout),
+          handleConfirmClone: (name, description, copyTemplate) =>
+            handleConfirmClone(selectedTemplate, name, description, copyTemplate),
         }}
         folderActions={folderActions}
       />
