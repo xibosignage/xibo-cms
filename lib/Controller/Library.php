@@ -260,57 +260,6 @@ class Library extends Base
         return $this->mediaService->setUser($this->getUser());
     }
 
-    /**
-     * Displays the page logic
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function displayPage(Request $request, Response $response)
-    {
-        $sanitizedParams = $this->getSanitizer($request->getQueryParams());
-        $mediaId = $sanitizedParams->getInt('mediaId');
-
-        if ($mediaId !== null) {
-            $media = $this->mediaFactory->getById($mediaId);
-
-            if (!$this->getUser()->checkViewable($media)) {
-                throw new AccessDeniedException();
-            }
-
-            // Thumbnail
-            $module = $this->moduleFactory->getByType($media->mediaType);
-            $media->setUnmatchedProperty('thumbnail', '');
-
-            if ($module->hasThumbnail) {
-                $media->setUnmatchedProperty(
-                    'thumbnail',
-                    $this->urlFor(
-                        $request,
-                        'library.download',
-                        ['id' => $media->mediaId],
-                        ['preview' => 1]
-                    )
-                );
-            }
-
-            $media->setUnmatchedProperty('fileSizeFormatted', ByteFormatter::format($media->fileSize));
-
-            return $response
-                ->withStatus(200)
-                ->withJson(['media' => $media]);
-        }
-
-        return $response
-            ->withStatus(200)
-            ->withJson([
-                'modules' => $this->moduleFactory->getLibraryModules(),
-                'validExt' => implode('|', $this->moduleFactory->getValidExtensions([]))
-            ]);
-    }
-
     #[OA\Put(
         path: '/library/setenablestat/{mediaId}',
         operationId: 'mediaSetEnableStat',

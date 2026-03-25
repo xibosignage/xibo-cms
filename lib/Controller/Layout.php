@@ -1861,15 +1861,6 @@ class Layout extends Base
                 ];
             }
 
-            if ($this->getUser()->featureEnabled('library.view')) {
-                $layout->buttons[] = [
-                    'id' => 'layout_button_media_jump',
-                    'linkType' => '_self', 'external' => true,
-                    'url' => $this->urlFor($request, 'library.view') .'?layoutId=' . $layout->layoutId,
-                    'text' => __('Jump to Media included on this Layout')
-                ];
-            }
-
             $layout->buttons[] = ['divider' => true];
 
             // Only proceed if we have edit permissions
