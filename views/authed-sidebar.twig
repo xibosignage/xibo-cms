@@ -18,7 +18,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("layout.view") %}
-                <li class="sidebar-list"><a href="/prototype/design/layout">{% trans "Layouts" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/design/layout">{% trans "Layouts" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("template.view") %}

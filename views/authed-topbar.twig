@@ -60,7 +60,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("layout.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("layout.view") }}">{% trans "Layouts" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/design/layout">{% trans "Layouts" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("template.view") %}

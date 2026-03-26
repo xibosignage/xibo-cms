@@ -192,25 +192,6 @@ class Layout extends Base
     }
 
     /**
-     * Displays the Layout Page
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    function displayPage(Request $request, Response $response)
-    {
-        // TODO: Remove this route once the links have been setup in frontend
-        $url = '/prototype/design/layout';
-
-        return $response
-            ->withHeader('Location', $url)
-            ->withStatus(302);
-    }
-
-    /**
      * Display the Layout Designer
      * @param Request $request
      * @param Response $response

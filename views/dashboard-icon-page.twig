@@ -37,7 +37,7 @@
 
         {% if currentUser.featureEnabled("layout.view") %}
             <div class="dashicons">
-                <a href="{{ url_for("layout.view") }}">
+                <a href="{{ theme.rootUri() }}prototype/design/layout">
                     <img src="{{ theme.uri("img/dashboard/presentations.png") }}" class="dash_button" />
                     <span class="dash_text">{% trans "Layouts" %}</span>
                 </a>

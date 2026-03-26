@@ -119,10 +119,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 //
 // layouts
 //
-$app->get('/layout/view', ['\Xibo\Controller\Layout', 'displayPage'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.view']))
-    ->setName('layout.view');
-
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/layout/xlf/{id}', ['\Xibo\Controller\Preview', 'getXlf'])->setName('layout.getXlf');
     $group->get('/layout/background/{id}', ['\Xibo\Controller\Layout', 'downloadBackground'])->setName('layout.download.background');
