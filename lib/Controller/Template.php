@@ -94,6 +94,36 @@ class Template extends Base
         summary: 'Template Search',
         tags: ['template']
     )]
+    #[OA\Parameter(
+        name: 'keyword',
+        description: 'Filter by Resolution Name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: [
+                'layout',
+                'owner',
+                'publishedStatus',
+                'modifiedDt',
+                'orientation',
+            ]
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
     #[OA\Response(
         response: 200,
         description: 'successful operation',
@@ -120,20 +150,17 @@ class Template extends Base
             ? explode(',', $sanitizedQueryParams->getString('embed'))
             : [];
 
-        $templates = $this->layoutFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter([
-            'excludeTemplates' => 0,
-            'tags' => $sanitizedQueryParams->getString('tags'),
-            'layoutId' => $sanitizedQueryParams->getInt('templateId'),
-            'layout' => $sanitizedQueryParams->getString('template'),
-            'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
-            'folderId' => $sanitizedQueryParams->getInt('folderId'),
-            'logicalOperator' => $sanitizedQueryParams->getString('logicalOperator'),
-            'logicalOperatorName' => $sanitizedQueryParams->getString('logicalOperatorName'),
-        ], $sanitizedQueryParams));
+        $templateSortQuery = $this->gridRenderSort(
+            $sanitizedQueryParams,
+            $this->isJson($request),
+            'layout'
+        );
+
+        $templateFilterQuery = $this->getTemplateFilterQuery($sanitizedQueryParams);
+
+        $templates = $this->layoutFactory->query($templateSortQuery, $templateFilterQuery);
 
         foreach ($templates as $template) {
-            /* @var \Xibo\Entity\Layout $template */
-
             if (in_array('regions', $embed)) {
                 $template->load([
                     'loadPlaylists' => in_array('playlists', $embed),
@@ -144,14 +171,9 @@ class Template extends Base
                 ]);
             }
 
-            if ($this->isApi($request) || $this->isJson($request)) {
-                continue;
-            }
-
-            $template->includeProperty('buttons');
-
             // Thumbnail
             $template->setUnmatchedProperty('thumbnail', '');
+
             if (file_exists($template->getThumbnailUri())) {
                 $template->setUnmatchedProperty(
                     'thumbnail',
@@ -165,191 +187,15 @@ class Template extends Base
                 Parsedown::instance()->setSafeMode(true)->text($template->description),
             );
 
-            if ($this->getUser()->featureEnabled('template.modify')
-                && $this->getUser()->checkEditable($template)
-            ) {
-                // Design Button
-                $template->buttons[] = [
-                    'id' => 'layout_button_design',
-                    'linkType' => '_self', 'external' => true,
-                    'url' => $this->urlFor(
-                        $request,
-                        'layout.designer',
-                        ['id' => $template->layoutId]
-                    ) . '?isTemplateEditor=1',
-                    'text' => __('Alter Template')
-                ];
-
-                if ($template->isEditable()) {
-                    $template->buttons[] = ['divider' => true];
-
-                    $template->buttons[] = array(
-                        'id' => 'layout_button_publish',
-                        'url' => $this->urlFor($request, 'layout.publish.form', ['id' => $template->layoutId]),
-                        'text' => __('Publish')
-                    );
-
-                    $template->buttons[] = array(
-                        'id' => 'layout_button_discard',
-                        'url' => $this->urlFor($request, 'layout.discard.form', ['id' => $template->layoutId]),
-                        'text' => __('Discard')
-                    );
-
-                    $template->buttons[] = ['divider' => true];
-                } else {
-                    $template->buttons[] = ['divider' => true];
-
-                    // Checkout Button
-                    $template->buttons[] = array(
-                        'id' => 'layout_button_checkout',
-                        'url' => $this->urlFor($request, 'layout.checkout.form', ['id' => $template->layoutId]),
-                        'text' => __('Checkout'),
-                        'dataAttributes' => [
-                            ['name' => 'auto-submit', 'value' => true],
-                            [
-                                'name' => 'commit-url',
-                                'value' => $this->urlFor(
-                                    $request,
-                                    'layout.checkout',
-                                    ['id' => $template->layoutId]
-                                )
-                            ],
-                            ['name' => 'commit-method', 'value' => 'PUT']
-                        ]
-                    );
-
-                    $template->buttons[] = ['divider' => true];
-                }
-
-                // Edit Button
-                $template->buttons[] = array(
-                    'id' => 'layout_button_edit',
-                    'url' => $this->urlFor($request, 'template.edit.form', ['id' => $template->layoutId]),
-                    'text' => __('Edit')
-                );
-
-                // Select Folder
-                if ($this->getUser()->featureEnabled('folder.view')) {
-                    $template->buttons[] = [
-                        'id' => 'campaign_button_selectfolder',
-                        'url' => $this->urlFor($request, 'campaign.selectfolder.form', ['id' => $template->campaignId]),
-                        'text' => __('Select Folder'),
-                        'multi-select' => true,
-                        'dataAttributes' => [
-                            [
-                                'name' => 'commit-url',
-                                'value' => $this->urlFor(
-                                    $request,
-                                    'campaign.selectfolder',
-                                    ['id' => $template->campaignId]
-                                )
-                            ],
-                            ['name' => 'commit-method', 'value' => 'put'],
-                            ['name' => 'id', 'value' => 'campaign_button_selectfolder'],
-                            ['name' => 'text', 'value' => __('Move to Folder')],
-                            ['name' => 'rowtitle', 'value' => $template->layout],
-                            ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
-                        ]
-                    ];
-                }
-
-                // Copy Button
-                $template->buttons[] = array(
-                    'id' => 'layout_button_copy',
-                    'url' => $this->urlFor($request, 'layout.copy.form', ['id' => $template->layoutId]),
-                    'text' => __('Copy')
-                );
-            }
-
-            // Extra buttons if have delete permissions
-            if ($this->getUser()->featureEnabled('template.modify')
-                && $this->getUser()->checkDeleteable($template)) {
-                // Delete Button
-                $template->buttons[] = [
-                    'id' => 'layout_button_delete',
-                    'url' => $this->urlFor($request, 'layout.delete.form', ['id' => $template->layoutId]),
-                    'text' => __('Delete'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'layout.delete',
-                                ['id' => $template->layoutId]
-                            )
-                        ],
-                        ['name' => 'commit-method', 'value' => 'delete'],
-                        ['name' => 'id', 'value' => 'layout_button_delete'],
-                        ['name' => 'text', 'value' => __('Delete')],
-                        ['name' => 'sort-group', 'value' => 1],
-                        ['name' => 'rowtitle', 'value' => $template->layout]
-                    ]
-                ];
-            }
-
-            $template->buttons[] = ['divider' => true];
-
-            // Extra buttons if we have modify permissions
-            if ($this->getUser()->featureEnabled('template.modify')
-                && $this->getUser()->checkPermissionsModifyable($template)) {
-                // Permissions button
-                $template->buttons[] = [
-                    'id' => 'layout_button_permissions',
-                    'url' => $this->urlFor(
-                        $request,
-                        'user.permissions.form',
-                        ['entity' => 'Campaign', 'id' => $template->campaignId]
-                    ) . '?nameOverride=' . __('Template'),
-                    'text' => __('Share'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'user.permissions.multi',
-                                ['entity' => 'Campaign', 'id' => $template->campaignId]
-                            )
-                        ],
-                        ['name' => 'commit-method', 'value' => 'post'],
-                        ['name' => 'id', 'value' => 'layout_button_permissions'],
-                        ['name' => 'text', 'value' => __('Share')],
-                        ['name' => 'rowtitle', 'value' => $template->layout],
-                        ['name' => 'sort-group', 'value' => 2],
-                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        [
-                            'name' => 'custom-handler-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'user.permissions.multi.form',
-                                ['entity' => 'Campaign']
-                            )
-                        ],
-                        ['name' => 'content-id-name', 'value' => 'campaignId']
-                    ]
-                ];
-            }
-
-            if ($this->getUser()->featureEnabled('layout.export')) {
-                $template->buttons[] = ['divider' => true];
-
-                // Export Button
-                $template->buttons[] = array(
-                    'id' => 'layout_button_export',
-                    'linkType' => '_self',
-                    'external' => true,
-                    'url' => $this->urlFor($request, 'layout.export', ['id' => $template->layoutId]),
-                    'text' => __('Export')
-                );
-            }
+            $template->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($template));
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->layoutFactory->countLast();
-        $this->getState()->setData($templates);
+        $recordsTotal = $this->layoutFactory->countLast();
 
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $recordsTotal)
+            ->withJson($templates);
     }
 
     #[OA\Get(
@@ -737,53 +583,6 @@ class Template extends Base
     }
 
     /**
-     * Displays an Add/Edit form
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    function addForm(Request $request, Response $response)
-    {
-        $this->getState()->template = 'template-form-add';
-        $this->getState()->setData([
-            'resolutions' => $this->resolutionFactory->query(['resolution']),
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Edit form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function editForm(Request $request, Response $response, $id)
-    {
-        // Get the layout
-        $template = $this->layoutFactory->getById($id);
-
-        // Check Permissions
-        if (!$this->getUser()->checkEditable($template)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'template-form-edit';
-        $this->getState()->setData([
-            'layout' => $template,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
      * Get list of Template providers with their details.
      *
      * @param Request $request
@@ -798,5 +597,25 @@ class Template extends Base
         $providers = $event->getProviders();
 
         return $response->withJson($providers);
+    }
+
+    /**
+     * Get the template filters
+     * @param $sanitizedQueryParams
+     * @return array
+     */
+    private function getTemplateFilterQuery($sanitizedQueryParams): array
+    {
+        return $this->gridRenderFilter([
+            'excludeTemplates' => 0,
+            'keyword' => $sanitizedQueryParams->getString('keyword'),
+            'tags' => $sanitizedQueryParams->getString('tags'),
+            'layoutId' => $sanitizedQueryParams->getInt('templateId'),
+            'layout' => $sanitizedQueryParams->getString('template'),
+            'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
+            'folderId' => $sanitizedQueryParams->getInt('folderId'),
+            'logicalOperator' => $sanitizedQueryParams->getString('logicalOperator'),
+            'logicalOperatorName' => $sanitizedQueryParams->getString('logicalOperatorName'),
+        ], $sanitizedQueryParams);
     }
 }

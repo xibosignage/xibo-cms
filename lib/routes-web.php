@@ -126,7 +126,6 @@ $app->get('/layout/view', ['\Xibo\Controller\Layout', 'displayPage'])
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/layout/xlf/{id}', ['\Xibo\Controller\Preview', 'getXlf'])->setName('layout.getXlf');
     $group->get('/layout/background/{id}', ['\Xibo\Controller\Layout', 'downloadBackground'])->setName('layout.download.background');
-    $group->get('/layout/thumbnail/{id}', ['\Xibo\Controller\Layout', 'downloadThumbnail'])->setName('layout.download.thumbnail');
     $group->get('/layout/playerBundle', ['\Xibo\Controller\Preview', 'playerBundle'])->setName('layout.preview.bundle');
     $group->get('/connector/widget/preview', ['\Xibo\Controller\Connector', 'connectorPreview'])->setName('layout.preview.connector');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.view', 'template.view']));
@@ -370,14 +369,9 @@ $app->get('/campaign/{id}/preview', ['\Xibo\Controller\Campaign','preview'])
 $app->get('/template/connector/list', ['\Xibo\Controller\Template','providersList'])
     ->setName('template.search.providers');
 $app->get('/template/search', ['\Xibo\Controller\Template', 'search'])->setName('template.search.all');
-$app->get('/template/view', ['\Xibo\Controller\Template','displayPage'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['template.view']))
-    ->setName('template.view');
 
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/template/form/layout/{id}', ['\Xibo\Controller\Template', 'addTemplateForm'])->setName('template.from.layout.form');
-    $group->get('/template/form/add', ['\Xibo\Controller\Template', 'addForm'])->setName('template.add.form');
-    $group->get('/template/form/edit/{id}', ['\Xibo\Controller\Template', 'editForm'])->setName('template.edit.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['template.add']));
 
 //

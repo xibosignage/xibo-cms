@@ -64,7 +64,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("template.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("template.view") }}">{% trans "Templates" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/design/templates">{% trans "Templates" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("resolution.view") %}

@@ -146,7 +146,7 @@
             },
             template: {
                 list: {
-                    url: "{{ url_for("template.view") }}"
+                    url: "{{ theme.rootUri() }}prototype/design/templates"
                 },
                 getProviders: {
                     url: "{{ url_for("template.search.providers") }}",

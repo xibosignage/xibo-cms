@@ -73,7 +73,7 @@ export const useTemplateData = ({
       const request: FetchTemplateRequest = {
         start: startOffset,
         length: pagination.pageSize,
-        template: filter || undefined,
+        keyword: filter || undefined,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,

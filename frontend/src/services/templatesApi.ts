@@ -25,7 +25,7 @@ import type { Template } from '@/types/templates';
 export interface FetchTemplateRequest {
   start: number;
   length: number;
-  template?: string;
+  keyword?: string;
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;

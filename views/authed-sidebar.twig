@@ -22,7 +22,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("template.view") %}
-                <li class="sidebar-list"><a href="/prototype/design/templates">{% trans "Templates" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/design/templates">{% trans "Templates" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("resolution.view") %}

@@ -55,7 +55,7 @@
 
         {% if currentUser.featureEnabled("template.view") %}
             <div class="dashicons">
-                <a href="{{ url_for("template.view") }}">
+                <a href="{{ theme.rootUri() }}prototype/design/templates">
                     <img src="{{ theme.uri("img/dashboard/layouts.png") }}" class="dash_button" />
                     <span class="dash_text">{% trans "Templates" %}</span>
                 </a>
