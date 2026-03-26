@@ -465,6 +465,7 @@ $app->post('/user/pref', ['\Xibo\Controller\User' ,'prefEdit']);
 $app->put('/user/pref', ['\Xibo\Controller\User' ,'prefEditFromForm']);
 $app->get('/user/me', ['\Xibo\Controller\User','myDetails'])->setName('user.me');
 $app->get('/user', ['\Xibo\Controller\User','grid'])->setName('user.search');
+$app->get('/user/{id}/applications', ['\Xibo\Controller\User', 'applicationsGrid'])->setName('user.applications');
 $app->put('/user/profile/edit', ['\Xibo\Controller\User','editProfile'])->setName('user.edit.profile');
 $app->get('/user/profile/setup', ['\Xibo\Controller\User','tfaSetup'])->setName('user.setup.profile');
 $app->post('/user/profile/validate', ['\Xibo\Controller\User','tfaValidate'])->setName('user.validate.profile');

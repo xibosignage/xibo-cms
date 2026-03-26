@@ -66,6 +66,26 @@ export async function saveUserPreference({ option, value }: SavePreferenceParams
   });
 }
 
+export async function saveUserPreferencesBulk(preferences: Record<string, string>): Promise<void> {
+  const formData = new URLSearchParams(preferences);
+
+  await http.put('/user/pref', formData, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
+}
+
+export async function updateUserProfile(profileData: Record<string, string>): Promise<void> {
+  const formData = new URLSearchParams(profileData);
+
+  await http.put('/user/profile/edit', formData, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
+}
+
 export interface FetchPreferenceResponse {
   option: string;
   value: string;
@@ -90,4 +110,39 @@ export async function fetchUserPreference<T = Record<string, unknown>>(
   }
 
   return null;
+}
+
+// 2FA
+export async function fetch2FASetup(): Promise<{ qRUrl: string } | null> {
+  const response = await http.get('/user/profile/setup');
+  return response.data || null;
+}
+
+export async function generate2FARecoveryCodes(): Promise<string[]> {
+  const response = await http.get('/user/profile/recoveryGenerate');
+  const rawCodes = response.data?.codes;
+  return rawCodes ? JSON.parse(rawCodes) : [];
+}
+
+export async function fetch2FARecoveryCodes(): Promise<string[]> {
+  const response = await http.get('/user/profile/recoveryShow');
+  return response.data?.codes || [];
+}
+
+// User Apps
+export interface UserApplication {
+  id: number;
+  name: string;
+  approvedDate: string;
+  approvedIp: string;
+}
+
+export async function fetchUserApplications(userId: number): Promise<UserApplication[]> {
+  const response = await http.get(`/user/${userId}/applications`);
+
+  return response.data || [];
+}
+
+export async function revokeApplicationAccess(clientId: number, userId: number): Promise<void> {
+  await http.delete(`/application/revoke/${clientId}/${userId}`);
 }

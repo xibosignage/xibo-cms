@@ -2511,4 +2511,46 @@ class User extends Base
             default => __('Disabled'),
         };
     }
+
+    #[OA\Get(
+        path: '/user/{id}/applications',
+        operationId: 'userApplicationsGrid',
+        description: 'Get authorized applications for a specific user',
+        summary: 'User Applications',
+        tags: ['user']
+    )]
+    #[OA\Parameter(
+        name: 'id',
+        in: 'path',
+        description: 'The user ID',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation'
+    )]
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     */
+    public function applicationsGrid(Request $request, Response $response, $id)
+    {
+        $user = $this->userFactory->getById($id);
+
+        if ($this->getUser()->userId !== $user->userId && !$this->getUser()->checkEditable($user)) {
+            throw new AccessDeniedException();
+        }
+
+        $applications = $this->applicationFactory->getAuthorisedByUserId($user->userId);
+
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = count($applications);
+        $this->getState()->setData($applications);
+
+        return $this->render($request, $response);
+    }
 }

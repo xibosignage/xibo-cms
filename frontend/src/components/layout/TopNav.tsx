@@ -23,6 +23,8 @@ import { Bell, Menu } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { matchPath } from 'react-router-dom';
 
+import UserMenu from './UserMenu/UserMenu';
+
 import { APP_ROUTES } from '@/config/appRoutes';
 
 interface TopNavProps {
@@ -58,7 +60,7 @@ export default function TopNav({ pathName, onToggleMobileDrawer: onToggleSidebar
 
   return (
     <header className="sticky top-0 w-full px-5 py-4 bg-gray-50 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
-      <nav className="flex flex-row h-[38px] items-center justify-between">
+      <nav className="flex flex-row h-9.5 items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -70,20 +72,17 @@ export default function TopNav({ pathName, onToggleMobileDrawer: onToggleSidebar
           <div className="flex align-middle font-semibold text-[16px]">{t(pageTitle)}</div>
         </div>
         <div className="center gap-x-2">
-          <div className="center gap-x-3 relative h-[38px] w-[38px]">
+          <div className="center gap-x-3 relative h-9.5 w-9.5">
             <button>
               <Bell size={16} className="text-xibo-blue-600" />
             </button>
             {/* TODO: Update real badge data */}
-            <div className="w-[18px] h-[18px] bg-xibo-blue-600 rounded-full text-[10px] text-white absolute top-0 right-0 flex items-center justify-center">
+            <div className="w-4.5 h-4.5 bg-xibo-blue-600 rounded-full text-[10px] text-white absolute top-0 right-0 flex items-center justify-center">
               2
             </div>
           </div>
-          {/* TODO: Update with real user's initial */}
-          <div className="h-[38px] w-[38px] center flex">
-            <div className="bg-xibo-blue-300 h-[26px] w-[26px] text-[12px] center rounded-full text-xibo-blue-800 font-semibold">
-              WA
-            </div>
+          <div className="h-9.5 w-9.5 center flex">
+            <UserMenu />
           </div>
         </div>
       </nav>
