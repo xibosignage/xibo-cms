@@ -100,7 +100,7 @@
     "font-awesome": "^4.7.0",
     "form-serializer": "~2.5.0",
     "globalthis": "^1.0.4",
-    "handlebars": "^4.7.8",
+    "handlebars": "^4.7.9",
     "hls.js": "^1.5.13",
     "html-to-image": "^1.11.11",
     "imagesloaded": "^5.0.0",
