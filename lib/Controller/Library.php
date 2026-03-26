@@ -260,36 +260,6 @@ class Library extends Base
         return $this->mediaService->setUser($this->getUser());
     }
 
-    /**
-     * Redirect to the Media Library page
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function displayPage(Request $request, Response $response)
-    {
-        // TODO: Remove this route once the links have been setup in frontend
-        $url = '/prototype/library/media';
-        $sanitizedParams = $this->getSanitizer($request->getQueryParams());
-        $mediaId = $sanitizedParams->getInt('mediaId');
-
-        if ($mediaId !== null) {
-            $media = $this->mediaFactory->getById($mediaId);
-
-            if (!$this->getUser()->checkViewable($media)) {
-                throw new AccessDeniedException();
-            }
-
-            $url .= '?mediaId=' . urlencode($mediaId);
-        }
-
-        return $response
-            ->withHeader('Location', $url)
-            ->withStatus(302);
-    }
-
     #[OA\Put(
         path: '/library/setenablestat/{mediaId}',
         operationId: 'mediaSetEnableStat',

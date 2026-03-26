@@ -91,7 +91,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("library.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("library.view") }}">{% trans "Media" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/library/media">{% trans "Media" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("dataset.view") %}
