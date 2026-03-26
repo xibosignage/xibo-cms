@@ -74,7 +74,7 @@ export const useLayoutData = ({
       const request: FetchLayoutRequest = {
         start: startOffset,
         length: pagination.pageSize,
-        layout: filter || undefined,
+        keyword: filter || undefined,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,

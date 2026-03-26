@@ -253,6 +253,7 @@ class Layout implements \JsonSerializable
     // Read only properties
     public $owner;
     public $groupsWithPermissions;
+    public string $folderName;
 
     /**
      * @var int

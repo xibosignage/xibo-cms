@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -2153,9 +2153,17 @@ class LayoutFactory extends BaseFactory
         $entries = [];
         $params = [];
 
-        if ($sortOrder === null) {
-            $sortOrder = ['layout'];
-        }
+        // Sorting
+        $allowedColumns = ['layoutId', 'layout', 'publishedStatus', 'enableStat', 'duration', 'owner', 'modifiedDt',
+            'campaignId'
+        ];
+
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            ['valid' => '`status`'],
+            ['layout ASC']
+        );
 
         $select  = 'SELECT `layout`.layoutID, 
                         `layout`.parentId,
@@ -2185,6 +2193,7 @@ class LayoutFactory extends BaseFactory
                         `layout`.code,
                         `campaign`.folderId,
                         `campaign`.permissionsFolderId,
+                        `folder`.folderName,
                    ';
 
         if ($parsedFilter->getInt('campaignId') !== null) {
@@ -2205,14 +2214,19 @@ class LayoutFactory extends BaseFactory
                         ) AS groupsWithPermissions ";
         $params['permissionEntityForGroup'] = 'Xibo\\Entity\\Campaign';
 
-        $body  = "   FROM layout ";
-        $body .= '  INNER JOIN status ON status.id = layout.publishedStatusId ';
-        $body .= "  INNER JOIN `lkcampaignlayout` ";
-        $body .= "   ON lkcampaignlayout.LayoutID = layout.LayoutID ";
-        $body .= "   INNER JOIN `campaign` ";
-        $body .= "   ON lkcampaignlayout.CampaignID = campaign.CampaignID ";
-        $body .= "       AND campaign.IsLayoutSpecific = 1";
-        $body .= "   INNER JOIN `user` ON `user`.userId = `campaign`.userId ";
+        $body  = '  FROM layout 
+                    INNER JOIN status 
+                        ON status.id = layout.publishedStatusId
+                    INNER JOIN `lkcampaignlayout`
+                        ON lkcampaignlayout.LayoutID = layout.LayoutID
+                    INNER JOIN `campaign`
+                        ON lkcampaignlayout.CampaignID = campaign.CampaignID
+                            AND campaign.IsLayoutSpecific = 1
+                    INNER JOIN `user` 
+                        ON `user`.userId = `campaign`.userId
+                    INNER JOIN `folder` 
+                        ON `folder`.folderId = `campaign`.folderId
+                 ';
 
         if ($parsedFilter->getInt('campaignId') !== null) {
             // Join Campaign back onto it again
@@ -2639,15 +2653,22 @@ class LayoutFactory extends BaseFactory
             $params['type'] = $parsedFilter->getString('campaignType');
         }
 
+        if ($parsedFilter->getString('keyword') != null) {
+            // Fulltext search
+            $body .= $this->buildSearchQuery(
+                $parsedFilter->getString('keyword'),
+                $params,
+                ['layout.layout', 'layout.description'],
+                ['layout.layoutId', 'campaign.campaignId'],
+            );
+
+        }
+
         // Logged in user view permissions
         $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'campaign.campaignId', 'layout.userId', $filterBy, 'campaign.permissionsFolderId');
 
         // Sorting?
-        $order = '';
-
-        if (is_array($sortOrder)) {
-            $order .= ' ORDER BY ' . implode(',', $sortOrder);
-        }
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         $limit = '';
         // Paging
@@ -2694,7 +2715,7 @@ class LayoutFactory extends BaseFactory
             $layout->code = $parsedRow->getString('code');
             $layout->folderId = $parsedRow->getInt('folderId');
             $layout->permissionsFolderId = $parsedRow->getInt('permissionsFolderId');
-
+            $layout->folderName = $parsedRow->getString('folderName');
             $layout->groupsWithPermissions = $row['groupsWithPermissions'];
             $layout->setOriginals();
 
