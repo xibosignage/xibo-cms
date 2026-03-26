@@ -96,7 +96,7 @@ class Template extends Base
     )]
     #[OA\Parameter(
         name: 'keyword',
-        description: 'Filter by Resolution Name',
+        description: 'Filter by template name, ID, or description',
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'string')
@@ -332,9 +332,11 @@ class Template extends Base
         tags: ['template']
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['name'],
                 properties: [
                     new OA\Property(property: 'name', description: 'The layout name', type: 'string'),
                     new OA\Property(property: 'description', description: 'The layout description', type: 'string'),
@@ -348,23 +350,21 @@ class Template extends Base
                         description: 'Should we return the Draft Layout or the Published Layout on Success?',
                         type: 'boolean'
                     )
-                ],
-                required: ['name']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(
         response: 201,
         description: 'successful operation',
-        content: new OA\JsonContent(ref: '#/components/schemas/Layout'),
         headers: [
             new OA\Header(
                 header: 'Location',
                 description: 'Location of the new record',
                 schema: new OA\Schema(type: 'string')
             )
-        ]
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout')
     )]
     /**
      * Add a Template
@@ -453,9 +453,11 @@ class Template extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['includeWidgets', 'name'],
                 properties: [
                     new OA\Property(
                         property: 'includeWidgets',
@@ -469,23 +471,21 @@ class Template extends Base
                         type: 'string'
                     ),
                     new OA\Property(property: 'description', description: 'A description of the Template', type: 'string')
-                ],
-                required: ['includeWidgets', 'name']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(
         response: 201,
         description: 'successful operation',
-        content: new OA\JsonContent(ref: '#/components/schemas/Layout'),
         headers: [
             new OA\Header(
                 header: 'Location',
                 description: 'Location of the new record',
                 schema: new OA\Schema(type: 'string')
             )
-        ]
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout')
     )]
     /**
      * Add template
