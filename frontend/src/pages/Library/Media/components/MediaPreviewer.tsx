@@ -131,7 +131,11 @@ export default function MediaPreviewer({
     <div className="fixed inset-0 z-50 flex flex-col bg-black/80 h-dvh">
       <div className="flex w-full px-5 py-3 text-white justify-between">
         <div className="flex w-full items-center gap-3">
-          <button onClick={onClose} className="cursor-pointer rounded-lg hover:bg-white/10">
+          <button
+            onClick={onClose}
+            aria-label={t('Close')}
+            className="cursor-pointer rounded-lg hover:bg-white/10"
+          >
             <X className="p-1" />
           </button>
           <h3 className="font-semibold text-sm truncate">{fileName}</h3>

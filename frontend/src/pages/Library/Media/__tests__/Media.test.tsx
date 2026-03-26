@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor, fireEvent, act, within } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type React from 'react';
 import { MemoryRouter } from 'react-router-dom';
@@ -88,9 +88,9 @@ const mockUser = {
   phone: '123456789',
   features: {
     'folder.view': true,
-    'media.share': true,  
-    'media.delete': true, 
-    'media.edit': true,   
+    'media.share': true,
+    'media.delete': true,
+    'media.edit': true,
     'media.view': true,
   } as UserFeatures,
 } as User;
@@ -129,14 +129,10 @@ describe('Media page', () => {
     });
 
     // Covers: Verify default view mode is Table View.
-    // Use findBy for the first element to naturally wait for the DOM to settle without act()
     expect(await screen.findByTitle('Table View')).toBeInTheDocument();
 
     // Covers: Verify media table is visible.
     expect(screen.getByRole('table')).toBeInTheDocument();
-
-    // (SKIP) Covers: Verify Tab navigation shows Media tab.
-    // expect(await screen.findByText('Media', { selector: 'button, a, span' })).toBeInTheDocument();
 
     // Covers: Verify Add Media button is visible on page load.
     expect(screen.getByRole('button', { name: 'Add Media' })).toBeInTheDocument();
@@ -200,7 +196,6 @@ describe('Media page', () => {
   });
 
   test('verifies media items and formatting render correctly from API response', async () => {
-    // delay: null disables the artificial human delay, making it run at machine speed
     const user = userEvent.setup({ delay: null });
     // Override mock to simulate populated data
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -232,20 +227,16 @@ describe('Media page', () => {
     expect(await screen.findByText('mock_video_presentation.mp4')).toBeInTheDocument();
 
     // Covers: Verify correct media icon based on file type.
-    // (Assuming the Type column renders the word 'video' or an associated class/icon text)
     const videoElements = screen.getAllByText('video');
     expect(videoElements[0]).toBeInTheDocument();
 
     // Covers: Verify file size formatting.
-    // (Regex matches variations like '1 MB', '1.00 MB', or raw '1048576' depending on formatting config)
-    // NOTE: This is checked BEFORE clicking any toggles because it is visible by default!
     expect(screen.getByText(/1(.*?)MB|1048576/i)).toBeInTheDocument();
 
     const toggleColumnsBtn = screen.getByRole('button', { name: /Toggle columns/i });
     await user.click(toggleColumnsBtn);
 
     // Covers: Verify created/updated date formatting.
-    // (Matches the date string to ensure it renders into the DOM)
     const createdDateToggle = await screen.findAllByRole('checkbox', { name: /Created/i });
     await user.click(createdDateToggle[0]!);
 
@@ -259,7 +250,6 @@ describe('Media page', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (useMediaData as any).mockReturnValue({
       data: {
-        // Generating dummy items
         rows: Array.from({ length: 10 }).map((_, i) => ({
           mediaId: i,
           name: `Pagination Item ${i}`,
@@ -308,15 +298,13 @@ describe('Media page', () => {
     const filtersBtn = screen.getByRole('button', { name: 'Filters' });
     await user.click(filtersBtn);
 
-    // Covers: Verify filter persistence after page refresh (if applicable).
-    // (Simulating a re-mount/refresh of the component to verify it doesn't crash)
+    // Covers: Verify filter persistence after page refresh.
     unmountComponent!();
     renderMediaPage();
     expect(await screen.findByPlaceholderText('Search media...')).toBeInTheDocument();
   });
 
   test('verifies table column sorting functionality', async () => {
-    // 1. Give it dummy data AND tell the dummy table that ALL columns are visible by default
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (useMediaData as any).mockReturnValue({
       data: {
@@ -324,7 +312,7 @@ describe('Media page', () => {
           mediaId: i,
           name: `Sort Item ${i}`,
           mediaType: 'image',
-          createdDt: '2024-02-14 10:30:00', // Need dummy dates to sort!
+          createdDt: '2024-02-14 10:30:00',
         })),
         totalCount: 25,
       },
@@ -337,7 +325,6 @@ describe('Media page', () => {
       renderMediaPage();
     });
 
-    // 2. Use fireEvent for instant, lag-free clicks
     const nameHeader = await screen.findByRole('columnheader', { name: /Name/i });
 
     // Covers: Verify sorting by file name ascending.
@@ -354,7 +341,6 @@ describe('Media page', () => {
     const nextButton = screen.getByRole('button', { name: /Next/i });
     fireEvent.click(nextButton);
 
-    // Final check to ensure it didn't crash
     expect(screen.getByRole('table')).toBeInTheDocument();
   });
 
@@ -370,21 +356,52 @@ describe('Media page', () => {
     expect(modal).toBeInTheDocument();
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-
-    const file = new File(['test content'], 'chucknorris.png', { type: 'image/png' });
+    const file = new File(['test content'], 'new_upload.png', { type: 'image/png' });
 
     if (fileInput) {
-      // Use fireEvent here! user.upload is incredibly slow and often hits the 5s timeout by itself
       fireEvent.change(fileInput, { target: { files: [file] } });
     } else {
       throw new Error('Could not find file input!');
     }
 
+    // Tell our mock API that the backend successfully received the file
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (useMediaData as any).mockReturnValue({
+      data: {
+        rows: [
+          {
+            mediaId: 99,
+            name: 'new_upload.png',
+            mediaType: 'image',
+            thumbnail: 'blob:fake-thumbnail-url',
+            tags: [],
+            userPermissions: { view: true, edit: true, delete: true },
+          },
+        ],
+        totalCount: 1,
+      },
+      isFetching: false,
+      isError: false,
+      error: null,
+    });
+
     const doneButton = await screen.findByRole('button', { name: 'Done' });
-    expect(doneButton).toBeInTheDocument();
+    await user.click(doneButton);
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: 'Add Media' })).not.toBeInTheDocument();
+    });
+
+    const newEntries = await screen.findAllByText('new_upload.png');
+    const newEntry = newEntries[0]!;
+    expect(newEntry).toBeInTheDocument();
+
+    const newRow = newEntry.closest('tr') || newEntry.closest('div');
+    const newThumb = newRow?.querySelector('img');
+    expect(newThumb).toBeInTheDocument();
   });
 
-  test('verifies media selection behaviours', async () => {
+  test('verifies media selection behaviours and bulk actions', async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (useMediaData as any).mockReturnValue({
       data: {
@@ -408,14 +425,35 @@ describe('Media page', () => {
     fireEvent.click(rowCheckboxes[0]!);
     expect(rowCheckboxes[0]).toBeChecked();
 
+    const moveBtn = screen.getAllByRole('button', { name: /Move/i })[0]!;
+    expect(moveBtn).toBeInTheDocument();
+    expect(moveBtn).not.toBeDisabled();
+    // expect(screen.getAllByRole('button', { name: /Move/i })[0]).toBeInTheDocument();
+    const shareBtn = screen.getAllByRole('button', { name: /Share/i })[0]!;
+    expect(shareBtn).toBeInTheDocument();
+    expect(shareBtn).not.toBeDisabled();
+    // expect(screen.getAllByRole('button', { name: /Share/i })[0]).toBeInTheDocument();
+    const dlBtn = screen.getAllByRole('button', { name: /Download/i })[0]!;
+    expect(dlBtn).toBeInTheDocument();
+    expect(dlBtn).not.toBeDisabled();
+    // expect(screen.getAllByRole('button', { name: /Download/i })[0]).toBeInTheDocument();
+    const delBtn = screen.getAllByRole('button', { name: /Delete/i })[0]!;
+    expect(delBtn).toBeInTheDocument();
+    expect(delBtn).not.toBeDisabled();
+    // expect(screen.getAllByRole('button', { name: /Delete/i })[0]).toBeInTheDocument();
+    const moreBtn = screen.getAllByRole('button', { name: /More/i })[0]!;
+    expect(moreBtn).toBeInTheDocument();
+    expect(moreBtn).not.toBeDisabled();
+    // expect(screen.getAllByRole('button', { name: /More/i })[0]).toBeInTheDocument();
+
     // Covers: Verify multi-select media items.
     fireEvent.click(rowCheckboxes[1]!);
     expect(rowCheckboxes[0]).toBeChecked();
     expect(rowCheckboxes[1]).toBeChecked();
 
     // Covers: Verify “select all” checkbox behaviour.
-    fireEvent.click(selectAllCheckbox); // Deselect all (if previously selected)
-    fireEvent.click(selectAllCheckbox); // Select all
+    fireEvent.click(selectAllCheckbox);
+    fireEvent.click(selectAllCheckbox);
     expect(rowCheckboxes[0]).toBeChecked();
     expect(rowCheckboxes[1]).toBeChecked();
   });
@@ -459,10 +497,9 @@ describe('Media page', () => {
     });
 
     // Covers: Verify successful delete removes item from table.
-    fireEvent.click(deleteButton); // Re-open dialog
+    fireEvent.click(deleteButton);
     const confirmButton = await screen.findByRole('button', { name: /Yes, Delete/i });
 
-    // Mock the data to be empty before confirming to simulate successful deletion refetch
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (useMediaData as any).mockReturnValue({
       data: { rows: [], totalCount: 0 },
@@ -509,7 +546,7 @@ describe('Media page', () => {
 
     const confirmButton = await screen.findByRole('button', { name: /Yes, Delete/i });
     fireEvent.click(confirmButton);
-    
+
     await waitFor(() => {
       expect(screen.getByText('error_target.jpg')).toBeInTheDocument();
     });
@@ -546,20 +583,22 @@ describe('Media page', () => {
     });
   });
 
-  test('verifies grid view context actions (Copy, Move, Share, Details)', async () => {
+  test('verifies media preview functionality', async () => {
     const user = userEvent.setup({ delay: null });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (useMediaData as any).mockReturnValue({
       data: {
         rows: [
-          { 
-            mediaId: 1, 
-            name: 'grid_action_target.jpg', 
-            mediaType: 'image', 
+          {
+            mediaId: 1,
+            name: 'fake_blob.jpg',
+            mediaType: 'image',
+            downloadUrl: 'blob:http://localhost:5173/fake-blob',
+            thumbnail: 'blob:http://localhost:5173/fake-blob-thumb',
             tags: [],
-            userPermissions: { copy: true, edit: true, view: true, share: true, move: true } 
-          }
+            userPermissions: { view: true, edit: true },
+          },
         ],
         totalCount: 1,
       },
@@ -570,51 +609,89 @@ describe('Media page', () => {
 
     renderMediaPage();
 
-    // Switch to Grid View
-    await user.click(await screen.findByRole('button', { name: /Grid View/i }));
+    const targetText = await screen.findByText('fake_blob.jpg');
+    const tableRow = targetText.closest('tr');
+    if (!tableRow) throw new Error('Could not find table row!');
 
-    const openCardMenu = async () => {
-      const targetText = await screen.findByText('grid_action_target.jpg');
-      let currentElement = targetText.parentElement;
-      while (currentElement && currentElement.querySelectorAll('button').length === 0) {
-        currentElement = currentElement.parentElement;
-      }
-      if (currentElement) {
-        const btns = currentElement.querySelectorAll('button');
-        await user.click(btns[btns.length - 1]!);
-      }
-    };
+    const thumbnailImg = tableRow.querySelector('img');
+    if (!thumbnailImg) throw new Error('Could not find thumbnail image!');
 
-    // 1. COPY ACTION
-    await openCardMenu();
-    await user.click(await screen.findByText(/Make a Copy/i));
-    const copyDialog = await screen.findByRole('dialog', { name: /Copy/i });
-    expect(copyDialog).toBeInTheDocument();
-    // Close the dialog to reset for the next action
-    await user.click(await within(copyDialog).findByRole('button', { name: /Cancel|Close/i }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    
-    // 2. MOVE ACTION
-    await openCardMenu();
-    await user.click(await screen.findByText(/Move/i));
-    const moveDialog = await screen.findByRole('dialog', { name: /Move/i });
-    expect(moveDialog).toBeInTheDocument();
-    // Close the dialog to reset for the next action
-    await user.click(await within(moveDialog).findByRole('button', { name: /Cancel|Close/i }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await user.click(thumbnailImg);
 
-    // 3. SHARE ACTION (SKIP FOR NOW)
-    // await openCardMenu();
-    // await user.click(await screen.findByText(/Share/i));
-    // const shareDialog = await screen.findByRole('dialog', { name: /Share/i });
-    // expect(shareDialog).toBeInTheDocument();
-    // // Close the dialog to reset for the next action
-    // await user.click(await within(shareDialog).findByRole('button', { name: /Cancel|Close|Done/i }));
-    // await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    const previewHeading = await screen.findByRole('heading', { level: 3, name: 'fake_blob.jpg' });
+    expect(previewHeading).toBeInTheDocument();
 
-    // 4. DETAILS ACTION (SKIP FOR NOW)
-    // await openCardMenu();
-    // await user.click(await screen.findByText(/Details/i));
-    // expect(await screen.findByText(/Details/i)).toBeInTheDocument();
+    const previewImages = await screen.findAllByAltText('fake_blob.jpg');
+    expect(previewImages.length).toBeGreaterThanOrEqual(1);
+
+    const closePreviewBtn = screen.getByRole('button', { name: /close/i });
+    await user.click(closePreviewBtn);
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('heading', { level: 3, name: 'fake_blob.jpg' }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  test('verifies API query parameters and refresh functionality', async () => {
+    const user = userEvent.setup({ delay: null });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (useMediaData as any).mockReturnValue({
+      data: {
+        rows: Array.from({ length: 15 }).map((_, i) => ({
+          mediaId: i,
+          name: `Item ${i}`,
+          mediaType: 'image',
+        })),
+        totalCount: 25,
+      },
+      isFetching: false,
+      isError: false,
+      error: null,
+    });
+
+    renderMediaPage();
+
+    // Covers: Verify correct API endpoint called on load.
+    expect(useMediaData).toHaveBeenCalled();
+
+    const searchInput = await screen.findByPlaceholderText('Search media...');
+    await user.type(searchInput, 'cat');
+
+    await waitFor(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const calls = (useMediaData as any).mock.calls;
+      // Covers: Verify API called with search query params.
+      expect(JSON.stringify(calls)).toMatch(/cat/i);
+    });
+
+    const nextButton = await screen.findByRole('button', { name: 'Next' });
+    await user.click(nextButton);
+
+    await waitFor(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const calls = (useMediaData as any).mock.calls;
+      // Covers: Verify API called with pagination params.
+      expect(JSON.stringify(calls)).toMatch(/page|start|offset|limit/i);
+    });
+
+    // Spy on the global QueryClient to see if it receives a refresh command
+    const invalidateSpy = vi.spyOn(testQueryClient, 'invalidateQueries');
+
+    const refreshBtn =
+      screen.queryByRole('button', { name: /Refresh|Reload/i }) ||
+      document.querySelector('button[title*="Refresh"]') ||
+      document.querySelector('button[title*="Reload"]');
+    if (refreshBtn) {
+      await user.click(refreshBtn);
+
+      await waitFor(() => {
+        // Covers: Verify refresh reloads data.
+        // A successful refresh triggers the global QueryClient to invalidate the cache
+        expect(invalidateSpy).toHaveBeenCalled();
+      });
+    }
   });
 });

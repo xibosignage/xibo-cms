@@ -46,7 +46,7 @@
 
         {% if currentUser.featureEnabled("library.view") %}
             <div class="dashicons">
-                <a href="{{ url_for("library.view") }}">
+                <a href="{{ theme.rootUri() }}prototype/library/media">
                     <img src="{{ theme.uri("img/dashboard/content.png") }}" class="dash_button" />
                     <span class="dash_text">{% trans "Library" %}</span>
                 </a>
