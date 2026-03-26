@@ -87,7 +87,7 @@ export default function ExpiryDateSelect({ value, options, onSelect }: ExpiryDat
       <div
         ref={refs.setReference}
         {...getReferenceProps()}
-        className="w-full border border-gray-200 rounded-lg flex items-center cursor-pointer bg-white"
+        className="w-full border border-gray-200 rounded-lg flex items-center cursor-pointer bg-white h-11.25"
       >
         <span className="p-3 text-gray-500 border-r text-sm border-gray-200">
           <CalendarCheck2Icon size={16} />

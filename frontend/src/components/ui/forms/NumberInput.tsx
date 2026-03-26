@@ -71,7 +71,7 @@ export default function NumberInput({
         }}
         placeholder={placeholder || t('Add text')}
         className={twMerge(
-          'p-3 rounded-lg text-sm font-normal text-gray-800 placeholder:text-gray-500 border-gray-200',
+          'h-11.25 px-3 rounded-lg text-sm font-normal text-gray-800 placeholder:text-gray-500 border-gray-200',
           'hover:border-gray-400',
           'focus:border-xibo-blue-600 focus:ring-xibo-blue-600/25 focus:ring-1',
           'disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-300 disabled:pointer-events-none',

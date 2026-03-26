@@ -157,7 +157,7 @@ export default function SelectFolder({
       <div
         ref={refs.setReference}
         {...getReferenceProps()}
-        className="w-full border border-gray-200 rounded-lg flex items-center bg-white transition-shadow hover:shadow-sm cursor-pointer h-10.5"
+        className="w-full border border-gray-200 rounded-lg flex items-center bg-white transition-shadow hover:shadow-sm cursor-pointer h-11.25"
       >
         <button
           type="button"

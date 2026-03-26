@@ -126,12 +126,12 @@ export default function SelectFilter({
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="w-full flex items-center justify-between bg-white rounded-lg border border-gray-200 pl-4 text-left"
+        className="w-full h-11.25 flex items-center justify-between bg-white rounded-lg border border-gray-200 pl-4 text-left"
       >
         <span>{getDisplayLabel()}</span>
         <div
           className={twMerge(
-            'p-4 transition-all duration-200 ease-in',
+            'px-4 transition-all duration-200 ease-in',
             open ? 'rotate-180' : 'rotate-0',
           )}
         >

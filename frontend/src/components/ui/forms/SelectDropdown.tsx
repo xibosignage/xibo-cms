@@ -40,6 +40,7 @@ import { twMerge } from 'tailwind-merge';
 export type SelectOption = {
   label: string;
   value: string;
+  disabled?: boolean;
 };
 
 interface SelectDropdownProps {
@@ -109,14 +110,16 @@ export default function SelectDropdown({
       <div
         ref={refs.setReference}
         {...getReferenceProps()}
-        className="w-full border bg-white border-gray-200 rounded-lg flex items-center cursor-pointer max-h-11.25"
+        className="w-full border bg-white border-gray-200 rounded-lg flex items-center cursor-pointer h-11.25"
       >
         {addLeftLabel && leftLabelContent && (
-          <div className="p-3 border-r text-sm border-gray-200 text-gray-500">
+          <div className="py-2 px-3 border-r text-sm border-gray-200 text-gray-500">
             {leftLabelContent}
           </div>
         )}
-        <span className="p-3 flex-1 text-sm capitalize">{selectedLabel || t(placeholder)}</span>
+        <span className="py-2 px-3 flex-1 text-sm capitalize">
+          {selectedLabel || t(placeholder)}
+        </span>
         <span
           className={twMerge(
             'p-3 text-gray-500 transition-transform duration-300 ease-in-out',
@@ -145,8 +148,18 @@ export default function SelectDropdown({
                 <button
                   key={option.value}
                   type="button"
-                  className="text-left p-2 rounded-lg hover:bg-gray-100 font-medium flex gap-2 items-center cursor-pointer"
+                  disabled={option.disabled}
+                  className={twMerge(
+                    'text-left p-2 rounded-lg font-medium flex gap-2 items-center',
+                    option.disabled
+                      ? 'text-gray-300 cursor-not-allowed'
+                      : 'hover:bg-gray-100 cursor-pointer',
+                  )}
                   onClick={() => {
+                    if (option.disabled) {
+                      return;
+                    }
+
                     onSelect(option.value);
                     setIsOpen(false);
                   }}
