@@ -111,6 +111,10 @@ $app->group('', function (RouteCollectorProxy $group) {
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify']))
     ->addMiddleware(new LayoutLock($app));
 
+$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
+    $group->get('/layout/thumbnail/{id}', ['\Xibo\Controller\Layout', 'downloadThumbnail'])->setName('layout.download.thumbnail');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.view', 'template.view']));
+
 $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/layout/checkout/{id}', ['\Xibo\Controller\Layout', 'checkout'])->setName('layout.checkout');
     $group->put('/layout/setenablestat/{id}',['\Xibo\Controller\Layout', 'setEnableStat'])->setName('layout.setenablestat');

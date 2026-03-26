@@ -49,6 +49,7 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetDataFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\LayoutDescription;
 use Xibo\Helper\LayoutUploadHandler;
 use Xibo\Helper\Profiler;
 use Xibo\Helper\SendFile;
@@ -1514,7 +1515,7 @@ class Layout extends Base
         $layouts = $this->layoutFactory->query($layoutSortQuery, $layoutFilterQuery);
 
         foreach ($layouts as $layout) {
-           $this->loadLayoutRegions($layout, $embed);
+            $this->loadLayoutRegions($layout, $embed);
 
             // Populate the status message
             $layout->getStatusMessage();
@@ -1525,8 +1526,35 @@ class Layout extends Base
             // Annotate each Widget with its validity, tags and permissions
             $this->annotateLayoutWidget($layout, $embed);
 
+            // Thumbnail
+            $layout->setUnmatchedProperty('thumbnail', '');
+
+            if (file_exists($layout->getThumbnailUri())) {
+                $layout->setUnmatchedProperty(
+                    'thumbnail',
+                    $this->urlFor($request, 'layout.download.thumbnail', ['id' => $layout->layoutId])
+                );
+            }
+
+            // Fix up the description
+            $this->getLayoutDescriptions($layout, $showDescriptionId);
+
             // Add user permissions
             $layout->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($layout));
+
+            // TODO: Update this once the layout designer is ready
+            // Check if user has "delete permissions" - for layout designer to show/hide Delete button
+            $layout->setUnmatchedProperty(
+                'deletePermission',
+                $this->getUser()->featureEnabled('layout.modify')
+            );
+
+            // Check if user has view permissions to the schedule now page - for layout designer to show/hide
+            // the Schedule Now button
+            $layout->setUnmatchedProperty(
+                'scheduleNowPermission',
+                $this->getUser()->featureEnabled('schedule.add')
+            );
         }
 
         // Store the table rows
@@ -3113,5 +3141,53 @@ class Layout extends Base
         $widget->transitionDurationOut = $widget->getOptionValue(
             'transOutDuration', $widgetTransOutDurationDefault
         );
+    }
+
+    /**
+     * Get the layout descriptions
+     * @param \Xibo\Entity\Layout $layout
+     * @param $showDescriptionId
+     * @return void
+     * @throws NotFoundException
+     */
+    private function getLayoutDescriptions(\Xibo\Entity\Layout $layout, $showDescriptionId): void
+    {
+        $layout->setUnmatchedProperty('descriptionFormatted', $layout->description);
+
+        if ($layout->description != '') {
+            if ($showDescriptionId == 1) {
+                // Parse down for description
+                $layout->setUnmatchedProperty(
+                    'descriptionFormatted',
+                    Parsedown::instance()->setSafeMode(true)->text($layout->description)
+                );
+            } else if ($showDescriptionId == 2) {
+                $layout->setUnmatchedProperty('descriptionFormatted', strtok($layout->description, "\n"));
+            }
+        }
+
+        if ($showDescriptionId === 3) {
+            // Load in the entire object model - creating module objects so that we can get the name of each
+            // widget and its items.
+            foreach ($layout->regions as $region) {
+                foreach ($region->getPlaylist()->widgets as $widget) {
+                    $module = $this->moduleFactory->getByType($widget->type);
+                    $widget->setUnmatchedProperty('moduleName', $module->name);
+                    $widget->setUnmatchedProperty('name', $widget->getOptionValue('name', $module->name));
+                }
+            }
+
+            // provide our layout object to a template to render immediately
+            $layout->setUnmatchedProperty('descriptionFormatted', $this->renderTemplateToString(
+                'layout-page-grid-widgetlist',
+                (array)$layout
+            ));
+        }
+
+        $statusDescription = LayoutDescription::getLayoutStatusDescription($layout->status);
+        $enableStatDescription = LayoutDescription::getLayoutEnableStatDescription($layout->enableStat);
+
+        $layout->setUnmatchedProperty('statusDescription', $statusDescription);
+        $layout->setUnmatchedProperty('enableStatDescription', $enableStatDescription);
     }
 }
