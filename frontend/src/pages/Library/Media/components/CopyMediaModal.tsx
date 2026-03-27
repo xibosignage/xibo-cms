@@ -54,6 +54,7 @@ export default function CopyMediaModal({
   useEffect(() => {
     if (media && isOpen) {
       setNewName(incrementName(media.name));
+      setNewTags(media.tags ?? []);
     }
   }, [media, isOpen]);
 
