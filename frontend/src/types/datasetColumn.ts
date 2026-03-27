@@ -19,24 +19,27 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { ElementType } from 'react';
+export interface DatasetColumn {
+  dataSetColumnId: number;
+  dataSetId: number;
+  heading: string;
+  listType: string;
+  columnOrder: number;
+  dataType: string;
+  dataTypeId: DataTypeId;
+  dataSetColumnType: string;
+  dataSetColumnTypeId: DataSetColumnTypeId;
+  listContent?: string;
+  remoteField?: string;
+  tooltip?: string;
+  formula?: string;
+  showFilter?: boolean;
+  dateFormat?: string;
+  showSort?: boolean;
+  isRequired?: boolean;
+}
 
-export type ActionItem =
-  | {
-      isSeparator: true;
-      label?: never;
-      icon?: never;
-      onClick?: never;
-      variant?: never;
-      isQuickAction?: never;
-    }
-  | {
-      isSeparator?: false | undefined;
-      label: string;
-      icon?: ElementType;
-      onClick?: () => void;
-      variant?: 'default' | 'primary' | 'danger';
-      isQuickAction?: boolean;
-    };
-
-export type BaseModalType = 'edit' | 'share' | 'delete' | 'copy' | 'move' | 'logout' | 'import';
+// 1 - Value | 2 - Formula | 3 - Remote
+export type DataSetColumnTypeId = 1 | 2 | 3;
+// 1 - String | 2 - Number | 3 - Date | 4 - External Image | 5 - Library Image | 6 - HTML |
+export type DataTypeId = 1 | 2 | 3 | 4 | 5 | 6;

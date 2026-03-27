@@ -19,24 +19,23 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { ElementType } from 'react';
+export interface DaypartException {
+  day: string;
+  start: string;
+  end: string;
+}
 
-export type ActionItem =
-  | {
-      isSeparator: true;
-      label?: never;
-      icon?: never;
-      onClick?: never;
-      variant?: never;
-      isQuickAction?: never;
-    }
-  | {
-      isSeparator?: false | undefined;
-      label: string;
-      icon?: ElementType;
-      onClick?: () => void;
-      variant?: 'default' | 'primary' | 'danger';
-      isQuickAction?: boolean;
-    };
-
-export type BaseModalType = 'edit' | 'share' | 'delete' | 'copy' | 'move' | 'logout' | 'import';
+export interface Daypart {
+  dayPartId: number;
+  name: string;
+  description: string;
+  isRetired: number;
+  userId: number;
+  startTime: string;
+  endTime: string;
+  exceptions: DaypartException[];
+  isAlways: number;
+  isCustom: number;
+  adjustedStart: string | null;
+  adjustedEnd: string | null;
+}
