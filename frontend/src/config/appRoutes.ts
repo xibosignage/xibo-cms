@@ -108,7 +108,8 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'dayparting',
         labelKey: 'Dayparting',
-        externalURL: '/dayparting/view',
+        lazy: () =>
+          import('@/pages/Schedule/Daypart/Daypart').then((m) => ({ Component: m.default })),
         feature: 'daypart.view',
       },
     ],
