@@ -425,6 +425,8 @@ export function FileUploader({
   };
 
   const uploadingCount = queue.filter((item) => item.status === 'uploading').length;
+  const completedCount = queue.filter((item) => item.status === 'completed').length;
+  const errorCount = queue.filter((item) => item.status === 'error').length;
   const totalCount = queue.length;
   const isAllComplete = uploadingCount === 0 && totalCount > 0;
 
@@ -536,7 +538,18 @@ export function FileUploader({
           <div className="flex justify-between items-center">
             <div className="text-sm text-gray-800 font-semibold">
               {isAllComplete
-                ? t('All {{count}} items completed', { count: totalCount })
+                ? errorCount > 0
+                  ? [
+                      completedCount === 1
+                        ? t('1 item completed')
+                        : t('{{count}} items completed', { count: completedCount }),
+                      errorCount === 1
+                        ? t('1 item failed')
+                        : t('{{count}} items failed', { count: errorCount }),
+                    ].join(', ')
+                  : totalCount === 1
+                    ? t('1 item completed')
+                    : t('All {{count}} items completed', { count: totalCount })
                 : t('{{uploading}} of {{total}} items are still uploading', {
                     uploading: uploadingCount,
                     total: totalCount,

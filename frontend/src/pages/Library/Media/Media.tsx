@@ -239,6 +239,7 @@ export default function Media() {
   const {
     isDeleting,
     deleteError,
+    setDeleteError,
     isCloning,
     confirmDelete,
     handleConfirmClone,
@@ -257,6 +258,7 @@ export default function Media() {
       return;
     }
 
+    setDeleteError(null);
     setItemsToDelete([media]);
     openModal('delete');
   };
@@ -338,6 +340,7 @@ export default function Media() {
         return;
       }
 
+      setDeleteError(null);
       setItemsToDelete(permittedItems);
       openModal('delete');
     },

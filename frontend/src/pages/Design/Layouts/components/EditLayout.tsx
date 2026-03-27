@@ -139,7 +139,7 @@ export default function EditLayout({ isOpen, onClose, data, onSave }: EditLayout
       } else if (err instanceof Error) {
         setApiError(err.message);
       } else {
-        setApiError(t('An unexpected error occurred while saving the playlist.'));
+        setApiError(t('An unexpected error occurred while saving the layout.'));
       }
     } finally {
       setIsSaving(false);

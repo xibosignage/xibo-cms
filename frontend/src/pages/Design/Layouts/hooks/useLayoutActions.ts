@@ -24,6 +24,8 @@ import type { TFunction } from 'i18next';
 import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
 
+import { isAxiosError } from 'axios';
+
 import { notify } from '@/components/ui/Notification';
 import { selectFolder } from '@/services/folderApi';
 import { copyLayout, createLayout, deleteLayout } from '@/services/layoutsApi';
@@ -61,7 +63,16 @@ export function useLayoutActions({
 
       const failed = results.filter((r) => r.status === 'rejected');
       if (failed.length > 0) {
-        setDeleteError(`${failed.length} item(s) could not be deleted because they are in use.`);
+        const firstRejected = failed[0] as PromiseRejectedResult;
+        const reason = firstRejected.reason;
+        const message =
+          isAxiosError(reason) && reason.response?.data?.message
+            ? reason.response.data.message
+            : t('{{count}} item(s) could not be deleted.', { count: failed.length });
+        setDeleteError(message);
+        setRowSelection({});
+        handleRefresh();
+        return;
       }
 
       setRowSelection({});
@@ -69,7 +80,11 @@ export function useLayoutActions({
       closeModal();
     } catch (error) {
       console.error(error);
-      setDeleteError('Some selected items are in use and cannot be deleted.');
+      const message =
+        isAxiosError(error) && error.response?.data?.message
+          ? error.response.data.message
+          : t('Some selected items could not be deleted.');
+      setDeleteError(message);
     } finally {
       setIsDeleting(false);
     }
