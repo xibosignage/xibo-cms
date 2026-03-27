@@ -78,6 +78,14 @@ vi.mock('../hooks/useMediaData', () => ({
   useMediaData: vi.fn(),
 }));
 
+vi.mock('@/services/mediaApi', () => ({
+  deleteMedia: vi.fn().mockResolvedValue(undefined),
+  cloneMedia: vi.fn().mockResolvedValue(undefined),
+  downloadMedia: vi.fn().mockResolvedValue(undefined),
+  downloadMediaAsZip: vi.fn().mockResolvedValue(undefined),
+  fetchMediaBlob: vi.fn().mockResolvedValue(new Blob()),
+}));
+
 const mockUser = {
   userId: 1,
   userName: 'MockUser',
