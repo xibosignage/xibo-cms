@@ -191,11 +191,9 @@ export default function Playlist() {
 
       playlistList.forEach((item) => {
         const id = item.playlistId.toString();
-        if (rowSelection[id]) {
-          if (!next[id]) {
-            next[id] = item;
-            hasChanges = true;
-          }
+        if (rowSelection[id] && next[id] !== item) {
+          next[id] = item;
+          hasChanges = true;
         }
       });
 

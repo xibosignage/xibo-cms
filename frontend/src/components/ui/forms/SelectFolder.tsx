@@ -32,17 +32,19 @@ import {
   FloatingPortal,
 } from '@floating-ui/react';
 import { ChevronDown, Loader2, X } from 'lucide-react';
-import { useEffect, useState, useId } from 'react';
+import { useEffect, useRef, useState, useId } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import FolderSearchInput from '../FolderSearchInput';
 import FolderTreeList, { type FolderAction } from '../FolderTreeList';
 
+import { useUserContext } from '@/context/UserContext';
 import { fetchFolderById } from '@/services/folderApi';
 import type { Folder } from '@/types/folder';
 
 interface SelectFolderProps {
   selectedId?: number | null;
+  selectedText?: string | null;
   placeholder?: string;
   onSelect: (folder: { id: number; text: string } | null) => void;
   onAction?: (action: FolderAction, folder: Folder) => void;
@@ -50,22 +52,35 @@ interface SelectFolderProps {
 
 export default function SelectFolder({
   selectedId,
+  selectedText,
   placeholder,
   onSelect,
   onAction,
 }: SelectFolderProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
+
+  const homeFolderId = user?.homeFolderId ?? 1;
   const generatedId = useId();
   const searchInputId = `${generatedId}_search`;
 
   const [isOpen, setIsOpen] = useState(false);
   const [initialName, setInitialName] = useState<string | null>(null);
+  const resolvedIdRef = useRef<number | null>(null);
+  const homeFolderNameRef = useRef<string | null>(null);
+  const homeFolderIdRef = useRef(homeFolderId);
+  homeFolderIdRef.current = homeFolderId;
   const [isResolvingName, setIsResolvingName] = useState(false);
   const [folderSearch, setFolderSearch] = useState('');
 
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
-    onOpenChange: setIsOpen,
+    onOpenChange: (open) => {
+      setIsOpen(open);
+      if (!open) {
+        setFolderSearch('');
+      }
+    },
     placement: 'bottom-start',
     whileElementsMounted: autoUpdate,
     middleware: [
@@ -91,17 +106,49 @@ export default function SelectFolder({
     e.preventDefault();
     e.stopPropagation();
 
-    setInitialName(null);
     setFolderSearch('');
     setIsOpen(false);
 
-    onSelect(null);
+    if (homeFolderNameRef.current) {
+      setInitialName(homeFolderNameRef.current);
+      resolvedIdRef.current = homeFolderId;
+      onSelect({ id: homeFolderId, text: homeFolderNameRef.current });
+      return;
+    }
+
+    setInitialName(null);
+    setIsResolvingName(true);
+    resolvedIdRef.current = null;
+    fetchFolderById(homeFolderId)
+      .then((folder) => {
+        homeFolderNameRef.current = folder.text;
+        setInitialName(folder.text);
+        resolvedIdRef.current = folder.id;
+        onSelect({ id: folder.id, text: folder.text });
+      })
+      .catch((err) => {
+        console.error('Failed to resolve home folder name', err);
+        onSelect({ id: homeFolderId, text: String(homeFolderId) });
+      })
+      .finally(() => setIsResolvingName(false));
   };
 
   useEffect(() => {
     if (!selectedId) {
       setInitialName(null);
+      resolvedIdRef.current = null;
       setIsResolvingName(false);
+      return;
+    }
+
+    if (selectedText) {
+      setInitialName(selectedText);
+      resolvedIdRef.current = selectedId;
+      setIsResolvingName(false);
+      return;
+    }
+
+    if (resolvedIdRef.current === selectedId) {
       return;
     }
 
@@ -113,7 +160,11 @@ export default function SelectFolder({
     fetchFolderById(selectedId)
       .then((folder) => {
         if (active) {
+          if (selectedId === homeFolderIdRef.current) {
+            homeFolderNameRef.current = folder.text;
+          }
           setInitialName(folder.text);
+          resolvedIdRef.current = selectedId;
         }
       })
       .catch((err) => console.error('Failed to resolve folder name', err))
@@ -125,7 +176,7 @@ export default function SelectFolder({
     return () => {
       active = false;
     };
-  }, [selectedId]);
+  }, [selectedId, selectedText]);
 
   const renderLabel = () => {
     if (isResolvingName) {
@@ -204,6 +255,7 @@ export default function SelectFolder({
                 onSelect={(folder: Folder) => {
                   onSelect({ id: folder.id, text: folder.text });
                   setInitialName(folder.text);
+                  resolvedIdRef.current = folder.id;
                   setIsOpen(false);
                 }}
                 onAction={onAction}
