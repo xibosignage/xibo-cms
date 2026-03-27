@@ -25,7 +25,7 @@ import type { Layout } from '@/types/layout';
 export interface FetchLayoutRequest {
   start: number;
   length: number;
-  layout?: string;
+  keyword?: string;
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;

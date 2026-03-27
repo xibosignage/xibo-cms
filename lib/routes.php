@@ -111,6 +111,10 @@ $app->group('', function (RouteCollectorProxy $group) {
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify']))
     ->addMiddleware(new LayoutLock($app));
 
+$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
+    $group->get('/layout/thumbnail/{id}', ['\Xibo\Controller\Layout', 'downloadThumbnail'])->setName('layout.download.thumbnail');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.view', 'template.view']));
+
 $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/layout/checkout/{id}', ['\Xibo\Controller\Layout', 'checkout'])->setName('layout.checkout');
     $group->put('/layout/setenablestat/{id}',['\Xibo\Controller\Layout', 'setEnableStat'])->setName('layout.setenablestat');
@@ -469,6 +473,7 @@ $app->post('/user/pref', ['\Xibo\Controller\User' ,'prefEdit']);
 $app->put('/user/pref', ['\Xibo\Controller\User' ,'prefEditFromForm']);
 $app->get('/user/me', ['\Xibo\Controller\User','myDetails'])->setName('user.me');
 $app->get('/user', ['\Xibo\Controller\User','grid'])->setName('user.search');
+$app->get('/user/{id}/applications', ['\Xibo\Controller\User', 'applicationsGrid'])->setName('user.applications');
 $app->put('/user/profile/edit', ['\Xibo\Controller\User','editProfile'])->setName('user.edit.profile');
 $app->get('/user/profile/setup', ['\Xibo\Controller\User','tfaSetup'])->setName('user.setup.profile');
 $app->post('/user/profile/validate', ['\Xibo\Controller\User','tfaValidate'])->setName('user.validate.profile');

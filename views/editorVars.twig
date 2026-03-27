@@ -95,7 +95,7 @@
                     type: 'PUT'
                 },
                 list: {
-                    url: "{{ url_for("layout.view") }}"
+                    url: "{{ theme.rootUri() }}prototype/design/layout"
                 },
                 status: {
                     url: "{{ url_for("layout.status", {id: ':id'}) }}"

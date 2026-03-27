@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -119,10 +119,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 //
 // layouts
 //
-$app->get('/layout/view', ['\Xibo\Controller\Layout', 'displayPage'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.view']))
-    ->setName('layout.view');
-
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/layout/xlf/{id}', ['\Xibo\Controller\Preview', 'getXlf'])->setName('layout.getXlf');
     $group->get('/layout/background/{id}', ['\Xibo\Controller\Layout', 'downloadBackground'])->setName('layout.download.background');
@@ -143,25 +139,17 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/layout/designer[/{id}]', ['\Xibo\Controller\Layout','displayDesigner'])->setName('layout.designer');
     $group->get('/layout/form/edit/{id}', ['\Xibo\Controller\Layout', 'editForm'])->setName('layout.edit.form');
     $group->get('/layout/form/background/{id}', ['\Xibo\Controller\Layout', 'editBackgroundForm'])->setName('layout.background.form');
-    $group->get('/layout/form/copy/{id}', ['\Xibo\Controller\Layout', 'copyForm'])->setName('layout.copy.form');
     $group->get('/layout/form/delete/{id}', ['\Xibo\Controller\Layout', 'deleteForm'])->setName('layout.delete.form');
     $group->get('/layout/form/clear/{id}', ['\Xibo\Controller\Layout', 'clearForm'])->setName('layout.clear.form');
     $group->get('/layout/form/checkout/{id}', ['\Xibo\Controller\Layout', 'checkoutForm'])->setName('layout.checkout.form');
     $group->get('/layout/form/publish/{id}', ['\Xibo\Controller\Layout', 'publishForm'])->setName('layout.publish.form');
     $group->get('/layout/form/discard/{id}', ['\Xibo\Controller\Layout', 'discardForm'])->setName('layout.discard.form');
     $group->get('/layout/form/retire/{id}', ['\Xibo\Controller\Layout', 'retireForm'])->setName('layout.retire.form');
-    $group->get('/layout/form/unretire/{id}', ['\Xibo\Controller\Layout', 'unretireForm'])->setName('layout.unretire.form');
-    $group->get('/layout/form/setenablestat/{id}', ['\Xibo\Controller\Layout', 'setEnableStatForm'])->setName('layout.setenablestat.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify', 'template.modify']));
 
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/layout/form/export/{id}', ['\Xibo\Controller\Layout', 'exportForm'])->setName('layout.export.form');
-    $group->get('/layout/export/{id}', ['\Xibo\Controller\Layout', 'export'])->setName('layout.export');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.export']));
-
-$app->get('/layout/form/campaign/assign/{id}', ['\Xibo\Controller\Layout','assignToCampaignForm'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.modify']))
-    ->setName('layout.assignTo.campaign.form');
 
 // Layout with Codes
 $app->get('/layout/codes', ['\Xibo\Controller\Layout', 'getLayoutCodes'])->setName('layout.code.search');
@@ -231,30 +219,9 @@ $app->get('/library/search', ['\Xibo\Controller\Library','search'])
 $app->get('/library/connector/list', ['\Xibo\Controller\Library','providersList'])
     ->setName('library.search.providers');
 
-$app->get('/library/view', ['\Xibo\Controller\Library','displayPage'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['library.view']))
-    ->setName('library.view');
-
-$app->get('/library/form/uploadUrl', ['\Xibo\Controller\Library','uploadFromUrlForm'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['library.add']))
-    ->setName('library.uploadUrl.form');
-
 $app->post('/library/connector/import', ['\Xibo\Controller\Library', 'connectorImport'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['library.add']))
     ->setName('library.connector.import');
-
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/library/form/edit/{id}', ['\Xibo\Controller\Library', 'editForm'])->setName('library.edit.form');
-    $group->get('/library/form/delete/{id}', ['\Xibo\Controller\Library', 'deleteForm'])->setName('library.delete.form');
-    $group->get('/library/form/tidy', ['\Xibo\Controller\Library', 'tidyForm'])->setName('library.tidy.form');
-    $group->get('/library/form/copy/{id}', ['\Xibo\Controller\Library','copyForm'])->setName('library.copy.form');
-    $group->get('/library/form/setenablestat/{id}', ['\Xibo\Controller\Library','setEnableStatForm'])->setName('library.setenablestat.form');
-    $group->get('/library/form/{id}/selectfolder', ['\Xibo\Controller\Library','selectFolderForm'])->setName('library.selectfolder.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['library.modify']));
-
-$app->get('/library/form/usage/{id}', ['\Xibo\Controller\Library','usageForm'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['schedule.view', 'layout.view']))
-    ->setName('library.usage.form');
 
 //
 // display

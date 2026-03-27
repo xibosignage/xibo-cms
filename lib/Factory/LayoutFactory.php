@@ -2718,6 +2718,7 @@ class LayoutFactory extends BaseFactory
             $layout->code = $parsedRow->getString('code');
             $layout->folderId = $parsedRow->getInt('folderId');
             $layout->permissionsFolderId = $parsedRow->getInt('permissionsFolderId');
+            $layout->folderName = $parsedRow->getString('folderName');
             $layout->groupsWithPermissions = $row['groupsWithPermissions'];
             $layout->setOriginals();
 

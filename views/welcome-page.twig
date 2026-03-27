@@ -124,7 +124,7 @@
             {
                 title: '{% trans "Existing Content" %}',
                 text: 'Do you already have an image or video content ready to be shown? Upload your media and schedule to be shown full screen on Displays in a few easy steps.',
-                firstLink: '{{ url_for("library.view")}}',
+                firstLink: '{{ theme.rootUri() }}prototype/library/media',
                 secondLink: '{{ url_for("schedule.view")}}',
                 otherLink: '{{ helpService.getLandingPage }}getting_started_showing_an_image',
                 imageUrl: '{{ theme.rootUri() }}theme/default/img/onboarding/existing-content.png',
@@ -145,7 +145,7 @@
                 title: '{% trans "Playlists" %}',
                 text: 'Create a ‘slideshow’ of content to be shown in sequence to schedule and show on your Displays.',
                 firstLink: '{{ url_for("playlist.view") }}',
-                secondLink: '{{ helpService.getLandingPage }}getting_started_showing_a_playlist',    
+                secondLink: '{{ helpService.getLandingPage }}getting_started_showing_a_playlist',
                 imageUrl: '{{ theme.rootUri() }}theme/default/img/onboarding/playlists.png',
                 videoLinks: {
                     link: 'Cch392voYic',
@@ -157,7 +157,7 @@
             {
                 title: '{% trans "Create Content" %}',
                 text: 'Create your own eye catching Layout designs using a variety of tools available in the Layout Editor.',
-                firstLink: '{{ url_for("layout.view") }}',
+                firstLink: '{{ theme.rootUri() }}prototype/design/layout',
                 secondLink: '{{ helpService.getLandingPage }}layouts_editor',
                 imageUrl: '{{ theme.rootUri() }}theme/default/img/onboarding/create-content.png',
                 videoLinks: {
@@ -188,7 +188,7 @@
                 text: '{% trans "Our documentation is there to help you at every turn. It’s updated regularly to reflect changes and additions to the platform, and so it’s a valuable reference tool for all users." %}',
                 links: `
                         <a href="{{ helpService.getLandingPage() }}" target="_blank">{% trans "User Manual" %}</a>
-                        ${isXiboThemed && isSuperAdmin ? 
+                        ${isXiboThemed && isSuperAdmin ?
                         `<a href="https://xibosignage.com/docs/setup" target="_blank">{% trans "Admin" %}</a>
                          <a href="https://xibosignage.com/docs/developer" target="_blank">{% trans "Developer" %}</a>` : ''
                         }`,
