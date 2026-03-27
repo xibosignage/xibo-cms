@@ -19,6 +19,10 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// =============================================================================
+// Shared test helpers for the Media page.
+// =============================================================================
+
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -30,6 +34,7 @@ import { useMediaData } from '../hooks/useMediaData';
 import { UploadProvider } from '@/context/UploadContext';
 import { UserProvider } from '@/context/UserContext';
 import { testQueryClient } from '@/setupTests';
+import type { Folder } from '@/types/folder';
 import type { Media as MediaItem } from '@/types/media';
 import type { User, UserFeatures } from '@/types/user';
 
@@ -65,6 +70,111 @@ export const mockEditMedia: MediaItem = {
   deleteOldRevisions: false,
 };
 
+// -----------------------------------------------------------------------------
+// Fake users
+//
+// Two pre-built users with different permission levels.
+// -----------------------------------------------------------------------------
+
+// This user can see and use the folder panel.
+export const userWithFolders: User = {
+  userId: 1,
+  userName: 'FolderUser',
+  userTypeId: 1,
+  homeFolderId: 1,
+  features: {
+    'folder.view': true,
+  } as UserFeatures,
+} as User;
+
+// This user has no folder permission — no folder panel, no Move actions.
+export const userWithoutFolders: User = {
+  userId: 2,
+  userName: 'NoFolderUser',
+  userTypeId: 1,
+  homeFolderId: 1,
+  features: {} as UserFeatures,
+} as User;
+
+// -----------------------------------------------------------------------------
+// Fake folders
+//
+// Two simple folders used as move destinations in folder-related tests.
+// -----------------------------------------------------------------------------
+
+export const mockArchiveFolder: Folder = {
+  id: 99,
+  text: 'Archive',
+  isRoot: 0,
+  type: null,
+  parentId: 0,
+  ownerId: 0,
+  ownerName: '',
+  children: [],
+};
+
+export const mockDesignFolder: Folder = {
+  id: 10,
+  text: 'Design',
+  isRoot: 0,
+  type: null,
+  parentId: 0,
+  ownerId: 0,
+  ownerName: '',
+  children: [],
+};
+
+// -----------------------------------------------------------------------------
+// Fake table data
+// -----------------------------------------------------------------------------
+
+// A table with a single image row that has full permissions.
+// Triggers the bulk action bar and all per-row action buttons.
+export const ONE_MEDIA_ITEM = {
+  data: {
+    rows: [
+      {
+        mediaId: 1,
+        name: 'sample.jpg',
+        mediaType: 'image',
+        userPermissions: { view: 1, edit: 1, delete: 1 },
+      },
+    ],
+    totalCount: 1,
+  },
+  isFetching: false,
+  isError: false,
+  error: null,
+};
+
+// A table with two rows that sit in different folders.
+// Used to test what happens when a move spans more than one source folder.
+export const MEDIA_ITEMS_IN_DIFFERENT_FOLDERS = {
+  data: {
+    rows: [
+      {
+        mediaId: 1,
+        name: 'photo.jpg',
+        folderId: 5,
+        mediaType: 'image',
+        userPermissions: { view: 1, edit: 1, delete: 1 },
+      },
+      {
+        mediaId: 2,
+        name: 'doc.pdf',
+        folderId: mockDesignFolder.id,
+        mediaType: 'generic',
+        userPermissions: { view: 1, edit: 1, delete: 1 },
+      },
+    ],
+    totalCount: 2,
+  },
+  isFetching: false,
+  isError: false,
+  error: null,
+};
+
+// The default logged-in user for most Media page tests.
 export const mockUser: User = {
   userId: 1,
   userName: 'MockUser',
@@ -100,13 +210,16 @@ export const openEditModal = async () => {
 
 // ---------------------------------------------------------------------------
 // Render wrapper — provides all required context providers
+// renderAs(user)    — use when the test cares which user is logged in
+// renderMediaPage() — when the test doesn't care about permissions
 // ---------------------------------------------------------------------------
 
-export const renderMediaPage = () => {
+export const renderAs = (user: User) => {
+  testQueryClient.setQueryData(['userPref', 'media_page'], null);
   return render(
     <QueryClientProvider client={testQueryClient}>
       <UploadProvider>
-        <UserProvider initialUser={mockUser}>
+        <UserProvider initialUser={user}>
           <MemoryRouter>
             <Media />
           </MemoryRouter>
@@ -115,3 +228,5 @@ export const renderMediaPage = () => {
     </QueryClientProvider>,
   );
 };
+
+export const renderMediaPage = () => renderAs(mockUser);
