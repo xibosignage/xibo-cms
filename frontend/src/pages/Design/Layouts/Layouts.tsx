@@ -394,7 +394,7 @@ export default function Layouts() {
             setFilterInputs((prev) => ({ ...prev, [name]: value }));
             setPagination((prev) => ({ ...prev, pageIndex: 0 }));
           }}
-          open={openFilter}
+          isOpen={openFilter}
           values={filterInputs}
           options={filterOptions}
           onReset={handleResetFilters}

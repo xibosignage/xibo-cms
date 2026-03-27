@@ -22,14 +22,14 @@ interface ReplaceFileMedia {
 }
 
 interface ReplaceFileModalProps {
-  openModal: boolean;
+  isOpen: boolean;
   data: Media;
   onClose: () => void;
   onSave?: (updated: Media) => void;
 }
 
 export default function ReplaceFileModal({
-  openModal,
+  isOpen,
   data,
   onClose,
   onSave,
@@ -139,7 +139,7 @@ export default function ReplaceFileModal({
     <Modal
       title={t('Replace File')}
       onClose={onClose}
-      isOpen={openModal}
+      isOpen={isOpen}
       isPending={isSaving}
       scrollable={false}
       actions={[

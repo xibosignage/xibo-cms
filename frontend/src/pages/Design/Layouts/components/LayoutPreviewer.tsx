@@ -109,7 +109,7 @@ export default function LayoutPreviewer({
         </div>
         <div className="pr-4 pb-4 flex">
           <LayoutInfoPanel
-            open={showInfoPanel}
+            isOpen={showInfoPanel}
             onClose={() => setShowInfoPanel(false)}
             layoutData={layoutData}
             owner={owner}

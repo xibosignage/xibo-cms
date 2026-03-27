@@ -84,7 +84,7 @@ export function LayoutModals({
     <>
       {selection.selectedLayout && (
         <EditLayout
-          openModal={isModalOpen('edit')}
+          isOpen={isModalOpen('edit')}
           onClose={actions.closeModal}
           data={selection.selectedLayout}
           onSave={(updatedLayout) => {
@@ -98,62 +98,70 @@ export function LayoutModals({
 
       <FolderActionModals folderActions={folderActions} />
 
-      <DeleteLayoutModal
-        isOpen={isModalOpen('delete')}
-        onClose={actions.closeModal}
-        onDelete={() => handlers.confirmDelete(selection.itemsToDelete)}
-        itemCount={selection.itemsToDelete.length}
-        layoutName={
-          selection.itemsToDelete.length === 1
-            ? selection.itemsToDelete[0]?.name || selection.itemsToDelete[0]?.layout
-            : undefined
-        }
-        error={actions.deleteError}
-        isLoading={actions.isDeleting}
-      />
+      {isModalOpen('delete') && (
+        <DeleteLayoutModal
+          onClose={actions.closeModal}
+          onDelete={() => handlers.confirmDelete(selection.itemsToDelete)}
+          itemCount={selection.itemsToDelete.length}
+          layoutName={
+            selection.itemsToDelete.length === 1
+              ? selection.itemsToDelete[0]?.name || selection.itemsToDelete[0]?.layout
+              : undefined
+          }
+          error={actions.deleteError}
+          isLoading={actions.isDeleting}
+        />
+      )}
 
-      <MoveModal
-        isOpen={isModalOpen('move')}
-        onClose={actions.closeModal}
-        onConfirm={handlers.handleConfirmMove}
-        items={selection.itemsToMove}
-        entityLabel={t('Layouts')}
-      />
+      {isModalOpen('move') && (
+        <MoveModal
+          onClose={actions.closeModal}
+          onConfirm={handlers.handleConfirmMove}
+          items={selection.itemsToMove}
+          entityLabel={t('Layouts')}
+        />
+      )}
 
-      <ShareModal
-        title={t('Share Layout')}
-        onClose={() => {
-          actions.closeModal();
-          selection.setShareEntityIds(null);
-          actions.handleRefresh();
-        }}
-        openModal={isModalOpen('share')}
-        entityType="campaign"
-        entityId={selection.shareEntityIds ?? (selection.selectedLayout?.campaignId || null)}
-      />
+      {isModalOpen('share') && (
+        <ShareModal
+          title={t('Share Layout')}
+          onClose={() => {
+            actions.closeModal();
+            selection.setShareEntityIds(null);
+            actions.handleRefresh();
+          }}
+          isOpen
+          entityType="campaign"
+          entityId={selection.shareEntityIds ?? (selection.selectedLayout?.campaignId || null)}
+        />
+      )}
 
-      <CopyLayoutModal
-        isOpen={isModalOpen('copy')}
-        onClose={actions.closeModal}
-        onConfirm={(name, description, copyMedia) =>
-          handlers.handleConfirmClone(name, description, copyMedia)
-        }
-        layout={selection.selectedLayout}
-        isLoading={actions.isCloning}
-        existingNames={selection.existingNames}
-      />
-      <LayoutInfoPanel
-        open={infoPanel.isOpen}
-        onClose={() => {
-          infoPanel.setSelectedLayoutId(null);
-          infoPanel.setOpen(false);
-        }}
-        layoutData={selection.selectedLayout}
-        owner={infoPanel.owner}
-        folderName={infoPanel.folderName}
-        loading={infoPanel.loading}
-        applyVersionTwo
-      />
+      {isModalOpen('copy') && (
+        <CopyLayoutModal
+          onClose={actions.closeModal}
+          onConfirm={(name, description, copyMedia) =>
+            handlers.handleConfirmClone(name, description, copyMedia)
+          }
+          layout={selection.selectedLayout}
+          isLoading={actions.isCloning}
+          existingNames={selection.existingNames}
+        />
+      )}
+
+      {infoPanel.isOpen && (
+        <LayoutInfoPanel
+          isOpen
+          onClose={() => {
+            infoPanel.setSelectedLayoutId(null);
+            infoPanel.setOpen(false);
+          }}
+          layoutData={selection.selectedLayout}
+          owner={infoPanel.owner}
+          folderName={infoPanel.folderName}
+          loading={infoPanel.loading}
+          applyVersionTwo
+        />
+      )}
     </>
   );
 }

@@ -27,7 +27,7 @@ import Checkbox from '@/components/ui/forms/Checkbox';
 import Modal from '@/components/ui/modals/Modal';
 
 interface DeleteMediaModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   onDelete: (options: { allLayouts: boolean; purgeList: boolean }) => void;
   itemCount: number;
@@ -37,7 +37,7 @@ interface DeleteMediaModalProps {
 }
 
 export default function DeleteMediaModal({
-  isOpen,
+  isOpen = true,
   onClose,
   onDelete,
   fileName,

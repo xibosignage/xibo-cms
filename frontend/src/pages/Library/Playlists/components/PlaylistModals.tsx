@@ -72,7 +72,7 @@ export function PlaylistModals({
       {isModalOpen('edit') && (
         <AddAndEditPlaylistModal
           type={selection.selectedPlaylistId ? 'edit' : 'add'}
-          openModal={isModalOpen('edit')}
+          isOpen={isModalOpen('edit')}
           onClose={() => {
             actions.closeModal();
           }}
@@ -90,48 +90,53 @@ export function PlaylistModals({
         />
       )}
 
-      <ShareModal
-        title={t('Share Playlist')}
-        onClose={() => {
-          actions.closeModal();
-          selection.setShareEntityIds(null);
-          actions.handleRefresh();
-        }}
-        openModal={isModalOpen('share')}
-        entityType="playlist"
-        entityId={selection.shareEntityIds ?? (selection.selectedPlaylist?.playlistId || null)}
-      />
+      {isModalOpen('share') && (
+        <ShareModal
+          title={t('Share Playlist')}
+          onClose={() => {
+            actions.closeModal();
+            selection.setShareEntityIds(null);
+            actions.handleRefresh();
+          }}
+          isOpen
+          entityType="playlist"
+          entityId={selection.shareEntityIds ?? (selection.selectedPlaylist?.playlistId || null)}
+        />
+      )}
 
       <FolderActionModals folderActions={folderActions} />
 
-      <DeletePlaylistModal
-        isOpen={isModalOpen('delete')}
-        onClose={actions.closeModal}
-        onDelete={() => handlers.confirmDelete(selection.itemsToDelete)}
-        itemCount={selection.itemsToDelete.length}
-        playlistName={
-          selection.itemsToDelete.length === 1 ? selection.itemsToDelete[0]?.name : undefined
-        }
-        error={actions.deleteError}
-        isLoading={actions.isDeleting}
-      />
+      {isModalOpen('delete') && (
+        <DeletePlaylistModal
+          onClose={actions.closeModal}
+          onDelete={() => handlers.confirmDelete(selection.itemsToDelete)}
+          itemCount={selection.itemsToDelete.length}
+          playlistName={
+            selection.itemsToDelete.length === 1 ? selection.itemsToDelete[0]?.name : undefined
+          }
+          error={actions.deleteError}
+          isLoading={actions.isDeleting}
+        />
+      )}
 
-      <CopyPlaylistModal
-        isOpen={isModalOpen('copy')}
-        onClose={actions.closeModal}
-        onConfirm={(name, copyMedia) => handlers.handleConfirmClone(name, copyMedia)}
-        playlist={selection.selectedPlaylist}
-        isLoading={actions.isCloning}
-        existingNames={selection.existingNames}
-      />
+      {isModalOpen('copy') && (
+        <CopyPlaylistModal
+          onClose={actions.closeModal}
+          onConfirm={(name, copyMedia) => handlers.handleConfirmClone(name, copyMedia)}
+          playlist={selection.selectedPlaylist}
+          isLoading={actions.isCloning}
+          existingNames={selection.existingNames}
+        />
+      )}
 
-      <MoveModal
-        isOpen={isModalOpen('move')}
-        onClose={actions.closeModal}
-        onConfirm={handlers.handleConfirmMove}
-        items={selection.itemsToMove}
-        entityLabel={t('Playlist')}
-      />
+      {isModalOpen('move') && (
+        <MoveModal
+          onClose={actions.closeModal}
+          onConfirm={handlers.handleConfirmMove}
+          items={selection.itemsToMove}
+          entityLabel={t('Playlist')}
+        />
+      )}
     </>
   );
 }

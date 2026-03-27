@@ -38,7 +38,7 @@ type RenderProps = Partial<React.ComponentProps<typeof FilterInputs<Filters>>>;
 // Renders a FilterInputs bar with defaults that a test can override.
 const renderFilters = (props: RenderProps = {}) =>
   render(
-    <FilterInputs open={true} options={[]} values={defaultValues} onChange={vi.fn()} {...props} />,
+    <FilterInputs isOpen={true} options={[]} values={defaultValues} onChange={vi.fn()} {...props} />,
   );
 
 describe('FilterInputs', () => {

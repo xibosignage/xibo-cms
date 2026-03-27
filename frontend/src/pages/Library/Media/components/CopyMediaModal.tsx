@@ -30,7 +30,7 @@ import type { Tag } from '@/types/tag';
 import { incrementName } from '@/utils/stringUtils';
 
 interface CopyMediaModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   onConfirm: (newName: string, tags: Tag[]) => void;
   media: Media | null;
@@ -39,7 +39,7 @@ interface CopyMediaModalProps {
 }
 
 export default function CopyMediaModal({
-  isOpen,
+  isOpen = true,
   onClose,
   onConfirm,
   media,

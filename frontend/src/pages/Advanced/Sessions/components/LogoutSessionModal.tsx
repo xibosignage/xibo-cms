@@ -25,7 +25,7 @@ import { useTranslation } from 'react-i18next';
 import Modal from '@/components/ui/modals/Modal';
 
 interface LogoutSessionModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   onLogout: () => void;
   userName?: string;
@@ -35,7 +35,7 @@ interface LogoutSessionModalProps {
 }
 
 export default function LogoutSessionModal({
-  isOpen,
+  isOpen = true,
   onClose,
   onLogout,
   userName,
