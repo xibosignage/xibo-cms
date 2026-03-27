@@ -24,6 +24,7 @@ import type React from 'react';
 import { test, vi, beforeEach } from 'vitest';
 
 import { mockEditMedia, mockMediaData, renderMediaPage } from './mediaTestUtils';
+import { useMediaData } from '../hooks/useMediaData';
 
 import { deleteMedia } from '@/services/mediaApi';
 import { testQueryClient } from '@/setupTests';
@@ -35,7 +36,9 @@ import { testQueryClient } from '@/setupTests';
 vi.mock('@/pages/Library/Media/hooks/useMediaFilterOptions', () => ({
   useMediaFilterOptions: vi.fn().mockReturnValue({ filterOptions: [], isLoading: false }),
 }));
-vi.mock('../hooks/useMediaData');
+vi.mock('../hooks/useMediaData', () => ({
+  useMediaData: vi.fn(),
+}));
 vi.mock('@/services/mediaApi', () => ({
   uploadMedia: vi.fn(),
   uploadMediaFromUrl: vi.fn(),
@@ -69,7 +72,7 @@ const openDeleteModal = async () => {
   const checkboxes = await screen.findAllByRole('checkbox', { name: /Select row/i });
   fireEvent.click(checkboxes[0]!);
 
-  const deleteBtn = await screen.findByRole('button', { name: /Delete Selected/i });
+  const deleteBtn = await screen.findByRole('button', { name: /Delete/i });
   fireEvent.click(deleteBtn);
 
   return screen.findByRole('dialog');
@@ -83,6 +86,21 @@ describe('Delete Media', () => {
   beforeEach(() => {
     testQueryClient.clear();
     vi.clearAllMocks();
+    (useMediaData as any).mockReturnValue({
+      data: { 
+        rows: [{
+          ...mockEditMedia, 
+          mediaId: 1, 
+          name: 'delete_target.jpg', 
+          mediaType: 'image',
+          userPermissions: { delete: true } 
+        }], 
+        totalCount: 1 
+      },
+      isFetching: false,
+      isError: false,
+      error: null,
+    });
     mockMediaData({
       data: { rows: [mockEditMedia], totalCount: 1 },
       isFetching: false,
