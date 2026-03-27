@@ -41,7 +41,7 @@ export interface ModalAction {
 }
 
 interface ModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   title?: string;
   children: React.ReactNode;
@@ -55,7 +55,7 @@ interface ModalProps {
 }
 
 export default function Modal({
-  isOpen,
+  isOpen = true,
   onClose,
   title,
   children,

@@ -45,7 +45,7 @@ import type {
 
 interface AddAndEditDatasetModalProps {
   type: 'add' | 'edit';
-  openModal: boolean;
+  isOpen?: boolean;
   data?: Dataset | null;
   dataConnectorSources?: { id: string; name: string }[];
   onClose: () => void;
@@ -129,7 +129,7 @@ const createDraftFromData = (data?: Dataset | null): UpdateDatasetRequest => {
 
 export default function AddAndEditDatasetModal({
   type,
-  openModal,
+  isOpen = true,
   onClose,
   data,
   dataConnectorSources = [],
@@ -186,13 +186,13 @@ export default function AddAndEditDatasetModal({
   };
 
   useEffect(() => {
-    if (openModal) {
+    if (isOpen) {
       setDraft(createDraftFromData(data));
       setApiError(undefined);
       setFormErrors({});
       setActiveTab('general');
     }
-  }, [data, openModal]);
+  }, [data, isOpen]);
 
   const handleSave = () => {
     const schema = getDatasetSchema(t);
@@ -268,7 +268,7 @@ export default function AddAndEditDatasetModal({
     <Modal
       title={modalTitle}
       onClose={onClose}
-      isOpen={openModal}
+      isOpen={isOpen}
       isPending={isPending}
       scrollable={false}
       error={apiError}

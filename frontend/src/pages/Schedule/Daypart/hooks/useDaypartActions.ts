@@ -20,6 +20,7 @@
  */
 
 import type { RowSelectionState } from '@tanstack/react-table';
+import { isAxiosError } from 'axios';
 import type { TFunction } from 'i18next';
 import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
@@ -56,7 +57,16 @@ export function useDaypartActions({
 
       const failed = results.filter((r) => r.status === 'rejected');
       if (failed.length > 0) {
-        setDeleteError(`${failed.length} item(s) could not be deleted.`);
+        const firstRejected = failed[0] as PromiseRejectedResult;
+        const reason = firstRejected.reason;
+        const message =
+          isAxiosError(reason) && reason.response?.data?.message
+            ? reason.response.data.message
+            : t('{{count}} item(s) could not be deleted.', { count: failed.length });
+        setDeleteError(message);
+        setRowSelection({});
+        handleRefresh();
+        return;
       }
 
       setRowSelection({});
@@ -64,7 +74,11 @@ export function useDaypartActions({
       closeModal();
     } catch (error) {
       console.error(error);
-      setDeleteError(t('Some selected items cannot be deleted.'));
+      const message =
+        isAxiosError(error) && error.response?.data?.message
+          ? error.response.data.message
+          : t('Some selected items could not be deleted.');
+      setDeleteError(message);
     } finally {
       setIsDeleting(false);
     }

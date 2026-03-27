@@ -27,7 +27,7 @@ import Checkbox from '@/components/ui/forms/Checkbox';
 import Modal from '@/components/ui/modals/Modal';
 
 interface DeleteDatasetModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   onDelete: (options: { deleteData: boolean }) => void;
   itemCount: number;
@@ -37,7 +37,7 @@ interface DeleteDatasetModalProps {
 }
 
 export default function DeleteDatasetModal({
-  isOpen,
+  isOpen = true,
   onClose,
   onDelete,
   datasetName,

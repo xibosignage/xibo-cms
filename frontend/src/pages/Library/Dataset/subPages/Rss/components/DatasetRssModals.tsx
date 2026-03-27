@@ -61,7 +61,6 @@ export function DatasetRssModals({
       {isModalOpen('edit') && (
         <AddAndEditDatasetRssModal
           type={selection.selectedRss ? 'edit' : 'add'}
-          isOpen={true}
           onClose={actions.closeModal}
           datasetId={datasetId}
           rss={selection.selectedRss}
@@ -74,7 +73,6 @@ export function DatasetRssModals({
 
       {isModalOpen('copy') && (
         <CopyDatasetRssModal
-          isOpen={true}
           onClose={actions.closeModal}
           isLoading={!!actions.isCloning}
           onConfirm={() => {
@@ -85,7 +83,6 @@ export function DatasetRssModals({
 
       {isModalOpen('delete') && selection.rssToDeleteId !== null && (
         <DeleteDatasetRssModal
-          isOpen={isModalOpen('delete')}
           onClose={actions.closeModal}
           onDelete={() => handlers.confirmDelete(selection.itemsToDelete)}
           itemCount={selection.itemsToDelete.length}

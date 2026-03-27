@@ -24,14 +24,14 @@ import { useTranslation } from 'react-i18next';
 import Modal from '@/components/ui/modals/Modal';
 
 interface CopyDatasetRssModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   onConfirm: () => void;
   isLoading?: boolean;
 }
 
 export default function CopyDatasetRssModal({
-  isOpen,
+  isOpen = true,
   onClose,
   onConfirm,
   isLoading,

@@ -35,7 +35,7 @@ import type { Daypart, DaypartException } from '@/types/daypart';
 
 interface AddAndEditDaypartModalProps {
   type: 'add' | 'edit';
-  openModal: boolean;
+  isOpen?: boolean;
   data?: Daypart | null;
   onClose: () => void;
   onSave: (updated: Daypart) => void;
@@ -77,7 +77,7 @@ const createDraftFromData = (data?: Daypart | null): DaypartDraft => {
 
 export default function AddAndEditDaypartModal({
   type,
-  openModal,
+  isOpen = true,
   onClose,
   data,
   onSave,
@@ -101,13 +101,13 @@ export default function AddAndEditDaypartModal({
   ];
 
   useEffect(() => {
-    if (openModal) {
+    if (isOpen) {
       setDraft(createDraftFromData(data));
       setFormErrors({});
       setApiError(undefined);
       setActiveTab('general');
     }
-  }, [data, openModal]);
+  }, [data, isOpen]);
 
   const updateDraftField = <K extends keyof DaypartDraft>(field: K, value: DaypartDraft[K]) => {
     setDraft((prev) => ({ ...prev, [field]: value }));
@@ -220,7 +220,7 @@ export default function AddAndEditDaypartModal({
     <Modal
       title={modalTitle}
       onClose={onClose}
-      isOpen={openModal}
+      isOpen={isOpen}
       isPending={isPending}
       scrollable={false}
       error={apiError}

@@ -50,7 +50,7 @@ import { formatDuration } from '@/utils/formatters';
 
 interface AddAndEditPlaylistModalProps {
   type: 'add' | 'edit';
-  isOpen: boolean;
+  isOpen?: boolean;
   data?: Playlist | null;
   onClose: () => void;
   onSave: (updated: Playlist) => void;
@@ -90,7 +90,7 @@ type PlaylistFormErrors = Partial<Record<keyof PlaylistDraft, string>>;
 
 export default function AddAndEditPlaylistModal({
   type,
-  isOpen,
+  isOpen = true,
   onClose,
   data,
   onSave,

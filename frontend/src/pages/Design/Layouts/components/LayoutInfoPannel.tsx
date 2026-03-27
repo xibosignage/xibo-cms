@@ -28,7 +28,7 @@ import type { Layout } from '@/types/layout';
 import type { User } from '@/types/user';
 
 type LayoutInfoPanelProps = {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   layoutData: Layout | null | undefined;
   owner: User | null;
@@ -46,7 +46,7 @@ function formatSeconds(seconds: number): string {
 }
 
 export function LayoutInfoPanel({
-  isOpen,
+  isOpen = true,
   onClose,
   layoutData,
   owner,

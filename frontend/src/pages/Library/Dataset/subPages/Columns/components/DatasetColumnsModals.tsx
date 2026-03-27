@@ -61,7 +61,6 @@ export function DatasetColumnModals({
       {isModalOpen('edit') && (
         <AddAndEditDatasetColumnModal
           type={selection.selectedColumn ? 'edit' : 'add'}
-          isOpen={true}
           onClose={actions.closeModal}
           datasetId={datasetId}
           column={selection.selectedColumn}
@@ -74,7 +73,6 @@ export function DatasetColumnModals({
 
       {isModalOpen('copy') && (
         <CopyDatasetColumnModal
-          isOpen={true}
           onClose={actions.closeModal}
           column={selection.selectedColumn}
           isLoading={!!actions.isCloning}
@@ -89,7 +87,6 @@ export function DatasetColumnModals({
 
       {isModalOpen('delete') && selection.columnToDeleteId !== null && (
         <DeleteDatasetColumnModal
-          isOpen={isModalOpen('delete')}
           onClose={actions.closeModal}
           onDelete={() => handlers.confirmDelete(selection.itemsToDelete)}
           itemCount={selection.itemsToDelete.length}

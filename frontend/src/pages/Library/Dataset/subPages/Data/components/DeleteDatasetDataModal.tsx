@@ -25,7 +25,7 @@ import { useTranslation } from 'react-i18next';
 import Modal from '@/components/ui/modals/Modal';
 
 interface DeleteDatasetDataModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   onDelete: () => void;
   itemCount: number;
@@ -35,7 +35,7 @@ interface DeleteDatasetDataModalProps {
 }
 
 export function DeleteDatasetDataModal({
-  isOpen,
+  isOpen = true,
   onClose,
   onDelete,
   itemCount,

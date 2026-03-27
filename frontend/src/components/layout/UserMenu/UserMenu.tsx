@@ -172,19 +172,13 @@ export default function UserMenu() {
       </FloatingPortal>
 
       {/* Modals */}
-      {activeModal === 'preferences' && (
-        <PreferencesModal isOpen={true} onClose={() => setActiveModal(null)} />
-      )}
+      {activeModal === 'preferences' && <PreferencesModal onClose={() => setActiveModal(null)} />}
 
-      {activeModal === 'profile' && (
-        <ProfileEditModal isOpen={true} onClose={() => setActiveModal(null)} />
-      )}
+      {activeModal === 'profile' && <ProfileEditModal onClose={() => setActiveModal(null)} />}
 
-      {activeModal === 'applications' && (
-        <ApplicationsModal isOpen={true} onClose={() => setActiveModal(null)} />
-      )}
+      {activeModal === 'applications' && <ApplicationsModal onClose={() => setActiveModal(null)} />}
 
-      {activeModal === 'about' && <AboutModal isOpen={true} onClose={() => setActiveModal(null)} />}
+      {activeModal === 'about' && <AboutModal onClose={() => setActiveModal(null)} />}
     </>
   );
 }

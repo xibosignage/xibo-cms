@@ -126,11 +126,9 @@ export default function DatasetData() {
 
       rowData.forEach((item) => {
         const id = String(item.id || item.datasetDataId);
-        if (id && rowSelection[id]) {
-          if (!next[id]) {
-            next[id] = item;
-            hasChanges = true;
-          }
+        if (id && rowSelection[id] && next[id] !== item) {
+          next[id] = item;
+          hasChanges = true;
         }
       });
 

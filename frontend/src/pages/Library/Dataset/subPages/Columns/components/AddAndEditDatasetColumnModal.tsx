@@ -52,7 +52,7 @@ export interface UpdateDatasetColumnRequest {
 
 interface AddAndEditDatasetColumnModalProps {
   type: 'add' | 'edit';
-  isOpen: boolean;
+  isOpen?: boolean;
   datasetId: string;
   datasetSourceId?: '1' | '2';
   column?: DatasetColumn | null;
@@ -79,7 +79,7 @@ const DEFAULT_DRAFT: UpdateDatasetColumnRequest = {
 
 export function AddAndEditDatasetColumnModal({
   type,
-  isOpen,
+  isOpen = true,
   datasetId,
   datasetSourceId = '1',
   column,

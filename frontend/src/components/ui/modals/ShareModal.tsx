@@ -60,7 +60,7 @@ interface PermissionChange {
 
 interface ShareModalProps {
   title?: string;
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   entityType: string;
   entityId: number | number[] | null;
@@ -75,7 +75,7 @@ type OwnerOption = {
 
 export default function ShareModal({
   title,
-  isOpen,
+  isOpen = true,
   onClose,
   entityType,
   entityId,

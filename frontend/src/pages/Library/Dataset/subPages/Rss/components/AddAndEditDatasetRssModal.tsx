@@ -55,7 +55,7 @@ export interface DatasetRssPayload {
 
 interface AddAndEditRssModalProps {
   type: 'add' | 'edit';
-  isOpen: boolean;
+  isOpen?: boolean;
   datasetId: string;
   rss?: DatasetRss | null;
   onClose: () => void;
@@ -107,7 +107,7 @@ const DEFAULT_DRAFT: Partial<DatasetRssPayload> = {
 
 export function AddAndEditDatasetRssModal({
   type,
-  isOpen,
+  isOpen = true,
   datasetId,
   rss,
   onClose,

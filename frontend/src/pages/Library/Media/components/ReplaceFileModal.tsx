@@ -22,14 +22,14 @@ interface ReplaceFileMedia {
 }
 
 interface ReplaceFileModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   data: Media;
   onClose: () => void;
   onSave?: (updated: Media) => void;
 }
 
 export default function ReplaceFileModal({
-  isOpen,
+  isOpen = true,
   data,
   onClose,
   onSave,

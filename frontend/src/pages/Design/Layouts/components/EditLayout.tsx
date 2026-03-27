@@ -34,7 +34,7 @@ import type { Layout } from '@/types/layout';
 import type { Tag } from '@/types/tag';
 
 interface EditLayoutModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   data: Layout;
   onClose: () => void;
   onSave: (updated: Layout) => void;
@@ -56,7 +56,7 @@ type LayoutDraft = {
   code: string;
 };
 
-export default function EditLayout({ isOpen, onClose, data, onSave }: EditLayoutModalProps) {
+export default function EditLayout({ isOpen = true, onClose, data, onSave }: EditLayoutModalProps) {
   const { t } = useTranslation();
 
   const [isSaving, setIsSaving] = useState(false);

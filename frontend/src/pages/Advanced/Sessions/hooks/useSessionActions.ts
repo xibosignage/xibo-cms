@@ -20,11 +20,10 @@
  */
 
 import type { RowSelectionState } from '@tanstack/react-table';
+import { isAxiosError } from 'axios';
 import type { TFunction } from 'i18next';
 import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
-
-import { isAxiosError } from 'axios';
 
 import { logoutSession } from '@/services/sessionApi';
 import type { Session } from '@/types/session';

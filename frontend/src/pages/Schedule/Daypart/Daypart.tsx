@@ -127,11 +127,9 @@ export default function Daypart() {
 
       daypartList.forEach((item) => {
         const id = item.dayPartId.toString();
-        if (rowSelection[id]) {
-          if (!next[id]) {
-            next[id] = item;
-            hasChanges = true;
-          }
+        if (rowSelection[id] && next[id] !== item) {
+          next[id] = item;
+          hasChanges = true;
         }
       });
 
@@ -279,7 +277,7 @@ export default function Daypart() {
               return { ...prev, pageIndex: 0 };
             });
           }}
-          open={openFilter}
+          isOpen={openFilter}
           values={filterInputs}
           options={filterOptions}
           onReset={handleResetFilters}

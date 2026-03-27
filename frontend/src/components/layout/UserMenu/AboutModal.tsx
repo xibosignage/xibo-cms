@@ -24,11 +24,11 @@ import { useTranslation } from 'react-i18next';
 import Modal from '@/components/ui/modals/Modal';
 
 interface AboutModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
 }
 
-export default function AboutModal({ isOpen, onClose }: AboutModalProps) {
+export default function AboutModal({ isOpen = true, onClose }: AboutModalProps) {
   const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
 

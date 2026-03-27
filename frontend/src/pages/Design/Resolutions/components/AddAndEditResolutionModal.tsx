@@ -33,7 +33,7 @@ import type { Resolution } from '@/types/resolution';
 
 interface AddAndEditResolutionModalProps {
   type: 'add' | 'edit';
-  isOpen: boolean;
+  isOpen?: boolean;
   data?: Resolution | null;
   onClose: () => void;
   onSave: (updated: Resolution) => void;
@@ -57,7 +57,7 @@ type ResolutionFormErrors = Partial<Record<keyof ResolutionDraft, string>>;
 
 export default function AddAndEditResolutionModal({
   type,
-  isOpen,
+  isOpen = true,
   onClose,
   data,
   onSave,

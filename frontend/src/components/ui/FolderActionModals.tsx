@@ -43,7 +43,6 @@ export default function FolderActionModals({ folderActions }: FolderActionModals
       {/* Create Modal */}
       {actionType === 'create' && (
         <Modal
-          isOpen
           isPending={isPending}
           onClose={closeAction}
           title={t('Create New Folder')}
@@ -73,7 +72,6 @@ export default function FolderActionModals({ folderActions }: FolderActionModals
       {/* Rename Modal */}
       {actionType === 'rename' && (
         <Modal
-          isOpen
           isPending={isPending}
           onClose={closeAction}
           title={t('Rename Folder')}
@@ -103,7 +101,6 @@ export default function FolderActionModals({ folderActions }: FolderActionModals
       {/* Move Modal */}
       {actionType === 'move' && (
         <Modal
-          isOpen
           isPending={isPending}
           onClose={closeAction}
           title={t('Move Folder')}
@@ -138,7 +135,6 @@ export default function FolderActionModals({ folderActions }: FolderActionModals
       {/* Share Modal */}
       {actionType === 'share' && (
         <ShareModal
-          isOpen
           showOwner={false}
           onClose={closeAction}
           title={t('Share Folder')}
@@ -150,7 +146,6 @@ export default function FolderActionModals({ folderActions }: FolderActionModals
       {/* Delete Modal */}
       {actionType === 'delete' && (
         <Modal
-          isOpen
           isPending={isPending}
           onClose={closeAction}
           title={t('Delete Folder')}

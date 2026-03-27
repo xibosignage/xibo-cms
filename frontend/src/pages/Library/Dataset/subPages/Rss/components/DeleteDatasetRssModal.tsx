@@ -25,7 +25,7 @@ import { useTranslation } from 'react-i18next';
 import Modal from '@/components/ui/modals/Modal';
 
 interface DeleteRssModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   onDelete: () => void;
   itemCount: number;
@@ -35,7 +35,7 @@ interface DeleteRssModalProps {
 }
 
 export function DeleteDatasetRssModal({
-  isOpen,
+  isOpen = true,
   onClose,
   onDelete,
   rssTitle,

@@ -58,7 +58,6 @@ export function DaypartModals({ actions, selection, handlers }: DaypartModalsPro
       {isModalOpen('edit') && (
         <AddAndEditDaypartModal
           type={selection.selectedDaypartId ? 'edit' : 'add'}
-          openModal={isModalOpen('edit')}
           onClose={actions.closeModal}
           data={selection.selectedDaypart}
           onSave={(savedDaypart) => {
@@ -74,29 +73,31 @@ export function DaypartModals({ actions, selection, handlers }: DaypartModalsPro
         />
       )}
 
-      <DeleteDaypartModal
-        isOpen={isModalOpen('delete')}
-        onClose={actions.closeModal}
-        onDelete={() => handlers.confirmDelete(selection.itemsToDelete)}
-        itemCount={selection.itemsToDelete.length}
-        daypartName={
-          selection.itemsToDelete.length === 1 ? selection.itemsToDelete[0]?.name : undefined
-        }
-        error={actions.deleteError}
-        isLoading={actions.isDeleting}
-      />
+      {isModalOpen('delete') && (
+        <DeleteDaypartModal
+          onClose={actions.closeModal}
+          onDelete={() => handlers.confirmDelete(selection.itemsToDelete)}
+          itemCount={selection.itemsToDelete.length}
+          daypartName={
+            selection.itemsToDelete.length === 1 ? selection.itemsToDelete[0]?.name : undefined
+          }
+          error={actions.deleteError}
+          isLoading={actions.isDeleting}
+        />
+      )}
 
-      <ShareModal
-        title={t('Share Daypart')}
-        openModal={isModalOpen('share')}
-        onClose={() => {
-          actions.closeModal();
-          selection.setShareEntityIds(null);
-          actions.handleRefresh();
-        }}
-        entityType="DayPart"
-        entityId={selection.shareEntityIds}
-      />
+      {isModalOpen('share') && (
+        <ShareModal
+          title={t('Share Daypart')}
+          onClose={() => {
+            actions.closeModal();
+            selection.setShareEntityIds(null);
+            actions.handleRefresh();
+          }}
+          entityType="DayPart"
+          entityId={selection.shareEntityIds}
+        />
+      )}
     </>
   );
 }

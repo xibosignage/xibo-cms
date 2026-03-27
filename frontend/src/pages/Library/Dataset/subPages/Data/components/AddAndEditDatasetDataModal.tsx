@@ -38,7 +38,7 @@ import type { DatasetColumn } from '@/types/datasetColumn';
 
 interface AddAndEditDataModalProps {
   type: 'add' | 'edit';
-  isOpen: boolean;
+  isOpen?: boolean;
   datasetId: string;
   columnsSchema: DatasetColumn[];
   rowData?: DynamicRowData | null;
@@ -67,7 +67,7 @@ const formatToSqlDateTime = (isoString: string): string => {
 
 export function AddAndEditDataModal({
   type,
-  isOpen,
+  isOpen = true,
   datasetId,
   columnsSchema,
   rowData,

@@ -31,14 +31,14 @@ import { fetchDatasetColumns, importDatasetCsv } from '@/services/datasetApi';
 import type { DatasetColumn } from '@/types/datasetColumn';
 
 interface ImportDatasetCsvModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   datasetId: number;
   onSuccess: () => void;
 }
 
 export default function ImportDatasetCsvModal({
-  isOpen,
+  isOpen = true,
   onClose,
   datasetId,
   onSuccess,

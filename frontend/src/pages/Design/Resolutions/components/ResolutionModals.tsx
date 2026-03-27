@@ -54,7 +54,6 @@ export function ResolutionModals({ actions, selection, handlers }: ResolutionMod
       {isModalOpen('edit') && (
         <AddAndEditResolutionModal
           type={selection.selectedResolutionId ? 'edit' : 'add'}
-          isOpen={isModalOpen('edit')}
           onClose={() => {
             actions.closeModal();
           }}

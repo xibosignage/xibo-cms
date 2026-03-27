@@ -27,7 +27,7 @@ import type { Media } from '@/types/media';
 import type { User } from '@/types/user';
 
 type MediaInfoPanelProps = {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   mediaData: Media | null | undefined;
   owner: User | null;
@@ -46,7 +46,7 @@ function formatSeconds(seconds: number): string {
 }
 
 export function MediaInfoPanel({
-  isOpen,
+  isOpen = true,
   onClose,
   mediaData,
   owner,

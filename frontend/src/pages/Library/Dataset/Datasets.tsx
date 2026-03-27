@@ -190,11 +190,9 @@ export default function Dataset() {
 
       datasetList.forEach((item) => {
         const id = item.dataSetId.toString();
-        if (rowSelection[id]) {
-          if (!next[id]) {
-            next[id] = item;
-            hasChanges = true;
-          }
+        if (rowSelection[id] && next[id] !== item) {
+          next[id] = item;
+          hasChanges = true;
         }
       });
 
@@ -411,7 +409,7 @@ export default function Dataset() {
             setFilterInputs((prev) => ({ ...prev, [name]: value }));
             setPagination((prev) => ({ ...prev, pageIndex: 0 }));
           }}
-          open={openFilter}
+          isOpen={openFilter}
           values={filterInputs}
           options={filterOptions}
           onReset={handleResetFilters}

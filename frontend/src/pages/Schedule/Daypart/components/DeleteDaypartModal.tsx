@@ -25,7 +25,7 @@ import { useTranslation } from 'react-i18next';
 import Modal from '@/components/ui/modals/Modal';
 
 interface DeleteDaypartModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   onDelete: () => void;
   itemCount: number;
@@ -35,7 +35,7 @@ interface DeleteDaypartModalProps {
 }
 
 export default function DeleteDaypartModal({
-  isOpen,
+  isOpen = true,
   onClose,
   onDelete,
   daypartName,

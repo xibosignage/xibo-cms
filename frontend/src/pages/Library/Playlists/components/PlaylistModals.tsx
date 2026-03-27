@@ -72,7 +72,6 @@ export function PlaylistModals({
       {isModalOpen('edit') && (
         <AddAndEditPlaylistModal
           type={selection.selectedPlaylistId ? 'edit' : 'add'}
-          isOpen={isModalOpen('edit')}
           onClose={() => {
             actions.closeModal();
           }}
@@ -98,7 +97,6 @@ export function PlaylistModals({
             selection.setShareEntityIds(null);
             actions.handleRefresh();
           }}
-          isOpen
           entityType="playlist"
           entityId={selection.shareEntityIds ?? (selection.selectedPlaylist?.playlistId || null)}
         />

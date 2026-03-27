@@ -162,7 +162,6 @@ export function MediaModals({
             selection.setShareEntityIds(null);
             actions.handleRefresh();
           }}
-          isOpen
           entityType="media"
           entityId={selection.shareEntityIds ?? (selection.selectedMedia?.mediaId || null)}
         />
@@ -172,7 +171,6 @@ export function MediaModals({
         <>
           {isModalOpen('edit') && (
             <EditMediaModal
-              isOpen={isModalOpen('edit')}
               onClose={actions.closeModal}
               onSave={(updatedMedia) => {
                 actions.setMediaList((prev) =>
@@ -186,7 +184,6 @@ export function MediaModals({
 
           {isModalOpen('replace') && (
             <ReplaceFileModal
-              isOpen={isModalOpen('replace')}
               onClose={actions.closeModal}
               data={selection.selectedMedia}
               onSave={(updatedMedia) => {
@@ -201,13 +198,7 @@ export function MediaModals({
       )}
 
       {upload.isOpen && (
-        <Modal
-          isOpen
-          onClose={upload.onCancel}
-          title={t('Add Media')}
-          actions={addModalActions}
-          size="lg"
-        >
+        <Modal onClose={upload.onCancel} title={t('Add Media')} actions={addModalActions} size="lg">
           <div className="flex flex-col gap-3 p-8 pt-0">
             {upload.canViewFolders && (
               <SelectFolder
@@ -240,7 +231,6 @@ export function MediaModals({
 
       {infoPanel.isOpen && (
         <MediaInfoPanel
-          isOpen
           onClose={() => {
             infoPanel.setSelectedMediaId(null);
             infoPanel.setOpen(false);

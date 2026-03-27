@@ -82,9 +82,8 @@ export function LayoutModals({
 
   return (
     <>
-      {selection.selectedLayout && (
+      {isModalOpen('edit') && selection.selectedLayout && (
         <EditLayout
-          isOpen={isModalOpen('edit')}
           onClose={actions.closeModal}
           data={selection.selectedLayout}
           onSave={(updatedLayout) => {
@@ -130,7 +129,6 @@ export function LayoutModals({
             selection.setShareEntityIds(null);
             actions.handleRefresh();
           }}
-          isOpen
           entityType="campaign"
           entityId={selection.shareEntityIds ?? (selection.selectedLayout?.campaignId || null)}
         />
@@ -150,7 +148,6 @@ export function LayoutModals({
 
       {infoPanel.isOpen && (
         <LayoutInfoPanel
-          isOpen
           onClose={() => {
             infoPanel.setSelectedLayoutId(null);
             infoPanel.setOpen(false);

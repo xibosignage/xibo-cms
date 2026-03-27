@@ -35,7 +35,7 @@ import {
 } from '@/services/userApi';
 
 interface ProfileEditModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
 }
 
@@ -117,7 +117,7 @@ function createProfileSchema(
   });
 }
 
-export default function ProfileEditModal({ isOpen, onClose }: ProfileEditModalProps) {
+export default function ProfileEditModal({ isOpen = true, onClose }: ProfileEditModalProps) {
   const { t } = useTranslation();
   const { user, updateUser } = useUserContext();
 

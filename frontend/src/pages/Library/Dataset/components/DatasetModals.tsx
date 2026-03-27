@@ -73,7 +73,6 @@ export function DatasetModals({ actions, selection, handlers, folderActions }: D
       {isModalOpen('edit') && (
         <AddAndEditDatasetModal
           type={selection.selectedDatasetId ? 'edit' : 'add'}
-          openModal={isModalOpen('edit')}
           onClose={() => {
             actions.closeModal();
           }}
@@ -91,54 +90,57 @@ export function DatasetModals({ actions, selection, handlers, folderActions }: D
         />
       )}
 
-      <ShareModal
-        title={t('Share Dataset')}
-        onClose={() => {
-          actions.closeModal();
-          selection.setShareEntityIds(null);
-          actions.handleRefresh();
-        }}
-        openModal={isModalOpen('share')}
-        entityType="DataSet"
-        entityId={selection.shareEntityIds ?? (selection.selectedDataset?.dataSetId || null)}
-      />
+      {isModalOpen('share') && (
+        <ShareModal
+          title={t('Share Dataset')}
+          onClose={() => {
+            actions.closeModal();
+            selection.setShareEntityIds(null);
+            actions.handleRefresh();
+          }}
+          entityType="DataSet"
+          entityId={selection.shareEntityIds ?? (selection.selectedDataset?.dataSetId || null)}
+        />
+      )}
 
       <FolderActionModals folderActions={folderActions} />
 
-      <DeleteDatasetModal
-        isOpen={isModalOpen('delete')}
-        onClose={actions.closeModal}
-        onDelete={handlers.confirmDelete}
-        itemCount={selection.itemsToDelete.length}
-        datasetName={
-          selection.itemsToDelete.length === 1 ? selection.itemsToDelete[0]?.dataSet : undefined
-        }
-        error={actions.deleteError}
-        isLoading={actions.isDeleting}
-      />
+      {isModalOpen('delete') && (
+        <DeleteDatasetModal
+          onClose={actions.closeModal}
+          onDelete={handlers.confirmDelete}
+          itemCount={selection.itemsToDelete.length}
+          datasetName={
+            selection.itemsToDelete.length === 1 ? selection.itemsToDelete[0]?.dataSet : undefined
+          }
+          error={actions.deleteError}
+          isLoading={actions.isDeleting}
+        />
+      )}
 
-      <CopyDatasetModal
-        isOpen={isModalOpen('copy')}
-        onClose={actions.closeModal}
-        onConfirm={(dataSet, description, code, copyRows) =>
-          handlers.handleConfirmClone(dataSet, description, code, copyRows)
-        }
-        dataset={selection.selectedDataset}
-        isLoading={actions.isCloning}
-        existingNames={selection.existingNames}
-      />
+      {isModalOpen('copy') && (
+        <CopyDatasetModal
+          onClose={actions.closeModal}
+          onConfirm={(dataSet, description, code, copyRows) =>
+            handlers.handleConfirmClone(dataSet, description, code, copyRows)
+          }
+          dataset={selection.selectedDataset}
+          isLoading={actions.isCloning}
+          existingNames={selection.existingNames}
+        />
+      )}
 
-      <MoveModal
-        isOpen={isModalOpen('move')}
-        onClose={actions.closeModal}
-        onConfirm={handlers.handleConfirmMove}
-        items={selection.itemsToMove}
-        entityLabel={t('Dataset')}
-      />
+      {isModalOpen('move') && (
+        <MoveModal
+          onClose={actions.closeModal}
+          onConfirm={handlers.handleConfirmMove}
+          items={selection.itemsToMove}
+          entityLabel={t('Dataset')}
+        />
+      )}
 
       {isModalOpen('import') && selection.selectedDatasetId && (
         <ImportDatasetCsvModal
-          isOpen={true}
           onClose={actions.closeModal}
           datasetId={selection.selectedDatasetId}
           onSuccess={() => {

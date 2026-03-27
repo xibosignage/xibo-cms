@@ -29,7 +29,7 @@ import type { Dataset } from '@/types/dataset';
 import { incrementName } from '@/utils/stringUtils';
 
 interface CopyDatasetModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   onConfirm: (newName: string, newDescription: string, newCode: string, copyRows: boolean) => void;
   dataset: Dataset | null;
@@ -38,7 +38,7 @@ interface CopyDatasetModalProps {
 }
 
 export default function CopyDatasetModal({
-  isOpen,
+  isOpen = true,
   onClose,
   onConfirm,
   dataset,
