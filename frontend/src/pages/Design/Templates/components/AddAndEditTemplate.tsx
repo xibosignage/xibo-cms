@@ -38,7 +38,7 @@ import type { Template } from '@/types/templates';
 
 interface AddAndEditTemplateModalProps {
   type: 'add' | 'edit';
-  openModal?: boolean;
+  isOpen?: boolean;
   data?: Template | null;
   onClose: () => void;
   onSave: (updated: Template) => void;
@@ -66,7 +66,7 @@ const DEFAULT_DRAFT: TemplateDraft = {
 
 export default function AddAndEditTemplateModal({
   type,
-  openModal = true,
+  isOpen = true,
   onClose,
   data,
   onSave,
@@ -93,7 +93,7 @@ export default function AddAndEditTemplateModal({
   });
 
   useEffect(() => {
-    if (!openModal) return;
+    if (!isOpen) return;
 
     const loadResolutions = async () => {
       setLoadingResolutions(true);
@@ -112,7 +112,7 @@ export default function AddAndEditTemplateModal({
     };
 
     loadResolutions();
-  }, [openModal]);
+  }, [isOpen]);
 
   useEffect(() => {
     if (type === 'edit' && data) {
@@ -208,7 +208,7 @@ export default function AddAndEditTemplateModal({
     <Modal
       title={modalTitle}
       onClose={onClose}
-      isOpen={openModal}
+      isOpen={isOpen}
       isPending={isPending}
       scrollable={false}
       error={apiError}
