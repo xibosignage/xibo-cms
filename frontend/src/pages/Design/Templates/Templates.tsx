@@ -391,7 +391,7 @@ export default function Templates() {
               return { ...prev, pageIndex: 0 };
             });
           }}
-          open={openFilter}
+          isOpen={openFilter}
           values={filterInputs}
           options={filterOptions}
           onReset={handleResetFilters}
