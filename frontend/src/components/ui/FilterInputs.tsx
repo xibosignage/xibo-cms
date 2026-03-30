@@ -39,7 +39,7 @@ export interface FilterConfigItem<T> {
 }
 
 type FilterInputsProps<T> = {
-  open: boolean;
+  isOpen: boolean;
   values: T;
   options: FilterConfigItem<T>[];
   onChange: (name: keyof T & string, value: string | number | null) => void;
@@ -47,7 +47,7 @@ type FilterInputsProps<T> = {
 };
 
 export default function FilterInputs<T>({
-  open,
+  isOpen,
   options,
   values,
   onChange,
@@ -55,11 +55,11 @@ export default function FilterInputs<T>({
 }: FilterInputsProps<T>) {
   return (
     <div
-      aria-hidden={!open}
+      aria-hidden={!isOpen}
       className={`
         transition-all duration-300 ease-in-out w-full
         ${
-          open
+          isOpen
             ? 'max-h-150 opacity-100 visible mt-4 overflow-visible'
             : 'max-h-0 opacity-0 invisible mt-0 overflow-hidden'
         }

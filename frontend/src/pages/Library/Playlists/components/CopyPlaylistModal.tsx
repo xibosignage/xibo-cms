@@ -29,7 +29,7 @@ import type { Playlist } from '@/types/playlist';
 import { incrementName } from '@/utils/stringUtils';
 
 interface CopyPlaylistModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   onConfirm: (newName: string, copyMediaFiles: boolean) => void;
   playlist: Playlist | null;
@@ -38,7 +38,7 @@ interface CopyPlaylistModalProps {
 }
 
 export default function CopyPlaylistModal({
-  isOpen,
+  isOpen = true,
   onClose,
   onConfirm,
   playlist,

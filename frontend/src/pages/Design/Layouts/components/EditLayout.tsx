@@ -34,7 +34,7 @@ import type { Layout } from '@/types/layout';
 import type { Tag } from '@/types/tag';
 
 interface EditLayoutModalProps {
-  openModal: boolean;
+  isOpen?: boolean;
   data: Layout;
   onClose: () => void;
   onSave: (updated: Layout) => void;
@@ -56,7 +56,7 @@ type LayoutDraft = {
   code: string;
 };
 
-export default function EditLayout({ openModal, onClose, data, onSave }: EditLayoutModalProps) {
+export default function EditLayout({ isOpen = true, onClose, data, onSave }: EditLayoutModalProps) {
   const { t } = useTranslation();
 
   const [isSaving, setIsSaving] = useState(false);
@@ -139,7 +139,7 @@ export default function EditLayout({ openModal, onClose, data, onSave }: EditLay
       } else if (err instanceof Error) {
         setApiError(err.message);
       } else {
-        setApiError(t('An unexpected error occurred while saving the playlist.'));
+        setApiError(t('An unexpected error occurred while saving the layout.'));
       }
     } finally {
       setIsSaving(false);
@@ -150,7 +150,7 @@ export default function EditLayout({ openModal, onClose, data, onSave }: EditLay
     <Modal
       title={t('Edit Layout')}
       onClose={onClose}
-      isOpen={openModal}
+      isOpen={isOpen}
       isPending={isSaving}
       scrollable={false}
       error={apiError}

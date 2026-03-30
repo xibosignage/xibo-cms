@@ -108,7 +108,8 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'dayparting',
         labelKey: 'Dayparting',
-        externalURL: '/dayparting/view',
+        lazy: () =>
+          import('@/pages/Schedule/Daypart/Daypart').then((m) => ({ Component: m.default })),
         feature: 'daypart.view',
       },
     ],
@@ -168,7 +169,38 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'datasets',
         labelKey: 'Datasets',
-        externalURL: '/dataset/view',
+        lazy: () =>
+          import('@/pages/Library/Dataset/Datasets').then((m) => ({ Component: m.default })),
+        feature: 'dataset.view',
+      },
+      {
+        path: 'datasets/:datasetId/columns',
+        labelKey: 'Dataset Columns',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Library/Dataset/subPages/Columns/DatasetColumns').then((m) => ({
+            Component: m.default,
+          })),
+        feature: 'dataset.view',
+      },
+      {
+        path: 'datasets/:datasetId/data',
+        labelKey: 'Dataset Data',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Library/Dataset/subPages/Data/DatasetData').then((m) => ({
+            Component: m.default,
+          })),
+        feature: 'dataset.view',
+      },
+      {
+        path: 'datasets/:datasetId/rss',
+        labelKey: 'Dataset RSS',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Library/Dataset/subPages/Rss/DatasetRss').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'dataset.view',
       },
       {

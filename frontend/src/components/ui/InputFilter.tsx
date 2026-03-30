@@ -66,7 +66,7 @@ export default function InputFilter({
         value={value ?? ''}
         onChange={handleChange}
         placeholder={t(placeholder || label)}
-        className="w-full bg-white rounded-lg border border-gray-200 px-4 py-[13.5px] text-left text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+        className="w-full h-11.25 bg-white rounded-lg border border-gray-200 px-4 text-left text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
       />
     </div>
   );

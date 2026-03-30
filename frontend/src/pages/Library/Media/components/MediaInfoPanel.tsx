@@ -27,7 +27,7 @@ import type { Media } from '@/types/media';
 import type { User } from '@/types/user';
 
 type MediaInfoPanelProps = {
-  open: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   mediaData: Media | null | undefined;
   owner: User | null;
@@ -46,7 +46,7 @@ function formatSeconds(seconds: number): string {
 }
 
 export function MediaInfoPanel({
-  open,
+  isOpen = true,
   onClose,
   mediaData,
   owner,
@@ -77,7 +77,7 @@ export function MediaInfoPanel({
           : 'bg-gray-800 border-l border-gray-700 rounded-xl',
 
         'transition-[max-width, opacity] duration-300 ease-in-out overflow-hidden',
-        open ? 'max-w-62 w-62 opacity-100' : 'max-w-0 opacity-0',
+        isOpen ? 'max-w-62 w-62 opacity-100' : 'max-w-0 opacity-0',
       )}
     >
       {/* Header */}

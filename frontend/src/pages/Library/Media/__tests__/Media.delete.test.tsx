@@ -134,9 +134,9 @@ describe('Delete Media', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // BUG
+  // Delete modal shows error when an item cannot be deleted
   // ---------------------------------------------------------------------------
-  test.fails('delete modal stays open and shows error when an item cannot be deleted', async () => {
+  test('delete modal stays open and shows error when an item cannot be deleted', async () => {
     vi.mocked(deleteMedia).mockRejectedValueOnce(new Error('Media is in use'));
 
     renderMediaPage();
@@ -150,6 +150,6 @@ describe('Delete Media', () => {
     });
 
     // Error message must appear inside the modal
-    expect(screen.getByText(/could not be deleted because they are in use/i)).toBeInTheDocument();
+    expect(screen.getByText('{{count}} item(s) could not be deleted.')).toBeInTheDocument();
   });
 });

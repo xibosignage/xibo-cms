@@ -39,4 +39,4 @@ export type ActionItem =
       isQuickAction?: boolean;
     };
 
-export type BaseModalType = 'edit' | 'share' | 'delete' | 'copy' | 'move' | 'logout';
+export type BaseModalType = 'edit' | 'share' | 'delete' | 'copy' | 'move' | 'logout' | 'import';

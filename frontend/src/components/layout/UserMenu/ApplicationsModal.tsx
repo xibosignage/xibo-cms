@@ -33,11 +33,11 @@ import { useUserContext } from '@/context/UserContext';
 import type { UserApplication } from '@/services/userApi';
 
 interface ApplicationsModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
 }
 
-export default function ApplicationsModal({ isOpen, onClose }: ApplicationsModalProps) {
+export default function ApplicationsModal({ isOpen = true, onClose }: ApplicationsModalProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
   const { query, revokeMutation } = useUserApplications(user?.userId, isOpen);

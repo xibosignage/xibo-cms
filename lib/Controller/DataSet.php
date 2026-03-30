@@ -228,11 +228,15 @@ class DataSet extends Base
                 break;
             }
 
-            $dataSet->includeProperty('buttons');
-            $dataSet->buttons = [];
-
             // Load the dataSet to get the columns
             $dataSet->load();
+
+            if ($this->isJson($request)) {
+                continue;
+            }
+
+            $dataSet->includeProperty('buttons');
+            $dataSet->buttons = [];
 
             if ($this->getUser()->featureEnabled('dataset.data') && $user->checkEditable($dataSet)) {
                 // View Data

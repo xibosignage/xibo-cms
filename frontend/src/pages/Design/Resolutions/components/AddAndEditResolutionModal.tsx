@@ -33,7 +33,7 @@ import type { Resolution } from '@/types/resolution';
 
 interface AddAndEditResolutionModalProps {
   type: 'add' | 'edit';
-  openModal: boolean;
+  isOpen?: boolean;
   data?: Resolution | null;
   onClose: () => void;
   onSave: (updated: Resolution) => void;
@@ -57,7 +57,7 @@ type ResolutionFormErrors = Partial<Record<keyof ResolutionDraft, string>>;
 
 export default function AddAndEditResolutionModal({
   type,
-  openModal,
+  isOpen = true,
   onClose,
   data,
   onSave,
@@ -74,7 +74,7 @@ export default function AddAndEditResolutionModal({
         resolution: data.resolution,
         width: data.width,
         height: data.height,
-        enabled: data.enabled,
+        enabled: Boolean(data.enabled),
       };
     }
     return { ...DEFAULT_DRAFT };
@@ -87,7 +87,7 @@ export default function AddAndEditResolutionModal({
         resolution: data.resolution,
         width: data.width,
         height: data.height,
-        enabled: data.enabled,
+        enabled: Boolean(data.enabled),
       });
     } else {
       setDraft({ ...DEFAULT_DRAFT });
@@ -166,7 +166,7 @@ export default function AddAndEditResolutionModal({
     <Modal
       title={modalTitle}
       onClose={onClose}
-      isOpen={openModal}
+      isOpen={isOpen}
       isPending={isPending}
       scrollable={false}
       error={apiError}

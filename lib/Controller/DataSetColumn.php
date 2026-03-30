@@ -161,8 +161,13 @@ class DataSetColumn extends Base
             $column->dataType = __($column->dataType);
             $column->dataSetColumnType = __($column->dataSetColumnType);
 
-            if ($this->isApi($request))
+            if ($this->isApi($request)) {
                 break;
+            }
+
+            if ($this->isJson($request)) {
+                continue;
+            }
 
             $column->includeProperty('buttons');
 

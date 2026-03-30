@@ -101,7 +101,7 @@ function TagInput({
 
       <div
         className={twMerge(
-          'flex rounded-lg bg-white border border-gray-200 overflow-hidden transition-colors',
+          'flex rounded-lg bg-white border border-gray-200 overflow-hidden transition-colors min-h-11.25',
           'focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500',
           disabled && 'opacity-50 pointer-events-none bg-gray-50',
           className,

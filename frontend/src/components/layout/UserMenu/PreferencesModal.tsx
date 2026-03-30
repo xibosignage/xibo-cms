@@ -28,11 +28,11 @@ import { useUserContext } from '@/context/UserContext';
 import { saveUserPreferencesBulk } from '@/services/userApi';
 
 interface PreferencesModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
 }
 
-export default function PreferencesModal({ isOpen, onClose }: PreferencesModalProps) {
+export default function PreferencesModal({ isOpen = true, onClose }: PreferencesModalProps) {
   const { t } = useTranslation();
   const { user, updateUser } = useUserContext();
 

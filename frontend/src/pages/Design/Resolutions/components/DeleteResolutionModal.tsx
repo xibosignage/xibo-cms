@@ -25,7 +25,7 @@ import { useTranslation } from 'react-i18next';
 import Modal from '@/components/ui/modals/Modal';
 
 interface DeleteResolutionModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   onDelete: () => void;
   itemCount: number;
@@ -35,7 +35,7 @@ interface DeleteResolutionModalProps {
 }
 
 export default function DeleteResolutionModal({
-  isOpen,
+  isOpen = true,
   onClose,
   onDelete,
   resolutionName,

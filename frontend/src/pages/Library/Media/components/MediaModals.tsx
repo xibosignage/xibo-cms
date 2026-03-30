@@ -122,52 +122,55 @@ export function MediaModals({
 
   return (
     <>
-      <DeleteMediaModal
-        isOpen={isModalOpen('delete')}
-        onClose={actions.closeModal}
-        onDelete={handlers.confirmDelete}
-        itemCount={selection.itemsToDelete.length}
-        fileName={
-          selection.itemsToDelete.length === 1 ? selection.itemsToDelete[0]?.name : undefined
-        }
-        isLoading={actions.isDeleting}
-        error={actions.deleteError}
-      />
+      {isModalOpen('delete') && (
+        <DeleteMediaModal
+          onClose={actions.closeModal}
+          onDelete={handlers.confirmDelete}
+          itemCount={selection.itemsToDelete.length}
+          fileName={
+            selection.itemsToDelete.length === 1 ? selection.itemsToDelete[0]?.name : undefined
+          }
+          isLoading={actions.isDeleting}
+          error={actions.deleteError}
+        />
+      )}
 
-      <CopyMediaModal
-        isOpen={isModalOpen('copy')}
-        onClose={actions.closeModal}
-        onConfirm={handlers.handleConfirmClone}
-        media={selection.selectedMedia}
-        isLoading={actions.isCloning}
-        existingNames={selection.existingNames}
-      />
+      {isModalOpen('copy') && (
+        <CopyMediaModal
+          onClose={actions.closeModal}
+          onConfirm={handlers.handleConfirmClone}
+          media={selection.selectedMedia}
+          isLoading={actions.isCloning}
+          existingNames={selection.existingNames}
+        />
+      )}
 
-      <MoveModal
-        isOpen={isModalOpen('move')}
-        onClose={actions.closeModal}
-        onConfirm={handlers.handleConfirmMove}
-        items={selection.itemsToMove}
-        entityLabel="Media"
-      />
+      {isModalOpen('move') && (
+        <MoveModal
+          onClose={actions.closeModal}
+          onConfirm={handlers.handleConfirmMove}
+          items={selection.itemsToMove}
+          entityLabel="Media"
+        />
+      )}
 
-      <ShareModal
-        title={t('Share Media')}
-        onClose={() => {
-          actions.closeModal();
-          selection.setShareEntityIds(null);
-          actions.handleRefresh();
-        }}
-        openModal={isModalOpen('share')}
-        entityType="media"
-        entityId={selection.shareEntityIds ?? (selection.selectedMedia?.mediaId || null)}
-      />
+      {isModalOpen('share') && (
+        <ShareModal
+          title={t('Share Media')}
+          onClose={() => {
+            actions.closeModal();
+            selection.setShareEntityIds(null);
+            actions.handleRefresh();
+          }}
+          entityType="media"
+          entityId={selection.shareEntityIds ?? (selection.selectedMedia?.mediaId || null)}
+        />
+      )}
 
       {selection.selectedMedia && (
         <>
           {isModalOpen('edit') && (
             <EditMediaModal
-              openModal={isModalOpen('edit')}
               onClose={actions.closeModal}
               onSave={(updatedMedia) => {
                 actions.setMediaList((prev) =>
@@ -181,7 +184,6 @@ export function MediaModals({
 
           {isModalOpen('replace') && (
             <ReplaceFileModal
-              openModal={isModalOpen('replace')}
               onClose={actions.closeModal}
               data={selection.selectedMedia}
               onSave={(updatedMedia) => {
@@ -195,54 +197,51 @@ export function MediaModals({
         </>
       )}
 
-      <Modal
-        isOpen={upload.isOpen}
-        onClose={upload.onCancel}
-        title={t('Add Media')}
-        actions={addModalActions}
-        size="lg"
-      >
-        <div className="flex flex-col gap-3 p-8 pt-0">
-          {upload.canViewFolders && (
-            <SelectFolder
-              selectedId={upload.selectedFolderId}
-              onSelect={(folder) => {
-                if (folder) {
-                  upload.setSelectedFolderId(folder.id);
-                }
+      {upload.isOpen && (
+        <Modal onClose={upload.onCancel} title={t('Add Media')} actions={addModalActions} size="lg">
+          <div className="flex flex-col gap-3 p-8 pt-0">
+            {upload.canViewFolders && (
+              <SelectFolder
+                selectedId={upload.selectedFolderId}
+                onSelect={(folder) => {
+                  if (folder) {
+                    upload.setSelectedFolderId(folder.id);
+                  }
+                }}
+              />
+            )}
+
+            <FileUploader
+              queue={upload.queue}
+              acceptedFileTypes={ACCEPTED_MIME_TYPES}
+              addFiles={upload.onManualAdd}
+              removeFile={upload.removeFile}
+              clearQueue={upload.clearQueue}
+              updateFileData={upload.updateFileData}
+              isUploading={false}
+              maxSize={2 * 1024 * 1024 * 1024}
+              disabled={!upload.canAdd}
+              onUrlUpload={(url) => {
+                upload.onUrlAdd(url, upload.targetFolderId);
               }}
             />
-          )}
+          </div>
+        </Modal>
+      )}
 
-          <FileUploader
-            queue={upload.queue}
-            acceptedFileTypes={ACCEPTED_MIME_TYPES}
-            addFiles={upload.onManualAdd}
-            removeFile={upload.removeFile}
-            clearQueue={upload.clearQueue}
-            updateFileData={upload.updateFileData}
-            isUploading={false}
-            maxSize={2 * 1024 * 1024 * 1024}
-            disabled={!upload.canAdd}
-            onUrlUpload={(url) => {
-              upload.onUrlAdd(url, upload.targetFolderId);
-            }}
-          />
-        </div>
-      </Modal>
-
-      <MediaInfoPanel
-        open={infoPanel.isOpen}
-        onClose={() => {
-          infoPanel.setSelectedMediaId(null);
-          infoPanel.setOpen(false);
-        }}
-        mediaData={selection.selectedMedia}
-        owner={infoPanel.owner}
-        applyVersionTwo
-        folderName={infoPanel.folderName}
-        loading={infoPanel.loading}
-      />
+      {infoPanel.isOpen && (
+        <MediaInfoPanel
+          onClose={() => {
+            infoPanel.setSelectedMediaId(null);
+            infoPanel.setOpen(false);
+          }}
+          mediaData={selection.selectedMedia}
+          owner={infoPanel.owner}
+          applyVersionTwo
+          folderName={infoPanel.folderName}
+          loading={infoPanel.loading}
+        />
+      )}
 
       <UploadProgressDock isModalOpen={upload.isOpen} />
 

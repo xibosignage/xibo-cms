@@ -60,7 +60,7 @@ interface PermissionChange {
 
 interface ShareModalProps {
   title?: string;
-  openModal: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   entityType: string;
   entityId: number | number[] | null;
@@ -75,7 +75,7 @@ type OwnerOption = {
 
 export default function ShareModal({
   title,
-  openModal,
+  isOpen = true,
   onClose,
   entityType,
   entityId,
@@ -111,13 +111,13 @@ export default function ShareModal({
   const sortDir = sort ? (sort.desc ? 'desc' : 'asc') : undefined;
 
   useEffect(() => {
-    if (!openModal) {
+    if (!isOpen) {
       setModifiedPermissions({});
       setPagination({ pageIndex: 0, pageSize: 10 });
       setNameFilter('');
       setFilter('all');
     }
-  }, [openModal]);
+  }, [isOpen]);
 
   const togglePermission = (row: UserRow, key: keyof PermissionChange) => {
     setModifiedPermissions((prev) => {
@@ -228,7 +228,7 @@ export default function ShareModal({
 
   // Data loading
   useEffect(() => {
-    if (!openModal || !entityId) return;
+    if (!isOpen || !entityId) return;
 
     const loadData = async () => {
       setLoading(true);
@@ -285,7 +285,7 @@ export default function ShareModal({
 
     loadData();
   }, [
-    openModal,
+    isOpen,
     pagination.pageIndex,
     pagination.pageSize,
     filter,
@@ -346,7 +346,7 @@ export default function ShareModal({
   };
 
   useEffect(() => {
-    if (!openModal) return;
+    if (!isOpen) return;
 
     const loadOwners = async () => {
       setOwnerLoading(true);
@@ -363,13 +363,13 @@ export default function ShareModal({
       }
     };
     loadOwners();
-  }, [openModal]);
+  }, [isOpen]);
 
   return (
     <div>
       <Modal
         title={title}
-        isOpen={openModal}
+        isOpen={isOpen}
         onClose={onClose}
         size="lg"
         actions={[

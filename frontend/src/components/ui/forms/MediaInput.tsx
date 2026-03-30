@@ -155,7 +155,7 @@ export default function MediaInput({
 
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex flex-wrap items-center gap-1.5 py-1.5 px-2 bg-white border rounded-lg min-h-10.5 transition-colors ${
+        className={`flex flex-wrap items-center gap-1.5 py-1.5 px-2 bg-white border rounded-lg min-h-11.25 transition-colors ${
           isOpen
             ? 'border-xibo-blue-500 ring-1 ring-xibo-blue-500'
             : 'border-gray-200 hover:border-gray-300'

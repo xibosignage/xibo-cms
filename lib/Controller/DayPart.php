@@ -140,7 +140,7 @@ class DayPart extends Base
             if (!in_array('exceptions', $embed)){
                 $dayPart->excludeProperty('exceptions');
             }
-            if ($this->isApi($request))
+            if ($this->isApi($request) || $this->isJson($request))
                 continue;
 
             $dayPart->includeProperty('buttons');

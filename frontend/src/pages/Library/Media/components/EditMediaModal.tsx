@@ -41,7 +41,7 @@ import type { ExpiryValue } from '@/utils/date';
 import { expiresToExpiryValue, expiryToDateTime } from '@/utils/date';
 
 interface EditMediaModalProps {
-  openModal: boolean;
+  isOpen?: boolean;
   data: Media;
   onClose: () => void;
   onSave: (updated: Media) => void;
@@ -62,7 +62,12 @@ type MediaDraft = {
   updateInLayouts: boolean;
 };
 
-export default function EditMediaModal({ openModal, onClose, data, onSave }: EditMediaModalProps) {
+export default function EditMediaModal({
+  isOpen = true,
+  onClose,
+  data,
+  onSave,
+}: EditMediaModalProps) {
   const { t } = useTranslation();
   const [expiry, setExpiry] = useState<ExpiryValue>(expiresToExpiryValue(data.expires));
   const [apiError, setApiError] = useState<string | undefined>();
@@ -176,7 +181,7 @@ export default function EditMediaModal({ openModal, onClose, data, onSave }: Edi
     <Modal
       title={t('Edit Media')}
       onClose={onClose}
-      isOpen={openModal}
+      isOpen={isOpen}
       isPending={isSaving}
       scrollable={false}
       error={apiError}

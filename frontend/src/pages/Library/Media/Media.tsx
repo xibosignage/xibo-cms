@@ -212,11 +212,9 @@ export default function Media() {
 
       mediaList.forEach((item) => {
         const id = item.mediaId.toString();
-        if (rowSelection[id]) {
-          if (!next[id]) {
-            next[id] = item;
-            hasChanges = true;
-          }
+        if (rowSelection[id] && next[id] !== item) {
+          next[id] = item;
+          hasChanges = true;
         }
       });
 
@@ -241,6 +239,7 @@ export default function Media() {
   const {
     isDeleting,
     deleteError,
+    setDeleteError,
     isCloning,
     confirmDelete,
     handleConfirmClone,
@@ -259,6 +258,7 @@ export default function Media() {
       return;
     }
 
+    setDeleteError(null);
     setItemsToDelete([media]);
     openModal('delete');
   };
@@ -340,6 +340,7 @@ export default function Media() {
         return;
       }
 
+      setDeleteError(null);
       setItemsToDelete(permittedItems);
       openModal('delete');
     },
@@ -560,7 +561,7 @@ export default function Media() {
             setFilterInputs((prev) => ({ ...prev, [name]: value }));
             setPagination((prev) => ({ ...prev, pageIndex: 0 }));
           }}
-          open={openFilter}
+          isOpen={openFilter}
           values={filterInputs}
           options={filterOptions}
           onReset={handleResetFilters}

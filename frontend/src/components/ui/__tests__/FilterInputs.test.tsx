@@ -38,13 +38,19 @@ type RenderProps = Partial<React.ComponentProps<typeof FilterInputs<Filters>>>;
 // Renders a FilterInputs bar with defaults that a test can override.
 const renderFilters = (props: RenderProps = {}) =>
   render(
-    <FilterInputs open={true} options={[]} values={defaultValues} onChange={vi.fn()} {...props} />,
+    <FilterInputs
+      isOpen={true}
+      options={[]}
+      values={defaultValues}
+      onChange={vi.fn()}
+      {...props}
+    />,
   );
 
 describe('FilterInputs', () => {
   // When the user hasn't opened the filter bar yet, it is hidden from view.
   test('collapsed filter bar is invisible to screen readers', () => {
-    const { container } = renderFilters({ open: false });
+    const { container } = renderFilters({ isOpen: false });
 
     expect(container.firstChild).toHaveAttribute('aria-hidden', 'true');
   });

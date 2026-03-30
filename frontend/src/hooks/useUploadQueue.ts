@@ -99,19 +99,24 @@ export const useUploadQueue = (defaultFolderId: number = 1): UseUploadQueueRetur
     data: { name?: string; tags?: string; thumbnailBlob?: Blob },
   ) => {
     setQueue((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              displayName: data.name ?? item.displayName,
-              tags: data.tags ?? item.tags,
-              isDirty: true, // Marks item for sync if upload is done or in progress
-              retryCount: 0,
-              thumbnailBlob:
-                data.thumbnailBlob !== undefined ? data.thumbnailBlob : item.thumbnailBlob,
-            }
-          : item,
-      ),
+      prev.map((item) => {
+        if (item.id !== id) {
+          return item;
+        }
+
+        // If the initial upload failed (no mediaId) and the name changed, reset to pending so it retries
+        const shouldRetry = item.status === 'error' && !item.mediaId && data.name !== undefined;
+
+        return {
+          ...item,
+          displayName: data.name ?? item.displayName,
+          tags: data.tags ?? item.tags,
+          isDirty: true, // Marks item for sync if upload is done or in progress
+          retryCount: 0,
+          thumbnailBlob: data.thumbnailBlob !== undefined ? data.thumbnailBlob : item.thumbnailBlob,
+          ...(shouldRetry && { status: 'pending', error: undefined, progress: 0 }),
+        };
+      }),
     );
   };
 
@@ -220,6 +225,7 @@ export const useUploadQueue = (defaultFolderId: number = 1): UseUploadQueueRetur
         } else if (nextItem.type === 'file' && nextItem.file) {
           const response = await uploadMedia({
             file: nextItem.file,
+            name: nextItem.displayName,
             folderId: nextItem.folderId || defaultFolderId,
             tags: initialTags,
             signal: controller.signal,

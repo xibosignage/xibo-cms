@@ -357,14 +357,11 @@ describe('Edit Media — save behaviour', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // BUG: after a failed save the Save button stays disabled. The user is stuck
-  // and cannot retry without closing and reopening the modal.
-  // Expected: the button should re-enable so the user can try again.
-  //
-  // TODO: change test.fails to test.
+  // The finally block in handleSave always resets isSaving, so the Save button
+  // re-enables and its label reverts from "Saving…" back to "Save" after a failure.
   // ---------------------------------------------------------------------------
-  test.fails('Save button re-enables after a failed save', async () => {
-    vi.mocked(updateMedia).mockReturnValueOnce(new Promise(() => {}));
+  test('Save button re-enables after a failed save', async () => {
+    vi.mocked(updateMedia).mockRejectedValueOnce(new Error('Network error'));
 
     renderMediaPage();
     await openEditModal();

@@ -125,11 +125,9 @@ export default function Sessions() {
       sessionList.forEach((item: Session) => {
         const id = item.userId.toString();
 
-        if (rowSelection[id]) {
-          if (!next[id]) {
-            next[id] = item;
-            hasChanges = true;
-          }
+        if (rowSelection[id] && next[id] !== item) {
+          next[id] = item;
+          hasChanges = true;
         }
       });
 
@@ -219,7 +217,7 @@ export default function Sessions() {
             setFilterInputs((prev) => ({ ...prev, [name]: value }));
             setPagination((prev) => ({ ...prev, pageIndex: 0 }));
           }}
-          open={openFilter}
+          isOpen={openFilter}
           values={filterInputs}
           options={filterOptions}
           onReset={handleResetFilters}
