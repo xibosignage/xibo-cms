@@ -48,12 +48,12 @@ import type { Template } from '@/types/templates';
 
 export interface TemplatesFilterInput {
   name?: string;
-  tags?: string;
+  tags?: Tag[];
 }
 
 export const TEMPLATE_INITIAL_FILTER_STATE: TemplatesFilterInput = {
   name: '',
-  tags: '',
+  tags: [],
 };
 
 export type ModalType = BaseModalType | null;
@@ -62,7 +62,7 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<Record<string,
   {
     label: t('Tag'),
     name: 'tags',
-    type: 'text' as const,
+    type: 'tags',
     className: 'max-w-auto md:max-w-80',
     shouldTranslateOptions: false,
     showAllOption: false,

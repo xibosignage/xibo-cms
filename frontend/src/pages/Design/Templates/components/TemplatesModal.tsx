@@ -73,7 +73,6 @@ export function TemplateModals({
       {isModalOpen('edit') && (
         <AddAndEditTemplateModal
           type={selection.selectedTemplateId ? 'edit' : 'add'}
-          openModal={isModalOpen('edit')}
           onClose={() => {
             actions.closeModal();
           }}
@@ -91,47 +90,49 @@ export function TemplateModals({
         />
       )}
       <FolderActionModals folderActions={folderActions} />
-      <ShareModal
-        title={t('Share Template')}
-        onClose={() => {
-          actions.closeModal();
-          selection.setShareEntityIds(null);
-          actions.handleRefresh();
-        }}
-        openModal={isModalOpen('share')}
-        entityType="campaign"
-        entityId={selection.shareEntityIds ?? (selection.selectedTemplate?.campaignId || null)}
-      />
-      <DeleteTemplateModal
-        isOpen={isModalOpen('delete')}
-        onClose={actions.closeModal}
-        onDelete={() => handlers.confirmDelete(selection.itemsToDelete)}
-        itemCount={selection.itemsToDelete.length}
-        templateName={
-          selection.itemsToDelete.length === 1 ? selection.itemsToDelete[0]?.layout : undefined
-        }
-        error={actions.deleteError}
-        isLoading={actions.isDeleting}
-      />
-
-      <CopyTemplateModal
-        isOpen={isModalOpen('copy')}
-        onClose={actions.closeModal}
-        onConfirm={(name, description, copyTemplate) =>
-          handlers.handleConfirmClone(name, description, copyTemplate)
-        }
-        template={selection.selectedTemplate}
-        isLoading={actions.isCloning}
-        existingNames={selection.existingNames}
-      />
-
-      <MoveModal
-        isOpen={isModalOpen('move')}
-        onClose={actions.closeModal}
-        onConfirm={handlers?.handleConfirmMove}
-        items={selection.itemsToMove}
-        entityLabel={t('Templates')}
-      />
+      {isModalOpen('share') && (
+        <ShareModal
+          title={t('Share Template')}
+          onClose={() => {
+            actions.closeModal();
+            selection.setShareEntityIds(null);
+            actions.handleRefresh();
+          }}
+          entityType="campaign"
+          entityId={selection.shareEntityIds ?? (selection.selectedTemplate?.campaignId || null)}
+        />
+      )}
+      {isModalOpen('delete') && (
+        <DeleteTemplateModal
+          onClose={actions.closeModal}
+          onDelete={() => handlers.confirmDelete(selection.itemsToDelete)}
+          itemCount={selection.itemsToDelete.length}
+          templateName={
+            selection.itemsToDelete.length === 1 ? selection.itemsToDelete[0]?.layout : undefined
+          }
+          error={actions.deleteError}
+          isLoading={actions.isDeleting}
+        />
+      )}
+      {isModalOpen('copy') && (
+        <CopyTemplateModal
+          onClose={actions.closeModal}
+          onConfirm={(name, description, copyTemplate) =>
+            handlers.handleConfirmClone(name, description, copyTemplate)
+          }
+          template={selection.selectedTemplate}
+          isLoading={actions.isCloning}
+          existingNames={selection.existingNames}
+        />
+      )}
+      {isModalOpen('move') && (
+        <MoveModal
+          onClose={actions.closeModal}
+          onConfirm={handlers?.handleConfirmMove}
+          items={selection.itemsToMove}
+          entityLabel={t('Templates')}
+        />
+      )}
     </>
   );
 }

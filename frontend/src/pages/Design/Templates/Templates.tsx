@@ -185,11 +185,9 @@ export default function Templates() {
 
       templateList.forEach((item) => {
         const id = item.layoutId.toString();
-        if (rowSelection[id]) {
-          if (!next[id]) {
-            next[id] = item;
-            hasChanges = true;
-          }
+        if (rowSelection[id] && next[id] !== item) {
+          next[id] = item;
+          hasChanges = true;
         }
       });
 

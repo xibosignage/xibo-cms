@@ -38,7 +38,7 @@ import type { Template } from '@/types/templates';
 
 interface AddAndEditTemplateModalProps {
   type: 'add' | 'edit';
-  openModal: boolean;
+  openModal?: boolean;
   data?: Template | null;
   onClose: () => void;
   onSave: (updated: Template) => void;
@@ -66,7 +66,7 @@ const DEFAULT_DRAFT: TemplateDraft = {
 
 export default function AddAndEditTemplateModal({
   type,
-  openModal,
+  openModal = true,
   onClose,
   data,
   onSave,

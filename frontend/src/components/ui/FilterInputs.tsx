@@ -23,12 +23,15 @@ import Button from './Button';
 import InputFilter from './InputFilter';
 import type { FilterOption } from './SelectFilter';
 import SelectFilter from './SelectFilter';
+import TagInput from './forms/TagInput';
+
+import type { Tag } from '@/types/tag';
 
 export interface FilterConfigItem<T> {
   label: string;
   name: keyof T & string;
   placeholder?: string;
-  type?: 'select' | 'text' | 'number';
+  type?: 'select' | 'text' | 'number' | 'tags';
   className?: string;
   options?: FilterOption[];
   shouldTranslateOptions?: boolean;
@@ -38,11 +41,13 @@ export interface FilterConfigItem<T> {
   isJalali?: boolean;
 }
 
+type FilterValue = string | number | null | Tag[];
+
 type FilterInputsProps<T> = {
   isOpen: boolean;
   values: T;
   options: FilterConfigItem<T>[];
-  onChange: (name: keyof T & string, value: string | number | null) => void;
+  onChange: (name: keyof T & string, value: FilterValue) => void;
   onReset?: () => void;
 };
 
@@ -90,6 +95,19 @@ export default function FilterInputs<T>({
                 value={values[filter.name] as string | number}
                 onChange={(name, val) => onChange(name as keyof T & string, val)}
                 className={filter.className}
+              />
+            );
+          }
+
+          if (filterType === 'tags') {
+            return (
+              <TagInput
+                key={filter.name}
+                label={filter.label}
+                value={(values[filter.name] as Tag[]) || []}
+                onChange={(tags) => onChange(filter.name, tags)}
+                className={filter.className}
+                placeholder={filter.placeholder}
               />
             );
           }

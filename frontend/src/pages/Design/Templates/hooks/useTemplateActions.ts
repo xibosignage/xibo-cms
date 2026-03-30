@@ -20,6 +20,7 @@
  */
 
 import type { RowSelectionState } from '@tanstack/react-table';
+import { isAxiosError } from 'axios';
 import type { TFunction } from 'i18next';
 import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
@@ -55,13 +56,29 @@ export function useTemplateActions({
 
     try {
       setIsDeleting(true);
+
       const results = await Promise.allSettled(
         itemsToDelete.map((item) => deleteLayout(item.layoutId)),
       );
 
       const failed = results.filter((r) => r.status === 'rejected');
+
       if (failed.length > 0) {
-        setDeleteError(`${failed.length} item(s) could not be deleted because they are in use.`);
+        const firstRejected = failed[0] as PromiseRejectedResult;
+        const reason = firstRejected.reason;
+
+        const message =
+          isAxiosError(reason) && reason.response?.data?.message
+            ? reason.response.data.message
+            : t('{{count}} item(s) could not be deleted because they are in use.', {
+                count: failed.length,
+              });
+
+        setDeleteError(message);
+
+        setRowSelection({});
+        handleRefresh();
+        return;
       }
 
       setRowSelection({});
@@ -69,7 +86,13 @@ export function useTemplateActions({
       closeModal();
     } catch (error) {
       console.error(error);
-      setDeleteError('Some selected items are in use and cannot be deleted.');
+
+      const message =
+        isAxiosError(error) && error.response?.data?.message
+          ? error.response.data.message
+          : t('Some selected items are in use and cannot be deleted.');
+
+      setDeleteError(message);
     } finally {
       setIsDeleting(false);
     }

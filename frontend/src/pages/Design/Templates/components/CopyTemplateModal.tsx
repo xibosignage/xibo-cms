@@ -30,7 +30,7 @@ import type { Template } from '@/types/templates';
 import { incrementName } from '@/utils/stringUtils';
 
 interface CopyTemplateModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   onConfirm: (newName: string, description: string, copyMediaFiles: boolean) => void;
   template: Template | null;
@@ -41,7 +41,7 @@ interface CopyTemplateModalProps {
 type CopyTemplateFormErrors = Partial<Record<'name' | 'description', string>>;
 
 export default function CopyTemplateModal({
-  isOpen,
+  isOpen = true,
   onClose,
   onConfirm,
   template,

@@ -68,7 +68,9 @@ export const useTemplateData = ({
       const sortBy = sorting?.[0]?.id;
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
 
-      const { ...restFilters } = advancedFilters;
+      const { tags, ...restFilters } = advancedFilters;
+
+      const normalizedTags = tags && tags.length > 0 ? tags.map((t) => t.tag).join(',') : undefined;
 
       const request: FetchTemplateRequest = {
         start: startOffset,
@@ -78,6 +80,7 @@ export const useTemplateData = ({
         sortDir: sorting.length ? sortDir : undefined,
         signal,
         ...restFilters,
+        ...(normalizedTags ? { tags: normalizedTags } : {}),
       };
 
       if (typeof folderId === 'number') {
