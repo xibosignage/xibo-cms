@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -1478,11 +1478,11 @@ window.setupScheduleForm = function(dialog) {
 
   // Hide/Show form elements according to the selected options
   // Initial state of the components
-  processScheduleFormElements($('#recurrenceType', dialog), dialog);
-  processScheduleFormElements($('#eventTypeId', dialog), dialog);
-  processScheduleFormElements($('#campaignId', dialog), dialog);
-  processScheduleFormElements($('#actionType', dialog), dialog);
-  processScheduleFormElements($('#relativeTime', dialog), dialog);
+  processScheduleFormElements($('#recurrenceType', dialog), dialog, false);
+  processScheduleFormElements($('#eventTypeId', dialog), dialog, false);
+  processScheduleFormElements($('#campaignId', dialog), dialog, false);
+  processScheduleFormElements($('#actionType', dialog), dialog, false);
+  processScheduleFormElements($('#relativeTime', dialog), dialog, false);
 
   // Events on change
   $('#recurrenceType, ' +
@@ -1494,7 +1494,7 @@ window.setupScheduleForm = function(dialog) {
     '#relativeTime, ' +
     '#syncTimezone', dialog)
     .on('change', function(ev) {
-      processScheduleFormElements($(ev.currentTarget), dialog);
+      processScheduleFormElements($(ev.currentTarget), dialog, true);
     });
 
   const evaluateDates = _.debounce(function() {
@@ -1824,7 +1824,7 @@ const configReminderFields = function(dialog) {
  * Process schedule form elements for the purpose of showing/hiding them
  * @param el jQuery element
  */
-const processScheduleFormElements = function(el, dialog) {
+const processScheduleFormElements = function(el, dialog, isOnChange) {
   const fieldVal = el.val();
   const relativeTime = $('#relativeTime').is(':checked');
   const isAddForm = $(dialog).find('form').is('#scheduleAddForm');
@@ -1982,7 +1982,7 @@ const processScheduleFormElements = function(el, dialog) {
       }
 
       // Call function for the daypart ID
-      processScheduleFormElements($('#dayPartId', dialog), dialog);
+      processScheduleFormElements($('#dayPartId', dialog), dialog, isOnChange);
 
       // Change the help text and label of the campaignId dropdown
       const $campaignSelect = el.closest('form').find('#campaignId');
@@ -2085,27 +2085,80 @@ const processScheduleFormElements = function(el, dialog) {
         $('li .nav-link[href="#general"]', dialog).tab('show');
       }
 
-      // Dayparts only show the start control
-      if (meta.isAlways === 0 && meta.isCustom === 0) {
-        // We need to update the date/time controls
-        // to only accept the date element
-        $startTime.find('input[name=fromDt_Link2]').hide();
-        $startTime.find('small.text-muted').html(
-          $startTime.closest('form').data().notDaypartMessage,
-        );
-      } else {
-        $startTime.find('input[name=fromDt_Link2]').show();
-        $startTime.find('small.text-muted').html(
-          $startTime.closest('form').data().daypartMessage,
-        );
+      // Reinitialise the fromDt picker based on daypart type.
+      // For named dayparts, time comes from the daypart definition so only a
+      // date is needed. For custom dayparts, the user sets the time directly.
+      const $fromDtInput = $startTime.find('input[name=fromDt]');
+      if (isOnChange && $fromDtInput.length) {
+        destroyDatePicker($fromDtInput);
+
+        if (meta.isAlways === 0 && meta.isCustom === 0) {
+          // Neither always/custom, a user defined day part has been provided
+          // show date picker
+          if (calendarType === 'Jalali') {
+            initDatePicker(
+              $fromDtInput,
+              systemDateFormat,
+              jsDateOnlyFormat,
+              {
+                altFieldFormatter: function(unixTime) {
+                  const newDate = moment.unix(unixTime / 1000);
+                  newDate.set('hour', 0);
+                  newDate.set('minute', 0);
+                  newDate.set('second', 0);
+                  return newDate.format(systemDateFormat);
+                },
+              },
+            );
+          } else {
+            initDatePicker(
+              $fromDtInput,
+              systemDateFormat,
+              jsDateOnlyFormat,
+            );
+          }
+        } else {
+          // show date/time picker
+          const enableSeconds = dateFormat.includes('s');
+          const enable24 = !dateFormat.includes('A');
+
+          if (calendarType === 'Jalali') {
+            initDatePicker(
+              $fromDtInput,
+              systemDateFormat,
+              jsDateFormat,
+              {
+                timePicker: {
+                  enabled: true,
+                  second: {
+                    enabled: enableSeconds,
+                  },
+                },
+              },
+            );
+          } else {
+            initDatePicker(
+              $fromDtInput,
+              systemDateFormat,
+              jsDateFormat,
+              {
+                enableTime: true,
+                time_24hr: enable24,
+                enableSeconds: enableSeconds,
+                altFormat: $fromDtInput.data('customFormat') ?
+                  $fromDtInput.data('customFormat') : jsDateFormat,
+              },
+            );
+          }
+        }
       }
 
       // if dayparting is set to always, disable start time and end time
       if (meta.isAlways === 0) {
-        $startTime.find('input[name=fromDt]').prop('disabled', false);
+        $fromDtInput.find('input[name=fromDt]').prop('disabled', false);
         $endTime.find('input[name=toDt]').prop('disabled', false);
       } else {
-        $startTime.find('input[name=fromDt]').prop('disabled', true);
+        $fromDtInput.find('input[name=fromDt]').prop('disabled', true);
         $endTime.find('input[name=toDt]').prop('disabled', true);
       }
 
