@@ -55,11 +55,10 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\Environment;
 use Xibo\Helper\HttpsDetect;
+use Xibo\Helper\LibraryDescription;
 use Xibo\Helper\LinkSigner;
 use Xibo\Helper\XiboUploadHandler;
-use Xibo\Helper\LibraryDescription;
 use Xibo\Service\MediaService;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -524,6 +523,44 @@ class Library extends Base
             ->withStatus(200)
             ->withHeader('X-Total-Count', $recordsTotal)
             ->withJson($mediaList);
+    }
+
+    #[OA\Get(
+        path: '/library/{mediaId}',
+        operationId: 'librarySearchById',
+        description: 'Get the Media object specified by the provided mediaId',
+        summary: 'Library search by ID',
+        tags: ['library']
+    )]
+    #[OA\Parameter(
+        name: 'mediaId',
+        description: 'Numeric ID of the Media to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Media')
+    )]
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param int $id
+     * @return Response|ResponseInterface
+     * @throws NotFoundException
+     */
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
+    {
+        $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
+        $media = $this->mediaFactory->getById($id, false);
+        $this->decorateMediaProperties($request, $parsedQueryParams, $media);
+
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $this->mediaFactory->countLast())
+            ->withJson($media);
     }
 
     #[OA\Get(
