@@ -26,7 +26,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("resolution.view") %}
-                <li class="sidebar-list"><a href="/prototype/design/resolutions">{% trans "Resolutions" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/design/resolutions">{% trans "Resolutions" %}</a></li>
             {% endif %}
         {% endif %}
 
@@ -34,7 +34,7 @@
         {% if countViewable > 0 %}
             <li class="sidebar-title"><a>{% trans "Library" %}</a></li>
             {% if currentUser.featureEnabled("playlist.view") %}
-                <li class="sidebar-list"><a href="/prototype/library/playlists">{% trans "Playlists" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/library/playlists">{% trans "Playlists" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("library.view") %}
@@ -42,7 +42,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("dataset.view") %}
-                <li class="sidebar-list"><a href="/prototype/library/datasets">{% trans "DataSets" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/library/datasets">{% trans "DataSets" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("menuBoard.view") %}
@@ -157,7 +157,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("sessions.view") %}
-                <li class="sidebar-list"><a href="/prototype/advanced/sessions">{% trans "Sessions" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/advanced/sessions">{% trans "Sessions" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("auditlog.view") %}

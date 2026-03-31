@@ -68,7 +68,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("resolution.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("resolution.view") }}">{% trans "Resolutions" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/design/resolutions">{% trans "Resolutions" %}</a>
             {% endif %}
         {% if countViewable > 1 %}
             </div>
@@ -87,7 +87,7 @@
             <li class="nav-item">
         {% endif %}
             {% if currentUser.featureEnabled("playlist.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("playlist.view") }}">{% trans "Playlists" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/library/playlists">{% trans "Playlists" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("library.view") %}
@@ -95,7 +95,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("dataset.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("dataset.view") }}">{% trans "DataSets" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/library/datasets">{% trans "DataSets" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("menuBoard.view") %}
@@ -311,7 +311,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("sessions.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("sessions.view") }}">{% trans "Sessions" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/advanced/sessions">{% trans "Sessions" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("auditlog.view") %}
