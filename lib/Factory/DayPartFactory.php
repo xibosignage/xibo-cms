@@ -139,10 +139,6 @@ class DayPartFactory extends BaseFactory
         $entries = [];
         $sanitizedFilter = $this->getSanitizer($filterBy);
 
-        if ($sortOrder == null) {
-            $sortOrder = ['name'];
-        }
-
         $params = [];
         $select = 'SELECT `daypart`.dayPartId, `name`, `description`, `isRetired`, `userId`, `startTime`, `endTime`, `exceptions`, `isCustom`, `isAlways` ';
 
@@ -181,13 +177,28 @@ class DayPartFactory extends BaseFactory
             $params['userId'] = $sanitizedFilter->getInt('userId');
         }
 
+        if ($sanitizedFilter->getString('keyword') != null) {
+            // Fulltext search
+            $body .= $this->buildSearchQuery(
+                $sanitizedFilter->getString('keyword'),
+                $params,
+                ['daypart.name', 'daypart.description'],
+                ['daypart.daypartId'],
+            );
+        }
+
         // View Permissions
         $this->viewPermissionSql('Xibo\Entity\DayPart', $body, $params, '`daypart`.dayPartId', '`daypart`.userId', $filterBy);
 
-        // Sorting?
-        $order = '';
-        if (is_array($sortOrder))
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        // Sorting
+        $allowedColumns = ['dayPartId', 'name', 'startTime', 'endTime', 'description'];
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['name ASC']
+        );
+
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         $limit = '';
         // Paging

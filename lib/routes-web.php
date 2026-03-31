@@ -148,7 +148,7 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify', 'template.modify']));
 
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/layout/form/export/{id}', ['\Xibo\Controller\Layout', 'exportForm'])->setName('layout.export.form');
+    $group->get('/layout/export/{id}', ['\Xibo\Controller\Layout', 'export'])->setName('layout.export');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.export']));
 
 // Layout with Codes
@@ -605,22 +605,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/command/form/edit/{id}', ['\Xibo\Controller\Command','editForm'])->setName('command.edit.form');
     $group->get('/command/form/delete/{id}', ['\Xibo\Controller\Command','deleteForm'])->setName('command.delete.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['command.view']));
-
-//
-// Daypart
-//
-$app->get('/daypart/view', ['\Xibo\Controller\DayPart','displayPage'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['daypart.view']))
-    ->setName('daypart.view');
-
-$app->get('/daypart/form/add', ['\Xibo\Controller\DayPart','addForm'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['daypart.add']))
-    ->setName('daypart.add.form');
-
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/daypart/form/edit/{id}', ['\Xibo\Controller\DayPart','editForm'])->setName('daypart.edit.form');
-    $group->get('/daypart/form/delete/{id}', ['\Xibo\Controller\DayPart','deleteForm'])->setName('daypart.delete.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['daypart.modify']));
 
 //
 // Tasks

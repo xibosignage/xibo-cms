@@ -7,7 +7,7 @@
         {% endif %}
 
         {% if currentUser.featureEnabled("daypart.view") %}
-            <li class="sidebar-list"><a href="/prototype/schedule/dayparting">{% trans "Dayparting" %}</a></li>
+            <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/schedule/dayparting">{% trans "Dayparting" %}</a></li>
         {% endif %}
 
         {% set countViewable = currentUser.featureEnabledCount(["campaign.view", "layout.view", "template.view", "resolution.view"]) %}

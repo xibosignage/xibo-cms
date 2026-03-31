@@ -37,7 +37,7 @@
                     <a class="{{ groupElementClass }}" href="{{ url_for("schedule.view") }}">{% trans "Schedule" %}</a>
                 {% endif %}
                 {% if currentUser.featureEnabled("daypart.view") %}
-                    <a class="{{ groupElementClass }}" href="{{ url_for("daypart.view") }}">{% trans "Dayparting" %}</a>
+                    <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/schedule/dayparting">{% trans "Dayparting" %}</a>
                 {% endif %}
         {% if countViewable > 1 %}
             </div>
