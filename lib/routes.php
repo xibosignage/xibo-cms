@@ -244,6 +244,7 @@ $app->group('', function (RouteCollectorProxy $group) {
  * Resolutions
  */
 $app->get('/resolution', ['\Xibo\Controller\Resolution','grid'])->setName('resolution.search');
+$app->get('/resolution/{id}', ['\Xibo\Controller\Resolution','searchById'])->setName('resolution.search.id');
 $app->post('/resolution', ['\Xibo\Controller\Resolution','add'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['resolution.add']))
     ->setName('resolution.add');

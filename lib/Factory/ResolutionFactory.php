@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -62,15 +62,20 @@ class ResolutionFactory extends BaseFactory
     /**
      * Load the Resolution by ID
      * @param int $resolutionId
+     * @param bool $isDisableUserCheck
      * @return Resolution
      * @throws NotFoundException
      */
-    public function getById($resolutionId)
+    public function getById(int $resolutionId, bool $isDisableUserCheck = true)
     {
-        $resolutions = $this->query(null, array('disableUserCheck' => 1, 'resolutionId' => $resolutionId));
+        $resolutions = $this->query(null, [
+            'disableUserCheck' => $isDisableUserCheck ? 1 : 0,
+            'resolutionId' => $resolutionId
+        ]);
 
-        if (count($resolutions) <= 0)
+        if (count($resolutions) <= 0) {
             throw new NotFoundException(null, 'Resolution');
+        }
 
         return $resolutions[0];
     }
