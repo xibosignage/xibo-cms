@@ -695,7 +695,8 @@ class Display implements \JsonSerializable
      */
     public function isPwa(): bool
     {
-        return $this->clientType === 'chromeOS';
+        return $this->clientType === 'chromeOS'
+            || $this->clientType === 'pwa';
     }
 
     /**
@@ -704,6 +705,7 @@ class Display implements \JsonSerializable
     public function isWebSocketXmrSupported(): bool
     {
         return $this->clientType === 'chromeOS'
+            || $this->clientType === 'pwa'
             || ($this->clientType === 'linux' && $this->clientCode >= 400)
             || ($this->clientType === 'windows' && $this->clientCode >= 407)
             || ($this->clientType === 'android' && $this->clientCode >= 408);
