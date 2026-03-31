@@ -71,28 +71,19 @@ class Template extends Base
         $this->resolutionFactory = $resolutionFactory;
     }
 
-    /**
-     * Display page logic
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    function displayPage(Request $request, Response $response)
-    {
-        // Call to render the template
-        $this->getState()->template = 'template-page';
-
-        return $this->render($request, $response);
-    }
-
     #[OA\Get(
         path: '/template',
         operationId: 'templateSearch',
         description: 'Search templates this user has access to',
         summary: 'Template Search',
         tags: ['template']
+    )]
+    #[OA\Parameter(
+        name: 'embed',
+        description: 'Embed related data such as regions, playlists, widgets, tags, campaigns, permissions',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
         name: 'keyword',
@@ -137,7 +128,7 @@ class Template extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\NotFoundException
@@ -161,33 +152,8 @@ class Template extends Base
         $templates = $this->layoutFactory->query($templateSortQuery, $templateFilterQuery);
 
         foreach ($templates as $template) {
-            if (in_array('regions', $embed)) {
-                $template->load([
-                    'loadPlaylists' => in_array('playlists', $embed),
-                    'loadCampaigns' => in_array('campaigns', $embed),
-                    'loadPermissions' => in_array('permissions', $embed),
-                    'loadTags' => in_array('tags', $embed),
-                    'loadWidgets' => in_array('widgets', $embed)
-                ]);
-            }
-
-            // Thumbnail
-            $template->setUnmatchedProperty('thumbnail', '');
-
-            if (file_exists($template->getThumbnailUri())) {
-                $template->setUnmatchedProperty(
-                    'thumbnail',
-                    $this->urlFor($request, 'layout.download.thumbnail', ['id' => $template->layoutId])
-                );
-            }
-
-            // Parse down for description
-            $template->setUnmatchedProperty(
-                'descriptionWithMarkup',
-                Parsedown::instance()->setSafeMode(true)->text($template->description),
-            );
-
-            $template->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($template));
+            $this->loadTemplateRegions($template, $embed);
+            $this->decorateTemplateProperties($request, $template);
         }
 
         $recordsTotal = $this->layoutFactory->countLast();
@@ -196,6 +162,60 @@ class Template extends Base
             ->withStatus(200)
             ->withHeader('X-Total-Count', $recordsTotal)
             ->withJson($templates);
+    }
+
+    #[OA\Get(
+        path: '/template/{templateId}',
+        operationId: 'templateSearchById',
+        description: 'Get the Template object specified by the provided templateId',
+        summary: 'Template Search by ID',
+        tags: ['template']
+    )]
+    #[OA\Parameter(
+        name: 'templateId',
+        description: 'Numeric ID of the Template to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'embed',
+        description: 'Embed related data such as regions, playlists, widgets, tags, campaigns, permissions',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Layout')
+    )]
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param int $id
+     * @return Response|ResponseInterface
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
+    {
+        $template = $this->layoutFactory->getById($id, false);
+
+        $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
+
+        // Embed?
+        $embed = ($sanitizedQueryParams->getString('embed') != null)
+            ? explode(',', $sanitizedQueryParams->getString('embed'))
+            : [];
+
+        $this->loadTemplateRegions($template, $embed);
+        $this->decorateTemplateProperties($request, $template);
+
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $this->layoutFactory->countLast())
+            ->withJson($template);
     }
 
     #[OA\Get(
@@ -218,7 +238,7 @@ class Template extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws \Xibo\Support\Exception\GeneralException
      */
     public function search(Request $request, Response $response)
@@ -300,7 +320,7 @@ class Template extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
@@ -371,7 +391,7 @@ class Template extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
@@ -492,7 +512,7 @@ class Template extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
@@ -589,7 +609,7 @@ class Template extends Base
      * @param Response $response
      * @return Response|ResponseInterface
      */
-    public function providersList(Request $request, Response $response): Response|\Psr\Http\Message\ResponseInterface
+    public function providersList(Request $request, Response $response): Response|ResponseInterface
     {
         $event = new TemplateProviderListEvent();
         $this->getDispatcher()->dispatch($event, $event->getName());
@@ -617,5 +637,53 @@ class Template extends Base
             'logicalOperator' => $sanitizedQueryParams->getString('logicalOperator'),
             'logicalOperatorName' => $sanitizedQueryParams->getString('logicalOperatorName'),
         ], $sanitizedQueryParams);
+    }
+
+    /**
+     * Loads the regions within the layout
+     * @param \Xibo\Entity\Layout $layout
+     * @param $embed
+     * @return void
+     * @throws NotFoundException
+     */
+    private function loadTemplateRegions(\Xibo\Entity\Layout $template, $embed): void
+    {
+        if (in_array('regions', $embed)) {
+            $template->load([
+                'loadPlaylists' => in_array('playlists', $embed),
+                'loadCampaigns' => in_array('campaigns', $embed),
+                'loadPermissions' => in_array('permissions', $embed),
+                'loadTags' => in_array('tags', $embed),
+                'loadWidgets' => in_array('widgets', $embed)
+            ]);
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @param \Xibo\Entity\Layout $template
+     * @return void
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    private function decorateTemplateProperties(Request $request, \Xibo\Entity\Layout $template): void
+    {
+        // Thumbnail
+        $template->setUnmatchedProperty('thumbnail', '');
+
+        if (file_exists($template->getThumbnailUri())) {
+            $template->setUnmatchedProperty(
+                'thumbnail',
+                $this->urlFor($request, 'layout.download.thumbnail', ['id' => $template->layoutId])
+            );
+        }
+
+        // Parse down for description
+        $template->setUnmatchedProperty(
+            'descriptionWithMarkup',
+            Parsedown::instance()->setSafeMode(true)->text($template->description),
+        );
+
+        $template->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($template));
     }
 }

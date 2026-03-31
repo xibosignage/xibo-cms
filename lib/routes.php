@@ -235,6 +235,7 @@ $app->group('', function (RouteCollectorProxy $group) {
  * Templates
  */
 $app->get('/template', ['\Xibo\Controller\Template', 'grid'])->setName('template.search');
+$app->get('/template/{id}', ['\Xibo\Controller\Template', 'searchById'])->setName('template.search.id');
 $app->group('', function (RouteCollectorProxy $group) {
     $group->post('/template', ['\Xibo\Controller\Template', 'add'])->setName('template.add');
     $group->post('/template/{id}', ['\Xibo\Controller\Template', 'addFromLayout'])->setName('template.add.from.layout');

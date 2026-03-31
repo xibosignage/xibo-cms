@@ -314,16 +314,22 @@ class LayoutFactory extends BaseFactory
     /**
      * Loads only the layout information
      * @param int $layoutId
+     * @param bool $isDisableUserCheck
      * @return Layout
      * @throws NotFoundException
      */
-    public function getById($layoutId)
+    public function getById(int $layoutId, bool $isDisableUserCheck = true)
     {
         if (empty($layoutId)) {
             throw new NotFoundException(__('LayoutId is 0'));
         }
 
-        $layouts = $this->query(null, array('disableUserCheck' => 1, 'layoutId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1));
+        $layouts = $this->query(null, [
+            'disableUserCheck' => $isDisableUserCheck ? 1 : 0,
+            'layoutId' => $layoutId,
+            'excludeTemplates' => -1,
+            'retired' => -1
+        ]);
 
         if (count($layouts) <= 0) {
             throw new NotFoundException(__('Layout not found'));
