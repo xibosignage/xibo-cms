@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -62,7 +62,7 @@ $app->setBasePath($container->get('basePath'));
 // Config
 $app->config = $container->get('configService');
 $routeParser = $app->getRouteCollector()->getRouteParser();
-$container->set('name', 'API');
+$container->set('name', 'api');
 
 // Handle additional Middleware
 \Xibo\Middleware\State::setMiddleWare($app);
