@@ -58,6 +58,7 @@ interface SelectDropdownProps {
   addOptionAvatar?: boolean;
   className?: string;
   error?: string;
+  isLoading?: boolean;
 }
 
 export default function SelectDropdown({
@@ -73,6 +74,7 @@ export default function SelectDropdown({
   className,
   addOptionAvatar,
   error,
+  isLoading,
 }: SelectDropdownProps) {
   const { t } = useTranslation();
 
@@ -117,7 +119,12 @@ export default function SelectDropdown({
             {leftLabelContent}
           </div>
         )}
-        <span className="py-2 px-3 flex-1 text-sm capitalize">
+        <span
+          className={twMerge(
+            'py-2 px-3 flex-1 text-sm',
+            isLoading ? 'text-gray-400 italic' : 'text-gray-800 capitalize',
+          )}
+        >
           {selectedLabel || t(placeholder)}
         </span>
         <span

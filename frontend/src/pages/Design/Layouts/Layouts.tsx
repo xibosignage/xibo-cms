@@ -87,6 +87,7 @@ export default function Layouts() {
       status: true,
       modifiedDt: false,
       layoutId: false,
+      code: false,
     },
     viewMode: 'table',
     globalFilter: '',
@@ -225,11 +226,23 @@ export default function Layouts() {
     deleteError,
     setDeleteError,
     isCloning,
+    isPublishing,
+    isAssigning,
     confirmDelete,
     handleConfirmClone,
     handleConfirmMove,
     handleCreateLayout,
     handleOpenLayout,
+    confirmPublish,
+    handleCheckoutLayout,
+    isDiscarding,
+    handleConfirmDiscard,
+    handleConfirmAssign,
+    handleJumpToPlaylists,
+    handleJumpToCampaigns,
+    handleJumpToMedia,
+    isExporting,
+    handleExportLayout,
   } = useLayoutActions({
     t,
     handleRefresh,
@@ -271,6 +284,36 @@ export default function Layouts() {
     openModal('copy');
   };
 
+  const openPublish = (layoutId: number) => {
+    setSelectedLayoutId(layoutId);
+    openModal('publish');
+  };
+
+  const handleDiscardModal = (layoutId: number) => {
+    setSelectedLayoutId(layoutId);
+    openModal('discard');
+  };
+
+  const handleExportModal = (layoutId: number) => {
+    setSelectedLayoutId(layoutId);
+    openModal('export');
+  };
+
+  const openTemplateModal = (layoutId: number) => {
+    setSelectedLayoutId(layoutId);
+    openModal('template');
+  };
+
+  const openRetireModal = (row: Layout) => {
+    setSelectedLayoutId(row.layoutId);
+    openModal('retire');
+  };
+
+  const openEnableStatsModal = (row: Layout) => {
+    setSelectedLayoutId(row.layoutId);
+    openModal('enableStats');
+  };
+
   const columns = getLayoutColumns({
     t,
     onDelete: handleDelete,
@@ -291,6 +334,24 @@ export default function Layouts() {
     openLayout: (layoutId) => {
       handleOpenLayout(layoutId);
     },
+    openPublish,
+    checkoutLayout: (layoutId) => {
+      handleCheckoutLayout(layoutId);
+    },
+    discardLayout: handleDiscardModal,
+    assignModal: (layout) => {
+      setSelectedLayoutId(layout.layoutId);
+      openModal('campaign');
+    },
+    jumpToPlaylists: handleJumpToPlaylists,
+    jumpToCampaigns: handleJumpToCampaigns,
+    jumpToMedia: handleJumpToMedia,
+    exportLayout: (layout) => {
+      handleExportModal(layout.layoutId);
+    },
+    openTemplateModal,
+    openRetireModal,
+    openEnableStatsModal,
   });
 
   const getAllSelectedItems = (): Layout[] => {
@@ -450,6 +511,10 @@ export default function Layouts() {
           deleteError,
           isDeleting,
           isCloning,
+          isPublishing,
+          isDiscarding,
+          isAssigning,
+          isExporting,
         }}
         selection={{
           selectedLayout,
@@ -464,6 +529,10 @@ export default function Layouts() {
           handleConfirmClone: (name, description, copyMedia) =>
             handleConfirmClone(selectedLayout, name, description, copyMedia),
           handleConfirmMove: (folderId) => handleConfirmMove(itemsToMove, folderId),
+          confirmPublish,
+          confirmDiscard: handleConfirmDiscard,
+          handleConfirmAssign,
+          handleExportLayout,
         }}
         infoPanel={{
           isOpen: showInfoPanel,

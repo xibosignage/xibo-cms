@@ -21,13 +21,21 @@
 
 import { useTranslation } from 'react-i18next';
 
+import AssignCampaignModal from './AssignCampaignModal';
 import CopyLayoutModal from './CopyLayoutModal';
 import DeleteLayoutModal from './DeleteLayoutModal';
+import DiscardLayoutModal from './DiscardLayoutModal';
 import EditLayout from './EditLayout';
+import { EnableStatsLayoutModal } from './EnableStatsLayoutModal';
+import ExportLayoutModal from './ExportLayoutModal';
 import { LayoutInfoPanel } from './LayoutInfoPannel';
+import { RetireLayoutModal } from './RetireLayoutModal';
+import SaveAsTemplateModal from './SaveAsTemplateModal';
 
 import FolderActionModals from '@/components/ui/FolderActionModals';
+import type { PublishValue } from '@/components/ui/forms/PublishDateSelect';
 import MoveModal from '@/components/ui/modals/MoveModal';
+import PublishModal from '@/components/ui/modals/PublishModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
 import type { useFolderActions } from '@/hooks/useFolderActions';
 import type { Layout } from '@/types/layout';
@@ -42,6 +50,10 @@ interface LayoutModalsProps {
     deleteError: string | null;
     isDeleting: boolean;
     isCloning: boolean;
+    isPublishing: boolean;
+    isDiscarding: boolean;
+    isAssigning: boolean;
+    isExporting: boolean;
   };
   selection: {
     selectedLayout: Layout | null;
@@ -55,6 +67,17 @@ interface LayoutModalsProps {
     confirmDelete: (items: Layout[]) => void;
     handleConfirmClone: (newName: string, description: string, copyMedia: boolean) => void;
     handleConfirmMove: (newFolderId: number) => void;
+    confirmPublish: (itemId: number, value: PublishValue) => void;
+    confirmDiscard: (layoutId: number) => void;
+    handleConfirmAssign: (campaignId: number, layoutId: number) => void;
+    handleExportLayout: (
+      layoutId: number,
+      options: {
+        includeData: boolean;
+        includeFallback: boolean;
+        fileName: string;
+      },
+    ) => void;
   };
   infoPanel: {
     isOpen: boolean;
@@ -142,6 +165,58 @@ export function LayoutModals({
           isLoading={actions.isCloning}
           existingNames={selection.existingNames}
         />
+      )}
+      {isModalOpen('publish') && (
+        <PublishModal
+          onClose={actions.closeModal}
+          fileName={selection.selectedLayout?.layout}
+          titleText={t('Publish Layout?')}
+          isLoading={actions.isPublishing}
+          onPublish={handlers.confirmPublish}
+          layoutId={selection.selectedLayout?.layoutId}
+        />
+      )}
+      {isModalOpen('discard') && (
+        <DiscardLayoutModal
+          onClose={actions.closeModal}
+          onConfirm={() =>
+            selection.selectedLayout && handlers.confirmDiscard(selection.selectedLayout.layoutId)
+          }
+          layoutName={selection.selectedLayout?.name || selection.selectedLayout?.layout}
+          isLoading={actions.isDiscarding}
+        />
+      )}
+      {isModalOpen('campaign') && (
+        <AssignCampaignModal
+          onClose={actions.closeModal}
+          onConfirm={(campaignId) =>
+            selection.selectedLayout &&
+            handlers.handleConfirmAssign(campaignId, selection.selectedLayout.layoutId)
+          }
+          isLoading={actions.isAssigning}
+        />
+      )}
+      {isModalOpen('export') && (
+        <ExportLayoutModal
+          onClose={actions.closeModal}
+          onConfirm={(options) =>
+            selection.selectedLayout &&
+            handlers.handleExportLayout(selection.selectedLayout.layoutId, options)
+          }
+          layoutName={selection.selectedLayout?.name || selection.selectedLayout?.layout}
+          isLoading={actions.isExporting}
+        />
+      )}
+      {isModalOpen('template') && selection.selectedLayout && (
+        <SaveAsTemplateModal onClose={actions.closeModal} layout={selection.selectedLayout} />
+      )}
+
+      {isModalOpen('retire') && selection.selectedLayout && (
+        <RetireLayoutModal layout={selection.selectedLayout} onClose={actions.closeModal} />
+      )}
+
+      {isModalOpen('enableStats') && selection.selectedLayout && (
+        <EnableStatsLayoutModal layout={selection.selectedLayout} onClose={actions.closeModal} />
       )}
 
       {infoPanel.isOpen && (

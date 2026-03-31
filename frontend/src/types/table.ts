@@ -29,6 +29,7 @@ export type ActionItem =
       onClick?: never;
       variant?: never;
       isQuickAction?: never;
+      rightIcon?: never;
     }
   | {
       isSeparator?: false | undefined;
@@ -37,6 +38,7 @@ export type ActionItem =
       onClick?: () => void;
       variant?: 'default' | 'primary' | 'danger';
       isQuickAction?: boolean;
+      rightIcon?: ElementType;
     };
 
 export type BaseModalType = 'edit' | 'share' | 'delete' | 'copy' | 'move' | 'logout' | 'import';

@@ -24,10 +24,21 @@ import { isAxiosError } from 'axios';
 import type { TFunction } from 'i18next';
 import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { notify } from '@/components/ui/Notification';
+import type { PublishValue } from '@/components/ui/forms/PublishDateSelect';
 import { selectFolder } from '@/services/folderApi';
-import { copyLayout, createLayout, deleteLayout } from '@/services/layoutsApi';
+import {
+  assignLayoutToCampaign,
+  checkoutLayout,
+  copyLayout,
+  createLayout,
+  deleteLayout,
+  discardLayout,
+  exportLayout,
+  publishLayout,
+} from '@/services/layoutsApi';
 import type { Layout } from '@/types/layout';
 
 interface UsePlaylistActionsProps {
@@ -48,6 +59,12 @@ export function useLayoutActions({
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isCloning, setIsCloning] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [isDiscarding, setIsDiscarding] = useState(false);
+  const [isAssigning, setIsAssigning] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const navigate = useNavigate();
 
   const confirmDelete = async (itemsToDelete: Layout[]) => {
     if (itemsToDelete.length === 0 || isDeleting) {
@@ -178,15 +195,168 @@ export function useLayoutActions({
     window.open(`/layout/designer/${layoutId}`, '_blank');
   };
 
+  const handleCheckoutLayout = async (layoutId: number) => {
+    notify.info(t('Preparing layout for editing...'));
+
+    try {
+      await checkoutLayout(layoutId);
+
+      window.open(`/layout/designer/${layoutId}`, '_blank');
+
+      notify.success(t('Layout checked out successfully'));
+    } catch (error) {
+      console.error(error);
+      notify.error(t('Failed to checkout layout'));
+    }
+  };
+
+  const handleConfirmDiscard = async (layoutId: number | null) => {
+    if (!layoutId || isDiscarding) return;
+
+    try {
+      setIsDiscarding(true);
+
+      notify.info(t('Discarding layout changes...'));
+
+      await discardLayout(layoutId);
+
+      notify.success(t('Layout restored successfully'));
+
+      setRowSelection({});
+      handleRefresh();
+      closeModal();
+    } catch (error) {
+      console.error(error);
+      notify.error(t('Failed to discard layout changes'));
+    } finally {
+      setIsDiscarding(false);
+    }
+  };
+  const confirmPublish = async (layoutId: number, value: PublishValue) => {
+    if (!layoutId || isPublishing) return;
+
+    try {
+      setIsPublishing(true);
+
+      await publishLayout(layoutId, {
+        publishNow: value.type === 'now' ? 1 : 0,
+        publishDate: value.type === 'scheduled' ? value.date.toISOString() : undefined,
+      });
+
+      notify.success(t('Layout published successfully'));
+
+      setRowSelection({});
+      handleRefresh();
+      closeModal();
+    } catch (error) {
+      console.error(error);
+      notify.error(t('Failed to publish layout'));
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  const handleConfirmAssign = async (campaignId: number, layoutId: number | null) => {
+    if (!layoutId || isAssigning) return;
+
+    try {
+      setIsAssigning(true);
+
+      await assignLayoutToCampaign(campaignId, layoutId);
+
+      notify.success(t('Layout assigned to campaign'));
+
+      setRowSelection({});
+      handleRefresh();
+      closeModal();
+    } catch (error) {
+      console.error(error);
+      notify.error(t('Failed to assign layout'));
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
+  const handleExportLayout = async (
+    layoutId: number,
+    options: {
+      includeData: boolean;
+      includeFallback: boolean;
+      fileName: string;
+    },
+  ) => {
+    if (!layoutId || isExporting) return;
+
+    try {
+      setIsExporting(true);
+
+      const blob = await exportLayout(layoutId, {
+        includeData: options.includeData,
+        includeFallback: options.includeFallback,
+      });
+
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${options.fileName}.zip`;
+      a.click();
+
+      window.URL.revokeObjectURL(url);
+
+      const text = await blob.text();
+      console.log('TEXT RESPONSE:', text);
+
+      notify.success(t('Layout exported successfully'));
+      closeModal();
+    } catch (error) {
+      console.error(error);
+      notify.error(t('Failed to export layout'));
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleJumpToPlaylists = (layoutId: number) => {
+    navigate('/library/playlists', {
+      state: { layoutId },
+    });
+  };
+
+  // TODO: Page is not yet available
+  const handleJumpToCampaigns = (layoutId: number) => {
+    navigate('/design/campaigns', {
+      state: { layoutId },
+    });
+  };
+
+  const handleJumpToMedia = (layoutId: number) => {
+    navigate('/library/media', {
+      state: { layoutId },
+    });
+  };
+
   return {
     isDeleting,
     deleteError,
     setDeleteError,
     isCloning,
+    isPublishing,
+    isAssigning,
     confirmDelete,
     handleConfirmClone,
     handleConfirmMove,
     handleCreateLayout,
     handleOpenLayout,
+    confirmPublish,
+    handleCheckoutLayout,
+    isDiscarding,
+    handleConfirmDiscard,
+    handleConfirmAssign,
+    handleJumpToPlaylists,
+    handleExportLayout,
+    isExporting,
+    handleJumpToCampaigns,
+    handleJumpToMedia,
   };
 }

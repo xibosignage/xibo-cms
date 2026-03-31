@@ -197,23 +197,6 @@ export default function EditLayout({ isOpen = true, onClose, data, onSave }: Edi
             error={formErrors.name}
           />
 
-          <TextInput
-            name="description"
-            label={t('Description')}
-            value={draft.description ?? ''}
-            placeholder={t('Add description')}
-            helpText={t('Optional description for this layout')}
-            onChange={(value) => {
-              setDraft((prev) => ({
-                ...prev,
-                description: value,
-              }));
-              clearError('description');
-            }}
-            multiline
-            rows={3}
-            error={formErrors.description}
-          />
           {/* Tags */}
           <TagInput
             value={draft.tags}
@@ -236,22 +219,40 @@ export default function EditLayout({ isOpen = true, onClose, data, onSave }: Edi
             error={formErrors.code}
           />
 
+          <TextInput
+            name="description"
+            label={t('Description')}
+            value={draft.description ?? ''}
+            placeholder={t('Add description')}
+            helpText={t('(Optional) | Up to 250 characters.')}
+            onChange={(value) => {
+              setDraft((prev) => ({
+                ...prev,
+                description: value,
+              }));
+              clearError('description');
+            }}
+            multiline
+            rows={3}
+            error={formErrors.description}
+          />
+
           {/* Retired */}
           <Checkbox
             id="retired"
             className="items-center px-3 py-2.5"
-            title={t('Retire this media?')}
-            label={t(
-              `Retired media remains on existing Layouts but is not available to assign to new Layouts.`,
-            )}
+            title={t('Retire Layout')}
+            label={t(`It will no longer be visible in the lists.`)}
             checked={draft.retired}
             onChange={() => setDraft((prev) => ({ ...prev, retired: !prev.retired }))}
           />
           <Checkbox
             id="update"
             className="items-center px-3 py-2.5"
-            title={t('Update this media in all layouts it is assigned to')}
-            label={t(`Note: It will only be updated in layouts you have permission to edit.`)}
+            title={t('Enable Stats Collections')}
+            label={t(
+              `Collect Proof of Play statistics. Requires 'Enable Stats Collection' to be set to 'On' in Display Settings.`,
+            )}
             checked={draft.enableStat}
             onChange={() => setDraft((prev) => ({ ...prev, enableStat: !prev.enableStat }))}
           />

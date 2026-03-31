@@ -36,10 +36,10 @@ export const getTemplateSchema = (t: TFunction) =>
       .array(
         z.object({
           tag: z.string(),
-          value: z.string().optional().nullable(),
+          value: z.union([z.string(), z.number()]).optional().nullable(),
         }),
       )
       .optional(),
 
-    retired: z.boolean().optional(),
+    includeWidgets: z.boolean(),
   });

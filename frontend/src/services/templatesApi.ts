@@ -51,7 +51,27 @@ export async function fetchTemplates(
     signal,
   });
 
-  const rows = response.data;
+  let rows = response.data;
+
+  // TODO: Temporary fix for API returning string instead of array, should be removed once backend is fixed
+  if (typeof rows === 'string') {
+    const jsonStart = rows.indexOf('[');
+    const jsonEnd = rows.lastIndexOf(']');
+
+    if (jsonStart !== -1 && jsonEnd !== -1) {
+      try {
+        rows = JSON.parse(rows.slice(jsonStart, jsonEnd + 1));
+      } catch {
+        rows = [];
+      }
+    } else {
+      rows = [];
+    }
+  }
+
+  if (!Array.isArray(rows)) {
+    rows = [];
+  }
 
   const totalCountHeader = response.headers['x-total-count'];
   const totalCount = totalCountHeader ? parseInt(totalCountHeader, 10) : rows.length;

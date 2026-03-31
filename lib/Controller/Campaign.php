@@ -277,7 +277,7 @@ class Campaign extends Base
                 $campaign->excludeProperty('layouts');
             }
 
-            if ($this->isApi($request)) {
+            if ($this->isApi($request) || $this->isJson($request)) {
                 continue;
             }
 
