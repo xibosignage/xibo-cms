@@ -632,6 +632,7 @@ $app->group('', function (RouteCollectorProxy $group) {
  * Dayparts
  */
 $app->get('/daypart', ['\Xibo\Controller\DayPart','grid'])->setName('daypart.search');
+$app->get('/daypart/{id}', ['\Xibo\Controller\DayPart','searchById'])->setName('daypart.search.id');
 $app->post('/daypart', ['\Xibo\Controller\DayPart','add'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['daypart.add']))
     ->setName('daypart.add');

@@ -22,6 +22,7 @@
 namespace Xibo\Controller;
 
 use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\DayPartFactory;
@@ -29,6 +30,7 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class DayPart
@@ -129,7 +131,7 @@ class DayPart extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
@@ -172,6 +174,60 @@ class DayPart extends Base
             ->withStatus(200)
             ->withHeader('X-Total-Count', $recordsTotal)
             ->withJson($dayParts);
+    }
+
+    #[OA\Get(
+        path: '/daypart/{dayPartId}',
+        operationId: 'dayPartSearchById',
+        description: 'Get the DayPart object specified by the provided daypartId',
+        summary: 'Daypart Search by ID',
+        tags: ['dayPart']
+    )]
+    #[OA\Parameter(
+        name: 'dayPartId',
+        description: 'Numeric ID of the DayPart to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'embed',
+        description: 'Embed related data such as exceptions',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DayPart')
+    )]
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param int $id
+     * @return Response|ResponseInterface
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
+    {
+        $sanitizedParams = $this->getSanitizer($request->getQueryParams());
+        $dayPart = $this->dayPartFactory->getById($id, false);
+
+        $embed = ($sanitizedParams->getString('embed') != null)
+            ? explode(',', $sanitizedParams->getString('embed'))
+            : [];
+
+        if (!in_array('exceptions', $embed)) {
+            $dayPart->excludeProperty('exceptions');
+        }
+        $dayPart->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($dayPart));
+
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $this->dayPartFactory->countLast())
+            ->withJson($dayPart);
     }
 
     #[OA\Post(
@@ -242,7 +298,7 @@ class DayPart extends Base
      * Add
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\InvalidArgumentException
@@ -336,7 +392,7 @@ class DayPart extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
@@ -451,7 +507,7 @@ class DayPart extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException

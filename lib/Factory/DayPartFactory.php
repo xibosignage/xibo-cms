@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -57,13 +57,17 @@ class DayPartFactory extends BaseFactory
 
     /**
      * Get DayPart by Id
-     * @param $dayPartId
+     * @param int $dayPartId
+     * @param bool $disableUserCheck
      * @return DayPart
      * @throws NotFoundException
      */
-    public function getById($dayPartId)
+    public function getById(int $dayPartId, bool $disableUserCheck = true)
     {
-        $dayParts = $this->query(null, ['dayPartId' => $dayPartId, 'disableUserCheck' => 1]);
+        $dayParts = $this->query(null, [
+            'dayPartId' => $dayPartId,
+            'disableUserCheck' => $disableUserCheck ? 1 : 0,
+        ]);
 
         if (count($dayParts) <= 0) {
             throw new NotFoundException();
