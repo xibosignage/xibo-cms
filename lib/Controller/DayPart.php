@@ -163,6 +163,7 @@ class DayPart extends Base
             if (!in_array('exceptions', $embed)) {
                 $dayPart->excludeProperty('exceptions');
             }
+            $dayPart->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($dayPart));
         }
 
         $recordsTotal = $this->dayPartFactory->countLast();
