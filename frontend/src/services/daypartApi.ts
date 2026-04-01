@@ -30,6 +30,8 @@ export interface FetchDaypartRequest {
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;
+  isAlways?: 0 | 1;
+  isCustom?: 0 | 1;
 }
 
 export interface FetchDaypartResponse {
