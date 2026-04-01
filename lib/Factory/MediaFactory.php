@@ -316,11 +316,14 @@ class MediaFactory extends BaseFactory
                 },
                 'rejected' => function ($reason, $index) use ($log, $queue, $rejected) {
                     /* @var RequestException $reason */
+                    $uri = ($reason instanceof \GuzzleHttp\Exception\RequestException)
+                        ? $reason->getRequest()->getUri()
+                        : 'unknown';
                     $log->error(
                         sprintf(
                             'Rejected Request %d to %s because %s',
                             $index,
-                            $reason->getRequest()->getUri(),
+                            $uri,
                             $reason->getMessage()
                         )
                     );
