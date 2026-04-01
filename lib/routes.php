@@ -413,6 +413,10 @@ $app->group('', function (RouteCollectorProxy $group) {
         ->setName('dataSet.rss.edit');
     $group->delete('/dataset/{id}/rss/{rssId}', ['\Xibo\Controller\DataSetRss','delete'])
         ->setName('dataSet.rss.delete');
+
+    // Data connector sources
+    $group->get('/dataset/dataconnector/source', ['\Xibo\Controller\DataSet', 'dataConnectorSource'])
+        ->setName('dataSet.dataconnector.source');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dataset.modify']));
 
 // Data

@@ -663,3 +663,14 @@ export async function deleteDatasetRss(
     },
   });
 }
+
+export type DatasetDataConnectorSource = {
+  id: string;
+  name: string;
+};
+
+export async function fetchDataConnectorSource(): Promise<DatasetDataConnectorSource[]> {
+  const response = await http.get('/dataset/dataconnector/source');
+
+  return response.data;
+}

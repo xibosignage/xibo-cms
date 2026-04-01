@@ -1738,7 +1738,7 @@ class DataSet extends Base
             'dataSet' => $dataSet,
             'script' => $script,
             ]);
-    
+
             return $this->render($request, $response);
     }
 
@@ -1834,5 +1834,30 @@ class DataSet extends Base
         }
 
         return $response;
+    }
+
+    /**
+     * List of data connector sources
+     * @param Response $response
+     * @return Response
+     */
+    public function dataConnectorSource(Response $response): Response
+    {
+        try {
+            // Dispatch an event to initialize list of data sources for data connectors
+            $event = new DataConnectorSourceRequestEvent();
+
+            $this->getDispatcher()->dispatch($event, DataConnectorSourceRequestEvent::$NAME);
+
+            // Retrieve data connector sources from the event
+            return $response->withJson($event->getDataConnectorSources());
+        } catch (\Exception $e) {
+            $this->getLog()->error('dataConnectorRequest: Failed to retrieve data connector sources: '
+                . $e->getMessage());
+
+            return $response->withJson([
+                'error' => 'Failed to retrieve data connector sources'
+            ], 500);
+        }
     }
 }

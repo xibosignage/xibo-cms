@@ -34,7 +34,12 @@ import TextInput from '@/components/ui/forms/TextInput';
 import { usePermissions } from '@/hooks/usePermissions';
 import { getDatasetSchema } from '@/schema/dataset';
 import type { UpdateDatasetRequest } from '@/services/datasetApi';
-import { updateDataset, createDataset, testRemoteDataset } from '@/services/datasetApi';
+import {
+  updateDataset,
+  createDataset,
+  testRemoteDataset,
+  fetchDataConnectorSource,
+} from '@/services/datasetApi';
 import type {
   Dataset,
   DatasetConnectorAuth,
@@ -132,7 +137,6 @@ export default function AddAndEditDatasetModal({
   isOpen = true,
   onClose,
   data,
-  dataConnectorSources = [],
   onSave,
 }: AddAndEditDatasetModalProps) {
   const { t } = useTranslation();
@@ -149,6 +153,19 @@ export default function AddAndEditDatasetModal({
     'general',
   );
   const [draft, setDraft] = useState<UpdateDatasetRequest>(() => createDraftFromData(data));
+  const [dataConnectorSources, setDataConnectorSources] = useState<{ id: string; name: string }[]>(
+    [],
+  );
+
+  useEffect(() => {
+    fetchDataConnectorSource()
+      .then((sources) => {
+        setDataConnectorSources(sources);
+      })
+      .catch((err) => {
+        console.error('Failed to fetch data connector sources:', err);
+      });
+  }, [isOpen]);
 
   const handleTestRemoteData = () => {
     setTestResult(t('Testing...'));
