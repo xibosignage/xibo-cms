@@ -559,7 +559,6 @@ class Library extends Base
 
         return $response
             ->withStatus(200)
-            ->withHeader('X-Total-Count', $this->mediaFactory->countLast())
             ->withJson($media);
     }
 
