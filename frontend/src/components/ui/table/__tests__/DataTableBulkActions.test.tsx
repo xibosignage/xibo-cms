@@ -20,9 +20,10 @@
  */
 
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
-import { DataTableBulkActions } from '../DataTableBulkActions';
 import { Trash2, Download } from 'lucide-react';
+import { describe, it, expect, vi } from 'vitest';
+
+import { DataTableBulkActions } from '../DataTableBulkActions';
 
 // Mock translation
 vi.mock('react-i18next', () => ({
@@ -36,6 +37,7 @@ describe('DataTableBulkActions', () => {
   const mockActions = [
     { label: 'Delete', icon: Trash2, onClick: vi.fn(), variant: 'danger' as const },
     { label: 'Export', icon: Download, onClick: vi.fn() },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     { label: 'No Handler', onClick: undefined as any }, // Should not render
   ];
 
