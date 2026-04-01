@@ -63,22 +63,43 @@ class Preview extends Base
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        // Get the layout
-        if ($sanitizedParams->getInt('findByCode') === 1) {
-            $layout = $this->layoutFactory->getByCode($id);
-        } else {
-            $layout = $this->layoutFactory->getById($id);
-        }
-
+        // Check token authentication
         /** @var \Lcobucci\JWT\Token $token */
         $token = $request->getAttribute('authedToken');
         if (empty($token)) {
             throw new AccessDeniedException();
         }
 
-        // Check the token allows access to this layout.
-        if (!$token->isPermittedFor('layout') || !$token->isIdentifiedBy($layout->layoutId)) {
-            throw new AccessDeniedException();
+        // Get the layout
+        if ($sanitizedParams->getInt('findByCode') === 1) {
+            $this->getlog()->debug('show: findByCode: ' . $id);
+
+            $layout = $this->layoutFactory->getByCode($id);
+
+            // Check that this layout is a navigate to layout action on the layout we're authed against
+            $tokenLayout = $this->layoutFactory->getById($token->claims()->get('jti'));
+            $tokenLayout->load();
+
+            $isActionFound = false;
+            foreach ($tokenLayout->getActions(true) as $action) {
+                if ($action->actionType === 'navLayout' && $action->layoutCode === $layout->code) {
+                    $isActionFound = true;
+                    break;
+                }
+            }
+
+            if (!$isActionFound) {
+                $this->getlog()->debug('show: findByCode: no actions found on authenticated layout '
+                    . $tokenLayout->layoutId);
+                throw new AccessDeniedException();
+            }
+        } else {
+            $layout = $this->layoutFactory->getById($id);
+
+            // Check the token allows access to this layout.
+            if (!$token->isPermittedFor('layout') || !$token->isIdentifiedBy($layout->layoutId)) {
+                throw new AccessDeniedException();
+            }
         }
 
         // Do we want to preview the draft version of this Layout?

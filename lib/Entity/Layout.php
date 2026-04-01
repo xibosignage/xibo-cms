@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -2921,6 +2921,27 @@ class Layout implements \JsonSerializable
                 }
             }
         }
+    }
+
+    /**
+     * @param bool $includeWidgets Also include actions from each widget?
+     * @return \Xibo\Entity\Action[]
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getActions(bool $includeWidgets = false): array
+    {
+        $actions = $this->actions;
+        if ($includeWidgets) {
+            foreach ($this->regions as $region) {
+                foreach ($region->getPlaylist()->widgets as $widget) {
+                    $widget->load();
+                    foreach ($widget->actions as $action) {
+                        $actions[] = $action;
+                    }
+                }
+            }
+        }
+        return $actions;
     }
 
     /**

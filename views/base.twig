@@ -30,6 +30,15 @@
             var CALENDAR_TYPE = "{{ settings.CALENDAR_TYPE }}";
             var jsLocale = "{{ translate.jsLocale }}";
             var jsShortLocale = "{{ translate.jsShortLocale }}";
+
+            window.addEventListener('message', function(e) {
+              if (event.data?.type === 'xlr:navLayout') {
+                if (confirm("{{ "Navigate to layout with code [layoutTag]?"|trans }}"
+                  .replace('[layoutTag]', event.data.layoutCode))) {
+                  window.open(event.data.url + '&jwt=' + previewJwt, '_blank');
+                }
+              }
+            });
         </script>
 
         {# Import JS bundle from dist #}
