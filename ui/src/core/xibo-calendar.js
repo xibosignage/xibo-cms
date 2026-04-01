@@ -2153,14 +2153,29 @@ const processScheduleFormElements = function(el, dialog, isOnChange) {
         }
       }
 
-      // if dayparting is set to always, disable start time and end time
-      if (meta.isAlways === 0) {
-        $fromDtInput.find('input[name=fromDt]').prop('disabled', false);
-        $endTime.find('input[name=toDt]').prop('disabled', false);
-      } else {
-        $fromDtInput.find('input[name=fromDt]').prop('disabled', true);
-        $endTime.find('input[name=toDt]').prop('disabled', true);
-      }
+      // If dayparting is set to always, disable start time and end time
+      const toggleDatePickerDisabled =
+        function($container, inputName, isDisabled) {
+          const $input = $container.find('input[name="' + inputName + '"]');
+
+          // Disable the hidden input
+          $input.prop('disabled', isDisabled);
+
+          // Disable flatpickr visible helper input
+          const rawInput = $input[0];
+          if (rawInput && rawInput._flatpickr && rawInput._flatpickr.altInput) {
+            rawInput._flatpickr.altInput.disabled = isDisabled;
+          }
+
+          // Disable Jalaali helper, if exists
+          const $jalaliInput = $('#' + $input.attr('id') + 'Link');
+          if ($jalaliInput.length) {
+            $jalaliInput.prop('disabled', isDisabled);
+          }
+        };
+      const disableTimes = (meta.isAlways !== 0);
+      toggleDatePickerDisabled($fromDtInput, 'fromDt', disableTimes);
+      toggleDatePickerDisabled($endTime, 'toDt', disableTimes);
 
       break;
 
