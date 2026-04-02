@@ -19,10 +19,10 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { Filter, FilterX, Plus, Search } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { LayoutFilterInput } from './LayoutConfig';
@@ -101,9 +101,7 @@ export default function Layouts() {
   const [openFilter, setOpenFilter] = useState(false);
   const [showInfoPanel, setShowInfoPanel] = useState(false);
 
-  const [canAddToFolder, setCanAddToFolder] = useState(false);
   const [selectedFolderName, setSelectedFolderName] = useState(t('Root Folder'));
-
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
 
@@ -116,7 +114,7 @@ export default function Layouts() {
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
 
-  // Data fetching
+  // --- Data Fetching ---
   const {
     data: queryData,
     isFetching,
@@ -131,21 +129,24 @@ export default function Layouts() {
     enabled: isHydrated,
   });
 
-  // Computed values
+  // Replaced manual useEffect with useQuery for Folder Permissions
+  const { data: folderPerms } = useQuery({
+    queryKey: ['folderPermissions', selectedFolderId],
+    queryFn: () => fetchContextButtons(selectedFolderId as number),
+    enabled: selectedFolderId !== null, // Only run when we have a valid ID
+    staleTime: 1000 * 60 * 5, // Cache permissions for 5 minutes
+  });
+
+  // Derived Values
   const data = queryData?.rows;
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
-
-  const [layoutList, setLayoutList] = useState<Layout[]>([]);
-
-  useEffect(() => {
-    setLayoutList(data ?? []);
-  }, [data]);
+  const layoutList = data ?? [];
+  const canAddToFolder = folderPerms?.create || false;
 
   const folderActions = useFolderActions({
     onSuccess: (targetFolder) => {
       setFolderRefreshTrigger((prev) => prev + 1);
-
       if (targetFolder) {
         handleFolderChange({ id: targetFolder.id, text: targetFolder.text });
       } else {
@@ -154,62 +155,37 @@ export default function Layouts() {
     },
   });
 
-  useEffect(() => {
-    if (selectedFolderId === null) {
-      setCanAddToFolder(false);
-      return;
-    }
+  const getRowId = (row: Layout) => {
+    return row.layoutId.toString();
+  };
 
-    let active = true;
+  // --- Event-Driven Selection Handler ---
+  const handleRowSelectionChange = (
+    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
+  ) => {
+    const newSelection =
+      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
 
-    fetchContextButtons(selectedFolderId)
-      .then((perms) => {
-        if (active) {
-          setCanAddToFolder(perms.create || false);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to fetch folder permissions', err);
-        if (active) {
-          setCanAddToFolder(false);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [selectedFolderId]);
-
-  useEffect(() => {
-    if (!layoutList || layoutList.length === 0) {
-      return;
-    }
+    setRowSelection(newSelection);
 
     setSelectionCache((prev) => {
       const next = { ...prev };
-      let hasChanges = false;
-
       layoutList.forEach((item) => {
-        const id = item.layoutId.toString();
-        if (rowSelection[id] && next[id] !== item) {
+        const id = getRowId(item);
+        if (newSelection[id]) {
           next[id] = item;
-          hasChanges = true;
         }
       });
-
-      return hasChanges ? next : prev;
+      return next;
     });
-  }, [layoutList, rowSelection]);
+  };
 
   const selectedLayout = layoutList.find((m) => m.layoutId === selectedLayoutId) ?? null;
   const existingNames = layoutList.map((m) => m.name || m.layout).filter(Boolean);
   const ownerId = selectedLayout?.ownerId ? Number(selectedLayout.ownerId) : null;
   const { owner, loading } = useOwner({ ownerId });
 
-  const getRowId = (row: Layout) => {
-    return row.layoutId.toString();
-  };
-
+  // --- Handlers ---
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['layout'] });
   };
@@ -487,7 +463,7 @@ export default function Layouts() {
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetching}
               rowSelection={rowSelection}
-              onRowSelectionChange={setRowSelection}
+              onRowSelectionChange={handleRowSelectionChange} // <-- Event Handler Applied!
               onRefresh={handleRefresh}
               columnPinning={{
                 left: ['tableSelection'],
@@ -507,7 +483,6 @@ export default function Layouts() {
           activeModal,
           closeModal,
           handleRefresh,
-          setLayoutList,
           deleteError,
           isDeleting,
           isCloning,

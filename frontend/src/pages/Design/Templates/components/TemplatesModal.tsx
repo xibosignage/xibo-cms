@@ -36,7 +36,6 @@ interface TemplatesModalsProps {
     activeModal: string | null;
     closeModal: () => void;
     handleRefresh: () => void;
-    setTemplateList: React.Dispatch<React.SetStateAction<Template[]>>;
     deleteError: string | null;
     isDeleting: boolean;
     isCloning: boolean;
@@ -77,14 +76,7 @@ export function TemplateModals({
             actions.closeModal();
           }}
           data={selection.selectedTemplate}
-          onSave={(savedResolution) => {
-            if (selection.selectedTemplateId) {
-              actions.setTemplateList((prev) =>
-                prev.map((m) => (m.layoutId === savedResolution.layoutId ? savedResolution : m)),
-              );
-            } else {
-              actions.setTemplateList((prev) => [savedResolution, ...prev]);
-            }
+          onSave={() => {
             actions.handleRefresh();
           }}
         />

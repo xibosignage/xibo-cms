@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 
@@ -49,20 +49,14 @@ export default function SidebarMenu({
   const location = useLocation();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
 
-  const visibleRoutes = useMemo(() => {
-    if (!user) {
-      return [];
-    }
-
-    const userRoutes = filterRoutesByUser(APP_ROUTES, user);
-
-    return userRoutes
-      .filter((route) => !route.hideFromMenu)
-      .map((route) => ({
-        ...route,
-        subLinks: route.subLinks?.filter((sub) => !sub.hideFromMenu),
-      }));
-  }, [user]);
+  const visibleRoutes = !user
+    ? []
+    : filterRoutesByUser(APP_ROUTES, user)
+        .filter((route) => !route.hideFromMenu)
+        .map((route) => ({
+          ...route,
+          subLinks: route.subLinks?.filter((sub) => !sub.hideFromMenu),
+        }));
 
   useEffect(() => {
     // Find the parent menu that contains the active link

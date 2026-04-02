@@ -31,7 +31,6 @@ interface DatasetRssModalsProps {
     activeModal: string | null;
     closeModal: () => void;
     handleRefresh: () => void;
-    setRssList: React.Dispatch<React.SetStateAction<DatasetRss[]>>;
     deleteError: string | null;
     isDeleting: boolean;
     isCloning?: boolean;

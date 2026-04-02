@@ -31,7 +31,6 @@ interface DatasetColumnModalsProps {
     activeModal: string | null;
     closeModal: () => void;
     handleRefresh: () => void;
-    setColumnList: React.Dispatch<React.SetStateAction<DatasetColumn[]>>;
     deleteError: string | null;
     isDeleting: boolean;
     isCloning?: boolean;

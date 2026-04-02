@@ -32,7 +32,6 @@ interface DaypartModalsProps {
     activeModal: string | null;
     closeModal: () => void;
     handleRefresh: () => void;
-    setDaypartList: React.Dispatch<React.SetStateAction<Daypart[]>>;
     deleteError: string | null;
     isDeleting: boolean;
   };
@@ -60,14 +59,7 @@ export function DaypartModals({ actions, selection, handlers }: DaypartModalsPro
           type={selection.selectedDaypartId ? 'edit' : 'add'}
           onClose={actions.closeModal}
           data={selection.selectedDaypart}
-          onSave={(savedDaypart) => {
-            if (selection.selectedDaypartId) {
-              actions.setDaypartList((prev) =>
-                prev.map((m) => (m.dayPartId === savedDaypart.dayPartId ? savedDaypart : m)),
-              );
-            } else {
-              actions.setDaypartList((prev) => [savedDaypart, ...prev]);
-            }
+          onSave={() => {
             actions.handleRefresh();
           }}
         />

@@ -36,7 +36,6 @@ interface PlaylistModalsProps {
     activeModal: string | null;
     closeModal: () => void;
     handleRefresh: () => void;
-    setPlaylistList: React.Dispatch<React.SetStateAction<Playlist[]>>;
     deleteError: string | null;
     isDeleting: boolean;
     isCloning: boolean;
@@ -76,14 +75,7 @@ export function PlaylistModals({
             actions.closeModal();
           }}
           data={selection.selectedPlaylist}
-          onSave={(savedPlaylist) => {
-            if (selection.selectedPlaylistId) {
-              actions.setPlaylistList((prev) =>
-                prev.map((m) => (m.playlistId === savedPlaylist.playlistId ? savedPlaylist : m)),
-              );
-            } else {
-              actions.setPlaylistList((prev) => [savedPlaylist, ...prev]);
-            }
+          onSave={() => {
             actions.handleRefresh();
           }}
         />

@@ -37,7 +37,6 @@ interface DatasetModalsProps {
     activeModal: string | null;
     closeModal: () => void;
     handleRefresh: () => void;
-    setDatasetList: React.Dispatch<React.SetStateAction<Dataset[]>>;
     deleteError: string | null;
     isDeleting: boolean;
     isCloning: boolean;
@@ -77,14 +76,7 @@ export function DatasetModals({ actions, selection, handlers, folderActions }: D
             actions.closeModal();
           }}
           data={selection.selectedDataset}
-          onSave={(savedDataset) => {
-            if (selection.selectedDatasetId) {
-              actions.setDatasetList((prev) =>
-                prev.map((m) => (m.dataSetId === savedDataset.dataSetId ? savedDataset : m)),
-              );
-            } else {
-              actions.setDatasetList((prev) => [savedDataset, ...prev]);
-            }
+          onSave={() => {
             actions.handleRefresh();
           }}
         />

@@ -19,10 +19,10 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { Search, Filter, FilterX, Plus } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { ModalType, TemplatesFilterInput } from './TemplatesConfig';
@@ -97,8 +97,6 @@ export default function Templates() {
   const [selectionCache, setSelectionCache] = useState<Record<string, Template>>({});
   const [openFilter, setOpenFilter] = useState(false);
 
-  const [canAddToFolder, setCanAddToFolder] = useState(false);
-
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
 
@@ -110,7 +108,7 @@ export default function Templates() {
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
 
-  // Data fetching
+  // --- Data Fetching ---
   const {
     data: queryData,
     isFetching,
@@ -125,16 +123,20 @@ export default function Templates() {
     folderId: selectedFolderId,
   });
 
-  // Computed values
+  // Replaced manual useEffect with useQuery for Folder Permissions
+  const { data: folderPerms } = useQuery({
+    queryKey: ['folderPermissions', selectedFolderId],
+    queryFn: () => fetchContextButtons(selectedFolderId as number),
+    enabled: selectedFolderId !== null, // Only run when we have a valid ID
+    staleTime: 1000 * 60 * 5, // Cache permissions for 5 minutes
+  });
+
+  // --- Computed Values ---
   const data = queryData?.rows;
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
-
-  const [templateList, setTemplateList] = useState<Template[]>([]);
-
-  useEffect(() => {
-    setTemplateList(data ?? []);
-  }, [data]);
+  const templateList = data ?? [];
+  const canAddToFolder = folderPerms?.create || false;
 
   const folderActions = useFolderActions({
     onSuccess: (targetFolder) => {
@@ -148,60 +150,35 @@ export default function Templates() {
     },
   });
 
-  useEffect(() => {
-    if (selectedFolderId === null) {
-      setCanAddToFolder(false);
-      return;
-    }
-
-    let active = true;
-
-    fetchContextButtons(selectedFolderId)
-      .then((perms) => {
-        if (active) {
-          setCanAddToFolder(perms.create || false);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to fetch folder permissions', err);
-        if (active) {
-          setCanAddToFolder(false);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [selectedFolderId]);
-
-  useEffect(() => {
-    if (!templateList || templateList.length === 0) {
-      return;
-    }
-
-    setSelectionCache((prev) => {
-      const next = { ...prev };
-      let hasChanges = false;
-
-      templateList.forEach((item) => {
-        const id = item.layoutId.toString();
-        if (rowSelection[id] && next[id] !== item) {
-          next[id] = item;
-          hasChanges = true;
-        }
-      });
-
-      return hasChanges ? next : prev;
-    });
-  }, [templateList, rowSelection]);
-
-  const selectedTemplate = templateList.find((m) => m.layoutId === selectedTemplateId) ?? null;
-  const existingNames = templateList.map((m) => m.layout);
-
   const getRowId = (row: Template) => {
     return row.layoutId.toString();
   };
 
+  // --- Event-Driven Cache Handler ---
+  const handleRowSelectionChange = (
+    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
+  ) => {
+    const newSelection =
+      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
+
+    setRowSelection(newSelection);
+
+    setSelectionCache((prev) => {
+      const next = { ...prev };
+      templateList.forEach((item) => {
+        const id = getRowId(item); // Strictly use getRowId
+        if (newSelection[id]) {
+          next[id] = item;
+        }
+      });
+      return next;
+    });
+  };
+
+  const selectedTemplate = templateList.find((m) => m.layoutId === selectedTemplateId) ?? null;
+  const existingNames = templateList.map((m) => m.layout);
+
+  // --- Handlers ---
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['template'] });
   };
@@ -423,7 +400,7 @@ export default function Templates() {
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetching}
               rowSelection={rowSelection}
-              onRowSelectionChange={setRowSelection}
+              onRowSelectionChange={handleRowSelectionChange} // <-- Event Handler Applied!
               onRefresh={handleRefresh}
               columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
               columnVisibility={columnVisibility}
@@ -441,7 +418,6 @@ export default function Templates() {
           activeModal,
           closeModal,
           handleRefresh,
-          setTemplateList,
           deleteError,
           isDeleting,
           isCloning,

@@ -109,6 +109,7 @@ export default function Media() {
     folderId: canViewFolders ? homeFolderId : null,
   });
 
+  // Keep this effect: it correctly syncs React Router state upon initial hydration
   useEffect(() => {
     if (!isHydrated) return;
 
@@ -142,7 +143,6 @@ export default function Media() {
   const closeModal = () => setActiveModal(null);
 
   const targetUploadFolderId = canViewFolders ? (selectedFolderId ?? homeFolderId) : homeFolderId;
-
   const canAddToFolder = targetUploadFolderId !== null;
 
   const handleRefresh = () => {
@@ -173,7 +173,7 @@ export default function Media() {
     isDragActive: isGlobalDragActive,
   } = dropzone;
 
-  // Data fetching
+  // --- Data Fetching ---
   const {
     data: queryData,
     isFetching,
@@ -188,18 +188,39 @@ export default function Media() {
     enabled: isHydrated,
   });
 
-  // Computed values
+  // --- Computed Values ---
   const data = queryData?.rows;
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
+  const mediaList = data ?? [];
 
-  const [mediaList, setMediaList] = useState<Media[]>([]);
+  const getRowId = (row: Media) => row.mediaId.toString();
+
+  // --- Event-Driven Selection Handler ---
+  const handleRowSelectionChange = (
+    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
+  ) => {
+    const newSelection =
+      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
+
+    setRowSelection(newSelection);
+
+    setSelectionCache((prev) => {
+      const next = { ...prev };
+      mediaList.forEach((item) => {
+        const id = getRowId(item);
+        if (newSelection[id]) {
+          next[id] = item;
+        }
+      });
+      return next;
+    });
+  };
 
   const folderActions = useFolderActions({
     onSuccess: (targetFolder) => {
       setFolderRefreshTrigger((prev) => prev + 1);
 
-      // Select home folder
       if (targetFolder?.id === -1) {
         targetFolder.id = homeFolderId;
       }
@@ -212,39 +233,12 @@ export default function Media() {
     },
   });
 
-  useEffect(() => {
-    setMediaList(data ?? []);
-  }, [data]);
-
-  // Update the selected cache when data loads or selection changes
-  useEffect(() => {
-    if (!mediaList || mediaList.length === 0) {
-      return;
-    }
-
-    setSelectionCache((prev) => {
-      const next = { ...prev };
-      let hasChanges = false;
-
-      mediaList.forEach((item) => {
-        const id = item.mediaId.toString();
-        if (rowSelection[id] && next[id] !== item) {
-          next[id] = item;
-          hasChanges = true;
-        }
-      });
-
-      return hasChanges ? next : prev;
-    });
-  }, [mediaList, rowSelection]);
-
   const selectedMedia = mediaList.find((m) => m.mediaId === selectedMediaId) ?? null;
   const existingNames = mediaList.map((m) => m.name);
   const ownerId = selectedMedia?.ownerId ? Number(selectedMedia.ownerId) : null;
   const { owner, loading } = useOwner({ ownerId });
 
-  const getRowId = (row: Media) => row.mediaId.toString();
-
+  // --- Handlers ---
   const handleFolderChange = (folder: { id: number | null; text: string | '' }) => {
     setSelectedFolderId(folder.id);
     setSelectedFolderName(folder.text);
@@ -413,15 +407,12 @@ export default function Media() {
 
       try {
         if (allItems.length === 1) {
-          // Normal single-file download
           const item = allItems[0];
-
           if (item) {
             await downloadMedia(item.mediaId, item.fileName);
             notify.success(t('Download started!'));
           }
         } else {
-          // Multiple items ZIP download
           notify.info(
             t('Zipping {{count}} files. You can continue using the app.', {
               count: allItems.length,
@@ -609,7 +600,7 @@ export default function Media() {
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetching}
               rowSelection={rowSelection}
-              onRowSelectionChange={setRowSelection}
+              onRowSelectionChange={handleRowSelectionChange} // <-- Event Handler Applied to Table!
               onRefresh={handleRefresh}
               columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
               columnVisibility={columnVisibility}
@@ -626,7 +617,7 @@ export default function Media() {
               pagination={pagination}
               onPaginationChange={setPagination}
               rowSelection={rowSelection}
-              onRowSelectionChange={setRowSelection}
+              onRowSelectionChange={handleRowSelectionChange} // <-- Event Handler Applied to Grid!
               loading={isFetching}
               onRefresh={handleRefresh}
               bulkActions={bulkActions}
@@ -685,7 +676,6 @@ export default function Media() {
           activeModal,
           closeModal,
           handleRefresh,
-          setMediaList,
           deleteError,
           isDeleting,
           isCloning,

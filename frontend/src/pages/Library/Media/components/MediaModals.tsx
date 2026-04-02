@@ -47,7 +47,6 @@ interface MediaModalsProps {
     activeModal: string | null;
     closeModal: () => void;
     handleRefresh: () => void;
-    setMediaList: React.Dispatch<React.SetStateAction<Media[]>>;
     deleteError: string | null;
     isDeleting: boolean;
     isCloning: boolean;
@@ -172,10 +171,7 @@ export function MediaModals({
           {isModalOpen('edit') && (
             <EditMediaModal
               onClose={actions.closeModal}
-              onSave={(updatedMedia) => {
-                actions.setMediaList((prev) =>
-                  prev.map((m) => (m.mediaId === updatedMedia.mediaId ? updatedMedia : m)),
-                );
+              onSave={() => {
                 actions.handleRefresh();
               }}
               data={selection.selectedMedia}
@@ -186,10 +182,7 @@ export function MediaModals({
             <ReplaceFileModal
               onClose={actions.closeModal}
               data={selection.selectedMedia}
-              onSave={(updatedMedia) => {
-                actions.setMediaList((prev) =>
-                  prev.map((m) => (m.mediaId === updatedMedia.mediaId ? updatedMedia : m)),
-                );
+              onSave={() => {
                 actions.handleRefresh();
               }}
             />

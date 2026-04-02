@@ -19,10 +19,10 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { Search, Filter, FilterX, Plus } from 'lucide-react';
-import { useEffect, useState, useTransition } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
@@ -102,8 +102,6 @@ export default function Dataset() {
   const [selectionCache, setSelectionCache] = useState<Record<string, Dataset>>({});
   const [openFilter, setOpenFilter] = useState(false);
 
-  const [canAddToFolder, setCanAddToFolder] = useState(false);
-
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
 
@@ -112,11 +110,10 @@ export default function Dataset() {
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
   const [selectedDatasetId, setSelectedDatasetId] = useState<number | null>(null);
 
-  const [isExporting, startExportTransition] = useTransition();
-
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
 
+  // --- Data Fetching ---
   const {
     data: queryData,
     isFetching,
@@ -131,11 +128,34 @@ export default function Dataset() {
     enabled: isHydrated,
   });
 
+  // Folder Permissions (Replaced useEffect with useQuery)
+  const { data: folderPerms } = useQuery({
+    queryKey: ['folderPermissions', selectedFolderId],
+    queryFn: () => fetchContextButtons(selectedFolderId as number),
+    enabled: selectedFolderId !== null,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // Export Mutation (Replaced useTransition with useMutation)
+  const exportCsvMutation = useMutation({
+    mutationFn: (datasetId: number) => exportDatasetCsv(datasetId),
+    onSuccess: () => {
+      notify.success(t('CSV exported successfully'));
+    },
+    onError: (err) => {
+      console.error('Failed to export dataset:', err);
+      notify.error(t('Failed to export CSV'), {
+        description: t('Please check the server logs or try again.'),
+      });
+    },
+  });
+
+  // --- Computed Values ---
   const data = queryData?.rows;
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
-
-  const [datasetList, setDatasetList] = useState<Dataset[]>([]);
+  const datasetList = data ?? [];
+  const canAddToFolder = folderPerms?.create || false;
 
   const folderActions = useFolderActions({
     onSuccess: (targetFolder) => {
@@ -149,64 +169,35 @@ export default function Dataset() {
     },
   });
 
-  useEffect(() => {
-    setDatasetList(data ?? []);
-  }, [data]);
-
-  useEffect(() => {
-    if (selectedFolderId === null) {
-      setCanAddToFolder(false);
-      return;
-    }
-
-    let active = true;
-
-    fetchContextButtons(selectedFolderId)
-      .then((perms) => {
-        if (active) {
-          setCanAddToFolder(perms.create || false);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to fetch folder permissions', err);
-        if (active) {
-          setCanAddToFolder(false);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [selectedFolderId]);
-
-  useEffect(() => {
-    if (!datasetList || datasetList.length === 0) {
-      return;
-    }
-
-    setSelectionCache((prev) => {
-      const next = { ...prev };
-      let hasChanges = false;
-
-      datasetList.forEach((item) => {
-        const id = item.dataSetId.toString();
-        if (rowSelection[id] && next[id] !== item) {
-          next[id] = item;
-          hasChanges = true;
-        }
-      });
-
-      return hasChanges ? next : prev;
-    });
-  }, [datasetList, rowSelection]);
-
-  const selectedDataset = datasetList.find((m) => m.dataSetId === selectedDatasetId) ?? null;
-  const existingNames = datasetList.map((m) => m.dataSet);
-
   const getRowId = (row: Dataset) => {
     return row.dataSetId.toString();
   };
 
+  // --- Event-Driven Cache Handler ---
+  const handleRowSelectionChange = (
+    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
+  ) => {
+    const newSelection =
+      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
+
+    setRowSelection(newSelection);
+
+    setSelectionCache((prev) => {
+      const next = { ...prev };
+      datasetList.forEach((item) => {
+        const id = getRowId(item); // Strictly use getRowId
+        if (newSelection[id]) {
+          next[id] = item;
+        }
+      });
+      return next;
+    });
+  };
+
+  const selectedDataset = datasetList.find((m) => m.dataSetId === selectedDatasetId) ?? null;
+  const existingNames = datasetList.map((m) => m.dataSet);
+
+  // --- Handlers ---
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['dataset'] });
   };
@@ -215,20 +206,6 @@ export default function Dataset() {
     setSelectedFolderId(folder.id);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
     setRowSelection({});
-  };
-
-  const handleExportCsv = (datasetId: number) => {
-    startExportTransition(async () => {
-      try {
-        await exportDatasetCsv(datasetId);
-        notify.success(t('CSV exported successfully'));
-      } catch (err) {
-        console.error('Failed to export dataset:', err);
-        notify.error(t('Failed to export CSV'), {
-          description: t('Please check the server logs or try again.'),
-        });
-      }
-    });
   };
 
   const {
@@ -294,11 +271,7 @@ export default function Dataset() {
     onNavigate: (path) => {
       navigate(path);
     },
-    onExportCsv: handleExportCsv,
-    onImportCsv: (datasetId) => {
-      setSelectedDatasetId(datasetId);
-      openModal('import');
-    },
+    onExportCsv: (datasetId) => exportCsvMutation.mutate(datasetId), // Point to useMutation!
   });
 
   const getAllSelectedItems = (): Dataset[] => {
@@ -346,7 +319,7 @@ export default function Dataset() {
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Datasets" navigation={libraryTabs} />
           <div className="flex items-center gap-2 md:mb-0">
-            {isExporting && (
+            {exportCsvMutation.isPending && ( // Use TanStack Query's loading state
               <span className="text-sm font-medium text-xibo-blue-600 animate-pulse pr-2">
                 {t('Generating CSV...')}
               </span>
@@ -441,7 +414,7 @@ export default function Dataset() {
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetching}
               rowSelection={rowSelection}
-              onRowSelectionChange={setRowSelection}
+              onRowSelectionChange={handleRowSelectionChange} // <-- Event Handler Applied!
               onRefresh={handleRefresh}
               columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
               columnVisibility={columnVisibility}
@@ -459,7 +432,6 @@ export default function Dataset() {
           activeModal,
           closeModal,
           handleRefresh,
-          setDatasetList,
           deleteError,
           isDeleting,
           isCloning,

@@ -22,7 +22,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { Search, Filter, FilterX, Plus } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { ModalType } from './ResolutionsConfig';
@@ -111,46 +111,41 @@ export default function Resolution() {
     enabled: isHydrated,
   });
 
-  // Computed values
+  // 1. Computed values pointing directly to server state
   const data = queryData?.rows;
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
+  const resolutionList = data ?? [];
 
-  const [resolutionList, setResolutionList] = useState<Resolution[]>([]);
+  // Centralize the ID logic to prevent bulk selection bugs
+  const getRowId = (row: Resolution) => {
+    return row.resolutionId.toString();
+  };
 
-  useEffect(() => {
-    setResolutionList(data ?? []);
-  }, [data]);
+  // 2. Event-Driven Cache Handler (Replaces the useEffect)
+  const handleRowSelectionChange = (
+    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
+  ) => {
+    const newSelection =
+      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
 
-  // Update the selected cache when data loads or selection changes
-  useEffect(() => {
-    if (!resolutionList || resolutionList.length === 0) {
-      return;
-    }
+    setRowSelection(newSelection);
 
     setSelectionCache((prev) => {
       const next = { ...prev };
-      let hasChanges = false;
-
       resolutionList.forEach((item) => {
-        const id = item.resolutionId.toString();
-        if (rowSelection[id] && next[id] !== item) {
+        const id = getRowId(item); // Strictly use getRowId
+        if (newSelection[id]) {
           next[id] = item;
-          hasChanges = true;
         }
       });
-
-      return hasChanges ? next : prev;
+      return next;
     });
-  }, [resolutionList, rowSelection]);
+  };
 
   const selectedResolution =
     resolutionList.find((m) => m.resolutionId === selectedResolutionId) ?? null;
   const existingNames = resolutionList.map((m) => m.resolution);
-
-  const getRowId = (row: Resolution) => {
-    return row.resolutionId.toString();
-  };
 
   // Event handlers
   const handleRefresh = () => {
@@ -197,7 +192,7 @@ export default function Resolution() {
   const getAllSelectedItems = (): Resolution[] => {
     return Object.keys(rowSelection)
       .map((id) => selectionCache[id])
-      .filter((item): item is Resolution => !!item); // Filter out any missing data
+      .filter((item): item is Resolution => !!item);
   };
 
   const bulkActions = getBulkActions({
@@ -306,7 +301,7 @@ export default function Resolution() {
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetching}
               rowSelection={rowSelection}
-              onRowSelectionChange={setRowSelection}
+              onRowSelectionChange={handleRowSelectionChange} // <-- Event Handler Appled!
               onRefresh={handleRefresh}
               columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
               columnVisibility={columnVisibility}
@@ -324,7 +319,6 @@ export default function Resolution() {
           activeModal,
           closeModal,
           handleRefresh,
-          setResolutionList,
           deleteError,
           isDeleting,
         }}

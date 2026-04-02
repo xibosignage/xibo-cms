@@ -46,7 +46,6 @@ interface LayoutModalsProps {
     activeModal: string | null;
     closeModal: () => void;
     handleRefresh: () => void;
-    setLayoutList: React.Dispatch<React.SetStateAction<Layout[]>>;
     deleteError: string | null;
     isDeleting: boolean;
     isCloning: boolean;
@@ -107,10 +106,7 @@ export function LayoutModals({
         <EditLayout
           onClose={actions.closeModal}
           data={selection.selectedLayout}
-          onSave={(updatedLayout) => {
-            actions.setLayoutList((prev) =>
-              prev.map((l) => (l.layoutId === updatedLayout.layoutId ? updatedLayout : l)),
-            );
+          onSave={() => {
             actions.handleRefresh();
           }}
         />
