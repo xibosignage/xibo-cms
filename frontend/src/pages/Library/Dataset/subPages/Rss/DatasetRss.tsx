@@ -94,7 +94,6 @@ export default function DatasetRss() {
     queryClient.invalidateQueries({ queryKey: ['datasetRss', datasetId] });
   };
 
-  // --- Data Fetching ---
   const { data: dataset } = useQuery({
     queryKey: ['dataset', datasetId],
     queryFn: () => getDatasetById(datasetId!),
@@ -113,7 +112,6 @@ export default function DatasetRss() {
     enabled: isHydrated,
   });
 
-  // 1. Single Source of Truth
   const rssList = queryData?.rows ?? [];
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
@@ -123,7 +121,6 @@ export default function DatasetRss() {
     return row.id.toString();
   };
 
-  // 2. Event-Driven Cache Handler
   const handleRowSelectionChange = (
     updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
   ) => {
@@ -178,7 +175,6 @@ export default function DatasetRss() {
     },
   });
 
-  // --- Handlers ---
   const handleAdd = () => {
     setSelectedRss(null);
     setActiveModal('edit');
@@ -221,7 +217,7 @@ export default function DatasetRss() {
       filter: selectedRss.filter,
     };
 
-    copyMutation.mutate(copiedPayload); // No more 'as any' needed!
+    copyMutation.mutate(copiedPayload);
   };
 
   const confirmDelete = (items: DatasetRss[]) => {
@@ -353,7 +349,7 @@ export default function DatasetRss() {
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetching}
               rowSelection={rowSelection}
-              onRowSelectionChange={handleRowSelectionChange} // <-- Event Handler
+              onRowSelectionChange={handleRowSelectionChange}
               bulkActions={bulkActions}
               onRefresh={handleRefresh}
               columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
@@ -373,12 +369,12 @@ export default function DatasetRss() {
           closeModal,
           handleRefresh,
           deleteError,
-          isDeleting: deleteMutation.isPending, // <-- Connected to mutation
-          isCloning: copyMutation.isPending, // <-- Connected to mutation
+          isDeleting: deleteMutation.isPending,
+          isCloning: copyMutation.isPending,
         }}
         selection={{
           selectedRss,
-          rssToDeleteId: itemsToDelete[0] ? itemsToDelete[0].id : null, // <-- Strict type guard
+          rssToDeleteId: itemsToDelete[0] ? itemsToDelete[0].id : null,
           itemsToDelete,
           existingNames,
         }}

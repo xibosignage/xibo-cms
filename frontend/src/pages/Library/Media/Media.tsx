@@ -109,7 +109,6 @@ export default function Media() {
     folderId: canViewFolders ? homeFolderId : null,
   });
 
-  // Keep this effect: it correctly syncs React Router state upon initial hydration
   useEffect(() => {
     if (!isHydrated) return;
 
@@ -173,7 +172,6 @@ export default function Media() {
     isDragActive: isGlobalDragActive,
   } = dropzone;
 
-  // --- Data Fetching ---
   const {
     data: queryData,
     isFetching,
@@ -188,7 +186,6 @@ export default function Media() {
     enabled: isHydrated,
   });
 
-  // --- Computed Values ---
   const data = queryData?.rows;
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
@@ -196,7 +193,6 @@ export default function Media() {
 
   const getRowId = (row: Media) => row.mediaId.toString();
 
-  // --- Event-Driven Selection Handler ---
   const handleRowSelectionChange = (
     updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
   ) => {
@@ -238,7 +234,6 @@ export default function Media() {
   const ownerId = selectedMedia?.ownerId ? Number(selectedMedia.ownerId) : null;
   const { owner, loading } = useOwner({ ownerId });
 
-  // --- Handlers ---
   const handleFolderChange = (folder: { id: number | null; text: string | '' }) => {
     setSelectedFolderId(folder.id);
     setSelectedFolderName(folder.text);
@@ -600,7 +595,7 @@ export default function Media() {
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetching}
               rowSelection={rowSelection}
-              onRowSelectionChange={handleRowSelectionChange} // <-- Event Handler Applied to Table!
+              onRowSelectionChange={handleRowSelectionChange}
               onRefresh={handleRefresh}
               columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
               columnVisibility={columnVisibility}
@@ -617,7 +612,7 @@ export default function Media() {
               pagination={pagination}
               onPaginationChange={setPagination}
               rowSelection={rowSelection}
-              onRowSelectionChange={handleRowSelectionChange} // <-- Event Handler Applied to Grid!
+              onRowSelectionChange={handleRowSelectionChange}
               loading={isFetching}
               onRefresh={handleRefresh}
               bulkActions={bulkActions}

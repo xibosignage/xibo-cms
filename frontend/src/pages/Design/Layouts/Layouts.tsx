@@ -114,7 +114,6 @@ export default function Layouts() {
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
 
-  // --- Data Fetching ---
   const {
     data: queryData,
     isFetching,
@@ -129,15 +128,13 @@ export default function Layouts() {
     enabled: isHydrated,
   });
 
-  // Replaced manual useEffect with useQuery for Folder Permissions
   const { data: folderPerms } = useQuery({
     queryKey: ['folderPermissions', selectedFolderId],
     queryFn: () => fetchContextButtons(selectedFolderId as number),
-    enabled: selectedFolderId !== null, // Only run when we have a valid ID
-    staleTime: 1000 * 60 * 5, // Cache permissions for 5 minutes
+    enabled: selectedFolderId !== null,
+    staleTime: 1000 * 60 * 5,
   });
 
-  // Derived Values
   const data = queryData?.rows;
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
@@ -159,7 +156,6 @@ export default function Layouts() {
     return row.layoutId.toString();
   };
 
-  // --- Event-Driven Selection Handler ---
   const handleRowSelectionChange = (
     updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
   ) => {
@@ -185,7 +181,6 @@ export default function Layouts() {
   const ownerId = selectedLayout?.ownerId ? Number(selectedLayout.ownerId) : null;
   const { owner, loading } = useOwner({ ownerId });
 
-  // --- Handlers ---
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['layout'] });
   };
@@ -463,7 +458,7 @@ export default function Layouts() {
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetching}
               rowSelection={rowSelection}
-              onRowSelectionChange={handleRowSelectionChange} // <-- Event Handler Applied!
+              onRowSelectionChange={handleRowSelectionChange}
               onRefresh={handleRefresh}
               columnPinning={{
                 left: ['tableSelection'],

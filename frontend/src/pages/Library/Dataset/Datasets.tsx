@@ -113,7 +113,6 @@ export default function Dataset() {
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
 
-  // --- Data Fetching ---
   const {
     data: queryData,
     isFetching,
@@ -128,7 +127,6 @@ export default function Dataset() {
     enabled: isHydrated,
   });
 
-  // Folder Permissions (Replaced useEffect with useQuery)
   const { data: folderPerms } = useQuery({
     queryKey: ['folderPermissions', selectedFolderId],
     queryFn: () => fetchContextButtons(selectedFolderId as number),
@@ -136,7 +134,6 @@ export default function Dataset() {
     staleTime: 1000 * 60 * 5,
   });
 
-  // Export Mutation (Replaced useTransition with useMutation)
   const exportCsvMutation = useMutation({
     mutationFn: (datasetId: number) => exportDatasetCsv(datasetId),
     onSuccess: () => {
@@ -150,7 +147,6 @@ export default function Dataset() {
     },
   });
 
-  // --- Computed Values ---
   const data = queryData?.rows;
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
@@ -173,7 +169,6 @@ export default function Dataset() {
     return row.dataSetId.toString();
   };
 
-  // --- Event-Driven Cache Handler ---
   const handleRowSelectionChange = (
     updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
   ) => {
@@ -185,7 +180,7 @@ export default function Dataset() {
     setSelectionCache((prev) => {
       const next = { ...prev };
       datasetList.forEach((item) => {
-        const id = getRowId(item); // Strictly use getRowId
+        const id = getRowId(item);
         if (newSelection[id]) {
           next[id] = item;
         }
@@ -197,7 +192,6 @@ export default function Dataset() {
   const selectedDataset = datasetList.find((m) => m.dataSetId === selectedDatasetId) ?? null;
   const existingNames = datasetList.map((m) => m.dataSet);
 
-  // --- Handlers ---
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['dataset'] });
   };
@@ -271,7 +265,7 @@ export default function Dataset() {
     onNavigate: (path) => {
       navigate(path);
     },
-    onExportCsv: (datasetId) => exportCsvMutation.mutate(datasetId), // Point to useMutation!
+    onExportCsv: (datasetId) => exportCsvMutation.mutate(datasetId),
   });
 
   const getAllSelectedItems = (): Dataset[] => {
@@ -319,7 +313,7 @@ export default function Dataset() {
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Datasets" navigation={libraryTabs} />
           <div className="flex items-center gap-2 md:mb-0">
-            {exportCsvMutation.isPending && ( // Use TanStack Query's loading state
+            {exportCsvMutation.isPending && (
               <span className="text-sm font-medium text-xibo-blue-600 animate-pulse pr-2">
                 {t('Generating CSV...')}
               </span>
@@ -414,7 +408,7 @@ export default function Dataset() {
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetching}
               rowSelection={rowSelection}
-              onRowSelectionChange={handleRowSelectionChange} // <-- Event Handler Applied!
+              onRowSelectionChange={handleRowSelectionChange}
               onRefresh={handleRefresh}
               columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
               columnVisibility={columnVisibility}

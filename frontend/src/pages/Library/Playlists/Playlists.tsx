@@ -99,7 +99,6 @@ export default function Playlist() {
     folderId: canViewFolders ? homeFolderId : null,
   });
 
-  // Keep this effect for syncing React Router state
   useEffect(() => {
     if (!isHydrated) return;
 
@@ -129,7 +128,6 @@ export default function Playlist() {
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
 
-  // --- Data Fetching ---
   const {
     data: queryData,
     isFetching,
@@ -144,15 +142,13 @@ export default function Playlist() {
     enabled: isHydrated,
   });
 
-  // Replaced manual useEffect with useQuery for Folder Permissions
   const { data: folderPerms } = useQuery({
     queryKey: ['folderPermissions', selectedFolderId],
     queryFn: () => fetchContextButtons(selectedFolderId as number),
-    enabled: selectedFolderId !== null, // Only run when we have a valid ID
-    staleTime: 1000 * 60 * 5, // Cache permissions for 5 minutes
+    enabled: selectedFolderId !== null,
+    staleTime: 1000 * 60 * 5,
   });
 
-  // --- Computed Values ---
   const data = queryData?.rows;
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
@@ -175,7 +171,6 @@ export default function Playlist() {
     return row.playlistId.toString();
   };
 
-  // --- Event-Driven Cache Handler ---
   const handleRowSelectionChange = (
     updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
   ) => {
@@ -187,7 +182,7 @@ export default function Playlist() {
     setSelectionCache((prev) => {
       const next = { ...prev };
       playlistList.forEach((item) => {
-        const id = getRowId(item); // Strictly use getRowId
+        const id = getRowId(item);
         if (newSelection[id]) {
           next[id] = item;
         }
@@ -199,7 +194,6 @@ export default function Playlist() {
   const selectedPlaylist = playlistList.find((m) => m.playlistId === selectedPlaylistId) ?? null;
   const existingNames = playlistList.map((m) => m.name);
 
-  // --- Handlers ---
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['playlist'] });
   };
@@ -405,7 +399,7 @@ export default function Playlist() {
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetching}
               rowSelection={rowSelection}
-              onRowSelectionChange={handleRowSelectionChange} // <-- Event Handler Applied!
+              onRowSelectionChange={handleRowSelectionChange}
               onRefresh={handleRefresh}
               columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
               columnVisibility={columnVisibility}

@@ -111,18 +111,15 @@ export default function Resolution() {
     enabled: isHydrated,
   });
 
-  // 1. Computed values pointing directly to server state
   const data = queryData?.rows;
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
   const resolutionList = data ?? [];
 
-  // Centralize the ID logic to prevent bulk selection bugs
   const getRowId = (row: Resolution) => {
     return row.resolutionId.toString();
   };
 
-  // 2. Event-Driven Cache Handler (Replaces the useEffect)
   const handleRowSelectionChange = (
     updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
   ) => {
@@ -134,7 +131,7 @@ export default function Resolution() {
     setSelectionCache((prev) => {
       const next = { ...prev };
       resolutionList.forEach((item) => {
-        const id = getRowId(item); // Strictly use getRowId
+        const id = getRowId(item);
         if (newSelection[id]) {
           next[id] = item;
         }
@@ -301,7 +298,7 @@ export default function Resolution() {
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetching}
               rowSelection={rowSelection}
-              onRowSelectionChange={handleRowSelectionChange} // <-- Event Handler Appled!
+              onRowSelectionChange={handleRowSelectionChange}
               onRefresh={handleRefresh}
               columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
               columnVisibility={columnVisibility}

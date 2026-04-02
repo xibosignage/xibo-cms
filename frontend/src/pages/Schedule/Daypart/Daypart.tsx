@@ -90,7 +90,6 @@ export default function Daypart() {
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
 
-  // --- Data Fetching ---
   const {
     data: queryData,
     isFetching,
@@ -104,7 +103,6 @@ export default function Daypart() {
     enabled: isHydrated,
   });
 
-  // --- Computed Values ---
   const data = queryData?.rows;
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
@@ -114,7 +112,6 @@ export default function Daypart() {
     return row.dayPartId.toString();
   };
 
-  // --- Event-Driven Cache Handler ---
   const handleRowSelectionChange = (
     updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
   ) => {
@@ -126,7 +123,7 @@ export default function Daypart() {
     setSelectionCache((prev) => {
       const next = { ...prev };
       daypartList.forEach((item) => {
-        const id = getRowId(item); // Strictly use getRowId
+        const id = getRowId(item);
         if (newSelection[id]) {
           next[id] = item;
         }
@@ -138,7 +135,6 @@ export default function Daypart() {
   const selectedDaypart = daypartList.find((m) => m.dayPartId === selectedDaypartId) ?? null;
   const existingNames = daypartList.map((m) => m.name);
 
-  // --- Handlers ---
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['daypart'] });
   };
@@ -303,7 +299,7 @@ export default function Daypart() {
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetching}
               rowSelection={rowSelection}
-              onRowSelectionChange={handleRowSelectionChange} // <-- Event Handler Applied!
+              onRowSelectionChange={handleRowSelectionChange}
               onRefresh={handleRefresh}
               columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
               columnVisibility={columnVisibility}

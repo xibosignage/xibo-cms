@@ -112,13 +112,11 @@ export default function DatasetData() {
   const error = isError && queryError instanceof Error ? queryError.message : '';
   const isLoading = !isHydrated || isFetchingColumns;
 
-  // --- Centralized Deterministic ID Function ---
   const getRowId = (row: DynamicRowData) => {
     const id = row.id ?? row.datasetDataId;
     return id !== undefined && id !== null ? String(id) : '';
   };
 
-  // --- Event-Driven Selection Handler ---
   const handleRowSelectionChange = (
     updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
   ) => {
@@ -172,7 +170,6 @@ export default function DatasetData() {
       return items;
     },
     onSuccess: (deletedItems) => {
-      // Clear selections
       const newSelection = { ...rowSelection };
       deletedItems.forEach((item) => {
         const rowId = getRowId(item);
@@ -350,14 +347,14 @@ export default function DatasetData() {
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetchingData}
               rowSelection={rowSelection}
-              onRowSelectionChange={handleRowSelectionChange} // <-- Event Handler
+              onRowSelectionChange={handleRowSelectionChange}
               bulkActions={bulkActions}
               onRefresh={handleRefresh}
               columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
               columnVisibility={columnVisibility}
               onColumnVisibilityChange={setColumnVisibility}
               viewMode={null}
-              getRowId={getRowId} // <-- Deterministic ID applied
+              getRowId={getRowId}
             />
           )}
         </div>
@@ -377,7 +374,6 @@ export default function DatasetData() {
         selection={{
           selectedData: selectedRow,
           itemsToDelete,
-          // FIX: Check for the item directly instead of array length
           rowToDeleteId: itemsToDelete[0] ? getRowId(itemsToDelete[0]) : null,
         }}
         handlers={{

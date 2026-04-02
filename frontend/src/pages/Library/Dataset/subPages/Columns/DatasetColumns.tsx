@@ -94,7 +94,6 @@ export default function DatasetColumns() {
     queryClient.invalidateQueries({ queryKey: ['datasetColumns', datasetId] });
   };
 
-  // --- Data Fetching ---
   const { data: dataset } = useQuery({
     queryKey: ['dataset', datasetId],
     queryFn: () => getDatasetById(datasetId!),
@@ -181,7 +180,6 @@ export default function DatasetColumns() {
     },
   });
 
-  // --- Handlers ---
   const handleAdd = () => {
     setSelectedColumn(null);
     setActiveModal('edit');
@@ -356,7 +354,7 @@ export default function DatasetColumns() {
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetching}
               rowSelection={rowSelection}
-              onRowSelectionChange={handleRowSelectionChange} // <-- Event Handler
+              onRowSelectionChange={handleRowSelectionChange}
               bulkActions={bulkActions}
               onRefresh={handleRefresh}
               columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}

@@ -120,7 +120,7 @@ export default function Sessions() {
     setSelectionCache((prev) => {
       const next = { ...prev };
       sessionList.forEach((item: Session) => {
-        const id = getRowId(item); // Fix: consistently use getRowId!
+        const id = getRowId(item);
 
         if (newSelection[id]) {
           next[id] = item;
