@@ -20,7 +20,7 @@
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type React from 'react';
 import { MemoryRouter } from 'react-router-dom';
@@ -414,7 +414,7 @@ describe('Media page', () => {
     });
 
     const table = await screen.findByRole('table');
-    const newEntries = await screen.findAllByText('new_upload.png');
+    const newEntries = await within(table).findAllByText('new_upload.png');
     const newEntry = newEntries[0]!;
     expect(newEntry).toBeInTheDocument();
 
@@ -428,8 +428,18 @@ describe('Media page', () => {
     (useMediaData as any).mockReturnValue({
       data: {
         rows: [
-          { mediaId: 1, name: 'Item 1', mediaType: 'image', userPermissions: { delete: true, share: true, edit: true } },
-          { mediaId: 2, name: 'Item 2', mediaType: 'image', userPermissions: { delete: true, share: true, edit: true } },
+          {
+            mediaId: 1,
+            name: 'Item 1',
+            mediaType: 'image',
+            userPermissions: { delete: true, share: true, edit: true },
+          },
+          {
+            mediaId: 2,
+            name: 'Item 2',
+            mediaType: 'image',
+            userPermissions: { delete: true, share: true, edit: true },
+          },
         ],
         totalCount: 2,
       },
