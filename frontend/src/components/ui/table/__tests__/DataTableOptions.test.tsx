@@ -21,6 +21,7 @@
 
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
+
 import { DataTableOptions } from '../DataTableOptions';
 
 // Mock translations
@@ -37,21 +38,21 @@ describe('DataTableOptions', () => {
 
   const mockTable = {
     getAllLeafColumns: () => [
-      { 
-        id: 'name', 
-        getCanHide: () => true, 
-        columnDef: { header: 'Name' }, 
-        toggleVisibility: mockToggleName // FIX 2: Use the variable here
+      {
+        id: 'name',
+        getCanHide: () => true,
+        columnDef: { header: 'Name' },
+        toggleVisibility: mockToggleName, // FIX 2: Use the variable here
       },
-      { 
-        id: 'age', 
-        getCanHide: () => true, 
-        columnDef: { header: 'Age' }, 
-        toggleVisibility: mockToggleAge // FIX 2: Use the variable here
+      {
+        id: 'age',
+        getCanHide: () => true,
+        columnDef: { header: 'Age' },
+        toggleVisibility: mockToggleAge, // FIX 2: Use the variable here
       },
     ],
-    getState: () => ({ 
-      columnVisibility: { name: true, age: false } 
+    getState: () => ({
+      columnVisibility: { name: true, age: false },
     }),
     getAllColumns: () => [], // satisfy types if needed
   } as any;
@@ -81,7 +82,7 @@ describe('DataTableOptions', () => {
 
   it('toggles the column dropdown and displays visibility states', () => {
     render(<DataTableOptions {...defaultProps} />);
-    
+
     // Open dropdown
     fireEvent.click(screen.getByText('Columns'));
     expect(screen.getByText('Visible Columns')).toBeInTheDocument();
@@ -89,7 +90,7 @@ describe('DataTableOptions', () => {
     // Check visibility states (Checkbox components)
     const nameCheckbox = screen.getByLabelText('Name') as HTMLInputElement;
     const ageCheckbox = screen.getByLabelText('Age') as HTMLInputElement;
-    
+
     expect(nameCheckbox.checked).toBe(true);
     expect(ageCheckbox.checked).toBe(false);
 

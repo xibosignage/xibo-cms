@@ -20,9 +20,10 @@
  */
 
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
-import { DataTableBulkActions } from '../DataTableBulkActions';
 import { Trash2, Download } from 'lucide-react';
+import { describe, it, expect, vi } from 'vitest';
+
+import { DataTableBulkActions } from '../DataTableBulkActions';
 
 // Mock translation
 vi.mock('react-i18next', () => ({

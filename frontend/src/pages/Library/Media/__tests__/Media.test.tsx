@@ -436,8 +436,18 @@ describe('Media page', () => {
     (useMediaData as any).mockReturnValue({
       data: {
         rows: [
-          { mediaId: 1, name: 'Item 1', mediaType: 'image', userPermissions: { delete: true, share: true, edit: true } },
-          { mediaId: 2, name: 'Item 2', mediaType: 'image', userPermissions: { delete: true, share: true, edit: true } },
+          {
+            mediaId: 1,
+            name: 'Item 1',
+            mediaType: 'image',
+            userPermissions: { delete: true, share: true, edit: true },
+          },
+          {
+            mediaId: 2,
+            name: 'Item 2',
+            mediaType: 'image',
+            userPermissions: { delete: true, share: true, edit: true },
+          },
         ],
         totalCount: 2,
       },
