@@ -24,6 +24,7 @@ import type { RowSelectionState } from '@tanstack/react-table';
 import { Search, Filter, Folder, FilterX, Plus, Upload } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 
 import type { MediaActionsProps, ModalType } from './MediaConfig';
 import {
@@ -65,6 +66,8 @@ export default function Media() {
   const queryClient = useQueryClient();
   const canViewFolders = usePermissions()?.canViewFolders;
   const homeFolderId = user?.homeFolderId ?? 1;
+  const location = useLocation();
+  const layoutId = location.state?.layoutId;
 
   const {
     pagination,
@@ -106,6 +109,19 @@ export default function Media() {
     folderId: canViewFolders ? homeFolderId : null,
   });
 
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    if (layoutId) {
+      setFilterInputs((prev) => ({
+        ...prev,
+        layoutId,
+      }));
+
+      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    }
+  }, [layoutId, isHydrated, setFilterInputs, setPagination]);
+
   const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [selectionCache, setSelectionCache] = useState<Record<string, Media>>({});
@@ -126,7 +142,6 @@ export default function Media() {
   const closeModal = () => setActiveModal(null);
 
   const targetUploadFolderId = canViewFolders ? (selectedFolderId ?? homeFolderId) : homeFolderId;
-
   const canAddToFolder = targetUploadFolderId !== null;
 
   const handleRefresh = () => {
@@ -157,7 +172,6 @@ export default function Media() {
     isDragActive: isGlobalDragActive,
   } = dropzone;
 
-  // Data fetching
   const {
     data: queryData,
     isFetching,
@@ -172,18 +186,37 @@ export default function Media() {
     enabled: isHydrated,
   });
 
-  // Computed values
   const data = queryData?.rows;
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
+  const mediaList = data ?? [];
 
-  const [mediaList, setMediaList] = useState<Media[]>([]);
+  const getRowId = (row: Media) => row.mediaId.toString();
+
+  const handleRowSelectionChange = (
+    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
+  ) => {
+    const newSelection =
+      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
+
+    setRowSelection(newSelection);
+
+    setSelectionCache((prev) => {
+      const next = { ...prev };
+      mediaList.forEach((item) => {
+        const id = getRowId(item);
+        if (newSelection[id]) {
+          next[id] = item;
+        }
+      });
+      return next;
+    });
+  };
 
   const folderActions = useFolderActions({
     onSuccess: (targetFolder) => {
       setFolderRefreshTrigger((prev) => prev + 1);
 
-      // Select home folder
       if (targetFolder?.id === -1) {
         targetFolder.id = homeFolderId;
       }
@@ -196,40 +229,10 @@ export default function Media() {
     },
   });
 
-  useEffect(() => {
-    setMediaList(data ?? []);
-  }, [data]);
-
-  // Update the selected cache when data loads or selection changes
-  useEffect(() => {
-    if (!mediaList || mediaList.length === 0) {
-      return;
-    }
-
-    setSelectionCache((prev) => {
-      const next = { ...prev };
-      let hasChanges = false;
-
-      mediaList.forEach((item) => {
-        const id = item.mediaId.toString();
-        if (rowSelection[id]) {
-          if (!next[id]) {
-            next[id] = item;
-            hasChanges = true;
-          }
-        }
-      });
-
-      return hasChanges ? next : prev;
-    });
-  }, [mediaList, rowSelection]);
-
   const selectedMedia = mediaList.find((m) => m.mediaId === selectedMediaId) ?? null;
   const existingNames = mediaList.map((m) => m.name);
   const ownerId = selectedMedia?.ownerId ? Number(selectedMedia.ownerId) : null;
   const { owner, loading } = useOwner({ ownerId });
-
-  const getRowId = (row: Media) => row.mediaId.toString();
 
   const handleFolderChange = (folder: { id: number | null; text: string | '' }) => {
     setSelectedFolderId(folder.id);
@@ -241,6 +244,7 @@ export default function Media() {
   const {
     isDeleting,
     deleteError,
+    setDeleteError,
     isCloning,
     confirmDelete,
     handleConfirmClone,
@@ -259,6 +263,7 @@ export default function Media() {
       return;
     }
 
+    setDeleteError(null);
     setItemsToDelete([media]);
     openModal('delete');
   };
@@ -340,6 +345,7 @@ export default function Media() {
         return;
       }
 
+      setDeleteError(null);
       setItemsToDelete(permittedItems);
       openModal('delete');
     },
@@ -396,15 +402,12 @@ export default function Media() {
 
       try {
         if (allItems.length === 1) {
-          // Normal single-file download
           const item = allItems[0];
-
           if (item) {
             await downloadMedia(item.mediaId, item.fileName);
             notify.success(t('Download started!'));
           }
         } else {
-          // Multiple items ZIP download
           notify.info(
             t('Zipping {{count}} files. You can continue using the app.', {
               count: allItems.length,
@@ -560,7 +563,7 @@ export default function Media() {
             setFilterInputs((prev) => ({ ...prev, [name]: value }));
             setPagination((prev) => ({ ...prev, pageIndex: 0 }));
           }}
-          open={openFilter}
+          isOpen={openFilter}
           values={filterInputs}
           options={filterOptions}
           onReset={handleResetFilters}
@@ -592,7 +595,7 @@ export default function Media() {
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetching}
               rowSelection={rowSelection}
-              onRowSelectionChange={setRowSelection}
+              onRowSelectionChange={handleRowSelectionChange}
               onRefresh={handleRefresh}
               columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
               columnVisibility={columnVisibility}
@@ -609,7 +612,7 @@ export default function Media() {
               pagination={pagination}
               onPaginationChange={setPagination}
               rowSelection={rowSelection}
-              onRowSelectionChange={setRowSelection}
+              onRowSelectionChange={handleRowSelectionChange}
               loading={isFetching}
               onRefresh={handleRefresh}
               bulkActions={bulkActions}
@@ -668,7 +671,6 @@ export default function Media() {
           activeModal,
           closeModal,
           handleRefresh,
-          setMediaList,
           deleteError,
           isDeleting,
           isCloning,

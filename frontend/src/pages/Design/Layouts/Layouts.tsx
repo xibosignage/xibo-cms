@@ -19,10 +19,10 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { Filter, FilterX, Plus, Search } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { LayoutFilterInput } from './LayoutConfig';
@@ -87,6 +87,7 @@ export default function Layouts() {
       status: true,
       modifiedDt: false,
       layoutId: false,
+      code: false,
     },
     viewMode: 'table',
     globalFilter: '',
@@ -100,9 +101,7 @@ export default function Layouts() {
   const [openFilter, setOpenFilter] = useState(false);
   const [showInfoPanel, setShowInfoPanel] = useState(false);
 
-  const [canAddToFolder, setCanAddToFolder] = useState(false);
   const [selectedFolderName, setSelectedFolderName] = useState(t('Root Folder'));
-
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
 
@@ -115,7 +114,6 @@ export default function Layouts() {
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
 
-  // Data fetching
   const {
     data: queryData,
     isFetching,
@@ -130,21 +128,22 @@ export default function Layouts() {
     enabled: isHydrated,
   });
 
-  // Computed values
+  const { data: folderPerms } = useQuery({
+    queryKey: ['folderPermissions', selectedFolderId],
+    queryFn: () => fetchContextButtons(selectedFolderId as number),
+    enabled: selectedFolderId !== null,
+    staleTime: 1000 * 60 * 5,
+  });
+
   const data = queryData?.rows;
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
-
-  const [layoutList, setLayoutList] = useState<Layout[]>([]);
-
-  useEffect(() => {
-    setLayoutList(data ?? []);
-  }, [data]);
+  const layoutList = data ?? [];
+  const canAddToFolder = folderPerms?.create || false;
 
   const folderActions = useFolderActions({
     onSuccess: (targetFolder) => {
       setFolderRefreshTrigger((prev) => prev + 1);
-
       if (targetFolder) {
         handleFolderChange({ id: targetFolder.id, text: targetFolder.text });
       } else {
@@ -153,63 +152,34 @@ export default function Layouts() {
     },
   });
 
-  useEffect(() => {
-    if (selectedFolderId === null) {
-      setCanAddToFolder(false);
-      return;
-    }
+  const getRowId = (row: Layout) => {
+    return row.layoutId.toString();
+  };
 
-    let active = true;
+  const handleRowSelectionChange = (
+    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
+  ) => {
+    const newSelection =
+      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
 
-    fetchContextButtons(selectedFolderId)
-      .then((perms) => {
-        if (active) {
-          setCanAddToFolder(perms.create || false);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to fetch folder permissions', err);
-        if (active) {
-          setCanAddToFolder(false);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [selectedFolderId]);
-
-  useEffect(() => {
-    if (!layoutList || layoutList.length === 0) {
-      return;
-    }
+    setRowSelection(newSelection);
 
     setSelectionCache((prev) => {
       const next = { ...prev };
-      let hasChanges = false;
-
       layoutList.forEach((item) => {
-        const id = item.layoutId.toString();
-        if (rowSelection[id]) {
-          if (!next[id]) {
-            next[id] = item;
-            hasChanges = true;
-          }
+        const id = getRowId(item);
+        if (newSelection[id]) {
+          next[id] = item;
         }
       });
-
-      return hasChanges ? next : prev;
+      return next;
     });
-  }, [layoutList, rowSelection]);
+  };
 
   const selectedLayout = layoutList.find((m) => m.layoutId === selectedLayoutId) ?? null;
   const existingNames = layoutList.map((m) => m.name || m.layout).filter(Boolean);
   const ownerId = selectedLayout?.ownerId ? Number(selectedLayout.ownerId) : null;
   const { owner, loading } = useOwner({ ownerId });
-
-  const getRowId = (row: Layout) => {
-    return row.layoutId.toString();
-  };
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['layout'] });
@@ -227,11 +197,23 @@ export default function Layouts() {
     deleteError,
     setDeleteError,
     isCloning,
+    isPublishing,
+    isAssigning,
     confirmDelete,
     handleConfirmClone,
     handleConfirmMove,
     handleCreateLayout,
     handleOpenLayout,
+    confirmPublish,
+    handleCheckoutLayout,
+    isDiscarding,
+    handleConfirmDiscard,
+    handleConfirmAssign,
+    handleJumpToPlaylists,
+    handleJumpToCampaigns,
+    handleJumpToMedia,
+    isExporting,
+    handleExportLayout,
   } = useLayoutActions({
     t,
     handleRefresh,
@@ -273,6 +255,36 @@ export default function Layouts() {
     openModal('copy');
   };
 
+  const openPublish = (layoutId: number) => {
+    setSelectedLayoutId(layoutId);
+    openModal('publish');
+  };
+
+  const handleDiscardModal = (layoutId: number) => {
+    setSelectedLayoutId(layoutId);
+    openModal('discard');
+  };
+
+  const handleExportModal = (layoutId: number) => {
+    setSelectedLayoutId(layoutId);
+    openModal('export');
+  };
+
+  const openTemplateModal = (layoutId: number) => {
+    setSelectedLayoutId(layoutId);
+    openModal('template');
+  };
+
+  const openRetireModal = (row: Layout) => {
+    setSelectedLayoutId(row.layoutId);
+    openModal('retire');
+  };
+
+  const openEnableStatsModal = (row: Layout) => {
+    setSelectedLayoutId(row.layoutId);
+    openModal('enableStats');
+  };
+
   const columns = getLayoutColumns({
     t,
     onDelete: handleDelete,
@@ -293,6 +305,24 @@ export default function Layouts() {
     openLayout: (layoutId) => {
       handleOpenLayout(layoutId);
     },
+    openPublish,
+    checkoutLayout: (layoutId) => {
+      handleCheckoutLayout(layoutId);
+    },
+    discardLayout: handleDiscardModal,
+    assignModal: (layout) => {
+      setSelectedLayoutId(layout.layoutId);
+      openModal('campaign');
+    },
+    jumpToPlaylists: handleJumpToPlaylists,
+    jumpToCampaigns: handleJumpToCampaigns,
+    jumpToMedia: handleJumpToMedia,
+    exportLayout: (layout) => {
+      handleExportModal(layout.layoutId);
+    },
+    openTemplateModal,
+    openRetireModal,
+    openEnableStatsModal,
   });
 
   const getAllSelectedItems = (): Layout[] => {
@@ -396,7 +426,7 @@ export default function Layouts() {
             setFilterInputs((prev) => ({ ...prev, [name]: value }));
             setPagination((prev) => ({ ...prev, pageIndex: 0 }));
           }}
-          open={openFilter}
+          isOpen={openFilter}
           values={filterInputs}
           options={filterOptions}
           onReset={handleResetFilters}
@@ -428,7 +458,7 @@ export default function Layouts() {
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetching}
               rowSelection={rowSelection}
-              onRowSelectionChange={setRowSelection}
+              onRowSelectionChange={handleRowSelectionChange}
               onRefresh={handleRefresh}
               columnPinning={{
                 left: ['tableSelection'],
@@ -448,10 +478,13 @@ export default function Layouts() {
           activeModal,
           closeModal,
           handleRefresh,
-          setLayoutList,
           deleteError,
           isDeleting,
           isCloning,
+          isPublishing,
+          isDiscarding,
+          isAssigning,
+          isExporting,
         }}
         selection={{
           selectedLayout,
@@ -466,6 +499,10 @@ export default function Layouts() {
           handleConfirmClone: (name, description, copyMedia) =>
             handleConfirmClone(selectedLayout, name, description, copyMedia),
           handleConfirmMove: (folderId) => handleConfirmMove(itemsToMove, folderId),
+          confirmPublish,
+          confirmDiscard: handleConfirmDiscard,
+          handleConfirmAssign,
+          handleExportLayout,
         }}
         infoPanel={{
           isOpen: showInfoPanel,

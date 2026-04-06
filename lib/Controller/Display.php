@@ -303,7 +303,7 @@ class Display extends Base
         foreach ($this->store->select($sql, ['displayId' => $id, 'type' => 'P']) as $row) {
             $totalSize = $totalSize + $row['size'];
             $totalCount++;
-            
+
             if (intval($row['complete']) === 1) {
                 $completeSize = $completeSize + $row['size'];
                 $completeCount = $completeCount + 1;
@@ -1010,8 +1010,7 @@ class Display extends Base
                             'id' => 'display_button_layouts_jump',
                             'linkType' => '_self',
                             'external' => true,
-                            'url' => $this->urlFor($request, 'layout.view')
-                                . '?activeDisplayGroupId=' . $display->displayGroupId,
+                            'url' => (new HttpsDetect())->getRootUrl() . '/prototype/design/layout',
                             'text' => __('Jump to Scheduled Layouts')
                         ];
                     }

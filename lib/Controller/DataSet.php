@@ -228,11 +228,15 @@ class DataSet extends Base
                 break;
             }
 
-            $dataSet->includeProperty('buttons');
-            $dataSet->buttons = [];
-
             // Load the dataSet to get the columns
             $dataSet->load();
+
+            if ($this->isJson($request)) {
+                continue;
+            }
+
+            $dataSet->includeProperty('buttons');
+            $dataSet->buttons = [];
 
             if ($this->getUser()->featureEnabled('dataset.data') && $user->checkEditable($dataSet)) {
                 // View Data
@@ -1734,7 +1738,7 @@ class DataSet extends Base
             'dataSet' => $dataSet,
             'script' => $script,
             ]);
-    
+
             return $this->render($request, $response);
     }
 
@@ -1830,5 +1834,30 @@ class DataSet extends Base
         }
 
         return $response;
+    }
+
+    /**
+     * List of data connector sources
+     * @param Response $response
+     * @return Response
+     */
+    public function dataConnectorSource(Response $response): Response
+    {
+        try {
+            // Dispatch an event to initialize list of data sources for data connectors
+            $event = new DataConnectorSourceRequestEvent();
+
+            $this->getDispatcher()->dispatch($event, DataConnectorSourceRequestEvent::$NAME);
+
+            // Retrieve data connector sources from the event
+            return $response->withJson($event->getDataConnectorSources());
+        } catch (\Exception $e) {
+            $this->getLog()->error('dataConnectorRequest: Failed to retrieve data connector sources: '
+                . $e->getMessage());
+
+            return $response->withJson([
+                'error' => 'Failed to retrieve data connector sources'
+            ], 500);
+        }
     }
 }

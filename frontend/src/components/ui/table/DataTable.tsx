@@ -72,6 +72,7 @@ interface DataTableProps<TData, TValue> {
   hideToolbar?: boolean;
   columnVisibility?: VisibilityState;
   onColumnVisibilityChange?: OnChangeFn<VisibilityState>;
+  noResultsCustom?: React.ReactNode;
 }
 
 const getCommonPinningStyles = <TData, TValue>(column: Column<TData, TValue>): CSSProperties => {
@@ -120,6 +121,7 @@ export function DataTable<TData, TValue>({
   hideToolbar = false,
   columnVisibility,
   onColumnVisibilityChange,
+  noResultsCustom,
 }: DataTableProps<TData, TValue>) {
   const { t } = useTranslation();
 
@@ -389,21 +391,26 @@ export function DataTable<TData, TValue>({
                 <tr>
                   <td colSpan={columns.length} className="text-center text-gray-500 no-results">
                     {!loading && (
-                      <div className="flex flex-col items-center justify-center gap-3 h-full min-h-64">
-                        <div className="inline-flex justify-center items-center size-15.5 rounded-full bg-gray-100 text-gray-500 border-7 border-gray-50">
-                          <FileSearch2 className="shrink-0 size-5" />
-                        </div>
+                      <>
+                        {noResultsCustom ? (
+                          <>{noResultsCustom}</>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center gap-3 h-full min-h-64">
+                            <div className="inline-flex justify-center items-center size-15.5 rounded-full bg-gray-100 text-gray-500 border-7 border-gray-50">
+                              <FileSearch2 className="shrink-0 size-5" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-800">
+                              {t('No results found.')}
+                            </h3>
 
-                        <h3 className="text-lg font-semibold text-gray-800">
-                          {t('No results found.')}
-                        </h3>
-
-                        <p className="text-gray-500">
-                          {t(
-                            "Reset your filters or adjust your search to find what you're looking for.",
-                          )}
-                        </p>
-                      </div>
+                            <p className="text-gray-500">
+                              {t(
+                                "Reset your filters or adjust your search to find what you're looking for.",
+                              )}
+                            </p>
+                          </div>
+                        )}
+                      </>
                     )}
                   </td>
                 </tr>

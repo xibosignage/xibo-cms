@@ -29,7 +29,7 @@ import type { Layout } from '@/types/layout';
 import { incrementName } from '@/utils/stringUtils';
 
 interface CopyLayoutModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   onConfirm: (newName: string, description: string, copyMediaFiles: boolean) => void;
   layout: Layout | null;
@@ -38,7 +38,7 @@ interface CopyLayoutModalProps {
 }
 
 export default function CopyLayoutModal({
-  isOpen,
+  isOpen = true,
   onClose,
   onConfirm,
   layout,

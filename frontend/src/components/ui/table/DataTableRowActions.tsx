@@ -29,6 +29,7 @@ import {
   useDismiss,
   useInteractions,
   FloatingPortal,
+  size,
 } from '@floating-ui/react';
 import type { LucideIcon } from 'lucide-react';
 import { ChevronRight, MoreVertical } from 'lucide-react';
@@ -40,6 +41,7 @@ export interface DataTableRowAction<TData> {
   label?: string;
   onClick?: (row: TData) => void;
   icon?: LucideIcon;
+  rightIcon?: LucideIcon;
   isNavigation?: boolean;
   variant?: 'default' | 'primary' | 'danger';
   isSeparator?: boolean;
@@ -63,7 +65,19 @@ export default function DataTableRowActions<TData>({
     onOpenChange: setOpen,
     placement: 'bottom-end',
     whileElementsMounted: autoUpdate,
-    middleware: [offset(4), flip(), shift()],
+    middleware: [
+      offset(4),
+      flip(),
+      shift(),
+      size({
+        apply({ availableHeight, elements }) {
+          Object.assign(elements.floating.style, {
+            maxHeight: `${availableHeight}px`,
+          });
+        },
+        padding: 8,
+      }),
+    ],
   });
 
   const click = useClick(context);
@@ -87,7 +101,7 @@ export default function DataTableRowActions<TData>({
             ref={refs.setFloating}
             style={floatingStyles}
             {...getFloatingProps()}
-            className="z-100 bg-white shadow-lg rounded-xl overflow-hidden min-w-40"
+            className="z-100 bg-white shadow-lg rounded-xl overflow-hidden min-w-40 overflow-y-auto"
           >
             <div className="p-2">
               {actions.map((action, idx) => {
@@ -121,6 +135,11 @@ export default function DataTableRowActions<TData>({
                     {action.isNavigation && (
                       <span className="w-4 h-4 flex items-center justify-center shrink-0 text-gray-400">
                         <ChevronRight />
+                      </span>
+                    )}
+                    {action.rightIcon && (
+                      <span className="w-4 h-4 flex items-center justify-center">
+                        <action.rightIcon />
                       </span>
                     )}
                   </button>

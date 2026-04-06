@@ -22,7 +22,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { Search, Filter, FilterX, Plus } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { ModalType } from './ResolutionsConfig';
@@ -111,48 +111,38 @@ export default function Resolution() {
     enabled: isHydrated,
   });
 
-  // Computed values
   const data = queryData?.rows;
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
-
-  const [resolutionList, setResolutionList] = useState<Resolution[]>([]);
-
-  useEffect(() => {
-    setResolutionList(data ?? []);
-  }, [data]);
-
-  // Update the selected cache when data loads or selection changes
-  useEffect(() => {
-    if (!resolutionList || resolutionList.length === 0) {
-      return;
-    }
-
-    setSelectionCache((prev) => {
-      const next = { ...prev };
-      let hasChanges = false;
-
-      resolutionList.forEach((item) => {
-        const id = item.resolutionId.toString();
-        if (rowSelection[id]) {
-          if (!next[id]) {
-            next[id] = item;
-            hasChanges = true;
-          }
-        }
-      });
-
-      return hasChanges ? next : prev;
-    });
-  }, [resolutionList, rowSelection]);
-
-  const selectedResolution =
-    resolutionList.find((m) => m.resolutionId === selectedResolutionId) ?? null;
-  const existingNames = resolutionList.map((m) => m.resolution);
+  const resolutionList = data ?? [];
 
   const getRowId = (row: Resolution) => {
     return row.resolutionId.toString();
   };
+
+  const handleRowSelectionChange = (
+    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
+  ) => {
+    const newSelection =
+      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
+
+    setRowSelection(newSelection);
+
+    setSelectionCache((prev) => {
+      const next = { ...prev };
+      resolutionList.forEach((item) => {
+        const id = getRowId(item);
+        if (newSelection[id]) {
+          next[id] = item;
+        }
+      });
+      return next;
+    });
+  };
+
+  const selectedResolution =
+    resolutionList.find((m) => m.resolutionId === selectedResolutionId) ?? null;
+  const existingNames = resolutionList.map((m) => m.resolution);
 
   // Event handlers
   const handleRefresh = () => {
@@ -199,7 +189,7 @@ export default function Resolution() {
   const getAllSelectedItems = (): Resolution[] => {
     return Object.keys(rowSelection)
       .map((id) => selectionCache[id])
-      .filter((item): item is Resolution => !!item); // Filter out any missing data
+      .filter((item): item is Resolution => !!item);
   };
 
   const bulkActions = getBulkActions({
@@ -276,7 +266,7 @@ export default function Resolution() {
               return { ...prev, pageIndex: 0 };
             });
           }}
-          open={openFilter}
+          isOpen={openFilter}
           values={filterInputs}
           options={filterOptions}
           onReset={handleResetFilters}
@@ -308,7 +298,7 @@ export default function Resolution() {
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetching}
               rowSelection={rowSelection}
-              onRowSelectionChange={setRowSelection}
+              onRowSelectionChange={handleRowSelectionChange}
               onRefresh={handleRefresh}
               columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
               columnVisibility={columnVisibility}
@@ -326,7 +316,6 @@ export default function Resolution() {
           activeModal,
           closeModal,
           handleRefresh,
-          setResolutionList,
           deleteError,
           isDeleting,
         }}

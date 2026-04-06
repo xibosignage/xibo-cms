@@ -353,29 +353,24 @@ describe('FileUploader component', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // Known bugs- remove test.fails
-  test.fails(
-    'queue summary does not show "All N items completed" when items are still pending',
-    () => {
-      renderUploader([
-        makeItem({ id: '1', status: 'pending' }),
-        makeItem({ id: '2', status: 'pending' }),
-      ]);
+  test('queue summary does not show "All N items completed" when items are still uploading', () => {
+    renderUploader([
+      makeItem({ id: '1', status: 'uploading' }),
+      makeItem({ id: '2', status: 'uploading' }),
+    ]);
 
-      expect(screen.queryByText('All 2 items completed')).not.toBeInTheDocument();
-    },
-  );
+    expect(screen.queryByText('All 2 items completed')).not.toBeInTheDocument();
+  });
 
-  // Bug
-  test.fails(
-    'queue summary does not show "All N items completed" when all items have errors',
-    () => {
-      renderUploader([
-        makeItem({ id: '1', status: 'error', error: 'Timeout' }),
-        makeItem({ id: '2', status: 'error', error: 'Timeout' }),
-      ]);
+  // When all items have errors the error-branch is taken, so the banner reads
+  // "0 items completed, 2 items failed"
+  test('queue summary shows completed/failed counts when all items have errors', () => {
+    renderUploader([
+      makeItem({ id: '1', status: 'error', error: 'Timeout' }),
+      makeItem({ id: '2', status: 'error', error: 'Timeout' }),
+    ]);
 
-      expect(screen.queryByText('All 2 items completed')).not.toBeInTheDocument();
-    },
-  );
+    expect(screen.queryByText('All 2 items completed')).not.toBeInTheDocument();
+    expect(screen.getByText('0 items completed, 2 items failed')).toBeInTheDocument();
+  });
 });

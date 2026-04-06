@@ -19,11 +19,12 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { Search, Filter, FilterX, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 
 import type { ModalType } from './PlaylistsConfig';
 import {
@@ -57,6 +58,8 @@ export default function Playlist() {
   const queryClient = useQueryClient();
   const canViewFolders = usePermissions()?.canViewFolders;
   const homeFolderId = user?.homeFolderId ?? 1;
+  const location = useLocation();
+  const layoutId = location.state?.layoutId;
 
   const {
     pagination,
@@ -96,12 +99,23 @@ export default function Playlist() {
     folderId: canViewFolders ? homeFolderId : null,
   });
 
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    if (layoutId) {
+      setFilterInputs((prev) => ({
+        ...prev,
+        layoutId,
+      }));
+
+      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    }
+  }, [layoutId, isHydrated, setFilterInputs, setPagination]);
+
   const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [selectionCache, setSelectionCache] = useState<Record<string, Playlist>>({});
   const [openFilter, setOpenFilter] = useState(false);
-
-  const [canAddToFolder, setCanAddToFolder] = useState(false);
 
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
@@ -114,7 +128,6 @@ export default function Playlist() {
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
 
-  // Data fetching
   const {
     data: queryData,
     isFetching,
@@ -129,12 +142,18 @@ export default function Playlist() {
     enabled: isHydrated,
   });
 
-  // Computed values
+  const { data: folderPerms } = useQuery({
+    queryKey: ['folderPermissions', selectedFolderId],
+    queryFn: () => fetchContextButtons(selectedFolderId as number),
+    enabled: selectedFolderId !== null,
+    staleTime: 1000 * 60 * 5,
+  });
+
   const data = queryData?.rows;
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
-
-  const [playlistList, setPlaylistList] = useState<Playlist[]>([]);
+  const playlistList = data ?? [];
+  const canAddToFolder = folderPerms?.create || false;
 
   const folderActions = useFolderActions({
     onSuccess: (targetFolder) => {
@@ -148,69 +167,33 @@ export default function Playlist() {
     },
   });
 
-  useEffect(() => {
-    setPlaylistList(data ?? []);
-  }, [data]);
-
-  // Check selected folder permission to add playlist
-  useEffect(() => {
-    if (selectedFolderId === null) {
-      setCanAddToFolder(false);
-      return;
-    }
-
-    let active = true;
-
-    fetchContextButtons(selectedFolderId)
-      .then((perms) => {
-        if (active) {
-          setCanAddToFolder(perms.create || false);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to fetch folder permissions', err);
-        if (active) {
-          setCanAddToFolder(false);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [selectedFolderId]);
-
-  // Update the selected cache when data loads or selection changes
-  useEffect(() => {
-    if (!playlistList || playlistList.length === 0) {
-      return;
-    }
-
-    setSelectionCache((prev) => {
-      const next = { ...prev };
-      let hasChanges = false;
-
-      playlistList.forEach((item) => {
-        const id = item.playlistId.toString();
-        if (rowSelection[id]) {
-          if (!next[id]) {
-            next[id] = item;
-            hasChanges = true;
-          }
-        }
-      });
-
-      return hasChanges ? next : prev;
-    });
-  }, [playlistList, rowSelection]);
-
-  const selectedPlaylist = playlistList.find((m) => m.playlistId === selectedPlaylistId) ?? null;
-  const existingNames = playlistList.map((m) => m.name);
-
   const getRowId = (row: Playlist) => {
     return row.playlistId.toString();
   };
 
-  // Event handlers
+  const handleRowSelectionChange = (
+    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
+  ) => {
+    const newSelection =
+      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
+
+    setRowSelection(newSelection);
+
+    setSelectionCache((prev) => {
+      const next = { ...prev };
+      playlistList.forEach((item) => {
+        const id = getRowId(item);
+        if (newSelection[id]) {
+          next[id] = item;
+        }
+      });
+      return next;
+    });
+  };
+
+  const selectedPlaylist = playlistList.find((m) => m.playlistId === selectedPlaylistId) ?? null;
+  const existingNames = playlistList.map((m) => m.name);
+
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['playlist'] });
   };
@@ -284,7 +267,7 @@ export default function Playlist() {
   const getAllSelectedItems = (): Playlist[] => {
     return Object.keys(rowSelection)
       .map((id) => selectionCache[id])
-      .filter((item): item is Playlist => !!item); // Filter out any missing data
+      .filter((item): item is Playlist => !!item);
   };
 
   const bulkActions = getBulkActions({
@@ -384,7 +367,7 @@ export default function Playlist() {
             setFilterInputs((prev) => ({ ...prev, [name]: value }));
             setPagination((prev) => ({ ...prev, pageIndex: 0 }));
           }}
-          open={openFilter}
+          isOpen={openFilter}
           values={filterInputs}
           options={filterOptions}
           onReset={handleResetFilters}
@@ -416,7 +399,7 @@ export default function Playlist() {
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetching}
               rowSelection={rowSelection}
-              onRowSelectionChange={setRowSelection}
+              onRowSelectionChange={handleRowSelectionChange}
               onRefresh={handleRefresh}
               columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
               columnVisibility={columnVisibility}
@@ -434,7 +417,6 @@ export default function Playlist() {
           activeModal,
           closeModal,
           handleRefresh,
-          setPlaylistList,
           deleteError,
           isDeleting,
           isCloning,

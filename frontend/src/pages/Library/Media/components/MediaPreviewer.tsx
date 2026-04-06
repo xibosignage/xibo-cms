@@ -215,7 +215,7 @@ export default function MediaPreviewer({
         </div>
         <div className="pr-4 pb-4 flex">
           <MediaInfoPanel
-            open={showInfoPanel}
+            isOpen={showInfoPanel}
             onClose={() => setShowInfoPanel(false)}
             mediaData={mediaData}
             owner={owner}

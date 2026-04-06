@@ -22,14 +22,14 @@ interface ReplaceFileMedia {
 }
 
 interface ReplaceFileModalProps {
-  openModal: boolean;
+  isOpen?: boolean;
   data: Media;
   onClose: () => void;
   onSave?: (updated: Media) => void;
 }
 
 export default function ReplaceFileModal({
-  openModal,
+  isOpen = true,
   data,
   onClose,
   onSave,
@@ -79,11 +79,11 @@ export default function ReplaceFileModal({
       onSave?.(uploaded as unknown as Media);
       setIsSaving(false);
       onClose();
-      notify.success('Media Replaced Successfully');
+      notify.success(t('Media Replaced Successfully'));
     } catch (err) {
       console.error('Replace media failed:', err);
       setIsSaving(false);
-      notify.error?.('Failed to replace media');
+      notify.error(t('Failed to replace media'));
     }
   };
 
@@ -139,7 +139,7 @@ export default function ReplaceFileModal({
     <Modal
       title={t('Replace File')}
       onClose={onClose}
-      isOpen={openModal}
+      isOpen={isOpen}
       isPending={isSaving}
       scrollable={false}
       actions={[

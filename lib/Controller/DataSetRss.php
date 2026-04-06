@@ -151,8 +151,13 @@ class DataSetRss extends Base
 
         foreach ($feeds as $feed) {
 
-            if ($this->isApi($request))
+            if ($this->isApi($request)) {
+                break;
+            }
+
+            if ($this->isJson($request)) {
                 continue;
+            }
 
             $feed->includeProperty('buttons');
 

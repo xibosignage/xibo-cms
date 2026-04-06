@@ -99,6 +99,14 @@ vi.mock('../hooks/useMediaData', () => ({
   useMediaData: vi.fn(),
 }));
 
+vi.mock('@/services/mediaApi', () => ({
+  deleteMedia: vi.fn().mockResolvedValue(undefined),
+  cloneMedia: vi.fn().mockResolvedValue(undefined),
+  downloadMedia: vi.fn().mockResolvedValue(undefined),
+  downloadMediaAsZip: vi.fn().mockResolvedValue(undefined),
+  fetchMediaBlob: vi.fn().mockResolvedValue(new Blob()),
+}));
+
 const mockUser = {
   userId: 1,
   userName: 'MockUser',
@@ -414,7 +422,7 @@ describe('Media page', () => {
     });
 
     const table = await screen.findByRole('table');
-    const newEntries = await within(table).findAllByText('new_upload.png');
+    const newEntries = await screen.findAllByText('new_upload.png');
     const newEntry = newEntries[0]!;
     expect(newEntry).toBeInTheDocument();
 
@@ -428,18 +436,8 @@ describe('Media page', () => {
     (useMediaData as any).mockReturnValue({
       data: {
         rows: [
-          {
-            mediaId: 1,
-            name: 'Item 1',
-            mediaType: 'image',
-            userPermissions: { delete: true, share: true, edit: true },
-          },
-          {
-            mediaId: 2,
-            name: 'Item 2',
-            mediaType: 'image',
-            userPermissions: { delete: true, share: true, edit: true },
-          },
+          { mediaId: 1, name: 'Item 1', mediaType: 'image', userPermissions: { delete: true, share: true, edit: true } },
+          { mediaId: 2, name: 'Item 2', mediaType: 'image', userPermissions: { delete: true, share: true, edit: true } },
         ],
         totalCount: 2,
       },

@@ -111,10 +111,18 @@ $app->group('', function (RouteCollectorProxy $group) {
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify']))
     ->addMiddleware(new LayoutLock($app));
 
+$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
+    $group->get('/layout/thumbnail/{id}', ['\Xibo\Controller\Layout', 'downloadThumbnail'])->setName('layout.download.thumbnail');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.view', 'template.view']));
+
 $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/layout/checkout/{id}', ['\Xibo\Controller\Layout', 'checkout'])->setName('layout.checkout');
     $group->put('/layout/setenablestat/{id}',['\Xibo\Controller\Layout', 'setEnableStat'])->setName('layout.setenablestat');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify']));
+
+$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
+    $group->post('/layout/export/{id}', ['\Xibo\Controller\Layout', 'export'])->setName('layout.export');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.export']));
 
 // Tagging
 $app->group('', function (RouteCollectorProxy $group) {
@@ -231,6 +239,7 @@ $app->group('', function (RouteCollectorProxy $group) {
  * Templates
  */
 $app->get('/template', ['\Xibo\Controller\Template', 'grid'])->setName('template.search');
+$app->get('/template/{id}', ['\Xibo\Controller\Template', 'searchById'])->setName('template.search.id');
 $app->group('', function (RouteCollectorProxy $group) {
     $group->post('/template', ['\Xibo\Controller\Template', 'add'])->setName('template.add');
     $group->post('/template/{id}', ['\Xibo\Controller\Template', 'addFromLayout'])->setName('template.add.from.layout');
@@ -240,6 +249,7 @@ $app->group('', function (RouteCollectorProxy $group) {
  * Resolutions
  */
 $app->get('/resolution', ['\Xibo\Controller\Resolution','grid'])->setName('resolution.search');
+$app->get('/resolution/{id}', ['\Xibo\Controller\Resolution','searchById'])->setName('resolution.search.id');
 $app->post('/resolution', ['\Xibo\Controller\Resolution','add'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['resolution.add']))
     ->setName('resolution.add');
@@ -253,6 +263,7 @@ $app->group('', function (RouteCollectorProxy $group) {
  * Library
  */
 $app->get('/library', ['\Xibo\Controller\Library','grid'])->setName('library.search');
+$app->get('/library/{id}', ['\Xibo\Controller\Library','searchById'])->setName('library.search.id');
 $app->get('/library/{id}/isused', ['\Xibo\Controller\Library','isUsed'])->setName('library.isused');
 
 $app->group('', function (RouteCollectorProxy $group) {
@@ -409,6 +420,10 @@ $app->group('', function (RouteCollectorProxy $group) {
         ->setName('dataSet.rss.edit');
     $group->delete('/dataset/{id}/rss/{rssId}', ['\Xibo\Controller\DataSetRss','delete'])
         ->setName('dataSet.rss.delete');
+
+    // Data connector sources
+    $group->get('/dataset/dataconnector/source', ['\Xibo\Controller\DataSet', 'dataConnectorSource'])
+        ->setName('dataSet.dataconnector.source');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dataset.modify']));
 
 // Data
@@ -465,6 +480,7 @@ $app->post('/user/pref', ['\Xibo\Controller\User' ,'prefEdit']);
 $app->put('/user/pref', ['\Xibo\Controller\User' ,'prefEditFromForm']);
 $app->get('/user/me', ['\Xibo\Controller\User','myDetails'])->setName('user.me');
 $app->get('/user', ['\Xibo\Controller\User','grid'])->setName('user.search');
+$app->get('/user/{id}/applications', ['\Xibo\Controller\User', 'applicationsGrid'])->setName('user.applications');
 $app->put('/user/profile/edit', ['\Xibo\Controller\User','editProfile'])->setName('user.edit.profile');
 $app->get('/user/profile/setup', ['\Xibo\Controller\User','tfaSetup'])->setName('user.setup.profile');
 $app->post('/user/profile/validate', ['\Xibo\Controller\User','tfaValidate'])->setName('user.validate.profile');
@@ -624,6 +640,7 @@ $app->group('', function (RouteCollectorProxy $group) {
  * Dayparts
  */
 $app->get('/daypart', ['\Xibo\Controller\DayPart','grid'])->setName('daypart.search');
+$app->get('/daypart/{id}', ['\Xibo\Controller\DayPart','searchById'])->setName('daypart.search.id');
 $app->post('/daypart', ['\Xibo\Controller\DayPart','add'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['daypart.add']))
     ->setName('daypart.add');

@@ -142,7 +142,7 @@ class PlayerSoftware extends Base
         // add row buttons
         foreach ($versions as $version) {
             $version->setUnmatchedProperty('fileSizeFormatted', ByteFormatter::format($version->size));
-            if ($this->isApi($request)) {
+            if ($this->isApi($request) || $this->isJson($request)) {
                 continue;
             }
 

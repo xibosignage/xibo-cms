@@ -93,7 +93,18 @@ export const getMediaIcon = (mediaType: string) => {
 
 type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
 
-export type ModalType = BaseModalType | 'replace' | null;
+// TODO: This should be moved to a more central location
+export type ModalType =
+  | BaseModalType
+  | 'replace'
+  | 'publish'
+  | 'discard'
+  | 'campaign'
+  | 'export'
+  | 'template'
+  | 'retire'
+  | 'enableStats'
+  | null;
 
 export const INITIAL_FILTER_STATE: MediaFilterInput = {
   type: '',

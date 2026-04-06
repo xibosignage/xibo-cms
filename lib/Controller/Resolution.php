@@ -22,6 +22,7 @@
 namespace Xibo\Controller;
 
 use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\ResolutionFactory;
@@ -139,7 +140,7 @@ class Resolution extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
@@ -168,6 +169,38 @@ class Resolution extends Base
             ->withStatus(200)
             ->withHeader('X-Total-Count', $recordsTotal)
             ->withJson($resolutions);
+    }
+
+    #[OA\Get(
+        path: '/resolution/{resolutionId}',
+        operationId: 'resolutionSearchById',
+        description: 'Get the Resolution object specified by the provided resolutionId',
+        summary: 'Resolution Search by ID',
+        tags: ['resolution']
+    )]
+    #[OA\Parameter(
+        name: 'resolutionId',
+        description: 'Numeric ID of the Resolution to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Resolution')
+    )]
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
+    {
+        $resolution = $this->resolutionFactory->getById($id, false);
+        $resolution->setUnmatchedProperty(
+            'userPermissions',
+            $this->getUser()->getPermission($resolution)
+        );
+
+        return $response
+            ->withStatus(200)
+            ->withJson($resolution);
     }
 
     #[OA\Post(
@@ -216,7 +249,7 @@ class Resolution extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\InvalidArgumentException
@@ -292,7 +325,7 @@ class Resolution extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
@@ -346,7 +379,7 @@ class Resolution extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException

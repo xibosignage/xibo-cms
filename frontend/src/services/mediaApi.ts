@@ -68,6 +68,7 @@ export async function fetchMedia(
 
 export interface UploadMediaRequest {
   file: File;
+  name?: string;
   folderId?: number | string;
   tags?: string[];
   onProgress?: (progress: number) => void;
@@ -92,6 +93,7 @@ export interface UploadMediaResponse {
 
 export async function uploadMedia({
   file,
+  name,
   folderId = 1,
   tags = [],
   onProgress,
@@ -100,7 +102,7 @@ export async function uploadMedia({
   const formData = new FormData();
 
   formData.append('files[]', file);
-  formData.append('name[]', file.name);
+  formData.append('name[]', name ?? file.name);
 
   if (folderId) {
     formData.append('folderId', folderId.toString());

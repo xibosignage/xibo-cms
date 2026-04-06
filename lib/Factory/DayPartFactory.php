@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -57,13 +57,17 @@ class DayPartFactory extends BaseFactory
 
     /**
      * Get DayPart by Id
-     * @param $dayPartId
+     * @param int $dayPartId
+     * @param bool $disableUserCheck
      * @return DayPart
      * @throws NotFoundException
      */
-    public function getById($dayPartId)
+    public function getById(int $dayPartId, bool $disableUserCheck = true)
     {
-        $dayParts = $this->query(null, ['dayPartId' => $dayPartId, 'disableUserCheck' => 1]);
+        $dayParts = $this->query(null, [
+            'dayPartId' => $dayPartId,
+            'disableUserCheck' => $disableUserCheck ? 1 : 0,
+        ]);
 
         if (count($dayParts) <= 0) {
             throw new NotFoundException();
@@ -139,10 +143,6 @@ class DayPartFactory extends BaseFactory
         $entries = [];
         $sanitizedFilter = $this->getSanitizer($filterBy);
 
-        if ($sortOrder == null) {
-            $sortOrder = ['name'];
-        }
-
         $params = [];
         $select = 'SELECT `daypart`.dayPartId, `name`, `description`, `isRetired`, `userId`, `startTime`, `endTime`, `exceptions`, `isCustom`, `isAlways` ';
 
@@ -181,13 +181,28 @@ class DayPartFactory extends BaseFactory
             $params['userId'] = $sanitizedFilter->getInt('userId');
         }
 
+        if ($sanitizedFilter->getString('keyword') != null) {
+            // Fulltext search
+            $body .= $this->buildSearchQuery(
+                $sanitizedFilter->getString('keyword'),
+                $params,
+                ['daypart.name', 'daypart.description'],
+                ['daypart.daypartId'],
+            );
+        }
+
         // View Permissions
         $this->viewPermissionSql('Xibo\Entity\DayPart', $body, $params, '`daypart`.dayPartId', '`daypart`.userId', $filterBy);
 
-        // Sorting?
-        $order = '';
-        if (is_array($sortOrder))
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        // Sorting
+        $allowedColumns = ['dayPartId', 'name', 'startTime', 'endTime', 'description'];
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['name ASC']
+        );
+
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         $limit = '';
         // Paging

@@ -35,7 +35,7 @@ type MoveableItem = {
 };
 
 interface MoveModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   onConfirm: (targetFolderId: number) => void;
   items: MoveableItem[] | null;
@@ -44,7 +44,7 @@ interface MoveModalProps {
 }
 
 export default function MoveModal({
-  isOpen,
+  isOpen = true,
   onClose,
   onConfirm,
   items,

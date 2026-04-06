@@ -25,12 +25,12 @@ import { twMerge } from 'tailwind-merge';
 
 interface TextInputProps {
   name: string;
-  value: string;
+  value?: string;
   label?: string;
   placeholder?: string;
   helpText?: string;
   error?: string;
-  onChange: (value: string) => void;
+  onChange?: (value: string) => void;
   className?: string;
   labelClassName?: string;
   wrapperClassName?: string;
@@ -76,6 +76,7 @@ export default function TextInput({
       <div
         className={twMerge(
           'flex items-stretch rounded-lg bg-white border border-gray-200 overflow-hidden transition-colors',
+          !multiline && 'h-11.25',
           'focus-within:border-xibo-blue-600 focus-within:ring-1 focus-within:ring-xibo-blue-600/25',
           disabled && 'bg-gray-50',
           error && 'border-red-500 focus-within:border-red-500 focus-within:ring-red-500/25',
@@ -92,7 +93,7 @@ export default function TextInput({
             value={value}
             disabled={disabled}
             rows={rows}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e) => onChange && onChange(e.target.value)}
             placeholder={placeholder || t('Add text')}
             className={twMerge(
               'flex-1 p-3 text-sm font-normal text-gray-800 placeholder:text-gray-500',
@@ -106,7 +107,7 @@ export default function TextInput({
             name={name}
             value={value}
             disabled={disabled}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e) => onChange && onChange(e.target.value)}
             placeholder={placeholder || t('Add text')}
             type={type || 'text'}
             className={twMerge(

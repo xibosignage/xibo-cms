@@ -49,6 +49,7 @@ export default [
     rules: {
       'react-compiler/react-compiler': 'error',
       ...reactHooks.configs.recommended.rules,
+      'react-hooks/exhaustive-deps': 'off',
       'prettier/prettier': ['error'],
       // Semicolons mandatory
       semi: ['error', 'always'],

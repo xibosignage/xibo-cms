@@ -29,7 +29,6 @@ interface ResolutionModalsProps {
     activeModal: string | null;
     closeModal: () => void;
     handleRefresh: () => void;
-    setResolutionList: React.Dispatch<React.SetStateAction<Resolution[]>>;
     deleteError: string | null;
     isDeleting: boolean;
   };
@@ -54,37 +53,30 @@ export function ResolutionModals({ actions, selection, handlers }: ResolutionMod
       {isModalOpen('edit') && (
         <AddAndEditResolutionModal
           type={selection.selectedResolutionId ? 'edit' : 'add'}
-          openModal={isModalOpen('edit')}
           onClose={() => {
             actions.closeModal();
           }}
           data={selection.selectedResolution}
-          onSave={(savedResolution) => {
-            if (selection.selectedResolutionId) {
-              actions.setResolutionList((prev) =>
-                prev.map((m) =>
-                  m.resolutionId === savedResolution.resolutionId ? savedResolution : m,
-                ),
-              );
-            } else {
-              actions.setResolutionList((prev) => [savedResolution, ...prev]);
-            }
+          onSave={() => {
             actions.handleRefresh();
           }}
         />
       )}
 
-      <DeleteResolutionModal
-        isOpen={isModalOpen('delete')}
-        onClose={actions.closeModal}
-        onDelete={() => handlers.confirmDelete(selection.itemsToDelete)}
-        itemCount={selection.itemsToDelete.length}
-        resolutionName={
-          selection.itemsToDelete.length === 1 ? selection.itemsToDelete[0]?.resolution : undefined
-        }
-        error={actions.deleteError}
-        isLoading={actions.isDeleting}
-      />
+      {isModalOpen('delete') && (
+        <DeleteResolutionModal
+          onClose={actions.closeModal}
+          onDelete={() => handlers.confirmDelete(selection.itemsToDelete)}
+          itemCount={selection.itemsToDelete.length}
+          resolutionName={
+            selection.itemsToDelete.length === 1
+              ? selection.itemsToDelete[0]?.resolution
+              : undefined
+          }
+          error={actions.deleteError}
+          isLoading={actions.isDeleting}
+        />
+      )}
     </>
   );
 }

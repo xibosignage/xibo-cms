@@ -21,28 +21,38 @@
 
 import { useTranslation } from 'react-i18next';
 
+import AssignCampaignModal from './AssignCampaignModal';
 import CopyLayoutModal from './CopyLayoutModal';
 import DeleteLayoutModal from './DeleteLayoutModal';
+import DiscardLayoutModal from './DiscardLayoutModal';
 import EditLayout from './EditLayout';
+import { EnableStatsLayoutModal } from './EnableStatsLayoutModal';
+import ExportLayoutModal from './ExportLayoutModal';
 import { LayoutInfoPanel } from './LayoutInfoPannel';
+import { RetireLayoutModal } from './RetireLayoutModal';
+import SaveAsTemplateModal from './SaveAsTemplateModal';
 
 import FolderActionModals from '@/components/ui/FolderActionModals';
+import type { PublishValue } from '@/components/ui/forms/PublishDateSelect';
 import MoveModal from '@/components/ui/modals/MoveModal';
+import PublishModal from '@/components/ui/modals/PublishModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
 import type { useFolderActions } from '@/hooks/useFolderActions';
 import type { Layout } from '@/types/layout';
 import type { User } from '@/types/user';
-// import type { Tag } from '@/types/tag';
 
 interface LayoutModalsProps {
   actions: {
     activeModal: string | null;
     closeModal: () => void;
     handleRefresh: () => void;
-    setLayoutList: React.Dispatch<React.SetStateAction<Layout[]>>;
     deleteError: string | null;
     isDeleting: boolean;
     isCloning: boolean;
+    isPublishing: boolean;
+    isDiscarding: boolean;
+    isAssigning: boolean;
+    isExporting: boolean;
   };
   selection: {
     selectedLayout: Layout | null;
@@ -54,9 +64,19 @@ interface LayoutModalsProps {
   };
   handlers: {
     confirmDelete: (items: Layout[]) => void;
-    // handleConfirmClone: (newName: string, description: string, copyMedia: boolean) => void;
     handleConfirmClone: (newName: string, description: string, copyMedia: boolean) => void;
     handleConfirmMove: (newFolderId: number) => void;
+    confirmPublish: (itemId: number, value: PublishValue) => void;
+    confirmDiscard: (layoutId: number) => void;
+    handleConfirmAssign: (campaignId: number, layoutId: number) => void;
+    handleExportLayout: (
+      layoutId: number,
+      options: {
+        includeData: boolean;
+        includeFallback: boolean;
+        fileName: string;
+      },
+    ) => void;
   };
   infoPanel: {
     isOpen: boolean;
@@ -82,15 +102,11 @@ export function LayoutModals({
 
   return (
     <>
-      {selection.selectedLayout && (
+      {isModalOpen('edit') && selection.selectedLayout && (
         <EditLayout
-          openModal={isModalOpen('edit')}
           onClose={actions.closeModal}
           data={selection.selectedLayout}
-          onSave={(updatedLayout) => {
-            actions.setLayoutList((prev) =>
-              prev.map((l) => (l.layoutId === updatedLayout.layoutId ? updatedLayout : l)),
-            );
+          onSave={() => {
             actions.handleRefresh();
           }}
         />
@@ -98,62 +114,120 @@ export function LayoutModals({
 
       <FolderActionModals folderActions={folderActions} />
 
-      <DeleteLayoutModal
-        isOpen={isModalOpen('delete')}
-        onClose={actions.closeModal}
-        onDelete={() => handlers.confirmDelete(selection.itemsToDelete)}
-        itemCount={selection.itemsToDelete.length}
-        layoutName={
-          selection.itemsToDelete.length === 1
-            ? selection.itemsToDelete[0]?.name || selection.itemsToDelete[0]?.layout
-            : undefined
-        }
-        error={actions.deleteError}
-        isLoading={actions.isDeleting}
-      />
+      {isModalOpen('delete') && (
+        <DeleteLayoutModal
+          onClose={actions.closeModal}
+          onDelete={() => handlers.confirmDelete(selection.itemsToDelete)}
+          itemCount={selection.itemsToDelete.length}
+          layoutName={
+            selection.itemsToDelete.length === 1
+              ? selection.itemsToDelete[0]?.name || selection.itemsToDelete[0]?.layout
+              : undefined
+          }
+          error={actions.deleteError}
+          isLoading={actions.isDeleting}
+        />
+      )}
 
-      <MoveModal
-        isOpen={isModalOpen('move')}
-        onClose={actions.closeModal}
-        onConfirm={handlers.handleConfirmMove}
-        items={selection.itemsToMove}
-        entityLabel={t('Layouts')}
-      />
+      {isModalOpen('move') && (
+        <MoveModal
+          onClose={actions.closeModal}
+          onConfirm={handlers.handleConfirmMove}
+          items={selection.itemsToMove}
+          entityLabel={t('Layouts')}
+        />
+      )}
 
-      <ShareModal
-        title={t('Share Layout')}
-        onClose={() => {
-          actions.closeModal();
-          selection.setShareEntityIds(null);
-          actions.handleRefresh();
-        }}
-        openModal={isModalOpen('share')}
-        entityType="campaign"
-        entityId={selection.shareEntityIds ?? (selection.selectedLayout?.campaignId || null)}
-      />
+      {isModalOpen('share') && (
+        <ShareModal
+          title={t('Share Layout')}
+          onClose={() => {
+            actions.closeModal();
+            selection.setShareEntityIds(null);
+            actions.handleRefresh();
+          }}
+          entityType="campaign"
+          entityId={selection.shareEntityIds ?? (selection.selectedLayout?.campaignId || null)}
+        />
+      )}
 
-      <CopyLayoutModal
-        isOpen={isModalOpen('copy')}
-        onClose={actions.closeModal}
-        onConfirm={(name, description, copyMedia) =>
-          handlers.handleConfirmClone(name, description, copyMedia)
-        }
-        layout={selection.selectedLayout}
-        isLoading={actions.isCloning}
-        existingNames={selection.existingNames}
-      />
-      <LayoutInfoPanel
-        open={infoPanel.isOpen}
-        onClose={() => {
-          infoPanel.setSelectedLayoutId(null);
-          infoPanel.setOpen(false);
-        }}
-        layoutData={selection.selectedLayout}
-        owner={infoPanel.owner}
-        folderName={infoPanel.folderName}
-        loading={infoPanel.loading}
-        applyVersionTwo
-      />
+      {isModalOpen('copy') && (
+        <CopyLayoutModal
+          onClose={actions.closeModal}
+          onConfirm={(name, description, copyMedia) =>
+            handlers.handleConfirmClone(name, description, copyMedia)
+          }
+          layout={selection.selectedLayout}
+          isLoading={actions.isCloning}
+          existingNames={selection.existingNames}
+        />
+      )}
+      {isModalOpen('publish') && (
+        <PublishModal
+          onClose={actions.closeModal}
+          fileName={selection.selectedLayout?.layout}
+          titleText={t('Publish Layout?')}
+          isLoading={actions.isPublishing}
+          onPublish={handlers.confirmPublish}
+          layoutId={selection.selectedLayout?.layoutId}
+        />
+      )}
+      {isModalOpen('discard') && (
+        <DiscardLayoutModal
+          onClose={actions.closeModal}
+          onConfirm={() =>
+            selection.selectedLayout && handlers.confirmDiscard(selection.selectedLayout.layoutId)
+          }
+          layoutName={selection.selectedLayout?.name || selection.selectedLayout?.layout}
+          isLoading={actions.isDiscarding}
+        />
+      )}
+      {isModalOpen('campaign') && (
+        <AssignCampaignModal
+          onClose={actions.closeModal}
+          onConfirm={(campaignId) =>
+            selection.selectedLayout &&
+            handlers.handleConfirmAssign(campaignId, selection.selectedLayout.layoutId)
+          }
+          isLoading={actions.isAssigning}
+        />
+      )}
+      {isModalOpen('export') && (
+        <ExportLayoutModal
+          onClose={actions.closeModal}
+          onConfirm={(options) =>
+            selection.selectedLayout &&
+            handlers.handleExportLayout(selection.selectedLayout.layoutId, options)
+          }
+          layoutName={selection.selectedLayout?.name || selection.selectedLayout?.layout}
+          isLoading={actions.isExporting}
+        />
+      )}
+      {isModalOpen('template') && selection.selectedLayout && (
+        <SaveAsTemplateModal onClose={actions.closeModal} layout={selection.selectedLayout} />
+      )}
+
+      {isModalOpen('retire') && selection.selectedLayout && (
+        <RetireLayoutModal layout={selection.selectedLayout} onClose={actions.closeModal} />
+      )}
+
+      {isModalOpen('enableStats') && selection.selectedLayout && (
+        <EnableStatsLayoutModal layout={selection.selectedLayout} onClose={actions.closeModal} />
+      )}
+
+      {infoPanel.isOpen && (
+        <LayoutInfoPanel
+          onClose={() => {
+            infoPanel.setSelectedLayoutId(null);
+            infoPanel.setOpen(false);
+          }}
+          layoutData={selection.selectedLayout}
+          owner={infoPanel.owner}
+          folderName={infoPanel.folderName}
+          loading={infoPanel.loading}
+          applyVersionTwo
+        />
+      )}
     </>
   );
 }

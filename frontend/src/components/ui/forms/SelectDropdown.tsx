@@ -32,7 +32,7 @@ import {
   FloatingPortal,
 } from '@floating-ui/react';
 import { ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
@@ -40,6 +40,7 @@ import { twMerge } from 'tailwind-merge';
 export type SelectOption = {
   label: string;
   value: string;
+  disabled?: boolean;
 };
 
 interface SelectDropdownProps {
@@ -57,6 +58,10 @@ interface SelectDropdownProps {
   addOptionAvatar?: boolean;
   className?: string;
   error?: string;
+  isLoading?: boolean;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
 }
 
 export default function SelectDropdown({
@@ -72,10 +77,35 @@ export default function SelectDropdown({
   className,
   addOptionAvatar,
   error,
+  isLoading,
+  onLoadMore,
+  hasMore,
+  isLoadingMore,
 }: SelectDropdownProps) {
   const { t } = useTranslation();
 
   const [isOpen, setIsOpen] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen || !hasMore || !onLoadMore || !sentinelRef.current || !scrollContainerRef.current) {
+      return;
+    }
+
+    const el = sentinelRef.current;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && !isLoadingMore) {
+          onLoadMore();
+        }
+      },
+      { threshold: 0.1, root: scrollContainerRef.current },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [isOpen, hasMore, onLoadMore, isLoadingMore]);
 
   const selectedLabel = options.find((o) => o.value === value)?.label ?? '';
 
@@ -109,14 +139,21 @@ export default function SelectDropdown({
       <div
         ref={refs.setReference}
         {...getReferenceProps()}
-        className="w-full border bg-white border-gray-200 rounded-lg flex items-center cursor-pointer max-h-11.25"
+        className="w-full border bg-white border-gray-200 rounded-lg flex items-center cursor-pointer h-11.25"
       >
         {addLeftLabel && leftLabelContent && (
-          <div className="p-3 border-r text-sm border-gray-200 text-gray-500">
+          <div className="py-2 px-3 border-r text-sm border-gray-200 text-gray-500">
             {leftLabelContent}
           </div>
         )}
-        <span className="p-3 flex-1 text-sm capitalize">{selectedLabel || t(placeholder)}</span>
+        <span
+          className={twMerge(
+            'py-2 px-3 flex-1 text-sm',
+            isLoading ? 'text-gray-400 italic' : 'text-gray-800 capitalize',
+          )}
+        >
+          {selectedLabel || t(placeholder)}
+        </span>
         <span
           className={twMerge(
             'p-3 text-gray-500 transition-transform duration-300 ease-in-out',
@@ -140,13 +177,29 @@ export default function SelectDropdown({
                 {t(optionLabel)}
               </span>
             )}
-            <div className="flex flex-col p-2 text-sm overflow-y-auto max-h-75">
+            <div
+              ref={scrollContainerRef}
+              className="flex flex-col p-2 text-sm overflow-y-auto max-h-75"
+            >
+              {options.length === 0 && !isLoadingMore && (
+                <p className="text-sm text-gray-400 text-center py-2">{t('No results')}</p>
+              )}
               {options.map((option) => (
                 <button
                   key={option.value}
                   type="button"
-                  className="text-left p-2 rounded-lg hover:bg-gray-100 font-medium flex gap-2 items-center cursor-pointer"
+                  disabled={option.disabled}
+                  className={twMerge(
+                    'text-left p-2 rounded-lg font-medium flex gap-2 items-center',
+                    option.disabled
+                      ? 'text-gray-300 cursor-not-allowed'
+                      : 'hover:bg-gray-100 cursor-pointer',
+                  )}
                   onClick={() => {
+                    if (option.disabled) {
+                      return;
+                    }
+
                     onSelect(option.value);
                     setIsOpen(false);
                   }}
@@ -159,6 +212,10 @@ export default function SelectDropdown({
                   {t(option.label)}
                 </button>
               ))}
+              {hasMore && <div ref={sentinelRef} className="h-1" />}
+              {isLoadingMore && (
+                <div className="text-xs text-gray-400 text-center py-1">{t('Loading…')}</div>
+              )}
             </div>
           </div>
         )}

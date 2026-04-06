@@ -22,6 +22,7 @@
 namespace Xibo\Controller;
 
 use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\DayPartFactory;
@@ -29,6 +30,7 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class DayPart
@@ -58,21 +60,6 @@ class DayPart extends Base
         $this->displayNotifyService = $displayNotifyService;
     }
 
-    /**
-     * View Route
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function displayPage(Request $request, Response $response)
-    {
-        $this->getState()->template = 'daypart-page';
-        
-        return $this->render($request, $response);
-    }
-
     #[OA\Get(
         path: '/daypart',
         operationId: 'dayPartSearch',
@@ -95,11 +82,41 @@ class DayPart extends Base
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
+        name: 'keyword',
+        description: 'Filter by dayPart name, ID, or description',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
         name: 'embed',
         description: 'Embed related data such as exceptions',
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: [
+                'dayPartId',
+                'name',
+                'startTime',
+                'endTime',
+                'description',
+            ]
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
     )]
     #[OA\Response(
         response: 200,
@@ -114,7 +131,7 @@ class DayPart extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
@@ -122,179 +139,94 @@ class DayPart extends Base
     public function grid(Request $request, Response $response)
     {
         $sanitizedParams = $this->getSanitizer($request->getQueryParams());
-        
-        $filter = [
+
+        // Construct the SQL
+        $daypartSortQuery = $this->gridRenderSort(
+            $sanitizedParams,
+            $this->isJson($request),
+        );
+
+        $daypartFilterQuery = $this->gridRenderFilter([
             'dayPartId' => $sanitizedParams->getInt('dayPartId'),
             'name' => $sanitizedParams->getString('name'),
+            'keyword' => $sanitizedParams->getString('keyword'),
             'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
             'isAlways' => $sanitizedParams->getInt('isAlways'),
             'isCustom' => $sanitizedParams->getInt('isCustom'),
             'isRetired' => $sanitizedParams->getInt('isRetired')
-        ];
+        ], $sanitizedParams);
 
-        $dayParts = $this->dayPartFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter($filter, $sanitizedParams));
-        $embed = ($sanitizedParams->getString('embed') != null) ? explode(',', $sanitizedParams->getString('embed')) : [];
-        
+        $dayParts = $this->dayPartFactory->query($daypartSortQuery, $daypartFilterQuery);
+        $embed = ($sanitizedParams->getString('embed') != null)
+            ? explode(',', $sanitizedParams->getString('embed'))
+            : [];
+
         foreach ($dayParts as $dayPart) {
-            /* @var \Xibo\Entity\DayPart $dayPart */
-            if (!in_array('exceptions', $embed)){
+            if (!in_array('exceptions', $embed)) {
                 $dayPart->excludeProperty('exceptions');
             }
-            if ($this->isApi($request))
-                continue;
-
-            $dayPart->includeProperty('buttons');
-
-            if ($dayPart->isCustom !== 1
-                && $dayPart->isAlways !== 1
-                && $this->getUser()->featureEnabled('daypart.modify')
-            ) {
-                // CRUD
-                $dayPart->buttons[] = array(
-                    'id' => 'daypart_button_edit',
-                    'url' => $this->urlFor($request,'daypart.edit.form', ['id' => $dayPart->dayPartId]),
-                    'text' => __('Edit')
-                );
-
-                if ($this->getUser()->checkDeleteable($dayPart)) {
-                    $dayPart->buttons[] = [
-                        'id' => 'daypart_button_delete',
-                        'url' => $this->urlFor($request,'daypart.delete.form', ['id' => $dayPart->dayPartId]),
-                        'text' => __('Delete'),
-                        'multi-select' => true,
-                        'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'daypart.delete', ['id' => $dayPart->dayPartId])],
-                            ['name' => 'commit-method', 'value' => 'delete'],
-                            ['name' => 'id', 'value' => 'daypart_button_delete'],
-                            ['name' => 'text', 'value' => __('Delete')],
-                            ['name' => 'sort-group', 'value' => 1],
-                            ['name' => 'rowtitle', 'value' => $dayPart->name]
-                        ]
-                    ];
-                }
-            }
-
-            if ($this->getUser()->checkPermissionsModifyable($dayPart)
-                && $this->getUser()->featureEnabled('daypart.modify')
-            ) {
-                if (count($dayPart->buttons) > 0)
-                    $dayPart->buttons[] = ['divider' => true];
-
-                // Edit Permissions
-                $dayPart->buttons[] = [
-                    'id' => 'daypart_button_permissions',
-                    'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DayPart', 'id' => $dayPart->dayPartId]),
-                    'text' => __('Share'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DayPart', 'id' => $dayPart->dayPartId])],
-                        ['name' => 'commit-method', 'value' => 'post'],
-                        ['name' => 'id', 'value' => 'daypart_button_permissions'],
-                        ['name' => 'text', 'value' => __('Share')],
-                        ['name' => 'rowtitle', 'value' => $dayPart->name],
-                        ['name' => 'sort-group', 'value' => 2],
-                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'DayPart'])],
-                        ['name' => 'content-id-name', 'value' => 'dayPartId']
-                    ]
-                ];
-            }
+            $dayPart->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($dayPart));
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->dayPartFactory->countLast();
-        $this->getState()->setData($dayParts);
+        $recordsTotal = $this->dayPartFactory->countLast();
 
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $recordsTotal)
+            ->withJson($dayParts);
     }
 
+    #[OA\Get(
+        path: '/daypart/{dayPartId}',
+        operationId: 'dayPartSearchById',
+        description: 'Get the DayPart object specified by the provided daypartId',
+        summary: 'Daypart Search by ID',
+        tags: ['dayPart']
+    )]
+    #[OA\Parameter(
+        name: 'dayPartId',
+        description: 'Numeric ID of the DayPart to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'embed',
+        description: 'Embed related data such as exceptions',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DayPart')
+    )]
     /**
-     * Add Daypart Form
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @param int $id
+     * @return Response|ResponseInterface
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
-    public function addForm(Request $request, Response $response)
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
-        $this->getState()->template = 'daypart-form-add';
-        $this->getState()->setData([
-            'extra' => [
-                'exceptions' => []
-            ]
-        ]);
+        $sanitizedParams = $this->getSanitizer($request->getQueryParams());
+        $dayPart = $this->dayPartFactory->getById($id, false);
 
-        return $this->render($request, $response);
-    }
+        $embed = ($sanitizedParams->getString('embed') != null)
+            ? explode(',', $sanitizedParams->getString('embed'))
+            : [];
 
-    /**
-     * Edit Daypart
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function editForm(Request $request, Response $response, $id)
-    {
-        $dayPart = $this->dayPartFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($dayPart)) {
-            throw new AccessDeniedException();
+        if (!in_array('exceptions', $embed)) {
+            $dayPart->excludeProperty('exceptions');
         }
+        $dayPart->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($dayPart));
 
-        if ($dayPart->isAlways === 1 || $dayPart->isCustom === 1) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'daypart-form-edit';
-        $this->getState()->setData([
-            'dayPart' => $dayPart,
-            'extra' => [
-                'exceptions' => $dayPart->exceptions
-            ]
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Delete Daypart
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function deleteForm(Request $request, Response $response, $id)
-    {
-        $dayPart = $this->dayPartFactory->getById($id);
-
-        if (!$this->getUser()->checkDeleteable($dayPart)) {
-            throw new AccessDeniedException();
-        }
-
-        if ($dayPart->isAlways === 1 || $dayPart->isCustom === 1) {
-            throw new AccessDeniedException();
-        }
-
-        // Get a count of schedules for this day part
-        $schedules = $this->scheduleFactory->getByDayPartId($id);
-
-        $this->getState()->template = 'daypart-form-delete';
-        $this->getState()->setData([
-            'countSchedules' => count($schedules),
-            'dayPart' => $dayPart
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson($dayPart);
     }
 
     #[OA\Post(
@@ -365,7 +297,7 @@ class DayPart extends Base
      * Add
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\InvalidArgumentException
@@ -459,7 +391,7 @@ class DayPart extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
@@ -574,7 +506,7 @@ class DayPart extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException

@@ -30,6 +30,12 @@ import {
   Trash2,
   PaletteIcon,
   CloudUpload,
+  DownloadCloud,
+  Redo2,
+  FileCheck,
+  Download,
+  FileX,
+  ArrowRight,
   Info,
 } from 'lucide-react';
 import type { ComponentProps } from 'react';
@@ -119,7 +125,195 @@ export interface LayoutActionsProps {
   copyLayout?: (row: number) => void;
   openDetails?: (id: number) => void;
   openLayout?: (id: number) => void;
+  openPublish?: (id: number) => void;
+  checkoutLayout?: (id: number) => void;
+  discardLayout?: (id: number) => void;
+  assignModal?: (layout: Layout) => void;
+  jumpToPlaylists?: (layoutId: number) => void;
+  exportLayout?: (row: Layout) => void;
+  openTemplateModal?: (layoutId: number) => void;
+  jumpToCampaigns?: (layoutId: number) => void;
+  jumpToMedia?: (layoutId: number) => void;
+  openRetireModal?: (layout: Layout) => void;
+  openEnableStatsModal?: (layout: Layout) => void;
 }
+
+export const getLayoutItemActions = ({
+  t,
+  onDelete,
+  openEditModal,
+  openShareModal,
+  openMoveModal,
+  copyLayout,
+  openDetails,
+  openLayout,
+  openPublish,
+  checkoutLayout,
+  discardLayout,
+  assignModal,
+  jumpToPlaylists,
+  jumpToCampaigns,
+  jumpToMedia,
+  exportLayout,
+  openTemplateModal,
+  openRetireModal,
+  openEnableStatsModal,
+}: LayoutActionsProps): ((layout: Layout) => ActionItem[]) => {
+  return (layout: Layout) => {
+    const actions: ActionItem[] = [];
+
+    // TODO: Set all true for now. Add userPermission to layout data
+    const canEdit = layout.userPermissions?.edit ?? 1;
+    const canDelete = layout.userPermissions?.delete ?? 1;
+    const canShare = layout.userPermissions?.modifyPermissions ?? 1;
+
+    actions.push({
+      label: t('Design'),
+      icon: PaletteIcon,
+      isQuickAction: true,
+      variant: 'primary',
+
+      onClick: () => openLayout && openLayout(layout.layoutId),
+    });
+
+    if (canEdit) {
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => openEditModal(layout),
+        isQuickAction: true,
+      });
+    }
+
+    actions.push({
+      label: t('Design'),
+      icon: PaletteIcon,
+      onClick: () => openLayout && openLayout(layout.layoutId),
+    });
+
+    if (layout.publishedStatus !== 'Published') {
+      actions.push({
+        label: t('Publish'),
+        icon: CloudUpload,
+        onClick: () => openPublish && openPublish(layout.layoutId),
+      });
+      actions.push({
+        label: t('Discard'),
+        icon: Redo2,
+        onClick: () => discardLayout && discardLayout(layout.layoutId),
+      });
+    } else {
+      actions.push({
+        label: t('Checkout'),
+        icon: DownloadCloud,
+        onClick: () => checkoutLayout && checkoutLayout(layout.layoutId),
+      });
+      actions.push({
+        label: t('Save as Template'),
+        icon: FileCheck,
+        onClick: () => openTemplateModal && openTemplateModal(layout.layoutId),
+      });
+    }
+
+    actions.push({ isSeparator: true });
+
+    if (canEdit) {
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => openEditModal(layout),
+      });
+    }
+
+    if (canEdit && openMoveModal) {
+      actions.push({
+        label: t('Move'),
+        icon: FolderInput,
+        onClick: () => openMoveModal(layout),
+      });
+    }
+
+    if (canEdit && copyLayout) {
+      actions.push({
+        label: t('Make a Copy'),
+        icon: CopyCheck,
+        onClick: () => copyLayout(layout.layoutId),
+      });
+    }
+
+    if (canShare && openShareModal && layout.campaignId) {
+      actions.push({
+        label: t('Share'),
+        icon: UserPlus2,
+        onClick: () => openShareModal(layout.campaignId),
+      });
+    }
+
+    actions.push({
+      label: t('Export'),
+      icon: Download,
+      onClick: () => exportLayout && exportLayout(layout),
+    });
+
+    actions.push({
+      label: t('Schedule'),
+      icon: CalendarClock,
+      onClick: () => console.log('Schedule', layout.layoutId),
+    });
+
+    actions.push({
+      label: t('Retire'),
+      icon: FileX,
+      onClick: () => openRetireModal && openRetireModal(layout),
+    });
+    actions.push({
+      label: t('Details'),
+      icon: Info,
+      onClick: () => openDetails && openDetails(layout.layoutId),
+    });
+
+    actions.push({ isSeparator: true });
+
+    actions.push({
+      label: t('Jump to Playlists'),
+      onClick: () => jumpToPlaylists && jumpToPlaylists(layout.layoutId),
+      rightIcon: ArrowRight,
+    });
+    actions.push({
+      label: t('Jump to Campaigns'),
+      onClick: () => jumpToCampaigns && jumpToCampaigns(layout.layoutId),
+      rightIcon: ArrowRight,
+    });
+    actions.push({
+      label: t('Jump to Media'),
+      onClick: () => jumpToMedia && jumpToMedia(layout.layoutId),
+      rightIcon: ArrowRight,
+    });
+
+    actions.push({
+      label: t('Assign to Campaign'),
+      onClick: () => assignModal && assignModal(layout),
+    });
+
+    actions.push({
+      label: t('Enable Stats Collection'),
+      onClick: () => openEnableStatsModal && openEnableStatsModal(layout),
+    });
+
+    if (canDelete) {
+      actions.push({ isSeparator: true });
+
+      actions.push({
+        label: t('Delete'),
+        icon: Trash2,
+        onClick: () => onDelete(layout.layoutId),
+        variant: 'danger',
+      });
+    }
+
+    return actions;
+  };
+};
 
 export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[] => {
   const { t } = props;
@@ -251,6 +445,12 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
       cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
     },
     {
+      accessorKey: 'code',
+      header: t('Code'),
+      size: 100,
+      cell: (info) => <TextCell>{info.getValue<number>() || '-'}</TextCell>,
+    },
+    {
       id: 'tableActions',
       header: '',
       size: 120,
@@ -303,133 +503,4 @@ export const getBulkActions = ({
       onClick: onDelete,
     },
   ];
-};
-
-export const getLayoutItemActions = ({
-  t,
-  onDelete,
-  openEditModal,
-  openShareModal,
-  openMoveModal,
-  copyLayout,
-  openDetails,
-  openLayout,
-}: LayoutActionsProps): ((layout: Layout) => ActionItem[]) => {
-  return (layout: Layout) => {
-    const actions: ActionItem[] = [];
-
-    // TODO: Set all true for now. Add userPermission to layout data
-    const canEdit = layout.userPermissions?.edit ?? 1;
-    const canDelete = layout.userPermissions?.delete ?? 1;
-    const canShare = layout.userPermissions?.modifyPermissions ?? 1;
-
-    if (canEdit) {
-      actions.push({
-        label: t('Edit'),
-        icon: Edit,
-        onClick: () => openEditModal(layout),
-        isQuickAction: true,
-        variant: 'primary',
-      });
-    }
-
-    actions.push({
-      label: t('Details'),
-      icon: Info,
-      onClick: () => openDetails && openDetails(layout.layoutId),
-      isQuickAction: true,
-      variant: 'primary',
-    });
-
-    actions.push({
-      label: t('Design'),
-      icon: PaletteIcon,
-      onClick: () => openLayout && openLayout(layout.layoutId),
-    });
-
-    actions.push({ isSeparator: true });
-
-    actions.push({
-      label: t('Publish'),
-      icon: CloudUpload,
-      onClick: () => console.log('Publish', layout.layoutId),
-    });
-
-    actions.push({ isSeparator: true });
-
-    actions.push({
-      label: t('Schedule'),
-      icon: CalendarClock,
-      onClick: () => console.log('Schedule', layout.layoutId),
-    });
-
-    actions.push({ isSeparator: true });
-
-    if (canEdit) {
-      actions.push({
-        label: t('Edit'),
-        icon: Edit,
-        onClick: () => openEditModal(layout),
-      });
-    }
-
-    if (canEdit && openMoveModal) {
-      actions.push({
-        label: t('Move'),
-        icon: FolderInput,
-        onClick: () => openMoveModal(layout),
-      });
-    }
-
-    if (canEdit && copyLayout) {
-      actions.push({
-        label: t('Make a Copy'),
-        icon: CopyCheck,
-        onClick: () => copyLayout(layout.layoutId),
-      });
-    }
-
-    if (canShare && openShareModal && layout.campaignId) {
-      actions.push({
-        label: t('Share'),
-        icon: UserPlus2,
-        onClick: () => openShareModal(layout.campaignId),
-      });
-    }
-
-    actions.push({ isSeparator: true });
-
-    actions.push({
-      label: t('Assign to Campaign'),
-      onClick: () => console.log('Assign to Campaign', layout.layoutId),
-    });
-
-    actions.push({
-      label: t('Discard'),
-      onClick: () => console.log('Discard', layout.layoutId),
-    });
-
-    actions.push({
-      label: t('Enable Stats Collection'),
-      onClick: () => console.log('Enable Stats', layout.layoutId),
-    });
-
-    actions.push({
-      label: t('Retire'),
-      onClick: () => console.log('Retire', layout.layoutId),
-    });
-
-    if (canDelete) {
-      actions.push({ isSeparator: true });
-
-      actions.push({
-        label: t('Delete'),
-        icon: Trash2,
-        onClick: () => onDelete(layout.layoutId),
-        variant: 'danger',
-      });
-    }
-
-    return actions;
-  };
 };

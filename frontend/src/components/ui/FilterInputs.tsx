@@ -23,12 +23,15 @@ import Button from './Button';
 import InputFilter from './InputFilter';
 import type { FilterOption } from './SelectFilter';
 import SelectFilter from './SelectFilter';
+import TagInput from './forms/TagInput';
+
+import type { Tag } from '@/types/tag';
 
 export interface FilterConfigItem<T> {
   label: string;
   name: keyof T & string;
   placeholder?: string;
-  type?: 'select' | 'text' | 'number';
+  type?: 'select' | 'text' | 'number' | 'tags';
   className?: string;
   options?: FilterOption[];
   shouldTranslateOptions?: boolean;
@@ -38,16 +41,18 @@ export interface FilterConfigItem<T> {
   isJalali?: boolean;
 }
 
+type FilterValue = string | number | null | Tag[];
+
 type FilterInputsProps<T> = {
-  open: boolean;
+  isOpen: boolean;
   values: T;
   options: FilterConfigItem<T>[];
-  onChange: (name: keyof T & string, value: string | number | null) => void;
+  onChange: (name: keyof T & string, value: FilterValue) => void;
   onReset?: () => void;
 };
 
 export default function FilterInputs<T>({
-  open,
+  isOpen,
   options,
   values,
   onChange,
@@ -55,11 +60,11 @@ export default function FilterInputs<T>({
 }: FilterInputsProps<T>) {
   return (
     <div
-      aria-hidden={!open}
+      aria-hidden={!isOpen}
       className={`
         transition-all duration-300 ease-in-out w-full
         ${
-          open
+          isOpen
             ? 'max-h-150 opacity-100 visible mt-4 overflow-visible'
             : 'max-h-0 opacity-0 invisible mt-0 overflow-hidden'
         }
@@ -90,6 +95,19 @@ export default function FilterInputs<T>({
                 value={values[filter.name] as string | number}
                 onChange={(name, val) => onChange(name as keyof T & string, val)}
                 className={filter.className}
+              />
+            );
+          }
+
+          if (filterType === 'tags') {
+            return (
+              <TagInput
+                key={filter.name}
+                label={filter.label}
+                value={(values[filter.name] as Tag[]) || []}
+                onChange={(tags) => onChange(filter.name, tags)}
+                className={filter.className}
+                placeholder={filter.placeholder}
               />
             );
           }

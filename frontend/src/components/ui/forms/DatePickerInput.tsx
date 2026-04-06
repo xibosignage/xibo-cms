@@ -78,7 +78,7 @@ export default function DatePickerInput({
       <div
         ref={refs.setReference}
         {...getReferenceProps()}
-        className="flex relative cursor-pointer"
+        className="flex relative cursor-pointer h-11.25"
       >
         <button
           type="button"

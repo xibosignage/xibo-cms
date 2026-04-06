@@ -28,7 +28,6 @@ interface SessionModalsProps {
     activeModal: string | null;
     closeModal: () => void;
     handleRefresh: () => void;
-    setSessionList: React.Dispatch<React.SetStateAction<Session[]>>;
     logoutError: string | null;
     isLoggingOut: boolean;
   };
@@ -45,15 +44,16 @@ export function SessionModals({ actions, selection, handlers }: SessionModalsPro
 
   return (
     <>
-      <LogoutSessionModal
-        isOpen={isModalOpen('logout')}
-        onClose={actions.closeModal}
-        onLogout={() => handlers.confirmLogout(selection.sessionToLogout)}
-        userName={selection.sessionToLogout[0]?.userName}
-        itemCount={selection.sessionToLogout.length}
-        error={actions.logoutError}
-        isLoading={actions.isLoggingOut}
-      />
+      {isModalOpen('logout') && (
+        <LogoutSessionModal
+          onClose={actions.closeModal}
+          onLogout={() => handlers.confirmLogout(selection.sessionToLogout)}
+          userName={selection.sessionToLogout[0]?.userName}
+          itemCount={selection.sessionToLogout.length}
+          error={actions.logoutError}
+          isLoading={actions.isLoggingOut}
+        />
+      )}
     </>
   );
 }

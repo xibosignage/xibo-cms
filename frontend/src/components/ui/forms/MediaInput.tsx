@@ -21,7 +21,7 @@
 
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Search, X, ChevronDown, Loader2, Check } from 'lucide-react';
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { fetchMedia } from '@/services/mediaApi';
@@ -106,9 +106,7 @@ export default function MediaInput({
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const mediaItems = useMemo(() => {
-    return data?.pages.flatMap((page) => page.rows) || [];
-  }, [data?.pages]);
+  const mediaItems = data?.pages.flatMap((page) => page.rows) ?? [];
 
   useEffect(() => {
     if (mediaItems.length > 0) {
@@ -155,7 +153,7 @@ export default function MediaInput({
 
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex flex-wrap items-center gap-1.5 py-1.5 px-2 bg-white border rounded-lg min-h-10.5 transition-colors ${
+        className={`flex flex-wrap items-center gap-1.5 py-1.5 px-2 bg-white border rounded-lg min-h-11.25 transition-colors ${
           isOpen
             ? 'border-xibo-blue-500 ring-1 ring-xibo-blue-500'
             : 'border-gray-200 hover:border-gray-300'
