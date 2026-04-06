@@ -174,7 +174,7 @@ export const APP_ROUTES: AppRoute[] = [
         feature: 'dataset.view',
       },
       {
-        path: 'datasets/:datasetId/columns',
+        path: 'datasets/:datasetId/column',
         labelKey: 'Dataset Columns',
         hideFromMenu: true,
         lazy: () =>

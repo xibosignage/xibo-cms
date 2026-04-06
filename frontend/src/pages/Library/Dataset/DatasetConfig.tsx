@@ -163,7 +163,7 @@ export const getDatasetItemActions = ({
       label: t('View Columns'),
       isNavigation: true,
       onClick: () => {
-        onNavigate(`/library/datasets/${dataset.dataSetId}/columns`);
+        onNavigate(`/library/datasets/${dataset.dataSetId}/column`);
       },
     },
     {

@@ -264,7 +264,7 @@ export default function DatasetData() {
             <Button
               variant="secondary"
               className="font-semibold"
-              onClick={() => navigate(`/library/datasets/${datasetId}/columns`)}
+              onClick={() => navigate(`/library/datasets/${datasetId}/column`)}
               leftIcon={Table}
             >
               {t('View Columns')}
@@ -329,7 +329,7 @@ export default function DatasetData() {
               </p>
               <Button
                 variant="primary"
-                onClick={() => navigate(`/library/datasets/${datasetId}/columns`)}
+                onClick={() => navigate(`/library/datasets/${datasetId}/column`)}
               >
                 {t('Configure Columns')}
               </Button>

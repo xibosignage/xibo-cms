@@ -340,48 +340,14 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 //
 // dataset
 //
-$app->get('/dataset/view', ['\Xibo\Controller\DataSet','displayPage'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['dataset.view']))
-    ->setName('dataset.view');
-
-$app->get('/dataset/form/add', ['\Xibo\Controller\DataSet','addForm'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['dataset.add']))
-    ->setName('dataSet.add.form');
-
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/dataset/form/edit/{id}', ['\Xibo\Controller\DataSet', 'editForm'])->setName('dataSet.edit.form');
-    $group->get('/dataset/form/copy/{id}', ['\Xibo\Controller\DataSet', 'copyForm'])->setName('dataSet.copy.form');
-    $group->get('/dataset/form/delete/{id}', ['\Xibo\Controller\DataSet', 'deleteForm'])->setName('dataSet.delete.form');
-    $group->get('/dataset/form/import/{id}', ['\Xibo\Controller\DataSet', 'importForm'])->setName('dataSet.import.form');
-    $group->get('/dataset/form/cache/clear/{id}', ['\Xibo\Controller\DataSet', 'clearCacheForm'])->setName('dataSet.clear.cache.form');
     $group->post('/dataset/cache/clear/{id}', ['\Xibo\Controller\DataSet', 'clearCache'])->setName('dataSet.clear.cache');
-    $group->get('/dataset/form/{id}/selectfolder', ['\Xibo\Controller\DataSet', 'selectFolderForm'])->setName('dataSet.selectfolder.form');
 
+    // Data connector
     $group->get('/dataset/dataConnector/{id}', ['\Xibo\Controller\DataSet', 'dataConnectorView'])->setName('dataSet.dataConnector.view');
     $group->get('/dataset/dataConnector/request/{id}', ['\Xibo\Controller\DataSet', 'dataConnectorRequest'])->setName('dataSet.dataConnector.request');
     $group->get('/dataset/dataConnector/test/{id}', ['\Xibo\Controller\DataSet', 'dataConnectorTest'])->setName('dataSet.dataConnector.test');
-
-    // columns
-    $group->get('/dataset/{id}/column/view', ['\Xibo\Controller\DataSetColumn','displayPage'])->setName('dataSet.column.view');
-    $group->get('/dataset/{id}/column/form/add', ['\Xibo\Controller\DataSetColumn','addForm'])->setName('dataSet.column.add.form');
-    $group->get('/dataset/{id}/column/form/edit/{colId}', ['\Xibo\Controller\DataSetColumn','editForm'])->setName('dataSet.column.edit.form');
-    $group->get('/dataset/{id}/column/form/delete/{colId}', ['\Xibo\Controller\DataSetColumn','deleteForm'])->setName('dataSet.column.delete.form');
-
-    // RSS
-    $group->get('/dataset/{id}/rss/view', ['\Xibo\Controller\DataSetRss','displayPage'])->setName('dataSet.rss.view');
-    $group->get('/dataset/{id}/rss/form/add', ['\Xibo\Controller\DataSetRss','addForm'])->setName('dataSet.rss.add.form');
-    $group->get('/dataset/{id}/rss/form/edit/{rssId}', ['\Xibo\Controller\DataSetRss','editForm'])->setName('dataSet.rss.edit.form');
-    $group->get('/dataset/{id}/rss/form/delete/{rssId}', ['\Xibo\Controller\DataSetRss','deleteForm'])->setName('dataSet.rss.delete.form');
-
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['dataset.modify']));
-
-// data
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/dataset/data/view/{id}', ['\Xibo\Controller\DataSetData','displayPage'])->setName('dataSet.view.data');
-    $group->get('/dataset/data/form/add/{id}', ['\Xibo\Controller\DataSetData','addForm'])->setName('dataSet.data.add.form');
-    $group->get('/dataset/data/form/edit/{id}/{rowId}', ['\Xibo\Controller\DataSetData','editForm'])->setName('dataSet.data.edit.form');
-    $group->get('/dataset/data/form/delete/{id}/{rowId}', ['\Xibo\Controller\DataSetData','deleteForm'])->setName('dataSet.data.delete.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['dataset.data']));
 
 //
 // displaygroup

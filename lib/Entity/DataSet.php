@@ -1132,7 +1132,7 @@ class DataSet implements \JsonSerializable
             'isRemote' => $this->isRemote,
             'isRealTime' => $this->isRealTime,
             'dataConnectorSource' => $this->dataConnectorSource,
-            'lastDataEdit' => 0,
+            'lastDataEdit' => Carbon::now()->format('U'),
             'lastClear' => 0,
             'folderId' => ($this->folderId === null) ? 1 : $this->folderId,
             'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this-> permissionsFolderId,

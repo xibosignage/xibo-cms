@@ -142,10 +142,34 @@ class DataSetColumnFactory extends BaseFactory
             $params['remoteField'] = $sanitizedFilter->getInt('remoteField');
         }
 
+        if ($sanitizedFilter->getString('keyword') != null) {
+            // Fulltext search
+            $body .= $this->buildSearchQuery(
+                $sanitizedFilter->getString('keyword'),
+                $params,
+                ['datasetcolumn.heading'],
+                ['datasetcolumn.dataSetColumnId']
+            );
+        }
+
         // Sorting?
-        $order = '';
-        if (is_array($sortOrder))
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        $allowedColumns = [
+            'heading',
+            'dataType',
+            'dataSetColumnType',
+            'listContent',
+            'tooltip',
+            'columnOrder',
+            'isRequired',
+        ];
+
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['columnOrder ASC']
+        );
+
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         $limit = '';
         // Paging

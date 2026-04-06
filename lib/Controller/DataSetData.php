@@ -57,36 +57,6 @@ class DataSetData extends Base
         $this->mediaFactory = $mediaFactory;
     }
 
-    /**
-     * Display Page
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function displayPage(Request $request, Response $response, $id)
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-        
-        // Load data set
-        $dataSet->load();
-
-        $this->getState()->template = 'dataset-dataentry-page';
-        $this->getState()->setData([
-            'dataSet' => $dataSet
-        ]);
-        
-        return $this->render($request, $response);
-    }
-
     #[OA\Get(
         path: '/dataset/data/{dataSetId}',
         operationId: 'dataSetData',
@@ -101,7 +71,39 @@ class DataSetData extends Base
         required: true,
         schema: new OA\Schema(type: 'integer')
     )]
-    #[OA\Response(response: 200, description: 'successful operation')]
+    #[OA\Parameter(
+        name: 'keyword',
+        description: 'Filter by dataset data column',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ]
+
+    )]
     /**
      * Grid
      * @param Request $request
@@ -121,13 +123,17 @@ class DataSetData extends Base
         if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
         }
-        
-        $sorting = $this->gridRenderSort($sanitizedParams);
+
+        $sorting = $this->gridRenderSort(
+            $sanitizedParams,
+            $this->isJson($request)
+        );
 
         if ($sorting != null) {
             $sorting = implode(',', $sorting);
         }
-        
+
+        // TODO: Add keyword filter
         // Filter criteria
         $filter = '';
         $params = [];
@@ -145,7 +151,10 @@ class DataSetData extends Base
         $filter = trim($filter, 'AND');
 
         // Work out the limits
-        $filter = $this->gridRenderFilter(['filter' => $request->getParam('filter', $filter)], $sanitizedParams);
+        $filter = $this->gridRenderFilter([
+            'filter' => $request->getParam('filter', $filter),
+            'keyword' => $sanitizedParams->getString('keyword')
+        ], $sanitizedParams);
 
         try {
             $data = $dataSet->getData(
@@ -153,57 +162,30 @@ class DataSetData extends Base
                     'order' => $sorting,
                     'start' => $filter['start'],
                     'size' => $filter['length'],
-                    'filter' => $filter['filter']
+                    'filter' => $filter['filter'],
+                    'keyword' => $filter['keyword']
                 ],
                 [],
                 $params,
             );
         } catch (\Exception $e) {
-            $data = ['exception' => __('Error getting DataSet data, failed with following message: ') . $e->getMessage()];
-            $this->getLog()->error('Error getting DataSet data, failed with following message: ' . $e->getMessage());
+            $data = [
+                'exception' => __('Error getting DataSet data, failed with following message: ')
+                    . $e->getMessage()
+            ];
+            $this->getLog()->error('Error getting DataSet data, failed with following message: '
+                . $e->getMessage());
             $this->getLog()->debug($e->getTraceAsString());
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->setData($data);
-
-        // Output the count of records for paging purposes
-        if ($dataSet->countLast() != 0)
-            $this->getState()->recordsTotal = $dataSet->countLast();
-
-        // Set this dataSet as being active
         $dataSet->setActive();
-        
-        return $this->render($request, $response);
-    }
 
-    /**
-     * Add Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function addForm(Request $request, Response $response, $id)
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
+        $recordsTotal = $dataSet->countLast();
 
-        if (!$this->getUser()->checkEditable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-        
-        $dataSet->load();
-
-        $this->getState()->template = 'dataset-data-form-add';
-        $this->getState()->setData([
-            'dataSet' => $dataSet
-        ]);
-        
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $recordsTotal)
+            ->withJson($data);
     }
 
     #[OA\Post(
@@ -316,53 +298,6 @@ class DataSetData extends Base
             'data' => [
                 'id' => $rowId
             ]
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Edit Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @param $rowId
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function editForm(Request $request, Response $response, $id, $rowId)
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-
-        $dataSet->load();
-
-        $row = $dataSet->getData(['id' => $rowId])[0];
-
-        // Augment my row with any already selected library image
-        foreach ($dataSet->getColumn() as $dataSetColumn) {
-            if ($dataSetColumn->dataTypeId === 5) {
-                // Add this image object to my row
-                try {
-                    if (isset($row[$dataSetColumn->heading])) {
-                        $row['__images'][$dataSetColumn->dataSetColumnId] = $this->mediaFactory->getById($row[$dataSetColumn->heading]);
-                    }
-                } catch (NotFoundException $notFoundException) {
-                    $this->getLog()->debug('DataSet ' . $id . ' references an image that no longer exists. ID is ' . $row[$dataSetColumn->heading]);
-                }
-            }
-        }
-
-        $this->getState()->template = 'dataset-data-form-edit';
-        $this->getState()->setData([
-            'dataSet' => $dataSet,
-            'row' => $row
         ]);
 
         return $this->render($request, $response);
@@ -502,37 +437,6 @@ class DataSetData extends Base
             'data' => [
                 'id' => $rowId
             ]
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Delete Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @param int $rowId
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function deleteForm(Request $request, Response $response, $id, $rowId)
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-
-        $dataSet->load();
-
-        $this->getState()->template = 'dataset-data-form-delete';
-        $this->getState()->setData([
-            'dataSet' => $dataSet,
-            'row' => $dataSet->getData(['id' => $rowId])[0]
         ]);
 
         return $this->render($request, $response);
