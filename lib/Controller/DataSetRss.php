@@ -28,6 +28,7 @@ use Carbon\Exceptions\InvalidDateException;
 use OpenApi\Attributes as OA;
 use PicoFeed\Syndication\Rss20FeedBuilder;
 use PicoFeed\Syndication\Rss20ItemBuilder;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Interfaces\PoolInterface;
@@ -37,6 +38,7 @@ use Xibo\Factory\DataSetRssFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -138,13 +140,12 @@ class DataSetRss extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function grid(Request $request, Response $response, $id)
+    public function grid(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getQueryParams());
@@ -161,7 +162,13 @@ class DataSetRss extends Base
 
         $dataRssFilterQuery = $this->getDataRssFilterQuery($id, $sanitizedParams);
 
+        $userPermissions = $this->getUser()->getPermission($dataSet);
+
         $feeds = $this->dataSetRssFactory->query($dataRssSortQuery, $dataRssFilterQuery);
+
+        foreach ($feeds as $feed) {
+            $feed->setUnmatchedProperty('userPermissions', $userPermissions);
+        }
 
         $recordsTotal = $this->dataSetRssFactory->countLast();
 
@@ -169,6 +176,53 @@ class DataSetRss extends Base
             ->withStatus(200)
             ->withHeader('X-Total-Count', $recordsTotal)
             ->withJson($feeds);
+    }
+
+    #[OA\Get(
+        path: '/dataset/{id}/rss/{rssId}}',
+        operationId: 'datasetRssSearchById',
+        description: 'Get the DataSet RSS object specified by the provided datasetId and rssId',
+        summary: 'DataSet RSS Search by ID',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'datasetId',
+        description: 'Numeric ID of the DataSet to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'datasetRssId',
+        description: 'Numeric ID of the DataSet RSS to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DataSetRss')
+    )]
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param int $id
+     * @param int $rssId
+     * @return Response|ResponseInterface
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function searchById(Request $request, Response $response, int $id, int $rssId): Response|ResponseInterface
+    {
+        $dataset = $this->dataSetFactory->getById($id, false);
+        $datasetRss = $this->dataSetRssFactory->getById($rssId);
+
+        $datasetRss->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($dataset));
+
+        return $response
+            ->withStatus(200)
+            ->withJson($datasetRss);
     }
 
     #[OA\Post(
@@ -230,14 +284,14 @@ class DataSetRss extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function add(Request $request, Response $response, $id)
+    public function add(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -287,7 +341,7 @@ class DataSetRss extends Base
      * @param Response $response
      * @param \Xibo\Entity\DataSetRss $feed
      */
-    private function handleFormFilterAndOrder(Request $request, Response $response, $feed)
+    private function handleFormFilterAndOrder(Request $request, Response $response, $feed): void
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Order criteria
@@ -402,15 +456,14 @@ class DataSetRss extends Base
      * @param Response $response
      * @param $id
      * @param $rssId
-     *
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function edit(Request $request, Response $response, $id, $rssId)
+    public function edit(Request $request, Response $response, $id, $rssId): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -483,14 +536,13 @@ class DataSetRss extends Base
      * @param Response $response
      * @param $id
      * @param $rssId
-     *
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function delete(Request $request, Response $response, $id, $rssId)
+    public function delete(Request $request, Response $response, $id, $rssId): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
 
@@ -573,7 +625,7 @@ class DataSetRss extends Base
      * @param Carbon $dataSetEditDate
      * @param \Xibo\Entity\DataSet $dataSet
      * @return string
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws NotFoundException
      */
     private function generateFeed($feed, $dataSetEditDate, $dataSet): string
     {

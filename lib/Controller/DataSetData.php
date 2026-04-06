@@ -133,27 +133,14 @@ class DataSetData extends Base
             $sorting = implode(',', $sorting);
         }
 
-        // TODO: Add keyword filter
-        // Filter criteria
-        $filter = '';
-        $params = [];
-        $i = 0;
-        foreach ($dataSet->getColumn() as $column) {
-            /* @var \Xibo\Entity\DataSetColumn $column */
-            if ($column->dataSetColumnTypeId == 1) {
-                $i++;
-                if ($sanitizedParams->getString($column->heading) != null) {
-                    $filter .= 'AND `' . $column->heading . '` LIKE :heading_' . $i . ' ';
-                    $params['heading_' . $i] = '%' . $sanitizedParams->getString($column->heading) . '%';
-                }
-            }
-        }
-        $filter = trim($filter, 'AND');
+        $columnFilter = $this->buildColumnFilter($dataSet, $sanitizedParams);
+        $keywordFilter = $this->buildKeywordFilter($dataSet, $sanitizedParams);
 
-        // Work out the limits
+        $params = array_merge($columnFilter['params'], $keywordFilter['params']);
+
         $filter = $this->gridRenderFilter([
-            'filter' => $request->getParam('filter', $filter),
-            'keyword' => $sanitizedParams->getString('keyword')
+            'filter' => $request->getParam('filter', $columnFilter['filter']),
+            'keyword' => $keywordFilter['keyword']
         ], $sanitizedParams);
 
         try {
@@ -505,5 +492,76 @@ class DataSetData extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Build the query for filter
+     * @param $dataSet
+     * @param $sanitizedParams
+     * @return array
+     */
+    private function buildColumnFilter($dataSet, $sanitizedParams): array
+    {
+        $filter = '';
+        $params = [];
+        $i = 0;
+
+        foreach ($dataSet->getColumn() as $column) {
+            if ($column->dataSetColumnTypeId == 1) {
+                $i++;
+                if ($sanitizedParams->getString($column->heading) != null) {
+                    $filter .= 'AND `' . $column->heading . '` LIKE :heading_' . $i . ' ';
+                    $params['heading_' . $i] = '%' . $sanitizedParams->getString($column->heading) . '%';
+                }
+            }
+        }
+
+        return [
+            'filter' => trim($filter, 'AND'),
+            'params' => $params
+        ];
+    }
+
+    /**
+     * Build the query for keyword
+     * @param $dataSet
+     * @param $sanitizedParams
+     * @return array
+     */
+    private function buildKeywordFilter($dataSet, $sanitizedParams): array
+    {
+        $keyword = $sanitizedParams->getString('keyword');
+
+        if ($keyword === null) {
+            return ['keyword' => '', 'params' => []];
+        }
+
+        // Get the keywords separated by comma
+        $keywords = array_filter(array_map('trim', explode(',', $keyword)));
+        $keywordClauses = [];
+        $params = [];
+        $i = 0;
+
+        // Create a separate SQL query for each keyword
+        foreach ($keywords as $word) {
+            $wordClauses = [];
+
+            foreach ($dataSet->getColumn() as $column) {
+                if ($column->dataSetColumnTypeId == 1) {
+                    $i++;
+                    $wordClauses[] = '`' . $column->heading . '` LIKE :keyword_' . $i;
+                    $params['keyword_' . $i] = '%' . $word . '%';
+                }
+            }
+
+            if (!empty($wordClauses)) {
+                $keywordClauses[] = '(' . implode(' OR ', $wordClauses) . ')';
+            }
+        }
+
+        return [
+            'keyword' => !empty($keywordClauses) ? implode(' OR ', $keywordClauses) : '',
+            'params' => $params
+        ];
     }
 }

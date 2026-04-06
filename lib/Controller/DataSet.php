@@ -25,6 +25,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Str;
 use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Event\DataConnectorScriptRequestEvent;
@@ -38,6 +39,9 @@ use Xibo\Helper\Random;
 use Xibo\Helper\SendFile;
 use Xibo\Service\MediaService;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -218,12 +222,12 @@ class DataSet extends Base
      * Search Data
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getQueryParams());
         $datasetsSortQuery = $this->gridRenderSort(
@@ -250,6 +254,44 @@ class DataSet extends Base
         $this->getState()->setData($dataSets);
 
         return $this->render($request, $response);
+    }
+
+    #[OA\Get(
+        path: '/dataset/{id}',
+        operationId: 'datasetSearchById',
+        description: 'Get the DataSet object specified by the provided datasetId',
+        summary: 'DataSet Search by ID',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'datasetId',
+        description: 'Numeric ID of the DataSet to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DataSet')
+    )]
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param int $id
+     * @return Response|ResponseInterface
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
+    {
+        $dataset = $this->dataSetFactory->getById($id, false);
+
+        $dataset->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($dataset));
+
+        return $response
+            ->withStatus(200)
+            ->withJson($dataset);
     }
 
     #[OA\Post(
@@ -387,13 +429,13 @@ class DataSet extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws InvalidArgumentException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws ControllerNotImplemented
+     * @throws DuplicateEntityException
      */
-    public function add(Request $request, Response $response)
+    public function add(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -468,47 +510,6 @@ class DataSet extends Base
             'message' => sprintf(__('Added %s'), $dataSet->dataSet),
             'id' => $dataSet->dataSetId,
             'data' => $dataSet
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Edit DataSet Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function editForm(Request $request, Response $response, $id)
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-
-        // Dispatch an event to initialize list of data sources for data connectors
-        $event = new DataConnectorSourceRequestEvent();
-        $this->getDispatcher()->dispatch($event, DataConnectorSourceRequestEvent::$NAME);
-
-        // Retrieve data sources from the event
-        $dataConnectorSources = $event->getDataConnectorSources();
-
-        // retrieve the columns of the selected dataset
-        $dataSet->getColumn();
-
-        // Set the form
-        $this->getState()->template = 'dataset-form-edit';
-        $this->getState()->setData([
-            'dataSet' => $dataSet,
-            'dataSets' => $this->dataSetFactory->query(),
-            'script' => $dataSet->getScript(),
-            'dataConnectorSources' => $dataConnectorSources
         ]);
 
         return $this->render($request, $response);
@@ -649,15 +650,15 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws ControllerNotImplemented
+     * @throws DuplicateEntityException
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -760,10 +761,10 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      */
-    public function updateDataConnector(Request $request, Response $response, $id)
+    public function updateDataConnector(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -810,15 +811,15 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ConfigurationException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ConfigurationException
+     * @throws ControllerNotImplemented
      */
-    public function delete(Request $request, Response $response, $id)
+    public function delete(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -842,37 +843,6 @@ class DataSet extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $dataSet->dataSet)
         ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Select Folder Form
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function selectFolderForm(Request $request, Response $response, $id)
-    {
-        // Get the data set
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        // Check Permissions
-        if (!$this->getUser()->checkEditable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-
-        $data = [
-            'dataSet' => $dataSet
-        ];
-
-        $this->getState()->template = 'dataset-form-selectfolder';
-        $this->getState()->setData($data);
 
         return $this->render($request, $response);
     }
@@ -916,14 +886,14 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @param int $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function selectFolder(Request $request, Response $response, $id)
+    public function selectFolder(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         // Get the DataSet
         $dataSet = $this->dataSetFactory->getById($id);
@@ -1000,15 +970,15 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws ControllerNotImplemented
+     * @throws DuplicateEntityException
      */
-    public function copy(Request $request, Response $response, $id)
+    public function copy(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -1098,12 +1068,12 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ConfigurationException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ConfigurationException
+     * @throws ControllerNotImplemented
      */
-    public function import(Request $request, Response $response, $id)
+    public function import(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $this->getLog()->debug('Import DataSet');
 
@@ -1164,13 +1134,13 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function importJson(Request $request, Response $response, $id)
+    public function importJson(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
 
@@ -1302,13 +1272,13 @@ class DataSet extends Base
      * Sends out a Test Request and returns the Data as JSON to the Client so it can be shown in the Dialog
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function testRemoteRequest(Request $request, Response $response)
+    public function testRemoteRequest(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -1390,11 +1360,11 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws NotFoundException
      */
-    public function exportToCsv(Request $request, Response $response, $id)
+    public function exportToCsv(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $this->setNoOutput();
         $i = 0;
@@ -1442,13 +1412,13 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function clearCache(Request $request, Response $response, $id)
+    public function clearCache(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
 

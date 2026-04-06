@@ -389,6 +389,7 @@ $app->group('', function (RouteCollectorProxy $group) {
  * DataSet
  */
 $app->get('/dataset', ['\Xibo\Controller\DataSet','grid'])->setName('dataSet.search');
+$app->get('/dataset/{id}', ['\Xibo\Controller\DataSet','searchById'])->setName('dataSet.search.id');
 $app->post('/dataset', ['\Xibo\Controller\DataSet','add'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dataset.add']))
     ->setName('dataSet.add');
@@ -408,12 +409,14 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/dataset/export/csv/{id}', ['\Xibo\Controller\DataSet', 'exportToCsv'])->setName('dataSet.export.csv');
 
     // Columns
+    $group->get('/dataset/{id}/column/{colId}', ['\Xibo\Controller\DataSetColumn','searchById'])->setName('dataSet.column.search.id');
     $group->get('/dataset/{id}/column', ['\Xibo\Controller\DataSetColumn','grid'])->setName('dataSet.column.search');
     $group->post('/dataset/{id}/column', ['\Xibo\Controller\DataSetColumn','add'])->setName('dataSet.column.add');
     $group->put('/dataset/{id}/column/{colId}', ['\Xibo\Controller\DataSetColumn','edit'])->setName('dataSet.column.edit');
     $group->delete('/dataset/{id}/column/{colId}', ['\Xibo\Controller\DataSetColumn','delete'])->setName('dataSet.column.delete');
 
     // RSS
+    $group->get('/dataset/{id}/rss/{rssId}', ['\Xibo\Controller\DataSetRss','searchById'])->setName('dataSet.rss.search.id');
     $group->get('/dataset/{id}/rss', ['\Xibo\Controller\DataSetRss','grid'])->setName('dataSet.rss.search');
     $group->post('/dataset/{id}/rss', ['\Xibo\Controller\DataSetRss','add'])->setName('dataSet.rss.add');
     $group->put('/dataset/{id}/rss/{rssId}', ['\Xibo\Controller\DataSetRss','edit'])

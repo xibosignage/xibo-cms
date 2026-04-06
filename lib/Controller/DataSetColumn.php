@@ -24,6 +24,7 @@
 namespace Xibo\Controller;
 
 use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Interfaces\PoolInterface;
@@ -32,6 +33,10 @@ use Xibo\Factory\DataSetColumnTypeFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DataTypeFactory;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class DataSetColumn
@@ -149,13 +154,12 @@ class DataSetColumn extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws GeneralException
+     * @throws NotFoundException
      */
-    public function grid(Request $request, Response $response, $id)
+    public function grid(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
         $parsedRequestParams = $this->getSanitizer($request->getParams());
@@ -177,9 +181,12 @@ class DataSetColumn extends Base
             $datasetsFilterQuery
         );
 
+        $userPermissions = $this->getUser()->getPermission($dataSet);
+
         foreach ($dataSetColumns as $column) {
             $column->dataType = __($column->dataType);
             $column->dataSetColumnType = __($column->dataSetColumnType);
+            $column->setUnmatchedProperty('userPermissions', $userPermissions);
         }
 
         $recordsTotal = $this->dataSetColumnFactory->countLast();
@@ -188,6 +195,53 @@ class DataSetColumn extends Base
             ->withStatus(200)
             ->withHeader('X-Total-Count', $recordsTotal)
             ->withJson($dataSetColumns);
+    }
+
+    #[OA\Get(
+        path: '/dataset/{id}/column/{colId}',
+        operationId: 'datasetColumnSearchById',
+        description: 'Get the DataSet column object specified by the provided datasetId and columnId',
+        summary: 'DataSet Column Search by ID',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'datasetId',
+        description: 'Numeric ID of the DataSet to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'datasetColumnId',
+        description: 'Numeric ID of the DataSet column to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DataSetColumn')
+    )]
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param int $id
+     * @param int $colId
+     * @return Response|ResponseInterface
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function searchById(Request $request, Response $response, int $id, int $colId): Response|ResponseInterface
+    {
+        $dataset = $this->dataSetFactory->getById($id, false);
+        $datasetColumn = $this->dataSetColumnFactory->getById($colId);
+
+        $datasetColumn->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($dataset));
+
+        return $response
+            ->withStatus(200)
+            ->withJson($datasetColumn);
     }
 
     #[OA\Post(
@@ -288,14 +342,14 @@ class DataSetColumn extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
-    public function add(Request $request, Response $response, $id)
+    public function add(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -456,14 +510,14 @@ class DataSetColumn extends Base
      * @param Response $response
      * @param $id
      * @param $colId
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
-    public function edit(Request $request, Response $response, $id, $colId)
+    public function edit(Request $request, Response $response, $id, $colId): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -540,13 +594,13 @@ class DataSetColumn extends Base
      * @param Response $response
      * @param $id
      * @param $colId
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
      */
-    public function delete(Request $request, Response $response, $id, $colId)
+    public function delete(Request $request, Response $response, $id, $colId): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
 

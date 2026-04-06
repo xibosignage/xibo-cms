@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -105,13 +105,17 @@ class DataSetFactory extends BaseFactory
 
     /**
      * Get DataSets by ID
-     * @param $dataSetId
+     * @param int $dataSetId
+     * @param bool $disableUserCheck
      * @return DataSet
      * @throws NotFoundException
      */
-    public function getById($dataSetId)
+    public function getById(int $dataSetId, bool $disableUserCheck = true): DataSet
     {
-        $dataSets = $this->query(null, ['disableUserCheck' => 1, 'dataSetId' => $dataSetId]);
+        $dataSets = $this->query(null, [
+            'disableUserCheck' => $disableUserCheck,
+            'dataSetId' => $dataSetId
+        ]);
 
         if (count($dataSets) <= 0) {
             throw new NotFoundException();
