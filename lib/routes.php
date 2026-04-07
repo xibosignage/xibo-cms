@@ -409,7 +409,9 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/dataset/export/csv/{id}', ['\Xibo\Controller\DataSet', 'exportToCsv'])->setName('dataSet.export.csv');
 
     // Columns
-    $group->get('/dataset/{id}/column/{colId}', ['\Xibo\Controller\DataSetColumn','searchById'])->setName('dataSet.column.search.id');
+    $group->get('/dataset/column/types', ['\Xibo\Controller\DataSetColumn','getDataSetColumnTypes'])->setName('dataSet.column.types');
+    $group->get('/dataset/column/datatypes', ['\Xibo\Controller\DataSetColumn','getDataTypes'])->setName('dataSet.column.datatypes');
+    $group->get('/dataset/column/{colId}', ['\Xibo\Controller\DataSetColumn','searchById'])->setName('dataSet.column.search.id');
     $group->get('/dataset/{id}/column', ['\Xibo\Controller\DataSetColumn','grid'])->setName('dataSet.column.search');
     $group->post('/dataset/{id}/column', ['\Xibo\Controller\DataSetColumn','add'])->setName('dataSet.column.add');
     $group->put('/dataset/{id}/column/{colId}', ['\Xibo\Controller\DataSetColumn','edit'])->setName('dataSet.column.edit');

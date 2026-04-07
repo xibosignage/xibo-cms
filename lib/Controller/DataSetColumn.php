@@ -28,6 +28,7 @@ use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Interfaces\PoolInterface;
+use Xibo\Event\DataConnectorSourceRequestEvent;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetColumnTypeFactory;
 use Xibo\Factory\DataSetFactory;
@@ -619,6 +620,65 @@ class DataSetColumn extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * List of data types for dataset columns
+     * @param Request $request
+     * @param Response $response
+     * @return Response
+     * @throws AccessDeniedException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function getDataTypes(Request $request, Response $response): Response
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        if ($sanitizedParams->getInt('datasetId') <= 0) {
+            throw new InvalidArgumentException(__('Missing dataSetId'), 'dataSetId');
+        }
+
+        $dataSet = $this->dataSetFactory->getById($sanitizedParams->getInt('datasetId'));
+
+        if (!$this->getUser()->checkEditable($dataSet)) {
+            throw new AccessDeniedException();
+        }
+
+        $dataTypes = $this->dataTypeFactory->query();
+
+        return $response
+            ->withStatus(200)
+            ->withJson($dataTypes);
+    }
+
+    /**
+     * List of dataset column types
+     * @param Request $request
+     * @param Response $response
+     * @return Response
+     * @throws AccessDeniedException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function getDataSetColumnTypes(Request $request, Response $response): Response
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        if ($sanitizedParams->getInt('datasetId') <= 0) {
+            throw new InvalidArgumentException(__('Missing dataSetId'), 'dataSetId');
+        }
+
+        $dataSet = $this->dataSetFactory->getById($sanitizedParams->getInt('datasetId'));
+
+        if (!$this->getUser()->checkEditable($dataSet)) {
+            throw new AccessDeniedException();
+        }
+        $dataSetColumnTypes = $this->dataSetColumnTypeFactory->query();
+
+        return $response
+            ->withStatus(200)
+            ->withJson($dataSetColumnTypes);
     }
 
     /**

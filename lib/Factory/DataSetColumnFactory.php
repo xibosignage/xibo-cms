@@ -74,8 +74,9 @@ class DataSetColumnFactory extends BaseFactory
     {
         $columns = $this->query(null, ['dataSetColumnId' => $dataSetColumnId]);
 
-        if (count($columns) <= 0)
+        if (count($columns) <= 0) {
             throw new NotFoundException();
+        }
 
         return $columns[0];
     }
@@ -95,9 +96,6 @@ class DataSetColumnFactory extends BaseFactory
         $entries = [];
         $params = [];
         $sanitizedFilter = $this->getSanitizer($filterBy);
-
-        if ($sortOrder == null)
-            $sortOrder = ['columnOrder'];
 
         $select = '
             SELECT dataSetColumnId,
@@ -177,7 +175,6 @@ class DataSetColumnFactory extends BaseFactory
         }
 
         $sql = $select . $body . $order . $limit;
-
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['showFilter', 'showSort']]);
