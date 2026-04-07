@@ -28,52 +28,61 @@ import { getMediaIcon } from '@/pages/Library/Media/MediaConfig';
 interface MediaProps {
   thumb?: string;
   alt?: string;
+  title?: string;
   mediaType: 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
-  onPreview: () => void;
+  onPreview?: () => void;
 }
 
-export function MediaCell({ thumb, alt, mediaType, onPreview }: MediaProps) {
+export function MediaCell({ thumb, alt, title, mediaType, onPreview }: MediaProps) {
   const { t } = useTranslation();
   const [hasError, setHasError] = useState(false);
-
-  const handlePreview = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onPreview();
-  };
 
   const isPlayable = mediaType === 'video' || mediaType === 'audio';
   const showThumbnail = thumb && !hasError;
   const Icon = getMediaIcon(mediaType);
 
+  const containerClass = 'rounded-sm w-16 h-11.75 bg-gray-400 overflow-hidden';
+
+  const inner = showThumbnail ? (
+    <div className="flex h-full justify-center items-center">
+      <img
+        src={thumb}
+        alt={alt}
+        className="h-full w-full object-contain"
+        onError={() => setHasError(true)}
+      />
+      {isPlayable && (
+        <div className="absolute flex items-center justify-center">
+          <Play className="w-4 z-20 text-white fill-white" />
+        </div>
+      )}
+    </div>
+  ) : (
+    <div className="flex h-full justify-center items-center">
+      <Icon className="size-6 text-gray-500" />
+    </div>
+  );
+
   return (
-    <div className="flex w-full justify-center items-center">
-      <button
-        type="button"
-        title={t('Preview media')}
-        aria-label={t('Preview media')}
-        className="cursor-pointer rounded-sm w-16 h-11.75 bg-gray-400 hover:bg-gray-300 focus:bg-gray-300 overflow-hidden"
-        onClick={handlePreview}
-      >
-        {showThumbnail ? (
-          <div className="flex h-full justify-center items-center">
-            <img
-              src={thumb}
-              alt={alt}
-              className="h-full w-full object-contain"
-              onError={() => setHasError(true)}
-            />
-            {isPlayable && (
-              <div className="absolute flex items-center justify-center">
-                <Play className="w-4 z-20 text-white fill-white" />
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="flex justify-center items-center">
-            <Icon className="size-6 text-gray-500" />
-          </div>
-        )}
-      </button>
+    <div className="flex flex-col w-full justify-center items-center gap-1">
+      {onPreview ? (
+        <button
+          type="button"
+          title={title ?? t('Preview media')}
+          aria-label={title ?? t('Preview media')}
+          className={`cursor-pointer hover:bg-gray-300 focus:bg-gray-300 ${containerClass}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onPreview();
+          }}
+        >
+          {inner}
+        </button>
+      ) : (
+        <div className={containerClass} title={title}>
+          {inner}
+        </div>
+      )}
     </div>
   );
 }

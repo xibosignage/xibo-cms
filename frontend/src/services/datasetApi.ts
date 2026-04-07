@@ -443,6 +443,7 @@ export interface FetchDatasetDataRequest {
   keyword?: string;
   sortBy?: string;
   sortDir?: string;
+  columnFilters?: Record<string, string>;
   signal?: AbortSignal;
 }
 
@@ -455,10 +456,10 @@ export async function fetchDatasetData(
   datasetId: string | number,
   options: FetchDatasetDataRequest = { start: 0, length: 10 },
 ): Promise<FetchDatasetDataResponse> {
-  const { signal, ...queryParams } = options;
+  const { signal, columnFilters, ...queryParams } = options;
 
   const response = await http.get(`/dataset/data/${datasetId}`, {
-    params: queryParams,
+    params: { ...queryParams, ...columnFilters },
     signal,
   });
 

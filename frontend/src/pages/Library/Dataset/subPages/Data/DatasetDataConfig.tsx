@@ -25,7 +25,7 @@ import { CopyCheck, Edit, Trash2 } from 'lucide-react';
 import { type ComponentProps } from 'react';
 
 import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
-import { TextCell, ActionsCell } from '@/components/ui/table/cells';
+import { TextCell, ActionsCell, MediaCell } from '@/components/ui/table/cells';
 import type { DynamicRowData } from '@/services/datasetApi';
 import type { DatasetColumn } from '@/types/datasetColumn';
 import type { ActionItem } from '@/types/table';
@@ -55,15 +55,27 @@ export const getDynamicDataColumns = (
   const dynamicColumns: ColumnDef<DynamicRowData>[] = columnsSchema
     .sort((a, b) => (a.columnOrder || 0) - (b.columnOrder || 0))
     .map((col) => ({
-      id: `col_${col.dataSetColumnId}`,
+      id: col.heading,
       accessorFn: (row) => row[col.heading] ?? row[col.dataSetColumnId],
       header: col.heading.toUpperCase(),
       size: 150,
+      enableSorting: Boolean(col.showSort),
       cell: (info) => {
         const value = info.getValue();
 
         if (value === undefined || value === null || value === '') {
           return <TextCell className="text-gray-400">-</TextCell>;
+        }
+
+        if (col.dataTypeId === 4) {
+          return <MediaCell thumb={String(value)} title={String(value)} mediaType="image" />;
+        }
+
+        if (col.dataTypeId === 5) {
+          const mediaId = String(value);
+          return (
+            <MediaCell thumb={`/library/thumbnail/${mediaId}`} title={mediaId} mediaType="image" />
+          );
         }
 
         if (col.dataTypeId === 6) {
