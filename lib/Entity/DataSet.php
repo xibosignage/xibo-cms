@@ -662,7 +662,10 @@ class DataSet implements \JsonSerializable
 
         // After the existing $filter block
         $keyword = $filterBy['keyword'] ?? '';
+
         if ($keyword !== '') {
+            $keyword = str_ireplace(Sql::DISALLOWED_KEYWORDS, '', $keyword);
+
             $body .= ' AND ' . $keyword;
         }
 
@@ -1138,7 +1141,7 @@ class DataSet implements \JsonSerializable
             'isRemote' => $this->isRemote,
             'isRealTime' => $this->isRealTime,
             'dataConnectorSource' => $this->dataConnectorSource,
-            'lastDataEdit' => Carbon::now()->format('U'),
+            'lastDataEdit' => 0,
             'lastClear' => 0,
             'folderId' => ($this->folderId === null) ? 1 : $this->folderId,
             'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this-> permissionsFolderId,

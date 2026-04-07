@@ -173,10 +173,10 @@ export default function AddAndEditDatasetModal({
     startTestTransition(async () => {
       try {
         const response = await testRemoteDataset(draft);
-        let displayData = response.data;
+        let displayData = response.data.data;
 
-        if (!response.success || !response.data?.entries) {
-          displayData = response.message || response.data;
+        if (!response.data.success || !response.data.data?.entries) {
+          displayData = response.data.message || response.data;
         }
 
         setTestResult(JSON.stringify(displayData, null, 3));

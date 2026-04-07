@@ -1284,7 +1284,7 @@ class DataSet extends Base
 
         $testDataSetId = $sanitizedParams->getInt('testDataSetId');
 
-        if ($testDataSetId !== null) {
+        if ($testDataSetId !== null && $testDataSetId > 0) {
             $dataSet = $this->dataSetFactory->getById($testDataSetId);
         } else {
             $dataSet = $this->dataSetFactory->createEmpty();
@@ -1329,14 +1329,12 @@ class DataSet extends Base
 
         $this->getLog()->debug('Results: ' . var_export($data, true));
 
-        // Return
-        $this->getState()->hydrate([
+        return $response->withJson([
+            'success' => true,
             'message' => __('Run Test-Request for %s', $dataSet->dataSet),
             'id' => $dataSet->dataSetId,
             'data' => $data
         ]);
-
-        return $this->render($request, $response);
     }
 
     #[OA\Get(

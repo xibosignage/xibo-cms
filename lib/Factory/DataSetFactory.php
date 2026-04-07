@@ -302,12 +302,12 @@ class DataSetFactory extends BaseFactory
 
         // Modified Date filter
         if ($parsedFilter->getDate('modifiedDateFrom') !== null) {
-            $body .= ' AND dataset.lastDataEdit >= :modifiedDateFrom ';
+            $body .= ' AND (dataset.lastDataEdit = 0 OR dataset.lastDataEdit >= :modifiedDateFrom) ';
             $params['modifiedDateFrom'] = strtotime($parsedFilter->getDate('modifiedDateFrom'));
         }
 
         if ($parsedFilter->getDate('modifiedDateTo') !== null) {
-            $body .= ' AND dataset.lastDataEdit <= :modifiedDateTo ';
+            $body .= ' AND (dataset.lastDataEdit = 0 OR dataset.lastDataEdit <= :modifiedDateTo) ';
             $params['modifiedDateTo'] = strtotime($parsedFilter->getDate('modifiedDateTo'));
         }
 

@@ -323,7 +323,7 @@ export async function importDatasetCsv(
 }
 
 export async function testRemoteDataset(payload: UpdateDatasetRequest) {
-  const response = await axios.post('/api/dataset/remote/test', payload);
+  const response = await axios.post('/dataset/remote/test', payload);
   return response.data;
 }
 
