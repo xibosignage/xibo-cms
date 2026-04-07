@@ -25,7 +25,13 @@ import type Modal from '../Modal';
 
 type ModalProps = React.ComponentProps<typeof Modal>;
 
-export default function MockModal({ isOpen, title, children, actions, onClose }: ModalProps) {
+export default function MockModal({
+  isOpen = true,
+  title,
+  children,
+  actions,
+  onClose,
+}: ModalProps) {
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e: KeyboardEvent) => {
