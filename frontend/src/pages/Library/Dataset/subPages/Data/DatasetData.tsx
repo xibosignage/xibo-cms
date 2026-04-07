@@ -61,6 +61,7 @@ export default function DatasetData() {
     columnVisibility,
     setColumnVisibility,
     globalFilter,
+    debouncedFilter,
     setGlobalFilter,
     isHydrated,
   } = useTableState<Record<string, string>>(`dataset_data_${datasetId}`, {
@@ -90,6 +91,7 @@ export default function DatasetData() {
   const { data: columnsData, isFetching: isFetchingColumns } = useDatasetColumnsData({
     datasetId: datasetId!,
     pagination: { pageIndex: 0, pageSize: 100 },
+    filter: '',
     sorting: [],
     enabled: isHydrated,
   });
@@ -102,6 +104,7 @@ export default function DatasetData() {
   } = useDatasetData({
     datasetId: datasetId!,
     pagination,
+    filter: debouncedFilter,
     sorting,
     enabled: isHydrated && !!columnsData,
   });

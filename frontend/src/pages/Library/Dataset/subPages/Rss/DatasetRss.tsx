@@ -55,6 +55,7 @@ export default function DatasetRss() {
     columnVisibility,
     setColumnVisibility,
     globalFilter,
+    debouncedFilter,
     setGlobalFilter,
     isHydrated,
   } = useTableState<Record<string, string>>(`dataset_rss_${datasetId}`, {
@@ -109,6 +110,7 @@ export default function DatasetRss() {
     datasetId: datasetId!,
     pagination,
     sorting,
+    filter: debouncedFilter,
     enabled: isHydrated,
   });
 

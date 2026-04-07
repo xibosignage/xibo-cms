@@ -27,6 +27,7 @@ import { fetchDatasetRss } from '@/services/datasetApi';
 interface UseDatasetRssDataProps {
   datasetId: string;
   pagination: PaginationState;
+  filter: string;
   sorting: SortingState;
   enabled?: boolean;
 }
@@ -34,6 +35,7 @@ interface UseDatasetRssDataProps {
 export function useDatasetRssData({
   datasetId,
   pagination,
+  filter,
   sorting,
   enabled = true,
 }: UseDatasetRssDataProps) {
@@ -42,11 +44,12 @@ export function useDatasetRssData({
   const sortDir = sort ? (sort.desc ? 'desc' : 'asc') : undefined;
 
   return useQuery({
-    queryKey: ['datasetRss', datasetId, pagination, sorting],
+    queryKey: ['datasetRss', datasetId, pagination, filter, sorting],
     queryFn: ({ signal }) =>
       fetchDatasetRss(datasetId, {
         start: pagination.pageIndex * pagination.pageSize,
         length: pagination.pageSize,
+        keyword: filter,
         sortBy,
         sortDir,
         signal,

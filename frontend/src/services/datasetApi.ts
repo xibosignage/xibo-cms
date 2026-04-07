@@ -331,6 +331,7 @@ export async function testRemoteDataset(payload: UpdateDatasetRequest) {
 export interface FetchDatasetColumnsRequest {
   start: number;
   length: number;
+  keyword?: string;
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;
@@ -439,6 +440,7 @@ export async function deleteDatasetColumn(
 export interface FetchDatasetDataRequest {
   start: number;
   length: number;
+  keyword?: string;
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;
@@ -530,6 +532,7 @@ export async function deleteDatasetRow(
 export interface FetchDatasetRssRequest {
   start?: number;
   length?: number;
+  keyword?: string;
   sortBy?: string;
   sortDir?: string;
   useRegexForName?: boolean;
