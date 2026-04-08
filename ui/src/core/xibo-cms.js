@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -2854,6 +2854,11 @@ window.createMiniLayoutPreview = function(previewUrl) {
     }));
   }
 
+  // Set the previewJWT on the window.
+  const previewUrlUrl = new URL(previewUrl, window.location.origin);
+  window.previewJwt = previewUrlUrl.searchParams.get('jwt');
+
+  // Create the mini preview
   const $layoutPreview = $('.mini-layout-preview');
   const $layoutPreviewContent = $layoutPreview.find('#content');
 
