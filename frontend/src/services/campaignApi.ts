@@ -20,15 +20,8 @@
  */
 
 import http from '@/lib/api';
-
-// TODO: Will transfer when Campaign page is created
-export interface Campaign {
-  campaignId: number;
-  type?: string;
-  folderId?: number;
-  retired?: number;
-  campaign: string;
-}
+import type { Campaign } from '@/types/campaign';
+import type { Tag } from '@/types/tag';
 
 export interface FetchCampaignRequest {
   name?: string;
@@ -42,7 +35,7 @@ export interface FetchCampaignResponse {
   totalCount: number;
 }
 
-export async function fetchCampaigns(
+export async function fetchCampaignsList(
   options: FetchCampaignRequest = {},
 ): Promise<FetchCampaignResponse> {
   const { signal, ...queryParams } = options;
@@ -61,4 +54,116 @@ export async function fetchCampaigns(
     rows,
     totalCount,
   };
+}
+
+export interface FetchCampaignTableRequest {
+  start: number;
+  length: number;
+
+  keyword?: string;
+  sortBy?: string;
+  sortDir?: string;
+
+  folderId?: number;
+  retired?: number;
+
+  tags?: string;
+
+  isLayoutSpecific?: number;
+  layoutId?: number;
+  type?: string;
+  cyclePlaybackEnabled?: number;
+
+  signal?: AbortSignal;
+}
+
+export interface FetchCampaignTableResponse {
+  rows: Campaign[];
+  totalCount: number;
+}
+
+export async function fetchCampaigns(
+  options: FetchCampaignTableRequest = { start: 0, length: 10 },
+): Promise<FetchCampaignTableResponse> {
+  const { signal, ...queryParams } = options;
+
+  const response = await http.get('/campaign', {
+    params: queryParams,
+    signal,
+  });
+
+  const rows = response.data;
+
+  const totalCountHeader = response.headers['x-total-count'];
+  const totalCount = totalCountHeader ? parseInt(totalCountHeader, 10) : 0;
+
+  return {
+    rows,
+    totalCount,
+  };
+}
+
+export interface CreateCampaignPayload {
+  name: string;
+  folderId?: number | null;
+  tags?: Tag[];
+  cyclePlaybackEnabled: boolean;
+  playCount?: number;
+  listPlayOrder?: 'round' | 'block';
+}
+
+export async function createCampaign(payload: CreateCampaignPayload) {
+  const formData = new URLSearchParams();
+
+  formData.append('name', payload.name);
+
+  if (payload.folderId) {
+    formData.append('folderId', String(payload.folderId));
+  }
+
+  // ✅ transform tags here
+  if (payload.tags && payload.tags.length > 0) {
+    const tags = payload.tags.map((t) => (t.value ? `${t.tag}|${t.value}` : t.tag)).join(',');
+
+    formData.append('tags', tags);
+  }
+
+  formData.append('cyclePlaybackEnabled', payload.cyclePlaybackEnabled ? '1' : '0');
+
+  if (payload.cyclePlaybackEnabled) {
+    formData.append('playCount', String(payload.playCount ?? 1));
+  } else if (payload.listPlayOrder) {
+    formData.append('listPlayOrder', payload.listPlayOrder);
+  }
+
+  const response = await http.post('/campaign', formData, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
+
+  return response.data;
+}
+
+export interface CopyCampaignPayload {
+  name: string;
+}
+
+export async function copyCampaign(campaignId: number, payload: CopyCampaignPayload) {
+  const formData = new URLSearchParams();
+
+  formData.append('name', payload.name);
+
+  const response = await http.post(`/campaign/${campaignId}/copy`, formData, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
+
+  return response.data;
+}
+
+export async function deleteCampaign(campaignId: number) {
+  const response = await http.delete(`/campaign/${campaignId}`);
+  return response.data;
 }

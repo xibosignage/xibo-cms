@@ -41,4 +41,12 @@ export type ActionItem =
       rightIcon?: ElementType;
     };
 
-export type BaseModalType = 'edit' | 'share' | 'delete' | 'copy' | 'move' | 'logout' | 'import';
+export type BaseModalType =
+  | 'edit'
+  | 'share'
+  | 'delete'
+  | 'copy'
+  | 'move'
+  | 'logout'
+  | 'import'
+  | 'add';

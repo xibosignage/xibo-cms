@@ -122,7 +122,8 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'campaign',
         labelKey: 'Campaign',
-        externalURL: '/campaign/view',
+        lazy: () =>
+          import('@/pages/Design/Campaigns/Campaigns').then((m) => ({ Component: m.default })),
         feature: 'campaign.view',
       },
       {

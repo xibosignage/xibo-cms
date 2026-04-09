@@ -111,6 +111,7 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<LayoutFilterIn
     className: '',
     shouldTranslateOptions: true,
     showAllOption: false,
+    allowCustomRange: true,
     options: getCommonFormOptions(t).lastModifiedFilter,
   },
 ];

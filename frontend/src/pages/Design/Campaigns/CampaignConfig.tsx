@@ -1,0 +1,411 @@
+import type { ColumnDef } from '@tanstack/react-table';
+import type { TFunction } from 'i18next';
+import { Edit, CopyCheck, FolderInput, UserPlus2, CalendarClock, Trash2, Eye } from 'lucide-react';
+import type { ComponentProps } from 'react';
+
+import type { FilterConfigItem } from '@/components/ui/FilterInputs';
+import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
+import { TextCell, TagsCell, StatusCell, ActionsCell } from '@/components/ui/table/cells';
+import type { Campaign } from '@/types/campaign';
+import type { ActionItem } from '@/types/table';
+import type { Tag } from '@/types/tag';
+
+export interface CampaignFilterInput {
+  tags?: Tag[];
+  hasLayouts?: string;
+  layoutId?: string;
+  type?: string;
+  cyclePlaybackEnabled?: string;
+}
+
+export const CAMPAIGN_INITIAL_FILTER_STATE: CampaignFilterInput = {
+  tags: [],
+  hasLayouts: '',
+  layoutId: '',
+  type: '',
+  cyclePlaybackEnabled: '',
+};
+
+export const getCampaignFilterKeys = (t: TFunction): FilterConfigItem<CampaignFilterInput>[] => [
+  {
+    label: t('Tags'),
+    name: 'tags',
+    type: 'tags',
+    placeholder: t('Add tags'),
+    className: '',
+  },
+
+  {
+    label: t('Layout'),
+    name: 'hasLayouts',
+    className: '',
+    shouldTranslateOptions: false,
+    showAllOption: false,
+    options: [
+      { label: t('Layout'), value: '' },
+      { label: t('Yes'), value: '1' },
+      { label: t('No'), value: '0' },
+    ],
+  },
+
+  {
+    label: t('Layout ID'),
+    name: 'layoutId',
+    type: 'number',
+    placeholder: t('Enter layout ID'),
+    className: '',
+  },
+
+  {
+    label: t('Type'),
+    name: 'type',
+    className: '',
+    shouldTranslateOptions: false,
+    showAllOption: false,
+    options: [
+      { label: t('Select Type'), value: '' },
+      { label: t('Layout List'), value: 'list' },
+      { label: t('Ad Campaign'), value: 'campaign' },
+    ],
+  },
+
+  {
+    label: t('Cycle Based'),
+    name: 'cyclePlaybackEnabled',
+    className: '',
+    shouldTranslateOptions: false,
+    showAllOption: false,
+    options: [
+      { label: t('Select Cycle Base'), value: '' },
+      { label: t('Enabled'), value: '1' },
+      { label: t('Disabled'), value: '0' },
+    ],
+  },
+];
+
+interface CampaignActionsProps {
+  t: TFunction;
+  onDelete?: (id: number) => void;
+  openShareModal?: (id: number) => void;
+  openMoveModal?: (row: Campaign | Campaign[]) => void;
+  openCopyModal?: (campaign: Campaign) => void;
+}
+
+export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campaign>[] => {
+  const { t } = props;
+  const getActions = getCampaignItemActions(props);
+
+  return [
+    {
+      accessorKey: 'campaign',
+      header: t('Name'),
+      size: 220,
+      enableHiding: false,
+      cell: (info) => (
+        <TextCell weight="bold" truncate>
+          {info.getValue<string>()}
+        </TextCell>
+      ),
+      enableSorting: true,
+    },
+
+    {
+      accessorKey: 'type',
+      header: t('Type'),
+      size: 120,
+      enableSorting: true,
+      cell: (info) => <TextCell className="capitalize">{info.getValue<string>()}</TextCell>,
+    },
+
+    {
+      accessorKey: 'startDt',
+      header: t('Start Date'),
+      size: 160,
+      enableSorting: true,
+      cell: (info) => {
+        const value = info.getValue<number>();
+        return <TextCell>{value ? new Date(value * 1000).toLocaleString() : '-'}</TextCell>;
+      },
+    },
+
+    {
+      accessorKey: 'endDt',
+      header: t('End Date'),
+      size: 160,
+      enableSorting: true,
+      cell: (info) => {
+        const value = info.getValue<number>();
+        return <TextCell>{value ? new Date(value * 1000).toLocaleString() : '-'}</TextCell>;
+      },
+    },
+
+    {
+      accessorKey: 'numberLayouts',
+      header: t('# Layouts'),
+      size: 100,
+      enableSorting: true,
+      cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
+    },
+
+    {
+      accessorKey: 'tags',
+      header: t('Tags'),
+      size: 150,
+      enableSorting: false,
+      cell: (info) => {
+        const tags = info.getValue<Tag[]>() || [];
+        const formattedTags = tags.map((tag) => ({
+          id: tag.tagId,
+          label: tag.tag,
+        }));
+        return <TagsCell tags={formattedTags} />;
+      },
+    },
+
+    {
+      accessorKey: 'totalDuration',
+      header: t('Duration'),
+      size: 120,
+      enableSorting: true,
+      cell: (info) => <TextCell>{info.getValue<number>()}s</TextCell>,
+    },
+
+    {
+      accessorKey: 'cyclePlaybackEnabled',
+      header: t('Cycle based Playback'),
+      size: 180,
+      enableSorting: true,
+      cell: (info) => {
+        const value = info.getValue<number>();
+        return (
+          <StatusCell
+            label={value ? t('Enabled') : t('Disabled')}
+            type={value ? 'success' : 'neutral'}
+          />
+        );
+      },
+    },
+
+    {
+      accessorKey: 'playCount',
+      header: t('Play Count'),
+      size: 120,
+      enableSorting: true,
+      cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
+    },
+
+    {
+      accessorKey: 'targetType',
+      header: t('Target Type'),
+      size: 140,
+      enableSorting: true,
+      cell: (info) => <TextCell>{info.getValue<string>() || '-'}</TextCell>,
+    },
+
+    {
+      accessorKey: 'target',
+      header: t('Target'),
+      size: 120,
+      enableSorting: true,
+      cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
+    },
+
+    {
+      accessorKey: 'plays',
+      header: t('Plays'),
+      size: 100,
+      enableSorting: true,
+      cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
+    },
+
+    {
+      accessorKey: 'spend',
+      header: t('Spend'),
+      size: 120,
+      enableSorting: true,
+      cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
+    },
+
+    {
+      accessorKey: 'impressions',
+      header: t('Impressions'),
+      size: 140,
+      enableSorting: true,
+      cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
+    },
+
+    {
+      accessorKey: 'ref1',
+      header: t('Reference 1'),
+      size: 140,
+      enableSorting: false,
+      cell: (info) => <TextCell>{info.getValue<string | null>() || '-'}</TextCell>,
+    },
+
+    {
+      accessorKey: 'ref2',
+      header: t('Reference 2'),
+      size: 140,
+      enableSorting: false,
+      cell: (info) => <TextCell>{info.getValue<string | null>() || '-'}</TextCell>,
+    },
+
+    {
+      accessorKey: 'ref3',
+      header: t('Reference 3'),
+      size: 140,
+      enableSorting: false,
+      cell: (info) => <TextCell>{info.getValue<string | null>() || '-'}</TextCell>,
+    },
+
+    {
+      accessorKey: 'ref4',
+      header: t('Reference 4'),
+      size: 140,
+      enableSorting: false,
+      cell: (info) => <TextCell>{info.getValue<string | null>() || '-'}</TextCell>,
+    },
+
+    {
+      accessorKey: 'ref5',
+      header: t('Reference 5'),
+      size: 140,
+      enableSorting: false,
+      cell: (info) => <TextCell>{info.getValue<string | null>() || '-'}</TextCell>,
+    },
+
+    {
+      accessorKey: 'createdAt',
+      header: t('Created At'),
+      size: 160,
+      enableSorting: true,
+      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+    },
+
+    {
+      accessorKey: 'modifiedAt',
+      header: t('Modified At'),
+      size: 160,
+      enableSorting: true,
+      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+    },
+
+    {
+      accessorKey: 'modifiedByName',
+      header: t('Modified By'),
+      size: 160,
+      enableSorting: true,
+      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+    },
+
+    {
+      id: 'tableActions',
+      header: '',
+      size: 120,
+      minSize: 120,
+      maxSize: 120,
+      enableHiding: false,
+      enableResizing: false,
+      cell: (info) => {
+        const row = info.row.original;
+        if (!row) return null;
+
+        return (
+          <ActionsCell
+            row={info.row}
+            actions={getActions(row) as ComponentProps<typeof ActionsCell>['actions']}
+          />
+        );
+      },
+    },
+  ];
+};
+
+export const getCampaignItemActions = ({
+  t,
+  onDelete,
+  openShareModal,
+  openMoveModal,
+  openCopyModal,
+}: CampaignActionsProps): ((campaign: Campaign) => ActionItem[]) => {
+  return (campaign: Campaign) => [
+    {
+      label: t('Edit'),
+      icon: Edit,
+      onClick: () => {},
+      isQuickAction: true,
+      variant: 'primary' as const,
+    },
+    {
+      label: t('Schedule'),
+      icon: CalendarClock,
+      onClick: () => {},
+    },
+    {
+      label: t('Preview Campaign'),
+      icon: Eye,
+      onClick: () => {},
+    },
+    { isSeparator: true },
+    {
+      label: t('Edit'),
+      icon: Edit,
+      onClick: () => {},
+    },
+    {
+      label: t('Make a Copy'),
+      icon: CopyCheck,
+      onClick: () => openCopyModal && openCopyModal(campaign),
+    },
+    {
+      label: t('Move'),
+      icon: FolderInput,
+      onClick: () => openMoveModal && openMoveModal(campaign),
+    },
+    {
+      label: t('Share'),
+      icon: UserPlus2,
+      onClick: () => openShareModal && openShareModal(campaign.campaignId),
+    },
+
+    { isSeparator: true },
+    {
+      label: t('Delete'),
+      icon: Trash2,
+      onClick: () => onDelete && onDelete(campaign.campaignId),
+      variant: 'danger' as const,
+    },
+  ];
+};
+
+interface GetBulkActionsProps {
+  t: TFunction;
+  onDelete: () => void;
+  onMove: () => void;
+  onShare: () => void;
+}
+
+export const getBulkActions = ({
+  t,
+  onDelete,
+  onMove,
+  onShare,
+}: GetBulkActionsProps): DataTableBulkAction<Campaign>[] => {
+  return [
+    {
+      label: t('Move'),
+      icon: FolderInput,
+      onClick: onMove,
+    },
+    {
+      label: t('Share'),
+      icon: UserPlus2,
+      onClick: onShare,
+    },
+    {
+      label: t('Delete Selected'),
+      icon: Trash2,
+      onClick: onDelete,
+    },
+  ];
+};

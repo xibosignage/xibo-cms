@@ -94,7 +94,7 @@ function TagInput({
   };
 
   return (
-    <div className="flex flex-col gap-1 relative w-full">
+    <div className={twMerge('flex flex-col gap-1 relative', className)}>
       <label className="text-sm font-semibold text-gray-500 leading-5">
         {!label ? t('Tags') : label}
       </label>
@@ -104,7 +104,6 @@ function TagInput({
           'flex rounded-lg bg-white border border-gray-200 overflow-hidden transition-colors min-h-11.25',
           'focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500',
           disabled && 'opacity-50 pointer-events-none bg-gray-50',
-          className,
         )}
       >
         {prefix && (

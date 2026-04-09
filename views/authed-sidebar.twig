@@ -14,7 +14,7 @@
         {% if countViewable > 0 %}
             <li class="sidebar-title"><a>{% trans "Design" %}</a></li>
             {% if currentUser.featureEnabled("campaign.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("campaign.view") }}">{% trans "Campaigns" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/design/campaign">{% trans "Campaigns" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("layout.view") %}
