@@ -220,6 +220,7 @@ $app->group('/playlist/widget', function (RouteCollectorProxy $group) {
  * Campaign
  */
 $app->get('/campaign', ['\Xibo\Controller\Campaign','grid'])->setName('campaign.search');
+$app->get('/campaign/{id}', ['\Xibo\Controller\Campaign', 'searchById'])->setName('campaign.search.id');
 $app->post('/campaign', ['\Xibo\Controller\Campaign','add'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.add']))
     ->setName('campaign.add');

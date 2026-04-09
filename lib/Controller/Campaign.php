@@ -22,6 +22,7 @@
 namespace Xibo\Controller;
 
 use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\CampaignFactory;
@@ -78,25 +79,11 @@ class Campaign extends Base
     }
 
     /**
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
-     */
-    public function displayPage(Request $request, Response $response)
-    {
-        $this->getState()->template = 'campaign-page';
-
-        return $this->render($request, $response);
-    }
-
-    /**
      * Display the Campaign Builder
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      */
     public function displayCampaignBuilder(Request $request, Response $response, $id)
@@ -217,6 +204,53 @@ class Campaign extends Base
         required: false,
         schema: new OA\Schema(type: 'integer')
     )]
+    #[OA\Parameter(
+        name: 'keyword',
+        description: 'Filter by campaign name, ID, or type',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: [
+                'campaignId',
+                'campaign',
+                'type',
+                'startDt',
+                'endDt',
+                'numberLayouts',
+                'totalDuration',
+                'cyclePlaybackEnabled',
+                'playCount',
+                'targetType',
+                'target',
+                'plays',
+                'spend',
+                'impressions',
+                'ref1',
+                'ref2',
+                'ref3',
+                'ref4',
+                'ref5',
+                'createdAt',
+                'modifiedAt',
+                'modifiedByName'
+            ]
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
     #[OA\Response(
         response: 200,
         description: 'successful operation',
@@ -227,214 +261,36 @@ class Campaign extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws ControllerNotImplemented
      * @throws NotFoundException
      */
-    public function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
         $parsedParams = $this->getSanitizer($request->getQueryParams());
-        $filter = [
-            'campaignId' => $parsedParams->getInt('campaignId'),
-            'type' => $parsedParams->getString('type'),
-            'name' => $parsedParams->getString('name'),
-            'useRegexForName' => $parsedParams->getCheckbox('useRegexForName'),
-            'tags' => $parsedParams->getString('tags'),
-            'exactTags' => $parsedParams->getCheckbox('exactTags'),
-            'hasLayouts' => $parsedParams->getInt('hasLayouts'),
-            'isLayoutSpecific' => $parsedParams->getInt('isLayoutSpecific'),
-            'retired' => $parsedParams->getInt('retired'),
-            'folderId' => $parsedParams->getInt('folderId'),
-            'totalDuration' => $parsedParams->getInt('totalDuration', ['default' => 1]),
-            'cyclePlaybackEnabled' => $parsedParams->getInt('cyclePlaybackEnabled'),
-            'layoutId' => $parsedParams->getInt('layoutId'),
-            'logicalOperator' => $parsedParams->getString('logicalOperator'),
-            'logicalOperatorName' => $parsedParams->getString('logicalOperatorName'),
-            'excludeMedia' => $parsedParams->getInt('excludeMedia'),
-        ];
+        $embed = ($parsedParams->getString('embed') !== null)
+            ? explode(',', $parsedParams->getString('embed'))
+            : [];
 
-        $embed = ($parsedParams->getString('embed') !== null) ? explode(',', $parsedParams->getString('embed')) : [];
+        $campaignSortQuery = $this->gridRenderSort(
+            $parsedParams,
+            $this->isJson($request),
+            'campaign'
+        );
+
+        $campaignFilterQuery = $this->getCampaignFilterQuery($parsedParams);
 
         $campaigns = $this->campaignFactory->query(
-            $this->gridRenderSort($parsedParams),
-            $this->gridRenderFilter($filter, $parsedParams)
+            $campaignSortQuery,
+            $campaignFilterQuery
         );
 
         foreach ($campaigns as $campaign) {
-            /* @var \Xibo\Entity\Campaign $campaign */
-            if (count($embed) > 0) {
-                if (in_array('layouts', $embed)) {
-                    $campaign->loadLayouts();
-                }
-
-                $campaign->load([
-                    'loadPermissions' => in_array('permissions', $embed),
-                    'loadTags' => in_array('tags', $embed),
-                    'loadEvents' => in_array('events', $embed)
-                ]);
-            } else {
-                $campaign->excludeProperty('layouts');
-            }
-
-            if ($this->isApi($request) || $this->isJson($request)) {
-                continue;
-            }
-
-            $campaign->includeProperty('buttons');
-            $campaign->buttons = [];
-
-            // Schedule
-            if ($this->getUser()->featureEnabled('schedule.add') && $campaign->type === 'list') {
-                $campaign->buttons[] = [
-                    'id' => 'campaign_button_schedule',
-                    'url' => $this->urlFor(
-                        $request,
-                        'schedule.add.form',
-                        ['id' => $campaign->campaignId, 'from' => 'Campaign']
-                    ),
-                    'text' => __('Schedule')
-                ];
-            }
-
-            // Preview
-            if ($this->getUser()->featureEnabled(['layout.view', 'campaign.view'], true)
-                && $campaign->type === 'list'
-            ) {
-                $campaign->buttons[] = array(
-                    'id' => 'campaign_button_preview',
-                    'linkType' => '_blank',
-                    'external' => true,
-                    'url' => $this->urlFor($request, 'campaign.preview', ['id' => $campaign->campaignId]),
-                    'text' => __('Preview Campaign')
-                );
-            }
-
-            // Buttons based on permissions
-            if ($this->getUser()->featureEnabled('campaign.modify')
-                && $this->getUser()->checkEditable($campaign)
-            ) {
-                if (count($campaign->buttons) > 0) {
-                    $campaign->buttons[] = ['divider' => true];
-                }
-
-                // Edit the Campaign
-                if ($campaign->type === 'list') {
-                    $campaign->buttons[] = array(
-                        'id' => 'campaign_button_edit',
-                        'url' => $this->urlFor($request, 'campaign.edit.form', ['id' => $campaign->campaignId]),
-                        'text' => __('Edit'),
-                    );
-                } else if ($campaign->type === 'ad' && $this->getUser()->featureEnabled('ad.campaign')) {
-                    $campaign->buttons[] = [
-                        'id' => 'campaign_button_edit',
-                        'linkType' => '_self',
-                        'external' => true,
-                        'url' => $this->urlFor($request, 'campaign.builder', ['id' => $campaign->campaignId]),
-                        'text' => __('Edit'),
-                    ];
-                }
-
-                if ($this->getUser()->featureEnabled('folder.view')) {
-                    // Select Folder
-                    $campaign->buttons[] = [
-                        'id' => 'campaign_button_selectfolder',
-                        'url' => $this->urlFor(
-                            $request,
-                            'campaign.selectfolder.form',
-                            ['id' => $campaign->campaignId]
-                        ),
-                        'text' => __('Select Folder'),
-                        'multi-select' => true,
-                        'dataAttributes' => [
-                            [
-                                'name' => 'commit-url',
-                                'value' => $this->urlFor(
-                                    $request,
-                                    'campaign.selectfolder',
-                                    ['id' => $campaign->campaignId]
-                                )
-                            ],
-                            ['name' => 'commit-method', 'value' => 'put'],
-                            ['name' => 'id', 'value' => 'campaign_button_selectfolder'],
-                            ['name' => 'text', 'value' => __('Move to Folder')],
-                            ['name' => 'rowtitle', 'value' => $campaign->campaign],
-                            ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
-                        ]
-                    ];
-                }
-
-                // Copy the campaign
-                $campaign->buttons[] = [
-                    'id' => 'campaign_button_copy',
-                    'url' => $this->urlFor(
-                        $request,
-                        'campaign.copy.form',
-                        ['id' => $campaign->campaignId]
-                    ),
-                    'text' => __('Copy')
-                ];
-            } else {
-                $campaign->buttons[] = ['divider' => true];
-            }
-
-            if ($this->getUser()->featureEnabled('campaign.modify') &&
-                $this->getUser()->checkDeleteable($campaign)
-            ) {
-                // Delete Campaign
-                $campaign->buttons[] = [
-                    'id' => 'campaign_button_delete',
-                    'url' => $this->urlFor(
-                        $request,
-                        'campaign.delete.form',
-                        ['id' => $campaign->campaignId]
-                    ),
-                    'text' => __('Delete'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'campaign.delete',
-                                ['id' => $campaign->campaignId]
-                            )
-                        ],
-                        ['name' => 'commit-method', 'value' => 'delete'],
-                        ['name' => 'id', 'value' => 'campaign_button_delete'],
-                        ['name' => 'text', 'value' => __('Delete')],
-                        ['name' => 'sort-group', 'value' => 1],
-                        ['name' => 'rowtitle', 'value' => $campaign->campaign]
-                    ]
-                ];
-            }
-
-            if ($this->getUser()->featureEnabled('campaign.modify') &&
-                $this->getUser()->checkPermissionsModifyable($campaign)
-            ) {
-                $campaign->buttons[] = ['divider' => true];
-
-                // Permissions for Campaign
-                $campaign->buttons[] = [
-                    'id' => 'campaign_button_permissions',
-                    'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Campaign', 'id' => $campaign->campaignId]),
-                    'text' => __('Share'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Campaign', 'id' => $campaign->campaignId])],
-                        ['name' => 'commit-method', 'value' => 'post'],
-                        ['name' => 'id', 'value' => 'campaign_button_permissions'],
-                        ['name' => 'text', 'value' => __('Share')],
-                        ['name' => 'rowtitle', 'value' => $campaign->campaign],
-                        ['name' => 'sort-group', 'value' => 2],
-                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Campaign'])],
-                        ['name' => 'content-id-name', 'value' => 'campaignId']
-                    ]
-                ];
-            }
+            $this->decorateCampaignProperties($campaign, $embed);
         }
 
+        // TODO: Convert this to JSON response object
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->campaignFactory->countLast();
         $this->getState()->setData($campaigns);
@@ -442,25 +298,56 @@ class Campaign extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/campaign/{campaignId}',
+        operationId: 'campaignSearchById',
+        description: 'Get the Campaign object specified by the provided campaignId',
+        summary: 'Campaign Search by ID',
+        tags: ['campaign']
+    )]
+    #[OA\Parameter(
+        name: 'campaignId',
+        description: 'Numeric ID of the Campaign to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'embed',
+        description: 'Embed related data such as layouts, permissions, tags and events',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Campaign')
+    )]
     /**
-     * Campaign Add Form
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
+     * @param int $id
+     * @return Response|ResponseInterface
+     * @throws NotFoundException
+     * @throws InvalidArgumentException
      */
-    public function addForm(Request $request, Response $response)
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
-        // Load layouts
-        $layouts = [];
+        $campaign = $this->campaignFactory->getById($id, false);
 
-        $this->getState()->template = 'campaign-form-add';
-        $this->getState()->setData([
-            'layouts' => $layouts,
-        ]);
+        $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
 
-        return $this->render($request, $response);
+        // Embed?
+        $embed = ($sanitizedQueryParams->getString('embed') != null)
+            ? explode(',', $sanitizedQueryParams->getString('embed'))
+            : [];
+
+        $this->decorateCampaignProperties($campaign, $embed);
+
+        return $response
+            ->withStatus(200)
+            ->withJson($campaign);
     }
 
     #[OA\Post(
@@ -536,7 +423,7 @@ class Campaign extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws InvalidArgumentException
@@ -644,7 +531,7 @@ class Campaign extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws ControllerNotImplemented
      * @throws GeneralException
@@ -781,7 +668,7 @@ class Campaign extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws ControllerNotImplemented
      * @throws GeneralException
@@ -903,33 +790,6 @@ class Campaign extends Base
         return $this->render($request, $response);
     }
 
-    /**
-     * Shows the Delete Group Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
-     * @throws NotFoundException
-     */
-    function deleteForm(Request $request, Response $response, $id)
-    {
-        $campaign = $this->campaignFactory->getById($id);
-
-        if (!$this->getUser()->checkDeleteable($campaign)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'campaign-form-delete';
-        $this->getState()->setData([
-            'campaign' => $campaign,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
     #[OA\Delete(
         path: '/campaign/{campaignId}',
         operationId: 'campaignDelete',
@@ -950,7 +810,7 @@ class Campaign extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws ControllerNotImplemented
      * @throws GeneralException
@@ -1029,7 +889,7 @@ class Campaign extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws ControllerNotImplemented
      * @throws GeneralException
@@ -1102,7 +962,7 @@ class Campaign extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws \Xibo\Support\Exception\GeneralException
      */
     public function removeLayoutForm(Request $request, Response $response, $id)
@@ -1161,7 +1021,7 @@ class Campaign extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws \Xibo\Support\Exception\GeneralException
      */
     public function removeLayout(Request $request, Response $response, $id)
@@ -1204,7 +1064,7 @@ class Campaign extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws NotFoundException
@@ -1246,34 +1106,7 @@ class Campaign extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
-     * @throws NotFoundException
-     */
-    public function copyForm(Request $request, Response $response, $id)
-    {
-        // get the Campaign
-        $campaign = $this->campaignFactory->getById($id);
-
-        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $campaign->ownerId) {
-            throw new AccessDeniedException(__('You do not have permission to copy this Campaign'));
-        }
-
-        $this->getState()->template = 'campaign-form-copy';
-        $this->getState()->setData([
-            'campaign' => $campaign
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws ControllerNotImplemented
      * @throws GeneralException
@@ -1326,37 +1159,6 @@ class Campaign extends Base
         return $this->render($request, $response);
     }
 
-    /**
-     * Select Folder Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function selectFolderForm(Request $request, Response $response, $id)
-    {
-        // Get the Campaign
-        $campaign = $this->campaignFactory->getById($id);
-
-        // Check Permissions
-        if (!$this->getUser()->checkEditable($campaign)) {
-            throw new AccessDeniedException();
-        }
-
-        $data = [
-            'campaign' => $campaign
-        ];
-
-        $this->getState()->template = 'campaign-form-selectfolder';
-        $this->getState()->setData($data);
-
-        return $this->render($request, $response);
-    }
-
     #[OA\Put(
         path: '/campaign/{id}/selectfolder',
         operationId: 'campaignSelectFolder',
@@ -1397,7 +1199,7 @@ class Campaign extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
@@ -1475,5 +1277,62 @@ class Campaign extends Base
         if ($layout->isTemplate()) {
             throw new InvalidArgumentException(__('Cannot assign a Template to a Campaign'), 'layoutId');
         }
+    }
+
+    /**
+     * Get the campaign filters
+     * @param $parsedParams
+     * @return array
+     */
+    private function getCampaignFilterQuery($parsedParams): array
+    {
+        return $this->gridRenderFilter([
+            'campaignId' => $parsedParams->getInt('campaignId'),
+            'type' => $parsedParams->getString('type'),
+            'name' => $parsedParams->getString('name'),
+            'useRegexForName' => $parsedParams->getCheckbox('useRegexForName'),
+            'tags' => $parsedParams->getString('tags'),
+            'exactTags' => $parsedParams->getCheckbox('exactTags'),
+            'hasLayouts' => $parsedParams->getInt('hasLayouts'),
+            'isLayoutSpecific' => $parsedParams->getInt('isLayoutSpecific'),
+            'retired' => $parsedParams->getInt('retired'),
+            'folderId' => $parsedParams->getInt('folderId'),
+            'totalDuration' => $parsedParams->getInt('totalDuration', ['default' => 1]),
+            'cyclePlaybackEnabled' => $parsedParams->getInt('cyclePlaybackEnabled'),
+            'layoutId' => $parsedParams->getInt('layoutId'),
+            'logicalOperator' => $parsedParams->getString('logicalOperator'),
+            'logicalOperatorName' => $parsedParams->getString('logicalOperatorName'),
+            'excludeMedia' => $parsedParams->getInt('excludeMedia'),
+            'keyword' => $parsedParams->getString('keyword')
+        ], $parsedParams);
+    }
+
+    /**
+     * Decorate campaign properties
+     * @param $campaign
+     * @param $embed
+     * @return void
+     * @throws InvalidArgumentException
+     */
+    private function decorateCampaignProperties($campaign, $embed): void
+    {
+        if (count($embed) > 0) {
+            if (in_array('layouts', $embed)) {
+                $campaign->loadLayouts();
+            }
+
+            $campaign->load([
+                'loadPermissions' => in_array('permissions', $embed),
+                'loadTags' => in_array('tags', $embed),
+                'loadEvents' => in_array('events', $embed)
+            ]);
+        } else {
+            $campaign->excludeProperty('layouts');
+        }
+
+        $campaign->setUnmatchedProperty(
+            'userPermissions',
+            $this->getUser()->getPermission($campaign)
+        );
     }
 }

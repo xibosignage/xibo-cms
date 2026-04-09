@@ -63,10 +63,10 @@ export const useCampaignData = ({
         ...(advancedFilters.type && { type: advancedFilters.type }),
 
         ...(advancedFilters.hasLayouts === '1' && {
-          isLayoutSpecific: 1,
+          hasLayouts: 1,
         }),
         ...(advancedFilters.hasLayouts === '0' && {
-          isLayoutSpecific: 0,
+          hasLayouts: 0,
         }),
 
         ...(advancedFilters.layoutId && {

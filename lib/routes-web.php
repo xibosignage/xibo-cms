@@ -297,19 +297,8 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 //
 // campaign
 //
-$app->get('/campaign/view', ['\Xibo\Controller\Campaign','displayPage'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.view']))
-    ->setName('campaign.view');
-
-$app->get('/campaign/form/add', ['\Xibo\Controller\Campaign','addForm'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.add']))
-    ->setName('campaign.add.form');
-
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/campaign/form/edit/{id}', ['\Xibo\Controller\Campaign', 'editForm'])->setName('campaign.edit.form');
-    $group->get('/campaign/form/copy/{id}', ['\Xibo\Controller\Campaign', 'copyForm'])->setName('campaign.copy.form');
-    $group->get('/campaign/form/delete/{id}', ['\Xibo\Controller\Campaign', 'deleteForm'])->setName('campaign.delete.form');
-    $group->get('/campaign/form/retire/{id}', ['\Xibo\Controller\Campaign', 'retireForm'])->setName('campaign.retire.form');
     $group->get('/campaign/form/layout/remove/{id}', ['\Xibo\Controller\Campaign', 'removeLayoutForm'])
         ->setName('campaign.layout.remove.form');
 
@@ -317,10 +306,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
         ->addMiddleware(new FeatureAuth($group->getContainer(), ['ad.campaign']))
         ->setName('campaign.builder');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.modify']));
-
-$app->get('/campaign/form/{id}/selectfolder', ['\Xibo\Controller\Campaign','selectFolderForm'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.modify', 'layout.modify']))
-    ->setName('campaign.selectfolder.form');
 
 $app->get('/campaign/{id}/preview', ['\Xibo\Controller\Campaign','preview'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.view', 'layout.view']))

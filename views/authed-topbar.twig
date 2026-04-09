@@ -56,7 +56,7 @@
             <li class="nav-item">
         {% endif %}
             {% if currentUser.featureEnabled("campaign.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("campaign.view") }}">{% trans "Campaigns" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/design/campaign">{% trans "Campaigns" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("layout.view") %}

@@ -65,7 +65,7 @@ export const getCampaignFilterKeys = (t: TFunction): FilterConfigItem<CampaignFi
     options: [
       { label: t('Select Type'), value: '' },
       { label: t('Layout List'), value: 'list' },
-      { label: t('Ad Campaign'), value: 'campaign' },
+      { label: t('Ad Campaign'), value: 'ad' },
     ],
   },
 
