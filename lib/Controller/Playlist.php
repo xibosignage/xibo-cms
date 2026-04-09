@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -38,6 +38,8 @@ use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\HttpsDetect;
+use Xibo\Service\JwtServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -113,7 +115,8 @@ class Playlist extends Base
         $displayFactory,
         $scheduleFactory,
         $folderFactory,
-        $regionFactory
+        $regionFactory,
+        private readonly JwtServiceInterface $jwtService,
     ) {
         $this->playlistFactory = $playlistFactory;
         $this->mediaFactory = $mediaFactory;
@@ -1716,6 +1719,9 @@ class Playlist extends Base
         $layouts = $this->layoutFactory->query(null, ['playlistId' => $id]);
 
         if (!$this->isApi($request)) {
+            // We need to generate preview URLs, base URL doesn't chagen between layouts
+            $baseUrl = (new HttpsDetect())->getBaseUrl($request);
+
             foreach ($layouts as $layout) {
                 $layout->includeProperty('buttons');
 
@@ -1725,19 +1731,28 @@ class Playlist extends Base
                     $layout->buttons[] = array(
                         'id' => 'layout_button_design',
                         'linkType' => '_self', 'external' => true,
-                        'url' => $this->urlFor($request,'layout.designer', array('id' => $layout->layoutId)),
+                        'url' => $this->urlFor($request, 'layout.designer', array('id' => $layout->layoutId)),
                         'text' => __('Design')
                     );
                 }
 
                 // Preview
+                // generate a JWT
+                $jwt = $this->jwtService->generateJwt(
+                    'Preview',
+                    'layout',
+                    $layout->layoutId,
+                    '/preview/layout/preview/' . $layout->layoutId,
+                    3600,
+                )->toString();
+
                 $layout->buttons[] = array(
                     'id' => 'layout_button_preview',
                     'external' => true,
                     'url' => '#',
                     'onclick' => 'createMiniLayoutPreview',
-                    'onclickParam' => $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]),
-                    'text' => __('Preview Layout')
+                    'onclickParam' => $baseUrl . '/preview/layout/preview/' . $layout->layoutId . '?jwt=' . $jwt,
+                    'text' => __('Preview Layout'),
                 );
             }
         }

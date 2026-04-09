@@ -55,8 +55,10 @@ use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
+use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\XiboUploadHandler;
 use Xibo\Middleware\TokenAuthMiddleware;
+use Xibo\Service\JwtServiceInterface;
 use Xibo\Service\MediaService;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -161,7 +163,8 @@ class Library extends Base
         $userGroupFactory,
         $displayFactory,
         $scheduleFactory,
-        $folderFactory
+        $folderFactory,
+        private readonly JwtServiceInterface $jwtService,
     ) {
         $this->moduleFactory = $moduleFactory;
         $this->mediaFactory = $mediaFactory;
@@ -2163,6 +2166,9 @@ class Library extends Base
         );
 
         if (!$this->isApi($request)) {
+            // We need to generate preview URLs, base URL doesn't chagen between layouts
+            $baseUrl = (new HttpsDetect())->getBaseUrl($request);
+
             foreach ($layouts as $layout) {
                 $layout->includeProperty('buttons');
 
@@ -2172,20 +2178,30 @@ class Library extends Base
                     $layout->buttons[] = array(
                         'id' => 'layout_button_design',
                         'linkType' => '_self', 'external' => true,
-                        'url' => $this->urlFor($request,'layout.designer', ['id' => $layout->layoutId]),
+                        'url' => $this->urlFor($request, 'layout.designer', ['id' => $layout->layoutId]),
                         'text' => __('Design')
                     );
                 }
 
                 // Preview
-                $layout->buttons[] = array(
+                // generate a JWT
+                $jwt = $this->jwtService->generateJwt(
+                    'Preview',
+                    'layout',
+                    $layout->layoutId,
+                    '/preview/layout/preview/' . $layout->layoutId,
+                    3600,
+                )->toString();
+
+                // Add it as a button
+                $layout->buttons[] = [
                     'id' => 'layout_button_preview',
                     'external' => true,
                     'url' => '#',
                     'onclick' => 'createMiniLayoutPreview',
-                    'onclickParam' => $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]),
-                    'text' => __('Preview Layout')
-                );
+                    'onclickParam' => $baseUrl . '/preview/layout/preview/' . $layout->layoutId . '?jwt=' . $jwt,
+                    'text' => __('Preview Layout'),
+                ];
             }
         }
 

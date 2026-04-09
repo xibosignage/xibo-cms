@@ -272,7 +272,8 @@ class Controllers
                     $c->get('userGroupFactory'),
                     $c->get('displayFactory'),
                     $c->get('scheduleFactory'),
-                    $c->get('folderFactory')
+                    $c->get('folderFactory'),
+                    $c->get('jwtService'),
                 );
                 $controller->useMediaService($c->get('mediaService'));
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
@@ -405,7 +406,8 @@ class Controllers
                     $c->get('displayFactory'),
                     $c->get('scheduleFactory'),
                     $c->get('folderFactory'),
-                    $c->get('regionFactory')
+                    $c->get('regionFactory'),
+                    $c->get('jwtService'),
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;

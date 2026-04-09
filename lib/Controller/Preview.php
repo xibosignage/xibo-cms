@@ -102,6 +102,7 @@ class Preview extends Base
                     $this->getConfig()->getApiKeyDetails()['encryptionKey'],
                 ),
                 'loaderUrl' => $this->getConfig()->uri('img/loader.gif'),
+                // We can use layout.preview here because this route is inside the Preview end point
                 'layoutPreviewUrl' => $this->urlFor($request, 'layout.preview', ['id' => '[layoutCode]']),
             ],
             'previewJwt' => $this->jwtService->generateJwt(
