@@ -409,7 +409,7 @@ class CampaignFactory extends BaseFactory
             }
         }
 
-        if ($sanitizedFilter->getInt('cyclePlaybackEnabled') != null) {
+        if ($sanitizedFilter->getInt('cyclePlaybackEnabled', ['default' => -1]) != -1) {
             $body .= ' AND `campaign`.cyclePlaybackEnabled = :cyclePlaybackEnabled ';
             $params['cyclePlaybackEnabled'] = $sanitizedFilter->getInt('cyclePlaybackEnabled');
         }
