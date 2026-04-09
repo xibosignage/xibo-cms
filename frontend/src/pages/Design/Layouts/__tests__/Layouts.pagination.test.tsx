@@ -84,18 +84,13 @@ vi.mock('@/components/ui/modals/Modal');
 
 // 10 rows with totalCount: 25 so pagination controls render (Next/Previous).
 const PAGINATED_LAYOUTS = {
-  data: {
-    rows: Array.from({ length: 10 }).map((_, i) => ({
-      ...mockLayout,
-      layoutId: i + 1,
-      layout: `Layout ${i + 1}`,
-      campaignId: i + 10,
-    })),
-    totalCount: 25,
-  },
-  isFetching: false,
-  isError: false,
-  error: null,
+  rows: Array.from({ length: 10 }).map((_, i) => ({
+    ...mockLayout,
+    layoutId: i + 1,
+    layout: `Layout ${i + 1}`,
+    campaignId: i + 10,
+  })),
+  totalCount: 25,
 };
 
 // =============================================================================

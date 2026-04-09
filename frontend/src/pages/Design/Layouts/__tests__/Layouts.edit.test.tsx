@@ -28,10 +28,12 @@ import { useLayoutActions } from '../hooks/useLayoutActions';
 import {
   SINGLE_LAYOUT,
   defaultLayoutActions,
+  mockFetchLayouts,
   mockLayout,
-  mockLayoutData,
   renderLayoutsPage,
 } from './layoutTestUtils';
+
+import { fetchLayouts } from '@/services/layoutsApi';
 
 import { testQueryClient } from '@/setupTests';
 
@@ -47,6 +49,7 @@ vi.mock('react-i18next', () => ({
 
 // Services
 vi.mock('@/services/folderApi');
+vi.mock('@/services/layoutsApi');
 vi.mock('@/services/userApi', () => ({
   fetchUserPreference: vi.fn().mockResolvedValue(null),
   saveUserPreference: vi.fn().mockResolvedValue(undefined),
@@ -54,7 +57,6 @@ vi.mock('@/services/userApi', () => ({
 
 // Hooks
 vi.mock('../hooks/useLayoutActions', () => ({ useLayoutActions: vi.fn() }));
-vi.mock('../hooks/useLayoutData', () => ({ useLayoutData: vi.fn() }));
 vi.mock('../hooks/useLayoutFilterOptions', () => ({
   useLayoutFilterOptions: vi.fn(() => ({ filterOptions: [], isLoading: false })),
 }));
@@ -99,7 +101,7 @@ describe('Layouts page - edit', () => {
     testQueryClient.clear();
     vi.clearAllMocks();
     vi.mocked(useLayoutActions).mockReturnValue(defaultLayoutActions());
-    mockLayoutData(SINGLE_LAYOUT);
+    mockFetchLayouts(SINGLE_LAYOUT);
   });
 
   // ---------------------------------------------------------------------------
@@ -129,6 +131,13 @@ describe('Layouts page - edit', () => {
 
     await act(async () => {
       fireEvent.click(await screen.findByTitle('Edit'));
+    });
+
+    // When the data is refreshed, return the updated layout.
+	// This happens because handleRefresh asks to reload the data.
+    vi.mocked(fetchLayouts).mockResolvedValueOnce({
+      rows: [updatedLayout],
+      totalCount: 1,
     });
 
     await act(async () => {

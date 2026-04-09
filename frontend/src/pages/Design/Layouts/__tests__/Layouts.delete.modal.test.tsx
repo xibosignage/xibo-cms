@@ -28,8 +28,8 @@ import { useLayoutActions } from '../hooks/useLayoutActions';
 import {
   SINGLE_LAYOUT,
   defaultLayoutActions,
+  mockFetchLayouts,
   mockLayout,
-  mockLayoutData,
   renderLayoutsPage,
 } from './layoutTestUtils';
 
@@ -45,6 +45,7 @@ vi.mock('react-i18next', () => ({
 
 // Services
 vi.mock('@/services/folderApi');
+vi.mock('@/services/layoutsApi');
 vi.mock('@/services/userApi', () => ({
   fetchUserPreference: vi.fn().mockResolvedValue(null),
   saveUserPreference: vi.fn().mockResolvedValue(undefined),
@@ -53,7 +54,6 @@ vi.mock('@/services/userApi', () => ({
 // Hooks
 const confirmDelete = vi.fn();
 vi.mock('../hooks/useLayoutActions', () => ({ useLayoutActions: vi.fn() }));
-vi.mock('../hooks/useLayoutData', () => ({ useLayoutData: vi.fn() }));
 vi.mock('../hooks/useLayoutFilterOptions', () => ({
   useLayoutFilterOptions: vi.fn(() => ({ filterOptions: [], isLoading: false })),
 }));
@@ -96,7 +96,7 @@ describe('Layouts page - delete modal', () => {
     testQueryClient.clear();
     vi.clearAllMocks();
     vi.mocked(useLayoutActions).mockReturnValue(defaultLayoutActions({ confirmDelete }));
-    mockLayoutData(SINGLE_LAYOUT);
+    mockFetchLayouts(SINGLE_LAYOUT);
   });
 
   // -------------------------------------------------------------------------
