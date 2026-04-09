@@ -30,6 +30,6 @@ class AddIndexToCampaignTableMigration extends AbstractMigration
 {
     public function change(): void
     {
-        $this->execute('ALTER TABLE campaign ADD FULLTEXT idx_campaign_search(campaign, type) WITH PARSER ngram');
+        $this->execute('ALTER TABLE campaign ADD FULLTEXT idx_campaign_search(campaign, `type`) WITH PARSER ngram');
     }
 }
