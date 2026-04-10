@@ -24,6 +24,7 @@ import type { RowSelectionState } from '@tanstack/react-table';
 import { Search, Filter, FilterX, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 
 import type { ModalType } from '../Templates/TemplatesConfig';
 
@@ -55,6 +56,9 @@ export default function Campaigns() {
   const { user } = useUserContext();
   const canViewFolders = usePermissions()?.canViewFolders;
   const homeFolderId = user?.homeFolderId ?? 1;
+
+  const location = useLocation();
+  const locationLayoutId = location.state?.layoutId;
 
   const {
     pagination,
@@ -103,6 +107,15 @@ export default function Campaigns() {
     filterInputs: CAMPAIGN_INITIAL_FILTER_STATE,
     folderId: canViewFolders ? homeFolderId : null,
   });
+
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    if (locationLayoutId) {
+      setFilterInputs((prev) => ({ ...prev, layoutId: String(locationLayoutId) }));
+      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    }
+  }, [locationLayoutId, isHydrated, setFilterInputs, setPagination]);
 
   const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});

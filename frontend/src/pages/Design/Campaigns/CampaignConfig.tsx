@@ -42,7 +42,7 @@ export const getCampaignFilterKeys = (t: TFunction): FilterConfigItem<CampaignFi
     shouldTranslateOptions: false,
     showAllOption: false,
     options: [
-      { label: t('Layout'), value: '' },
+      { label: t('All'), value: '' },
       { label: t('Yes'), value: '1' },
       { label: t('No'), value: '0' },
     ],
@@ -63,7 +63,7 @@ export const getCampaignFilterKeys = (t: TFunction): FilterConfigItem<CampaignFi
     shouldTranslateOptions: false,
     showAllOption: false,
     options: [
-      { label: t('Select Type'), value: '' },
+      { label: t('All'), value: '' },
       { label: t('Layout List'), value: 'list' },
       { label: t('Ad Campaign'), value: 'ad' },
     ],
@@ -76,7 +76,7 @@ export const getCampaignFilterKeys = (t: TFunction): FilterConfigItem<CampaignFi
     shouldTranslateOptions: false,
     showAllOption: false,
     options: [
-      { label: t('Select Cycle Base'), value: '' },
+      { label: t('All'), value: '' },
       { label: t('Enabled'), value: '1' },
       { label: t('Disabled'), value: '0' },
     ],

@@ -250,7 +250,9 @@ export function useLayoutActions({
       closeModal();
     } catch (error) {
       console.error(error);
-      notify.error(t('Failed to publish layout'));
+      const apiErr = error as { response?: { data?: { message?: string } } };
+      const message = apiErr.response?.data?.message ?? t('Failed to publish layout');
+      notify.error(message);
     } finally {
       setIsPublishing(false);
     }
@@ -323,9 +325,8 @@ export function useLayoutActions({
     });
   };
 
-  // TODO: Page is not yet available
   const handleJumpToCampaigns = (layoutId: number) => {
-    navigate('/design/campaigns', {
+    navigate('/design/campaign', {
       state: { layoutId },
     });
   };
