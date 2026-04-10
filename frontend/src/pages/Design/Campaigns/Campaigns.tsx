@@ -19,16 +19,14 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { Search, Filter, FilterX, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 
-import type { ModalType } from '../Templates/TemplatesConfig';
-
-import type { CampaignFilterInput } from './CampaignConfig';
+import type { CampaignFilterInput, ModalType } from './CampaignConfig';
 import { CAMPAIGN_INITIAL_FILTER_STATE, getBulkActions, getCampaignColumn } from './CampaignConfig';
 import { CampaignModals } from './components/CampaignModals';
 import { useCampaignActions } from './hooks/useCampaignActions';
@@ -48,7 +46,6 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import { fetchContextButtons } from '@/services/folderApi';
 import type { Campaign } from '@/types/campaign';
-import type { BaseModalType } from '@/types/table';
 
 export default function Campaigns() {
   const { t } = useTranslation();
@@ -122,17 +119,15 @@ export default function Campaigns() {
   const [selectionCache, setSelectionCache] = useState<Record<string, Campaign>>({});
   const [openFilter, setOpenFilter] = useState(false);
 
-  const [canAddToFolder, setCanAddToFolder] = useState(false);
-
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
 
   const [itemsToDelete, setItemsToDelete] = useState<Campaign[]>([]);
+  const [itemsToMove, setItemsToMove] = useState<Campaign[]>([]);
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
   const [selectedCampaignId, setSelectedCampaignId] = useState<number | null>(null);
-  const [itemsToMove, setItemsToMove] = useState<Campaign[]>([]);
 
-  const openModal = (name: BaseModalType) => setActiveModal(name);
+  const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
 
   // Data fetching
@@ -150,10 +145,18 @@ export default function Campaigns() {
     folderId: selectedFolderId,
   });
 
+  const { data: folderPerms } = useQuery({
+    queryKey: ['folderPermissions', selectedFolderId],
+    queryFn: () => fetchContextButtons(selectedFolderId as number),
+    enabled: selectedFolderId !== null,
+    staleTime: 1000 * 60 * 5,
+  });
+
   // Computed values
   const campaignList = queryData?.rows ?? [];
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
+  const canAddToFolder = folderPerms?.create || false;
 
   const folderActions = useFolderActions({
     onSuccess: (targetFolder) => {
@@ -166,32 +169,6 @@ export default function Campaigns() {
       }
     },
   });
-
-  useEffect(() => {
-    if (selectedFolderId === null) {
-      setCanAddToFolder(false);
-      return;
-    }
-
-    let active = true;
-
-    fetchContextButtons(selectedFolderId)
-      .then((perms) => {
-        if (active) {
-          setCanAddToFolder(perms.create || false);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to fetch folder permissions', err);
-        if (active) {
-          setCanAddToFolder(false);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [selectedFolderId]);
 
   const selectedCampaign = campaignList.find((m) => m.campaignId === selectedCampaignId) ?? null;
   const existingNames = campaignList.map((m) => m.campaign);
@@ -299,6 +276,7 @@ export default function Campaigns() {
     onDelete: () => {
       const allItems = getAllSelectedItems();
       setItemsToDelete(allItems);
+      setDeleteError(null);
       openModal('delete');
     },
     onMove: () => {
@@ -386,15 +364,8 @@ export default function Campaigns() {
 
         <FilterInputs
           onChange={(name, value) => {
-            setFilterInputs((prev) => {
-              return {
-                ...prev,
-                [name]: value === undefined || value === '' ? null : value,
-              } as CampaignFilterInput;
-            });
-            setPagination((prev) => {
-              return { ...prev, pageIndex: 0 };
-            });
+            setFilterInputs((prev) => ({ ...prev, [name]: value }));
+            setPagination((prev) => ({ ...prev, pageIndex: 0 }));
           }}
           isOpen={openFilter}
           values={filterInputs}

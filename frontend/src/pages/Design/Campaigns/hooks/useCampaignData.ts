@@ -5,7 +5,7 @@ import type { AxiosError } from 'axios';
 import type { CampaignFilterInput } from '../CampaignConfig';
 
 import { fetchCampaigns } from '@/services/campaignApi';
-import type { FetchCampaignTableRequest } from '@/services/campaignApi';
+import type { FetchCampaignRequest } from '@/services/campaignApi';
 
 export const campaignQueryKeys = {
   all: ['campaign'] as const,
@@ -51,7 +51,7 @@ export const useCampaignData = ({
         ? advancedFilters.tags.map((t) => t.tag).join(',')
         : undefined;
 
-      const request: FetchCampaignTableRequest = {
+      const request: FetchCampaignRequest = {
         start: startOffset,
         length: pagination.pageSize,
         keyword: filter || undefined,

@@ -23,9 +23,25 @@ import http from '@/lib/api';
 import type { Campaign } from '@/types/campaign';
 
 export interface FetchCampaignRequest {
+  start?: number;
+  length?: number;
+
   name?: string;
+  keyword?: string;
+  sortBy?: string;
+  sortDir?: string;
+
   folderId?: number;
   retired?: number;
+
+  tags?: string;
+
+  isLayoutSpecific?: number;
+  hasLayouts?: number;
+  layoutId?: number;
+  type?: string;
+  cyclePlaybackEnabled?: number;
+
   signal?: AbortSignal;
 }
 
@@ -34,7 +50,7 @@ export interface FetchCampaignResponse {
   totalCount: number;
 }
 
-export async function fetchCampaignsList(
+export async function fetchCampaigns(
   options: FetchCampaignRequest = {},
 ): Promise<FetchCampaignResponse> {
   const { signal, ...queryParams } = options;
@@ -48,53 +64,6 @@ export async function fetchCampaignsList(
 
   const totalCountHeader = response.headers['x-total-count'];
   const totalCount = totalCountHeader ? parseInt(totalCountHeader, 10) : rows.length;
-
-  return {
-    rows,
-    totalCount,
-  };
-}
-
-export interface FetchCampaignTableRequest {
-  start: number;
-  length: number;
-
-  keyword?: string;
-  sortBy?: string;
-  sortDir?: string;
-
-  folderId?: number;
-  retired?: number;
-
-  tags?: string;
-
-  isLayoutSpecific?: number;
-  layoutId?: number;
-  type?: string;
-  cyclePlaybackEnabled?: number;
-
-  signal?: AbortSignal;
-}
-
-export interface FetchCampaignTableResponse {
-  rows: Campaign[];
-  totalCount: number;
-}
-
-export async function fetchCampaigns(
-  options: FetchCampaignTableRequest = { start: 0, length: 10 },
-): Promise<FetchCampaignTableResponse> {
-  const { signal, ...queryParams } = options;
-
-  const response = await http.get('/campaign', {
-    params: queryParams,
-    signal,
-  });
-
-  const rows = response.data;
-
-  const totalCountHeader = response.headers['x-total-count'];
-  const totalCount = totalCountHeader ? parseInt(totalCountHeader, 10) : 0;
 
   return {
     rows,

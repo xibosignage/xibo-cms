@@ -25,7 +25,7 @@ import { useTranslation } from 'react-i18next';
 import type { SelectOption } from '@/components/ui/forms/SelectDropdown';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import Modal from '@/components/ui/modals/Modal';
-import { fetchCampaignsList } from '@/services/campaignApi';
+import { fetchCampaigns } from '@/services/campaignApi';
 import type { Campaign } from '@/types/campaign';
 
 interface AssignCampaignModalProps {
@@ -56,7 +56,7 @@ export default function AssignCampaignModal({
     setCampaigns([]);
     setIsFetching(true);
 
-    fetchCampaignsList()
+    fetchCampaigns()
       .then((res) => setCampaigns(res.rows))
       .catch((err) => {
         console.error(err);

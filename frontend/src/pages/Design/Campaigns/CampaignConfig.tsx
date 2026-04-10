@@ -1,3 +1,24 @@
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 import type { ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
 import { Edit, CopyCheck, FolderInput, UserPlus2, CalendarClock, Trash2, Eye } from 'lucide-react';
@@ -7,7 +28,7 @@ import type { FilterConfigItem } from '@/components/ui/FilterInputs';
 import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
 import { TextCell, TagsCell, StatusCell, ActionsCell } from '@/components/ui/table/cells';
 import type { Campaign } from '@/types/campaign';
-import type { ActionItem } from '@/types/table';
+import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 
 export interface CampaignFilterInput {
@@ -82,6 +103,8 @@ export const getCampaignFilterKeys = (t: TFunction): FilterConfigItem<CampaignFi
     ],
   },
 ];
+
+export type ModalType = BaseModalType | null;
 
 interface CampaignActionsProps {
   t: TFunction;
