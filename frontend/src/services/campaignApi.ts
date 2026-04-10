@@ -21,7 +21,6 @@
 
 import http from '@/lib/api';
 import type { Campaign } from '@/types/campaign';
-import type { Tag } from '@/types/tag';
 
 export interface FetchCampaignRequest {
   name?: string;
@@ -106,7 +105,7 @@ export async function fetchCampaigns(
 export interface CreateCampaignPayload {
   name: string;
   folderId?: number | null;
-  tags?: Tag[];
+  tags?: string;
   cyclePlaybackEnabled: boolean;
   playCount?: number;
   listPlayOrder?: 'round' | 'block';
@@ -121,11 +120,8 @@ export async function createCampaign(payload: CreateCampaignPayload) {
     formData.append('folderId', String(payload.folderId));
   }
 
-  // ✅ transform tags here
-  if (payload.tags && payload.tags.length > 0) {
-    const tags = payload.tags.map((t) => (t.value ? `${t.tag}|${t.value}` : t.tag)).join(',');
-
-    formData.append('tags', tags);
+  if (payload.tags) {
+    formData.append('tags', payload.tags);
   }
 
   formData.append('cyclePlaybackEnabled', payload.cyclePlaybackEnabled ? '1' : '0');
@@ -143,6 +139,43 @@ export async function createCampaign(payload: CreateCampaignPayload) {
   });
 
   return response.data;
+}
+
+export interface UpdateCampaignPayload {
+  name: string;
+  folderId?: number | null;
+  tags?: string;
+  cyclePlaybackEnabled: number;
+  playCount?: number;
+  listPlayOrder?: string;
+  ref1?: string;
+  ref2?: string;
+  ref3?: string;
+  ref4?: string;
+  ref5?: string;
+}
+
+export async function updateCampaign(
+  campaignId: number,
+  payload: UpdateCampaignPayload,
+): Promise<Campaign> {
+  const params = new URLSearchParams();
+  params.append('name', payload.name);
+  if (payload.folderId != null) params.append('folderId', String(payload.folderId));
+  if (payload.tags !== undefined) params.append('tags', payload.tags);
+  params.append('cyclePlaybackEnabled', String(payload.cyclePlaybackEnabled));
+  if (payload.playCount !== undefined) params.append('playCount', String(payload.playCount));
+  if (payload.listPlayOrder !== undefined) params.append('listPlayOrder', payload.listPlayOrder);
+  if (payload.ref1 !== undefined) params.append('ref1', payload.ref1);
+  if (payload.ref2 !== undefined) params.append('ref2', payload.ref2);
+  if (payload.ref3 !== undefined) params.append('ref3', payload.ref3);
+  if (payload.ref4 !== undefined) params.append('ref4', payload.ref4);
+  if (payload.ref5 !== undefined) params.append('ref5', payload.ref5);
+
+  const { data } = await http.put(`/campaign/${campaignId}`, params.toString(), {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+  return data;
 }
 
 export interface CopyCampaignPayload {

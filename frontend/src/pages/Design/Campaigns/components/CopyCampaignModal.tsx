@@ -34,7 +34,7 @@ export default function CopyCampaignModal({
 
   useEffect(() => {
     if (campaign && isOpen) {
-      setNewName(incrementName(campaign.campaign)); // reuse your helper
+      setNewName(incrementName(campaign.campaign));
     }
 
     setFormErrors({});

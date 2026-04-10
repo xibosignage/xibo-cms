@@ -31,6 +31,7 @@ export interface FetchLayoutRequest {
   sortDir?: string;
   signal?: AbortSignal;
   folderId?: number;
+  campaignId?: number;
 
   userId?: string;
   ownerUserGroupId?: string;
@@ -207,6 +208,17 @@ export async function checkoutLayout(layoutId: number | string): Promise<Layout>
 export async function discardLayout(layoutId: number | string): Promise<Layout> {
   const { data } = await http.put(`/layout/discard/${layoutId}`);
   return data;
+}
+
+export async function unassignLayoutFromCampaign(
+  campaignId: number,
+  layoutId: number,
+): Promise<void> {
+  const params = new URLSearchParams();
+  params.append('layoutId', String(layoutId));
+  await http.delete(`/campaign/layout/remove/${campaignId}`, {
+    params: { layoutId },
+  });
 }
 
 export async function assignLayoutToCampaign(campaignId: number, layoutId: number): Promise<void> {

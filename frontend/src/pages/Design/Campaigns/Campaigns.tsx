@@ -236,6 +236,11 @@ export default function Campaigns() {
     openModal('delete');
   };
 
+  const openEditModal = (campaign: Campaign) => {
+    setSelectedCampaignId(campaign.campaignId);
+    openModal('edit');
+  };
+
   const openCopyModal = (campaign: Campaign) => {
     setSelectedCampaignId(campaign.campaignId);
     openModal('copy');
@@ -264,6 +269,7 @@ export default function Campaigns() {
   const columns = getCampaignColumn({
     t,
     onDelete: handleDelete,
+    openEditModal,
     openCopyModal,
     openMoveModal,
     openShareModal,

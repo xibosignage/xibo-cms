@@ -83,10 +83,16 @@ export default function AddCampaignModal({
       setFormErrors({});
 
       try {
+        const serializedTags = draft.tags
+          .map((tag) =>
+            tag.value != null && tag.value !== '' ? `${tag.tag}|${tag.value}` : tag.tag,
+          )
+          .join(',');
+
         await createCampaign({
           name: draft.name,
           folderId: draft.folderId,
-          tags: draft.tags,
+          tags: serializedTags || undefined,
           cyclePlaybackEnabled: draft.cyclePlaybackEnabled,
           playCount:
             draft.cyclePlaybackEnabled && draft.playCount !== ''

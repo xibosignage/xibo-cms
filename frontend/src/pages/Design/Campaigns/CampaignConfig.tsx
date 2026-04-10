@@ -86,6 +86,7 @@ export const getCampaignFilterKeys = (t: TFunction): FilterConfigItem<CampaignFi
 interface CampaignActionsProps {
   t: TFunction;
   onDelete?: (id: number) => void;
+  openEditModal?: (campaign: Campaign) => void;
   openShareModal?: (id: number) => void;
   openMoveModal?: (row: Campaign | Campaign[]) => void;
   openCopyModal?: (campaign: Campaign) => void;
@@ -324,6 +325,7 @@ export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campai
 export const getCampaignItemActions = ({
   t,
   onDelete,
+  openEditModal,
   openShareModal,
   openMoveModal,
   openCopyModal,
@@ -332,7 +334,7 @@ export const getCampaignItemActions = ({
     {
       label: t('Edit'),
       icon: Edit,
-      onClick: () => {},
+      onClick: () => openEditModal && openEditModal(campaign),
       isQuickAction: true,
       variant: 'primary' as const,
     },
@@ -350,7 +352,7 @@ export const getCampaignItemActions = ({
     {
       label: t('Edit'),
       icon: Edit,
-      onClick: () => {},
+      onClick: () => openEditModal && openEditModal(campaign),
     },
     {
       label: t('Make a Copy'),

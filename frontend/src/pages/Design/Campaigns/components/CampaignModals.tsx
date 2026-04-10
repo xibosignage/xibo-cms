@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import AddCampaignModal from './AddCampaignModal';
 import CopyCampaignModal from './CopyCampaignModal';
 import DeleteCampaignModal from './DeleteCampaignModal';
+import EditCampaignModal from './EditCampaignModal';
 
 import FolderActionModals from '@/components/ui/FolderActionModals';
 import MoveModal from '@/components/ui/modals/MoveModal';
@@ -47,6 +48,16 @@ export function CampaignModals({
 
   return (
     <>
+      {/* Edit */}
+      {isModalOpen('edit') && (
+        <EditCampaignModal
+          isOpen
+          campaign={selection.selectedCampaign}
+          onClose={actions.closeModal}
+          onSuccess={actions.handleRefresh}
+        />
+      )}
+
       {/* Add */}
       {isModalOpen('add') && (
         <AddCampaignModal
