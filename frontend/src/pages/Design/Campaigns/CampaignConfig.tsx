@@ -53,7 +53,7 @@ export const getCampaignFilterKeys = (t: TFunction): FilterConfigItem<CampaignFi
     name: 'tags',
     type: 'tags',
     placeholder: t('Add tags'),
-    className: '',
+    className: 'md:w-auto md:flex-1 min-w-0',
   },
 
   {

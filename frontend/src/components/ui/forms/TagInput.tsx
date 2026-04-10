@@ -94,7 +94,7 @@ function TagInput({
   };
 
   return (
-    <div className={twMerge('flex flex-col gap-1 relative', className)}>
+    <div className={twMerge('flex flex-col gap-1 relative w-full', className)}>
       <label className="text-sm font-semibold text-gray-500 leading-5">
         {!label ? t('Tags') : label}
       </label>

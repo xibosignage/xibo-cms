@@ -216,8 +216,12 @@ export async function unassignLayoutFromCampaign(
 ): Promise<void> {
   const params = new URLSearchParams();
   params.append('layoutId', String(layoutId));
+
   await http.delete(`/campaign/layout/remove/${campaignId}`, {
-    params: { layoutId },
+    data: params,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
   });
 }
 
