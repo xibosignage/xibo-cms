@@ -65,7 +65,7 @@ export const mockTemplate: Template = {
   autoApplyTransitions: 0,
   code: null,
   isLocked: null,
-  tags: [{ tag: 'template', tagId: 1, value: null }],
+  tags: [{ tag: 'template', tagId: 1, value: '' }],
   owner: 'TestUser',
   ownerId: 1,
   groupsWithPermissions: null,

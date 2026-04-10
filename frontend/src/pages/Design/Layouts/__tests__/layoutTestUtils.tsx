@@ -27,10 +27,10 @@ import { vi } from 'vitest';
 import Layouts from '../Layouts';
 import type { useLayoutActions } from '../hooks/useLayoutActions';
 import { useLayoutData } from '../hooks/useLayoutData';
-import { fetchLayouts, updateLayout } from '@/services/layoutsApi';
-import type { FetchLayoutResponse } from '@/services/layoutsApi';
 
 import { UserProvider } from '@/context/UserContext';
+import { fetchLayouts, updateLayout } from '@/services/layoutsApi';
+import type { FetchLayoutResponse } from '@/services/layoutsApi';
 import { testQueryClient } from '@/setupTests';
 import type { Layout } from '@/types/layout';
 import type { User } from '@/types/user';
@@ -45,12 +45,13 @@ import type { User } from '@/types/user';
 export const mockLayout: Layout = {
   layoutId: 861001,
   campaignId: 10,
+  name: 'My Layout',
   layout: 'My Layout',
   publishedStatusId: 1,
   publishedStatus: 'Published',
   modifiedDt: '2026-03-01 10:00:00',
-  status: 1,
-  retired: 0,
+  status: 'Published',
+  retired: false,
   width: 1920,
   height: 1080,
   orientation: 'landscape',

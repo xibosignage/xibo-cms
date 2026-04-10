@@ -21,9 +21,12 @@ describe('DataTablePagination', () => {
   const mockSetPageIndex = vi.fn();
   const mockSetPageSize = vi.fn();
 
-  // Helper to generate a fake TanStack table object
-  const createMockTable = (pageIndex = 0, pageCount = 5, canPrev = false, canNext = true) =>
-    ({
+  // Helper to generate a fake TanStack table object along with the pagination
+  // state and pageCount that the component now requires as explicit props.
+  const createMockTable = (pageIndex = 0, pageCount = 5, canPrev = false, canNext = true) => {
+    const pagination = { pageIndex, pageSize: 10 };
+
+    const table = {
       getCanPreviousPage: () => canPrev,
       getCanNextPage: () => canNext,
       previousPage: mockPreviousPage,
@@ -31,11 +34,11 @@ describe('DataTablePagination', () => {
       setPageIndex: mockSetPageIndex,
       setPageSize: mockSetPageSize,
       getPageCount: () => pageCount,
-      getState: () => ({
-        pagination: { pageIndex, pageSize: 10 },
-      }),
+      getState: () => ({ pagination }),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    }) as any;
+    } as any;
+    return { table, pagination, pageCount };
+  };
 
   // A helper function to wrap the component in the MemoryRouter
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -48,16 +51,20 @@ describe('DataTablePagination', () => {
   });
 
   it('The Previous button is greyed out on the first page', () => {
-    const table = createMockTable(0, 5, false, true);
-    renderWithRouter(<DataTablePagination table={table} />);
+    const { table, pagination, pageCount } = createMockTable(0, 5, false, true);
+    renderWithRouter(
+      <DataTablePagination table={table} pagination={pagination} pageCount={pageCount} />,
+    );
 
     const prevBtn = screen.getByRole('button', { name: /Previous/i });
     expect(prevBtn).toBeDisabled();
   });
 
   it('The Next button is greyed out on the last page', () => {
-    const table = createMockTable(4, 5, true, false);
-    renderWithRouter(<DataTablePagination table={table} />);
+    const { table, pagination, pageCount } = createMockTable(4, 5, true, false);
+    renderWithRouter(
+      <DataTablePagination table={table} pagination={pagination} pageCount={pageCount} />,
+    );
 
     const nextBtn = screen.getByRole('button', { name: /Next/i });
     expect(nextBtn).toBeDisabled();
@@ -65,8 +72,10 @@ describe('DataTablePagination', () => {
 
   it('Clicking Previous goes to the previous page', async () => {
     const user = userEvent.setup();
-    const table = createMockTable(2, 5, true, true);
-    renderWithRouter(<DataTablePagination table={table} />);
+    const { table, pagination, pageCount } = createMockTable(2, 5, true, true);
+    renderWithRouter(
+      <DataTablePagination table={table} pagination={pagination} pageCount={pageCount} />,
+    );
 
     const prevBtn = screen.getByRole('button', { name: /Previous/i });
     await user.click(prevBtn);
@@ -75,8 +84,10 @@ describe('DataTablePagination', () => {
 
   it('Clicking Next goes to the next page', async () => {
     const user = userEvent.setup();
-    const table = createMockTable(2, 5, true, true);
-    renderWithRouter(<DataTablePagination table={table} />);
+    const { table, pagination, pageCount } = createMockTable(2, 5, true, true);
+    renderWithRouter(
+      <DataTablePagination table={table} pagination={pagination} pageCount={pageCount} />,
+    );
 
     const nextBtn = screen.getByRole('button', { name: /Next/i });
     await user.click(nextBtn);
@@ -85,8 +96,10 @@ describe('DataTablePagination', () => {
 
   it('Clicking a page number goes directly to that page', async () => {
     const user = userEvent.setup();
-    const table = createMockTable(0, 5, false, true);
-    renderWithRouter(<DataTablePagination table={table} />);
+    const { table, pagination, pageCount } = createMockTable(0, 5, false, true);
+    renderWithRouter(
+      <DataTablePagination table={table} pagination={pagination} pageCount={pageCount} />,
+    );
 
     const nav = screen.getByRole('navigation');
     const page3Btn = within(nav).getByRole('button', { name: '3' });
@@ -97,8 +110,10 @@ describe('DataTablePagination', () => {
 
   it('The page size selector shows available options and changes items per page', async () => {
     const user = userEvent.setup();
-    const table = createMockTable(0, 5, false, true);
-    renderWithRouter(<DataTablePagination table={table} />);
+    const { table, pagination, pageCount } = createMockTable(0, 5, false, true);
+    renderWithRouter(
+      <DataTablePagination table={table} pagination={pagination} pageCount={pageCount} />,
+    );
 
     const dropdownTrigger = screen.getByRole('button', { name: /Select page size/i });
     await user.click(dropdownTrigger);
@@ -113,15 +128,19 @@ describe('DataTablePagination', () => {
   });
 
   it('When there are more than 7 pages, dots (...) appear to skip the middle pages', () => {
-    const table = createMockTable(0, 10, false, true);
-    renderWithRouter(<DataTablePagination table={table} />);
+    const { table, pagination, pageCount } = createMockTable(0, 10, false, true);
+    renderWithRouter(
+      <DataTablePagination table={table} pagination={pagination} pageCount={pageCount} />,
+    );
 
     expect(screen.getByText('...')).toBeInTheDocument();
   });
 
   it('When there are 7 or fewer pages, all page numbers are shown', () => {
-    const table = createMockTable(0, 7, false, true);
-    renderWithRouter(<DataTablePagination table={table} />);
+    const { table, pagination, pageCount } = createMockTable(0, 7, false, true);
+    renderWithRouter(
+      <DataTablePagination table={table} pagination={pagination} pageCount={pageCount} />,
+    );
 
     expect(screen.queryByText('...')).not.toBeInTheDocument();
 
@@ -132,8 +151,15 @@ describe('DataTablePagination', () => {
   });
 
   it('All buttons are greyed out while data is loading', () => {
-    const table = createMockTable(2, 5, true, true);
-    renderWithRouter(<DataTablePagination table={table} loading={true} />);
+    const { table, pagination, pageCount } = createMockTable(2, 5, true, true);
+    renderWithRouter(
+      <DataTablePagination
+        table={table}
+        pagination={pagination}
+        pageCount={pageCount}
+        loading={true}
+      />,
+    );
 
     expect(screen.getByRole('button', { name: /Previous/i })).toBeDisabled();
     expect(screen.getByRole('button', { name: /Next/i })).toBeDisabled();
