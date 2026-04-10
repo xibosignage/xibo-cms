@@ -20,12 +20,14 @@
  */
 
 import type { Table, VisibilityState } from '@tanstack/react-table';
-import { ChevronDown, Printer, FileDown, RefreshCw, X, List, LayoutGrid } from 'lucide-react';
+import { ChevronDown, Printer, FileDown, RefreshCw, List, LayoutGrid, Map } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Button from '../Button';
 import Checkbox from '../forms/Checkbox';
+
+import type { ViewMode } from './types';
 
 import { useClickOutside } from '@/hooks/useClickOutside';
 
@@ -35,8 +37,9 @@ interface DataTableOptionsProps<TData> {
   onRefresh?: () => void;
   onCSVExport?: () => void;
   columnVisibility?: VisibilityState;
-  viewMode?: 'table' | 'grid' | null;
-  onViewModeChange?: (mode: 'table' | 'grid') => void;
+  viewMode?: ViewMode | null;
+  onViewModeChange?: (mode: ViewMode) => void;
+  availableViewModes?: ViewMode[];
 }
 
 const getToggleButtonStyle = (active: boolean) => {
@@ -51,6 +54,7 @@ export function DataTableOptions<TData>({
   columnVisibility,
   viewMode = 'table',
   onViewModeChange,
+  availableViewModes,
 }: DataTableOptionsProps<TData>) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
@@ -64,10 +68,11 @@ export function DataTableOptions<TData>({
 
   const isTableMode = viewMode === 'table';
   const isGridMode = viewMode === 'grid';
+  const isMapMode = viewMode === 'map';
 
   return (
     <div className="flex gap-3">
-      {columns.length > 0 && !isGridMode && (
+      {columns.length > 0 && !isGridMode && !isMapMode && (
         <div className="relative" ref={dropdownRef}>
           <Button
             type="button"
@@ -90,46 +95,66 @@ export function DataTableOptions<TData>({
                 <div
                   className="flex items-center justify-center size-6 absolute right-1.25 cursor-pointer"
                   onClick={() => setIsOpen(false)}
-                >
-                  <X className="size-4 text-gray-500" />
-                </div>
+                ></div>
               </div>
 
               <div className="overflow-y-auto space-y-1 px-2">
-                {columns.map((column) => {
-                  let label = column.id;
-                  const header = column.columnDef.header;
-
-                  if (typeof header === 'string') {
-                    label = header;
-                  }
-
-                  const uniqueCheckboxId = `col-toggle-${column.id}`;
-
-                  const isVisible = currentVisibility[column.id] ?? true;
+                {(() => {
+                  const visibleCount = columns.filter(
+                    (col) => currentVisibility[col.id] ?? true,
+                  ).length;
+                  const allChecked = visibleCount === columns.length;
+                  const someChecked = visibleCount > 0 && visibleCount < columns.length;
 
                   return (
-                    <Checkbox
-                      key={column.id}
-                      id={uniqueCheckboxId}
-                      label={label}
-                      checked={isVisible}
-                      className="px-3 py-2.5 gap-4"
-                      classNameLabel="m-0 font-semibold text-gray-800"
-                      onChange={(e) => {
-                        column.toggleVisibility(!!e.target.checked);
-                      }}
-                    />
+                    <>
+                      <Checkbox
+                        id="col-toggle-all"
+                        label={t('All Columns')}
+                        checked={allChecked}
+                        indeterminate={someChecked}
+                        className="px-3 py-2.5 gap-4"
+                        classNameLabel="m-0 font-semibold text-gray-800"
+                        onChange={(e) => {
+                          table.toggleAllColumnsVisible(!!e.target.checked);
+                        }}
+                      />
+                      {columns.map((column) => {
+                        let label = column.id;
+                        const header = column.columnDef.header;
+
+                        if (typeof header === 'string') {
+                          label = header;
+                        }
+
+                        const uniqueCheckboxId = `col-toggle-${column.id}`;
+                        const isVisible = currentVisibility[column.id] ?? true;
+
+                        return (
+                          <Checkbox
+                            key={column.id}
+                            id={uniqueCheckboxId}
+                            label={label}
+                            checked={isVisible}
+                            className="px-3 py-2.5 gap-4"
+                            classNameLabel="m-0 font-semibold text-gray-800"
+                            onChange={(e) => {
+                              column.toggleVisibility(!!e.target.checked);
+                            }}
+                          />
+                        );
+                      })}
+                    </>
                   );
-                })}
+                })()}
               </div>
             </div>
           )}
         </div>
       )}
 
-      {/* Don't Print and CSV on grid mode  */}
-      {!isGridMode && (
+      {/* Don't Print and CSV on grid or map mode  */}
+      {!isGridMode && !isMapMode && (
         <>
           <Button type="button" onClick={onPrint} variant="tertiary" leftIcon={Printer}>
             {t('Print')}
@@ -146,22 +171,36 @@ export function DataTableOptions<TData>({
 
       {onViewModeChange && (
         <div className="flex items-center rounded-lg bg-gray-50">
-          <Button
-            variant="tertiary"
-            onClick={() => onViewModeChange('table')}
-            className={getToggleButtonStyle(isTableMode)}
-            title={t('Table View')}
-          >
-            <List className="size-4" />
-          </Button>
-          <Button
-            variant="tertiary"
-            onClick={() => onViewModeChange('grid')}
-            className={getToggleButtonStyle(!isTableMode)}
-            title={t('Grid View')}
-          >
-            <LayoutGrid className="size-4" />
-          </Button>
+          {(!availableViewModes || availableViewModes.includes('table')) && (
+            <Button
+              variant="tertiary"
+              onClick={() => onViewModeChange('table')}
+              className={getToggleButtonStyle(isTableMode)}
+              title={t('Table View')}
+            >
+              <List className="size-4" />
+            </Button>
+          )}
+          {(!availableViewModes || availableViewModes.includes('grid')) && (
+            <Button
+              variant="tertiary"
+              onClick={() => onViewModeChange('grid')}
+              className={getToggleButtonStyle(isGridMode)}
+              title={t('Grid View')}
+            >
+              <LayoutGrid className="size-4" />
+            </Button>
+          )}
+          {(!availableViewModes || availableViewModes.includes('map')) && (
+            <Button
+              variant="tertiary"
+              onClick={() => onViewModeChange('map')}
+              className={getToggleButtonStyle(isMapMode)}
+              title={t('Map View')}
+            >
+              <Map className="size-4" />
+            </Button>
+          )}
         </div>
       )}
     </div>

@@ -112,7 +112,7 @@ export default function DatePickerInput({
         )}
       </div>
 
-      {helpText && <p className="text-xs text-gray-500">{helpText}</p>}
+      {helpText && <p className="text-xs text-gray-400">{helpText}</p>}
 
       <FloatingPortal>
         {isOpen && (

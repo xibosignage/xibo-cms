@@ -282,11 +282,13 @@ export default function Dataset() {
       setDeleteError(null);
       openModal('delete');
     },
-    onMove: () => {
-      const allItems = getAllSelectedItems();
-      setItemsToMove(allItems);
-      openModal('move');
-    },
+    onMove: canViewFolders
+      ? () => {
+          const allItems = getAllSelectedItems();
+          setItemsToMove(allItems);
+          openModal('move');
+        }
+      : undefined,
     onShare: () => {
       const allItems = getAllSelectedItems();
       const ids = allItems.map((i) => i.dataSetId);

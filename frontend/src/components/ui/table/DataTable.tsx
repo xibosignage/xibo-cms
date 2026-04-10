@@ -42,6 +42,7 @@ import type { DataTableBulkAction } from './DataTableBulkActions';
 import { DataTableBulkActions } from './DataTableBulkActions';
 import { DataTableOptions } from './DataTableOptions';
 import { DataTablePagination } from './DataTablePagination';
+import type { ViewMode } from './types';
 
 import { CheckboxCell } from '@/components/ui/table/cells';
 
@@ -66,8 +67,9 @@ interface DataTableProps<TData, TValue> {
     columnVisibility?: VisibilityState;
   };
   onRefresh?: () => void;
-  viewMode?: 'table' | 'grid' | null;
-  onViewModeChange?: (mode: 'table' | 'grid') => void;
+  viewMode?: ViewMode | null;
+  onViewModeChange?: (mode: ViewMode) => void;
+  availableViewModes?: ViewMode[];
   getRowId?: (originalRow: TData, index: number, parent?: Row<TData>) => string;
   hideToolbar?: boolean;
   columnVisibility?: VisibilityState;
@@ -117,6 +119,7 @@ export function DataTable<TData, TValue>({
   onRefresh,
   viewMode,
   onViewModeChange,
+  availableViewModes,
   getRowId,
   hideToolbar = false,
   columnVisibility,
@@ -260,6 +263,7 @@ export function DataTable<TData, TValue>({
               columnVisibility={columnVisibility}
               viewMode={viewMode}
               onViewModeChange={onViewModeChange}
+              availableViewModes={availableViewModes}
             />
           </div>
         </div>
@@ -418,7 +422,13 @@ export function DataTable<TData, TValue>({
             </tbody>
           </table>
         </div>
-        <DataTablePagination table={table} loading={loading} pageSizeOptions={pageSizeOptions} />
+        <DataTablePagination
+          table={table}
+          pagination={pagination}
+          pageCount={pageCount}
+          loading={loading}
+          pageSizeOptions={pageSizeOptions}
+        />
       </div>
     </div>
   );

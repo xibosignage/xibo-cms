@@ -603,6 +603,7 @@ export default function Media() {
               bulkActions={bulkActions}
               viewMode="table"
               onViewModeChange={setViewMode}
+              availableViewModes={['table', 'grid']}
               getRowId={getRowId}
             />
           ) : (

@@ -62,6 +62,7 @@ export interface LayoutFilterInput {
   retired?: string;
   orientation?: string;
   lastModified?: string;
+  activeDisplayGroupId?: number;
 }
 
 export const LAYOUT_INITIAL_FILTER_STATE: LayoutFilterInput = {
@@ -70,6 +71,7 @@ export const LAYOUT_INITIAL_FILTER_STATE: LayoutFilterInput = {
   retired: '',
   orientation: '',
   lastModified: '',
+  activeDisplayGroupId: undefined,
 };
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<LayoutFilterInput>[] => [
   {
@@ -476,7 +478,7 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
 interface GetBulkActionsProps {
   t: TFunction;
   onDelete: () => void;
-  onMove: () => void;
+  onMove?: () => void;
   onShare: () => void;
 }
 
@@ -487,11 +489,15 @@ export const getBulkActions = ({
   onShare,
 }: GetBulkActionsProps): DataTableBulkAction<Layout>[] => {
   return [
-    {
-      label: t('Move'),
-      icon: FolderInput,
-      onClick: onMove,
-    },
+    ...(onMove
+      ? [
+          {
+            label: t('Move'),
+            icon: FolderInput,
+            onClick: onMove,
+          },
+        ]
+      : []),
     {
       label: t('Share'),
       icon: UserPlus2,

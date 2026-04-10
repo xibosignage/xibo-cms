@@ -279,7 +279,7 @@ export const getPlaylistColumns = (props: PlaylistActionsProps): ColumnDef<Playl
 interface GetBulkActionsProps {
   t: TFunction;
   onDelete: () => void;
-  onMove: () => void;
+  onMove?: () => void;
   onShare: () => void;
 }
 
@@ -290,11 +290,15 @@ export const getBulkActions = ({
   onShare,
 }: GetBulkActionsProps): DataTableBulkAction<Playlist>[] => {
   return [
-    {
-      label: t('Move'),
-      icon: FolderInput,
-      onClick: onMove,
-    },
+    ...(onMove
+      ? [
+          {
+            label: t('Move'),
+            icon: FolderInput,
+            onClick: onMove,
+          },
+        ]
+      : []),
     {
       label: t('Share'),
       icon: UserPlus2,

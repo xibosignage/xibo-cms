@@ -61,7 +61,7 @@ export default function SidebarMenu({
   useEffect(() => {
     // Find the parent menu that contains the active link
     const activeParent = visibleRoutes.find((route) => {
-      route.subLinks?.some((sub) => {
+      return route.subLinks?.some((sub) => {
         // Check if an external URL
         if (sub.externalURL) {
           return (

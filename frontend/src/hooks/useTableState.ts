@@ -23,13 +23,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { PaginationState, SortingState, VisibilityState } from '@tanstack/react-table';
 import { useState, useEffect, useRef } from 'react';
 
+import type { ViewMode } from '@/components/ui/table/types';
 import { fetchUserPreference, saveUserPreference } from '@/services/userApi';
 
 export interface TablePreferences<TFilters> {
   pagination: PaginationState;
   sorting: SortingState;
   columnVisibility: VisibilityState;
-  viewMode: 'table' | 'grid';
+  viewMode: ViewMode;
   globalFilter: string;
   filterInputs: TFilters;
   folderId?: number | null;
@@ -47,7 +48,7 @@ export function useTableState<TFilters>(
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
     defaultState.columnVisibility,
   );
-  const [viewMode, setViewMode] = useState<'table' | 'grid'>(defaultState.viewMode);
+  const [viewMode, setViewMode] = useState<ViewMode>(defaultState.viewMode);
 
   const [globalFilter, setGlobalFilter] = useState<string>(defaultState.globalFilter);
 

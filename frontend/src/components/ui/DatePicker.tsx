@@ -77,9 +77,25 @@ export default function DatePicker({
     to: value?.to,
   });
 
-  const [hour, setHour] = useState('12');
-  const [minute, setMinute] = useState('00');
-  const [period, setPeriod] = useState<'AM' | 'PM'>('PM');
+  const [hour, setHour] = useState(() => {
+    if (!value?.date) {
+      return '12';
+    }
+    const h = value.date.getHours() % 12 || 12;
+    return String(h).padStart(2, '0');
+  });
+  const [minute, setMinute] = useState(() => {
+    if (!value?.date) {
+      return '00';
+    }
+    return String(value.date.getMinutes()).padStart(2, '0');
+  });
+  const [period, setPeriod] = useState<'AM' | 'PM'>(() => {
+    if (!value?.date) {
+      return 'PM';
+    }
+    return value.date.getHours() >= 12 ? 'PM' : 'AM';
+  });
 
   const timeClass =
     'h-[32px] font-semibold w-[70px] rounded-lg border border-gray-200 px-3 text-xs bg-white';

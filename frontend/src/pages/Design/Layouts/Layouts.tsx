@@ -22,8 +22,9 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { Filter, FilterX, Plus, Search } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 
 import type { LayoutFilterInput } from './LayoutConfig';
 import { getBulkActions, getLayoutColumns, LAYOUT_INITIAL_FILTER_STATE } from './LayoutConfig';
@@ -94,6 +95,18 @@ export default function Layouts() {
     filterInputs: LAYOUT_INITIAL_FILTER_STATE,
     folderId: canViewFolders ? homeFolderId : null,
   });
+
+  const location = useLocation();
+  const activeDisplayGroupId = location.state?.activeDisplayGroupId as number | undefined;
+
+  useEffect(() => {
+    if (!isHydrated || !activeDisplayGroupId) {
+      return;
+    }
+
+    setFilterInputs((prev) => ({ ...prev, activeDisplayGroupId }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }, [activeDisplayGroupId, isHydrated, setFilterInputs, setPagination]);
 
   const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -339,11 +352,13 @@ export default function Layouts() {
       setDeleteError(null);
       openModal('delete');
     },
-    onMove: () => {
-      const allItems = getAllSelectedItems();
-      setItemsToMove(allItems);
-      openModal('move');
-    },
+    onMove: canViewFolders
+      ? () => {
+          const allItems = getAllSelectedItems();
+          setItemsToMove(allItems);
+          openModal('move');
+        }
+      : undefined,
     onShare: () => {
       const allItems = getAllSelectedItems();
       const ids = allItems.map((i) => i.layoutId);

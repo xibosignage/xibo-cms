@@ -27,6 +27,7 @@ export interface FetchLayoutRequest {
   start: number;
   length: number;
   keyword?: string;
+  retired?: number | string;
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;
@@ -35,6 +36,7 @@ export interface FetchLayoutRequest {
   userId?: string;
   ownerUserGroupId?: string;
   lastModified?: string;
+  activeDisplayGroupId?: number;
 }
 
 export interface FetchLayoutResponse {

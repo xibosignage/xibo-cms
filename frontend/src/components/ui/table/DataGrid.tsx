@@ -34,6 +34,7 @@ import { useTranslation } from 'react-i18next';
 import { DataTableBulkActions, type DataTableBulkAction } from './DataTableBulkActions';
 import { DataTableOptions } from './DataTableOptions';
 import { DataTablePagination } from './DataTablePagination';
+import type { ViewMode } from './types';
 
 interface DataGridProps<TData> {
   data: TData[];
@@ -45,7 +46,7 @@ interface DataGridProps<TData> {
   loading?: boolean;
   onRefresh?: () => void;
   viewMode: 'grid';
-  onViewModeChange: (mode: 'table' | 'grid') => void;
+  onViewModeChange: (mode: ViewMode) => void;
   renderCard: (
     item: TData,
     isSelected: boolean,
@@ -122,6 +123,7 @@ export function DataGrid<TData>({
             onRefresh={onRefresh}
             viewMode={viewMode}
             onViewModeChange={onViewModeChange}
+            availableViewModes={['table', 'grid']}
           />
         </div>
       </div>
@@ -161,7 +163,12 @@ export function DataGrid<TData>({
         )}
       </div>
 
-      <DataTablePagination table={table} loading={loading} />
+      <DataTablePagination
+        table={table}
+        pagination={pagination}
+        pageCount={pageCount}
+        loading={loading}
+      />
     </div>
   );
 }

@@ -367,7 +367,7 @@ export default function AddAndEditPlaylistModal({
             onSelect={(value) => {
               setDraft((prev) => ({ ...prev, enableStat: value }));
             }}
-            helper={t(
+            helpText={t(
               `Enable the collection of Proof of Play statistics for this Playlist Item. Ensure that 'Enable Stats Collection' is set to 'On' in the Display Settings.`,
             )}
           />
