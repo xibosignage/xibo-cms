@@ -269,6 +269,10 @@
                         <p>{{ settingsDesc1 }}<strong>{{ settingsDesc2 }}</strong>{{ settingsDesc3 }}</p>
                     </div>
 
+                    {% set title = "Disable managing on/off timers"|trans %}
+                    {% set helpText = "When disabled on/off timers can be controlled on the screen and will not be modified by the CMS"|trans %}
+                    {{ forms.checkbox("disableTimerManagement", title, displayProfile.getSetting("disableTimerManagement"), helpText) }}
+
                     {# Days translations #}
                     {% set monday %}{% trans "Monday" %}{% endset %}
                     {% set tuesday %}{% trans "Tuesday" %}{% endset %}

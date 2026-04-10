@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -343,6 +343,7 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'mediaInventoryTimer', 'default' => 0],
                 ['name' => 'screenShotRequestInterval', 'default' => 0, 'type' => 'int'],
                 ['name' => 'screenShotSize', 'default' => 1],
+                ['name' => 'disableTimerManagement', 'default' => 0, 'type' => 'checkbox'],
                 ['name' => 'timers', 'default' => '{}'],
                 ['name' => 'pictureOptions', 'default' => '{}'],
                 ['name' => 'lockOptions', 'default' => '{}'],
@@ -381,6 +382,7 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'mediaInventoryTimer', 'default' => 0],
                 ['name' => 'screenShotRequestInterval', 'default' => 0, 'type' => 'int'],
                 ['name' => 'screenShotSize', 'default' => 1],
+                ['name' => 'disableTimerManagement', 'default' => 0, 'type' => 'checkbox'],
                 ['name' => 'timers', 'default' => '{}'],
                 ['name' => 'pictureOptions', 'default' => '{}'],
                 ['name' => 'lockOptions', 'default' => '{}'],
