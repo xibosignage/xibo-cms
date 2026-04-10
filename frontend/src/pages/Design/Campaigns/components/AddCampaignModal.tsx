@@ -21,10 +21,14 @@ type CampaignDraft = {
   name: string;
   folderId: number | null;
   tags: Tag[];
-  type: 'list' | 'campaign';
+  type: 'list' | 'ad';
+  // list campaign fields
   cyclePlaybackEnabled: boolean;
   playCount: number | '';
   listPlayOrder: 'round' | 'block';
+  // ad campaign fields
+  targetType: 'plays' | 'budget' | 'impressions';
+  target: number | '';
 };
 
 type CampaignFormErrors = Partial<Record<keyof CampaignDraft, string>>;
@@ -33,10 +37,12 @@ const DEFAULT_DRAFT: CampaignDraft = {
   name: '',
   folderId: null,
   tags: [],
-  type: 'list',
+  type: 'list' as const,
   cyclePlaybackEnabled: false,
   playCount: '',
   listPlayOrder: 'round',
+  targetType: 'plays' as const,
+  target: '',
 };
 
 export default function AddCampaignModal({
@@ -60,13 +66,14 @@ export default function AddCampaignModal({
   }, [isOpen]);
 
   const handleSave = () => {
+    setFormErrors({});
+    setApiError(undefined);
+
     startTransition(async () => {
       const schema = getCampaignSchema(t);
       const result = schema.safeParse(draft);
 
       if (!result.success) {
-        setApiError(undefined);
-
         const fieldErrors = result.error.flatten().fieldErrors;
         const mappedErrors: CampaignFormErrors = {};
 
@@ -80,8 +87,6 @@ export default function AddCampaignModal({
         return;
       }
 
-      setFormErrors({});
-
       try {
         const serializedTags = draft.tags
           .map((tag) =>
@@ -91,14 +96,23 @@ export default function AddCampaignModal({
 
         await createCampaign({
           name: draft.name,
+          type: draft.type,
           folderId: draft.folderId,
           tags: serializedTags || undefined,
-          cyclePlaybackEnabled: draft.cyclePlaybackEnabled,
-          playCount:
-            draft.cyclePlaybackEnabled && draft.playCount !== ''
-              ? Number(draft.playCount)
-              : undefined,
-          listPlayOrder: !draft.cyclePlaybackEnabled ? draft.listPlayOrder : undefined,
+          ...(draft.type === 'ad'
+            ? {
+                cyclePlaybackEnabled: false,
+                targetType: draft.targetType,
+                target: draft.target !== '' ? Number(draft.target) : undefined,
+              }
+            : {
+                cyclePlaybackEnabled: draft.cyclePlaybackEnabled,
+                playCount:
+                  draft.cyclePlaybackEnabled && draft.playCount !== ''
+                    ? Number(draft.playCount)
+                    : undefined,
+                listPlayOrder: !draft.cyclePlaybackEnabled ? draft.listPlayOrder : undefined,
+              }),
         });
 
         onSuccess();
@@ -163,12 +177,12 @@ export default function AddCampaignModal({
             value={draft.type}
             options={[
               { label: 'Layout list', value: 'list' },
-              { label: 'Ad Campaign', value: 'campaign' },
+              { label: 'Ad Campaign', value: 'ad' },
             ]}
             onSelect={(val) =>
               setDraft((prev) => ({
                 ...prev,
-                type: val as 'list' | 'campaign',
+                type: val as 'list' | 'ad',
               }))
             }
           />
@@ -189,54 +203,94 @@ export default function AddCampaignModal({
             onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
           />
 
-          {/* Cycle Playback */}
-          <Checkbox
-            id="cyclePlayback"
-            title={t('Enable cycle based playback')}
-            className="items-center px-3 py-2.5"
-            label={t(
-              `When cycle based playback is enabled only 1 Layout from this Campaign will be played each time it is in a Schedule loop. The same Layout will be shown until the 'Play count' is achieved.`,
-            )}
-            checked={draft.cyclePlaybackEnabled}
-            onChange={() =>
-              setDraft((prev) => ({
-                ...prev,
-                cyclePlaybackEnabled: !prev.cyclePlaybackEnabled,
-              }))
-            }
-          />
+          {draft.type === 'ad' ? (
+            <>
+              {/* Target Type */}
+              <SelectDropdown
+                label={t('Target Type')}
+                value={draft.targetType}
+                helper={t('How would you like to set the target for this campaign?')}
+                options={[
+                  { label: t('Plays'), value: 'plays' },
+                  { label: t('Budget'), value: 'budget' },
+                  { label: t('Impressions'), value: 'impressions' },
+                ]}
+                onSelect={(val) =>
+                  setDraft((prev) => ({
+                    ...prev,
+                    targetType: val as 'plays' | 'budget' | 'impressions',
+                  }))
+                }
+              />
 
-          {/* Conditional Fields */}
-          {draft.cyclePlaybackEnabled ? (
-            <TextInput
-              name="playCount"
-              label={t('Play count')}
-              type="number"
-              value={draft.playCount === '' ? '' : String(draft.playCount)}
-              onChange={(val) =>
-                setDraft((prev) => ({
-                  ...prev,
-                  playCount: val === '' ? '' : Number(val),
-                }))
-              }
-              error={formErrors.playCount}
-            />
+              {/* Target */}
+              <TextInput
+                name="target"
+                label={t('Target')}
+                type="number"
+                helpText={t('What is the target number for this Campaign over its entire playtime')}
+                value={draft.target === '' ? '' : String(draft.target)}
+                onChange={(val) =>
+                  setDraft((prev) => ({
+                    ...prev,
+                    target: val === '' ? '' : Number(val),
+                  }))
+                }
+                error={formErrors.target}
+              />
+            </>
           ) : (
-            <SelectDropdown
-              label={t('List play order')}
-              value={draft.listPlayOrder}
-              options={[
-                { label: 'Round-robin', value: 'round' },
-                { label: 'Block', value: 'block' },
-              ]}
-              onSelect={(val) =>
-                setDraft((prev) => ({
-                  ...prev,
-                  listPlayOrder: val as 'round' | 'block',
-                }))
-              }
-              error={formErrors.listPlayOrder}
-            />
+            <>
+              {/* Cycle Playback */}
+              <Checkbox
+                id="cyclePlayback"
+                title={t('Enable cycle based playback')}
+                className="items-center px-3 py-2.5"
+                label={t(
+                  `When cycle based playback is enabled only 1 Layout from this Campaign will be played each time it is in a Schedule loop. The same Layout will be shown until the 'Play count' is achieved.`,
+                )}
+                checked={draft.cyclePlaybackEnabled}
+                onChange={() =>
+                  setDraft((prev) => ({
+                    ...prev,
+                    cyclePlaybackEnabled: !prev.cyclePlaybackEnabled,
+                  }))
+                }
+              />
+
+              {/* Conditional Fields */}
+              {draft.cyclePlaybackEnabled ? (
+                <TextInput
+                  name="playCount"
+                  label={t('Play count')}
+                  type="number"
+                  value={draft.playCount === '' ? '' : String(draft.playCount)}
+                  onChange={(val) =>
+                    setDraft((prev) => ({
+                      ...prev,
+                      playCount: val === '' ? '' : Number(val),
+                    }))
+                  }
+                  error={formErrors.playCount}
+                />
+              ) : (
+                <SelectDropdown
+                  label={t('List play order')}
+                  value={draft.listPlayOrder}
+                  options={[
+                    { label: 'Round-robin', value: 'round' },
+                    { label: 'Block', value: 'block' },
+                  ]}
+                  onSelect={(val) =>
+                    setDraft((prev) => ({
+                      ...prev,
+                      listPlayOrder: val as 'round' | 'block',
+                    }))
+                  }
+                  error={formErrors.listPlayOrder}
+                />
+              )}
+            </>
           )}
         </div>
       </div>

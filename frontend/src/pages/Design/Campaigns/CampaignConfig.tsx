@@ -115,7 +115,10 @@ export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campai
       header: t('Type'),
       size: 120,
       enableSorting: true,
-      cell: (info) => <TextCell className="capitalize">{info.getValue<string>()}</TextCell>,
+      cell: (info) => {
+        const value = info.getValue<string>();
+        return <TextCell>{value === 'ad' ? t('Ad Campaign') : t('Layout List')}</TextCell>;
+      },
     },
 
     {
@@ -331,13 +334,17 @@ export const getCampaignItemActions = ({
   openCopyModal,
 }: CampaignActionsProps): ((campaign: Campaign) => ActionItem[]) => {
   return (campaign: Campaign) => [
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => openEditModal && openEditModal(campaign),
-      isQuickAction: true,
-      variant: 'primary' as const,
-    },
+    ...(campaign.type !== 'ad'
+      ? [
+          {
+            label: t('Edit'),
+            icon: Edit,
+            onClick: () => openEditModal && openEditModal(campaign),
+            isQuickAction: true,
+            variant: 'primary' as const,
+          },
+        ]
+      : []),
     {
       label: t('Schedule'),
       icon: CalendarClock,
@@ -349,11 +356,15 @@ export const getCampaignItemActions = ({
       onClick: () => {},
     },
     { isSeparator: true },
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => openEditModal && openEditModal(campaign),
-    },
+    ...(campaign.type !== 'ad'
+      ? [
+          {
+            label: t('Edit'),
+            icon: Edit,
+            onClick: () => openEditModal && openEditModal(campaign),
+          },
+        ]
+      : []),
     {
       label: t('Make a Copy'),
       icon: CopyCheck,

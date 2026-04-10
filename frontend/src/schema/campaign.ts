@@ -20,16 +20,34 @@ export const getCampaignSchema = (t: TFunction) =>
         )
         .optional(),
 
-      type: z.enum(['list', 'campaign']),
+      type: z.enum(['list', 'ad']),
 
       cyclePlaybackEnabled: z.boolean(),
 
       playCount: z.union([z.number(), z.literal('')]).optional(),
 
       listPlayOrder: z.enum(['round', 'block']).optional(),
+
+      targetType: z.enum(['plays', 'budget', 'impressions']).optional(),
+
+      target: z.union([z.number(), z.literal('')]).optional(),
     })
     .superRefine((data, ctx) => {
-      if (data.cyclePlaybackEnabled) {
+      if (data.type === 'ad') {
+        if (data.target === '' || data.target == null) {
+          ctx.addIssue({
+            path: ['target'],
+            code: z.ZodIssueCode.custom,
+            message: t('Target is required for Ad Campaigns'),
+          });
+        } else if (Number(data.target) <= 0) {
+          ctx.addIssue({
+            path: ['target'],
+            code: z.ZodIssueCode.custom,
+            message: t('Target must be greater than 0'),
+          });
+        }
+      } else if (data.cyclePlaybackEnabled) {
         if (!data.playCount || data.playCount === null) {
           ctx.addIssue({
             path: ['playCount'],

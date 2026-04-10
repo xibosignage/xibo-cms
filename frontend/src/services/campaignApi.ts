@@ -104,17 +104,24 @@ export async function fetchCampaigns(
 
 export interface CreateCampaignPayload {
   name: string;
+  type?: string;
   folderId?: number | null;
   tags?: string;
   cyclePlaybackEnabled: boolean;
   playCount?: number;
   listPlayOrder?: 'round' | 'block';
+  targetType?: string;
+  target?: number;
 }
 
 export async function createCampaign(payload: CreateCampaignPayload) {
   const formData = new URLSearchParams();
 
   formData.append('name', payload.name);
+
+  if (payload.type) {
+    formData.append('type', payload.type);
+  }
 
   if (payload.folderId) {
     formData.append('folderId', String(payload.folderId));
@@ -126,7 +133,14 @@ export async function createCampaign(payload: CreateCampaignPayload) {
 
   formData.append('cyclePlaybackEnabled', payload.cyclePlaybackEnabled ? '1' : '0');
 
-  if (payload.cyclePlaybackEnabled) {
+  if (payload.type === 'ad') {
+    if (payload.targetType) {
+      formData.append('targetType', payload.targetType);
+    }
+    if (payload.target != null) {
+      formData.append('target', String(payload.target));
+    }
+  } else if (payload.cyclePlaybackEnabled) {
     formData.append('playCount', String(payload.playCount ?? 1));
   } else if (payload.listPlayOrder) {
     formData.append('listPlayOrder', payload.listPlayOrder);
