@@ -23,16 +23,18 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-import { renderWithClient, mockResolutions } from './Setup';
 import Resolution from '../Resolutions';
+
+import { renderWithClient, mockResolutions } from './Setup';
+
 import { fetchResolution } from '@/services/resolutionApi';
 
 describe('Resolutions Page - Render, Search, and Pagination', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (fetchResolution as ReturnType<typeof vi.fn>).mockResolvedValue({
+    vi.mocked(fetchResolution).mockResolvedValue({
       rows: mockResolutions,
-      totalCount: 20, 
+      totalCount: 20,
     });
   });
 
@@ -58,7 +60,7 @@ describe('Resolutions Page - Render, Search, and Pagination', () => {
     // Wait for debounce and refetch
     await waitFor(() => {
       expect(fetchResolution).toHaveBeenCalledWith(
-        expect.objectContaining({ keyword: '4K', start: 0 })
+        expect.objectContaining({ keyword: '4K', start: 0 }),
       );
     });
   });
@@ -74,9 +76,7 @@ describe('Resolutions Page - Render, Search, and Pagination', () => {
     await user.click(nextButton);
 
     await waitFor(() => {
-      expect(fetchResolution).toHaveBeenCalledWith(
-        expect.objectContaining({ start: 10 })
-      );
+      expect(fetchResolution).toHaveBeenCalledWith(expect.objectContaining({ start: 10 }));
     });
   });
 });

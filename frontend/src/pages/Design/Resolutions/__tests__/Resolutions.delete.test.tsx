@@ -23,14 +23,16 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-import { renderWithClient, mockResolutions } from './Setup';
 import Resolution from '../Resolutions';
+
+import { renderWithClient, mockResolutions } from './Setup';
+
 import { fetchResolution, deleteResolution } from '@/services/resolutionApi';
 
 describe('Resolutions Page - Delete and Error Handling', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (fetchResolution as ReturnType<typeof vi.fn>).mockResolvedValue({
+    vi.mocked(fetchResolution).mockResolvedValue({
       rows: mockResolutions,
       totalCount: 2,
     });
@@ -38,7 +40,7 @@ describe('Resolutions Page - Delete and Error Handling', () => {
 
   it('successfully deletes a resolution and closes the modal', async () => {
     const user = userEvent.setup();
-    (deleteResolution as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    vi.mocked(deleteResolution).mockResolvedValue(undefined);
 
     renderWithClient(<Resolution />);
     await waitFor(() => expect(screen.getByText('1080p')).toBeInTheDocument());
@@ -49,7 +51,7 @@ describe('Resolutions Page - Delete and Error Handling', () => {
 
     // Verify modal is open and asks for confirmation
     expect(screen.getByText('Delete Resolution?')).toBeInTheDocument();
-    
+
     // Confirm delete
     await user.click(screen.getByRole('button', { name: 'Yes, Delete' }));
 
@@ -62,13 +64,13 @@ describe('Resolutions Page - Delete and Error Handling', () => {
 
   it('keeps the modal open and shows the API error message if deletion fails', async () => {
     const user = userEvent.setup();
-    
+
     // Mock a rejected promise with an Axios-like error structure
     const mockAxiosError = {
       isAxiosError: true,
-      response: { data: { message: 'Cannot delete resolution. It is currently in use.' } }
+      response: { data: { message: 'Cannot delete resolution. It is currently in use.' } },
     };
-    (deleteResolution as ReturnType<typeof vi.fn>).mockRejectedValue(mockAxiosError);
+    vi.mocked(deleteResolution).mockRejectedValue(mockAxiosError);
 
     renderWithClient(<Resolution />);
     await waitFor(() => expect(screen.getByText('1080p')).toBeInTheDocument());
@@ -76,19 +78,21 @@ describe('Resolutions Page - Delete and Error Handling', () => {
     // Click delete on the first row
     const deleteButtons = screen.getAllByRole('button', { name: 'Delete' });
     await user.click(deleteButtons[0]!);
-    
+
     // Confirm delete
     await user.click(screen.getByRole('button', { name: 'Yes, Delete' }));
 
     await waitFor(() => {
       // The API was called
       expect(deleteResolution).toHaveBeenCalledWith(1);
-      
+
       // CRITICAL: The modal should still be open
       expect(screen.getByText('Delete Resolution?')).toBeInTheDocument();
-      
+
       // CRITICAL: The API error message should be displayed inside the modal
-      expect(screen.getByText('Cannot delete resolution. It is currently in use.')).toBeInTheDocument();
+      expect(
+        screen.getByText('Cannot delete resolution. It is currently in use.'),
+      ).toBeInTheDocument();
     });
   });
 });
