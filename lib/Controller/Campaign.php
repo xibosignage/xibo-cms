@@ -254,6 +254,13 @@ class Campaign extends Base
     #[OA\Response(
         response: 200,
         description: 'successful operation',
+        headers: [
+            new OA\Header(
+            header: 'X-Total-Count',
+            description: 'The total number of records',
+            schema: new OA\Schema(type: 'integer')
+            )
+        ],
         content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Campaign'))
     )]
     /**
@@ -290,9 +297,18 @@ class Campaign extends Base
             $this->decorateCampaignProperties($campaign, $embed);
         }
 
-        // TODO: Convert this to JSON response object
+        $recordsTotal = $this->campaignFactory->countLast();
+
+        if ($this->isApi($request) || $this->isJson($request)) {
+            return $response
+                ->withStatus(200)
+                ->withHeader('X-Total-Count', $recordsTotal)
+                ->withJson($campaigns);
+        }
+
+        // TODO: Remove this once the schedule page is complete
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->campaignFactory->countLast();
+        $this->getState()->recordsTotal = $recordsTotal;
         $this->getState()->setData($campaigns);
 
         return $this->render($request, $response);
