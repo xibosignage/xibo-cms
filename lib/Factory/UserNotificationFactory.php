@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -39,7 +39,7 @@ class UserNotificationFactory extends BaseFactory
      * @param User $user
      * @param UserFactory $userFactory
      */
-    public function __construct($user, $userFactory)
+    public function __construct(User $user, $userFactory)
     {
         $this->setAclDependencies($user, $userFactory);
     }
@@ -47,7 +47,7 @@ class UserNotificationFactory extends BaseFactory
     /**
      * @return UserNotification
      */
-    public function createEmpty()
+    public function createEmpty(): UserNotification
     {
         return new UserNotification($this->getStore(), $this->getLog(), $this->getDispatcher());
     }
@@ -55,10 +55,10 @@ class UserNotificationFactory extends BaseFactory
     /**
      * Create User Notification
      * @param $subject
-     * @param $body
+     * @param string $body
      * @return UserNotification
      */
-    public function create($subject, $body = '')
+    public function create($subject, string $body = ''): UserNotification
     {
         $notification = $this->createEmpty();
         $notification->subject = $subject;
@@ -75,12 +75,16 @@ class UserNotificationFactory extends BaseFactory
      * @return UserNotification
      * @throws AccessDeniedException
      */
-    public function getByNotificationId($notificationId)
+    public function getByNotificationId(int $notificationId): UserNotification
     {
-        $notifications = $this->query(null, ['userId' => $this->getUser()->userId, 'notificationId' => $notificationId]);
+        $notifications = $this->query(null, [
+            'userId' => $this->getUser()->userId,
+            'notificationId' => $notificationId,
+        ]);
 
-        if (count($notifications) <= 0)
+        if (count($notifications) <= 0) {
             throw new AccessDeniedException();
+        }
 
         return $notifications[0];
     }
@@ -90,7 +94,7 @@ class UserNotificationFactory extends BaseFactory
      * @param int $length
      * @return UserNotification[]
      */
-    public function getMine($length = 5)
+    public function getMine(int $length = 5): array
     {
         return $this->query(null, ['userId' => $this->getUser()->userId, 'start' => 0, 'length' => $length]);
     }
@@ -99,7 +103,7 @@ class UserNotificationFactory extends BaseFactory
      * Get email notification queue
      * @return UserNotification[]
      */
-    public function getEmailQueue()
+    public function getEmailQueue(): array
     {
         return $this->query(null, ['isEmailed' => 0, 'checkRetired' => 1]);
     }
@@ -108,7 +112,7 @@ class UserNotificationFactory extends BaseFactory
      * Count My Unread
      * @return int
      */
-    public function countMyUnread()
+    public function countMyUnread(): int
     {
         return $this->getStore()->select('
             SELECT COUNT(*) AS Cnt
@@ -119,16 +123,17 @@ class UserNotificationFactory extends BaseFactory
               AND `lknotificationuser`.`read` = 0
               AND `notification`.releaseDt < :now
           ', [
-            'now' => Carbon::now()->format('U'), 'userId' => $this->getUser()->userId
+            'now' => Carbon::now()->format('U'),
+            'userId' => $this->getUser()->userId,
         ])[0]['Cnt'];
     }
 
     /**
-     * @param array[Optional] $sortOrder
-     * @param array[Optional] $filterBy
-     * @return array[UserNotification]
+     * @param array|null $sortOrder
+     * @param array $filterBy
+     * @return UserNotification[]
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query(?array $sortOrder = null, array $filterBy = []): array
     {
         $entries = [];
         $parsedBody = $this->getSanitizer($filterBy);
@@ -157,22 +162,22 @@ class UserNotificationFactory extends BaseFactory
              `user`.retired
         ';
 
-        $body = ' FROM `lknotificationuser`
-                    INNER JOIN `notification`
+        $body = ' FROM `notification`
+                LEFT OUTER JOIN `lknotificationuser`
                     ON `notification`.notificationId = `lknotificationuser`.notificationId
-                    LEFT OUTER JOIN `user`
+                LEFT OUTER JOIN `user`
                     ON `user`.userId = `lknotificationuser`.userId
          ';
 
         $body .= ' WHERE `notification`.releaseDt < :now ';
 
         if ($parsedBody->getInt('notificationId') !== null) {
-            $body .= ' AND `lknotificationuser`.notificationId = :notificationId ';
+            $body .= ' AND `notification`.notificationId = :notificationId ';
             $params['notificationId'] = $parsedBody->getInt('notificationId');
         }
 
         if ($parsedBody->getInt('userId') !== null) {
-            $body .= ' AND `lknotificationuser`.userId = :userId ';
+            $body .= ' AND (`lknotificationuser`.userId = :userId OR `notification`.userId = :userId) ';
             $params['userId'] = $parsedBody->getInt('userId');
         }
 
