@@ -206,7 +206,7 @@ class Campaign extends Base
     )]
     #[OA\Parameter(
         name: 'keyword',
-        description: 'Filter by campaign name, ID, or type',
+        description: 'Filter by campaign name or ID',
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'string')

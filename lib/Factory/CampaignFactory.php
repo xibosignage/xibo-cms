@@ -122,7 +122,7 @@ class CampaignFactory extends BaseFactory
         $this->getLog()->debug(sprintf('CampaignFactory getById(%d)', $campaignId));
 
         $campaigns = $this->query(null, [
-            'disableUserCheck' => $disableUserCheck,
+            'disableUserCheck' => $disableUserCheck ? 1 : 0,
             'campaignId' => $campaignId,
             'isLayoutSpecific' => -1,
             'excludeTemplates' => -1
@@ -423,7 +423,7 @@ class CampaignFactory extends BaseFactory
             $body .= $this->buildSearchQuery(
                 $sanitizedFilter->getString('keyword'),
                 $params,
-                ['campaign.campaign', 'campaign.type'],
+                ['campaign.campaign'],
                 ['campaign.campaignId']
             );
         }

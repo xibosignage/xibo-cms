@@ -113,7 +113,7 @@ class DataSetFactory extends BaseFactory
     public function getById(int $dataSetId, bool $disableUserCheck = true): DataSet
     {
         $dataSets = $this->query(null, [
-            'disableUserCheck' => $disableUserCheck,
+            'disableUserCheck' => $disableUserCheck ? 1 : 0,
             'dataSetId' => $dataSetId
         ]);
 
