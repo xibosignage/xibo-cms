@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -42,6 +42,7 @@ use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\XMR\ChangeLayoutAction;
+use Xibo\XMR\ClearStatsAndLogsAction;
 use Xibo\XMR\CollectNowAction;
 use Xibo\XMR\CommandAction;
 use Xibo\XMR\OverlayLayoutAction;
@@ -2084,7 +2085,7 @@ class DisplayGroup extends Base
             throw new AccessDeniedException();
         }
 
-        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($id), new CollectNowAction());
+        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($id), new ClearStatsAndLogsAction());
 
         // Return
         $this->getState()->hydrate([
