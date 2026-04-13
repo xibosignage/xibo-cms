@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -244,7 +244,10 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             display.Display as display, 
             layout.Layout as layout, 
             campaign.campaign as parentCampaign, 
-            media.Name AS media ';
+            CASE WHEN `stat`.`type` = \'media\' THEN `media`.`Name`
+             WHEN `stat`.`type` = \'widget\' THEN IFNULL(`widgethistory`.name,`widget`.`type`)
+             ELSE NULL
+            END AS media ';
 
         if ($embedDisplayTags) {
             $select .= ', 
@@ -302,7 +305,12 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             ON media.mediaID = stat.mediaID
             LEFT OUTER JOIN widget
             ON widget.widgetId = stat.widgetId
-         WHERE 1 = 1 ';
+            LEFT OUTER JOIN `layouthistory`
+            ON `layouthistory`.layoutId = `stat`.layoutId
+            LEFT OUTER JOIN `widgethistory`
+            ON `widgethistory`.widgetId = `stat`.widgetId
+                AND `widgethistory`.layoutHistoryId = `layouthistory`.layoutHistoryId
+         WHERE 1 = 1';
 
         // fromDt/toDt Filter
         if (($fromDt != null) && ($toDt != null)) {
@@ -348,7 +356,6 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
 
         // Layout Filter
         if (count($layoutIds) != 0) {
-
             $layoutSql = '';
             $i = 0;
             foreach ($layoutIds as $layoutId) {
@@ -357,12 +364,12 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                 $params['layoutId_' . $i] = $layoutId;
             }
 
-            $body .= '  AND `stat`.campaignId IN (SELECT campaignId FROM `layouthistory` WHERE layoutId IN (' . trim($layoutSql, ',') . ')) ';
+            $body .= '  AND `stat`.campaignId IN (SELECT campaignId FROM `layouthistory` WHERE layoutId IN ('
+                . trim($layoutSql, ',') . ')) ';
         }
 
         // Media Filter
         if (count($mediaIds) != 0) {
-
             $mediaSql = '';
             $i = 0;
             foreach ($mediaIds as $mediaId) {
