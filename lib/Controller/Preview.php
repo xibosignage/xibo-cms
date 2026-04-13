@@ -118,7 +118,7 @@ class Preview extends Base
                 ]),
                 'layoutBackgroundDownloadUrl' => TokenAuthMiddleware::sign(
                     $request,
-                    '/preview/layout/background/' . $layout->layoutId,
+                    $this->urlFor($request, 'layout.download.background', ['id' => $layout->layoutId]),
                     time() + 3600,
                     $this->getConfig()->getApiKeyDetails()['encryptionKey'],
                 ),
