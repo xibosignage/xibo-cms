@@ -45,7 +45,6 @@ import type { User } from '@/types/user';
 export const mockLayout: Layout = {
   layoutId: 861001,
   campaignId: 10,
-  name: 'My Layout',
   layout: 'My Layout',
   publishedStatusId: 1,
   publishedStatus: 'Published',

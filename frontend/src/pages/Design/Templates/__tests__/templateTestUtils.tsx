@@ -75,6 +75,20 @@ export const mockTemplate: Template = {
   userPermissions: { view: 1, edit: 1, delete: 1, modifyPermissions: 1 },
 };
 
+// A draft (non-published) template — used for Publish, Discard, and Checkout action tests.
+export const mockDraftTemplate: Template = {
+  ...mockTemplate,
+  layoutId: 2,
+  publishedStatusId: 2,
+  publishedStatus: 'Draft',
+  layout: 'Draft Template',
+};
+
+export const SINGLE_DRAFT_TEMPLATE_ROWS: FetchTemplateResponse = {
+  rows: [mockDraftTemplate],
+  totalCount: 1,
+};
+
 // -----------------------------------------------------------------------------
 // The default logged-in user for most Templates page tests.
 // -----------------------------------------------------------------------------

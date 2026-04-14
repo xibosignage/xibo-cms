@@ -143,29 +143,30 @@ describe('Templates page - edit form fields', () => {
     expect(retireCheckbox).not.toBeChecked();
   });
 
-  test.fails(
-    'Successful save calls updateTemplate with correct payload and closes the modal',
-    async () => {
-      vi.mocked(updateTemplate).mockResolvedValueOnce(mockTemplate);
+  // ---------------------------------------------------------------------------
+  // When the user saves changes, the app should save the right data
+  // and close the popup.
+  // ---------------------------------------------------------------------------
+  test('Successful save calls updateTemplate with correct payload and closes the modal', async () => {
+    vi.mocked(updateTemplate).mockResolvedValueOnce(mockTemplate);
 
-      renderTemplatesPage();
-      await openEditModal();
+    renderTemplatesPage();
+    await openEditModal();
 
-      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-      await waitFor(() => {
-        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-      });
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
 
-      expect(updateTemplate).toHaveBeenCalledWith(mockTemplate.layoutId, {
-        name: mockTemplate.layout,
-        description: mockTemplate.description,
-        tags: 'template',
-        retired: 0,
-        folderId: mockTemplate.folderId,
-      });
-    },
-  );
+    expect(updateTemplate).toHaveBeenCalledWith(mockTemplate.layoutId, {
+      name: mockTemplate.layout,
+      description: mockTemplate.description,
+      tags: 'template',
+      retired: 0,
+      folderId: mockTemplate.folderId,
+    });
+  });
 
   // ---------------------------------------------------------------------------
   // Failed save - API error keeps the modal open so the user can retry.

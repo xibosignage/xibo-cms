@@ -248,8 +248,6 @@ export default function AddAndEditPlaylistModal({
     });
   };
 
-  console.log(formErrors);
-
   const hasActiveDynamicFilters = Boolean(
     draft.filterFolderId !== null ||
     draft.filterMediaName.trim() !== '' ||

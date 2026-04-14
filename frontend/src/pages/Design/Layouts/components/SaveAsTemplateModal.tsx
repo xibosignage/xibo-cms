@@ -56,7 +56,7 @@ export default function SaveAsTemplateModal({
 
   useEffect(() => {
     if (layout) {
-      const baseName = layout.name || layout.layout;
+      const baseName = layout.layout;
 
       setName((prev) => {
         if (prev && prev !== '') return prev;
