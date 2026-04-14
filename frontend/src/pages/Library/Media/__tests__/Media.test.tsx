@@ -20,7 +20,7 @@
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor, fireEvent, act, within } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type React from 'react';
 import { MemoryRouter } from 'react-router-dom';
@@ -421,7 +421,7 @@ describe('Media page', () => {
       expect(screen.queryByRole('dialog', { name: 'Add Media' })).not.toBeInTheDocument();
     });
 
-    const table = await screen.findByRole('table');
+    await screen.findByRole('table');
     const newEntries = await screen.findAllByText('new_upload.png');
     const newEntry = newEntries[0]!;
     expect(newEntry).toBeInTheDocument();

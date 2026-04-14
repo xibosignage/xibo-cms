@@ -34,7 +34,6 @@ import {
 } from './layoutTestUtils';
 
 import { fetchLayouts } from '@/services/layoutsApi';
-
 import { testQueryClient } from '@/setupTests';
 
 // -----------------------------------------------------------------------------
@@ -134,7 +133,7 @@ describe('Layouts page - edit', () => {
     });
 
     // When the data is refreshed, return the updated layout.
-	// This happens because handleRefresh asks to reload the data.
+    // This happens because handleRefresh asks to reload the data.
     vi.mocked(fetchLayouts).mockResolvedValueOnce({
       rows: [updatedLayout],
       totalCount: 1,
