@@ -279,7 +279,7 @@ class Playlist extends Base
             $this->decoratePlaylistProperties($sanitizedParams, $playlist);
         }
 
-        if ($this->isJson($request) || $this->isJson($request)) {
+        if ($this->isJson($request) || $this->isApi($request)) {
             return $response
                 ->withStatus(200)
                 ->withHeader('X-Total-Count', $this->playlistFactory->countLast())
