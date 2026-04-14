@@ -148,6 +148,7 @@ $app->group('/region', function (RouteCollectorProxy $group) {
  * playlist
  */
 $app->get('/playlist', ['\Xibo\Controller\Playlist','grid'])->setName('playlist.search');
+$app->get('/playlist/{id}', ['\Xibo\Controller\Playlist','searchById'])->setName('playlist.search.id');
 
 $app->post('/playlist', ['\Xibo\Controller\Playlist','add'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['playlist.add']))

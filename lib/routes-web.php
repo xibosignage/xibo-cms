@@ -184,27 +184,13 @@ $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
 //
 // playlists
 //
-$app->get('/playlist/view', ['\Xibo\Controller\Playlist','displayPage'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['playlist.view']))
-    ->setName('playlist.view');
-
-$app->get('/playlist/form/add', ['\Xibo\Controller\Playlist','addForm'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['playlist.add']))
-    ->setName('playlist.add.form');
-
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/playlist/form/edit/{id}', ['\Xibo\Controller\Playlist', 'editForm'])->setName('playlist.edit.form');
-    $group->get('/playlist/form/copy/{id}', ['\Xibo\Controller\Playlist', 'copyForm'])->setName('playlist.copy.form');
-    $group->get('/playlist/form/delete/{id}', ['\Xibo\Controller\Playlist', 'deleteForm'])->setName('playlist.delete.form');
-    $group->get('/playlist/form/setenablestat/{id}', ['\Xibo\Controller\Playlist','setEnableStatForm'])->setName('playlist.setenablestat.form');
-    $group->get('/playlist/form/{id}/selectfolder', ['\Xibo\Controller\Playlist','selectFolderForm'])->setName('playlist.selectfolder.form');
+    $group->get('/playlist/form/edit/{id}', ['\Xibo\Controller\Playlist', 'editForm'])
+        ->setName('playlist.edit.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['playlist.modify']));
 
-$app->get('/playlist/form/timeline/{id}', ['\Xibo\Controller\Playlist','timelineForm'])->setName('playlist.timeline.form');
-
-$app->get('/playlist/form/usage/{id}', ['\Xibo\Controller\Playlist','usageForm'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['schedule.view', 'layout.view']))
-    ->setName('playlist.usage.form');
+$app->get('/playlist/form/timeline/{id}', ['\Xibo\Controller\Playlist','timelineForm'])
+    ->setName('playlist.timeline.form');
 
 //
 // library
