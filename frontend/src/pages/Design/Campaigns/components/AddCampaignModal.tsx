@@ -230,7 +230,7 @@ export default function AddCampaignModal({
               <SelectDropdown
                 label={t('Target Type')}
                 value={draft.targetType}
-                helper={t('How would you like to set the target for this campaign?')}
+                helpText={t('How would you like to set the target for this campaign?')}
                 options={[
                   { label: t('Plays'), value: 'plays' },
                   { label: t('Budget'), value: 'budget' },
