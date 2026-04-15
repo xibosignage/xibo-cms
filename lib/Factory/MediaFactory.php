@@ -163,7 +163,7 @@ class MediaFactory extends BaseFactory
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
-    public function queueDownload($name, $uri, $expiry, $requestOptions = [])
+    public function queueDownload($name, $uri, $expiry, $requestOptions = []): Media
     {
         // Determine the save name
         if (!isset($requestOptions['fileType'])) {
@@ -243,12 +243,15 @@ class MediaFactory extends BaseFactory
 
     /**
      * Process the queue of downloads
-     * @param null|callable $success success callable
-     * @param null|callable $failure failure callable
-     * @param null|callable $rejected rejected callable
+     * @param callable|null $success success callable
+     * @param callable|null $failure failure callable
+     * @param callable|null $rejected rejected callable
      */
-    public function processDownloads($success = null, $failure = null, $rejected = null)
-    {
+    public function processDownloads(
+        ?callable $success = null,
+        ?callable $failure = null,
+        ?callable $rejected = null
+    ): void {
         if (count($this->remoteDownloadQueue) > 0) {
             $this->getLog()->debug('Processing Queue of ' . count($this->remoteDownloadQueue) . ' downloads.');
 
@@ -271,15 +274,32 @@ class MediaFactory extends BaseFactory
                                 $this->getLog()->debug('processDownloads: successful, headers = '
                                     . var_export($response->getHeaders(), true));
 
-                                // Get the content length
+                                // Get the content length to reject downloads bigger than we can accept
+                                // (before downloading anything other than headers)
+                                // Only reject if Content-Length is present AND exceeds the limit.
+                                // Servers using chunked transfer encoding omit Content-Length entirely;
+                                // treating an absent header as "too large" wrongly rejects valid images.
                                 $contentLength = $response->getHeaderLine('Content-Length');
-                                if (empty($contentLength)
-                                    || intval($contentLength) > ByteFormatter::toBytes(Environment::getMaxUploadSize())
+                                if (!empty($contentLength)
+                                    && intval($contentLength) > ByteFormatter::toBytes(Environment::getMaxUploadSize())
                                 ) {
                                     throw new \Exception(__('File too large'));
                                 }
                             }
-                        }
+                        },
+                        'progress' => function (
+                            int $downloadTotal,
+                            int $downloadedBytes,
+                            int $uploadTotal,
+                            int $uploadedBytes
+                        ) {
+                            // Abort the transfer mid-stream if the download grows beyond the
+                            // max upload size. This handles servers that omit Content-Length
+                            // (e.g. chunked transfer encoding) where on_headers cannot reject early.
+                            if ($downloadedBytes > ByteFormatter::toBytes(Environment::getMaxUploadSize())) {
+                                throw new \Exception(__('File too large'));
+                            }
+                        },
                     ]);
 
                     yield function () use ($client, $url, $requestOptions) {
@@ -349,7 +369,8 @@ class MediaFactory extends BaseFactory
 
         // Handle the downloads that did not require downloading
         if (count($this->remoteDownloadNotRequiredQueue) > 0) {
-            $this->getLog()->debug('Processing Queue of ' . count($this->remoteDownloadNotRequiredQueue) . ' items which do not need downloading.');
+            $this->getLog()->debug('Processing Queue of ' . count($this->remoteDownloadNotRequiredQueue)
+                . ' items which do not need downloading.');
 
             foreach ($this->remoteDownloadNotRequiredQueue as $item) {
                 // If a success callback has been provided, call it
