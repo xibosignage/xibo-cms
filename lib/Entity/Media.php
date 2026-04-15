@@ -490,6 +490,8 @@ class Media implements \JsonSerializable
                 || $this->valid == 0
                 || ($expires > 0 && $expires < Carbon::now()->format('U'))
                 || ($this->mediaType === 'module' && (
+                    // Save is required if the file doesn't exist, and also if it exists but isn't the size
+                    // we have recorded for it in the database
                     !file_exists($this->downloadSink(false))
                     || ($this->fileSize > 0 && filesize($this->downloadSink(false)) !== $this->fileSize)
                 ));
