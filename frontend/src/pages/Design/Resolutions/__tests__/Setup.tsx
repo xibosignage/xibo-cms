@@ -23,35 +23,26 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react';
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
-import { vi } from 'vitest';
 
 import Resolution from '../Resolutions';
 
+import { UserProvider } from '@/context/UserContext';
 import type { Resolution as ResolutionType } from '@/types/resolution';
+import type { User } from '@/types/user';
 
-// Mock the API calls
-vi.mock('@/services/resolutionApi', () => ({
-  fetchResolution: vi.fn(),
-  createResolution: vi.fn(),
-  updateResolution: vi.fn(),
-  deleteResolution: vi.fn(),
-}));
-
-// Mock translations to just return the key
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
-}));
-
-// Mock the tabs hook to bypass the missing UserProvider error
-vi.mock('@/hooks/useFilteredTabs', () => ({
-  useFilteredTabs: vi.fn(() => []),
-}));
-
-// Mock userApi so useTableState doesn't make real HTTP calls
-vi.mock('@/services/userApi', () => ({
-  fetchUserPreference: vi.fn(),
-  saveUserPreference: vi.fn(),
-}));
+const mockUser: User = {
+  userId: 1,
+  userName: 'TestUser',
+  userTypeId: 1,
+  groupId: 1,
+  features: {},
+  settings: {
+    defaultTimezone: 'UTC',
+    defaultLanguage: 'en',
+    DATE_FORMAT_JS: 'DD/MM/YYYY',
+    TIME_FORMAT_JS: 'HH:mm',
+  },
+};
 
 // Provide a fresh QueryClient and Router for each test
 export const renderWithClient = (ui: React.ReactElement = <Resolution />) => {
@@ -68,7 +59,9 @@ export const renderWithClient = (ui: React.ReactElement = <Resolution />) => {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>{ui}</MemoryRouter>
+      <UserProvider initialUser={mockUser}>
+        <MemoryRouter>{ui}</MemoryRouter>
+      </UserProvider>
     </QueryClientProvider>,
   );
 };

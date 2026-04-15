@@ -29,6 +29,22 @@ import { renderWithClient, mockResolutions } from './Setup';
 
 import { fetchResolution } from '@/services/resolutionApi';
 
+vi.mock('@/services/resolutionApi', () => ({
+  fetchResolution: vi.fn(),
+  createResolution: vi.fn(),
+  updateResolution: vi.fn(),
+  deleteResolution: vi.fn(),
+}));
+
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+}));
+
+vi.mock('@/services/userApi', () => ({
+  fetchUserPreference: vi.fn().mockResolvedValue(null),
+  saveUserPreference: vi.fn().mockResolvedValue(undefined),
+}));
+
 describe('Resolutions Page - Render, Search, and Pagination', () => {
   beforeEach(() => {
     vi.clearAllMocks();

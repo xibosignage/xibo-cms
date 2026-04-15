@@ -19,8 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { render, screen, fireEvent } from '@testing-library/react';
 import type { Table } from '@tanstack/react-table';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 
 import { DataTableOptions } from '../DataTableOptions';
