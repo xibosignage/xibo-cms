@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -830,7 +830,7 @@ class User extends Base
         $user->userName = $sanitizedParams->getString('userName');
         $user->email = $sanitizedParams->getString('email');
         $user->homePageId = $sanitizedParams->getString('homePageId');
-        $user->libraryQuota = $sanitizedParams->getInt('libraryQuota');
+        $user->libraryQuota = $sanitizedParams->getInt('libraryQuota', ['default' => $user->libraryQuota]);
         $user->retired = $sanitizedParams->getCheckbox('retired');
 
         // Are user home folders enabled? Don't change unless they are.
