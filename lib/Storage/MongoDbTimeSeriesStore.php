@@ -220,11 +220,12 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 // Lookup and cache
                 try {
                     $widget = $this->widgetFactory->loadByWidgetId($statData['widgetId']);
-                    $widgetName = $widget->getOptionValue('name', $widget->type);
+                    $rawName = $widget->getOptionValue('name', null);
+                    $widgetName = ($rawName === '' ? null : $rawName) ?? $widget->type;
                 } catch (\Exception) {
                     // Fallback to the widget history record
                     $widget = $this->widgetFactory->getWidgetHistoryById($statData['widgetId'])[0];
-                    $widgetName = $widget?->name ?? $widget?->type;
+                    $widgetName = ($widget?->name !== '' ? $widget?->name : null) ?? $widget?->type;
                 }
 
                 // Cache widget

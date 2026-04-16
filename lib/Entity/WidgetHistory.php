@@ -35,5 +35,5 @@ class WidgetHistory implements \JsonSerializable
     public int $widgetId;
     public int $mediaId;
     public string $type;
-    public string $name;
+    public ?string $name;
 }
