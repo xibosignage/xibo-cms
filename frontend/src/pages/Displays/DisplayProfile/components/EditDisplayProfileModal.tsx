@@ -28,6 +28,7 @@ import { getPictureSliderIndex, LgSsspFields } from './fields/LgSsspFields';
 import type { LockOptionsState, PictureOptionRow, TimerRow } from './fields/LgSsspFields';
 import { LinuxFields } from './fields/LinuxFields';
 import { WindowsFields } from './fields/WindowsFields';
+import { CHECKBOX_FIELDS_BY_TYPE } from './fields/fieldMetadata';
 
 import Checkbox from '@/components/ui/forms/Checkbox';
 import TextInput from '@/components/ui/forms/TextInput';
@@ -38,73 +39,7 @@ import { fetchDisplayProfileById, updateDisplayProfile } from '@/services/displa
 import { fetchPlayerSoftware } from '@/services/playerSoftwareApi';
 import type { PlayerSoftware } from '@/services/playerSoftwareApi';
 import type { Daypart } from '@/types/daypart';
-import type { DisplayProfile, DisplayProfileType } from '@/types/displayProfile';
-
-const CHECKBOX_FIELDS_BY_TYPE: Record<DisplayProfileType, Set<string>> = {
-  android: new Set([
-    'statsEnabled',
-    'isRecordGeoLocationOnProofOfPlay',
-    'forceHttps',
-    'restartWifiOnConnectionFailure',
-    'blacklistVideo',
-    'storeHtmlOnInternal',
-    'useSurfaceVideoView',
-    'startOnBoot',
-    'autoRestart',
-    'sendCurrentLayoutAsStatusUpdate',
-    'expireModifiedLayouts',
-    'timeSyncFromCms',
-    'webCacheEnabled',
-    'embeddedServerAllowWan',
-    'installWithLoadedLinkLibraries',
-    'isTouchEnabled',
-  ]),
-  windows: new Set([
-    'statsEnabled',
-    'isRecordGeoLocationOnProofOfPlay',
-    'powerpointEnabled',
-    'forceHttps',
-    'clientInfomationCtrlKey',
-    'showInTaskbar',
-    'doubleBuffering',
-    'enableMouse',
-    'enableShellCommands',
-    'sendCurrentLayoutAsStatusUpdate',
-    'expireModifiedLayouts',
-    'timeSyncFromCms',
-    'embeddedServerAllowWan',
-    'preventSleep',
-  ]),
-  linux: new Set([
-    'statsEnabled',
-    'isRecordGeoLocationOnProofOfPlay',
-    'forceHttps',
-    'expireModifiedLayouts',
-    'enableShellCommands',
-    'sendCurrentLayoutAsStatusUpdate',
-    'preventSleep',
-    'timeSyncFromCms',
-  ]),
-  lg: new Set([
-    'statsEnabled',
-    'isRecordGeoLocationOnProofOfPlay',
-    'forceHttps',
-    'embeddedServerAllowWan',
-    'sendCurrentLayoutAsStatusUpdate',
-  ]),
-  sssp: new Set([
-    'statsEnabled',
-    'isRecordGeoLocationOnProofOfPlay',
-    'forceHttps',
-    'embeddedServerAllowWan',
-    'sendCurrentLayoutAsStatusUpdate',
-  ]),
-  chromeOS: new Set([
-    'statsEnabled',
-    'isRecordGeoLocationOnProofOfPlay',
-    'sendCurrentLayoutAsStatusUpdate',
-  ]),
-};
+import type { DisplayProfile } from '@/types/displayProfile';
 
 const PAGE_SIZE = 10;
 
