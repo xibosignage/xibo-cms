@@ -167,7 +167,7 @@ export default function SelectDropdown({
         )}
         <span
           className={twMerge(
-            'py-2 px-3 flex-1 text-sm',
+            'py-2 px-3 flex-1 text-sm truncate min-w-0',
             isLoading ? 'text-gray-400 italic' : 'text-gray-800 capitalize',
           )}
         >
@@ -202,7 +202,7 @@ export default function SelectDropdown({
                 <input
                   autoFocus
                   type="text"
-                  className="flex-1 text-sm outline-none border-none bg-transparent"
+                  className="flex-1 w-full text-sm outline-none border-none bg-transparent"
                   placeholder={searchPlaceholder ?? t('Search…')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -235,7 +235,7 @@ export default function SelectDropdown({
                   type="button"
                   disabled={option.disabled}
                   className={twMerge(
-                    'text-left p-2 rounded-lg font-medium flex gap-2 items-center',
+                    'text-left p-2 rounded-lg font-medium flex gap-2 items-center min-w-0',
                     option.disabled
                       ? 'text-gray-300 cursor-not-allowed'
                       : 'hover:bg-gray-100 cursor-pointer',
@@ -254,7 +254,9 @@ export default function SelectDropdown({
                       {option.label.slice(0, 1)}
                     </div>
                   )}
-                  {t(option.label)}
+                  <span className="truncate" title={option.label}>
+                    {t(option.label)}
+                  </span>
                 </button>
               ))}
               {hasMore && <div ref={sentinelRef} className="h-1" />}

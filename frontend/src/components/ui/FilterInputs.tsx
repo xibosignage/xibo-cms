@@ -23,6 +23,8 @@ import Button from './Button';
 import InputFilter from './InputFilter';
 import type { FilterOption } from './SelectFilter';
 import SelectFilter from './SelectFilter';
+import SelectDropdown from './forms/SelectDropdown';
+import type { SelectOption } from './forms/SelectDropdown';
 import TagInput from './forms/TagInput';
 
 import type { Tag } from '@/types/tag';
@@ -31,7 +33,7 @@ export interface FilterConfigItem<T> {
   label: string;
   name: keyof T & string;
   placeholder?: string;
-  type?: 'select' | 'text' | 'number' | 'tags';
+  type?: 'select' | 'text' | 'number' | 'tags' | 'paged-select';
   className?: string;
   options?: FilterOption[];
   shouldTranslateOptions?: boolean;
@@ -39,6 +41,10 @@ export interface FilterConfigItem<T> {
   allLabel?: string;
   allowCustomRange?: boolean;
   isJalali?: boolean;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
+  isLoading?: boolean;
 }
 
 type FilterValue = string | number | null | Tag[];
@@ -108,6 +114,36 @@ export default function FilterInputs<T>({
                 onChange={(tags) => onChange(filter.name, tags)}
                 className={filter.className}
                 placeholder={filter.placeholder}
+              />
+            );
+          }
+
+          if (filterType === 'paged-select') {
+            const pagedOptions: SelectOption[] = (filter.options ?? []).map((o) => ({
+              label: o.label,
+              value: String(o.value ?? ''),
+            }));
+            const currentValue = values[filter.name];
+            const stringValue =
+              currentValue !== null && currentValue !== undefined ? String(currentValue) : '';
+
+            return (
+              <SelectDropdown
+                key={filter.name}
+                label={filter.label}
+                value={stringValue}
+                options={pagedOptions}
+                onSelect={(val) =>
+                  onChange(filter.name as keyof T & string, val === '' ? null : Number(val))
+                }
+                searchable
+                clearable
+                placeholder={filter.placeholder ?? 'All'}
+                onLoadMore={filter.onLoadMore}
+                hasMore={filter.hasMore}
+                isLoadingMore={filter.isLoadingMore}
+                isLoading={filter.isLoading}
+                className={`w-full md:w-auto md:flex-1 min-w-0 ${filter.className ?? ''}`}
               />
             );
           }
