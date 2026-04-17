@@ -19,19 +19,18 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table';
-import { Check, Plus, X } from 'lucide-react';
 import { useEffect, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { SearchAssignPanel } from '@/components/ui/SearchAssignPanel';
 import Checkbox from '@/components/ui/forms/Checkbox';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TagInput from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
-import { DataTable } from '@/components/ui/table/DataTable';
 import { CheckMarkCell, TextCell } from '@/components/ui/table/cells';
 import { useDebounce } from '@/hooks/useDebounce';
 import { updateCampaign } from '@/services/campaignApi';
@@ -158,21 +157,22 @@ export default function EditCampaignModal({
         sortDir: layoutSortDir,
       }),
     enabled: isOpen && !!campaign && activeTab === 'layouts',
+    placeholderData: keepPreviousData,
     staleTime: 1000 * 30,
   });
 
   const layoutRows = layoutsData?.rows ?? [];
   const layoutPageCount = Math.ceil((layoutsData?.totalCount ?? 0) / layoutPagination.pageSize);
 
-  const assignedIds = new Set(assignedLayouts.map((l) => l.layoutId));
-
   const addLayout = (layout: Layout) => {
-    if (assignedIds.has(layout.layoutId)) return;
+    if (assignedLayouts.some((l) => l.layoutId === layout.layoutId)) {
+      return;
+    }
     setAssignedLayouts((prev) => [...prev, layout]);
   };
 
-  const removeLayout = (layoutId: number) => {
-    setAssignedLayouts((prev) => prev.filter((l) => l.layoutId !== layoutId));
+  const removeLayout = (layout: Layout) => {
+    setAssignedLayouts((prev) => prev.filter((l) => l.layoutId !== layout.layoutId));
   };
 
   const handleSave = () => {
@@ -241,37 +241,11 @@ export default function EditCampaignModal({
       cell: ({ row }) => <TextCell weight="bold">{row.original.layout}</TextCell>,
     },
     {
-      accessorKey: 'publishedStatusId',
+      id: 'publishedStatus',
+      accessorFn: (row) => row.publishedStatusId,
       header: t('Status'),
       size: 90,
-      enableSorting: false,
       cell: (info) => <CheckMarkCell active={info.getValue<number>() === 1} />,
-    },
-    {
-      id: 'assign',
-      header: '',
-      size: 60,
-      enableSorting: false,
-      cell: ({ row }) => {
-        const isAssigned = assignedIds.has(row.original.layoutId);
-        return (
-          <div className="flex justify-center">
-            <button
-              type="button"
-              disabled={isAssigned}
-              onClick={() => addLayout(row.original)}
-              className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
-                isAssigned
-                  ? 'bg-green-100 text-green-600 cursor-default'
-                  : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
-              }`}
-              title={isAssigned ? t('Already assigned') : t('Assign layout')}
-            >
-              {isAssigned ? <Check size={12} /> : <Plus size={12} />}
-            </button>
-          </div>
-        );
-      },
     },
   ];
 
@@ -414,64 +388,27 @@ export default function EditCampaignModal({
 
           {/* Layouts Tab */}
           {activeTab === 'layouts' && (
-            <>
-              {/* Assigned chips */}
-              <div className="flex flex-wrap gap-2 min-h-9">
-                {assignedLayouts.length === 0 ? (
-                  <p className="text-sm text-gray-400 italic">{t('No layouts assigned yet')}</p>
-                ) : (
-                  assignedLayouts.map((layout, index) => (
-                    <span
-                      key={layout.layoutId}
-                      className="flex items-center gap-1 px-2 py-1 text-xs font-semibold bg-blue-50 border border-blue-300 text-blue-700 rounded-full max-w-48"
-                    >
-                      <span className="shrink-0">{index + 1}</span>
-                      <span className="truncate">
-                        #{layout.layoutId} {layout.layout}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => removeLayout(layout.layoutId)}
-                        className="shrink-0 w-3.5 h-3.5 flex items-center justify-center rounded-full bg-blue-200 hover:bg-blue-300 text-blue-700"
-                      >
-                        <X size={8} />
-                      </button>
-                    </span>
-                  ))
-                )}
-              </div>
-
-              {/* Search */}
-              <TextInput
-                name="layoutSearch"
-                placeholder={t('Search layouts...')}
-                value={layoutKeyword}
-                onChange={(val) => {
-                  setLayoutKeyword(val);
-                  setLayoutPagination((prev) => ({ ...prev, pageIndex: 0 }));
-                }}
-              />
-
-              {/* Layouts table */}
-              <div className="flex flex-col overflow-hidden">
-                <DataTable
-                  columns={layoutColumns}
-                  data={layoutRows}
-                  pageCount={layoutPageCount}
-                  pagination={layoutPagination}
-                  onPaginationChange={setLayoutPagination}
-                  sorting={layoutSorting}
-                  onSortingChange={setLayoutSorting}
-                  globalFilter={layoutKeyword}
-                  onGlobalFilterChange={setLayoutKeyword}
-                  loading={isFetchingLayouts}
-                  enableSelection={false}
-                  rowSelection={{}}
-                  onRowSelectionChange={() => {}}
-                  hideToolbar
-                />
-              </div>
-            </>
+            <SearchAssignPanel<Layout>
+              assignedItems={assignedLayouts}
+              assignedLabel={t('Selected Layouts')}
+              onAddItem={addLayout}
+              onRemoveItem={removeLayout}
+              onClearAll={() => setAssignedLayouts([])}
+              noAssignedText={t('No layouts assigned yet')}
+              getItemId={(l) => l.layoutId}
+              getItemLabel={(l) => l.layout}
+              keyword={layoutKeyword}
+              onKeywordChange={setLayoutKeyword}
+              searchPlaceholder={t('Search')}
+              columns={layoutColumns}
+              searchRows={layoutRows}
+              pageCount={layoutPageCount}
+              pagination={layoutPagination}
+              onPaginationChange={setLayoutPagination}
+              sorting={layoutSorting}
+              onSortingChange={setLayoutSorting}
+              isSearching={isFetchingLayouts}
+            />
           )}
         </div>
       </div>
