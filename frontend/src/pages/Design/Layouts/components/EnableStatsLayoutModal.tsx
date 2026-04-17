@@ -75,7 +75,7 @@ export function EnableStatsLayoutModal({
 
   return (
     <Modal
-      title={t('Retire Layout')}
+      title={t('Enable Stats Collection')}
       isOpen={isOpen}
       onClose={onClose}
       isPending={isLoading}
@@ -87,7 +87,7 @@ export function EnableStatsLayoutModal({
           variant: 'secondary',
         },
         {
-          label: t('Retire'),
+          label: t('Save'),
           onClick: handleConfirm,
           disabled: isLoading,
         },

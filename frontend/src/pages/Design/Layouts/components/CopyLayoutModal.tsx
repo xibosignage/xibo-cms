@@ -53,7 +53,7 @@ export default function CopyLayoutModal({
 
   useEffect(() => {
     if (layout && isOpen) {
-      setNewName(incrementName(layout.name || layout.layout));
+      setNewName(incrementName(layout.layout));
       setDescription(layout.description ?? '');
       setCopyMediaFiles(false);
     }

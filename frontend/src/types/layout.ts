@@ -23,7 +23,6 @@ import type { Tag } from './tag';
 
 export interface Layout {
   layoutId: number;
-  name: string;
   layout: string;
   parentId?: number;
   showDrafts?: number;

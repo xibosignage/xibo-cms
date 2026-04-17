@@ -64,7 +64,7 @@ export default function EditLayout({ isOpen = true, onClose, data, onSave }: Edi
   const [apiError, setApiError] = useState<string | undefined>();
 
   const [draft, setDraft] = useState<LayoutDraft>(() => ({
-    name: data.name || data.layout,
+    name: data.layout,
     folderId: data.folderId,
     tags: data.tags?.map((t) => ({ ...t })) ?? [],
     enableStat: data.enableStat,
@@ -75,7 +75,7 @@ export default function EditLayout({ isOpen = true, onClose, data, onSave }: Edi
 
   useEffect(() => {
     setDraft({
-      name: data.name || data.layout,
+      name: data.layout,
       folderId: data.folderId,
       tags: data.tags?.map((t) => ({ ...t })) ?? [],
       enableStat: data.enableStat,

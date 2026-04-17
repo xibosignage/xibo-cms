@@ -340,7 +340,7 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
         return (
           <MediaCell
             thumb={row?.layoutId ? `/layout/thumbnail/${row.layoutId}` : undefined}
-            alt={row?.name || row?.layout}
+            alt={row?.layout}
             mediaType="image"
             onPreview={() => props.onPreview && props.onPreview(row)}
           />

@@ -132,96 +132,42 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
       </UserProvider>,
     );
 
-    const menuStructure = [
-      {
-        main: 'Schedule',
-        subs: [
-          { name: 'Event', href: '/schedule/view' },
-          { name: 'Dayparting', href: '/dayparting/view' },
-        ],
-      },
-      {
-        main: 'Design',
-        subs: [
-          { name: 'Campaign', href: '/campaign/view' },
-          { name: 'Layouts', href: '/design/layout' },
-          { name: 'Templates', href: '/template/view' },
-          { name: 'Resolutions', href: '/design/resolutions' },
-        ],
-      },
-      {
-        main: 'Library',
-        subs: [
-          { name: 'Playlists', href: '/library/playlists' },
-          { name: 'Media', href: '/library/media' },
-          { name: 'Datasets', href: '/dataset/view' },
-        ],
-      },
-      {
-        main: 'Displays',
-        subs: [
-          { name: 'Add Displays', href: '/display/view' },
-          { name: 'Display Groups', href: '/displaygroup/view' },
-          { name: 'Sync Groups', href: '/syncgroup/view' },
-          { name: 'Commands', href: '/command/view' },
-        ],
-      },
-      {
-        main: 'Administration',
-        subs: [
-          { name: 'Users', href: '/user/view' },
-          { name: 'User Groups', href: '/group/view' },
-          { name: 'Applications', href: '/application/view' },
-          { name: 'Modules', href: '/module/view' },
-          { name: 'Transitions', href: '/transition/view' },
-          { name: 'Tasks', href: '/task/view' },
-          { name: 'Tags', href: '/tag/view' },
-          { name: 'Folders', href: '/folders/view' },
-          { name: 'Fonts', href: '/fonts/view' },
-        ],
-      },
-      {
-        main: 'Reporting',
-        subs: [
-          { name: 'All Reports', href: '/report/view' },
-          { name: 'Report Schedules', href: '/report/reportschedule/view' },
-          { name: 'Saved Reports', href: '/report/savedreport/view' },
-        ],
-      },
-      {
-        main: 'Advanced',
-        subs: [
-          // Note: "Log" usually points to savedreport based on your earlier HTML dump
-          { name: 'Log', href: '/log/view' },
-          { name: 'Sessions', href: '/advanced/sessions' },
-          { name: 'Audit Trail', href: '/audit/view' },
-          { name: 'Report Fault', href: '/fault/view' },
-        ],
-      },
-      {
-        main: 'Developer',
-        subs: [{ name: 'Developer', href: '/developer/template/view' }],
-      },
+    // Representative sample — one link per group, mixing React Router and external URL types.
+    // This proves the sidebar reads appRoutes config and builds correct hrefs for both kinds,
+    // without exhaustively re-testing every route (that would just duplicate appRoutes.ts).
+    // When a route moves between types (external ↔ React Router) update the href here.
+    const sampleLinks = [
+      { group: 'Schedule', name: 'Dayparting', href: '/schedule/dayparting' }, // React Router
+      { group: 'Design', name: 'Layouts', href: '/design/layout' }, // React Router
+      { group: 'Library', name: 'Media', href: '/library/media' }, // React Router
+      { group: 'Displays', name: 'Commands', href: '/command/view' }, // external
+      { group: 'Administration', name: 'Tags', href: '/tag/view' }, // external
+      { group: 'Reporting', name: 'All Reports', href: '/report/view' }, // external
+      { group: 'Advanced', name: 'Sessions', href: '/advanced/sessions' }, // React Router
     ];
 
-    menuStructure.forEach((group) => {
-      const mainLabels = screen.getAllByText(group.main);
-      fireEvent.click(mainLabels[0]!);
+    sampleLinks.forEach(({ group, name, href }) => {
+      const groupLabels = screen.getAllByText(group);
+      fireEvent.click(groupLabels[0]!);
 
-      group.subs.forEach((subItem) => {
-        const link = screen.getByRole('link', { name: new RegExp(subItem.name, 'i') });
+      // getAllByRole handles the rare case where a label appears in multiple groups.
+      const links = screen.getAllByRole('link', { name: new RegExp(name, 'i') });
+      const link = links.find((l) => l.getAttribute('href') === href);
 
-        expect(link).toHaveAttribute('href', subItem.href);
-        expect(link).toBeVisible();
-      });
+      expect(link).toBeVisible();
     });
 
-    const settingsLinks = screen.getAllByRole('link', { name: 'Settings' });
+    // Developer is a top-level external link (no subLinks) — always visible, not expandable.
+    expect(screen.getByRole('link', { name: /developer/i })).toHaveAttribute(
+      'href',
+      '/developer/template/view',
+    );
 
+    // Both Displays > Settings and Administration > Settings must be reachable.
+    const settingsLinks = screen.getAllByRole('link', { name: 'Settings' });
     expect(
       settingsLinks.find((l) => l.getAttribute('href') === '/displayprofile/view'),
     ).toBeVisible();
-
     expect(settingsLinks.find((l) => l.getAttribute('href') === '/admin/view')).toBeVisible();
   });
 

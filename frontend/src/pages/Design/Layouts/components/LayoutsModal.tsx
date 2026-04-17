@@ -120,9 +120,7 @@ export function LayoutModals({
           onDelete={() => handlers.confirmDelete(selection.itemsToDelete)}
           itemCount={selection.itemsToDelete.length}
           layoutName={
-            selection.itemsToDelete.length === 1
-              ? selection.itemsToDelete[0]?.name || selection.itemsToDelete[0]?.layout
-              : undefined
+            selection.itemsToDelete.length === 1 ? selection.itemsToDelete[0]?.layout : undefined
           }
           error={actions.deleteError}
           isLoading={actions.isDeleting}
@@ -178,7 +176,7 @@ export function LayoutModals({
           onConfirm={() =>
             selection.selectedLayout && handlers.confirmDiscard(selection.selectedLayout.layoutId)
           }
-          layoutName={selection.selectedLayout?.name || selection.selectedLayout?.layout}
+          layoutName={selection.selectedLayout?.layout}
           isLoading={actions.isDiscarding}
         />
       )}
@@ -199,7 +197,7 @@ export function LayoutModals({
             selection.selectedLayout &&
             handlers.handleExportLayout(selection.selectedLayout.layoutId, options)
           }
-          layoutName={selection.selectedLayout?.name || selection.selectedLayout?.layout}
+          layoutName={selection.selectedLayout?.layout}
           isLoading={actions.isExporting}
         />
       )}
