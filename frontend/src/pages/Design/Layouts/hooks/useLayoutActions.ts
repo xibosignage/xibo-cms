@@ -127,7 +127,6 @@ export function useLayoutActions({
       notify.success(t('Layout copied successfully'));
       handleRefresh();
       closeModal();
-      console.log('copy layout', selectedLayout, newName, description, copyMediaFiles);
     } catch (error) {
       console.error('Copy layout failed', error);
       notify.error(t('Failed to copy layout'));

@@ -229,7 +229,10 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'display-groups',
         labelKey: 'Display Groups',
-        externalURL: '/displaygroup/view',
+        lazy: () =>
+          import('@/pages/Displays/DisplayGroup/DisplayGroup').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'displaygroup.view',
       },
       {

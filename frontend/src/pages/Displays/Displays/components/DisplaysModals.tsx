@@ -34,6 +34,7 @@ import { useTranslation } from 'react-i18next';
 import AddDisplayModal from './AddDisplayModal';
 import AssignLayoutModal from './AssignLayoutModal';
 import AssignMediaModal from './AssignMediaModal';
+import CollectNowModal from './CollectNowModal';
 import DeleteDisplayModal from './DeleteDisplayModal';
 import EditDisplayModal from './EditDisplayModal';
 import ManageGroupMembershipModal from './ManageGroupMembershipModal';
@@ -290,33 +291,12 @@ export function DisplayModals({ actions, selection, handlers }: DisplayModalsPro
       )}
 
       {isModalOpen('collectNow') && display && (
-        <Modal
-          isOpen
-          isPending={actions.isActionPending}
+        <CollectNowModal
           onClose={actions.closeModal}
-          actions={[
-            { label: t('Cancel'), onClick: actions.closeModal, variant: 'secondary' },
-            {
-              label: actions.isActionPending ? t('Collecting…') : t('Collect Now'),
-              onClick: () => handlers.confirmCollectNow(display),
-              disabled: actions.isActionPending,
-            },
-          ]}
-          size="md"
-        >
-          <div className="flex flex-col p-5 gap-3">
-            <div className="flex justify-center mb-2">
-              <div className="bg-blue-100 w-15.5 h-15.5 text-blue-800 border-blue-50 border-[7px] rounded-full p-3">
-                <RefreshCw size={26} />
-              </div>
-            </div>
-            <h2 className="text-center text-lg font-semibold mb-1">{t('Collect Now')}</h2>
-            <p className="text-center text-gray-500">
-              {t('Are you sure you want to request a collection to occur?')}
-            </p>
-            <ActionError error={actions.actionError} />
-          </div>
-        </Modal>
+          onConfirm={() => handlers.confirmCollectNow(display)}
+          isActionPending={actions.isActionPending}
+          actionError={actions.actionError}
+        />
       )}
 
       {isModalOpen('wakeOnLan') && display && (

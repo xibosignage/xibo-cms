@@ -19,30 +19,31 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { Tag } from '@/types/tag';
+import type { TFunction } from 'i18next';
+import { z } from 'zod';
 
-export interface DisplayGroup {
-  displayGroupId: number;
-  displayGroup: string;
-  description: string;
-  isDisplaySpecific: number;
-  isDynamic: number;
-  dynamicCriteria: string;
-  dynamicCriteriaLogicalOperator: string;
-  dynamicCriteriaTags: string;
-  dynamicCriteriaExactTags: number;
-  dynamicCriteriaTagsLogicalOperator: string;
-  userId: number;
-  tags: Tag[];
-  bandwidthLimit: number;
-  groupsWithPermissions: string;
-  createdDt: string;
-  modifiedDt: string;
-  folderId: number;
-  permissionsFolderId: number;
-  ref1: string;
-  ref2: string;
-  ref3: string;
-  ref4: string;
-  ref5: string;
-}
+export const getDisplayGroupSchema = (t: TFunction) =>
+  z.object({
+    displayGroup: z
+      .string()
+      .trim()
+      .min(1, t('Name is required'))
+      .max(50, t('Name must be at most 50 characters')),
+
+    description: z.string().max(254, t('Description must be at most 254 characters')).optional(),
+
+    tags: z
+      .array(
+        z.object({
+          tag: z.string(),
+          value: z.union([z.string(), z.number()]).optional().nullable(),
+        }),
+      )
+      .optional(),
+
+    isDynamic: z.boolean().optional(),
+
+    dynamicCriteria: z.string().optional(),
+
+    dynamicCriteriaTags: z.string().optional(),
+  });

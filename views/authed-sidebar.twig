@@ -58,7 +58,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("displaygroup.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("displaygroup.view") }}">{% trans "Display Groups" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/displays/display-groups">{% trans "Display Groups" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("display.syncView") %}

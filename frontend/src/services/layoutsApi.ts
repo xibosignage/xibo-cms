@@ -57,6 +57,7 @@ export async function fetchLayouts(
   });
 
   const rows = response.data;
+  console.log('Fetched layouts:', rows);
 
   const totalCountHeader = response.headers['x-total-count'];
   const totalCount = totalCountHeader ? parseInt(totalCountHeader, 10) : 0;
