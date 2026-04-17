@@ -353,6 +353,7 @@ $app->group('', function (RouteCollectorProxy $group) {
  */
 $app->get('/displayvenue', ['\Xibo\Controller\Display','displayVenue'])->setName('display.venue.search');
 $app->get('/displaygroup', ['\Xibo\Controller\DisplayGroup','grid'])->setName('displayGroup.search');
+$app->get('/displaygroup/{id}', ['\Xibo\Controller\DisplayGroup','searchById'])->setName('displayGroup.search.id');
 
 $app->post('/displaygroup', ['\Xibo\Controller\DisplayGroup','add'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['displaygroup.add']))
@@ -366,28 +367,39 @@ $app->post('/displaygroup/{id}/action/collectNow', ['\Xibo\Controller\DisplayGro
 $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/displaygroup/{id}', ['\Xibo\Controller\DisplayGroup','edit'])->setName('displayGroup.edit');
     $group->delete('/displaygroup/{id}', ['\Xibo\Controller\DisplayGroup','delete'])->setName('displayGroup.delete');
-
+    // displays
+    $group->get('/displaygroup/{id}/displays', ['\Xibo\Controller\DisplayGroup','getDisplaysAssigned'])->setName('displayGroup.display.list');
     $group->post('/displaygroup/{id}/display/assign', ['\Xibo\Controller\DisplayGroup','assignDisplay'])->setName('displayGroup.assign.display');
     $group->post('/displaygroup/{id}/display/unassign', ['\Xibo\Controller\DisplayGroup','unassignDisplay'])->setName('displayGroup.unassign.display');
+    // display groups
+    $group->get('/displaygroup/{id}/displayGroups', ['\Xibo\Controller\DisplayGroup','getDisplayGroupAssigned'])->setName('displayGroup.displayGroup.list');
     $group->post('/displaygroup/{id}/displayGroup/assign', ['\Xibo\Controller\DisplayGroup','assignDisplayGroup'])->setName('displayGroup.assign.displayGroup');
     $group->post('/displaygroup/{id}/displayGroup/unassign', ['\Xibo\Controller\DisplayGroup','unassignDisplayGroup'])->setName('displayGroup.unassign.displayGroup');
+    // relationship tree
+    $group->get('/displaygroup/{id}/relationshiptree', ['\Xibo\Controller\DisplayGroup','getDisplayGroupRelationShipTree'])->setName('displayGroup.relationshipTree');
+    // media
     $group->post('/displaygroup/{id}/media/assign', ['\Xibo\Controller\DisplayGroup','assignMedia'])->setName('displayGroup.assign.media');
     $group->post('/displaygroup/{id}/media/unassign', ['\Xibo\Controller\DisplayGroup','unassignMedia'])->setName('displayGroup.unassign.media');
+    // layouts
+    $group->get('/displaygroup/{id}/layout', ['\Xibo\Controller\DisplayGroup','getDisplayGroupLayout'])->setName('displayGroup.layout.list');
     $group->post('/displaygroup/{id}/layout/assign', ['\Xibo\Controller\DisplayGroup','assignLayouts'])->setName('displayGroup.assign.layout');
     $group->post('/displaygroup/{id}/layout/unassign', ['\Xibo\Controller\DisplayGroup','unassignLayouts'])->setName('displayGroup.unassign.layout');
+    // actions
     $group->post('/displaygroup/{id}/action/changeLayout', ['\Xibo\Controller\DisplayGroup','changeLayout'])->setName('displayGroup.action.changeLayout');
     $group->post('/displaygroup/{id}/action/overlayLayout', ['\Xibo\Controller\DisplayGroup','overlayLayout'])->setName('displayGroup.action.overlayLayout');
     $group->post('/displaygroup/{id}/action/revertToSchedule', ['\Xibo\Controller\DisplayGroup','revertToSchedule'])->setName('displayGroup.action.revertToSchedule');
-    $group->post('/displaygroup/{id}/copy', ['\Xibo\Controller\DisplayGroup','copy'])->setName('displayGroup.copy');
     $group->post('/displaygroup/{id}/action/clearStatsAndLogs', ['\Xibo\Controller\DisplayGroup','clearStatsAndLogs'])->setName('displayGroup.action.clearStatsAndLogs');
     $group->post('/displaygroup/{id}/action/triggerWebhook', ['\Xibo\Controller\DisplayGroup','triggerWebhook'])->setName('displayGroup.action.trigger.webhook');
+
+    $group->post('/displaygroup/{id}/copy', ['\Xibo\Controller\DisplayGroup','copy'])->setName('displayGroup.copy');
     $group->put('/displaygroup/{id}/selectfolder', ['\Xibo\Controller\DisplayGroup','selectFolder'])->setName('displayGroup.selectfolder');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['displaygroup.modify']));
 
-$app->post('/displaygroup/{id}/action/command', ['\Xibo\Controller\DisplayGroup','command'])
-    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['displaygroup.modify']))
-    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['command.view']))
-    ->setName('displayGroup.action.command');
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->post('/displaygroup/{id}/action/command', ['\Xibo\Controller\DisplayGroup','command'])->setName('displayGroup.action.command');
+    $group->get('/displaygroup/{id}/action/command', ['\Xibo\Controller\DisplayGroup','getDisplayGroupCommands'])->setName('displayGroup.action.command.list');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['displaygroup.modify', 'command.view']));
+
 /**
  * Display Profile
  */
@@ -584,6 +596,8 @@ $app->delete('/application/revoke/{id}/{userId}', ['\Xibo\Controller\Application
  * Modules
  */
 $app->get('/module', ['\Xibo\Controller\Module','grid'])->setName('module.search');
+$app->get('/module/library', ['\Xibo\Controller\Module','getLibraryModules'])->setName('module.library.list');
+
 $app->get('/module/templates/{dataType}', [
     '\Xibo\Controller\Module', 'templateGrid'
 ])->setName('module.template.search');

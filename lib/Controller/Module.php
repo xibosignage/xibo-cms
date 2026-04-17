@@ -462,4 +462,17 @@ class Module extends Base
         // The asset can serve itself.
         return $asset->psrResponse($request, $response, $this->getConfig()->getSetting('SENDFILE_MODE'));
     }
+
+    /**
+     * Get the library modules list
+     * @param Request $request
+     * @param Response $response
+     * @return Response
+     */
+    public function getLibraryModules(Request $request, Response $response): Response
+    {
+        $modules = $this->moduleFactory->getLibraryModules();
+
+        return $response->withStatus(200)->withJson($modules);
+    }
 }

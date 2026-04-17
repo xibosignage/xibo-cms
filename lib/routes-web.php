@@ -301,33 +301,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['dataset.modify']));
 
 //
-// displaygroup
-//
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/displaygroup/view', ['\Xibo\Controller\DisplayGroup','displayPage'])->setName('displaygroup.view');
-    $group->get('/displaygroup/form/command/{id}', ['\Xibo\Controller\DisplayGroup','commandForm'])->setName('displayGroup.command.form');
-    $group->get('/displaygroup/form/collect/{id}', ['\Xibo\Controller\DisplayGroup','collectNowForm'])->setName('displayGroup.collectNow.form');
-    $group->get('/displaygroup/form/trigger/webhook/{id}', ['\Xibo\Controller\DisplayGroup','triggerWebhookForm'])->setName('displayGroup.trigger.webhook.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['displaygroup.view']));
-
-$app->get('/displaygroup/form/add', ['\Xibo\Controller\DisplayGroup','addForm'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['displaygroup.add']))
-    ->setName('displayGroup.add.form');
-
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/displaygroup/form/edit/{id}', ['\Xibo\Controller\DisplayGroup','editForm'])->setName('displayGroup.edit.form');
-    $group->get('/displaygroup/form/delete/{id}', ['\Xibo\Controller\DisplayGroup','deleteForm'])->setName('displayGroup.delete.form');
-    $group->get('/displaygroup/form/members/{id}', ['\Xibo\Controller\DisplayGroup','membersForm'])->setName('displayGroup.members.form');
-    $group->get('/displaygroup/form/media/{id}', ['\Xibo\Controller\DisplayGroup','mediaForm'])->setName('displayGroup.media.form');
-    $group->get('/displaygroup/form/layout/{id}', ['\Xibo\Controller\DisplayGroup','layoutsForm'])->setName('displayGroup.layout.form');
-    $group->get('/displaygroup/form/copy/{id}', ['\Xibo\Controller\DisplayGroup','copyForm'])->setName('displayGroup.copy.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['displaygroup.modify']));
-
-$app->get('/displaygroup/form/{id}/selectfolder', ['\Xibo\Controller\DisplayGroup','selectFolderForm'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['displaygroup.modify', 'display.modify']))
-    ->setName('displayGroup.selectfolder.form');
-
-//
 // group
 //
 $app->get('/group/view', ['\Xibo\Controller\UserGroup','displayPage'])
