@@ -24,12 +24,12 @@ import { useTranslation } from 'react-i18next';
 
 import CommandDropdown from '@/components/ui/forms/CommandDropdown';
 import Modal from '@/components/ui/modals/Modal';
-import type { Display } from '@/types/display';
+import type { DisplayCommandTarget } from '@/types/display';
 
 interface SendCommandModalProps {
-  items: Display[];
+  items: DisplayCommandTarget[];
   onClose: () => void;
-  onConfirm: (items: Display[], commandId: number) => void;
+  onConfirm: (items: DisplayCommandTarget[], commandId: number) => void;
   isActionPending: boolean;
   actionError: string | null;
 }

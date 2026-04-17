@@ -48,7 +48,7 @@ import Modal from '@/components/ui/modals/Modal';
 import MoveModal from '@/components/ui/modals/MoveModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
 import type { MoveCmsData } from '@/services/displaysApi';
-import type { Display } from '@/types/display';
+import type { Display, DisplayCommandTarget } from '@/types/display';
 
 interface DisplayModalsProps {
   actions: {
@@ -87,9 +87,9 @@ interface DisplayModalsProps {
     confirmBulkCheckLicence: (items: Display[]) => void;
     confirmBulkRequestScreenShot: (items: Display[]) => void;
     confirmBulkCollectNow: (items: Display[]) => void;
-    confirmBulkTriggerWebhook: (items: Display[], triggerCode: string) => void;
+    confirmBulkTriggerWebhook: (items: DisplayCommandTarget[], triggerCode: string) => void;
     confirmBulkSetDefaultLayout: (items: Display[], layoutId: number) => void;
-    confirmSendCommand: (items: Display[], commandId: number) => void;
+    confirmSendCommand: (items: DisplayCommandTarget[], commandId: number) => void;
     confirmBulkMoveCms: (items: Display[], data: MoveCmsData) => void;
   };
 }

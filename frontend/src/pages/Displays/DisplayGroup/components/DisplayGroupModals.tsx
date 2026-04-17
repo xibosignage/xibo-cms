@@ -34,7 +34,7 @@ import AssignMediaModal from '@/pages/Displays/Displays/components/AssignMediaMo
 import CollectNowModal from '@/pages/Displays/Displays/components/CollectNowModal';
 import SendCommandModal from '@/pages/Displays/Displays/components/SendCommandModal';
 import TriggerWebhookModal from '@/pages/Displays/Displays/components/TriggerWebhookModal';
-import type { Display } from '@/types/display';
+import type { DisplayCommandTarget } from '@/types/display';
 import type { DisplayGroup } from '@/types/displayGroup';
 
 interface DisplayGroupModalsProps {
@@ -75,12 +75,11 @@ export function DisplayGroupModals({ actions, selection, handlers }: DisplayGrou
   const isModalOpen = (name: string) => actions.activeModal === name;
   const { t } = useTranslation();
 
-  // Adapter for modals that expect a Display object
-  const displayAdapter: Display | null = selection.selectedDisplayGroup
-    ? ({
+  const displayAdapter: DisplayCommandTarget | null = selection.selectedDisplayGroup
+    ? {
         displayGroupId: selection.selectedDisplayGroup.displayGroupId,
         display: selection.selectedDisplayGroup.displayGroup,
-      } as Display)
+      }
     : null;
 
   return (
@@ -197,13 +196,10 @@ export function DisplayGroupModals({ actions, selection, handlers }: DisplayGrou
 
       {isModalOpen('bulkSendCommand') && (
         <SendCommandModal
-          items={handlers.getAllSelectedItems().map(
-            (dg) =>
-              ({
-                displayGroupId: dg.displayGroupId,
-                display: dg.displayGroup,
-              }) as Display,
-          )}
+          items={handlers.getAllSelectedItems().map((dg) => ({
+            displayGroupId: dg.displayGroupId,
+            display: dg.displayGroup,
+          }))}
           onClose={actions.closeModal}
           onConfirm={(_items, commandId) => {
             handlers.confirmBulkSendCommand(handlers.getAllSelectedItems(), commandId);
@@ -215,13 +211,10 @@ export function DisplayGroupModals({ actions, selection, handlers }: DisplayGrou
 
       {isModalOpen('bulkTriggerWebhook') && (
         <TriggerWebhookModal
-          items={handlers.getAllSelectedItems().map(
-            (dg) =>
-              ({
-                displayGroupId: dg.displayGroupId,
-                display: dg.displayGroup,
-              }) as Display,
-          )}
+          items={handlers.getAllSelectedItems().map((dg) => ({
+            displayGroupId: dg.displayGroupId,
+            display: dg.displayGroup,
+          }))}
           onClose={actions.closeModal}
           onConfirm={(_items, triggerCode) => {
             handlers.confirmBulkTriggerWebhook(handlers.getAllSelectedItems(), triggerCode);

@@ -19,8 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import axios from 'axios';
-
 import http from '@/lib/api';
 import type { Display } from '@/types/display';
 import type { DisplayGroup } from '@/types/displayGroup';
@@ -146,28 +144,21 @@ export async function updateDisplayGroup(
   return responseData;
 }
 
-export interface DisplayGroupMemberData {
-  displaysAssigned: Display[];
-  displayGroupsAssigned: DisplayGroup[];
-  tree: DisplayGroup[];
+export async function fetchDisplaysAssigned(displayGroupId: number): Promise<Display[]> {
+  const response = await http.get(`/displaygroup/${displayGroupId}/displays`);
+  return response.data ?? [];
 }
 
-export async function fetchDisplayGroupMemberData(
+export async function fetchDisplayGroupsAssigned(displayGroupId: number): Promise<DisplayGroup[]> {
+  const response = await http.get(`/displaygroup/${displayGroupId}/displayGroups`);
+  return response.data ?? [];
+}
+
+export async function fetchDisplayGroupRelationshipTree(
   displayGroupId: number,
-): Promise<DisplayGroupMemberData> {
-  const response = await axios.get(`/displaygroup/form/members/${displayGroupId}`, {
-    withCredentials: true,
-    headers: { 'X-Requested-With': 'XMLHttpRequest' },
-  });
-
-  const extra = response.data?.extra ?? {};
-  const data = response.data?.data ?? {};
-
-  return {
-    displaysAssigned: extra.displaysAssigned ?? [],
-    displayGroupsAssigned: extra.displayGroupsAssigned ?? [],
-    tree: data.tree ?? [],
-  };
+): Promise<DisplayGroup[]> {
+  const response = await http.get(`/displaygroup/${displayGroupId}/relationshiptree`);
+  return response.data ?? [];
 }
 
 export async function assignDisplaysToGroup(

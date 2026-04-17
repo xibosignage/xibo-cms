@@ -31,11 +31,10 @@ import { TextCell } from '@/components/ui/table/cells';
 import { useDebounce } from '@/hooks/useDebounce';
 import { assignLayouts } from '@/services/displaysApi';
 import { fetchLayouts } from '@/services/layoutsApi';
-import type { Display } from '@/types/display';
 import type { Layout } from '@/types/layout';
 
 interface AssignLayoutModalProps {
-  display: Display;
+  display: { displayGroupId: number };
   onClose: () => void;
   onSave: () => void;
 }

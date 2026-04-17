@@ -32,8 +32,10 @@ import { useDebounce } from '@/hooks/useDebounce';
 import {
   assignDisplayGroupsToGroup,
   assignDisplaysToGroup,
-  fetchDisplayGroupMemberData,
+  fetchDisplayGroupRelationshipTree,
   fetchDisplayGroups,
+  fetchDisplayGroupsAssigned,
+  fetchDisplaysAssigned,
 } from '@/services/displayGroupApi';
 import { fetchDisplays } from '@/services/displaysApi';
 import type { Display } from '@/types/display';
@@ -64,7 +66,6 @@ export default function ManageMembersModal({
 
   // Displays tab state
   const [assignedDisplays, setAssignedDisplays] = useState<Display[]>([]);
-  const [isLoadingDisplays, setIsLoadingDisplays] = useState(false);
   const [displaysToAdd, setDisplaysToAdd] = useState<number[]>([]);
   const [displaysToRemove, setDisplaysToRemove] = useState<number[]>([]);
   const [displayKeyword, setDisplayKeyword] = useState('');
@@ -77,7 +78,6 @@ export default function ManageMembersModal({
 
   // Display Groups tab state
   const [assignedGroups, setAssignedGroups] = useState<DisplayGroup[]>([]);
-  const [isLoadingGroups, setIsLoadingGroups] = useState(false);
   const [groupsToAdd, setGroupsToAdd] = useState<number[]>([]);
   const [groupsToRemove, setGroupsToRemove] = useState<number[]>([]);
   const [groupKeyword, setGroupKeyword] = useState('');
@@ -88,24 +88,40 @@ export default function ManageMembersModal({
   });
   const [groupSorting, setGroupSorting] = useState<SortingState>([]);
 
+  // Initial membership queries
+  const { data: initialDisplaysData, isLoading: isLoadingDisplays } = useQuery({
+    queryKey: ['displayGroup', 'assigned-displays', groupId],
+    queryFn: () => fetchDisplaysAssigned(groupId!),
+    enabled: isOpen && !!groupId,
+    staleTime: 0,
+  });
+
+  const { data: initialGroupsData, isLoading: isLoadingGroups } = useQuery({
+    queryKey: ['displayGroup', 'assigned-groups', groupId],
+    queryFn: () => fetchDisplayGroupsAssigned(groupId!),
+    enabled: isOpen && !!groupId,
+    staleTime: 0,
+  });
+
+  const { data: treeData } = useQuery({
+    queryKey: ['displayGroup', 'relationship-tree', groupId],
+    queryFn: () => fetchDisplayGroupRelationshipTree(groupId!),
+    enabled: isOpen && !!groupId && activeTab === 'tree',
+    staleTime: 1000 * 60,
+  });
+
+  // Seed local state from initial query data on open
   useEffect(() => {
-    if (!isOpen || !groupId) return;
-    setIsLoadingDisplays(true);
-    setIsLoadingGroups(true);
-    fetchDisplayGroupMemberData(groupId)
-      .then((data) => {
-        setAssignedDisplays(data.displaysAssigned);
-        setAssignedGroups(data.displayGroupsAssigned);
-      })
-      .catch(() => {
-        setAssignedDisplays([]);
-        setAssignedGroups([]);
-      })
-      .finally(() => {
-        setIsLoadingDisplays(false);
-        setIsLoadingGroups(false);
-      });
-  }, [isOpen, groupId]);
+    if (initialDisplaysData) {
+      setAssignedDisplays(initialDisplaysData);
+    }
+  }, [initialDisplaysData]);
+
+  useEffect(() => {
+    if (initialGroupsData) {
+      setAssignedGroups(initialGroupsData);
+    }
+  }, [initialGroupsData]);
 
   // Reset on close
   useEffect(() => {
@@ -391,8 +407,15 @@ export default function ManageMembersModal({
                 'The Display Group being edited is in bold. The list is ordered so that items above the current Display Group are its ancestors and items below are its descendants.',
               )}
             </p>
-            <ul className="list-disc list-inside mt-2">
-              <li className="font-bold text-sm">{displayGroup?.displayGroup}</li>
+            <ul className="list-disc list-inside mt-2 text-sm">
+              {(treeData ?? []).map((group) => (
+                <li
+                  key={group.displayGroupId}
+                  className={group.displayGroupId === groupId ? 'font-bold' : 'text-gray-700'}
+                >
+                  {group.displayGroup}
+                </li>
+              ))}
             </ul>
           </div>
         )}

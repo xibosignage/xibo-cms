@@ -27,47 +27,103 @@ import { getBaseFilterKeys } from '../DisplayGroupConfig';
 import type { FilterOption } from '@/components/ui/SelectFilter';
 import { fetchDisplays } from '@/services/displaysApi';
 
+const PAGE_SIZE = 10;
+
+function toOptions(rows: { displayId: number; display: string }[]): FilterOption[] {
+  return rows.map((d) => ({ label: d.display, value: d.displayId.toString() }));
+}
+
 export function useDisplayGroupFilterOptions(t: TFunction) {
-  const [filterOptions, setFilterOptions] = useState(() => getBaseFilterKeys(t));
-  const [isLoading, setIsLoading] = useState(true);
+  // Display dropdown state
+  const [displayOptions, setDisplayOptions] = useState<FilterOption[]>([]);
+  const [displayPage, setDisplayPage] = useState(0);
+  const [hasMoreDisplays, setHasMoreDisplays] = useState(false);
+  const [isLoadingDisplays, setIsLoadingDisplays] = useState(false);
+  const [isLoadingMoreDisplays, setIsLoadingMoreDisplays] = useState(false);
 
+  // Nested Display dropdown state (same data source, independent pagination)
+  const [nestedDisplayOptions, setNestedDisplayOptions] = useState<FilterOption[]>([]);
+  const [nestedDisplayPage, setNestedDisplayPage] = useState(0);
+  const [hasMoreNestedDisplays, setHasMoreNestedDisplays] = useState(false);
+  const [isLoadingNestedDisplays, setIsLoadingNestedDisplays] = useState(false);
+  const [isLoadingMoreNestedDisplays, setIsLoadingMoreNestedDisplays] = useState(false);
+
+  // Initial load
   useEffect(() => {
-    let ignore = false;
+    setIsLoadingDisplays(true);
+    fetchDisplays({ start: 0, length: PAGE_SIZE })
+      .then((res) => {
+        setDisplayOptions(toOptions(res.rows));
+        setDisplayPage(0);
+        setHasMoreDisplays(res.rows.length === PAGE_SIZE);
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingDisplays(false));
 
-    async function loadDynamicOptions() {
-      try {
-        const displaysRes = await fetchDisplays({ start: 0, length: 1000 });
+    setIsLoadingNestedDisplays(true);
+    fetchDisplays({ start: 0, length: PAGE_SIZE })
+      .then((res) => {
+        setNestedDisplayOptions(toOptions(res.rows));
+        setNestedDisplayPage(0);
+        setHasMoreNestedDisplays(res.rows.length === PAGE_SIZE);
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingNestedDisplays(false));
+  }, []);
 
-        if (ignore) return;
+  const handleLoadMoreDisplays = () => {
+    if (isLoadingMoreDisplays || !hasMoreDisplays) return;
+    const nextPage = displayPage + 1;
+    setIsLoadingMoreDisplays(true);
+    fetchDisplays({ start: nextPage * PAGE_SIZE, length: PAGE_SIZE })
+      .then((res) => {
+        setDisplayOptions((prev) => [...prev, ...toOptions(res.rows)]);
+        setDisplayPage(nextPage);
+        setHasMoreDisplays(res.rows.length === PAGE_SIZE);
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingMoreDisplays(false));
+  };
 
-        const displayOptions: FilterOption[] = displaysRes.rows.map((display) => ({
-          label: display.display,
-          value: display.displayId.toString(),
-        }));
+  const handleLoadMoreNestedDisplays = () => {
+    if (isLoadingMoreNestedDisplays || !hasMoreNestedDisplays) return;
+    const nextPage = nestedDisplayPage + 1;
+    setIsLoadingMoreNestedDisplays(true);
+    fetchDisplays({ start: nextPage * PAGE_SIZE, length: PAGE_SIZE })
+      .then((res) => {
+        setNestedDisplayOptions((prev) => [...prev, ...toOptions(res.rows)]);
+        setNestedDisplayPage(nextPage);
+        setHasMoreNestedDisplays(res.rows.length === PAGE_SIZE);
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingMoreNestedDisplays(false));
+  };
 
-        const mergedOptions = getBaseFilterKeys(t).map((item) => {
-          if (item.name === 'displayIdDropdown' || item.name === 'nestedDisplayId') {
-            return { ...item, options: displayOptions };
-          }
-          return item;
-        });
-
-        setFilterOptions(mergedOptions);
-      } catch (error) {
-        console.error('Failed to load filter options', error);
-      } finally {
-        if (!ignore) {
-          setIsLoading(false);
-        }
-      }
+  const filterOptions = getBaseFilterKeys(t).map((item) => {
+    if (item.name === 'displayIdDropdown') {
+      return {
+        ...item,
+        options: displayOptions,
+        onLoadMore: handleLoadMoreDisplays,
+        hasMore: hasMoreDisplays,
+        isLoadingMore: isLoadingMoreDisplays,
+        isLoading: isLoadingDisplays,
+      };
     }
+    if (item.name === 'nestedDisplayId') {
+      return {
+        ...item,
+        options: nestedDisplayOptions,
+        onLoadMore: handleLoadMoreNestedDisplays,
+        hasMore: hasMoreNestedDisplays,
+        isLoadingMore: isLoadingMoreNestedDisplays,
+        isLoading: isLoadingNestedDisplays,
+      };
+    }
+    return item;
+  });
 
-    loadDynamicOptions();
-
-    return () => {
-      ignore = true;
-    };
-  }, [t]);
+  const isLoading = isLoadingDisplays || isLoadingNestedDisplays;
 
   return { filterOptions, isLoading };
 }

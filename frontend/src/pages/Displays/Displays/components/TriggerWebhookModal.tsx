@@ -23,12 +23,12 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Modal from '@/components/ui/modals/Modal';
-import type { Display } from '@/types/display';
+import type { DisplayCommandTarget } from '@/types/display';
 
 interface TriggerWebhookModalProps {
-  items: Display[];
+  items: DisplayCommandTarget[];
   onClose: () => void;
-  onConfirm: (items: Display[], triggerCode: string) => void;
+  onConfirm: (items: DisplayCommandTarget[], triggerCode: string) => void;
   isActionPending: boolean;
   actionError: string | null;
 }

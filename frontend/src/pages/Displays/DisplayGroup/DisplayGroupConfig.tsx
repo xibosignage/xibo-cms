@@ -81,15 +81,17 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayGroupFi
   {
     label: t('Display'),
     name: 'displayIdDropdown',
+    type: 'paged-select',
+    placeholder: t('All'),
     options: [],
-    showAllOption: true,
     shouldTranslateOptions: false,
   },
   {
     label: t('Nested Display'),
     name: 'nestedDisplayId',
+    type: 'paged-select',
+    placeholder: t('All'),
     options: [],
-    showAllOption: true,
     shouldTranslateOptions: false,
   },
   {

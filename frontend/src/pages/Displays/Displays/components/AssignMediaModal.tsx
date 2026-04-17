@@ -33,7 +33,6 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { getStatusTypeFromMediaType } from '@/pages/Library/Media/MediaConfig';
 import { assignMedia } from '@/services/displaysApi';
 import { fetchMedia } from '@/services/mediaApi';
-import type { Display } from '@/types/display';
 import type { Media } from '@/types/media';
 
 const MEDIA_TYPE_OPTIONS = [
@@ -46,7 +45,7 @@ const MEDIA_TYPE_OPTIONS = [
 ];
 
 interface AssignMediaModalProps {
-  display: Display;
+  display: { displayGroupId: number };
   onClose: () => void;
   onSave: () => void;
 }

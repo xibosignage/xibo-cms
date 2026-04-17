@@ -24,6 +24,12 @@ import type { Tag } from '@/types/tag';
 
 export type { DisplayGroup };
 
+export interface DisplayCommandTarget {
+  displayGroupId: number;
+  display: string;
+  clientType?: string | null;
+}
+
 export interface DisplayPermissions {
   view?: number;
   edit?: number;

@@ -30,7 +30,7 @@ class AddIndexToDisplayGroupTableMigration extends AbstractMigration
 {
     public function change(): void
     {
-        $this->execute('ALTER TABLE displaygroup ADD FULLTEXT idx_displaygroup_search(displaygGroup, 
+        $this->execute('ALTER TABLE displaygroup ADD FULLTEXT idx_displaygroup_search(displayGroup, 
             dynamicCriteria, dynamicCriteriaTags) WITH PARSER ngram');
     }
 }

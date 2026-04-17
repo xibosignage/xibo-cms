@@ -44,7 +44,7 @@ import {
 } from '@/services/displaysApi';
 import type { MoveCmsData } from '@/services/displaysApi';
 import { selectFolder } from '@/services/folderApi';
-import type { Display } from '@/types/display';
+import type { Display, DisplayCommandTarget } from '@/types/display';
 
 interface UseDisplaysActionsProps {
   t: TFunction;
@@ -264,7 +264,7 @@ export function useDisplaysActions({
       t('Failed to trigger collection for one or more displays.'),
     );
 
-  const confirmBulkTriggerWebhook = (items: Display[], triggerCode: string) =>
+  const confirmBulkTriggerWebhook = (items: DisplayCommandTarget[], triggerCode: string) =>
     runBulkAction(
       items.map((d) => () => triggerWebhook(d.displayGroupId, triggerCode)),
       t('Failed to trigger webhook for one or more displays.'),
@@ -276,7 +276,7 @@ export function useDisplaysActions({
       t('Failed to set default layout for one or more displays.'),
     );
 
-  const confirmSendCommand = (items: Display[], commandId: number) =>
+  const confirmSendCommand = (items: DisplayCommandTarget[], commandId: number) =>
     runBulkAction(
       items.map((d) => () => sendCommand(d.displayGroupId, commandId)),
       t('Failed to send command to one or more displays.'),
