@@ -125,9 +125,7 @@ export default function AssignLayoutModal({ display, onClose, onSave }: AssignLa
     {
       accessorKey: 'layout',
       header: t('Name'),
-      cell: (info) => (
-        <TextCell weight="bold">{info.getValue<string>() ?? info.row.original.name}</TextCell>
-      ),
+      cell: (info) => <TextCell weight="bold">{info.getValue<string>()}</TextCell>,
     },
   ];
 
@@ -167,7 +165,7 @@ export default function AssignLayoutModal({ display, onClose, onSave }: AssignLa
           assignedLabel={t('Assigned Layouts')}
           noAssignedText={t('No layouts assigned.')}
           getItemId={(l) => l.layoutId}
-          getItemLabel={(l) => l.layout ?? l.name}
+          getItemLabel={(l) => l.layout}
           keyword={nameFilter}
           onKeywordChange={setNameFilter}
           searchLabel={t('Name')}

@@ -128,13 +128,6 @@ export const INITIAL_FILTER_STATE: DisplayFilterInput = {
   lastAccessed: null,
 };
 
-const formatUnixTimestamp = (value: number | null): string => {
-  if (value === null) {
-    return '';
-  }
-  return new Date(value * 1000).toLocaleString();
-};
-
 const getCommercialLicenceLabel = (t: TFunction, value: number): string => {
   switch (value) {
     case 1:

@@ -806,7 +806,7 @@ export default function EditDisplayModal({
 
   const layoutOptions: SelectOption[] = [
     { value: '', label: t('Global default') },
-    ...layouts.map((l) => ({ value: String(l.layoutId), label: l.layout ?? l.name })),
+    ...layouts.map((l) => ({ value: String(l.layoutId), label: l.layout })),
   ];
 
   if (draft.defaultLayoutId && !layouts.some((l) => l.layoutId === draft.defaultLayoutId)) {

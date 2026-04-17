@@ -63,7 +63,7 @@ export default function SetDefaultLayoutModal({
       .then((res) => {
         const options = res.rows.map((l) => ({
           value: String(l.layoutId),
-          label: l.layout ?? l.name,
+          label: l.layout,
         }));
         // Ensure current layout is in the list
         if (
@@ -92,7 +92,7 @@ export default function SetDefaultLayoutModal({
       .then((res) => {
         setLayouts((prev) => [
           ...prev,
-          ...res.rows.map((l) => ({ value: String(l.layoutId), label: l.layout ?? l.name })),
+          ...res.rows.map((l) => ({ value: String(l.layoutId), label: l.layout })),
         ]);
         setLayoutPage(nextPage);
         setHasMoreLayouts(res.rows.length === LAYOUT_PAGE_SIZE);
