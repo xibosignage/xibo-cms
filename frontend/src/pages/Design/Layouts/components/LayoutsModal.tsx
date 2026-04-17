@@ -120,9 +120,7 @@ export function LayoutModals({
           onDelete={() => handlers.confirmDelete(selection.itemsToDelete)}
           itemCount={selection.itemsToDelete.length}
           layoutName={
-            selection.itemsToDelete.length === 1
-              ? selection.itemsToDelete[0]?.layout
-              : undefined
+            selection.itemsToDelete.length === 1 ? selection.itemsToDelete[0]?.layout : undefined
           }
           error={actions.deleteError}
           isLoading={actions.isDeleting}

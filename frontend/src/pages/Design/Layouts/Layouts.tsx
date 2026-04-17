@@ -190,7 +190,7 @@ export default function Layouts() {
   };
 
   const selectedLayout = layoutList.find((m) => m.layoutId === selectedLayoutId) ?? null;
-  const existingNames = layoutList.map((m) => m.name || m.layout).filter(Boolean);
+  const existingNames = layoutList.map((m) => m.layout).filter(Boolean);
   const ownerId = selectedLayout?.ownerId ? Number(selectedLayout.ownerId) : null;
   const { owner, loading } = useOwner({ ownerId });
 
@@ -531,7 +531,7 @@ export default function Layouts() {
       />
       <LayoutPreviewer
         layoutId={previewItem && previewItem?.layoutId}
-        name={selectedLayout?.name}
+        name={selectedLayout?.layout}
         onClose={() => {
           setPreviewItem(null);
         }}

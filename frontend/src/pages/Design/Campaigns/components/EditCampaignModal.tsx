@@ -238,9 +238,7 @@ export default function EditCampaignModal({
     {
       accessorKey: 'layout',
       header: t('Name'),
-      cell: ({ row }) => (
-        <TextCell weight="bold">{row.original.name || row.original.layout}</TextCell>
-      ),
+      cell: ({ row }) => <TextCell weight="bold">{row.original.layout}</TextCell>,
     },
     {
       accessorKey: 'publishedStatusId',
@@ -429,7 +427,7 @@ export default function EditCampaignModal({
                     >
                       <span className="shrink-0">{index + 1}</span>
                       <span className="truncate">
-                        #{layout.layoutId} {layout.name || layout.layout}
+                        #{layout.layoutId} {layout.layout}
                       </span>
                       <button
                         type="button"
