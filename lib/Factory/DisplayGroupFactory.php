@@ -522,39 +522,6 @@ class DisplayGroupFactory extends BaseFactory
             }
         }
 
-        if ($parsedBody->getInt('displayGroupIdMembers') !== null) {
-            $members = [];
-            foreach ($this->getStore()->select($select . $body, $params) as $row) {
-                $displayGroupId = $this->getSanitizer($row)->getInt('displayGroupId');
-                $parentId = $parsedBody->getInt('displayGroupIdMembers');
-
-                if ($this->getStore()->exists('SELECT `childId` FROM `lkdgdg` WHERE `parentId` = :parentId AND `childId` = :childId AND `depth` = 1',
-                    [
-                        'parentId' => $parentId,
-                        'childId' => $displayGroupId
-                    ]
-                )) {
-                    $members[] = $displayGroupId;
-                }
-            }
-        } else if ($parsedBody->getInt('displayIdMember') !== null) {
-            $members = [];
-
-            foreach ($this->getStore()->select($select . $body, $params) as $row) {
-                $displayGroupId = $this->getSanitizer($row)->getInt('displayGroupId');
-                $displayId = $parsedBody->getInt('displayIdMember');
-
-                if ($this->getStore()->exists('SELECT `displayGroupId` FROM `lkdisplaydg` WHERE `displayId` = :displayId AND `displayGroupId` = :displayGroupId ',
-                    [
-                        'displayId' => $displayId,
-                        'displayGroupId' => $displayGroupId
-                    ]
-                )) {
-                    $members[] = $displayGroupId;
-                }
-            }
-        }
-
         if ($parsedBody->getInt('folderId') !== null) {
             $body .= ' AND `displaygroup`.folderId = :folderId ';
             $params['folderId'] = $parsedBody->getInt('folderId');
@@ -589,20 +556,56 @@ class DisplayGroupFactory extends BaseFactory
             'modifiedDt',
         ];
 
-        $customColumns = [];
+        // Capture member sort direction before buildSortQuery strips the virtual column
+        $memberSortDir = null;
 
-        if (isset($members) && $members != []) {
-            $customColumns['member'] = 'FIELD(displaygroup.displayGroupId,' . implode(',', $members) . ')';
+        if (is_array($sortOrder)) {
+            foreach ($sortOrder as $s) {
+                $sort = strtolower(trim($s));
+                if ($sort === 'member' || $sort === 'member asc') {
+                    $memberSortDir = 'ASC';
+                } else if ($sort === 'member desc') {
+                    $memberSortDir = 'DESC';
+                }
+            }
+
+            // remove member sort options from sortOrder.
+            $sortOrder = array_values(array_filter(
+                $sortOrder,
+                fn($s) => !in_array(strtolower(trim($s)), ['member', 'member asc', 'member desc'])
+            ));
         }
 
+        // Resolve member display group IDs, only when member sort was requested
+        $members = [];
+
+        if ($memberSortDir !== null) {
+            if ($parsedBody->getInt('displayGroupIdMembers') !== null) {
+                $members = $this->resolveMemberDisplayGroupIds($parsedBody->getInt('displayGroupIdMembers'), null);
+            } else if ($parsedBody->getInt('displayIdMember') !== null) {
+                $members = $this->resolveMemberDisplayGroupIds(null, $parsedBody->getInt('displayIdMember'));
+            }
+        }
+
+        // default sort order
         $sortOrder = $this->buildSortQuery(
             $sortOrder,
             $allowedColumns,
-            $customColumns,
-            ['displayGroupId ASC']
+            defaultSort: ['displayGroupId ASC']
         );
 
-        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
+        $orderParts = [];
+
+        if (!empty($members)) {
+            $fieldExpr = 'FIELD(displaygroup.displayGroupId,' . implode(',', $members) . ')';
+            $orderParts[] = $fieldExpr . ($memberSortDir === 'DESC' ? ' DESC' : ' ASC');
+        }
+
+        if (!empty($sortOrder)) {
+            array_push($orderParts, ...$sortOrder);
+        }
+
+        $order = !empty($orderParts) ? ' ORDER BY ' . implode(', ', $orderParts) : '';
 
         $limit = '';
         // Paging
@@ -638,5 +641,32 @@ class DisplayGroupFactory extends BaseFactory
         }
 
         return $entries;
+    }
+
+    /**
+     * Returns displayGroupIds that are members of the given parent group or display.
+     * Used to build a FIELD()-based ORDER BY clause for member sorting.
+     */
+    private function resolveMemberDisplayGroupIds(?int $parentDisplayGroupId, ?int $displayId): array
+    {
+        if ($parentDisplayGroupId !== null) {
+            $rows = $this->getStore()->select(
+                'SELECT `childId` FROM `lkdgdg` WHERE `parentId` = :parentId AND `depth` = 1',
+                ['parentId' => $parentDisplayGroupId]
+            );
+
+            return array_column($rows, 'childId');
+        }
+
+        if ($displayId !== null) {
+            $rows = $this->getStore()->select(
+                'SELECT `displayGroupId` FROM `lkdisplaydg` WHERE `displayId` = :displayId',
+                ['displayId' => $displayId]
+            );
+
+            return array_column($rows, 'displayGroupId');
+        }
+
+        return [];
     }
 }

@@ -730,7 +730,7 @@ class DisplayGroup extends Base
      * @throws NotFoundException
      * @throws ControllerNotImplemented
      */
-    function delete(Request $request, Response $response, $id): Response|ResponseInterface
+    public function delete(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
         $displayGroup->load();

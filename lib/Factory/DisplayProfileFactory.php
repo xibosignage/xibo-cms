@@ -83,7 +83,7 @@ class DisplayProfileFactory extends BaseFactory
     public function getById(int $displayProfileId, bool $disableUserCheck = true): DisplayProfile
     {
         $profiles = $this->query(null, [
-            'disableUserCheck' => $disableUserCheck,
+            'disableUserCheck' => $disableUserCheck ? 1 : 0,
             'displayProfileId' => $displayProfileId
         ]);
 
