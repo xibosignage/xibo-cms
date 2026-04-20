@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -525,6 +525,16 @@ class DisplayGroupFactory extends BaseFactory
         if ($parsedBody->getInt('folderId') !== null) {
             $body .= ' AND `displaygroup`.folderId = :folderId ';
             $params['folderId'] = $parsedBody->getInt('folderId');
+        }
+
+        if ($parsedBody->getString('keyword') != null) {
+            // Fulltext search
+            $body .= $this->buildSearchQuery(
+                $parsedBody->getString('keyword'),
+                $params,
+                ['displaygroup.displayGroup', 'displaygroup.dynamicCriteria', 'displaygroup.dynamicCriteriaTags'],
+                ['displaygroup.displayGroupId']
+            );
         }
 
         // View Permissions

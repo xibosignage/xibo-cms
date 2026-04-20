@@ -26,7 +26,6 @@ import type { DisplayGroup } from '@/types/displayGroup';
 export interface FetchDisplayGroupRequest {
   start: number;
   length: number;
-  displayGroup?: string;
   folderId?: number | null;
   displayId?: number;
   nestedDisplayId?: number;
@@ -72,6 +71,7 @@ export interface CreateDisplayGroupRequest {
   exactTags?: number;
   logicalOperator?: string;
   folderId?: number | null;
+  keyword?: string;
 }
 
 export async function createDisplayGroup(data: CreateDisplayGroupRequest): Promise<DisplayGroup> {
