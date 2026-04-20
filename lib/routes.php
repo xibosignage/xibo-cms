@@ -597,8 +597,6 @@ $app->group('', function (RouteCollectorProxy $group) {
 //
 // Applications
 //
-$app->get('/application', ['\Xibo\Controller\Applications','grid'])->setName('application.search');
-
 $app->group('', function (RouteCollectorProxy $group) {
     $group->post('/application', ['\Xibo\Controller\Applications','add'])->setName('application.add');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['application.add']));

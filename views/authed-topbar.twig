@@ -194,7 +194,7 @@
                 {% if countViewable == 0 %}
                 <li class="nav-item">
                 {% endif %}
-                    <a class="{{ groupElementClass }}" href="{{ url_for("application.view") }}">{% trans "Applications" %}</a>
+                    <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/administration/applications">{% trans "Applications" %}</a>
                 {% if countViewable == 0 %}
                 </li>
                 {% endif %}

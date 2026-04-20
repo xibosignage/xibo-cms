@@ -54,7 +54,6 @@ class Controllers
                     $c->get('applicationScopeFactory'),
                     $c->get('userFactory'),
                     $c->get('pool'),
-                    $c->get('connectorFactory')
                 );
 
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));

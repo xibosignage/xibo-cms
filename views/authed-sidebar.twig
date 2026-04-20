@@ -102,7 +102,7 @@
             {% endif %}
 
             {% if currentUser.isSuperAdmin() %}
-                <li class="sidebar-list"><a href="{{ url_for("application.view") }}">{% trans "Applications" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/administration/applications">{% trans "Applications" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("module.view") %}
