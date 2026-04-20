@@ -188,7 +188,9 @@
                 params: $scriptParams.val()
               }, '*');
             } else if (type === 'log') {
-              $logs.prepend('[' + moment().format('YY-MM-DD HH:mm:ss') + '] ' + data.data + '\n');
+              const $logEntry = $('<span>');
+              $logEntry.text('[' + moment().format('YY-MM-DD HH:mm:ss') + '] ' + data.data + '\n');
+              $logs.prepend($logEntry);
             } else if (type === 'set') {
               // Update the table
               // if the dataKey matches my connector's DataSetId, then render out a table
@@ -212,9 +214,9 @@
                     // Do we have a column for this item
                     $.each(row, function (colIndex, col) {
                       if ($newRow.find('td[data-id=' + colIndex).length > 0) {
-                        $newRow.find('td[data-id=' + colIndex).append(row[colIndex]);
+                        $newRow.find('td[data-id=' + colIndex).append(DOMPurify.sanitize(row[colIndex]));
                       } else {
-                        $newRow.find('td[data-id=unmatched').append(colIndex + ': ' + row[colIndex] + '<br/>');
+                        $newRow.find('td[data-id=unmatched').append(DOMPurify.sanitize(colIndex + ': ' + row[colIndex]) + '<br/>');
                       }
                     });
                   });
@@ -234,15 +236,21 @@
               channel.postMessage({type: 'xiboDC_data', dataKey: data.dataKey, data: data.data});
             } else if (type === 'notify') {
               // Log
-              $logs.prepend('[' + moment().format('YY-MM-DD HH:mm:ss') + '] Notify for ' + data.dataKey + '\n');
+              const $notifyEntry = $('<span>');
+              $notifyEntry.text('[' + moment().format('YY-MM-DD HH:mm:ss') + '] Notify for ' + data.dataKey + '\n');
+              $logs.prepend($notifyEntry);
 
-              channel.postMessage({type: "xiboDC_notify", dataKey: data.dataKey});
+              channel.postMessage({type: 'xiboDC_notify', dataKey: data.dataKey});
             } else if (type === 'criteria') {
               // Schedule criteria, update in the table.
               criteria[data.dataKey] = data.data;
               const $tableBody = $scheduleCriteria.find('tbody');
               $.each(criteria, function (key, value) {
-                $tableBody.append('<tr><td>' + key + '</td><td>' + value.value + '</td><td>' + value.ttl + '</td></tr>');
+                const $row = $('<tr>');
+                $('<td>').text(key).appendTo($row);
+                $('<td>').html(DOMPurify.sanitize(value.value)).appendTo($row);
+                $('<td>').text(value.ttl).appendTo($row);
+                $tableBody.append($row);
               });
             }
           }
@@ -264,4 +272,5 @@
 
     {# Add code editor bundle #}
     <script type="text/javascript" src="{{ theme.rootUri() }}dist/codeEditor.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}" defer></script>
+    <script type="text/javascript" src="{{ theme.rootUri() }}dist/dompurify.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}" defer></script>
 {% endblock %}
