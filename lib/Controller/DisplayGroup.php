@@ -1591,8 +1591,7 @@ class DisplayGroup extends Base
         $displayGroup = $this->displayGroupFactory->getById($id);
 
         // Non-destructive edit-only feature; allow limited view access
-        if (
-            !$this->getUser()->checkEditable($displayGroup)
+        if (!$this->getUser()->checkEditable($displayGroup)
             && !$this->getUser()->featureEnabled('displays.limitedView')
             && !$this->getUser()->featureEnabled('displaygroup.limitedView')
         ) {
@@ -2056,8 +2055,7 @@ class DisplayGroup extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Non-destructive edit-only feature; allow limited view access
-        if (
-            !$this->getUser()->checkEditable($displayGroup)
+        if (!$this->getUser()->checkEditable($displayGroup)
             && !$this->getUser()->featureEnabled('displaygroup.limitedView')
             && !$this->getUser()->featureEnabled('displays.limitedView')
         ) {
