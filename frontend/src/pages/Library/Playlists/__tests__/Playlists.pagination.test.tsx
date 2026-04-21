@@ -99,7 +99,7 @@ describe('Playlists page - pagination', () => {
   // ---------------------------------------------------------------------------
   // Clicking Previous after Next decrements pageIndex back to 0.
   // ---------------------------------------------------------------------------
-  test.fails('clicking Previous after Next decrements pageIndex back to 0', async () => {
+  test('clicking Previous after Next decrements pageIndex back to 0', async () => {
     await act(async () => {
       renderPlaylistsPage();
     });
