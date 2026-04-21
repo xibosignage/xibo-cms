@@ -2667,10 +2667,6 @@ window.initDatePicker = function(
     flatpickr.l10ns.default.firstDayOfWeek =
       parseInt(moment().startOf('week').format('d'));
 
-    // Check if element is inside of a modal
-    // and set it as static
-    const isStatic = $element.parents('.modal').length > 0;
-
     // Create flatpickr
     flatpickr($element, Object.assign({
       altInput: true,
@@ -2682,7 +2678,6 @@ window.initDatePicker = function(
       dateFormat: baseFormat,
       locale: (language != 'en-GB') ? language : 'default',
       defaultHour: '00',
-      static: isStatic,
       getWeek: function(dateObj) {
         return moment(dateObj).week();
       },
@@ -2693,11 +2688,6 @@ window.initDatePicker = function(
         return moment(date).format(format);
       },
     }, options));
-
-    // If it's a static flatpickr, fix flex CSS
-    if (isStatic) {
-      $element.parent().css('flex', 1);
-    }
   }
 
   // Callback for on change event

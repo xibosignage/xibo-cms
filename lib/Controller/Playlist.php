@@ -1661,7 +1661,7 @@ class Playlist extends Base
                     }
 
                     $displays[] = $display;
-                    $displayIds = $display->displayId;
+                    $displayIds[] = $display->displayId;
 
                 }
             }
