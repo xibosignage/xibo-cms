@@ -317,7 +317,7 @@ describe('Edit Media — form fields', () => {
     await openEditModal();
 
     const retiredCheckbox = screen.getByRole('checkbox', {
-      name: /Retired media remains/i,
+      name: /Retire this media/i,
     });
     expect(retiredCheckbox).not.toBeChecked();
 
@@ -337,7 +337,7 @@ describe('Edit Media — form fields', () => {
     renderMediaPage();
     await openEditModal();
 
-    const updateCheckbox = screen.getByRole('checkbox', { name: /only be updated/i });
+    const updateCheckbox = screen.getByRole('checkbox', { name: /all layouts it is assigned to/i });
     expect(updateCheckbox).not.toBeChecked();
 
     fireEvent.click(updateCheckbox);
