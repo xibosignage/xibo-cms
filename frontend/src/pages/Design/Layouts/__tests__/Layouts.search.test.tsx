@@ -45,6 +45,11 @@ vi.mock('react-i18next', () => ({
   Trans: ({ children }: { children: React.ReactNode }) => children,
 }));
 
+vi.mock('i18next', () => {
+  const t = (key: string) => key;
+  return { default: { t, language: 'en', isInitialized: true }, t };
+});
+
 // Services
 vi.mock('@/services/folderApi', () => ({
   fetchFolderById: vi.fn().mockResolvedValue({ id: 1, text: 'Root' }),

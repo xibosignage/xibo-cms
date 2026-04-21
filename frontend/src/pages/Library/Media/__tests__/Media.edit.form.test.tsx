@@ -44,13 +44,7 @@ vi.mock('@/services/mediaApi', () => ({
   uploadThumbnail: vi.fn(),
   deleteMedia: vi.fn(),
 }));
-vi.mock('@/services/folderApi', () => ({
-  fetchFolderById: vi.fn().mockResolvedValue({ id: 1, text: 'Root' }),
-  fetchFolderTree: vi.fn().mockResolvedValue([]),
-  searchFolders: vi.fn().mockResolvedValue([]),
-  fetchContextButtons: vi.fn().mockResolvedValue({ create: true }),
-  selectFolder: vi.fn(),
-}));
+vi.mock('@/services/folderApi');
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
   Trans: ({ children }: { children: React.ReactNode }) => children,
