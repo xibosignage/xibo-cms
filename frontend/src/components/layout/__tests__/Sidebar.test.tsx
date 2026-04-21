@@ -163,12 +163,12 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
       '/developer/template/view',
     );
 
-    // Both Displays > Settings and Administration > Settings must be reachable.
-    const settingsLinks = screen.getAllByRole('link', { name: 'Settings' });
-    expect(
-      settingsLinks.find((l) => l.getAttribute('href') === '/displayprofile/view'),
-    ).toBeVisible();
-    expect(settingsLinks.find((l) => l.getAttribute('href') === '/admin/view')).toBeVisible();
+    // Displays > Display Settings is a React Router link; Administration > Settings is external.
+    expect(screen.getByRole('link', { name: 'Display Settings' })).toHaveAttribute(
+      'href',
+      '/displays/settings',
+    );
+    expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute('href', '/admin/view');
   });
 
   it('should try to close when the hamburger button is clicked', () => {
