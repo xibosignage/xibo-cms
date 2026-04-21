@@ -57,8 +57,8 @@
                 $(document).ready(function(){
                     var xiboLayoutRenderer = new XiboLayoutRenderer({{ layoutObj|json_encode()|raw }}, [], {{ xlrOptions|json_encode()|raw }});
     
-                    xiboLayoutRenderer.init().then(function(xlr) {
-                      xlr.playSchedules(xlr);
+                    xiboLayoutRenderer.init().then(async function(xlr) {
+                      await xlr.playSchedules(xlr);
                     });
 
                     window.xlr = xiboLayoutRenderer;
