@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -803,6 +803,20 @@ class DataSetRss extends Base
                         $criteria = '< \'' . $clause['filterClauseValue'] . '\'';
                         break;
 
+                    case 'is-empty':
+                        if ($i > 1) {
+                            $filtering .= ' ' . $clause['filterClauseOperator'] . ' ';
+                        }
+                        $filtering .= 'IFNULL(`' . $clause['filterClause'] . '`, \'\') = \'\'';
+                        continue 2;
+
+                    case 'is-not-empty':
+                        if ($i > 1) {
+                            $filtering .= ' ' . $clause['filterClauseOperator'] . ' ';
+                        }
+                        $filtering .= 'IFNULL(`' . $clause['filterClause'] . '`, \'\') <> \'\'';
+                        continue 2;
+
                     default:
                         // Continue out of the switch and the loop (this takes us back to our foreach)
                         continue 2;
@@ -811,14 +825,7 @@ class DataSetRss extends Base
                 if ($i > 1)
                     $filtering .= ' ' . $clause['filterClauseOperator'] . ' ';
 
-                // Ability to filter by not-empty and empty
-                if ($clause['filterClauseCriteria'] == 'is-empty') {
-                    $filtering .= 'IFNULL(`' . $clause['filterClause'] . '`, \'\') = \'\'';
-                } else if ($clause['filterClauseCriteria'] == 'is-not-empty') {
-                    $filtering .= 'IFNULL(`' . $clause['filterClause'] . '`, \'\') <> \'\'';
-                } else {
-                    $filtering .= $clause['filterClause'] . ' ' . $criteria;
-                }
+                $filtering .= $clause['filterClause'] . ' ' . $criteria;
             }
         }
 
