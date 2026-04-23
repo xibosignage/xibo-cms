@@ -323,7 +323,9 @@
                     if (!response.success || !$.trim(response.data.entries)) {
                         response.data = response.message;
                     }
-                    $("#datasetRemoteTestRequestResult").html('<pre style="height: 300px; overflow: scroll">' + JSON.stringify(response.data, null, 3) + '</pre>');
+                    $('<pre style="height: 300px; overflow: scroll"></pre>')
+                        .text(JSON.stringify(response.data, null, 3))
+                        .appendTo($("#datasetRemoteTestRequestResult").empty());
                 });
             });
 

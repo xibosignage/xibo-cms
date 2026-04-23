@@ -34,6 +34,7 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\RespectSanitizer;
 
 /**
  * Class DataSetFactory
@@ -784,8 +785,10 @@ class DataSetFactory extends BaseFactory
                             }
                             break;
                         case 6:
-                            // HTML, without any sanitization
-                            $result[$column->heading] = $value[1];
+                            // HTML — sanitize via RespectSanitizer to match the manual entry path
+                            $result[$column->heading] = (new RespectSanitizer())
+                                ->setCollection(['html' => $value[1] ?? ''])
+                                ->getHtml('html');
                             break;
                         default:
                             // Default value, assume it will be a string and filter it accordingly.
