@@ -48,6 +48,8 @@ class Sql
         'REPEAT', 'SPACE', 'LPAD', 'RPAD', 'RANDOM_BYTES',
         'SHA', 'SHA1', 'SHA2', 'MD5', 'AES_ENCRYPT', 'AES_DECRYPT',
         'COMPRESS', 'UNCOMPRESS',
+        // Regex functions (ReDoS risk - unbounded backtracking complexity)
+        'REGEXP_REPLACE', 'REGEXP_SUBSTR', 'REGEXP_LIKE', 'REGEXP_INSTR', 'RLIKE',
     ];
 
     /**
