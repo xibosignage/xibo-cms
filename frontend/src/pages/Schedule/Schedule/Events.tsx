@@ -48,6 +48,7 @@ import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { DataCalendar } from '@/components/ui/table/DataCalendar';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import { fetchUserPreference, saveUserPreference } from '@/services/userApi';
@@ -58,6 +59,8 @@ const DATE_RANGE_PREF_KEY = 'event_page_date_range';
 export default function Events() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { user } = useUserContext();
+  const timezone = user?.settings?.defaultTimezone ?? 'UTC';
 
   const {
     pagination,
@@ -274,6 +277,7 @@ export default function Events() {
 
   const columns = getEventColumns({
     t,
+    timezone,
     onDelete: handleDelete,
     openAddEditModal,
     copyEvent: openCopyModal,

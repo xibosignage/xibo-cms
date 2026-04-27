@@ -169,7 +169,7 @@ export interface CreateEventRequest {
   }[];
 }
 
-export async function createEvent(data: CreateEventRequest): Promise<Event> {
+export async function createEvent(data: CreateEventRequest, timezone = 'UTC'): Promise<Event> {
   const params = new URLSearchParams();
 
   params.append('eventTypeId', String(data.eventTypeId));
@@ -196,8 +196,8 @@ export async function createEvent(data: CreateEventRequest): Promise<Event> {
   if (data.actionTriggerCode) params.append('actionTriggerCode', data.actionTriggerCode);
   if (data.actionLayoutCode) params.append('actionLayoutCode', data.actionLayoutCode);
 
-  if (data.fromDt) params.append('fromDt', formatDateTime(new Date(data.fromDt)));
-  if (data.toDt) params.append('toDt', formatDateTime(new Date(data.toDt)));
+  if (data.fromDt) params.append('fromDt', formatDateTime(new Date(data.fromDt), timezone));
+  if (data.toDt) params.append('toDt', formatDateTime(new Date(data.toDt), timezone));
   if (data.recurrenceType) params.append('recurrenceType', data.recurrenceType);
   if (data.recurrenceDetail) params.append('recurrenceDetail', String(data.recurrenceDetail));
   if (data.recurrenceRepeatsOn) {
@@ -207,7 +207,7 @@ export async function createEvent(data: CreateEventRequest): Promise<Event> {
     params.append('recurrenceMonthlyRepeatsOn', String(data.recurrenceMonthlyRepeatsOn));
   }
   if (data.recurrenceRange) {
-    params.append('recurrenceRange', formatDateTime(new Date(data.recurrenceRange)));
+    params.append('recurrenceRange', formatDateTime(new Date(data.recurrenceRange), timezone));
   }
   if (data.syncTimezone != null) params.append('syncTimezone', String(data.syncTimezone));
 
@@ -264,6 +264,7 @@ export async function createEvent(data: CreateEventRequest): Promise<Event> {
 export async function updateEvent(
   eventId: number | string,
   data: CreateEventRequest,
+  timezone = 'UTC',
 ): Promise<Event> {
   const params = new URLSearchParams();
 
@@ -291,8 +292,8 @@ export async function updateEvent(
   if (data.actionTriggerCode) params.append('actionTriggerCode', data.actionTriggerCode);
   if (data.actionLayoutCode) params.append('actionLayoutCode', data.actionLayoutCode);
 
-  if (data.fromDt) params.append('fromDt', formatDateTime(new Date(data.fromDt)));
-  if (data.toDt) params.append('toDt', formatDateTime(new Date(data.toDt)));
+  if (data.fromDt) params.append('fromDt', formatDateTime(new Date(data.fromDt), timezone));
+  if (data.toDt) params.append('toDt', formatDateTime(new Date(data.toDt), timezone));
   if (data.recurrenceType) params.append('recurrenceType', data.recurrenceType);
   if (data.recurrenceDetail) params.append('recurrenceDetail', String(data.recurrenceDetail));
   if (data.recurrenceRepeatsOn) {
@@ -302,7 +303,7 @@ export async function updateEvent(
     params.append('recurrenceMonthlyRepeatsOn', String(data.recurrenceMonthlyRepeatsOn));
   }
   if (data.recurrenceRange) {
-    params.append('recurrenceRange', formatDateTime(new Date(data.recurrenceRange)));
+    params.append('recurrenceRange', formatDateTime(new Date(data.recurrenceRange), timezone));
   }
   if (data.syncTimezone != null) params.append('syncTimezone', String(data.syncTimezone));
 

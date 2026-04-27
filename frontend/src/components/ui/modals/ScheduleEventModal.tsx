@@ -104,6 +104,7 @@ export default function ScheduleEventModal({
 }: ScheduleEventModalProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
+  const timezone = user?.settings?.defaultTimezone ?? 'UTC';
 
   const canGeoSchedule = hasFeature(user, 'schedule.geoLocation');
   const canSetReminders = hasFeature(user, 'schedule.reminders');
@@ -743,10 +744,10 @@ export default function ScheduleEventModal({
         };
 
         if (isEditMode) {
-          await updateEvent(event.eventId, payload);
+          await updateEvent(event.eventId, payload, timezone);
           notify.success(t('Updated Event'));
         } else {
-          await createEvent(payload);
+          await createEvent(payload, timezone);
           notify.success(t('Added Event'));
         }
         onSaved?.();

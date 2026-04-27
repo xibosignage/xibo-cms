@@ -39,12 +39,13 @@ import { expandRecurringEvents } from '../utils/expandRecurringEvents';
 
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import { useUserContext } from '@/context/UserContext';
 import type { Event } from '@/types/event';
 
 const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-function buildMonthWeeks(date: Date): DateTime[][] {
-  const month = DateTime.fromJSDate(date).startOf('month');
+function buildMonthWeeks(date: Date, timezone: string): DateTime[][] {
+  const month = DateTime.fromJSDate(date, { zone: timezone }).startOf('month');
   const start = month.startOf('week');
   const end = month.endOf('month').endOf('week');
 
@@ -63,7 +64,10 @@ function buildMonthWeeks(date: Date): DateTime[][] {
   return weeks;
 }
 
-function buildEventsByDay(events: Event[]): {
+function buildEventsByDay(
+  events: Event[],
+  timezone: string,
+): {
   map: Map<string, Event[]>;
   alwaysEvents: Event[];
 } {
@@ -78,8 +82,8 @@ function buildEventsByDay(events: Event[]): {
     if (!event.fromDt || !event.toDt) {
       return;
     }
-    let day = DateTime.fromSeconds(Number(event.fromDt)).startOf('day');
-    const end = DateTime.fromSeconds(Number(event.toDt)).startOf('day');
+    let day = DateTime.fromSeconds(Number(event.fromDt), { zone: timezone }).startOf('day');
+    const end = DateTime.fromSeconds(Number(event.toDt), { zone: timezone }).startOf('day');
     while (day <= end) {
       const key = day.toISODate()!;
       const bucket = map.get(key);
@@ -93,6 +97,26 @@ function buildEventsByDay(events: Event[]): {
   });
 
   return { map, alwaysEvents };
+}
+
+function getTimeLabel(event: Event, day: DateTime, timezone: string): string | null {
+  if (!event.fromDt || !event.toDt) {
+    return null;
+  }
+  const from = DateTime.fromSeconds(Number(event.fromDt), { zone: timezone });
+  const to = DateTime.fromSeconds(Number(event.toDt), { zone: timezone });
+  const startHere = from.hasSame(day, 'day');
+  const endHere = to.hasSame(day, 'day');
+  if (startHere && endHere) {
+    return `${from.toFormat('h:mma').toLowerCase()} – ${to.toFormat('h:mma').toLowerCase()}`;
+  }
+  if (startHere) {
+    return `${from.toFormat('h:mma').toLowerCase()} –`;
+  }
+  if (endHere) {
+    return `– ${to.toFormat('h:mma').toLowerCase()}`;
+  }
+  return null;
 }
 
 function getEventsForDay(
@@ -111,7 +135,7 @@ function CalendarEventBadge({
 }: {
   scheduleEvent: Event;
   onEdit?: (scheduleEvent: Event) => void;
-  onContextMenu?: (scheduleEvent: Event, el: HTMLElement) => void;
+  onContextMenu?: (scheduleEvent: Event, x: number, y: number) => void;
 }) {
   const badge = getEventBadge(scheduleEvent);
   const Icon = badge.icon;
@@ -127,7 +151,7 @@ function CalendarEventBadge({
       onContextMenu={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        onContextMenu?.(scheduleEvent, e.currentTarget);
+        onContextMenu?.(scheduleEvent, e.clientX, e.clientY);
       }}
     >
       <span
@@ -147,21 +171,25 @@ function CalendarEventBadge({
 interface DayDetailPanelProps {
   day: DateTime;
   events: Event[];
+  timezone: string;
   floatingRef: (node: HTMLElement | null) => void;
   floatingStyles: React.CSSProperties;
   getFloatingProps: (props?: React.HTMLProps<HTMLElement>) => Record<string, unknown>;
   onClose: () => void;
   onEditEvent?: (scheduleEvent: Event) => void;
+  onContextMenu?: (scheduleEvent: Event, x: number, y: number) => void;
 }
 
 function DayDetailPanel({
   day,
   events,
+  timezone,
   floatingRef,
   floatingStyles,
   getFloatingProps,
   onClose,
   onEditEvent,
+  onContextMenu,
 }: DayDetailPanelProps) {
   const { t } = useTranslation();
   const dateLabel = day.toFormat('cccc, d LLL yyyy');
@@ -171,7 +199,7 @@ function DayDetailPanel({
       ref={floatingRef}
       style={floatingStyles}
       {...getFloatingProps()}
-      className="z-50 max-w-120 max-h-100 flex flex-col rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden"
+      className="z-50 max-w-150 max-h-100 flex flex-col rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden"
     >
       <div className="flex items-start justify-between px-3 py-2">
         <div>
@@ -199,11 +227,20 @@ function DayDetailPanel({
             const eventName = event.name ?? null;
             const contentName = event.campaign ?? event.command ?? null;
             const displays = event.displayGroups.map((dg) => dg.displayGroup);
+
+            const timeLabel = getTimeLabel(event, day, timezone);
+
             return (
               <li
                 key={`${event.eventId}-${event.fromDt}`}
                 onClick={() => {
                   onEditEvent?.(event);
+                  onClose();
+                }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onContextMenu?.(event, e.clientX, e.clientY);
                   onClose();
                 }}
                 className={`flex items-center gap-3 min-w-0 rounded px-1 -mx-1${onEditEvent ? ' cursor-pointer hover:bg-gray-50' : ''}`}
@@ -214,18 +251,21 @@ function DayDetailPanel({
                 >
                   <Icon className="w-4 h-4" />
                 </span>
-                <div className="flex items-center gap-1 text-xs text-gray-700 min-w-0 overflow-hidden">
-                  {eventName && (
-                    <span className="font-semibold truncate min-w-0" title={eventName}>
-                      {eventName}
-                    </span>
-                  )}
-                  {eventName && contentName && <span className="shrink-0 text-gray-400">-</span>}
-                  {contentName && (
-                    <span className="font-normal truncate min-w-0" title={contentName}>
-                      {contentName}
-                    </span>
-                  )}
+                <div className="flex items-center gap-1 text-xs min-w-0 overflow-hidden">
+                  {timeLabel && <span className="shrink-0 font-semibold">{timeLabel}</span>}
+                  <div className="flex items-center gap-1 min-w-0 overflow-hidden flex-1">
+                    {eventName && (
+                      <span className="font-semibold truncate min-w-0 max-w-1/2" title={eventName}>
+                        {eventName}
+                      </span>
+                    )}
+                    {eventName && contentName && <span className="shrink-0 text-gray-400">·</span>}
+                    {contentName && (
+                      <span className="font-normal truncate min-w-0 flex-1" title={contentName}>
+                        {contentName}
+                      </span>
+                    )}
+                  </div>
                   {displays[0] && (
                     <Badge variation="outline" className="flex gap-px h-4.25 shrink-0 ml-1">
                       <MonitorPlay size={10} className="shrink-0" />
@@ -256,6 +296,7 @@ function DayDetailPanel({
 
 interface EventContextMenuProps {
   scheduleEvent: Event;
+  timezone: string;
   floatingRef: (node: HTMLElement | null) => void;
   floatingStyles: React.CSSProperties;
   getFloatingProps: (props?: React.HTMLProps<HTMLElement>) => Record<string, unknown>;
@@ -265,6 +306,7 @@ interface EventContextMenuProps {
 
 function EventContextMenu({
   scheduleEvent,
+  timezone,
   floatingRef,
   floatingStyles,
   getFloatingProps,
@@ -277,6 +319,13 @@ function EventContextMenu({
   const eventName = scheduleEvent.name ?? null;
   const contentName = scheduleEvent.campaign ?? scheduleEvent.command ?? null;
   const displays = scheduleEvent.displayGroups.map((dg) => dg.displayGroup);
+
+  let timeLabel: string | null = null;
+  if (scheduleEvent.fromDt && scheduleEvent.toDt) {
+    const from = DateTime.fromSeconds(Number(scheduleEvent.fromDt), { zone: timezone });
+    const to = DateTime.fromSeconds(Number(scheduleEvent.toDt), { zone: timezone });
+    timeLabel = `${from.toFormat('h:mma').toLowerCase()} – ${to.toFormat('h:mma').toLowerCase()}`;
+  }
 
   return (
     <div
@@ -294,17 +343,20 @@ function EventContextMenu({
         </span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1 text-sm text-gray-700 min-w-0 overflow-hidden">
-            {eventName && (
-              <span className="font-semibold truncate min-w-0" title={eventName}>
-                {eventName}
-              </span>
-            )}
-            {eventName && contentName && <span className="shrink-0 text-gray-400">-</span>}
-            {contentName && (
-              <span className="font-normal truncate min-w-0" title={contentName}>
-                {contentName}
-              </span>
-            )}
+            {timeLabel && <span className="shrink-0 font-semibold">{timeLabel}</span>}
+            <div className="flex items-center gap-1 min-w-0 overflow-hidden flex-1">
+              {eventName && (
+                <span className="font-semibold truncate min-w-0 max-w-1/2" title={eventName}>
+                  {eventName}
+                </span>
+              )}
+              {eventName && contentName && <span className="shrink-0 text-gray-400">·</span>}
+              {contentName && (
+                <span className="font-normal truncate min-w-0 flex-1" title={contentName}>
+                  {contentName}
+                </span>
+              )}
+            </div>
           </div>
           {displays[0] && (
             <div className="flex items-center gap-1 mt-1 flex-wrap">
@@ -361,19 +413,23 @@ export function EventCalendar({
   onDeleteEvent,
 }: EventCalendarProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
+  const timezone = user?.settings?.defaultTimezone ?? 'UTC';
+
   const currentDate = date ?? new Date();
-  const currentMonth = DateTime.fromJSDate(currentDate);
-  const weeks = buildMonthWeeks(currentDate);
+  const currentMonth = DateTime.fromJSDate(currentDate, { zone: timezone });
+  const weeks = buildMonthWeeks(currentDate, timezone);
 
   const viewStart = currentMonth.startOf('month').startOf('week');
   const viewEnd = currentMonth.endOf('month').endOf('week');
-  const expandedEvents = expandRecurringEvents(events, viewStart, viewEnd);
-  const eventsIndex = buildEventsByDay(expandedEvents);
+  const expandedEvents = expandRecurringEvents(events, viewStart, viewEnd, timezone);
+  const eventsIndex = buildEventsByDay(expandedEvents, timezone);
 
   const [selectedCell, setSelectedCell] = useState<{ day: DateTime; el: HTMLElement } | null>(null);
   const [contextMenuEvent, setContextMenuEvent] = useState<{
     event: Event;
-    el: HTMLElement;
+    x: number;
+    y: number;
   } | null>(null);
 
   const selectedDayEvents =
@@ -415,7 +471,16 @@ export function EventCalendar({
   });
 
   useEffect(() => {
-    ctxRefs.setReference(contextMenuEvent?.el ?? null);
+    if (contextMenuEvent === null) {
+      ctxRefs.setReference(null);
+      return;
+    }
+    const { x, y } = contextMenuEvent;
+    ctxRefs.setReference({
+      getBoundingClientRect() {
+        return { width: 0, height: 0, x, y, top: y, left: x, right: x, bottom: y };
+      },
+    });
   }, [contextMenuEvent, ctxRefs]);
 
   const ctxDismiss = useDismiss(ctxContext);
@@ -485,7 +550,7 @@ export function EventCalendar({
             >
               {week.map((day, di) => {
                 const isCurrentMonth = day.month === currentMonth.month;
-                const isToday = day.hasSame(DateTime.now(), 'day');
+                const isToday = day.hasSame(DateTime.now().setZone(timezone), 'day');
                 const dayEvents = getEventsForDay(eventsIndex, day);
                 const isSelected = selectedCell?.day.hasSame(day, 'day') ?? false;
                 const viewLabel = isSelected ? t('View less') : t('View more');
@@ -520,7 +585,7 @@ export function EventCalendar({
                               key={`${event.eventId}-${event.fromDt}`}
                               scheduleEvent={event}
                               onEdit={onEditEvent}
-                              onContextMenu={(ev, el) => setContextMenuEvent({ event: ev, el })}
+                              onContextMenu={(ev, x, y) => setContextMenuEvent({ event: ev, x, y })}
                             />
                           ))}
                         </div>
@@ -543,13 +608,13 @@ export function EventCalendar({
           <DayDetailPanel
             day={selectedCell.day}
             events={selectedDayEvents}
+            timezone={timezone}
             floatingRef={refs.setFloating}
             floatingStyles={floatingStyles}
             getFloatingProps={getFloatingProps}
-            onClose={() => {
-              setSelectedCell(null);
-            }}
+            onClose={() => setSelectedCell(null)}
             onEditEvent={onEditEvent}
+            onContextMenu={(ev, x, y) => setContextMenuEvent({ event: ev, x, y })}
           />
         </FloatingPortal>
       )}
@@ -558,6 +623,7 @@ export function EventCalendar({
         <FloatingPortal>
           <EventContextMenu
             scheduleEvent={contextMenuEvent.event}
+            timezone={timezone}
             floatingRef={ctxRefs.setFloating}
             floatingStyles={ctxStyles}
             getFloatingProps={getCtxFloatingProps}

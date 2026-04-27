@@ -27,6 +27,7 @@ export function expandRecurringEvents(
   events: Event[],
   viewStart: DateTime,
   viewEnd: DateTime,
+  timezone: string,
 ): Event[] {
   const allOccurrences: Event[] = [];
 
@@ -45,13 +46,13 @@ export function expandRecurringEvents(
     }
 
     const generated: Event[] = [];
-    const originalStart = DateTime.fromSeconds(Number(sourceEv.fromDt));
+    const originalStart = DateTime.fromSeconds(Number(sourceEv.fromDt), { zone: timezone });
     const durationSecs = Number(sourceEv.toDt) - Number(sourceEv.fromDt);
 
     // 0 or null means no end date
     const rangeEnd = sourceEv.recurrenceRange
-      ? DateTime.fromSeconds(Number(sourceEv.recurrenceRange))
-      : DateTime.fromISO('9999-12-31T00:00:00.000Z');
+      ? DateTime.fromSeconds(Number(sourceEv.recurrenceRange), { zone: timezone })
+      : DateTime.fromISO('9999-12-31T00:00:00.000Z', { zone: timezone });
 
     const isHighFrequency =
       (sourceEv.recurrenceType === 'Minute' && interval < 1440) ||
@@ -221,7 +222,9 @@ export function expandRecurringEvents(
   // Deduplicate: keep only the first occurrence of each event per calendar day
   const grouped = new Map<string, Event>();
   filtered.forEach((ev) => {
-    const dayKey = DateTime.fromSeconds(ev.isAlways === 1 ? 0 : Number(ev.fromDt)).toISODate();
+    const dayKey = DateTime.fromSeconds(ev.isAlways === 1 ? 0 : Number(ev.fromDt), {
+      zone: timezone,
+    }).toISODate();
     const groupKey = `${ev.eventId}-${dayKey}`;
     if (!grouped.has(groupKey)) {
       grouped.set(groupKey, ev);

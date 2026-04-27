@@ -20,12 +20,14 @@
  */
 
 import { Calendar, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { DateTime } from 'luxon';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Button from '@/components/ui/Button';
 import DatePicker from '@/components/ui/DatePicker';
 import MonthPicker from '@/components/ui/MonthPicker';
+import { useUserContext } from '@/context/UserContext';
 import { formatDateTime } from '@/utils/date';
 
 type ViewMode = 'day' | 'week' | 'month' | 'year' | 'custom' | 'always';
@@ -46,75 +48,40 @@ interface DateRangeControllerProps {
   onStateChange?: (state: DateRangeControllerState) => void;
 }
 
-function startOfDay(date: Date): Date {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function endOfDay(date: Date): Date {
-  const d = new Date(date);
-  d.setHours(23, 59, 59, 999);
-  return d;
-}
-
-function startOfWeek(date: Date): Date {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  d.setDate(d.getDate() + diff);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function endOfWeek(date: Date): Date {
-  const start = startOfWeek(date);
-  const d = new Date(start);
-  d.setDate(d.getDate() + 6);
-  d.setHours(23, 59, 59, 999);
-  return d;
-}
-
-function startOfMonth(date: Date): Date {
-  const d = new Date(date.getFullYear(), date.getMonth(), 1, 0, 0, 0, 0);
-  return d;
-}
-
-function endOfMonth(date: Date): Date {
-  const d = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
-  return d;
-}
-
-function startOfYear(date: Date): Date {
-  return new Date(date.getFullYear(), 0, 1, 0, 0, 0, 0);
-}
-
-function endOfYear(date: Date): Date {
-  return new Date(date.getFullYear(), 11, 31, 23, 59, 59, 999);
-}
-
 function toLocalISO(d: Date): string {
   const p = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 }
 
-function computeRange(mode: ViewMode, date: Date): { from: Date; to: Date } | null {
+function computeRange(
+  mode: ViewMode,
+  date: Date,
+  timezone: string,
+): { from: Date; to: Date } | null {
+  const dt = DateTime.fromJSDate(date, { zone: timezone });
   if (mode === 'day') {
-    return { from: startOfDay(date), to: endOfDay(date) };
+    return { from: dt.startOf('day').toJSDate(), to: dt.endOf('day').toJSDate() };
   }
   if (mode === 'week') {
-    return { from: startOfWeek(date), to: endOfWeek(date) };
+    const weekStart = dt.startOf('week');
+    return { from: weekStart.toJSDate(), to: weekStart.endOf('week').toJSDate() };
   }
   if (mode === 'month') {
-    return { from: startOfMonth(date), to: endOfMonth(date) };
+    return { from: dt.startOf('month').toJSDate(), to: dt.endOf('month').toJSDate() };
   }
   if (mode === 'year') {
-    return { from: startOfYear(date), to: endOfYear(date) };
+    return { from: dt.startOf('year').toJSDate(), to: dt.endOf('year').toJSDate() };
   }
   return null;
 }
 
-function formatDateLabel(mode: ViewMode, date: Date, customFrom: string, customTo: string): string {
+function formatDateLabel(
+  mode: ViewMode,
+  date: Date,
+  customFrom: string,
+  customTo: string,
+  timezone: string,
+): string {
   const fmt = (d: Date, opts: Intl.DateTimeFormatOptions) =>
     new Intl.DateTimeFormat(undefined, opts).format(d);
 
@@ -125,8 +92,9 @@ function formatDateLabel(mode: ViewMode, date: Date, customFrom: string, customT
     return fmt(date, { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
   }
   if (mode === 'week') {
-    const start = startOfWeek(date);
-    const end = endOfWeek(date);
+    const dt = DateTime.fromJSDate(date, { zone: timezone });
+    const start = dt.startOf('week').toJSDate();
+    const end = dt.endOf('week').toJSDate();
     const sameYear = start.getFullYear() === end.getFullYear();
     const startStr = fmt(start, {
       day: 'numeric',
@@ -192,6 +160,8 @@ export function DateRangeController({
   onStateChange,
 }: DateRangeControllerProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
+  const timezone = user?.settings?.defaultTimezone ?? 'UTC';
 
   const [viewMode, setViewMode] = useState<ViewMode>(
     lockedViewMode ?? initialState?.viewMode ?? 'day',
@@ -274,17 +244,19 @@ export function DateRangeController({
     }
     if (viewMode === 'custom') {
       if (customFrom && customTo) {
-        onDateRangeChange(formatDateTime(new Date(customFrom)), formatDateTime(new Date(customTo)));
+        const from = DateTime.fromISO(customFrom, { zone: timezone }).startOf('day').toJSDate();
+        const to = DateTime.fromISO(customTo, { zone: timezone }).endOf('day').toJSDate();
+        onDateRangeChange(formatDateTime(from, timezone), formatDateTime(to, timezone));
       } else {
         onDateRangeChange(undefined, undefined);
       }
       return;
     }
-    const range = computeRange(viewMode, currentDate);
+    const range = computeRange(viewMode, currentDate, timezone);
     if (range) {
-      onDateRangeChange(formatDateTime(range.from), formatDateTime(range.to));
+      onDateRangeChange(formatDateTime(range.from, timezone), formatDateTime(range.to, timezone));
     }
-  }, [viewMode, currentDate, customFrom, customTo]);
+  }, [viewMode, currentDate, customFrom, customTo, timezone]);
 
   const handlePrev = () => {
     setCurrentDate((d) => addUnit(d, viewMode, -1));
@@ -309,7 +281,7 @@ export function DateRangeController({
     }
   };
 
-  const currentLabel = formatDateLabel(viewMode, currentDate, customFrom, customTo);
+  const currentLabel = formatDateLabel(viewMode, currentDate, customFrom, customTo, timezone);
 
   return (
     <div className="w-full lg:flex-1 md:min-w-0 flex items-center gap-3 flex-wrap">
