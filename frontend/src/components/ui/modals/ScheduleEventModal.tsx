@@ -77,6 +77,8 @@ import { fetchSyncGroups } from '@/services/syncGroupApi';
 import { EventTypeId, type Event } from '@/types/event';
 import { hasFeature } from '@/utils/permissions';
 
+const DROPDOWN_PAGE_SIZE = 10;
+
 type ScheduleModalMode = 'add' | 'schedule' | 'edit';
 
 interface ScheduleEventModalProps {
@@ -108,9 +110,9 @@ export default function ScheduleEventModal({
   const canSetCriteria = hasFeature(user, 'schedule.criteria');
 
   const isEditMode = mode === 'edit' && !!event;
-  const isSyncEvent =
+  const initialIsSyncType =
     (prefilledEventTypeId ?? (isEditMode ? event?.eventTypeId : null)) === EventTypeId.Sync;
-  const initialStepLabels = getStepLabels(isSyncEvent ? EventTypeId.Sync : null);
+  const initialStepLabels = getStepLabels(initialIsSyncType ? EventTypeId.Sync : null);
   const initialStep = isEditMode ? 0 : contentId ? 1 : 0;
   const initialMaxStep = isEditMode ? initialStepLabels.length - 1 : initialStep;
   const [currentStep, setCurrentStep] = useState(initialStep);
@@ -130,9 +132,15 @@ export default function ScheduleEventModal({
   const [showDisplayBanner, setShowDisplayBanner] = useState(false);
   const [daypartOptions, setDaypartOptions] = useState<SelectOption[]>([]);
   const [resolutionOptions, setResolutionOptions] = useState<SelectOption[]>([]);
-
   const [layoutCodeOptions, setLayoutCodeOptions] = useState<SelectOption[]>([]);
   const [commandOptions, setCommandOptions] = useState<SelectOption[]>([]);
+
+  const [pagination, setPagination] = useState({
+    content: { totalCount: 0, isLoading: false, isLoadingMore: false },
+    daypart: { totalCount: 0, isLoading: false, isLoadingMore: false },
+    command: { totalCount: 0, isLoading: false, isLoadingMore: false },
+    layoutCode: { totalCount: 0, isLoading: false, isLoadingMore: false },
+  });
 
   const [alwaysDayPartId, setAlwaysDayPartId] = useState<string>('');
   const [customDayPartId, setCustomDayPartId] = useState<string>('');
@@ -215,19 +223,25 @@ export default function ScheduleEventModal({
   useEffect(() => {
     if (!isOpen) return;
 
-    fetchDaypart({ start: 0, length: 100 }).then(({ rows }) => {
-      setDaypartOptions(rows.map((dp) => ({ value: String(dp.dayPartId), label: dp.name })));
+    setPagination((prev) => ({ ...prev, daypart: { ...prev.daypart, isLoading: true } }));
+    fetchDaypart({ start: 0, length: DROPDOWN_PAGE_SIZE })
+      .then(({ rows, totalCount }) => {
+        setDaypartOptions(rows.map((dp) => ({ value: String(dp.dayPartId), label: dp.name })));
+        setPagination((prev) => ({ ...prev, daypart: { ...prev.daypart, totalCount } }));
 
-      const always = rows.find((dp) => dp.isAlways === 1);
-      const custom = rows.find((dp) => dp.isCustom === 1);
-      if (always) {
-        setAlwaysDayPartId(String(always.dayPartId));
-        setDraft((prev) =>
-          prev.dayPartId === '' ? { ...prev, dayPartId: String(always.dayPartId) } : prev,
-        );
-      }
-      if (custom) setCustomDayPartId(String(custom.dayPartId));
-    });
+        const always = rows.find((dp) => dp.isAlways === 1);
+        const custom = rows.find((dp) => dp.isCustom === 1);
+        if (always) {
+          setAlwaysDayPartId(String(always.dayPartId));
+          setDraft((prev) =>
+            prev.dayPartId === '' ? { ...prev, dayPartId: String(always.dayPartId) } : prev,
+          );
+        }
+        if (custom) setCustomDayPartId(String(custom.dayPartId));
+      })
+      .finally(() => {
+        setPagination((prev) => ({ ...prev, daypart: { ...prev.daypart, isLoading: false } }));
+      });
 
     fetchResolution({ start: 0, length: 100 }).then(({ rows }) => {
       setResolutionOptions(
@@ -272,76 +286,166 @@ export default function ScheduleEventModal({
     }
   }, [isCommandEvent, customDayPartId]);
 
+  const fetchContentPage = async (
+    eventType: EventTypeId,
+    start: number,
+  ): Promise<{ options: SelectOption[]; totalCount: number }> => {
+    switch (eventType) {
+      case EventTypeId.Layout:
+      case EventTypeId.Overlay:
+      case EventTypeId.Interrupt: {
+        const { rows, totalCount } = await fetchLayouts({ start, length: DROPDOWN_PAGE_SIZE });
+        return {
+          options: rows.map((l) => ({ value: String(l.campaignId), label: l.layout })),
+          totalCount,
+        };
+      }
+      case EventTypeId.Command: {
+        const { rows, totalCount } = await fetchCommands({ start, length: DROPDOWN_PAGE_SIZE });
+        return {
+          options: rows.map((c) => ({ value: String(c.commandId), label: c.command })),
+          totalCount,
+        };
+      }
+      case EventTypeId.Campaign: {
+        const { rows, totalCount } = await fetchCampaigns({
+          start,
+          length: DROPDOWN_PAGE_SIZE,
+        });
+        return {
+          options: rows.map((c) => ({ value: String(c.campaignId), label: c.campaign })),
+          totalCount,
+        };
+      }
+      case EventTypeId.Media: {
+        const { rows, totalCount } = await fetchMedia({ start, length: DROPDOWN_PAGE_SIZE });
+        return {
+          options: rows
+            .filter((m) => m.released === 1)
+            .map((m) => ({ value: String(m.mediaId), label: m.name })),
+          totalCount,
+        };
+      }
+      case EventTypeId.Playlist: {
+        const { rows, totalCount } = await fetchPlaylist({ start, length: DROPDOWN_PAGE_SIZE });
+        return {
+          options: rows.map((p) => ({ value: String(p.playlistId), label: p.name })),
+          totalCount,
+        };
+      }
+      case EventTypeId.Sync: {
+        const { rows, totalCount } = await fetchSyncGroups({ start, length: DROPDOWN_PAGE_SIZE });
+        return {
+          options: rows.map((sg) => ({ value: String(sg.syncGroupId), label: sg.name })),
+          totalCount,
+        };
+      }
+      case EventTypeId.DataConnector: {
+        const { rows, totalCount } = await fetchDataset({
+          start,
+          length: DROPDOWN_PAGE_SIZE,
+          isRealTime: 1,
+        });
+        return {
+          options: rows.map((ds) => ({ value: String(ds.dataSetId), label: ds.dataSet })),
+          totalCount,
+        };
+      }
+      default:
+        return { options: [], totalCount: 0 };
+    }
+  };
+
   useEffect(() => {
     if (!isOpen || !draft.eventTypeId) {
       setContentOptions([]);
+      setPagination((prev) => ({
+        ...prev,
+        content: { totalCount: 0, isLoading: false, isLoadingMore: false },
+      }));
       setIsLoadingContent(false);
       return;
     }
 
+    let cancelled = false;
     setIsLoadingContent(true);
     setContentOptions([]);
+    setPagination((prev) => ({
+      ...prev,
+      content: { totalCount: 0, isLoading: false, isLoadingMore: false },
+    }));
 
-    const load = async () => {
-      try {
-        switch (draft.eventTypeId) {
-          case EventTypeId.Layout:
-          case EventTypeId.Overlay:
-          case EventTypeId.Interrupt: {
-            const { rows } = await fetchLayouts({ start: 0, length: 100 });
-            setContentOptions(rows.map((l) => ({ value: String(l.campaignId), label: l.layout })));
-            break;
-          }
-          case EventTypeId.Command: {
-            const { rows } = await fetchCommands({ start: 0, length: 100 });
-            setContentOptions(rows.map((c) => ({ value: String(c.commandId), label: c.command })));
-            break;
-          }
-          case EventTypeId.Campaign: {
-            const { rows } = await fetchCampaigns({});
-            setContentOptions(
-              rows.map((c) => ({ value: String(c.campaignId), label: c.campaign })),
-            );
-            break;
-          }
-          case EventTypeId.Media: {
-            const { rows } = await fetchMedia({ start: 0, length: 100 });
-            setContentOptions(
-              rows
-                .filter((m) => m.released === 1)
-                .map((m) => ({ value: String(m.mediaId), label: m.name })),
-            );
-            break;
-          }
-          case EventTypeId.Playlist: {
-            const { rows } = await fetchPlaylist({ start: 0, length: 100 });
-            setContentOptions(rows.map((p) => ({ value: String(p.playlistId), label: p.name })));
-            break;
-          }
-          case EventTypeId.Sync: {
-            const { rows } = await fetchSyncGroups({ start: 0, length: 100 });
-            setContentOptions(
-              rows.map((sg) => ({ value: String(sg.syncGroupId), label: sg.name })),
-            );
-            break;
-          }
-          case EventTypeId.DataConnector: {
-            const { rows } = await fetchDataset({ start: 0, length: 100, isRealTime: 1 });
-            setContentOptions(
-              rows.map((ds) => ({ value: String(ds.dataSetId), label: ds.dataSet })),
-            );
-            break;
-          }
-          default:
-            setContentOptions([]);
+    fetchContentPage(draft.eventTypeId, 0)
+      .then(({ options, totalCount }) => {
+        if (!cancelled) {
+          setContentOptions(options);
+          setPagination((prev) => ({ ...prev, content: { ...prev.content, totalCount } }));
         }
-      } finally {
-        setIsLoadingContent(false);
-      }
-    };
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoadingContent(false);
+        }
+      });
 
-    load();
+    return () => {
+      cancelled = true;
+    };
   }, [isOpen, draft.eventTypeId]);
+
+  type PaginationKey = keyof typeof pagination;
+
+  const loadMore = (
+    key: PaginationKey,
+    fetchFn: () => Promise<SelectOption[]>,
+    setOptions: React.Dispatch<React.SetStateAction<SelectOption[]>>,
+  ) => {
+    if (pagination[key].isLoadingMore) return;
+    setPagination((prev) => ({ ...prev, [key]: { ...prev[key], isLoadingMore: true } }));
+    fetchFn()
+      .then((newOptions) => {
+        setOptions((prev) => [...prev, ...newOptions]);
+      })
+      .finally(() => {
+        setPagination((prev) => ({ ...prev, [key]: { ...prev[key], isLoadingMore: false } }));
+      });
+  };
+
+  const hasMoreContent = contentOptions.length < pagination.content.totalCount;
+  const hasMoreDayparts = daypartOptions.length < pagination.daypart.totalCount;
+  const hasMoreCommands = commandOptions.length < pagination.command.totalCount;
+
+  const loadMoreContent = () => {
+    if (!draft.eventTypeId) return;
+    loadMore(
+      'content',
+      () =>
+        fetchContentPage(draft.eventTypeId!, contentOptions.length).then(({ options }) => options),
+      setContentOptions,
+    );
+  };
+
+  const loadMoreDayparts = () => {
+    loadMore(
+      'daypart',
+      () =>
+        fetchDaypart({ start: daypartOptions.length, length: DROPDOWN_PAGE_SIZE }).then(
+          ({ rows }) => rows.map((dp) => ({ value: String(dp.dayPartId), label: dp.name })),
+        ),
+      setDaypartOptions,
+    );
+  };
+
+  const loadMoreCommands = () => {
+    loadMore(
+      'command',
+      () =>
+        fetchCommands({ start: commandOptions.length, length: DROPDOWN_PAGE_SIZE }).then(
+          ({ rows }) => rows.map((c) => ({ value: String(c.commandId), label: c.command })),
+        ),
+      setCommandOptions,
+    );
+  };
 
   useEffect(() => {
     if (!isOpen || draft.eventTypeId !== EventTypeId.Action) {
@@ -350,14 +454,43 @@ export default function ScheduleEventModal({
       return;
     }
 
-    Promise.all([fetchLayoutCodes(), fetchCommands({ start: 0, length: 100 })]).then(
-      ([codes, { rows: commands }]) => {
+    setPagination((prev) => ({
+      ...prev,
+      layoutCode: { ...prev.layoutCode, isLoading: true },
+      command: { ...prev.command, isLoading: true },
+    }));
+
+    fetchLayoutCodes()
+      .then((codes) => {
         setLayoutCodeOptions(
           codes.map((c) => ({ value: c.code, label: `${c.layout} (${c.code})` })),
         );
+        setPagination((prev) => ({
+          ...prev,
+          layoutCode: { ...prev.layoutCode, totalCount: codes.length },
+        }));
+      })
+      .catch((err) => {
+        console.error('fetchLayoutCodes failed:', err);
+      })
+      .finally(() => {
+        setPagination((prev) => ({
+          ...prev,
+          layoutCode: { ...prev.layoutCode, isLoading: false },
+        }));
+      });
+
+    fetchCommands({ start: 0, length: DROPDOWN_PAGE_SIZE })
+      .then(({ rows: commands, totalCount }) => {
         setCommandOptions(commands.map((c) => ({ value: String(c.commandId), label: c.command })));
-      },
-    );
+        setPagination((prev) => ({ ...prev, command: { ...prev.command, totalCount } }));
+      })
+      .catch(() => {
+        notify.error(t('Failed to load commands.'));
+      })
+      .finally(() => {
+        setPagination((prev) => ({ ...prev, command: { ...prev.command, isLoading: false } }));
+      });
   }, [isOpen, draft.eventTypeId]);
 
   const updateDraft = <K extends keyof ScheduleEventDraft>(
@@ -802,6 +935,9 @@ export default function ScheduleEventModal({
                   helpText={contentHelpText}
                   searchable
                   isLoading={isLoadingContent}
+                  onLoadMore={loadMoreContent}
+                  hasMore={hasMoreContent}
+                  isLoadingMore={pagination.content.isLoadingMore}
                   error={
                     formErrors.campaignId ||
                     formErrors.commandId ||
@@ -885,6 +1021,7 @@ export default function ScheduleEventModal({
                         'Please select the Code identifier for the Layout that Player should navigate to when this Action is triggered.',
                       )}
                       searchable
+                      isLoading={pagination.layoutCode.isLoading}
                       error={formErrors.actionLayoutCode}
                     />
                   )}
@@ -896,6 +1033,10 @@ export default function ScheduleEventModal({
                       onSelect={(value) => updateDraft('commandId', Number(value))}
                       placeholder={t('Select Command')}
                       searchable
+                      isLoading={pagination.command.isLoading}
+                      onLoadMore={loadMoreCommands}
+                      hasMore={hasMoreCommands}
+                      isLoadingMore={pagination.command.isLoadingMore}
                       error={formErrors.commandId}
                     />
                   )}
@@ -950,6 +1091,10 @@ export default function ScheduleEventModal({
                   helpText={t(
                     'Select how this event recurs. Choose Always for continuous playback or Custom to define specific times.',
                   )}
+                  isLoading={pagination.daypart.isLoading}
+                  onLoadMore={loadMoreDayparts}
+                  hasMore={hasMoreDayparts}
+                  isLoadingMore={pagination.daypart.isLoadingMore}
                   error={formErrors.dayPartId}
                 />
               )}

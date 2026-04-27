@@ -298,9 +298,9 @@ export async function saveLayoutAsTemplate(
 export interface LayoutCode {
   code: string;
   layout: string;
-  CampaignID: number;
 }
 
+// TODO: This endpoint is only in routes-web.php, not routes.php.
 export async function fetchLayoutCodes(code?: string): Promise<LayoutCode[]> {
   const response = await http.get('/layout/codes', {
     params: code ? { code } : undefined,
