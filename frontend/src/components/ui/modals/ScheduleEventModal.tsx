@@ -855,7 +855,7 @@ export default function ScheduleEventModal({
         </div>
 
         {/* Info Banners */}
-        {currentStep === displayStepIndex && hasDisplays && showDisplayBanner && (
+        {currentStep === displayStepIndex && !isEditMode && hasDisplays && showDisplayBanner && (
           <div className="shrink-0 mx-8 mt-4">
             <InfoBanner type="success">
               {t("You're all set! Click")} <strong>{t('Finish')}</strong>{' '}
@@ -864,7 +864,7 @@ export default function ScheduleEventModal({
             </InfoBanner>
           </div>
         )}
-        {currentStep === timeStepIndex && (
+        {currentStep === timeStepIndex && !isEditMode && (
           <div className="shrink-0 mx-8 mt-4">
             <InfoBanner type="success">
               {t('Click')} <strong>{t('Finish')}</strong> {t('to complete schedule or click')}{' '}
@@ -872,7 +872,7 @@ export default function ScheduleEventModal({
             </InfoBanner>
           </div>
         )}
-        {currentStep === optionalStepIndex && (
+        {currentStep === optionalStepIndex && !isEditMode && (
           <div className="shrink-0 mx-8 mt-4">
             <InfoBanner type="success">
               {t("You're all set! Simply click")} <strong>{t('Finish')}</strong>{' '}
