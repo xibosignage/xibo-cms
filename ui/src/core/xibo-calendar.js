@@ -637,6 +637,9 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
   const allOccurrences = [];
   const deepClone = (obj) => JSON.parse(JSON.stringify(obj));
 
+  // Use CMS timezone
+  const momentTz = (ts) => moment.tz ? moment.tz(ts, timezone) : moment(ts);
+
   const generateRecurrences = (sourceEv) => {
     if (!sourceEv.recurrenceType || !sourceEv.recurrenceDetail) {
       return [];
@@ -646,11 +649,11 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
     const interval = parseInt(sourceEv.recurrenceDetail, 10);
     if (interval <= 0) return [];
 
-    const originalStart = moment(sourceEv.fromDt * 1000);
+    const originalStart = momentTz(sourceEv.fromDt * 1000);
     const duration = moment.duration((sourceEv.toDt - sourceEv.fromDt) * 1000);
     const rangeEnd = sourceEv.recurrenceRange ?
-      moment(sourceEv.recurrenceRange * 1000) :
-      moment('9999-12-31'); // Infinity
+      momentTz(sourceEv.recurrenceRange * 1000) :
+      momentTz('9999-12-31'); // Infinity
 
     const unitMap =
       {Minute: 'm', Hour: 'h', Day: 'd', Week: 'w', Month: 'M', Year: 'y'};
@@ -675,9 +678,11 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
       if (!isBlocked) {
         const clone = deepClone(sourceEv);
         clone.fromDt = startUnix;
-        clone.displayFromDt = moment(startUnix * 1000).format(systemDateFormat);
+        clone.displayFromDt =
+          momentTz(startUnix * 1000).format(systemDateFormat);
         clone.toDt = endUnix;
-        clone.displayToDt = moment(endUnix * 1000).format(systemDateFormat);
+        clone.displayToDt =
+          momentTz(endUnix * 1000).format(systemDateFormat);
 
         if (isHighFrequency) {
           clone.isHighFrequency = true;
@@ -693,13 +698,13 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
       let currentDayIter = originalStart.clone().startOf('day');
 
       // Find the first valid day
-      if (currentDayIter.isBefore(moment(viewStartMs).startOf('day'))) {
-        currentDayIter = moment(viewStartMs).startOf('day');
+      if (currentDayIter.isBefore(momentTz(viewStartMs).startOf('day'))) {
+        currentDayIter = momentTz(viewStartMs).startOf('day');
       }
 
       // Loop day by day
       while (
-        currentDayIter.isBefore(moment(viewEndMs)) &&
+        currentDayIter.isBefore(momentTz(viewEndMs)) &&
         currentDayIter.isBefore(rangeEnd)
       ) {
         // Find the time of the first event on this day
@@ -720,7 +725,7 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
           let exclude = true;
           let fromDate = eventMoment.unix();
           let toDate = eventMoment.unix() + duration.asSeconds();
-          const endOfDayUnix = moment(currentDayIter).endOf('day').unix();
+          const endOfDayUnix = currentDayIter.clone().endOf('day').unix();
           const recurUnit = sourceEv.recurrenceType.toLowerCase();
           const recurAmount = sourceEv.recurrenceDetail;
 
@@ -742,7 +747,7 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
 
               if (isExcluded) {
                 const nextSlot =
-                  moment.unix(fromDate).add(recurAmount, recurUnit);
+                  momentTz(fromDate * 1000).add(recurAmount, recurUnit);
                 fromDate = nextSlot.unix();
                 toDate = fromDate + duration.asSeconds();
               } else {
@@ -788,7 +793,7 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
       }
 
       while (
-        currentMoment.isBefore(moment(viewEndMs)) &&
+        currentMoment.isBefore(momentTz(viewEndMs)) &&
         currentMoment.isBefore(rangeEnd)
       ) {
         // Weekly complex calculation
@@ -940,13 +945,13 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
       url: eventUrl,
       start: startMs,
       end: endMs,
-      sameDay: moment(startMs).isSame(moment(endMs), 'day'),
+      sameDay: momentTz(startMs).isSame(momentTz(endMs), 'day'),
       editable: rawEv.isEditable,
       event: rawEv,
       scheduleEvent: {
         // Format with default format to match calendar.js
-        fromDt: moment(startMs).format('YYYY-MM-DD HH:mm:ss'),
-        toDt: moment(endMs).format('YYYY-MM-DD HH:mm:ss'),
+        fromDt: momentTz(startMs).format('YYYY-MM-DD HH:mm:ss'),
+        toDt: momentTz(endMs).format('YYYY-MM-DD HH:mm:ss'),
       },
       recurringEvent: rawEv.recurringEvent,
     };
@@ -962,7 +967,7 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
   // Group events by day
   const groupedEvents = new Map();
   filteredOccurrences.forEach((ev) => {
-    const dayKey = moment(ev.fromDt * 1000).startOf('day')
+    const dayKey = momentTz(ev.fromDt * 1000).startOf('day')
       .format(jsDateOnlyFormat);
     // Group by the original eventId and the day
     const groupKey = `${ev.eventId}-${dayKey}`;
