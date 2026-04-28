@@ -50,36 +50,14 @@ use Xibo\Support\Sanitizer\SanitizerInterface;
  */
 class Tag extends Base
 {
-    private CampaignFactory $campaignFactory;
-    private DisplayGroupFactory $displayGroupFactory;
-    private LayoutFactory $layoutFactory;
-    private MediaFactory $mediaFactory;
-    private PlaylistFactory $playlistFactory;
-    private TagFactory $tagFactory;
-
-    /**
-     * Set common dependencies.
-     * @param DisplayGroupFactory $displayGroupFactory
-     * @param LayoutFactory $layoutFactory
-     * @param TagFactory $tagFactory
-     * @param MediaFactory $mediaFactory
-     * @param CampaignFactory $campaignFactory
-     * @param PlaylistFactory $playlistFactory
-     */
     public function __construct(
-        DisplayGroupFactory $displayGroupFactory,
-        LayoutFactory $layoutFactory,
-        TagFactory $tagFactory,
-        MediaFactory $mediaFactory,
-        CampaignFactory $campaignFactory,
-        PlaylistFactory $playlistFactory
+        private readonly DisplayGroupFactory $displayGroupFactory,
+        private readonly LayoutFactory $layoutFactory,
+        private readonly TagFactory $tagFactory,
+        private readonly MediaFactory $mediaFactory,
+        private readonly CampaignFactory $campaignFactory,
+        private readonly PlaylistFactory $playlistFactory
     ) {
-        $this->displayGroupFactory = $displayGroupFactory;
-        $this->layoutFactory = $layoutFactory;
-        $this->tagFactory = $tagFactory;
-        $this->mediaFactory = $mediaFactory;
-        $this->campaignFactory = $campaignFactory;
-        $this->playlistFactory = $playlistFactory;
     }
 
     #[OA\Get(
