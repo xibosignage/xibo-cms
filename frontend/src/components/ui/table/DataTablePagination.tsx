@@ -1,4 +1,4 @@
-import { type Table } from '@tanstack/react-table';
+import { type PaginationState, type Table } from '@tanstack/react-table';
 import { ChevronLeft, ChevronRight, ChevronUp, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
@@ -7,6 +7,8 @@ import { usePreline } from '@/hooks/usePreline';
 
 interface DataTablePaginationProps<TData> {
   table: Table<TData>;
+  pagination: PaginationState;
+  pageCount: number;
   pageSizeOptions?: number[];
   loading?: boolean;
 }
@@ -47,13 +49,12 @@ function getPaginationItems(pageIndex: number, pageCount: number) {
 
 export function DataTablePagination<TData>({
   table,
+  pagination,
+  pageCount,
   pageSizeOptions = [5, 10, 20, 50],
   loading = false,
 }: DataTablePaginationProps<TData>) {
   const { t } = useTranslation();
-
-  const pagination = table.getState().pagination;
-  const pageCount = table.getPageCount();
 
   usePreline();
 
@@ -108,7 +109,7 @@ export function DataTablePagination<TData>({
           type="button"
           className={BUTTON_BASE_STYLE}
           onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage() || loading}
+          disabled={pagination.pageIndex === 0 || loading}
           aria-label={t('Previous')}
         >
           <ChevronLeft className="h-5 w-5" />
@@ -151,7 +152,7 @@ export function DataTablePagination<TData>({
           type="button"
           className={BUTTON_BASE_STYLE}
           onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage() || loading}
+          disabled={(pageCount !== -1 && pagination.pageIndex >= pageCount - 1) || loading}
           aria-label={t('Next')}
         >
           <ChevronRight className="h-5 w-5" />

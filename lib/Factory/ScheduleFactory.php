@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -34,68 +34,25 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class ScheduleFactory extends BaseFactory
 {
-    /**
-     * @var ConfigServiceInterface
-     */
-    private $config;
-
-    /** @var PoolInterface  */
-    private $pool;
-
-    /**
-     * @var DisplayGroupFactory
-     */
-    private $displayGroupFactory;
-
-    /** @var DayPartFactory */
-    private $dayPartFactory;
-
-    /** @var  UserFactory */
-    private $userFactory;
-
-    /** @var  ScheduleReminderFactory */
-    private $scheduleReminderFactory;
-
-    /** @var  ScheduleExclusionFactory */
-    private $scheduleExclusionFactory;
-
-    /**
-     * Construct a factory
-     * @param ConfigServiceInterface $config
-     * @param PoolInterface $pool
-     * @param DisplayGroupFactory $displayGroupFactory
-     * @param DayPartFactory $dayPartFactory
-     * @param UserFactory $userFactory
-     * @param ScheduleReminderFactory $scheduleReminderFactory
-     * @param ScheduleExclusionFactory $scheduleExclusionFactory
-     * @param User $user
-     */
     public function __construct(
-        $config,
-        $pool,
-        $displayGroupFactory,
-        $dayPartFactory,
-        $userFactory,
-        $scheduleReminderFactory,
-        $scheduleExclusionFactory,
-        $user,
+        private readonly ConfigServiceInterface $config,
+        private readonly PoolInterface $pool,
+        private readonly DisplayGroupFactory $displayGroupFactory,
+        private readonly DayPartFactory $dayPartFactory,
+        private readonly UserFactory $userFactory,
+        private readonly ScheduleReminderFactory $scheduleReminderFactory,
+        private readonly ScheduleExclusionFactory $scheduleExclusionFactory,
+        User $user,
         private readonly ScheduleCriteriaFactory $scheduleCriteriaFactory
     ) {
-        $this->setAclDependencies($user, $userFactory);
-        $this->config = $config;
-        $this->pool = $pool;
-        $this->displayGroupFactory = $displayGroupFactory;
-        $this->dayPartFactory = $dayPartFactory;
-        $this->userFactory = $userFactory;
-        $this->scheduleReminderFactory = $scheduleReminderFactory;
-        $this->scheduleExclusionFactory = $scheduleExclusionFactory;
+        $this->setAclDependencies($user, $this->userFactory);
     }
 
     /**
      * Create Empty
      * @return Schedule
      */
-    public function createEmpty()
+    public function createEmpty(): Schedule
     {
         return new Schedule(
             $this->getStore(),
@@ -114,15 +71,20 @@ class ScheduleFactory extends BaseFactory
 
     /**
      * @param int $eventId
+     * @param bool $disableUserCheck
      * @return Schedule
      * @throws NotFoundException
      */
-    public function getById($eventId)
+    public function getById(int $eventId, bool $disableUserCheck = true): Schedule
     {
-        $events = $this->query(null, ['disableUserCheck' => 1, 'eventId' => $eventId]);
+        $events = $this->query(null, [
+            'disableUserCheck' => $disableUserCheck ? 1 : 0,
+            'eventId' => $eventId
+        ]);
 
-        if (count($events) <= 0)
+        if (count($events) <= 0) {
             throw new NotFoundException();
+        }
 
         return $events[0];
     }
@@ -131,7 +93,7 @@ class ScheduleFactory extends BaseFactory
      * @param int $displayGroupId
      * @return array[Schedule]
      */
-    public function getByDisplayGroupId($displayGroupId)
+    public function getByDisplayGroupId(int $displayGroupId): array
     {
         if ($displayGroupId == null) {
             return [];
@@ -145,12 +107,12 @@ class ScheduleFactory extends BaseFactory
      * @param int $campaignId
      * @return array[Schedule]
      */
-    public function getByCampaignId($campaignId)
+    public function getByCampaignId(int $campaignId): array
     {
         return $this->query(null, ['disableUserCheck' => 1, 'campaignId' => $campaignId]);
     }
 
-    public function getByParentCampaignId($campaignId)
+    public function getByParentCampaignId(int $campaignId): array
     {
         return $this->query(null, ['disableUserCheck' => 1, 'parentCampaignId' => $campaignId]);
     }
@@ -160,7 +122,7 @@ class ScheduleFactory extends BaseFactory
      * @param int $ownerId
      * @return array[Schedule]
      */
-    public function getByOwnerId($ownerId)
+    public function getByOwnerId(int $ownerId): array
     {
         return $this->query(null, ['disableUserCheck' => 1, 'ownerId' => $ownerId]);
     }
@@ -170,16 +132,16 @@ class ScheduleFactory extends BaseFactory
      * @param int $dayPartId
      * @return Schedule[]
      */
-    public function getByDayPartId($dayPartId)
+    public function getByDayPartId(int $dayPartId): array
     {
         return $this->query(null, ['disableUserCheck' => 1, 'dayPartId' => $dayPartId]);
     }
 
     /**
-     * @param $syncGroupId
+     * @param int $syncGroupId
      * @return Schedule[]
      */
-    public function getBySyncGroupId($syncGroupId): array
+    public function getBySyncGroupId(int $syncGroupId): array
     {
         return $this->query(null, ['disableUserCheck' => 1, 'syncGroupId' => $syncGroupId]);
     }
@@ -191,7 +153,7 @@ class ScheduleFactory extends BaseFactory
      * @param array $options
      * @return array
      */
-    public function getForXmds($displayId, $fromDt, $toDt, $options = [])
+    public function getForXmds($displayId, $fromDt, $toDt, $options = []): array
     {
         $options = array_merge(['useGroupId' => false], $options);
 
@@ -202,7 +164,10 @@ class ScheduleFactory extends BaseFactory
             'toDt' => $toDt->format('U')
         );
 
-        $this->getLog()->debug('Get events for XMDS: fromDt[' . $params['fromDt'] . '], toDt[' . $params['toDt'] . '], with options: ' . json_encode($options));
+        $this->getLog()->debug(
+            'Get events for XMDS: fromDt[' . $params['fromDt'] . '],
+         toDt[' . $params['toDt'] . '], with options: ' . json_encode($options)
+        );
 
         // Add file nodes to the $fileElements
         // Firstly get all the scheduled layouts
@@ -332,43 +297,50 @@ class ScheduleFactory extends BaseFactory
     }
 
     /**
-     * @param array $sortOrder
+     * @param ?array $sortOrder
      * @param array $filterBy
      * @return Schedule[]
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query(?array $sortOrder = null, array $filterBy = []): array
     {
         $parsedFilter = $this->getSanitizer($filterBy);
         $entries = [];
         $params = [];
 
-        if (is_array($sortOrder)) {
-            $newSortOrder = [];
-            foreach ($sortOrder as $sort) {
-                if ($sort == '`recurringEvent`') {
-                    $newSortOrder[] = '`recurrence_type`';
-                    continue;
-                }
+        $allowedColumns = [
+            'eventId',
+            'eventTypeId',
+            'name',
+            'fromDt',
+            'toDt',
+            'campaign',
+            'campaignId',
+            'shareOfVoice',
+            'maxPlaysPerHour',
+            'isGeoAware',
+            'recurringEvent',
+            'recurrenceType',
+            'recurrenceDetail',
+            'recurrenceRepeatsOn',
+            'recurrenceRange',
+            'isPriority',
+            'criteria',
+            'createdOn',
+            'updatedOn',
+            'modifiedByName',
+        ];
+        $customColumns = [
+            'recurringEvent' => '`recurrence_type`',
+            'icon' => '`eventTypeId`',
+        ];
 
-                if ($sort == '`recurringEvent` DESC') {
-                    $newSortOrder[] = '`recurrence_type` DESC';
-                    continue;
-                }
-
-                if ($sort == '`icon`') {
-                    $newSortOrder[] = '`eventTypeId`';
-                    continue;
-                }
-
-                if ($sort == '`icon` DESC') {
-                    $newSortOrder[] = '`eventTypeId` DESC';
-                    continue;
-                }
-
-                $newSortOrder[] = $sort;
-            }
-            $sortOrder = $newSortOrder;
-        }
+        $hasExplicitSort = $sortOrder !== null;
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            $customColumns,
+            ['eventId ASC']
+        );
 
         $select = '
         SELECT `schedule`.eventId, 
@@ -436,6 +408,16 @@ class ScheduleFactory extends BaseFactory
         if ($parsedFilter->getInt('eventId') !== null) {
             $body .= ' AND `schedule`.eventId = :eventId ';
             $params['eventId'] = $parsedFilter->getInt('eventId');
+        }
+
+        if ($parsedFilter->getString('keyword') != null) {
+            // Fulltext search
+            $body .= $this->buildSearchQuery(
+                $parsedFilter->getString('keyword'),
+                $params,
+                ['schedule.name'],
+                ['schedule.eventId']
+            );
         }
 
         if ($parsedFilter->getInt('eventTypeId') !== null) {
@@ -751,7 +733,6 @@ class ScheduleFactory extends BaseFactory
             ';
 
             $params['playlistId'] = $parsedFilter->getInt('playlistId');
-
         }
 
         if ($parsedFilter->getInt('syncGroupId') !== null) {
@@ -774,15 +755,14 @@ class ScheduleFactory extends BaseFactory
         }
 
         // Sorting?
-        $order = '';
-        if ($parsedFilter->getInt('gridFilter') === 1 && $sortOrder === null) {
+        if ($parsedFilter->getInt('gridFilter') === 1 && !$hasExplicitSort) {
             $order = ' ORDER BY
                             CASE WHEN `schedule`.fromDt = 0 THEN 0
                                  WHEN `schedule`.recurrence_type <> \'\' THEN 1
                                  ELSE 2 END,
                             eventId';
-        } else if (is_array($sortOrder) && !empty($sortOrder)) {
-            $order .= ' ORDER BY ' . implode(',', $sortOrder);
+        } else {
+            $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
         }
 
         // Paging

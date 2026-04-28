@@ -27,14 +27,19 @@ export interface FetchLayoutRequest {
   start: number;
   length: number;
   keyword?: string;
+  layout?: string;
+  retired?: number | string;
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;
   folderId?: number;
+  campaignId?: number;
 
   userId?: string;
   ownerUserGroupId?: string;
   lastModified?: string;
+  activeDisplayGroupId?: number;
+  displayGroupId?: number;
 }
 
 export interface FetchLayoutResponse {
@@ -209,6 +214,21 @@ export async function discardLayout(layoutId: number | string): Promise<Layout> 
   return data;
 }
 
+export async function unassignLayoutFromCampaign(
+  campaignId: number,
+  layoutId: number,
+): Promise<void> {
+  const params = new URLSearchParams();
+  params.append('layoutId', String(layoutId));
+
+  await http.delete(`/campaign/layout/remove/${campaignId}`, {
+    data: params,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
+}
+
 export async function assignLayoutToCampaign(campaignId: number, layoutId: number): Promise<void> {
   const params = new URLSearchParams();
   params.append('layoutId', String(layoutId));
@@ -273,4 +293,18 @@ export async function saveLayoutAsTemplate(
   }
 
   return result;
+}
+
+export interface LayoutCode {
+  code: string;
+  layout: string;
+}
+
+// TODO: This endpoint is only in routes-web.php, not routes.php.
+export async function fetchLayoutCodes(code?: string): Promise<LayoutCode[]> {
+  const response = await http.get('/layout/codes', {
+    params: code ? { code } : undefined,
+  });
+
+  return response.data;
 }

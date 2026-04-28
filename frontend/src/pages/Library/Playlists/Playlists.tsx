@@ -249,6 +249,11 @@ export default function Playlist() {
     openModal('copy');
   };
 
+  const openScheduleModal = (playlist: Playlist) => {
+    setSelectedPlaylistId(playlist.playlistId);
+    openModal('schedule');
+  };
+
   const columns = getPlaylistColumns({
     t,
     onDelete: handleDelete,
@@ -262,6 +267,7 @@ export default function Playlist() {
       openModal('share');
     },
     copyPlaylist: openCopyModal,
+    openScheduleModal,
   });
 
   const getAllSelectedItems = (): Playlist[] => {
@@ -278,11 +284,13 @@ export default function Playlist() {
       setDeleteError(null);
       openModal('delete');
     },
-    onMove: () => {
-      const allItems = getAllSelectedItems();
-      setItemsToMove(allItems);
-      openModal('move');
-    },
+    onMove: canViewFolders
+      ? () => {
+          const allItems = getAllSelectedItems();
+          setItemsToMove(allItems);
+          openModal('move');
+        }
+      : undefined,
     onShare: () => {
       const allItems = getAllSelectedItems();
       const ids = allItems.map((i) => i.playlistId);

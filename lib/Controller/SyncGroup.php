@@ -157,7 +157,7 @@ class SyncGroup extends Base
                 }
             }
 
-            if ($this->isApi($request)) {
+            if ($this->isApi($request) || $this->isJson($request)) {
                 continue;
             }
 

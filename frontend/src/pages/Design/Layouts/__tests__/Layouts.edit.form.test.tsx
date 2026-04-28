@@ -28,8 +28,8 @@ import { useLayoutActions } from '../hooks/useLayoutActions';
 import {
   SINGLE_LAYOUT,
   defaultLayoutActions,
+  mockFetchLayouts,
   mockLayout,
-  mockLayoutData,
   openEditModal,
   renderLayoutsPage,
 } from './layoutTestUtils';
@@ -57,7 +57,6 @@ vi.mock('@/services/userApi', () => ({
 
 // Hooks
 vi.mock('../hooks/useLayoutActions', () => ({ useLayoutActions: vi.fn() }));
-vi.mock('../hooks/useLayoutData', () => ({ useLayoutData: vi.fn() }));
 vi.mock('../hooks/useLayoutFilterOptions', () => ({
   useLayoutFilterOptions: vi.fn(() => ({ filterOptions: [], isLoading: false })),
 }));
@@ -79,7 +78,7 @@ describe('Layouts page - edit form fields', () => {
     testQueryClient.clear();
     vi.clearAllMocks();
     vi.mocked(useLayoutActions).mockReturnValue(defaultLayoutActions());
-    mockLayoutData(SINGLE_LAYOUT);
+    mockFetchLayouts(SINGLE_LAYOUT);
   });
 
   // ---------------------------------------------------------------------------

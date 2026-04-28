@@ -23,17 +23,18 @@
 namespace Xibo\Factory;
 
 use Carbon\Carbon;
-use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
+use Xibo\Helper\Guzzle\SafeClient;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\RespectSanitizer;
 
 /**
  * Class DataSetFactory
@@ -113,7 +114,7 @@ class DataSetFactory extends BaseFactory
     public function getById(int $dataSetId, bool $disableUserCheck = true): DataSet
     {
         $dataSets = $this->query(null, [
-            'disableUserCheck' => $disableUserCheck,
+            'disableUserCheck' => $disableUserCheck ? 1 : 0,
             'dataSetId' => $dataSetId
         ]);
 
@@ -412,7 +413,7 @@ class DataSetFactory extends BaseFactory
         $maxMemory = Environment::getMemoryLimitBytes() / 2;
 
         // Guzzle for this and add proxy support.
-        $client = new Client($this->config->getGuzzleProxy());
+        $client = SafeClient::getSafeClient($this->config->getGuzzleProxy());
 
         $result = new \stdClass();
         $result->entries = [];
@@ -836,8 +837,10 @@ class DataSetFactory extends BaseFactory
                             }
                             break;
                         case 6:
-                            // HTML, without any sanitization
-                            $result[$column->heading] = $value[1];
+                            // HTML — sanitize via RespectSanitizer to match the manual entry path
+                            $result[$column->heading] = (new RespectSanitizer())
+                                ->setCollection(['html' => $value[1] ?? ''])
+                                ->getHtml('html');
                             break;
                         default:
                             // Default value, assume it will be a string and filter it accordingly.

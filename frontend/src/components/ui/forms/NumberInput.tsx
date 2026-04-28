@@ -25,7 +25,7 @@ import { twMerge } from 'tailwind-merge';
 
 interface NumberInputProps {
   name: string;
-  value: number;
+  value: number | undefined;
   label?: string;
   placeholder?: string;
   helpText?: string;
@@ -33,6 +33,7 @@ interface NumberInputProps {
   onChange: (num: number) => void;
   className?: string;
   disabled?: boolean;
+  min?: number;
 }
 
 export default function NumberInput({
@@ -45,28 +46,32 @@ export default function NumberInput({
   helpText,
   error,
   disabled = false,
+  min = 0,
 }: NumberInputProps) {
   const { t } = useTranslation();
   const generatedId = useId();
 
   return (
     <div className="flex flex-col gap-1 w-full">
-      <label htmlFor={generatedId} className="text-sm font-semibold text-gray-500 leading-4.5">
-        {!label ? t('Text') : label}
-      </label>
+      {label && (
+        <label htmlFor={generatedId} className="text-sm font-semibold text-gray-500 leading-4.5">
+          {!label ? t('Text') : label}
+        </label>
+      )}
       <input
         id={generatedId}
         type="number"
         name={name}
         value={value}
         disabled={disabled}
+        min={min}
         onChange={(e) => {
           const numericValue = e.target.valueAsNumber;
 
           if (!Number.isNaN(numericValue)) {
-            onChange(numericValue);
+            onChange(min != null ? Math.max(min, numericValue) : numericValue);
           } else {
-            onChange(0);
+            onChange(min ?? 0);
           }
         }}
         placeholder={placeholder || t('Add text')}
@@ -83,7 +88,7 @@ export default function NumberInput({
       {error ? (
         <p className="text-xs text-red-600 ml-2 mt-1">{error}</p>
       ) : helpText ? (
-        <p className="text-xs text-gray-500 mt-1">{helpText}</p>
+        <p className="text-xs text-gray-400 mt-1">{helpText}</p>
       ) : null}
     </div>
   );

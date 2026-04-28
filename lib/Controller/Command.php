@@ -124,6 +124,13 @@ class Command extends Base
         required: false,
         schema: new OA\Schema(type: 'string')
     )]
+    #[OA\Parameter(
+        name: 'type',
+        description: 'Filter by player type (e.g. android, windows, linux, chromeOS, lg). Returns commands available on that type plus commands with no type restriction.', // phpcs:ignore
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
     #[OA\Response(
         response: 200,
         description: 'successful operation',
@@ -152,6 +159,7 @@ class Command extends Base
             'useRegexForCode' => $sanitizedParams->getCheckbox('useRegexForCode'),
             'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
             'logicalOperatorCode' => $sanitizedParams->getString('logicalOperatorCode'),
+            'type' => $sanitizedParams->getString('type'),
         ];
 
         $commands = $this->commandFactory->query(
@@ -162,7 +170,7 @@ class Command extends Base
         foreach ($commands as $command) {
             /* @var \Xibo\Entity\Command $command */
 
-            if ($this->isApi($request)) {
+            if ($this->isApi($request) || $this->isJson($request)) {
                 continue;
             }
 

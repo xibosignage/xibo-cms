@@ -100,9 +100,10 @@ export const APP_ROUTES: AppRoute[] = [
     icon: CalendarDays,
     subLinks: [
       {
-        path: 'event',
-        labelKey: 'Event',
-        externalURL: '/schedule/view',
+        path: 'events',
+        labelKey: 'Events',
+        lazy: () =>
+          import('@/pages/Schedule/Schedule/Events').then((m) => ({ Component: m.default })),
         feature: 'schedule.view',
       },
       {
@@ -122,7 +123,8 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'campaign',
         labelKey: 'Campaign',
-        externalURL: '/campaign/view',
+        lazy: () =>
+          import('@/pages/Design/Campaigns/Campaigns').then((m) => ({ Component: m.default })),
         feature: 'campaign.view',
       },
       {
@@ -217,15 +219,21 @@ export const APP_ROUTES: AppRoute[] = [
     icon: Monitor,
     subLinks: [
       {
-        path: 'add-displays',
-        labelKey: 'Add Displays',
-        externalURL: '/display/view',
+        path: 'displays',
+        labelKey: 'Displays',
+        lazy: () =>
+          import('@/pages/Displays/Displays/Displays').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'displays.view',
       },
       {
         path: 'display-groups',
         labelKey: 'Display Groups',
-        externalURL: '/displaygroup/view',
+        lazy: () =>
+          import('@/pages/Displays/DisplayGroup/DisplayGroup').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'displaygroup.view',
       },
       {
@@ -236,8 +244,11 @@ export const APP_ROUTES: AppRoute[] = [
       },
       {
         path: 'settings',
-        labelKey: 'Settings',
-        externalURL: '/displayprofile/view',
+        labelKey: 'Display Settings',
+        lazy: () =>
+          import('@/pages/Displays/DisplayProfile/DisplayProfile').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'displayprofile.view',
       },
       {

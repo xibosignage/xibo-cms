@@ -130,6 +130,17 @@
                 </test>
             </visibility>
         </property>
+        <property id="chromeosCommand" type="commandBuilder">
+            <title>ChromeOS Command</title>
+            <helpText>Enter a ChromeOS Command Line compatible command</helpText>
+            <default></default>
+            <visibility>
+                <test type="and">
+                    <condition field="commandType" type="eq">createCommand</condition>
+                    <condition field="useGlobalCommand" type="eq">0</condition>
+                </test>
+            </visibility>
+        </property>
         <property id="launchThroughCmd" type="checkbox">
             <title>Launch the command via Windows Command Line</title>
             <helpText>On Windows, should the player launch this command through the windows command line (cmd.exe)? This is useful for batch files. If you try to terminate this command only the command line will be terminated.</helpText>
@@ -177,6 +188,7 @@
     <p>{% trans "Linux Command:" %} {{linuxCommand}}</p>
     <p>{% trans "webOS Command:" %} {{webosCommand}}</p>
     <p>{% trans "Tizen Command:" %} {{tizenCommand}}</p>
+    <p>{% trans "ChromeOS Command:" %} {{chromeosCommand}}</p>
 {% endif %}
         ]]></twig>
     </preview>

@@ -423,7 +423,7 @@ export default function AddAndEditDatasetModal({
                       onSelect={(val) => {
                         updateDraft('dataConnectorSource', val);
                       }}
-                      helper={t('Select data connector source.')}
+                      helpText={t('Select data connector source.')}
                     />
                   </div>
                 )}
@@ -479,7 +479,7 @@ export default function AddAndEditDatasetModal({
                   { label: 'GET', value: 'GET' },
                   { label: 'POST', value: 'POST' },
                 ]}
-                helper={t('Select type of request needs to be made to get the remote data.')}
+                helpText={t('Select type of request needs to be made to get the remote data.')}
                 onSelect={(val) => {
                   updateDraft('method', val as DatasetConnectorMethod);
                 }}
@@ -517,7 +517,7 @@ export default function AddAndEditDatasetModal({
             <div className="space-y-4">
               <SelectDropdown
                 label={t('Authentication')}
-                helper={t(
+                helpText={t(
                   'Select the authentication requirements for the remote data source. These will be added to the request.',
                 )}
                 value={draft.authentication}
@@ -674,7 +674,7 @@ export default function AddAndEditDatasetModal({
                       { label: t('Tab (\\t)'), value: '\t' },
                       { label: t('Pipe (|)'), value: '|' },
                     ]}
-                    helper={t('What separator should be used for CSV source?')}
+                    helpText={t('What separator should be used for CSV source?')}
                     onSelect={(val) => {
                       updateDraft('csvSeparator', val);
                     }}
@@ -696,7 +696,7 @@ export default function AddAndEditDatasetModal({
             <div className="space-y-4">
               <SelectDropdown
                 label={t('Refresh')}
-                helper={t('Select how often the remote data is fetched and imported.')}
+                helpText={t('Select how often the remote data is fetched and imported.')}
                 value={draft.refreshRate.toString()}
                 options={[
                   { label: t('Constantly'), value: '0' },
@@ -728,7 +728,7 @@ export default function AddAndEditDatasetModal({
                   { label: t('Yearly'), value: '29030400' },
                   { label: t('Every second Year'), value: '58060800' },
                 ]}
-                helper={t(
+                helpText={t(
                   'Select when you would like the Data to be truncated out of this DataSet.\nThe criteria is assessed when synchronisations occurs and is truncated before adding new data.',
                 )}
                 onSelect={(val) => {
@@ -748,7 +748,7 @@ export default function AddAndEditDatasetModal({
                 label={t('Depends on Dataset')}
                 value={draft.runsAfter.toString()}
                 options={[]}
-                helper={t(
+                helpText={t(
                   'The DataSet you select here will be processed in advance and have its values available for substitution in the data to add to this request on the Remote tab.',
                 )}
                 onSelect={(val) => {
@@ -774,7 +774,7 @@ export default function AddAndEditDatasetModal({
                   { label: 'First In First Out', value: 'fifo' },
                   { label: 'Truncate', value: 'truncate' },
                 ]}
-                helper={t('What should happen when this Dataset reaches the row limit?')}
+                helpText={t('What should happen when this Dataset reaches the row limit?')}
                 onSelect={(val) => {
                   updateDraft('limitPolicy', val as DatasetLimitPolicy);
                 }}

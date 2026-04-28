@@ -102,7 +102,6 @@ class DataSetData extends Base
                 schema: new OA\Schema(type: 'integer')
             )
         ]
-
     )]
     /**
      * Grid
@@ -139,7 +138,7 @@ class DataSetData extends Base
         $params = array_merge($columnFilter['params'], $keywordFilter['params']);
 
         $filter = $this->gridRenderFilter([
-            'filter' => $request->getParam('filter', $columnFilter['filter']),
+            'filter' => $columnFilter['filter'],
             'keyword' => $keywordFilter['keyword']
         ], $sanitizedParams);
 
@@ -156,13 +155,12 @@ class DataSetData extends Base
                 $params,
             );
         } catch (\Exception $e) {
-            $data = [
-                'exception' => __('Error getting DataSet data, failed with following message: ')
-                    . $e->getMessage()
-            ];
-            $this->getLog()->error('Error getting DataSet data, failed with following message: '
-                . $e->getMessage());
+            $this->getLog()->error('grid: failed to query dataset getData, e = ' . $e->getMessage());
             $this->getLog()->debug($e->getTraceAsString());
+
+            throw new InvalidArgumentException(
+                sprintf(__('Error getting DataSet data, failed with following message: %s'), $e->getMessage())
+            );
         }
 
         $dataSet->setActive();

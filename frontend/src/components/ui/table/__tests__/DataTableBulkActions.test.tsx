@@ -37,7 +37,7 @@ describe('DataTableBulkActions', () => {
   const mockActions = [
     { label: 'Delete', icon: Trash2, onClick: vi.fn(), variant: 'danger' as const },
     { label: 'Export', icon: Download, onClick: vi.fn() },
-    { label: 'No Handler', onClick: undefined as any }, // Should not render
+    { label: 'No Handler', onClick: undefined as unknown as (rows: object[]) => void }, // Should not render
   ];
 
   const defaultProps = {

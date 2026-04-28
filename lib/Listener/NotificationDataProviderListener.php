@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -86,6 +86,7 @@ class NotificationDataProviderListener
             $filter['userId'] = $this->user->getId();
         } else {
             $filter['displayId'] = $dataProvider->getDisplayId();
+            $filter['disableUserCheck'] = 1;
         }
 
         $sort = ['releaseDt DESC', 'createDt DESC', 'subject'];
@@ -122,6 +123,7 @@ class NotificationDataProviderListener
             'onlyReleased' => 1,
             'displayId' => $displayId,
             'length' => 1,
+            'disableUserCheck' => 1,
         ]);
 
         if (count($notifications) > 0) {

@@ -242,7 +242,7 @@
     <div class="widget d-none" id="displaysGridTable">
         <div class="widget-title">{% trans "Displays" %}
             {% if currentUser.featureEnabled("displays.view") %}
-                <a class="pull-right" href="{{ url_for('display.view') }}">{% trans "Displays Page" %}</a>
+                <a class="pull-right" href="{{ theme.rootUri() }}prototype/displays/displays">{% trans "Displays Page" %}</a>
             {% endif %}
         </div>
         <div class="widget-body">

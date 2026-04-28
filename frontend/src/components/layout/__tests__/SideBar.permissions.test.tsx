@@ -294,9 +294,9 @@ describe('SidebarMenu — Permissions', () => {
       fireEvent.click(getChevronButton('Displays'));
 
       for (const label of [
-        'Add Displays',
+        'Displays',
         'Display Groups',
-        'Settings',
+        'Display Settings',
         'Player Versions',
         'Commands',
       ]) {

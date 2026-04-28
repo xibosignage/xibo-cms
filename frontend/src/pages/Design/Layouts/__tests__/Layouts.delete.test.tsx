@@ -23,7 +23,7 @@ import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-import { mockLayout, mockLayoutData, renderLayoutsPage, SINGLE_LAYOUT } from './layoutTestUtils';
+import { mockFetchLayouts, mockLayout, renderLayoutsPage, SINGLE_LAYOUT } from './layoutTestUtils';
 
 import { deleteLayout } from '@/services/layoutsApi';
 import { testQueryClient } from '@/setupTests';
@@ -47,7 +47,6 @@ vi.mock('@/services/userApi', () => ({
 }));
 
 // Hooks
-vi.mock('../hooks/useLayoutData', () => ({ useLayoutData: vi.fn() }));
 vi.mock('@/hooks/useOwner', () => ({
   useOwner: vi.fn().mockReturnValue({ owner: null, loading: false }),
 }));
@@ -79,7 +78,7 @@ describe('Delete Layout', () => {
   beforeEach(() => {
     testQueryClient.clear();
     vi.clearAllMocks();
-    mockLayoutData(SINGLE_LAYOUT);
+    mockFetchLayouts(SINGLE_LAYOUT);
   });
 
   // ---------------------------------------------------------------------------

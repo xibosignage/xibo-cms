@@ -126,7 +126,7 @@ export default function TextInput({
       {error ? (
         <p className="text-xs text-red-600 ml-2 mt-1">{error}</p>
       ) : helpText ? (
-        <p className="text-xs text-gray-500 mt-1 whitespace-pre-line">{helpText}</p>
+        <p className="text-xs text-gray-400 mt-1 whitespace-pre-line">{helpText}</p>
       ) : null}
     </div>
   );

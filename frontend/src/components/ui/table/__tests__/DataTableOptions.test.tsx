@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import type { Table } from '@tanstack/react-table';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 
@@ -55,7 +56,7 @@ describe('DataTableOptions', () => {
       columnVisibility: { name: true, age: false },
     }),
     getAllColumns: () => [], // satisfy types if needed
-  } as any;
+  } as unknown as Table<object>;
 
   const defaultProps = {
     table: mockTable,

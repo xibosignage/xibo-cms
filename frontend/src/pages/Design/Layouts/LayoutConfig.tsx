@@ -52,7 +52,7 @@ import {
 } from '@/components/ui/table/cells';
 import { getCommonFormOptions } from '@/config/commonForms';
 import type { Layout } from '@/types/layout';
-import type { ActionItem } from '@/types/table';
+import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 import { formatDuration } from '@/utils/formatters';
 
@@ -62,6 +62,7 @@ export interface LayoutFilterInput {
   retired?: string;
   orientation?: string;
   lastModified?: string;
+  activeDisplayGroupId?: number;
 }
 
 export const LAYOUT_INITIAL_FILTER_STATE: LayoutFilterInput = {
@@ -70,7 +71,22 @@ export const LAYOUT_INITIAL_FILTER_STATE: LayoutFilterInput = {
   retired: '',
   orientation: '',
   lastModified: '',
+  activeDisplayGroupId: undefined,
 };
+
+export type ModalType =
+  | BaseModalType
+  | 'replace'
+  | 'publish'
+  | 'discard'
+  | 'campaign'
+  | 'export'
+  | 'template'
+  | 'retire'
+  | 'enableStats'
+  | 'schedule'
+  | null;
+
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<LayoutFilterInput>[] => [
   {
     label: 'Owner',
@@ -111,6 +127,7 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<LayoutFilterIn
     className: '',
     shouldTranslateOptions: true,
     showAllOption: false,
+    allowCustomRange: true,
     options: getCommonFormOptions(t).lastModifiedFilter,
   },
 ];
@@ -136,6 +153,7 @@ export interface LayoutActionsProps {
   jumpToMedia?: (layoutId: number) => void;
   openRetireModal?: (layout: Layout) => void;
   openEnableStatsModal?: (layout: Layout) => void;
+  openScheduleModal?: (layout: Layout) => void;
 }
 
 export const getLayoutItemActions = ({
@@ -158,6 +176,7 @@ export const getLayoutItemActions = ({
   openTemplateModal,
   openRetireModal,
   openEnableStatsModal,
+  openScheduleModal,
 }: LayoutActionsProps): ((layout: Layout) => ActionItem[]) => {
   return (layout: Layout) => {
     const actions: ActionItem[] = [];
@@ -255,11 +274,13 @@ export const getLayoutItemActions = ({
       onClick: () => exportLayout && exportLayout(layout),
     });
 
-    actions.push({
-      label: t('Schedule'),
-      icon: CalendarClock,
-      onClick: () => console.log('Schedule', layout.layoutId),
-    });
+    if (openScheduleModal) {
+      actions.push({
+        label: t('Schedule'),
+        icon: CalendarClock,
+        onClick: () => openScheduleModal(layout),
+      });
+    }
 
     actions.push({
       label: t('Retire'),
@@ -337,7 +358,7 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
         return (
           <MediaCell
             thumb={row?.layoutId ? `/layout/thumbnail/${row.layoutId}` : undefined}
-            alt={row?.name || row?.layout}
+            alt={row?.layout}
             mediaType="image"
             onPreview={() => props.onPreview && props.onPreview(row)}
           />
@@ -476,7 +497,7 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
 interface GetBulkActionsProps {
   t: TFunction;
   onDelete: () => void;
-  onMove: () => void;
+  onMove?: () => void;
   onShare: () => void;
 }
 
@@ -487,11 +508,15 @@ export const getBulkActions = ({
   onShare,
 }: GetBulkActionsProps): DataTableBulkAction<Layout>[] => {
   return [
-    {
-      label: t('Move'),
-      icon: FolderInput,
-      onClick: onMove,
-    },
+    ...(onMove
+      ? [
+          {
+            label: t('Move'),
+            icon: FolderInput,
+            onClick: onMove,
+          },
+        ]
+      : []),
     {
       label: t('Share'),
       icon: UserPlus2,

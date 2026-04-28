@@ -29,6 +29,8 @@ import type { useLayoutActions } from '../hooks/useLayoutActions';
 import { useLayoutData } from '../hooks/useLayoutData';
 
 import { UserProvider } from '@/context/UserContext';
+import { fetchLayouts, updateLayout } from '@/services/layoutsApi';
+import type { FetchLayoutResponse } from '@/services/layoutsApi';
 import { testQueryClient } from '@/setupTests';
 import type { Layout } from '@/types/layout';
 import type { User } from '@/types/user';
@@ -47,8 +49,8 @@ export const mockLayout: Layout = {
   publishedStatusId: 1,
   publishedStatus: 'Published',
   modifiedDt: '2026-03-01 10:00:00',
-  status: 1,
-  retired: 0,
+  status: 'Published',
+  retired: false,
   width: 1920,
   height: 1080,
   orientation: 'landscape',
@@ -72,11 +74,9 @@ export const mockDraftLayout: Layout = {
   layout: 'Draft Layout',
 };
 
-export const SINGLE_DRAFT_LAYOUT = {
-  data: { rows: [mockDraftLayout], totalCount: 1 },
-  isFetching: false,
-  isError: false,
-  error: null,
+export const SINGLE_DRAFT_LAYOUT: FetchLayoutResponse = {
+  rows: [mockDraftLayout],
+  totalCount: 1,
 };
 
 // -----------------------------------------------------------------------------
@@ -101,19 +101,15 @@ export const mockUser: User = {
 // -----------------------------------------------------------------------------
 
 // A table with one layout row.
-export const SINGLE_LAYOUT = {
-  data: { rows: [mockLayout], totalCount: 1 },
-  isFetching: false,
-  isError: false,
-  error: null,
+export const SINGLE_LAYOUT: FetchLayoutResponse = {
+  rows: [mockLayout],
+  totalCount: 1,
 };
 
 // An empty table - used for initial load and empty state tests.
-export const EMPTY_LAYOUT_TABLE = {
-  data: { rows: [], totalCount: 0 },
-  isFetching: false,
-  isError: false,
-  error: null,
+export const EMPTY_LAYOUT_TABLE: FetchLayoutResponse = {
+  rows: [],
+  totalCount: 0,
 };
 
 // -----------------------------------------------------------------------------
@@ -121,6 +117,29 @@ export const EMPTY_LAYOUT_TABLE = {
 // -----------------------------------------------------------------------------
 export type UseLayoutReturn = ReturnType<typeof useLayoutData>;
 export type UseLayoutActionsReturn = ReturnType<typeof useLayoutActions>;
+
+// Helps create fake data in the same format that useLayoutData normally returns.
+// Use this when your test directly mocks useLayoutData (e.g. for search or pagination tests).
+export const mockLayoutData = (rawData: FetchLayoutResponse) => {
+  vi.mocked(useLayoutData).mockReturnValue({
+    data: rawData,
+    isFetching: false,
+    isError: false,
+    error: null,
+  } as UseLayoutReturn);
+};
+
+// Makes fetchLayouts return the data you provide.
+// Use this when you want the real useLayoutData and React Query to run in your test.
+export const mockFetchLayouts = (rawData: FetchLayoutResponse) => {
+  vi.mocked(fetchLayouts).mockResolvedValue(rawData);
+};
+
+// Makes updateLayout return the layout you provide.
+// Use this to simulate a successful update in your test.
+export const mockUpdateLayout = (layout: Layout) => {
+  vi.mocked(updateLayout).mockResolvedValue(layout);
+};
 
 // Returns a fresh useLayoutActions mock value for every beforeEach call.
 export const defaultLayoutActions = (
@@ -152,10 +171,6 @@ export const defaultLayoutActions = (
     handleOpenLayout: vi.fn(),
     ...overrides,
   }) as UseLayoutActionsReturn;
-
-export const mockLayoutData = (overrides: unknown) => {
-  vi.mocked(useLayoutData).mockReturnValue(overrides as UseLayoutReturn);
-};
 
 // -----------------------------------------------------------------------------
 // Opens the Edit Layout modal for mockLayout by clicking the Edit row action.

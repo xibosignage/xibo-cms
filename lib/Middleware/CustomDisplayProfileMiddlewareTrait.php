@@ -87,15 +87,6 @@ trait CustomDisplayProfileMiddlewareTrait
         return $handler->handle($request);
     }
 
-    /**
-     * @return string
-     * @throws InvalidArgumentException
-     */
-    public static function getCustomEditTemplate() : string
-    {
-        return 'displayprofile-form-edit-'.self::getType().'.twig';
-    }
-
     /** @var \Slim\App */
     private $app;
 

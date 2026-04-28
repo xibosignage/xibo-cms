@@ -41,7 +41,13 @@ vi.mock('react-i18next', () => ({
 }));
 
 // Services
-vi.mock('@/services/folderApi');
+vi.mock('@/services/folderApi', () => ({
+  fetchFolderById: vi.fn().mockResolvedValue({ id: 1, text: 'Root' }),
+  fetchFolderTree: vi.fn().mockResolvedValue([]),
+  searchFolders: vi.fn().mockResolvedValue([]),
+  fetchContextButtons: vi.fn().mockResolvedValue({ create: true }),
+  selectFolder: vi.fn().mockResolvedValue({ success: true }),
+}));
 vi.mock('@/services/userApi', () => ({
   fetchUserPreference: vi.fn().mockResolvedValue(null),
   saveUserPreference: vi.fn().mockResolvedValue(undefined),
@@ -84,18 +90,13 @@ vi.mock('@/components/ui/modals/Modal');
 
 // 10 rows with totalCount: 25 so pagination controls render (Next/Previous).
 const PAGINATED_LAYOUTS = {
-  data: {
-    rows: Array.from({ length: 10 }).map((_, i) => ({
-      ...mockLayout,
-      layoutId: i + 1,
-      layout: `Layout ${i + 1}`,
-      campaignId: i + 10,
-    })),
-    totalCount: 25,
-  },
-  isFetching: false,
-  isError: false,
-  error: null,
+  rows: Array.from({ length: 10 }).map((_, i) => ({
+    ...mockLayout,
+    layoutId: i + 1,
+    layout: `Layout ${i + 1}`,
+    campaignId: i + 10,
+  })),
+  totalCount: 25,
 };
 
 // =============================================================================
@@ -107,35 +108,6 @@ describe('Layouts page - pagination', () => {
     testQueryClient.clear();
     vi.clearAllMocks();
     mockLayoutData(PAGINATED_LAYOUTS);
-  });
-
-  // ---------------------------------------------------------------------------
-  // Clicking Previous after Next decrements pageIndex back to 0.
-  // ---------------------------------------------------------------------------
-  test.fails('clicking Previous after Next decrements pageIndex back to 0', async () => {
-    await act(async () => {
-      renderLayoutsPage();
-    });
-
-    fireEvent.click(await screen.findByRole('button', { name: /Next/i }));
-
-    await waitFor(() => {
-      expect(useLayoutData).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          pagination: expect.objectContaining({ pageIndex: 1 }),
-        }),
-      );
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Previous/i }));
-
-    await waitFor(() => {
-      expect(useLayoutData).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          pagination: expect.objectContaining({ pageIndex: 0 }),
-        }),
-      );
-    });
   });
 
   // ---------------------------------------------------------------------------

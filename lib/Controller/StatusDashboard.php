@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -384,7 +384,7 @@ class StatusDashboard extends Base
                                 $content = strip_tags($item->getContent());
                             } else {
                                 // use description
-                                $content = ($desc[0] ?? strip_tags($item->getContent()));
+                                $content = strip_tags($desc[0] ?? $item->getContent());
                             }
 
                             $latestNews[] = [

@@ -113,14 +113,20 @@ class CampaignFactory extends BaseFactory
     /**
      * Get Campaign by ID
      * @param int $campaignId
+     * @param bool $disableUserCheck
      * @return Campaign
      * @throws NotFoundException
      */
-    public function getById($campaignId)
+    public function getById(int $campaignId, bool $disableUserCheck = true): Campaign
     {
         $this->getLog()->debug(sprintf('CampaignFactory getById(%d)', $campaignId));
 
-        $campaigns = $this->query(null, ['disableUserCheck' => 1, 'campaignId' => $campaignId, 'isLayoutSpecific' => -1, 'excludeTemplates' => -1]);
+        $campaigns = $this->query(null, [
+            'disableUserCheck' => $disableUserCheck ? 1 : 0,
+            'campaignId' => $campaignId,
+            'isLayoutSpecific' => -1,
+            'excludeTemplates' => -1
+        ]);
 
         if (count($campaigns) <= 0) {
             $this->getLog()->debug(sprintf('Campaign not found with ID %d', $campaignId));
@@ -179,10 +185,6 @@ class CampaignFactory extends BaseFactory
     {
         $sanitizedFilter = $this->getSanitizer($filterBy);
 
-        if ($sortOrder == null) {
-            $sortOrder = ['campaign'];
-        }
-
         $campaigns = [];
         $params = [];
 
@@ -219,8 +221,14 @@ class CampaignFactory extends BaseFactory
                 FROM lkcampaignlayout
                 WHERE lkcampaignlayout.campaignId = `campaign`.campaignId
             ) AS numberLayouts,
-            MAX(CASE WHEN `campaign`.IsLayoutSpecific = 1 THEN `layout`.retired ELSE 0 END) AS retired
+            MAX(CASE WHEN `campaign`.IsLayoutSpecific = 1 THEN `layout`.retired ELSE 0 END) AS retired,
+            `folder`.folderName
         ';
+
+        // Layout durations
+        if ($sanitizedFilter->getInt('totalDuration', ['default' => 0]) != 0) {
+            $select .= ', SUM(`layout`.duration) AS totalDuration ';
+        }
 
         $body  = '
             FROM `campaign`
@@ -232,6 +240,7 @@ class CampaignFactory extends BaseFactory
               ON user.userId = campaign.userId 
               LEFT OUTER JOIN `user` modifiedBy
               ON modifiedBy.userId = campaign.modifiedBy 
+              INNER JOIN `folder` ON folder.folderId = campaign.folderId
            WHERE 1 = 1
         ';
 
@@ -264,15 +273,14 @@ class CampaignFactory extends BaseFactory
             $params['layoutId'] = $sanitizedFilter->getInt('layoutId', ['default' => 0]);
         }
 
-        if ($sanitizedFilter->getInt('hasLayouts', ['default' => 0]) != 0) {
-
+        if ($sanitizedFilter->getInt('hasLayouts') !== null) {
             $body .= " AND (
                 SELECT COUNT(*)
                 FROM lkcampaignlayout
                 WHERE lkcampaignlayout.campaignId = `campaign`.campaignId
-                )";
+            )";
 
-            $body .= ($sanitizedFilter->getInt('hasLayouts', ['default' => 0]) == 1) ? " = 0 " : " > 0";
+            $body .= ($sanitizedFilter->getInt('hasLayouts') == 0) ? " = 0 " : " > 0 ";
         }
 
         // Tags
@@ -401,7 +409,7 @@ class CampaignFactory extends BaseFactory
             }
         }
 
-        if ($sanitizedFilter->getInt('cyclePlaybackEnabled') != null) {
+        if ($sanitizedFilter->getInt('cyclePlaybackEnabled', ['default' => -1]) != -1) {
             $body .= ' AND `campaign`.cyclePlaybackEnabled = :cyclePlaybackEnabled ';
             $params['cyclePlaybackEnabled'] = $sanitizedFilter->getInt('cyclePlaybackEnabled');
         }
@@ -410,20 +418,54 @@ class CampaignFactory extends BaseFactory
             $body .= ' AND `campaign`.type != \'media\' ';
         }
 
+        if ($sanitizedFilter->getString('keyword') != null) {
+            // Fulltext search
+            $body .= $this->buildSearchQuery(
+                $sanitizedFilter->getString('keyword'),
+                $params,
+                ['campaign.campaign'],
+                ['campaign.campaignId']
+            );
+        }
+
         // Sorting?
-        $order = '';
-        if (is_array($sortOrder))
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        $allowedColumns = [
+            'campaignId',
+            'campaign',
+            'type',
+            'startDt',
+            'endDt',
+            'numberLayouts',
+            'totalDuration',
+            'cyclePlaybackEnabled',
+            'playCount',
+            'targetType',
+            'target',
+            'plays',
+            'spend',
+            'impressions',
+            'ref1',
+            'ref2',
+            'ref3',
+            'ref4',
+            'ref5',
+            'createdAt',
+            'modifiedAt',
+            'modifiedByName'
+        ];
+
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['campaign ASC']
+        );
+
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         $limit = '';
         // Paging
         if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
             $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
-        }
-
-        // Layout durations
-        if ($sanitizedFilter->getInt('totalDuration', ['default' => 0]) != 0) {
-            $select .= ", SUM(`layout`.duration) AS totalDuration";
         }
 
         $sql = $select . $body . $group . $order . $limit;

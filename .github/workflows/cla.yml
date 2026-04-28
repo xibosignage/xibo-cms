@@ -1,0 +1,31 @@
+name: "CLA Check"
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_target:
+    types: [opened, closed, synchronize, reopened]
+
+permissions:
+  actions: write
+  contents: write
+  pull-requests: write
+  statuses: write
+
+jobs:
+  cla-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "CLA Assistant"
+        if: (github.event.comment.body == 'recheck' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA') || github.event_name == 'pull_request_target'
+        uses: contributor-assistant/github-action@v2.6.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.JENKINS_PAT }}
+        with:
+          path-to-signatures: 'contributors/cla-1.0.json'
+          path-to-document: 'https://github.com/xibosignage/xibo/blob/main/cla-1.0.md'
+          branch: 'main'
+          allowlist: dependabot[bot]
+          remote-organization-name: xibosignage
+          remote-repository-name: xibo

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -1383,6 +1383,9 @@ Widget.prototype.getData = function() {
       url: requestPath,
       type: linkToAPI.type,
       dataType: 'json',
+      headers: {
+        'X-PREVIEW-JWT': previewJwt,
+      },
     }).done((data) => {
       // If we don't have data, show sample data
       if (!data.data) {

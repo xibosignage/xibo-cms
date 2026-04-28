@@ -37,6 +37,8 @@ import { twMerge } from 'tailwind-merge';
 
 import Button from '@/components/ui/Button';
 
+type TimeFormat = 'HH:mm:ss' | 'HH:mm';
+
 interface TimePickerInputProps {
   label: string;
   value?: string;
@@ -44,6 +46,7 @@ interface TimePickerInputProps {
   helpText?: string;
   error?: string;
   className?: string;
+  timeFormat?: TimeFormat;
 }
 
 function pad(n: number): string {
@@ -60,10 +63,12 @@ function TimePicker({
   value,
   onApply,
   onCancel,
+  timeFormat = 'HH:mm:ss',
 }: {
   value?: string;
   onApply: (value: string) => void;
   onCancel: () => void;
+  timeFormat?: TimeFormat;
 }) {
   const { t } = useTranslation();
   const { hour: initHour, minute: initMinute } = parseTime(value);
@@ -143,7 +148,13 @@ function TimePicker({
         </Button>
         <Button
           className="flex-1 min-w-auto"
-          onClick={() => onApply(`${pad(hour)}:${pad(minute)}:00`)}
+          onClick={() =>
+            onApply(
+              timeFormat === 'HH:mm'
+                ? `${pad(hour)}:${pad(minute)}`
+                : `${pad(hour)}:${pad(minute)}:00`,
+            )
+          }
         >
           {t('Apply')}
         </Button>
@@ -159,6 +170,7 @@ export default function TimePickerInput({
   helpText,
   error,
   className,
+  timeFormat = 'HH:mm:ss',
 }: TimePickerInputProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
@@ -219,7 +231,7 @@ export default function TimePickerInput({
       {error ? (
         <p className="text-xs text-red-600">{error}</p>
       ) : helpText ? (
-        <p className="text-xs text-gray-500">{helpText}</p>
+        <p className="text-xs text-gray-400">{helpText}</p>
       ) : null}
 
       <FloatingPortal>
@@ -232,6 +244,7 @@ export default function TimePickerInput({
           >
             <TimePicker
               value={value}
+              timeFormat={timeFormat}
               onApply={(v) => {
                 onChange(v);
                 setIsOpen(false);
