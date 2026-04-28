@@ -27,6 +27,7 @@ export interface FetchLayoutRequest {
   start: number;
   length: number;
   keyword?: string;
+  layout?: string;
   retired?: number | string;
   sortBy?: string;
   sortDir?: string;
@@ -57,7 +58,6 @@ export async function fetchLayouts(
   });
 
   const rows = response.data;
-  console.log('Fetched layouts:', rows);
 
   const totalCountHeader = response.headers['x-total-count'];
   const totalCount = totalCountHeader ? parseInt(totalCountHeader, 10) : 0;
@@ -293,4 +293,18 @@ export async function saveLayoutAsTemplate(
   }
 
   return result;
+}
+
+export interface LayoutCode {
+  code: string;
+  layout: string;
+}
+
+// TODO: This endpoint is only in routes-web.php, not routes.php.
+export async function fetchLayoutCodes(code?: string): Promise<LayoutCode[]> {
+  const response = await http.get('/layout/codes', {
+    params: code ? { code } : undefined,
+  });
+
+  return response.data;
 }

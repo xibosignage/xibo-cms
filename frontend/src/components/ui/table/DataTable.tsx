@@ -234,6 +234,12 @@ export function DataTable<TData, TValue>({
     return () => clearTimeout(timer);
   }, [loading]);
 
+  useEffect(() => {
+    if (data.length === 0 && pagination.pageIndex > 0 && !loading) {
+      onPaginationChange({ ...pagination, pageIndex: pagination.pageIndex - 1 });
+    }
+  }, [data.length, loading, onPaginationChange, pagination]);
+
   return (
     <div className="flex flex-col gap-y-3 data-table flex-1 min-h-0">
       {!hideToolbar && (

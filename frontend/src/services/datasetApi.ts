@@ -43,6 +43,7 @@ export interface FetchDatasetRequest {
   sortDir?: string;
   signal?: AbortSignal;
   folderId?: number;
+  isRealTime?: number;
 
   userId?: string;
   ownerUserGroupId?: string;

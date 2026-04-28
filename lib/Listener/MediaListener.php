@@ -119,8 +119,11 @@ class MediaListener
             }
         } else if ($function === 'reassignAll') {
             foreach ($this->mediaFactory->getByOwnerId($user->userId, 1) as $media) {
-                ($media->mediaType === 'module') ? $media->setOwner($systemUser->userId) : $media->setOwner($newUser->getOwnerId());
-                $media->save();
+                $media->mediaType === 'module'
+                    ? $media->setOwner($systemUser->userId)
+                    : $media->setOwner($newUser->getOwnerId());
+
+                $media->save(['isMediaReassigned' => true]);
             }
         } else if ($function === 'countChildren') {
             $media = $this->mediaFactory->getByOwnerId($user->userId, 1);

@@ -52,7 +52,7 @@ import {
 } from '@/components/ui/table/cells';
 import { getCommonFormOptions } from '@/config/commonForms';
 import type { Layout } from '@/types/layout';
-import type { ActionItem } from '@/types/table';
+import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 import { formatDuration } from '@/utils/formatters';
 
@@ -73,6 +73,20 @@ export const LAYOUT_INITIAL_FILTER_STATE: LayoutFilterInput = {
   lastModified: '',
   activeDisplayGroupId: undefined,
 };
+
+export type ModalType =
+  | BaseModalType
+  | 'replace'
+  | 'publish'
+  | 'discard'
+  | 'campaign'
+  | 'export'
+  | 'template'
+  | 'retire'
+  | 'enableStats'
+  | 'schedule'
+  | null;
+
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<LayoutFilterInput>[] => [
   {
     label: 'Owner',
@@ -139,6 +153,7 @@ export interface LayoutActionsProps {
   jumpToMedia?: (layoutId: number) => void;
   openRetireModal?: (layout: Layout) => void;
   openEnableStatsModal?: (layout: Layout) => void;
+  openScheduleModal?: (layout: Layout) => void;
 }
 
 export const getLayoutItemActions = ({
@@ -161,6 +176,7 @@ export const getLayoutItemActions = ({
   openTemplateModal,
   openRetireModal,
   openEnableStatsModal,
+  openScheduleModal,
 }: LayoutActionsProps): ((layout: Layout) => ActionItem[]) => {
   return (layout: Layout) => {
     const actions: ActionItem[] = [];
@@ -258,11 +274,13 @@ export const getLayoutItemActions = ({
       onClick: () => exportLayout && exportLayout(layout),
     });
 
-    actions.push({
-      label: t('Schedule'),
-      icon: CalendarClock,
-      onClick: () => console.log('Schedule', layout.layoutId),
-    });
+    if (openScheduleModal) {
+      actions.push({
+        label: t('Schedule'),
+        icon: CalendarClock,
+        onClick: () => openScheduleModal(layout),
+      });
+    }
 
     actions.push({
       label: t('Retire'),

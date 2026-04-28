@@ -33,6 +33,7 @@ interface NumberInputProps {
   onChange: (num: number) => void;
   className?: string;
   disabled?: boolean;
+  min?: number;
 }
 
 export default function NumberInput({
@@ -45,6 +46,7 @@ export default function NumberInput({
   helpText,
   error,
   disabled = false,
+  min = 0,
 }: NumberInputProps) {
   const { t } = useTranslation();
   const generatedId = useId();
@@ -62,13 +64,14 @@ export default function NumberInput({
         name={name}
         value={value}
         disabled={disabled}
+        min={min}
         onChange={(e) => {
           const numericValue = e.target.valueAsNumber;
 
           if (!Number.isNaN(numericValue)) {
-            onChange(numericValue);
+            onChange(min != null ? Math.max(min, numericValue) : numericValue);
           } else {
-            onChange(0);
+            onChange(min ?? 0);
           }
         }}
         placeholder={placeholder || t('Add text')}

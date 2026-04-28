@@ -51,6 +51,7 @@ interface SelectDropdownProps {
   searchable?: boolean;
   searchPlaceholder?: string;
   onSelect: (value: string) => void;
+  onSearch?: (term: string) => void;
   helpText?: string;
   addLeftLabel?: boolean;
   leftLabelContent?: ReactNode;
@@ -73,6 +74,7 @@ export default function SelectDropdown({
   searchable,
   searchPlaceholder,
   onSelect,
+  onSearch,
   helpText,
   addLeftLabel,
   leftLabelContent,
@@ -97,11 +99,12 @@ export default function SelectDropdown({
     setIsOpen(open);
     if (!open) {
       setSearchTerm('');
+      onSearch?.('');
     }
   };
 
   const visibleOptions =
-    searchable && searchTerm
+    !onSearch && searchable && searchTerm
       ? options.filter((o) => o.label.toLowerCase().includes(searchTerm.toLowerCase()))
       : options;
 
@@ -168,10 +171,10 @@ export default function SelectDropdown({
         <span
           className={twMerge(
             'py-2 px-3 flex-1 text-sm truncate min-w-0',
-            isLoading ? 'text-gray-400 italic' : 'text-gray-800 capitalize',
+            isLoading ? 'text-gray-400 italic' : 'text-gray-800',
           )}
         >
-          {selectedLabel || t(placeholder)}
+          {isLoading ? t('Loading...') : selectedLabel || t(placeholder)}
         </span>
         <span
           className={twMerge(
@@ -205,7 +208,10 @@ export default function SelectDropdown({
                   className="flex-1 w-full text-sm outline-none border-none bg-transparent"
                   placeholder={searchPlaceholder ?? t('Search…')}
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    onSearch?.(e.target.value);
+                  }}
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
@@ -226,8 +232,11 @@ export default function SelectDropdown({
                   {t(placeholder)}
                 </button>
               )}
-              {visibleOptions.length === 0 && !isLoadingMore && (
+              {visibleOptions.length === 0 && !isLoadingMore && !isLoading && (
                 <p className="text-sm text-gray-400 text-center py-2">{t('No results')}</p>
+              )}
+              {isLoading && visibleOptions.length === 0 && (
+                <p className="text-sm text-gray-400 text-center py-2">{t('Loading...')}</p>
               )}
               {visibleOptions.map((option) => (
                 <button

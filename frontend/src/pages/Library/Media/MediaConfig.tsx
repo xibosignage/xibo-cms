@@ -93,18 +93,7 @@ export const getMediaIcon = (mediaType: string) => {
 
 type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
 
-// TODO: This should be moved to a more central location
-export type ModalType =
-  | BaseModalType
-  | 'replace'
-  | 'publish'
-  | 'discard'
-  | 'campaign'
-  | 'export'
-  | 'template'
-  | 'retire'
-  | 'enableStats'
-  | null;
+export type ModalType = BaseModalType | 'replace' | 'schedule' | null;
 
 export const INITIAL_FILTER_STATE: MediaFilterInput = {
   type: '',
@@ -233,6 +222,7 @@ export interface MediaActionsProps {
   openDetails?: (id: number) => void;
   copyMedia?: (row: number) => void;
   openReplaceModal: (id: number) => void;
+  openScheduleModal?: (row: Media) => void;
 }
 
 export const getMediaItemActions = ({
@@ -245,6 +235,7 @@ export const getMediaItemActions = ({
   openDetails,
   copyMedia,
   openReplaceModal,
+  openScheduleModal,
 }: MediaActionsProps): ((media: Media) => ActionItem[]) => {
   return (media: Media) => {
     const actions: ActionItem[] = [];
@@ -316,11 +307,13 @@ export const getMediaItemActions = ({
       onClick: () => onDownload(media),
     });
 
-    actions.push({
-      label: t('Schedule'),
-      icon: CalendarClock,
-      onClick: () => console.log('Schedule', media.mediaId),
-    });
+    if (openScheduleModal) {
+      actions.push({
+        label: t('Schedule'),
+        icon: CalendarClock,
+        onClick: () => openScheduleModal(media),
+      });
+    }
 
     if (openDetails) {
       actions.push({

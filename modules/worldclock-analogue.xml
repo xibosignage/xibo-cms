@@ -512,12 +512,17 @@ body {
         height: 14px;
     }
 
-    {% for i in 0..11 %}
-        .analogue-steps > div:nth-child({{i + 1}}) {
-            transform: rotate({{i * 30}}deg);
-            -webkit-transform: rotate({{i * 30}}deg);
-        }
-    {% endfor %}
+    .analogue-steps > div:nth-child(2) { transform: rotate(30deg); -webkit-transform: rotate(30deg); }
+    .analogue-steps > div:nth-child(3) { transform: rotate(60deg); -webkit-transform: rotate(60deg); }
+    .analogue-steps > div:nth-child(4) { transform: rotate(90deg); -webkit-transform: rotate(90deg); }
+    .analogue-steps > div:nth-child(5) { transform: rotate(120deg); -webkit-transform: rotate(120deg); }
+    .analogue-steps > div:nth-child(6) { transform: rotate(150deg); -webkit-transform: rotate(150deg); }
+    .analogue-steps > div:nth-child(7) { transform: rotate(180deg); -webkit-transform: rotate(180deg); }
+    .analogue-steps > div:nth-child(8) { transform: rotate(210deg); -webkit-transform: rotate(210deg); }
+    .analogue-steps > div:nth-child(9) { transform: rotate(240deg); -webkit-transform: rotate(240deg); }
+    .analogue-steps > div:nth-child(10) { transform: rotate(270deg); -webkit-transform: rotate(270deg); }
+    .analogue-steps > div:nth-child(11) { transform: rotate(300deg); -webkit-transform: rotate(300deg); }
+    .analogue-steps > div:nth-child(12) { transform: rotate(330deg); -webkit-transform: rotate(330deg); }
 {% endif %}
 
 /* If there's a case colour, show the clock border and adjust the steps' positions */

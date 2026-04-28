@@ -34,7 +34,7 @@
             <li class="nav-item">
         {% endif %}
                 {% if currentUser.featureEnabled("schedule.view") %}
-                    <a class="{{ groupElementClass }}" href="{{ url_for("schedule.view") }}">{% trans "Schedule" %}</a>
+                    <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/schedule/events">{% trans "Schedule" %}</a>
                 {% endif %}
                 {% if currentUser.featureEnabled("daypart.view") %}
                     <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/schedule/dayparting">{% trans "Dayparting" %}</a>

@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { Tag } from './tag';
+import type {Tag} from './tag';
 
 export interface Layout {
   layoutId: number;
@@ -39,6 +39,8 @@ export interface Layout {
   status: string;
   duration: number;
   thumbnail?: string;
+  previewUrl?: string;
+  previewDraftUrl?: string;
   owner: string;
   groupsWithPermissions?: string;
   valid?: number;

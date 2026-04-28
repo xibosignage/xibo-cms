@@ -25,15 +25,15 @@ import 'leaflet-easyprint';
 import 'leaflet-fullscreen';
 import 'leaflet-fullscreen/dist/leaflet.fullscreen.css';
 import { Maximize2, Minus, Plus, Printer } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import 'leaflet/dist/leaflet.css';
 import { useTranslation } from 'react-i18next';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import 'react-leaflet-cluster/dist/assets/MarkerCluster.Default.css';
+import '@/styles/leaflet-overrides.css';
 import 'react-leaflet-cluster/dist/assets/MarkerCluster.css';
-import './DisplayMap.css';
 
 import type { DisplayFilterInput } from '../DisplaysConfig';
 
@@ -351,17 +351,17 @@ export default function DisplayMap({ filters, folderId }: DisplayMapProps) {
   const timezone = (user?.settings?.defaultTimezone as string | undefined) ?? 'UTC';
 
   const [tileLayer, setTileLayer] = useState<L.TileLayer | null>(null);
-  const handleTileLayerRef = useCallback((instance: L.TileLayer | null) => {
+  const handleTileLayerRef = (instance: L.TileLayer | null) => {
     setTileLayer(instance);
-  }, []);
+  };
 
   const [clusterGroup, setClusterGroup] = useState<L.MarkerClusterGroup | null>(null);
-  const handleClusterRef = useCallback((instance: L.MarkerClusterGroup | null) => {
+  const handleClusterRef = (instance: L.MarkerClusterGroup | null) => {
     setClusterGroup(instance);
-  }, []);
+  };
 
   const [bounds, setBounds] = useState<string | null>(null);
-  const handleBoundsChange = useCallback((b: string) => setBounds(b), []);
+  const handleBoundsChange = (b: string) => setBounds(b);
 
   const { data, isFetching, isError } = useQuery({
     queryKey: ['displayMap', filters, folderId, bounds],

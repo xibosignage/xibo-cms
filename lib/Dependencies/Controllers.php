@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -73,7 +73,8 @@ class Controllers
                     $c->get('layoutFactory'),
                     $c->get('tagFactory'),
                     $c->get('folderFactory'),
-                    $c->get('displayGroupFactory')
+                    $c->get('displayGroupFactory'),
+                    $c->get('jwtService'),
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
@@ -253,6 +254,7 @@ class Controllers
                     $c->get('widgetFactory'),
                     $c->get('widgetDataFactory'),
                     $c->get('playlistFactory'),
+                    $c->get('jwtService'),
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
@@ -270,7 +272,8 @@ class Controllers
                     $c->get('userGroupFactory'),
                     $c->get('displayFactory'),
                     $c->get('scheduleFactory'),
-                    $c->get('folderFactory')
+                    $c->get('folderFactory'),
+                    $c->get('jwtService'),
                 );
                 $controller->useMediaService($c->get('mediaService'));
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
@@ -403,14 +406,16 @@ class Controllers
                     $c->get('displayFactory'),
                     $c->get('scheduleFactory'),
                     $c->get('folderFactory'),
-                    $c->get('regionFactory')
+                    $c->get('regionFactory'),
+                    $c->get('jwtService'),
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
             '\Xibo\Controller\Preview' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Preview(
-                    $c->get('layoutFactory')
+                    $c->get('layoutFactory'),
+                    $c->get('jwtService'),
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
@@ -429,7 +434,8 @@ class Controllers
                     $c->get('widgetFactory'),
                     $c->get('transitionFactory'),
                     $c->get('moduleFactory'),
-                    $c->get('layoutFactory')
+                    $c->get('layoutFactory'),
+                    $c->get('jwtService'),
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
@@ -481,18 +487,17 @@ class Controllers
             },
             '\Xibo\Controller\Schedule' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Schedule(
-                    $c->get('session'),
                     $c->get('scheduleFactory'),
                     $c->get('displayGroupFactory'),
                     $c->get('campaignFactory'),
-                    $c->get('commandFactory'),
                     $c->get('displayFactory'),
                     $c->get('layoutFactory'),
                     $c->get('dayPartFactory'),
                     $c->get('scheduleReminderFactory'),
                     $c->get('scheduleExclusionFactory'),
                     $c->get('syncGroupFactory'),
-                    $c->get('scheduleCriteriaFactory')
+                    $c->get('scheduleCriteriaFactory'),
+                    $c->get('jwtService'),
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;

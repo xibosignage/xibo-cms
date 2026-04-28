@@ -19,19 +19,20 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { TFunction } from 'i18next';
-import { Minus, Plus } from 'lucide-react';
+import type {TFunction} from 'i18next';
+import {Minus, Plus} from 'lucide-react';
 import React from 'react';
 
-import { DynamicSettingField } from './DynamicSettingField';
-import { getFieldMetaForType } from './fieldMetadata';
+import {DynamicSettingField} from './DynamicSettingField';
+import {getFieldMetaForType} from './fieldMetadata';
 
 import Button from '@/components/ui/Button';
+import Checkbox from '@/components/ui/forms/Checkbox';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import Slider from '@/components/ui/forms/Slider';
 import TimePickerInput from '@/components/ui/forms/TimePickerInput';
-import type { PlayerSoftware } from '@/services/playerSoftwareApi';
-import type { Daypart } from '@/types/daypart';
+import type {PlayerSoftware} from '@/services/playerSoftwareApi';
+import type {Daypart} from '@/types/daypart';
 
 export interface TimerRow {
   id: number;
@@ -412,7 +413,20 @@ export function LgSsspFields({
   onLockOptionsStateChange,
 }: LgSsspFieldProps) {
   if (tab === 'timers' && onTimerRowsChange) {
-    return <TimersInput timerRows={timerRows} onChange={onTimerRowsChange} t={t} />;
+    return (
+      <div className="flex flex-col gap-4">
+        <Checkbox
+          id="disableTimerManagement"
+          title={t('Disable managing on/off timers')}
+          label={t(
+            'When disabled on/off timers can be controlled on the screen and will not be modified by the CMS',
+          )}
+          checked={bool('disableTimerManagement')}
+          onChange={setBool('disableTimerManagement')}
+        />
+        <TimersInput timerRows={timerRows} onChange={onTimerRowsChange} t={t} />
+      </div>
+    );
   }
 
   if (tab === 'pictureOptions' && onPictureOptionRowsChange) {

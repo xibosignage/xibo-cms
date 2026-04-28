@@ -31,7 +31,7 @@ import {
   useFloating,
   useInteractions,
 } from '@floating-ui/react';
-import { ChevronDown, Search } from 'lucide-react';
+import { ChevronDown, Search, X } from 'lucide-react';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
@@ -55,6 +55,8 @@ interface MultiSelectDropdownProps {
   selectAllText?: string;
   error?: string;
   className?: string;
+  showTags?: boolean;
+  onDropdownClose?: () => void;
 }
 
 export default function MultiSelectDropdown({
@@ -69,6 +71,8 @@ export default function MultiSelectDropdown({
   selectAllText,
   error,
   className,
+  showTags = false,
+  onDropdownClose,
 }: MultiSelectDropdownProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
@@ -78,6 +82,7 @@ export default function MultiSelectDropdown({
     setIsOpen(open);
     if (!open) {
       setSearchTerm('');
+      onDropdownClose?.();
     }
   };
 
@@ -178,17 +183,46 @@ export default function MultiSelectDropdown({
       <div
         ref={refs.setReference}
         {...getReferenceProps()}
-        className="w-full border bg-white border-gray-200 rounded-lg flex items-center cursor-pointer h-11.25 hover:border-gray-400 focus-within:border-xibo-blue-600 focus-within:ring-1 focus-within:ring-xibo-blue-600/25 focus:outline-none transition-colors"
+        className={twMerge(
+          'w-full border bg-white border-gray-200 rounded-lg flex items-center cursor-pointer hover:border-gray-400 focus-within:border-xibo-blue-600 focus-within:ring-1 focus-within:ring-xibo-blue-600/25 focus:outline-none transition-colors',
+          showTags && value.length > 0 ? 'min-h-11.25 py-2 px-2' : 'h-11.25',
+        )}
       >
-        <span
-          ref={labelSpanRef}
-          className={twMerge(
-            'py-2 px-3 flex-1 text-sm truncate',
-            value.length === 0 ? 'text-gray-400' : 'text-gray-800',
-          )}
-        >
-          {selectedLabel}
-        </span>
+        {showTags && value.length > 0 ? (
+          <div className="flex-1 flex flex-wrap gap-1.5 items-center min-w-0">
+            {value.map((v) => {
+              const opt = options.find((o) => o.value === v);
+              return (
+                <span
+                  key={v}
+                  className="flex items-center gap-1.5 px-2 py-0.5 text-sm border text-gray-800 border-gray-400 rounded-full"
+                >
+                  {opt?.label ?? v}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onChange(value.filter((val) => val !== v));
+                    }}
+                    className="text-gray-700 rounded-full bg-gray-300 p-1 cursor-pointer"
+                  >
+                    <X size={8} />
+                  </button>
+                </span>
+              );
+            })}
+          </div>
+        ) : (
+          <span
+            ref={labelSpanRef}
+            className={twMerge(
+              'py-2 px-3 flex-1 text-sm truncate',
+              value.length === 0 ? 'text-gray-400' : 'text-gray-800',
+            )}
+          >
+            {selectedLabel}
+          </span>
+        )}
         <span
           className={twMerge(
             'p-3 text-gray-500 transition-transform duration-300 ease-in-out shrink-0',

@@ -249,6 +249,11 @@ export default function Playlist() {
     openModal('copy');
   };
 
+  const openScheduleModal = (playlist: Playlist) => {
+    setSelectedPlaylistId(playlist.playlistId);
+    openModal('schedule');
+  };
+
   const columns = getPlaylistColumns({
     t,
     onDelete: handleDelete,
@@ -262,6 +267,7 @@ export default function Playlist() {
       openModal('share');
     },
     copyPlaylist: openCopyModal,
+    openScheduleModal,
   });
 
   const getAllSelectedItems = (): Playlist[] => {

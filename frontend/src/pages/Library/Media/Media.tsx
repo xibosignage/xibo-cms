@@ -291,6 +291,11 @@ export default function Media() {
     openModal('replace');
   };
 
+  const openScheduleModal = (media: Media) => {
+    setSelectedMediaId(media.mediaId);
+    openModal('schedule');
+  };
+
   const handleResetFilters = () => {
     setFilterInputs(INITIAL_FILTER_STATE);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
@@ -323,6 +328,7 @@ export default function Media() {
     },
     copyMedia: openCopyModal,
     openReplaceModal: openReplaceFileModal,
+    openScheduleModal,
   });
 
   const getAllSelectedItems = (): Media[] => {
@@ -456,6 +462,7 @@ export default function Media() {
     },
     copyMedia: openCopyModal,
     openReplaceModal: openReplaceFileModal,
+    openScheduleModal,
   } as MediaActionsProps);
 
   const { filterOptions } = useMediaFilterOptions(t);

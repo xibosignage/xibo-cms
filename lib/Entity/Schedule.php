@@ -70,133 +70,148 @@ class Schedule implements \JsonSerializable
     /**
      * @var int
      */
-    #[OA\Property(description: "The ID of this Event")]
+    #[OA\Property(description: 'The ID of this Event')]
     public $eventId;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The Event Type ID")]
+    #[OA\Property(description: 'The Event Type ID')]
     public $eventTypeId;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The CampaignID this event is for")]
+    #[OA\Property(description: 'The CampaignID this event is for')]
     public $campaignId;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The CommandId this event is for")]
+    #[OA\Property(description: 'The CommandId this event is for')]
     public $commandId;
 
     /**
      * @var DisplayGroup[]
      */
-    #[OA\Property(description: "Display Groups assigned to this Scheduled Event.", type: "array", items: new OA\Items(ref: "#/components/schemas/DisplayGroup"))]
+    #[OA\Property(
+        description: 'Display Groups assigned to this Scheduled Event.',
+        type: 'array',
+        items: new OA\Items(ref: '#/components/schemas/DisplayGroup')
+    )]
     public $displayGroups = [];
 
     /**
      * @var ScheduleReminder[]
      */
-    #[OA\Property(description: "Schedule Reminders assigned to this Scheduled Event.", type: "array", items: new OA\Items(ref: "#/components/schemas/ScheduleReminder"))]
+    #[OA\Property(
+        description: 'Schedule Reminders assigned to this Scheduled Event.',
+        type: 'array',
+        items: new OA\Items(ref: '#/components/schemas/ScheduleReminder')
+    )]
     public $scheduleReminders = [];
 
     /**
      * @var ScheduleCriteria[]
      */
-    #[OA\Property(description: "Schedule Criteria assigned to this Scheduled Event.", type: "array", items: new OA\Items(ref: "#/components/schemas/ScheduleCriteria"))]
+    #[OA\Property(
+        description: 'Schedule Criteria assigned to this Scheduled Event.',
+        type: 'array',
+        items: new OA\Items(ref: '#/components/schemas/ScheduleCriteria')
+    )]
     public $criteria = [];
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The userId that owns this event.")]
+    #[OA\Property(description: 'The userId that owns this event.')]
     public $userId;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "A Unix timestamp representing the from date of this event in CMS time.")]
+    #[OA\Property(description: 'A Unix timestamp representing the from date of this event in CMS time.')]
     public $fromDt;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "A Unix timestamp representing the to date of this event in CMS time.")]
+    #[OA\Property(description: 'A Unix timestamp representing the to date of this event in CMS time.')]
     public $toDt;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "Integer indicating the event priority.")]
+    #[OA\Property(description: 'Integer indicating the event priority.')]
     public $isPriority;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The display order for this event.")]
+    #[OA\Property(description: 'The display order for this event.')]
     public $displayOrder;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "If this event recurs when what is the recurrence period.", enum: ["None", "Minute", "Hour", "Day", "Week", "Month", "Year"])]
+    #[OA\Property(
+        description: 'If this event recurs when what is the recurrence period.',
+        enum: ['None', 'Minute', 'Hour', 'Day', 'Week', 'Month', 'Year']
+    )]
     public $recurrenceType;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "If this event recurs when what is the recurrence frequency.")]
+    #[OA\Property(description: 'If this event recurs when what is the recurrence frequency.')]
     public $recurrenceDetail;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "A Unix timestamp indicating the end time of the recurring events.")]
+    #[OA\Property(description: 'A Unix timestamp indicating the end time of the recurring events.')]
     public $recurrenceRange;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "Recurrence repeats on days - 0 to 7 where 0 is a monday")]
+    #[OA\Property(description: 'Recurrence repeats on days - 0 to 7 where 0 is a monday')]
     public $recurrenceRepeatsOn;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "Recurrence monthly repeats on - 0 is day of month, 1 is weekday of week")]
+    #[OA\Property(description: 'Recurrence monthly repeats on - 0 is day of month, 1 is weekday of week')]
     public $recurrenceMonthlyRepeatsOn;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The Campaign/Layout Name", readOnly: true)]
+    #[OA\Property(description: 'The Campaign/Layout Name', readOnly: true)]
     public $campaign;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The Command Name", readOnly: true)]
+    #[OA\Property(description: 'The Command Name', readOnly: true)]
     public $command;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The Day Part Id")]
+    #[OA\Property(description: 'The Day Part Id')]
     public $dayPartId;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "Is this event an always on event?")]
+    #[OA\Property(description: 'Is this event an always on event?')]
     public $isAlways;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "Does this event have custom from/to date times?")]
+    #[OA\Property(description: 'Does this event have custom from/to date times?')]
     public $isCustom;
 
     /**
@@ -208,122 +223,122 @@ class Schedule implements \JsonSerializable
     /**
      * @var int
      */
-    #[OA\Property(description: "Flag indicating whether the event should be synchronised across displays")]
+    #[OA\Property(description: 'Flag indicating whether the event should be synchronised across displays')]
     public $syncEvent = 0;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "Flag indicating whether the event will sync to the Display timezone")]
+    #[OA\Property(description: 'Flag indicating whether the event will sync to the Display timezone')]
     public $syncTimezone;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "Seconds (0-3600) of each full hour that is scheduled that this Layout should occupy")]
+    #[OA\Property(description: 'Seconds (0-3600) of each full hour that is scheduled that this Layout should occupy')]
     public $shareOfVoice;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The maximum number of plays per hour per display for this event")]
+    #[OA\Property(description: 'The maximum number of plays per hour per display for this event')]
     public $maxPlaysPerHour;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "Flag (0-1), whether this event is using Geo Location")]
+    #[OA\Property(description: 'Flag (0-1), whether this event is using Geo Location')]
     public $isGeoAware;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "Geo JSON representing the area of this event")]
+    #[OA\Property(description: 'Geo JSON representing the area of this event')]
     public $geoLocation;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "For Action event type, Action trigger code")]
+    #[OA\Property(description: 'For Action event type, Action trigger code')]
     public $actionTriggerCode;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "For Action event type, the type of the Action (navigate to Layout or Command)")]
+    #[OA\Property(description: 'For Action event type, the type of the Action (navigate to Layout or Command)')]
     public $actionType;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "For Action event type and navigate to Layout Action type, the Layout code")]
+    #[OA\Property(description: 'For Action event type and navigate to Layout Action type, the Layout code')]
     public $actionLayoutCode;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "If the schedule should be considered part of a larger campaign")]
+    #[OA\Property(description: 'If the schedule should be considered part of a larger campaign')]
     public $parentCampaignId;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "For sync events, the id the the sync group")]
+    #[OA\Property(description: 'For sync events, the id the the sync group')]
     public $syncGroupId;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "For data connector events, the dataSetId")]
+    #[OA\Property(description: 'For data connector events, the dataSetId')]
     public $dataSetId;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "For data connector events, the data set parameters")]
+    #[OA\Property(description: 'For data connector events, the data set parameters')]
     public $dataSetParams;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The userId of the user that last modified this Schedule")]
+    #[OA\Property(description: 'The userId of the user that last modified this Schedule')]
     public $modifiedBy;
     public $modifiedByName;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The Date this Schedule was created on")]
+    #[OA\Property(description: 'The Date this Schedule was created on')]
     public $createdOn;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The Date this Schedule was las updated on")]
+    #[OA\Property(description: 'The Date this Schedule was las updated on')]
     public $updatedOn;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The name of this Scheduled Event")]
+    #[OA\Property(description: 'The name of this Scheduled Event')]
     public $name;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The resolutionId of this Fullscreen Scheduled Event")]
+    #[OA\Property(description: 'The resolutionId of this Fullscreen Scheduled Event')]
     public int $resolutionId;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The duration of this Fullscreen Scheduled Event")]
+    #[OA\Property(description: 'The duration of this Fullscreen Scheduled Event')]
     public int $layoutDuration;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The background color of this Fullscreen Scheduled Event")]
+    #[OA\Property(description: 'The background color of this Fullscreen Scheduled Event')]
     public string $backgroundColor;
 
     /**
@@ -410,7 +425,7 @@ class Schedule implements \JsonSerializable
      * @param CampaignFactory $campaignFactory
      * @return $this
      */
-    public function setCampaignFactory($campaignFactory)
+    public function setCampaignFactory(CampaignFactory $campaignFactory): static
     {
         $this->campaignFactory = $campaignFactory;
         return $this;
@@ -425,7 +440,7 @@ class Schedule implements \JsonSerializable
      * @param DisplayNotifyServiceInterface $displayNotifyService
      * @return $this
      */
-    public function setDisplayNotifyService($displayNotifyService)
+    public function setDisplayNotifyService(DisplayNotifyServiceInterface $displayNotifyService): static
     {
         $this->displayNotifyService = $displayNotifyService;
         return $this;
@@ -443,7 +458,7 @@ class Schedule implements \JsonSerializable
     /**
      * @return int
      */
-    public function getId()
+    public function getId(): int
     {
         return $this->eventId;
     }
@@ -451,7 +466,7 @@ class Schedule implements \JsonSerializable
     /**
      * @return int
      */
-    public function getOwnerId()
+    public function getOwnerId(): int
     {
         return $this->userId;
     }
@@ -460,7 +475,7 @@ class Schedule implements \JsonSerializable
      * Sets the Owner
      * @param int $ownerId
      */
-    public function setOwner($ownerId)
+    public function setOwner(int $ownerId): void
     {
         $this->userId = $ownerId;
     }
@@ -547,7 +562,7 @@ class Schedule implements \JsonSerializable
      * @param array $options
      * @throws NotFoundException
      */
-    public function load($options = [])
+    public function load(array $options = []): void
     {
         $options = array_merge([
             'loadDisplayGroups' => true,
@@ -587,7 +602,7 @@ class Schedule implements \JsonSerializable
      * @param DisplayGroup $displayGroup
      * @throws NotFoundException
      */
-    public function assignDisplayGroup($displayGroup)
+    public function assignDisplayGroup(DisplayGroup $displayGroup): void
     {
         $this->load();
 
@@ -601,7 +616,7 @@ class Schedule implements \JsonSerializable
      * @param DisplayGroup $displayGroup
      * @throws NotFoundException
      */
-    public function unassignDisplayGroup($displayGroup)
+    public function unassignDisplayGroup(DisplayGroup $displayGroup): void
     {
         $this->load();
 
@@ -618,7 +633,7 @@ class Schedule implements \JsonSerializable
      * Validate
      * @throws GeneralException
      */
-    public function validate()
+    public function validate(): void
     {
         if (count($this->displayGroups) <= 0 && $this->eventTypeId !== Schedule::$SYNC_EVENT) {
             throw new InvalidArgumentException(__('No display groups selected'), 'displayGroups');
@@ -650,7 +665,10 @@ class Schedule implements \JsonSerializable
         ) {
             // Validate layout
             if (!v::intType()->notEmpty()->validate($this->campaignId)) {
-                throw new InvalidArgumentException(__('Please select a Campaign/Layout for this event.'), 'campaignId');
+                throw new InvalidArgumentException(
+                    __('Please select a Campaign/Layout for this event.'),
+                    'campaignId'
+                );
             }
 
             if ($this->isCustomDayPart()) {
@@ -674,17 +692,22 @@ class Schedule implements \JsonSerializable
                     );
                 }
             }
-
         } else if ($this->eventTypeId == Schedule::$COMMAND_EVENT) {
             // Validate command
             if (!v::intType()->notEmpty()->validate($this->commandId)) {
-                throw new InvalidArgumentException(__('Please select a Command for this event.'), 'command');
+                throw new InvalidArgumentException(
+                    __('Please select a Command for this event.'),
+                    'command'
+                );
             }
             $this->campaignId = null;
             $this->toDt = null;
         } elseif ($this->eventTypeId == Schedule::$ACTION_EVENT) {
             if (!v::stringType()->notEmpty()->validate($this->actionType)) {
-                throw new InvalidArgumentException(__('Please select a Action Type for this event.'), 'actionType');
+                throw new InvalidArgumentException(
+                    __('Please select a Action Type for this event.'),
+                    'actionType'
+                );
             }
 
             if (!v::stringType()->notEmpty()->validate($this->actionTriggerCode)) {
@@ -706,7 +729,10 @@ class Schedule implements \JsonSerializable
 
             if ($this->actionType === 'command') {
                 if (!v::intType()->notEmpty()->validate($this->commandId)) {
-                    throw new InvalidArgumentException(__('Please select a Command for this event.'), 'commandId');
+                    throw new InvalidArgumentException(
+                        __('Please select a Command for this event.'),
+                        'commandId'
+                    );
                 }
             } elseif ($this->actionType === 'navLayout') {
                 if (!v::stringType()->notEmpty()->validate($this->actionLayoutCode)) {
@@ -720,7 +746,10 @@ class Schedule implements \JsonSerializable
             $this->campaignId = null;
         } else if ($this->eventTypeId === Schedule::$SYNC_EVENT) {
             if (!v::intType()->notEmpty()->validate($this->syncGroupId)) {
-                throw new InvalidArgumentException(__('Please select a Sync Group for this event.'), 'syncGroupId');
+                throw new InvalidArgumentException(
+                    __('Please select a Sync Group for this event.'),
+                    'syncGroupId'
+                );
             }
 
             if ($this->isCustomDayPart()) {
@@ -734,7 +763,10 @@ class Schedule implements \JsonSerializable
             }
         } else if ($this->eventTypeId === Schedule::$DATA_CONNECTOR_EVENT) {
             if (!v::intType()->notEmpty()->validate($this->dataSetId)) {
-                throw new InvalidArgumentException(__('Please select a DataSet for this event.'), 'dataSetId');
+                throw new InvalidArgumentException(
+                    __('Please select a DataSet for this event.'),
+                    'dataSetId'
+                );
             }
 
             if ($this->isCustomDayPart()) {
@@ -762,22 +794,34 @@ class Schedule implements \JsonSerializable
         }
         // Check display order is positive
         if ($this->displayOrder < 0) {
-            throw new InvalidArgumentException(__('Display Order must be 0 or a positive number'), 'displayOrder');
+            throw new InvalidArgumentException(
+                __('Display Order must be 0 or a positive number'),
+                'displayOrder'
+            );
         }
         // Check priority is positive
         if ($this->isPriority < 0) {
-            throw new InvalidArgumentException(__('Priority must be 0 or a positive number'), 'isPriority');
+            throw new InvalidArgumentException(
+                __('Priority must be 0 or a positive number'),
+                'isPriority'
+            );
         }
         // Check max plays per hour is positive
         if ($this->maxPlaysPerHour < 0) {
-            throw new InvalidArgumentException(__('Maximum plays per hour must be 0 or a positive number'), 'maxPlaysPerHour');
+            throw new InvalidArgumentException(
+                __('Maximum plays per hour must be 0 or a positive number'),
+                'maxPlaysPerHour'
+            );
         }
 
         // Run some additional validation if we have a recurrence type set.
         if (!empty($this->recurrenceType)) {
             // Check recurrenceDetail every is positive
             if ($this->recurrenceDetail === null || $this->recurrenceDetail <= 0) {
-                throw new InvalidArgumentException(__('Repeat every must be a positive number'), 'recurrenceDetail');
+                throw new InvalidArgumentException(
+                    __('Repeat every must be a positive number'),
+                    'recurrenceDetail'
+                );
             }
 
             // Make sure that we don't repeat more frequently than the duration of the event as this is a common
@@ -786,34 +830,15 @@ class Schedule implements \JsonSerializable
                 $eventDuration = $this->toDt - $this->fromDt;
 
                 // Determine the number of seconds our repeat type/interval represents
-                switch ($this->recurrenceType) {
-                    case 'Minute':
-                        $repeatDuration = $this->recurrenceDetail * 60;
-                        break;
-
-                    case 'Hour':
-                        $repeatDuration = $this->recurrenceDetail * 3600;
-                        break;
-
-                    case 'Day':
-                        $repeatDuration = $this->recurrenceDetail * 86400;
-                        break;
-
-                    case 'Week':
-                        $repeatDuration = $this->recurrenceDetail * 86400 * 7;
-                        break;
-
-                    case 'Month':
-                        $repeatDuration = $this->recurrenceDetail * 86400 * 30;
-                        break;
-
-                    case 'Year':
-                        $repeatDuration = $this->recurrenceDetail * 86400 * 365;
-                        break;
-
-                    default:
-                        throw new InvalidArgumentException(__('Unknown repeat type'), 'recurrenceType');
-                }
+                $repeatDuration = match ($this->recurrenceType) {
+                    'Minute' => $this->recurrenceDetail * 60,
+                    'Hour' => $this->recurrenceDetail * 3600,
+                    'Day' => $this->recurrenceDetail * 86400,
+                    'Week' => $this->recurrenceDetail * 86400 * 7,
+                    'Month' => $this->recurrenceDetail * 86400 * 30,
+                    'Year' => $this->recurrenceDetail * 86400 * 365,
+                    default => throw new InvalidArgumentException(__('Unknown repeat type'), 'recurrenceType'),
+                };
 
                 if ($repeatDuration < $eventDuration) {
                     throw new InvalidArgumentException(
@@ -831,7 +856,7 @@ class Schedule implements \JsonSerializable
      * @param array $options
      * @throws GeneralException
      */
-    public function save($options = [])
+    public function save(array $options = []): void
     {
         $options = array_merge([
             'validate' => true,
@@ -932,7 +957,7 @@ class Schedule implements \JsonSerializable
     /**
      * Delete this Schedule Event
      */
-    public function delete($options = [])
+    public function delete($options = []): void
     {
         $this->load();
 
@@ -1008,7 +1033,7 @@ class Schedule implements \JsonSerializable
     /**
      * Add
      */
-    private function add()
+    private function add(): void
     {
         $this->eventId = $this->getStore()->insert('
             INSERT INTO `schedule` (
@@ -1117,7 +1142,7 @@ class Schedule implements \JsonSerializable
     /**
      * Edit
      */
-    private function edit()
+    private function edit(): void
     {
         $this->getStore()->update('
           UPDATE `schedule` SET
@@ -1197,7 +1222,7 @@ class Schedule implements \JsonSerializable
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function getEvents($fromDt, $toDt)
+    public function getEvents(Carbon $fromDt, Carbon $toDt): array
     {
         // Events scheduled "always" will return one event
         if ($this->isAlwaysDayPart()) {
@@ -1254,7 +1279,9 @@ class Schedule implements \JsonSerializable
                  pulled back the generate from dt to ' . $fromDt->toRssString()
             );
         } else {
-            $this->getLog()->debug('The main event has a start and end date within the month, no need to pull it in from the prior month. [eventId:' . $this->eventId . ']');
+            $this->getLog()->debug(
+                'The main event has a start and end date within the month,
+                 no need to pull it in from the prior month. [eventId:' . $this->eventId . ']');
         }
 
         // Keep a cache of schedule exclusions, so we look them up by eventId only one time per event
@@ -1326,7 +1353,7 @@ class Schedule implements \JsonSerializable
      * @param Carbon $end
      * @throws GeneralException
      */
-    private function generateMonth($generateFromDt, $start, $end)
+    private function generateMonth(Carbon $generateFromDt, Carbon $start, Carbon $end): void
     {
         // Operate on copies of the dates passed.
         $start = $start->copy();
@@ -1630,10 +1657,13 @@ class Schedule implements \JsonSerializable
 
         if ($lastWatermarkTimeStamp != $this->lastRecurrenceWatermark) {
             $this->lastRecurrenceWatermark = $lastWatermarkTimeStamp;
-            $this->getStore()->update('UPDATE `schedule` SET lastRecurrenceWatermark = :lastRecurrenceWatermark WHERE eventId = :eventId', [
-                'eventId' => $this->eventId,
-                'lastRecurrenceWatermark' => $this->lastRecurrenceWatermark
-            ]);
+            $this->getStore()->update(
+                'UPDATE `schedule` SET lastRecurrenceWatermark = :lastRecurrenceWatermark WHERE eventId = :eventId',
+                [
+                    'eventId' => $this->eventId,
+                    'lastRecurrenceWatermark' => $this->lastRecurrenceWatermark
+                ]
+            );
         }
 
         // Update the cache
@@ -1649,7 +1679,7 @@ class Schedule implements \JsonSerializable
      * Drop the event cache
      * @param $key
      */
-    private function dropEventCache($key = null)
+    private function dropEventCache($key = null): void
     {
         $compKey = 'schedule/' . $this->eventId;
 
@@ -1666,7 +1696,7 @@ class Schedule implements \JsonSerializable
      * @param Carbon $end
      * @throws GeneralException
      */
-    private function calculateDayPartTimes($start, $end)
+    private function calculateDayPartTimes(Carbon $start, Carbon $end): void
     {
         $dayOfWeekLookup = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -1722,7 +1752,7 @@ class Schedule implements \JsonSerializable
      * @param int $fromDt
      * @param int $toDt
      */
-    private function addDetail($fromDt, $toDt)
+    private function addDetail($fromDt, $toDt): void
     {
         $this->scheduleEvents[] = new ScheduleEvent($fromDt, $toDt);
     }
@@ -1732,7 +1762,7 @@ class Schedule implements \JsonSerializable
      * @param bool $notify should we notify or not?
      * @throws \Xibo\Exception\XiboException
      */
-    private function manageAssignments($notify)
+    private function manageAssignments($notify): void
     {
         $this->linkDisplayGroups();
         $this->unlinkDisplayGroups();
@@ -1780,7 +1810,7 @@ class Schedule implements \JsonSerializable
     /**
      * Link Layout
      */
-    private function linkDisplayGroups()
+    private function linkDisplayGroups(): void
     {
         // TODO: Make this more efficient by storing the prepared SQL statement
         $sql = 'INSERT INTO `lkscheduledisplaygroup` (eventId, displayGroupId) VALUES (:eventId, :displayGroupId) ON DUPLICATE KEY UPDATE displayGroupId = displayGroupId';
@@ -1799,7 +1829,7 @@ class Schedule implements \JsonSerializable
     /**
      * Unlink Layout
      */
-    private function unlinkDisplayGroups()
+    private function unlinkDisplayGroups(): void
     {
         // Unlink any layouts that are NOT in the collection
         $params = ['eventId' => $this->eventId];
@@ -1819,10 +1849,10 @@ class Schedule implements \JsonSerializable
     }
 
     /**
-     * @return \Xibo\Entity\DayPart
+     * @return DayPart
      * @throws \Xibo\Exception\NotFoundException
      */
-    private function getDayPart()
+    private function getDayPart(): DayPart
     {
         if ($this->dayPart === null) {
             $this->dayPart = $this->dayPartFactory->getById($this->dayPartId);
@@ -1836,7 +1866,7 @@ class Schedule implements \JsonSerializable
      * @return bool
      * @throws NotFoundException
      */
-    public function isAlwaysDayPart()
+    public function isAlwaysDayPart(): bool
     {
         return $this->getDayPart()->isAlways === 1;
     }
@@ -1846,9 +1876,25 @@ class Schedule implements \JsonSerializable
      * @return bool
      * @throws NotFoundException
      */
-    public function isCustomDayPart()
+    public function isCustomDayPart(): bool
     {
         return $this->getDayPart()->isCustom === 1;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFullScreenSchedule(): bool
+    {
+        return in_array($this->eventTypeId, [self::$MEDIA_EVENT, self::$PLAYLIST_EVENT]);
+    }
+
+    /**
+     * @return int
+     */
+    public function isSyncEvent(): int
+    {
+        return ($this->eventTypeId === self::$SYNC_EVENT) ? 1 : 0;
     }
 
     /**
@@ -1862,7 +1908,7 @@ class Schedule implements \JsonSerializable
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function getNextReminderDate($now, $reminder, $remindSeconds)
+    public function getNextReminderDate($now, $reminder, $remindSeconds): ?int
     {
         // Determine toDt so that we don't getEvents which never ends
         // adding the recurrencedetail at the end (minute/hour/week) to make sure we get at least 2 next events
@@ -1939,7 +1985,7 @@ class Schedule implements \JsonSerializable
      * @return string
      * @throws GeneralException
      */
-    public function getEventTitle()
+    public function getEventTitle(): string
     {
         // Setting for whether we show Layouts with out permissions
         $showLayoutName = ($this->config->getSetting('SCHEDULE_SHOW_LAYOUT_NAME') == 1);
@@ -1979,7 +2025,7 @@ class Schedule implements \JsonSerializable
         return $title;
     }
 
-    private function toArray($jsonEncodeArrays = false)
+    private function toArray($jsonEncodeArrays = false): array
     {
         $objectAsJson = $this->jsonSerialize();
 
@@ -2019,7 +2065,7 @@ class Schedule implements \JsonSerializable
      * @return array
      * @throws NotFoundException
      */
-    public function getChangedProperties($jsonEncodeArrays = false)
+    public function getChangedProperties($jsonEncodeArrays = false): array
     {
         $changedProperties = [];
 

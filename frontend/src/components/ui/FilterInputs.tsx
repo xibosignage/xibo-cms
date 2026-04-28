@@ -20,6 +20,7 @@
  */
 
 import { t } from 'i18next';
+import { useEffect, useRef, useState } from 'react';
 
 import Button from './Button';
 import InputFilter from './InputFilter';
@@ -47,9 +48,41 @@ export interface FilterConfigItem<T> {
   hasMore?: boolean;
   isLoadingMore?: boolean;
   isLoading?: boolean;
+  onSearch?: (term: string) => void;
 }
 
 type FilterValue = string | number | null | Tag[];
+
+type DebouncedInputFilterProps = {
+  name: string;
+  label: string;
+  placeholder?: string;
+  type: 'text' | 'number';
+  externalValue: string | number;
+  onChange: (name: string, value: string | number | null) => void;
+  className?: string;
+};
+
+function DebouncedInputFilter({ externalValue, onChange, ...props }: DebouncedInputFilterProps) {
+  const [localValue, setLocalValue] = useState<string | number>(externalValue ?? '');
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setLocalValue(externalValue ?? '');
+  }, [externalValue]);
+
+  const handleChange = (name: string, val: string | number | null) => {
+    setLocalValue(val ?? '');
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = setTimeout(() => {
+      onChange(name, val);
+    }, 300);
+  };
+
+  return <InputFilter {...props} value={localValue} onChange={handleChange} />;
+}
 
 type FilterInputsProps<T> = {
   isOpen: boolean;
@@ -79,7 +112,6 @@ export default function FilterInputs<T>({
       `}
     >
       <div className="relative bg-slate-50 p-5 pt-7 grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-4 items-end">
-        {' '}
         {onReset && (
           <Button
             variant="tertiary"
@@ -94,13 +126,13 @@ export default function FilterInputs<T>({
 
           if (filterType === 'text' || filterType === 'number') {
             return (
-              <InputFilter
+              <DebouncedInputFilter
                 key={filter.name}
                 label={filter.label}
                 placeholder={filter.placeholder}
                 name={filter.name}
                 type={filterType}
-                value={values[filter.name] as string | number}
+                externalValue={values[filter.name] as string | number}
                 onChange={(name, val) => onChange(name as keyof T & string, val)}
                 className={filter.className}
               />
@@ -145,6 +177,7 @@ export default function FilterInputs<T>({
                 hasMore={filter.hasMore}
                 isLoadingMore={filter.isLoadingMore}
                 isLoading={filter.isLoading}
+                onSearch={filter.onSearch}
                 className={`w-full md:w-auto md:flex-1 min-w-0 ${filter.className ?? ''}`}
               />
             );

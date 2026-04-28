@@ -298,6 +298,12 @@ class SavedReport extends Base
      */
     public function savedReportOpen(Request $request, Response $response, $id, $name)
     {
+        $savedReport = $this->savedReportFactory->getById($id);
+
+        if (!$this->getUser()->checkViewable($savedReport)) {
+            throw new AccessDeniedException(__('You do not have permissions to open the report.'));
+        }
+
         // Retrieve the saved report result in array
         /* @var ReportResult $results */
         $results = $this->reportService->getSavedReportResults($id, $name);
@@ -327,6 +333,10 @@ class SavedReport extends Base
     public function savedReportExport(Request $request, Response $response, $id, $name)
     {
         $savedReport = $this->savedReportFactory->getById($id);
+
+        if (!$this->getUser()->checkViewable($savedReport)) {
+            throw new AccessDeniedException(__('You do not have permissions to export the report.'));
+        }
 
         // Retrieve the saved report result in array
         /* @var ReportResult $results */

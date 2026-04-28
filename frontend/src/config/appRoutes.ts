@@ -100,9 +100,10 @@ export const APP_ROUTES: AppRoute[] = [
     icon: CalendarDays,
     subLinks: [
       {
-        path: 'event',
-        labelKey: 'Event',
-        externalURL: '/schedule/view',
+        path: 'events',
+        labelKey: 'Events',
+        lazy: () =>
+          import('@/pages/Schedule/Schedule/Events').then((m) => ({ Component: m.default })),
         feature: 'schedule.view',
       },
       {

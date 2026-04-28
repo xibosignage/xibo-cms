@@ -29,7 +29,7 @@
     <type>rss-ticker</type>
     <legacyType>ticker</legacyType>
     <dataType>article</dataType>
-    <dataCacheKey>%uri%_%numItems%_%stripTags%_%imageSource%_%imageSourceTag%</dataCacheKey>
+    <dataCacheKey>%uri%_%numItems%_%stripTags%_%imageSource%_%imageSourceTag%_%decodeHtml%_%decodeEntities%</dataCacheKey>
     <fallbackData>1</fallbackData>
     <schemaVersion>2</schemaVersion>
     <assignable>1</assignable>
@@ -143,7 +143,12 @@
         </property>
         <property id="decodeHtml" type="checkbox">
             <title>Decode HTML</title>
-            <helpText>Should we decode the HTML entities in this feed before parsing it?</helpText>
+            <helpText>Should we decode the HTML entities in this feed before parsing it? (Applies to the Content widget.)</helpText>
+            <default>0</default>
+        </property>
+        <property id="decodeEntities" type="checkbox">
+            <title>Decode Entities</title>
+            <helpText>Convert HTML entities in the title, summary and content into their readable characters.</helpText>
             <default>0</default>
         </property>
         <property id="disableDateSort" type="checkbox">

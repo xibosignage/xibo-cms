@@ -246,7 +246,11 @@ class Base
      */
     protected function isApi(Request $request): bool
     {
-        return ($request->getAttribute('_entryPoint') == 'api');
+        return (
+            $request->getAttribute('_entryPoint') != 'web'
+            && $request->getAttribute('_entryPoint') != 'json'
+            && $request->getAttribute('_entryPoint') != 'preview'
+        );
     }
 
     /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -44,6 +44,7 @@ const mainConfig = Object.assign({}, config, {
     preview: './ui/bundle_preview.js',
     datatables: './ui/bundle_datatables.js',
     codeEditor: './ui/bundle_code_editor.js',
+    dompurify: './ui/bundle_dompurify.js',
     wysiwygEditor: './ui/bundle_wysiwyg_editor.js',
     leaflet: './ui/bundle_leaflet.js',
     fileUpload: './ui/src/core/file-upload.js',

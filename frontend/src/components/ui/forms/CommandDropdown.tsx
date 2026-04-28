@@ -19,11 +19,12 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import type { SelectOption } from '@/components/ui/forms/SelectDropdown';
+import { useDebounce } from '@/hooks/useDebounce';
 import { fetchCommands } from '@/services/commandApi';
 
 const PAGE_SIZE = 10;
@@ -51,6 +52,8 @@ export default function CommandDropdown({
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 300);
   const pageRef = useRef(0);
 
   useEffect(() => {
@@ -58,7 +61,12 @@ export default function CommandDropdown({
     setOptions([]);
     pageRef.current = 0;
 
-    fetchCommands({ start: 0, length: PAGE_SIZE, type })
+    fetchCommands({
+      start: 0,
+      length: PAGE_SIZE,
+      type,
+      command: debouncedSearch || undefined,
+    })
       .then((res) => {
         setOptions(res.rows.map((c) => ({ value: String(c.commandId), label: c.command })));
         setTotalCount(res.totalCount);
@@ -66,15 +74,20 @@ export default function CommandDropdown({
       })
       .catch(() => setOptions([]))
       .finally(() => setIsLoading(false));
-  }, [type]);
+  }, [type, debouncedSearch]);
 
-  const handleLoadMore = useCallback(() => {
+  const handleLoadMore = () => {
     if (isLoadingMore || options.length >= totalCount) {
       return;
     }
 
     setIsLoadingMore(true);
-    fetchCommands({ start: pageRef.current * PAGE_SIZE, length: PAGE_SIZE, type })
+    fetchCommands({
+      start: pageRef.current * PAGE_SIZE,
+      length: PAGE_SIZE,
+      type,
+      command: debouncedSearch || undefined,
+    })
       .then((res) => {
         setOptions((prev) => [
           ...prev,
@@ -85,7 +98,7 @@ export default function CommandDropdown({
       })
       .catch(() => {})
       .finally(() => setIsLoadingMore(false));
-  }, [isLoadingMore, options.length, totalCount, type]);
+  };
 
   return (
     <SelectDropdown
@@ -100,6 +113,7 @@ export default function CommandDropdown({
       isLoadingMore={isLoadingMore}
       searchable
       searchPlaceholder={t('Search commands...')}
+      onSearch={(v) => setSearchTerm(v)}
       error={error}
     />
   );

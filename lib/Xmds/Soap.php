@@ -1500,6 +1500,7 @@ class Soap
                         $overlay->setAttribute('duration', $row['duration'] ?? 0);
                         $overlay->setAttribute('isGeoAware', $row['isGeoAware'] ?? 0);
                         $overlay->setAttribute('geoLocation', $row['geoLocation'] ?? null);
+                        $overlay->setAttribute('maxPlaysPerHour', $row['maxPlaysPerHour'] ?? 0);
 
                         // Add criteria notes
                         if (count($criteriaNodes) > 0) {
