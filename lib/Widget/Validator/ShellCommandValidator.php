@@ -45,6 +45,7 @@ class ShellCommandValidator implements WidgetValidatorInterface
             && $widget->getOptionValue('commandCode', '') == ''
             && $widget->getOptionValue('webosCommand', '') == ''
             && $widget->getOptionValue('tizenCommand', '') == ''
+            && $widget->getOptionValue('chromeosCommand', '') == ''
         ) {
             throw new InvalidArgumentException(__('You must enter a command'), 'command');
         }

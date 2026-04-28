@@ -26,7 +26,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 
-import type { LayoutFilterInput } from './LayoutConfig';
+import type { LayoutFilterInput, ModalType } from './LayoutConfig';
 import { getBulkActions, getLayoutColumns, LAYOUT_INITIAL_FILTER_STATE } from './LayoutConfig';
 import LayoutPreviewer from './components/LayoutPreviewer';
 import { LayoutModals } from './components/LayoutsModal';
@@ -46,7 +46,6 @@ import { useFolderActions } from '@/hooks/useFolderActions';
 import { useOwner } from '@/hooks/useOwner';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
-import type { ModalType } from '@/pages/Library/Media/MediaConfig';
 import { fetchContextButtons } from '@/services/folderApi';
 import type { Layout } from '@/types/layout';
 
@@ -298,6 +297,11 @@ export default function Layouts() {
     openModal('enableStats');
   };
 
+  const openScheduleModal = (layout: Layout) => {
+    setSelectedLayoutId(layout.layoutId);
+    openModal('schedule');
+  };
+
   const columns = getLayoutColumns({
     t,
     onDelete: handleDelete,
@@ -336,6 +340,7 @@ export default function Layouts() {
     openTemplateModal,
     openRetireModal,
     openEnableStatsModal,
+    openScheduleModal,
   });
 
   const getAllSelectedItems = (): Layout[] => {

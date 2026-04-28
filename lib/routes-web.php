@@ -75,32 +75,6 @@ $app->get('/logout', ['\Xibo\Controller\Login','logout'])->setName('logout');
 $app->get('/login/ping', ['\Xibo\Controller\Login','PingPong'])->setName('ping');
 
 //
-// schedule
-//
-$app->get('/schedule/view', ['\Xibo\Controller\Schedule','displayPage'])
-    ->add(new FeatureAuth($app->getContainer(), ['schedule.view']))
-    ->setName('schedule.view');
-
-$app->get('/schedule/grid/view', ['\Xibo\Controller\Schedule','gridPage'])
-    ->add(new FeatureAuth($app->getContainer(), ['schedule.view']))
-    ->setName('schedule.grid.view');
-
-$app->get('/schedule/form/add[/{from}/{id}]', ['\Xibo\Controller\Schedule','addForm'])
-    ->add(new FeatureAuth($app->getContainer(), ['schedule.add']))
-    ->setName('schedule.add.form');
-
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/schedule/form/edit/{id}', ['\Xibo\Controller\Schedule', 'editForm'])
-        ->setName('schedule.edit.form');
-
-    $group->get('/schedule/form/delete/{id}', ['\Xibo\Controller\Schedule', 'deleteForm'])
-        ->setName('schedule.delete.form');
-
-    $group->get('/schedulerecurrence/form/delete/{id}', ['\Xibo\Controller\Schedule', 'deleteRecurrenceForm'])
-        ->setName('schedule.recurrence.delete.form');
-})->add(new FeatureAuth($app->getContainer(), ['schedule.modify']));
-
-//
 // notification
 //
 $app->get('/drawer/notification/show/{id}', ['\Xibo\Controller\Notification','show'])->setName('notification.show');
@@ -128,13 +102,7 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/layout/xlf/{id}', ['\Xibo\Controller\Preview', 'getXlf'])->setName('layout.getXlf');
     $group->get('/layout/background/{id}', ['\Xibo\Controller\Layout', 'downloadBackground'])->setName('layout.download.background');
-    $group->get('/layout/playerBundle', ['\Xibo\Controller\Preview', 'playerBundle'])->setName('layout.preview.bundle');
-    $group->get('/connector/widget/preview', ['\Xibo\Controller\Connector', 'connectorPreview'])->setName('layout.preview.connector');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.view', 'template.view']));
-
-$app->get('/layout/preview/{id}', ['\Xibo\Controller\Preview', 'show'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.view', 'template.view', 'campaign.view']))
-    ->setName('layout.preview');
 
 // forms
 $app->get('/layout/form/add', ['\Xibo\Controller\Layout','addForm'])
@@ -168,15 +136,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 
     // Designer
     $group->get('/playlist/form/library/assign/{id}', ['\Xibo\Controller\Playlist','libraryAssignForm'])->setName('playlist.library.assign.form');
-
-    // Outputs
-    $group->get('/playlist/widget/resource/{regionId}[/{id}]', [
-        '\Xibo\Controller\Widget', 'getResource'
-    ])->setName('module.getResource');
-
-    $group->get('/playlist/widget/data/{regionId}/{id}', [
-        '\Xibo\Controller\Widget', 'getData'
-    ])->setName('module.getData');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify']));
 
 $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
@@ -302,7 +261,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 
     // Data connector
     $group->get('/dataset/dataConnector/{id}', ['\Xibo\Controller\DataSet', 'dataConnectorView'])->setName('dataSet.dataConnector.view');
-    $group->get('/dataset/dataConnector/request/{id}', ['\Xibo\Controller\DataSet', 'dataConnectorRequest'])->setName('dataSet.dataConnector.request');
     $group->get('/dataset/dataConnector/test/{id}', ['\Xibo\Controller\DataSet', 'dataConnectorTest'])->setName('dataSet.dataConnector.test');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['dataset.modify']));
 
@@ -385,6 +343,9 @@ $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/module/form/settings/{id}', ['\Xibo\Controller\Module','settingsForm'])
         ->setName('module.settings.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['module.view']));
+
+$app->get('/module/asset/{assetId}', ['\Xibo\Controller\Module', 'assetDownload'])
+    ->setName('module.asset.download');
 
 //
 // Developer

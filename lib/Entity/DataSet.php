@@ -417,71 +417,12 @@ class DataSet implements \JsonSerializable
     }
 
     /**
-     * Get Column
-     * @param string $dataSetColumn
-     * @return DataSetColumn[]|DataSetColumn
-     * @throws NotFoundException when the heading is provided and the column cannot be found
-     */
-    public function getColumnByName($dataSetColumn)
-    {
-        $this->load();
-
-        foreach ($this->columns as $column) {
-            /* @var DataSetColumn $column */
-            if ($column->heading == $dataSetColumn)
-                return $column;
-        }
-
-        throw new NotFoundException(sprintf(__('Column %s not found'), $dataSetColumn));
-    }
-
-    /**
-     * @param string[] $columns Column Names to select
-     * @return array
-     * @throws InvalidArgumentException
-     */
-    public function getUniqueColumnValues($columns)
-    {
-        $this->load();
-
-        $select = '';
-        foreach ($columns as $heading) {
-            // Check this exists
-            $found = false;
-            foreach ($this->columns as $column) {
-                if ($column->heading == $heading) {
-                    // Formula column?
-                    if ($column->dataSetColumnTypeId == 2) {
-                        $select .= str_replace(
-                            Sql::DISALLOWED_KEYWORDS,
-                            '',
-                            htmlspecialchars_decode($column->formula, ENT_QUOTES)
-                        ) . ' AS `' . $column->heading . '`,';
-                    } else {
-                        $select .= '`' . $column->heading . '`,';
-                    }
-                    $found = true;
-                    break;
-                }
-            }
-
-            if (!$found) {
-                throw new InvalidArgumentException(__('Unknown Column ' . $heading));
-            }
-        }
-        $select = rtrim($select, ',');
-        // $select is safe
-
-        return $this->getStore()->select('SELECT DISTINCT ' . $select . ' FROM `dataset_' . $this->dataSetId . '`', []);
-    }
-
-    /**
      * Get DataSet Data
      * @param array $filterBy
      * @param array $options
      * @param array $extraParams Extra params to apply to the final query
      * @return array
-     * @throws NotFoundException
+     * @throws NotFoundException|\Xibo\Support\Exception\InvalidArgumentException
      */
     public function getData($filterBy = [], $options = [], $extraParams = [])
     {
@@ -616,11 +557,9 @@ class DataSet implements \JsonSerializable
                 }
 
                 $count = 0;
-                $formula = str_ireplace(
-                    Sql::DISALLOWED_KEYWORDS,
-                    '',
+                $formula = Sql::cleanup(
                     htmlspecialchars_decode($column->formula, ENT_QUOTES),
-                    $count
+                    $count,
                 );
 
                 if ($count > 0) {
@@ -649,7 +588,16 @@ class DataSet implements \JsonSerializable
         if ($filter != '') {
             // Support display filtering.
             $filter = str_replace('[DisplayId]', $displayId, $filter);
-            $filter = str_ireplace(Sql::DISALLOWED_KEYWORDS, '', $filter);
+
+            $filterCount = 0;
+            $filter = Sql::cleanup($filter, $filterCount);
+
+            if ($filterCount > 0) {
+                throw new InvalidArgumentException(
+                    __('Filter contains disallowed keywords'),
+                    'filter'
+                );
+            }
 
             $body .= ' AND ' . $filter;
         }

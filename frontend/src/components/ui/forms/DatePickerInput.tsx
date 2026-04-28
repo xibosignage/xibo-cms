@@ -36,14 +36,17 @@ import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
 import DatePicker from '@/components/ui/DatePicker';
+import { useUserContext } from '@/context/UserContext';
 
 interface DatePickerInputProps {
   label: string;
   value?: string;
   onChange: (value: string) => void;
   helpText?: string;
+  error?: string;
   disablePastDates?: boolean;
   disableFutureDates?: boolean;
+  showTimePicker?: boolean;
 }
 
 export default function DatePickerInput({
@@ -51,10 +54,14 @@ export default function DatePickerInput({
   value,
   onChange,
   helpText,
+  error,
   disablePastDates = false,
   disableFutureDates = false,
+  showTimePicker = true,
 }: DatePickerInputProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
+  const timeZone = user?.settings?.defaultTimezone;
   const [isOpen, setIsOpen] = useState(false);
 
   const { refs, floatingStyles, context } = useFloating({
@@ -69,7 +76,12 @@ export default function DatePickerInput({
   const dismiss = useDismiss(context);
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
 
-  const displayValue = value ? new Date(value).toLocaleString() : '';
+  const tzOption = timeZone ? { timeZone } : undefined;
+  const displayValue = value
+    ? showTimePicker
+      ? new Date(value).toLocaleString(undefined, tzOption)
+      : new Date(value).toLocaleDateString(undefined, tzOption)
+    : '';
 
   return (
     <div className="flex flex-col gap-1.5 relative">
@@ -112,7 +124,11 @@ export default function DatePickerInput({
         )}
       </div>
 
-      {helpText && <p className="text-xs text-gray-400">{helpText}</p>}
+      {error ? (
+        <p className="text-xs text-red-600 ml-2 mt-1">{error}</p>
+      ) : (
+        helpText && <p className="text-xs text-gray-400">{helpText}</p>
+      )}
 
       <FloatingPortal>
         {isOpen && (
@@ -127,6 +143,7 @@ export default function DatePickerInput({
               value={value ? { date: new Date(value) } : undefined}
               disablePastDates={disablePastDates}
               disableFutureDates={disableFutureDates}
+              showTimePicker={showTimePicker}
               onApply={(selection) => {
                 if (selection && selection.type === 'single' && selection.date) {
                   onChange(selection.date.toISOString());

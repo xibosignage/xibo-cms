@@ -373,7 +373,7 @@ class StatusDashboard extends Base
                                 $content = strip_tags($item->getContent());
                             } else {
                                 // use description
-                                $content = ($desc[0] ?? strip_tags($item->getContent()));
+                                $content = strip_tags($desc[0] ?? $item->getContent());
                             }
 
                             $latestNews[] = [

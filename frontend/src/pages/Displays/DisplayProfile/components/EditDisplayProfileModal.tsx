@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AndroidFields } from './fields/AndroidFields';
@@ -271,7 +271,7 @@ export default function EditDisplayProfileModal({
       .finally(() => setIsLoading(false));
   }, [isOpen, data, t]);
 
-  const handleLoadMoreDayparts = useCallback(() => {
+  const handleLoadMoreDayparts = () => {
     if (isLoadingMoreDayparts || dayparts.length >= daypartsTotalCount) {
       return;
     }
@@ -289,9 +289,9 @@ export default function EditDisplayProfileModal({
       })
       .catch(() => {})
       .finally(() => setIsLoadingMoreDayparts(false));
-  }, [isLoadingMoreDayparts, dayparts.length, daypartsTotalCount]);
+  };
 
-  const handleLoadMorePlayerVersions = useCallback(() => {
+  const handleLoadMorePlayerVersions = () => {
     const playerVersionType = playerVersionTypeRef.current;
     if (
       !playerVersionType ||
@@ -313,7 +313,7 @@ export default function EditDisplayProfileModal({
       })
       .catch(() => {})
       .finally(() => setIsLoadingMorePlayerVersions(false));
-  }, [isLoadingMorePlayerVersions, playerVersions.length, playerVersionsTotalCount]);
+  };
 
   const str = (key: string): string => String(draft.config[key] ?? configDefaults[key] ?? '');
   const num = (key: string): number => Number(draft.config[key] ?? configDefaults[key] ?? 0);

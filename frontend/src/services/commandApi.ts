@@ -32,6 +32,7 @@ export interface FetchCommandsRequest {
   start: number;
   length: number;
   keyword?: string;
+  command?: string;
   type?: string;
   signal?: AbortSignal;
 }

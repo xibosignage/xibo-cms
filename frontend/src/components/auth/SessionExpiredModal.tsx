@@ -19,8 +19,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { useQueryClient } from '@tanstack/react-query';
 import { ExternalLink, Lock, RefreshCw, AlertCircle } from 'lucide-react';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Button from '../ui/Button';
@@ -32,6 +33,7 @@ import { authEvents } from '@/lib/auth-events';
 
 export function SessionExpiredModal() {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
 
@@ -44,7 +46,7 @@ export function SessionExpiredModal() {
     return () => authEvents.removeEventListener('session-expired', handleExpired);
   }, []);
 
-  const checkSession = useCallback(async () => {
+  const checkSession = async () => {
     if (checkLock.current) {
       return;
     }
@@ -57,6 +59,7 @@ export function SessionExpiredModal() {
         try {
           await http.head('/user/me');
           setIsOpen(false);
+          void queryClient.invalidateQueries();
         } catch {
           // Still expired, stay open
         } finally {
@@ -73,7 +76,7 @@ export function SessionExpiredModal() {
     } finally {
       checkLock.current = false;
     }
-  }, [isOpen]);
+  };
 
   // Pro active check - focus and auto-resume
   useEffect(() => {

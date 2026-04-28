@@ -53,7 +53,7 @@ export interface PlaylistFilterInput {
   lastModified: string;
 }
 
-export type ModalType = BaseModalType | null;
+export type ModalType = BaseModalType | 'schedule' | null;
 
 export const INITIAL_FILTER_STATE: PlaylistFilterInput = {
   userId: '',
@@ -95,6 +95,7 @@ export interface PlaylistActionsProps {
   openShareModal?: (id: number) => void;
   openMoveModal?: (row: Playlist | Playlist[]) => void;
   copyPlaylist?: (row: number) => void;
+  openScheduleModal?: (row: Playlist) => void;
 }
 
 export const getPlaylistItemActions = ({
@@ -104,6 +105,7 @@ export const getPlaylistItemActions = ({
   openShareModal,
   openMoveModal,
   copyPlaylist,
+  openScheduleModal,
 }: PlaylistActionsProps): ((playlist: Playlist) => ActionItem[]) => {
   return (playlist: Playlist) => [
     // Quick Actions
@@ -142,11 +144,15 @@ export const getPlaylistItemActions = ({
       icon: UserPlus2,
       onClick: () => openShareModal && openShareModal(playlist.playlistId),
     },
-    {
-      label: t('Schedule'),
-      icon: CalendarClock,
-      onClick: () => console.log('Schedule', playlist.playlistId),
-    },
+    ...(openScheduleModal
+      ? [
+          {
+            label: t('Schedule'),
+            icon: CalendarClock,
+            onClick: () => openScheduleModal(playlist),
+          },
+        ]
+      : []),
     {
       label: t('Timeline'),
       icon: BarChartHorizontalBig,

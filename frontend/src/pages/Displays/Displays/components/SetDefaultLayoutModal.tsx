@@ -25,6 +25,7 @@ import { useTranslation } from 'react-i18next';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import type { SelectOption } from '@/components/ui/forms/SelectDropdown';
 import Modal from '@/components/ui/modals/Modal';
+import { useDebounce } from '@/hooks/useDebounce';
 import { fetchLayouts } from '@/services/layoutsApi';
 import type { Display } from '@/types/display';
 
@@ -55,18 +56,27 @@ export default function SetDefaultLayoutModal({
   const [isLoadingMoreLayouts, setIsLoadingMoreLayouts] = useState(false);
   const [hasMoreLayouts, setHasMoreLayouts] = useState(false);
   const [layoutPage, setLayoutPage] = useState(0);
+  const [layoutSearch, setLayoutSearch] = useState('');
+  const debouncedLayoutSearch = useDebounce(layoutSearch, 300);
 
   useEffect(() => {
     setIsLoadingLayouts(true);
+    setLayouts([]);
     setLayoutPage(0);
-    fetchLayouts({ start: 0, length: LAYOUT_PAGE_SIZE, retired: 0 })
+    fetchLayouts({
+      start: 0,
+      length: LAYOUT_PAGE_SIZE,
+      retired: 0,
+      layout: debouncedLayoutSearch || undefined,
+    })
       .then((res) => {
         const options = res.rows.map((l) => ({
           value: String(l.layoutId),
           label: l.layout,
         }));
-        // Ensure current layout is in the list
+        // Ensure current layout is in the list when not searching
         if (
+          !debouncedLayoutSearch &&
           display?.defaultLayoutId &&
           !options.some((o) => o.value === String(display.defaultLayoutId))
         ) {
@@ -80,7 +90,7 @@ export default function SetDefaultLayoutModal({
       })
       .catch(() => setLayouts([]))
       .finally(() => setIsLoadingLayouts(false));
-  }, [display?.defaultLayoutId, display?.defaultLayout]);
+  }, [display?.defaultLayoutId, display?.defaultLayout, debouncedLayoutSearch]);
 
   const handleLoadMore = () => {
     if (isLoadingMoreLayouts || !hasMoreLayouts) {
@@ -88,7 +98,12 @@ export default function SetDefaultLayoutModal({
     }
     const nextPage = layoutPage + 1;
     setIsLoadingMoreLayouts(true);
-    fetchLayouts({ start: nextPage * LAYOUT_PAGE_SIZE, length: LAYOUT_PAGE_SIZE, retired: 0 })
+    fetchLayouts({
+      start: nextPage * LAYOUT_PAGE_SIZE,
+      length: LAYOUT_PAGE_SIZE,
+      retired: 0,
+      layout: debouncedLayoutSearch || undefined,
+    })
       .then((res) => {
         setLayouts((prev) => [
           ...prev,
@@ -139,6 +154,7 @@ export default function SetDefaultLayoutModal({
           isLoadingMore={isLoadingMoreLayouts}
           searchable
           searchPlaceholder={t('Search layouts...')}
+          onSearch={(v) => setLayoutSearch(v)}
         />
       </div>
     </Modal>

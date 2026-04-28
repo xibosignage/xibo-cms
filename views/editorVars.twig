@@ -63,7 +63,7 @@
                     type: 'GET'
                 },
                 preview: {
-                    url: "{{ url_for("layout.preview", {id: ':id'}) }}",
+                    url: "{{ theme.rootUri() }}preview/layout/preview/:id",
                     type: 'GET'
                 },
                 checkout: {
@@ -343,7 +343,7 @@
                     type: 'GET'
                 },
                 getData: {
-                    url: "{{ url_for("module.getData", {regionId: ':regionId', id: ':id'}) }}",
+                    url: "{{ theme.rootUri() }}preview/playlist/widget/data/:regionId/:id",
                     type: 'GET'
                 },
                 assetDownload: {

@@ -46,6 +46,7 @@ import TagInput from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import TimezoneSelect from '@/components/ui/forms/TimezoneSelect';
 import Modal from '@/components/ui/modals/Modal';
+import { useDebounce } from '@/hooks/useDebounce';
 import { DynamicSettingField } from '@/pages/Displays/DisplayProfile/components/fields/DynamicSettingField';
 import { PICTURE_PROPERTY_DEFS } from '@/pages/Displays/DisplayProfile/components/fields/LgSsspFields';
 import type { FieldMeta } from '@/pages/Displays/DisplayProfile/components/fields/fieldMetadata';
@@ -488,6 +489,8 @@ export default function EditDisplayModal({
   const [hasMoreLayouts, setHasMoreLayouts] = useState(false);
   const [isLoadingLayouts, setIsLoadingLayouts] = useState(false);
   const [isLoadingMoreLayouts, setIsLoadingMoreLayouts] = useState(false);
+  const [layoutSearch, setLayoutSearch] = useState('');
+  const debouncedLayoutSearch = useDebounce(layoutSearch, 300);
 
   const [venues, setVenues] = useState<DisplayVenue[]>([]);
   const [localeLanguages, setLocaleLanguages] = useState<{ value: string; label: string }[]>([]);
@@ -624,9 +627,22 @@ export default function EditDisplayModal({
       .then((v) => setVenues(v))
       .catch(() => setVenues([]));
 
+    setLayoutSearch('');
+  }, [isOpen, data]);
+
+  useEffect(() => {
+    if (!isOpen || !data) {
+      return;
+    }
     setIsLoadingLayouts(true);
+    setLayouts([]);
     setLayoutPage(0);
-    fetchLayouts({ start: 0, length: LAYOUT_PAGE_SIZE, retired: 0 })
+    fetchLayouts({
+      start: 0,
+      length: LAYOUT_PAGE_SIZE,
+      retired: 0,
+      layout: debouncedLayoutSearch || undefined,
+    })
       .then((res) => {
         setLayouts(res.rows);
         setHasMoreLayouts(res.rows.length === LAYOUT_PAGE_SIZE);
@@ -636,7 +652,7 @@ export default function EditDisplayModal({
         setHasMoreLayouts(false);
       })
       .finally(() => setIsLoadingLayouts(false));
-  }, [isOpen, data]);
+  }, [isOpen, data, debouncedLayoutSearch]);
 
   useEffect(() => {
     setIsLoadingProfile(true);
@@ -673,7 +689,12 @@ export default function EditDisplayModal({
     }
     const nextPage = layoutPage + 1;
     setIsLoadingMoreLayouts(true);
-    fetchLayouts({ start: nextPage * LAYOUT_PAGE_SIZE, length: LAYOUT_PAGE_SIZE, retired: 0 })
+    fetchLayouts({
+      start: nextPage * LAYOUT_PAGE_SIZE,
+      length: LAYOUT_PAGE_SIZE,
+      retired: 0,
+      layout: debouncedLayoutSearch || undefined,
+    })
       .then((res) => {
         setLayouts((prev) => [...prev, ...res.rows]);
         setLayoutPage(nextPage);
@@ -805,11 +826,15 @@ export default function EditDisplayModal({
   };
 
   const layoutOptions: SelectOption[] = [
-    { value: '', label: t('Global default') },
+    ...(layoutSearch ? [] : [{ value: '', label: t('Global default') }]),
     ...layouts.map((l) => ({ value: String(l.layoutId), label: l.layout })),
   ];
 
-  if (draft.defaultLayoutId && !layouts.some((l) => l.layoutId === draft.defaultLayoutId)) {
+  if (
+    !layoutSearch &&
+    draft.defaultLayoutId &&
+    !layouts.some((l) => l.layoutId === draft.defaultLayoutId)
+  ) {
     layoutOptions.push({
       value: String(draft.defaultLayoutId),
       label: data?.defaultLayout ?? String(draft.defaultLayoutId),
@@ -954,6 +979,7 @@ export default function EditDisplayModal({
                 isLoadingMore={isLoadingMoreLayouts}
                 searchable
                 searchPlaceholder={t('Search layouts...')}
+                onSearch={(v) => setLayoutSearch(v)}
               />
             </>
           )}

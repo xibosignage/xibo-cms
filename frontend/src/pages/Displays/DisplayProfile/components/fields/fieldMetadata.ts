@@ -19,9 +19,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { TFunction } from 'i18next';
+import type {TFunction} from 'i18next';
 
-import type { DisplayProfileType } from '@/types/displayProfile';
+import type {DisplayProfileType} from '@/types/displayProfile';
 
 export const CHECKBOX_FIELDS_BY_TYPE: Record<DisplayProfileType, Set<string>> = {
   android: new Set([
@@ -74,6 +74,7 @@ export const CHECKBOX_FIELDS_BY_TYPE: Record<DisplayProfileType, Set<string>> = 
     'forceHttps',
     'embeddedServerAllowWan',
     'sendCurrentLayoutAsStatusUpdate',
+    'disableTimerManagement',
   ]),
   sssp: new Set([
     'statsEnabled',
@@ -81,6 +82,7 @@ export const CHECKBOX_FIELDS_BY_TYPE: Record<DisplayProfileType, Set<string>> = 
     'forceHttps',
     'embeddedServerAllowWan',
     'sendCurrentLayoutAsStatusUpdate',
+    'disableTimerManagement',
   ]),
   chromeOS: new Set([
     'statsEnabled',
@@ -731,6 +733,14 @@ function lgSsspMeta(t: TFunction): FieldMetaMap {
         { value: 'on', label: t('On') },
         { value: 'off', label: t('Off') },
       ],
+    },
+    disableTimerManagement: {
+      label: t('Disable managing on/off timer'),
+      tab: 'timers',
+      helpText: t(
+        'When disabled on/off timers can be controlled on the screen and will not be modified by the CMS',
+      ),
+      inputType: 'checkbox',
     },
     timers: {
       label: t('Timers'),

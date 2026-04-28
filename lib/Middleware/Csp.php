@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -34,8 +34,10 @@ use Xibo\Helper\Random;
  */
 class Csp implements Middleware
 {
-    public function __construct(private readonly ContainerInterface $container)
-    {
+    public function __construct(
+        private readonly ContainerInterface $container,
+        private readonly bool $preventFraming = true
+    ) {
     }
 
     /**
@@ -55,7 +57,10 @@ class Csp implements Middleware
         $csp = 'object-src \'none\'; script-src \'nonce-' . $nonce . '\'';
         $csp .= ' \'unsafe-inline\' \'unsafe-eval\' \'strict-dynamic\' https: http:;';
         $csp .= ' base-uri \'self\';';
-        $csp .= ' frame-ancestors \'self\';';
+
+        if ($this->preventFraming) {
+            $csp .= ' frame-ancestors \'self\';';
+        }
 
         // Store it for use in the stack if needed
         $request = $request->withAttribute('cspNonce', $nonce);
@@ -66,9 +71,12 @@ class Csp implements Middleware
         // Call next middleware.
         $response = $handler->handle($request);
 
+        if ($this->preventFraming) {
+            $response = $response->withAddedHeader('X-Frame-Options', 'SAMEORIGIN')
+                ->withAddedHeader('X-Content-Type-Options', 'nosniff');
+        }
+
         // Add our header
-        return $response
-            ->withAddedHeader('X-Frame-Options', 'SAMEORIGIN')
-            ->withAddedHeader('Content-Security-Policy', $csp);
+        return $response->withAddedHeader('Content-Security-Policy', $csp);
     }
 }
