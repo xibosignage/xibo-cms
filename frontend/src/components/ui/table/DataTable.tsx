@@ -42,6 +42,7 @@ import type { DataTableBulkAction } from './DataTableBulkActions';
 import { DataTableBulkActions } from './DataTableBulkActions';
 import { DataTableOptions } from './DataTableOptions';
 import { DataTablePagination } from './DataTablePagination';
+import type { ViewMode } from './types';
 
 import { CheckboxCell } from '@/components/ui/table/cells';
 
@@ -66,8 +67,9 @@ interface DataTableProps<TData, TValue> {
     columnVisibility?: VisibilityState;
   };
   onRefresh?: () => void;
-  viewMode?: 'table' | 'grid' | null;
-  onViewModeChange?: (mode: 'table' | 'grid') => void;
+  viewMode?: ViewMode | null;
+  onViewModeChange?: (mode: ViewMode) => void;
+  availableViewModes?: ViewMode[];
   getRowId?: (originalRow: TData, index: number, parent?: Row<TData>) => string;
   hideToolbar?: boolean;
   columnVisibility?: VisibilityState;
@@ -117,6 +119,7 @@ export function DataTable<TData, TValue>({
   onRefresh,
   viewMode,
   onViewModeChange,
+  availableViewModes,
   getRowId,
   hideToolbar = false,
   columnVisibility,
@@ -231,6 +234,12 @@ export function DataTable<TData, TValue>({
     return () => clearTimeout(timer);
   }, [loading]);
 
+  useEffect(() => {
+    if (data.length === 0 && pagination.pageIndex > 0 && !loading) {
+      onPaginationChange({ ...pagination, pageIndex: pagination.pageIndex - 1 });
+    }
+  }, [data.length, loading, onPaginationChange, pagination]);
+
   return (
     <div className="flex flex-col gap-y-3 data-table flex-1 min-h-0">
       {!hideToolbar && (
@@ -260,6 +269,7 @@ export function DataTable<TData, TValue>({
               columnVisibility={columnVisibility}
               viewMode={viewMode}
               onViewModeChange={onViewModeChange}
+              availableViewModes={availableViewModes}
             />
           </div>
         </div>
@@ -418,7 +428,13 @@ export function DataTable<TData, TValue>({
             </tbody>
           </table>
         </div>
-        <DataTablePagination table={table} loading={loading} pageSizeOptions={pageSizeOptions} />
+        <DataTablePagination
+          table={table}
+          pagination={pagination}
+          pageCount={pageCount}
+          loading={loading}
+          pageSizeOptions={pageSizeOptions}
+        />
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022-2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -217,9 +217,38 @@ class TimeConnected implements ReportInterface
         // From and To Date Selection
         // --------------------------
         // The report uses a custom range filter that automatically calculates the from/to dates
-        // depending on the date range selected.
-        $fromDt = $sanitizedParams->getDate('fromDt');
-        $toDt = $sanitizedParams->getDate('toDt');
+        // depending on the date range selected. When run as a scheduled report, only reportFilter
+        // is present in filterCriteria — convert it to actual Carbon dates here.
+        $reportFilter = $sanitizedParams->getString('reportFilter');
+        $now = Carbon::now();
+
+        switch ($reportFilter) {
+            case 'yesterday':
+                $fromDt = $now->copy()->startOfDay()->subDay();
+                $toDt = $now->copy()->startOfDay();
+                break;
+
+            case 'lastweek':
+                $fromDt = $now->copy()->locale(Translate::GetLocale())->startOfWeek()->subWeek();
+                $toDt = $fromDt->copy()->addWeek();
+                break;
+
+            case 'lastmonth':
+                $fromDt = $now->copy()->startOfMonth()->subMonth();
+                $toDt = $fromDt->copy()->addMonth();
+                break;
+
+            case 'lastyear':
+                $fromDt = $now->copy()->startOfYear()->subYear();
+                $toDt = $fromDt->copy()->addYear();
+                break;
+
+            case '':
+            default:
+                $fromDt = $sanitizedParams->getDate('fromDt') ?? $now->copy()->subSeconds(86400 * 35);
+                $toDt = $sanitizedParams->getDate('toDt') ?? $now;
+                break;
+        }
 
         // Use the group by filter provided
         // NB: this differs from the Summary Report where we set the group by according to the range selected

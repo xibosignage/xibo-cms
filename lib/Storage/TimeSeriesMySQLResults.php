@@ -83,8 +83,8 @@ class TimeSeriesMySQLResults implements TimeSeriesResultsInterface
     public function getTagFilterFromRow($row)
     {
         // Tags
-        // Mimic the structure we have in Mongo.
-        $entry['tagFilter'] = [
+        // Mongo uses object structure for this data, so we need to mimic the structure
+        $entry = (object)[
             'dg' => [],
             'layout' => [],
             'media' => []
@@ -96,7 +96,7 @@ class TimeSeriesMySQLResults implements TimeSeriesResultsInterface
             foreach ($tags as $tag) {
                 $tag = explode('|', $tag);
                 $value = $tag[1] ?? null;
-                $entry['tagFilter']['dg'][] = [
+                $entry->dg[] = [
                     'tag' => $tag[0],
                     'value' => ($value === 'null') ? null : $value
                 ];
@@ -109,7 +109,7 @@ class TimeSeriesMySQLResults implements TimeSeriesResultsInterface
             foreach ($tags as $tag) {
                 $tag = explode('|', $tag);
                 $value = $tag[1] ?? null;
-                $entry['tagFilter']['layout'][] = [
+                $entry->layout[] = [
                     'tag' => $tag[0],
                     'value' => ($value === 'null') ? null : $value
                 ];
@@ -122,12 +122,14 @@ class TimeSeriesMySQLResults implements TimeSeriesResultsInterface
             foreach ($tags as $tag) {
                 $tag = explode('|', $tag);
                 $value = $tag[1] ?? null;
-                $entry['tagFilter']['media'][] = [
+                $entry->media[] = [
                     'tag' => $tag[0],
                     'value' => ($value === 'null') ? null : $value
                 ];
             }
         }
+
+        return $entry;
     }
 
     /**
@@ -145,5 +147,4 @@ class TimeSeriesMySQLResults implements TimeSeriesResultsInterface
     {
         return $this->totalCount;
     }
-
 }

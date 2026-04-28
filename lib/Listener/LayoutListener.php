@@ -136,7 +136,12 @@ class LayoutListener
             // Reassign layouts, regions, region Playlists and Widgets.
             foreach ($this->layoutFactory->getByOwnerId($user->userId) as $layout) {
                 $layout->setOwner($newUser->userId, true);
-                $layout->save(['notify' => false, 'saveTags' => false, 'setBuildRequired' => false]);
+                $layout->save([
+                    'notify' => false,
+                    'saveTags' => false,
+                    'setBuildRequired' => false,
+                    'isLayoutReassigned' => true
+                ]);
             }
         } else if ($function === 'countChildren') {
             $layouts = $this->layoutFactory->getByOwnerId($user->userId);

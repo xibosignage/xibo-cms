@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -38,26 +38,11 @@ class DisplayFactory extends BaseFactory
 {
     use TagTrait;
 
-    /** @var  DisplayNotifyServiceInterface */
-    private $displayNotifyService;
-
-    /**
-     * @var ConfigServiceInterface
-     */
-    private $config;
-
-    /**
-     * @var DisplayGroupFactory
-     */
-    private $displayGroupFactory;
-
-    /**
-     * @var DisplayProfileFactory
-     */
-    private $displayProfileFactory;
-
-    /** @var FolderFactory */
-    private $folderFactory;
+    private DisplayNotifyServiceInterface $displayNotifyService;
+    private ConfigServiceInterface $config;
+    private DisplayGroupFactory $displayGroupFactory;
+    private DisplayProfileFactory $displayProfileFactory;
+    private FolderFactory $folderFactory;
 
     /**
      * Construct a factory
@@ -70,13 +55,13 @@ class DisplayFactory extends BaseFactory
      * @param FolderFactory $folderFactory
      */
     public function __construct(
-        $user,
-        $userFactory,
-        $displayNotifyService,
-        $config,
-        $displayGroupFactory,
-        $displayProfileFactory,
-        $folderFactory
+        User $user,
+        UserFactory $userFactory,
+        DisplayNotifyServiceInterface $displayNotifyService,
+        ConfigServiceInterface $config,
+        DisplayGroupFactory $displayGroupFactory,
+        DisplayProfileFactory $displayProfileFactory,
+        FolderFactory $folderFactory
     ) {
         $this->setAclDependencies($user, $userFactory);
 
@@ -91,7 +76,7 @@ class DisplayFactory extends BaseFactory
      * Get the Display Notify Service
      * @return DisplayNotifyServiceInterface
      */
-    public function getDisplayNotifyService()
+    public function getDisplayNotifyService(): DisplayNotifyServiceInterface
     {
         return $this->displayNotifyService->init();
     }
@@ -100,7 +85,7 @@ class DisplayFactory extends BaseFactory
      * Create Empty Display Object
      * @return Display
      */
-    public function createEmpty()
+    public function createEmpty(): Display
     {
         return new Display(
             $this->getStore(),
@@ -117,12 +102,17 @@ class DisplayFactory extends BaseFactory
     /**
      * @param int $displayId
      * @param bool|false $showTags
+     * @param bool $disableUserCheck
      * @return Display
      * @throws NotFoundException
      */
-    public function getById($displayId, $showTags = false)
+    public function getById(int $displayId, bool $showTags = false, bool $disableUserCheck = true): Display
     {
-        $displays = $this->query(null, ['disableUserCheck' => 1, 'displayId' => $displayId, 'showTags' => $showTags]);
+        $displays = $this->query(null, [
+            'disableUserCheck' => $disableUserCheck ? 1 : 0,
+            'displayId' => $displayId,
+            'showTags' => $showTags
+        ]);
 
         if (count($displays) <= 0) {
             throw new NotFoundException();
@@ -136,7 +126,7 @@ class DisplayFactory extends BaseFactory
      * @return Display
      * @throws NotFoundException
      */
-    public function getByLicence($licence)
+    public function getByLicence(string $licence): Display
     {
         if (empty($licence)) {
             throw new NotFoundException(__('Hardware key cannot be empty'));
@@ -156,7 +146,7 @@ class DisplayFactory extends BaseFactory
      * @return Display[]
      * @throws NotFoundException
      */
-    public function getByDisplayGroupId($displayGroupId)
+    public function getByDisplayGroupId($displayGroupId): array
     {
         return $this->query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
     }
@@ -166,7 +156,7 @@ class DisplayFactory extends BaseFactory
      * @return Display[]
      * @throws NotFoundException
      */
-    public function getByDisplayGroupIds(array $displayGroupIds)
+    public function getByDisplayGroupIds(array $displayGroupIds): array
     {
         return $this->query(null, ['disableUserCheck' => 1, 'displayGroupIds' => $displayGroupIds]);
     }
@@ -182,47 +172,99 @@ class DisplayFactory extends BaseFactory
     }
 
     /**
-     * @param array $sortOrder
+     * @param ?array $sortOrder
      * @param array $filterBy
      * @return Display[]
      * @throws NotFoundException
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query(?array $sortOrder = null, array $filterBy = []): array
     {
         $parsedBody = $this->getSanitizer($filterBy);
 
-        if ($sortOrder === null) {
-            $sortOrder = ['display'];
+        $allowedColumns = [
+            'displayId',
+            'display',
+            'clientType',
+            'clientCode',
+            'clientVersion',
+            'mediaInventoryStatus',
+            'clientAddress',
+            'licensed',
+            'loggedIn',
+            'deviceName',
+            'address',
+            'storageAvailableSpace',
+            'storageTotalSpace',
+            'description',
+            'orientation',
+            'resolution',
+            'defaultLayout',
+            'incSchedule',
+            'emailAlert',
+            'lastAccessed',
+            'macAddress',
+            'timeZone',
+            'languages',
+            'latitude',
+            'longitude',
+            'screenShotRequested',
+            'bandwidthLimit',
+            'lastCommandSuccess',
+            'commercialLicence',
+            'groupsWithPermissions',
+            'screenSize',
+            'isMobile',
+            'isOutdoor',
+            'ref1',
+            'ref2',
+            'ref3',
+            'ref4',
+            'ref5',
+            'customId',
+            'costPerPlay',
+            'impressionsPerPlay',
+            'createdDt',
+            'modifiedDt',
+            'countFaults',
+            'osVersion',
+            'osSdk',
+            'manufacturer',
+            'brand',
+            'model',
+        ];
+        $customColumns = [
+            'clientSort' => '`clientType`, `clientCode`, `clientVersion`',
+            'cmsTransfer' => '`newCmsAddress`',
+            'isPlayerSupported' => '`clientCode`',
+            'xmrRegistered' => '`xmrChannel`',
+        ];
+
+        // Capture member sort direction before buildSortQuery strips the virtual column
+        $memberSortDir = null;
+        if (is_array($sortOrder)) {
+            foreach ($sortOrder as $s) {
+                $sort = strtolower(trim($s));
+                if ($sort === 'member' || $sort === 'member asc') {
+                    $memberSortDir = 'ASC';
+                } else if ($sort === 'member desc') {
+                    $memberSortDir = 'DESC';
+                }
+            }
+
+            // remove member sort options from sortOrder.
+            $sortOrder = array_values(array_filter(
+                $sortOrder,
+                fn($s) => !in_array(strtolower(trim($s)), ['member', 'member asc', 'member desc'])
+            ));
         }
 
-        $newSortOrder = [];
-        foreach ($sortOrder as $sort) {
-            if ($sort == '`clientSort`') {
-                $newSortOrder[] = '`clientType`';
-                $newSortOrder[] = '`clientCode`';
-                $newSortOrder[] = '`clientVersion`';
-                continue;
-            }
-
-            if ($sort == '`clientSort` DESC') {
-                $newSortOrder[] = '`clientType` DESC';
-                $newSortOrder[] = '`clientCode` DESC';
-                $newSortOrder[] = '`clientVersion` DESC';
-                continue;
-            }
-
-            if ($sort == '`isCmsTransferInProgress`') {
-                $newSortOrder[] = '`newCmsAddress`';
-                continue;
-            }
-
-            if ($sort == '`isCmsTransferInProgress` DESC') {
-                $newSortOrder[] = '`newCmsAddress` DESC';
-                continue;
-            }
-            $newSortOrder[] = $sort;
-        }
-        $sortOrder = $newSortOrder;
+        // default sort order
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            $customColumns,
+            ['display ASC']
+        );
 
         // SQL function for ST_X/X and ST_Y/Y dependent on MySQL version
         $version = $this->getStore()->getVersion();
@@ -390,15 +432,31 @@ class DisplayFactory extends BaseFactory
             $params['displayId'] = $parsedBody->getInt('displayId');
         }
 
+        if ($parsedBody->getString('keyword') != null) {
+            // Fulltext search
+            $body .= $this->buildSearchQuery(
+                $parsedBody->getString('keyword'),
+                $params,
+                ['display.display'],
+                ['display.displayId']
+            );
+        }
+
         // Display Profile
         if ($parsedBody->getInt('displayProfileId') !== null) {
             if ($parsedBody->getInt('displayProfileId') == -1) {
                 $body .= ' AND IFNULL(displayProfileId, 0) = 0 ';
             } else {
-                $displayProfileSelected = $this->displayProfileFactory->getById($parsedBody->getInt('displayProfileId'));
+                $displayProfileSelected = $this->displayProfileFactory->getById(
+                    $parsedBody->getInt('displayProfileId')
+                );
                 $displayProfileDefault = $this->displayProfileFactory->getDefaultByType($displayProfileSelected->type);
 
-                $body .= ' AND (`display`.displayProfileId = :displayProfileId OR (IFNULL(displayProfileId, :displayProfileDefaultId) = :displayProfileId AND display.client_type = :displayProfileType ) ) ';
+                $body .= ' AND (
+                        `display`.displayProfileId = :displayProfileId OR
+                         (IFNULL(displayProfileId, :displayProfileDefaultId) = :displayProfileId
+                          AND display.client_type = :displayProfileType ) 
+                ) ';
 
                 $params['displayProfileId'] = $parsedBody->getInt('displayProfileId');
                 $params['displayProfileDefaultId'] = $displayProfileDefault->displayProfileId;
@@ -495,13 +553,13 @@ class DisplayFactory extends BaseFactory
 
         // Exclude a group?
         if ($parsedBody->getInt('exclude_displaygroupid') !== null) {
-            $body .= " AND display.DisplayID NOT IN ";
-            $body .= "       (SELECT display.DisplayID ";
-            $body .= "       FROM    display ";
-            $body .= "               INNER JOIN lkdisplaydg ";
-            $body .= "               ON      lkdisplaydg.DisplayID = display.DisplayID ";
-            $body .= "   WHERE  lkdisplaydg.DisplayGroupID   = :excludeDisplayGroupId ";
-            $body .= "       )";
+            $body .= ' AND display.DisplayID NOT IN ';
+            $body .= '       (SELECT display.DisplayID ';
+            $body .= '       FROM    display ';
+            $body .= '               INNER JOIN lkdisplaydg ';
+            $body .= '               ON      lkdisplaydg.DisplayID = display.DisplayID ';
+            $body .= '   WHERE  lkdisplaydg.DisplayGroupID   = :excludeDisplayGroupId ';
+            $body .= '       )';
             $params['excludeDisplayGroupId'] = $parsedBody->getInt('exclude_displaygroupid');
         }
 
@@ -617,56 +675,13 @@ class DisplayFactory extends BaseFactory
             }
         }
 
-        // run the special query to help sort by displays already assigned to this display group,
-        // or by displays assigned to this syncGroup
-        // we want to run it only if we're sorting by member column.
-        if (in_array('`member`', $sortOrder) || in_array('`member` DESC', $sortOrder)) {
-            $members = [];
-
-            // DisplayGroup members with provided Display Group ID
-            if ($parsedBody->getInt('displayGroupIdMembers') !== null) {
-                $displayGroupId = $parsedBody->getInt('displayGroupIdMembers');
-
-                foreach ($this->getStore()->select($select . $body, $params) as $row) {
-                    $displayId = $this->getSanitizer($row)->getInt('displayId');
-
-                    if ($this->getStore()->exists(
-                        'SELECT display.display, display.displayId, displaygroup.displayGroupId
-                                                    FROM display
-                                                      INNER JOIN `lkdisplaydg` 
-                                                          ON lkdisplaydg.displayId = `display`.displayId 
-                                                          AND lkdisplaydg.displayGroupId = :displayGroupId 
-                                                          AND lkdisplaydg.displayId = :displayId
-                                                      INNER JOIN `displaygroup` 
-                                                          ON displaygroup.displaygroupid = lkdisplaydg.displaygroupid
-                                                          AND `displaygroup`.isDisplaySpecific = 0',
-                        [
-                            'displayGroupId' => $displayGroupId,
-                            'displayId' => $displayId
-                        ]
-                    )) {
-                        $members[] = $displayId;
-                    }
-                }
-            } else if ($parsedBody->getInt('syncGroupIdMembers') !== null) {
-                // Sync Group Members with provided Sync Group ID
-                foreach ($this->getStore()->select($select . $body, $params) as $row) {
-                    $displayId = $this->getSanitizer($row)->getInt('displayId');
-
-                    if ($this->getStore()->exists(
-                        'SELECT display.displayId 
-                                FROM `display` 
-                                WHERE `display`.syncGroupId = :syncGroupId
-                                    AND `display`.displayId = :displayId',
-                        [
-                            'syncGroupId' => $parsedBody->getInt('syncGroupIdMembers'),
-                            'displayId' => $displayId
-                        ]
-                    )) {
-                        $members[] = $displayId;
-                    }
-                }
-            }
+        // Resolve member display IDs, only when member sort was requested
+        $memberIds = [];
+        if ($memberSortDir !== null) {
+            $memberIds = $this->resolveMemberDisplayIds(
+                $parsedBody->getInt('displayGroupIdMembers'),
+                $parsedBody->getInt('syncGroupIdMembers'),
+            );
         }
 
         // filter by commercial licence
@@ -712,28 +727,19 @@ class DisplayFactory extends BaseFactory
             '`displaygroup`.permissionsFolderId'
         );
 
-        // Sorting?
-        $order = '';
+        // Sorting
+        $orderParts = [];
 
-        if (isset($members) && $members != []) {
-            $sqlOrderMembers = 'ORDER BY FIELD(display.displayId,' . implode(',', $members) . ')';
-
-            foreach ($sortOrder as $sort) {
-                if ($sort == '`member`') {
-                    $order .= $sqlOrderMembers;
-                    continue;
-                }
-
-                if ($sort == '`member` DESC') {
-                    $order .= $sqlOrderMembers . ' DESC';
-                    continue;
-                }
-            }
+        if (!empty($memberIds)) {
+            $fieldExpr = 'FIELD(`display`.`displayId`, ' . implode(',', $memberIds) . ')';
+            $orderParts[] = $fieldExpr . ($memberSortDir === 'DESC' ? ' DESC' : ' ASC');
         }
 
-        if (is_array($sortOrder) && (!in_array('`member`', $sortOrder) && !in_array('`member` DESC', $sortOrder))) {
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        if (!empty($sortOrder)) {
+            array_push($orderParts, ...$sortOrder);
         }
+
+        $order = !empty($orderParts) ? 'ORDER BY ' . implode(', ', $orderParts) : '';
 
         $limit = '';
         // Paging
@@ -768,7 +774,9 @@ class DisplayFactory extends BaseFactory
                 ],
                 'stringProperties' => ['customId']
             ]);
-            $display->overrideConfig = ($display->overrideConfig == '') ? [] : json_decode($display->overrideConfig, true);
+            $display->overrideConfig = ($display->overrideConfig == '')
+                ? []
+                : json_decode($display->overrideConfig, true);
             $displayGroupIds[] = $display->displayGroupId;
             $entries[] = $display;
         }
@@ -786,5 +794,38 @@ class DisplayFactory extends BaseFactory
         }
 
         return $entries;
+    }
+
+    /**
+     * Returns the displayIds that are members of the given display group or sync group.
+     * Used to build a FIELD()-based ORDER BY clause for member sorting.
+     * Issues a single query per call.
+     */
+    private function resolveMemberDisplayIds(?int $displayGroupId, ?int $syncGroupId): array
+    {
+        if ($displayGroupId !== null) {
+            $rows = $this->getStore()->select(
+                'SELECT `display`.`displayId`
+                   FROM `display`
+                  INNER JOIN `lkdisplaydg`
+                          ON `lkdisplaydg`.`displayId` = `display`.`displayId`
+                         AND `lkdisplaydg`.`displayGroupId` = :displayGroupId
+                  INNER JOIN `displaygroup`
+                          ON `displaygroup`.`displayGroupId` = `lkdisplaydg`.`displayGroupId`
+                         AND `displaygroup`.`isDisplaySpecific` = 0',
+                ['displayGroupId' => $displayGroupId]
+            );
+            return array_column($rows, 'displayId');
+        }
+
+        if ($syncGroupId !== null) {
+            $rows = $this->getStore()->select(
+                'SELECT `displayId` FROM `display` WHERE `syncGroupId` = :syncGroupId',
+                ['syncGroupId' => $syncGroupId]
+            );
+            return array_column($rows, 'displayId');
+        }
+
+        return [];
     }
 }

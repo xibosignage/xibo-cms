@@ -22,7 +22,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { Search, Filter, FilterX, Plus } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { ModalType } from './DaypartConfig';
@@ -90,7 +90,6 @@ export default function Daypart() {
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
 
-  // Data fetching
   const {
     data: queryData,
     isFetching,
@@ -104,47 +103,38 @@ export default function Daypart() {
     enabled: isHydrated,
   });
 
-  // Computed values
   const data = queryData?.rows;
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
-
-  const [daypartList, setDaypartList] = useState<Daypart[]>([]);
-
-  useEffect(() => {
-    setDaypartList(data ?? []);
-  }, [data]);
-
-  // Update the selected cache when data loads or selection changes
-  useEffect(() => {
-    if (!daypartList || daypartList.length === 0) {
-      return;
-    }
-
-    setSelectionCache((prev) => {
-      const next = { ...prev };
-      let hasChanges = false;
-
-      daypartList.forEach((item) => {
-        const id = item.dayPartId.toString();
-        if (rowSelection[id] && next[id] !== item) {
-          next[id] = item;
-          hasChanges = true;
-        }
-      });
-
-      return hasChanges ? next : prev;
-    });
-  }, [daypartList, rowSelection]);
-
-  const selectedDaypart = daypartList.find((m) => m.dayPartId === selectedDaypartId) ?? null;
-  const existingNames = daypartList.map((m) => m.name);
+  const daypartList = data ?? [];
 
   const getRowId = (row: Daypart) => {
     return row.dayPartId.toString();
   };
 
-  // Event handlers
+  const handleRowSelectionChange = (
+    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
+  ) => {
+    const newSelection =
+      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
+
+    setRowSelection(newSelection);
+
+    setSelectionCache((prev) => {
+      const next = { ...prev };
+      daypartList.forEach((item) => {
+        const id = getRowId(item);
+        if (newSelection[id]) {
+          next[id] = item;
+        }
+      });
+      return next;
+    });
+  };
+
+  const selectedDaypart = daypartList.find((m) => m.dayPartId === selectedDaypartId) ?? null;
+  const existingNames = daypartList.map((m) => m.name);
+
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['daypart'] });
   };
@@ -195,7 +185,7 @@ export default function Daypart() {
   const getAllSelectedItems = (): Daypart[] => {
     return Object.keys(rowSelection)
       .map((id) => selectionCache[id])
-      .filter((item): item is Daypart => !!item); // Filter out any missing data
+      .filter((item): item is Daypart => !!item);
   };
 
   const bulkActions = getBulkActions({
@@ -309,7 +299,7 @@ export default function Daypart() {
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetching}
               rowSelection={rowSelection}
-              onRowSelectionChange={setRowSelection}
+              onRowSelectionChange={handleRowSelectionChange}
               onRefresh={handleRefresh}
               columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
               columnVisibility={columnVisibility}
@@ -327,7 +317,6 @@ export default function Daypart() {
           activeModal,
           closeModal,
           handleRefresh,
-          setDaypartList,
           deleteError,
           isDeleting,
         }}

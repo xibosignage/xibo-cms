@@ -5,9 +5,7 @@ on:
     branches:
       - master
       - develop
-      - release23
-      - release33
-      - release43
+      - release44
       - neujmin
 
 jobs:

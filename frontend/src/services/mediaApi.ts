@@ -38,6 +38,7 @@ export interface FetchMediaRequest {
   orientation?: string;
   retired?: string;
   lastModified?: string;
+  displayGroupId?: number;
 }
 
 export interface FetchMediaResponse {

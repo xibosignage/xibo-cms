@@ -25,8 +25,8 @@ import { useTranslation } from 'react-i18next';
 import type { SelectOption } from '@/components/ui/forms/SelectDropdown';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import Modal from '@/components/ui/modals/Modal';
-import type { Campaign } from '@/services/campaignApi';
 import { fetchCampaigns } from '@/services/campaignApi';
+import type { Campaign } from '@/types/campaign';
 
 interface AssignCampaignModalProps {
   isOpen?: boolean;

@@ -28,6 +28,7 @@ use GeoJson\Geometry\Point;
 use GuzzleHttp\Client;
 use Intervention\Image\ImageManagerStatic as Img;
 use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use Respect\Validation\Validator as v;
 use RobThree\Auth\TwoFactorAuth;
 use Slim\Http\Response as Response;
@@ -73,68 +74,21 @@ class Display extends Base
 {
     use DisplayProfileConfigFields;
 
-    /**
-     * @var StorageServiceInterface
-     */
-    private $store;
-
-    /**
-     * @var PoolInterface
-     */
-    private $pool;
-
-    /**
-     * @var PlayerActionServiceInterface
-     */
-    private $playerAction;
-
-    /**
-     * @var DayPartFactory
-     */
-    private $dayPartFactory;
-
-    /**
-     * @var DisplayFactory
-     */
-    private $displayFactory;
-
-    /**
-     * @var DisplayGroupFactory
-     */
-    private $displayGroupFactory;
-
-    /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
-
-    /**
-     * @var DisplayProfileFactory
-     */
-    private $displayProfileFactory;
-
-    /**
-     * @var DisplayTypeFactory
-     */
-    private $displayTypeFactory;
-
-    /** @var  DisplayEventFactory */
-    private $displayEventFactory;
-
-    /** @var PlayerVersionFactory */
-    private $playerVersionFactory;
-
-    /** @var  RequiredFileFactory */
-    private $requiredFileFactory;
-
-    /** @var  TagFactory */
-    private $tagFactory;
-
-    /** @var NotificationFactory */
-    private $notificationFactory;
-
-    /** @var UserGroupFactory */
-    private $userGroupFactory;
+    private StorageServiceInterface $store;
+    private PoolInterface $pool;
+    private PlayerActionServiceInterface $playerAction;
+    private DayPartFactory $dayPartFactory;
+    private DisplayFactory $displayFactory;
+    private DisplayGroupFactory $displayGroupFactory;
+    private LayoutFactory $layoutFactory;
+    private DisplayProfileFactory $displayProfileFactory;
+    private DisplayTypeFactory $displayTypeFactory;
+    private DisplayEventFactory $displayEventFactory;
+    private PlayerVersionFactory $playerVersionFactory;
+    private RequiredFileFactory $requiredFileFactory;
+    private TagFactory $tagFactory;
+    private NotificationFactory $notificationFactory;
+    private UserGroupFactory $userGroupFactory;
 
     /**
      * Set common dependencies.
@@ -154,8 +108,23 @@ class Display extends Base
      * @param PlayerVersionFactory $playerVersionFactory
      * @param DayPartFactory $dayPartFactory
      */
-    public function __construct($store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $displayTypeFactory, $layoutFactory, $displayProfileFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory, $playerVersionFactory, $dayPartFactory)
-    {
+    public function __construct(
+        StorageServiceInterface $store,
+        PoolInterface $pool,
+        PlayerActionServiceInterface $playerAction,
+        DisplayFactory $displayFactory,
+        DisplayGroupFactory $displayGroupFactory,
+        DisplayTypeFactory $displayTypeFactory,
+        LayoutFactory $layoutFactory,
+        DisplayProfileFactory $displayProfileFactory,
+        DisplayEventFactory $displayEventFactory,
+        RequiredFileFactory $requiredFileFactory,
+        TagFactory $tagFactory,
+        NotificationFactory $notificationFactory,
+        UserGroupFactory $userGroupFactory,
+        PlayerVersionFactory $playerVersionFactory,
+        DayPartFactory $dayPartFactory
+    ) {
         $this->store = $store;
         $this->pool = $pool;
         $this->playerAction = $playerAction;
@@ -179,16 +148,26 @@ class Display extends Base
         summary: 'Get Display Venues',
         tags: ['displayVenue']
     )]
-    #[OA\Response(response: 200, description: 'a successful response')]
+    #[OA\Response(
+        response: 200,
+        description: 'a successful response',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
+    )]
     /**
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function displayVenue(Request $request, Response $response)
+    public function displayVenue(Request $request, Response $response): Response|ResponseInterface
     {
         if (!file_exists(PROJECT_ROOT . '/openooh/specification.json')) {
             throw new GeneralException(__('OpenOOH specification missing'));
@@ -212,66 +191,48 @@ class Display extends Base
                 if (isset($children['children'])) {
                     foreach ($children['children'] as $grandchildren) {
                         $taxonomy[$i]['venueId'] = $grandchildren['enumeration_id'] ;
-                        $taxonomy[$i]['venueName'] = $categories['name'] . ' -> ' . $children['name'] .  ' -> ' . $grandchildren['name'] ;
+                        $taxonomy[$i]['venueName'] =
+                            $categories['name'] . ' -> ' . $children['name'] .  ' -> ' . $grandchildren['name'] ;
                         $i++;
                     }
                 }
             }
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = count($taxonomy);
-        $this->getState()->setData($taxonomy);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', count($taxonomy))
+            ->withJson($taxonomy);
     }
 
     /**
-     * Include display page template page based on sub page selected
-     * @param Request $request
+     * Get the list of supported locale languages
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @return Response
      */
-    function displayPage(Request $request, Response $response)
+    public function getLocaleLanguages(Response $response): Response
     {
-        // Build a list of display profiles
-        $displayProfiles = $this->displayProfileFactory->query();
-        $displayProfiles[] = ['displayProfileId' => -1, 'name' => __('Default')];
-
-        // Call to render the template
-        $this->getState()->template = 'display-page';
-
-        $mapConfig = [
-            'setArea' => [
-                'lat' => $this->getConfig()->getSetting('DEFAULT_LAT'),
-                'long' => $this->getConfig()->getSetting('DEFAULT_LONG'),
-                'zoom' => 7
-            ]
-        ];
-
-        $this->getState()->setData([
-            'mapConfig' => $mapConfig,
-            'displayProfiles' => $displayProfiles
-        ]);
-
-        return $this->render($request, $response);
+        $languages = [];
+        $localeDir = PROJECT_ROOT . '/locale';
+        foreach (array_map('basename', glob($localeDir . '/*.mo') ?: []) as $lang) {
+            $lang = str_replace('.mo', '', $lang);
+            $languages[] = ['id' => $lang, 'value' => $lang];
+        }
+        return $response->withJson($languages);
     }
 
     /**
      * Display Management Page for an Individual Display
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @param int $id
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    function displayManage(Request $request, Response $response, $id)
+    public function displayManage(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $display = $this->displayFactory->getById($id);
 
@@ -473,6 +434,7 @@ class Display extends Base
     {
         return [
             'displayId' => $parsedQueryParams->getInt('displayId'),
+            'keyword' => $parsedQueryParams->getString('keyword'),
             'display' => $parsedQueryParams->getString('display'),
             'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
             'macAddress' => $parsedQueryParams->getString('macAddress'),
@@ -519,6 +481,13 @@ class Display extends Base
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'keyword',
+        description: 'Filter by Display Name, ID',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
         name: 'displayGroupId',
@@ -653,9 +622,85 @@ class Display extends Base
         required: false,
         schema: new OA\Schema(type: 'integer')
     )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: [
+                'displayId',
+                'display',
+                'clientType',
+                'clientCode',
+                'clientVersion',
+                'mediaInventoryStatus',
+                'clientAddress',
+                'licensed',
+                'loggedIn',
+                'deviceName',
+                'address',
+                'storageAvailableSpace',
+                'storageTotalSpace',
+                'description',
+                'orientation',
+                'resolution',
+                'defaultLayout',
+                'incSchedule',
+                'emailAlert',
+                'lastAccessed',
+                'macAddress',
+                'timeZone',
+                'languages',
+                'latitude',
+                'longitude',
+                'screenShotRequested',
+                'bandwidthLimit',
+                'lastCommandSuccess',
+                'commercialLicence',
+                'groupsWithPermissions',
+                'screenSize',
+                'isMobile',
+                'isOutdoor',
+                'ref1',
+                'ref2',
+                'ref3',
+                'ref4',
+                'ref5',
+                'customId',
+                'costPerPlay',
+                'impressionsPerPlay',
+                'createdDt',
+                'modifiedDt',
+                'countFaults',
+                'osVersion',
+                'osSdk',
+                'manufacturer',
+                'brand',
+                'model',
+                'cmsTransfer',
+                'xmrRegistered',
+            ]
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
     #[OA\Response(
         response: 200,
         description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: '#/components/schemas/Display')
@@ -666,614 +711,39 @@ class Display extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws ConfigurationException
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
-        // Embed?
-        $embed = ($parsedQueryParams->getString('embed') != null)
-            ? explode(',', $parsedQueryParams->getString('embed'))
-            : [];
 
         $filter = $this->getFilters($parsedQueryParams);
 
         // Get a list of displays
         $displays = $this->displayFactory->query(
-            $this->gridRenderSort($parsedQueryParams),
+            $this->gridRenderSort($parsedQueryParams, $this->isJson($request)),
             $this->gridRenderFilter($filter, $parsedQueryParams)
         );
-
-        // Get all Display Profiles
-        $displayProfiles = [];
-        foreach ($this->displayProfileFactory->query() as $displayProfile) {
-            $displayProfiles[$displayProfile->displayProfileId] = $displayProfile->name;
-        }
 
         // validate displays so we get a realistic view of the table
         $this->validateDisplays($displays);
 
         foreach ($displays as $display) {
-            /* @var \Xibo\Entity\Display $display */
-            if (in_array('displaygroups', $embed)) {
-                $display->load();
-            } else {
-                $display->excludeProperty('displayGroups');
-            }
-
-            if (in_array('overrideconfig', $embed)) {
-                $display->includeProperty('overrideConfig');
-            }
-
-            $display->setUnmatchedProperty(
-                'bandwidthLimitFormatted',
-                ByteFormatter::format($display->bandwidthLimit * 1024)
-            );
-
-            // Current layout from cache
-            $display->getCurrentLayoutId($this->pool, $this->layoutFactory);
-
-            if ($this->isApi($request)) {
-                $display->lastAccessed =
-                    Carbon::createFromTimestamp($display->lastAccessed)->format(DateFormatHelper::getSystemFormat());
-                $display->auditingUntil = ($display->auditingUntil == 0)
-                    ? 0
-                    : Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
-                continue;
-            }
-
-            // use try and catch here to cover scenario
-            // when there is no default display profile set for any of the existing display types.
-            $displayProfileName = '';
-            try {
-                $defaultDisplayProfile = $this->displayProfileFactory->getDefaultByType($display->clientType);
-                $displayProfileName = $defaultDisplayProfile->name;
-            } catch (NotFoundException) {
-                $this->getLog()->debug('No default Display Profile set for Display type ' . $display->clientType);
-            }
-
-            // Add in the display profile information
-            $display->setUnmatchedProperty(
-                'displayProfile',
-                (!array_key_exists($display->displayProfileId, $displayProfiles))
-                    ? $displayProfileName . __(' (Default)')
-                    : $displayProfiles[$display->displayProfileId]
-            );
-
-            $display->includeProperty('buttons');
-
-            // Format the storage available / total space
-            $display->setUnmatchedProperty(
-                'storageAvailableSpaceFormatted',
-                ByteFormatter::format($display->storageAvailableSpace)
-            );
-            $display->setUnmatchedProperty(
-                'storageTotalSpaceFormatted',
-                ByteFormatter::format($display->storageTotalSpace)
-            );
-            $display->setUnmatchedProperty(
-                'storagePercentage',
-                ($display->storageTotalSpace == 0)
-                    ? 0
-                    : round($display->storageAvailableSpace / $display->storageTotalSpace * 100.0, 2)
-            );
-
-            // Set some text for the display status
-            $display->setUnmatchedProperty('statusDescription', match ($display->mediaInventoryStatus) {
-                1 => __('Display is up to date'),
-                2 => __('Display is downloading new files'),
-                3 => __('Display is out of date but has not yet checked in with the server'),
-                default => __('Unknown Display Status'),
-            });
-
-            // Commercial Licence
-            $display->setUnmatchedProperty('commercialLicenceDescription', match ($display->commercialLicence) {
-                1 => __('Display is fully licensed'),
-                2 => __('Display is on a trial licence'),
-                default => __('Display is not licensed'),
-            });
-
-            if ($display->clientCode < 400) {
-                $commercialLicenceDescription = $display->getUnmatchedProperty('commercialLicenceDescription');
-                $commercialLicenceDescription .= ' ('
-                    . __('The status will be updated with each Commercial Licence check') . ')';
-                $display->setUnmatchedProperty('commercialLicenceDescription', $commercialLicenceDescription);
-            }
-
-            // Thumbnail
-            $display->setUnmatchedProperty('thumbnail', '');
-            // If we aren't logged in, and we are showThumbnail == 2, then show a circle
-            if (file_exists($this->getConfig()->getSetting('LIBRARY_LOCATION') . 'screenshots/'
-                . $display->displayId . '_screenshot.jpg')) {
-                $display->setUnmatchedProperty(
-                    'thumbnail',
-                    $this->urlFor($request, 'display.screenShot', [
-                        'id' => $display->displayId
-                    ]) . '?' . Random::generateString()
-                );
-            }
-
-            $display->setUnmatchedProperty(
-                'teamViewerLink',
-                (!empty($display->teamViewerSerial))
-                    ? 'https://start.teamviewer.com/' . $display->teamViewerSerial
-                    : ''
-            );
-            $display->setUnmatchedProperty(
-                'webkeyLink',
-                (!empty($display->webkeySerial))
-                    ? 'https://device.webkeyapp.com/phone?publicid=' . $display->webkeySerial
-                    : ''
-            );
-
-            // Is a transfer to another CMS in progress?
-            $display->setUnmatchedProperty('isCmsTransferInProgress', (!empty($display->newCmsAddress)));
-
-            // Edit and Delete buttons first
-            if ($this->getUser()->featureEnabled('displays.modify')
-                && $this->getUser()->checkEditable($display)
-            ) {
-                // Manage
-                $display->buttons[] = [
-                    'id' => 'display_button_manage',
-                    'url' => $this->urlFor($request, 'display.manage', ['id' => $display->displayId]),
-                    'text' => __('Manage'),
-                    'external' => true
-                ];
-
-                $display->buttons[] = ['divider' => true];
-
-                // Edit
-                $display->buttons[] = [
-                    'id' => 'display_button_edit',
-                    'url' => $this->urlFor($request, 'display.edit.form', ['id' => $display->displayId]),
-                    'text' => __('Edit')
-                ];
-            }
-
-            // Delete
-            if ($this->getUser()->featureEnabled('displays.modify')
-                && $this->getUser()->checkDeleteable($display)
-            ) {
-                $deleteButton = [
-                    'id' => 'display_button_delete',
-                    'url' => $this->urlFor($request, 'display.delete.form', ['id' => $display->displayId]),
-                    'text' => __('Delete')
-                ];
-
-                // We only include this in dev mode, because users have complained that it is too powerful a feature
-                // to have in the core product.
-                if (Environment::isDevMode()) {
-                    $deleteButton['multi-select'] = true;
-                    $deleteButton['dataAttributes'] = [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'display.delete',
-                                ['id' => $display->displayId]
-                            )
-                        ],
-                        ['name' => 'commit-method', 'value' => 'delete'],
-                        ['name' => 'id', 'value' => 'display_button_delete'],
-                        ['name' => 'sort-group', 'value' => 1],
-                        ['name' => 'text', 'value' => __('Delete')],
-                        ['name' => 'rowtitle', 'value' => $display->display]
-                    ];
-                }
-
-                $display->buttons[] = $deleteButton;
-            }
-
-            if ($this->getUser()->featureEnabled('displays.modify')
-                && ($this->getUser()->checkEditable($display) || $this->getUser()->checkDeleteable($display))
-            ) {
-                $display->buttons[] = ['divider' => true];
-            }
-
-            if ($this->getUser()->featureEnabled('displays.modify')
-                && $this->getUser()->checkEditable($display)
-            ) {
-                // Authorise
-                $display->buttons[] = [
-                    'id' => 'display_button_authorise',
-                    'url' => $this->urlFor($request, 'display.authorise.form', ['id' => $display->displayId]),
-                    'text' => __('Authorise'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        ['name' => 'auto-submit', 'value' => true],
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'display.authorise',
-                                ['id' => $display->displayId]
-                            )
-                        ],
-                        ['name' => 'commit-method', 'value' => 'put'],
-                        ['name' => 'id', 'value' => 'display_button_authorise'],
-                        ['name' => 'sort-group', 'value' => 2],
-                        ['name' => 'text', 'value' => __('Toggle Authorise')],
-                        ['name' => 'rowtitle', 'value' => $display->display]
-                    ]
-                ];
-
-                // Default Layout
-                $display->buttons[] = [
-                    'id' => 'display_button_defaultlayout',
-                    'url' => $this->urlFor($request, 'display.defaultlayout.form', ['id' => $display->displayId]),
-                    'text' => __('Default Layout'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'display.defaultlayout',
-                                ['id' => $display->displayId]
-                            )
-                        ],
-                        ['name' => 'commit-method', 'value' => 'put'],
-                        ['name' => 'id', 'value' => 'display_button_defaultlayout'],
-                        ['name' => 'sort-group', 'value' => 2],
-                        ['name' => 'text', 'value' => __('Set Default Layout')],
-                        ['name' => 'rowtitle', 'value' => $display->display],
-                        ['name' => 'form-callback', 'value' => 'setDefaultMultiSelectFormOpen']
-                    ]
-                ];
-
-                if ($this->getUser()->featureEnabled('folder.view')) {
-                    // Select Folder
-                    $display->buttons[] = [
-                        'id' => 'displaygroup_button_selectfolder',
-                        'url' => $this->urlFor(
-                            $request,
-                            'displayGroup.selectfolder.form',
-                            ['id' => $display->displayGroupId]
-                        ),
-                        'text' => __('Select Folder'),
-                        'multi-select' => true,
-                        'dataAttributes' => [
-                            [
-                                'name' => 'commit-url',
-                                'value' => $this->urlFor(
-                                    $request,
-                                    'displayGroup.selectfolder',
-                                    ['id' => $display->displayGroupId]
-                                )
-                            ],
-                            ['name' => 'commit-method', 'value' => 'put'],
-                            ['name' => 'id', 'value' => 'displaygroup_button_selectfolder'],
-                            ['name' => 'sort-group', 'value' => 2],
-                            ['name' => 'text', 'value' => __('Move to Folder')],
-                            ['name' => 'rowtitle', 'value' => $display->display],
-                            ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
-                        ]
-                    ];
-                }
-
-                if (in_array($display->clientType, ['android', 'lg', 'sssp', 'chromeOS'])) {
-                    $display->buttons[] = array(
-                        'id' => 'display_button_checkLicence',
-                        'url' => $this->urlFor($request, 'display.licencecheck.form', ['id' => $display->displayId]),
-                        'text' => __('Check Licence'),
-                        'multi-select' => true,
-                        'dataAttributes' => [
-                            ['name' => 'auto-submit', 'value' => true],
-                            [
-                                'name' => 'commit-url',
-                                'value' => $this->urlFor(
-                                    $request,
-                                    'display.licencecheck',
-                                    ['id' => $display->displayId]
-                                )
-                            ],
-                            ['name' => 'commit-method', 'value' => 'put'],
-                            ['name' => 'id', 'value' => 'display_button_checkLicence'],
-                            ['name' => 'sort-group', 'value' => 2],
-                            ['name' => 'text', 'value' => __('Check Licence')],
-                            ['name' => 'rowtitle', 'value' => $display->display]
-                        ]
-                    );
-                }
-
-                $display->buttons[] = ['divider' => true];
-            }
-
-            // Schedule
-            if ($this->getUser()->featureEnabled('schedule.add')
-                && ($this->getUser()->checkEditable($display)
-                    || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1)
-            ) {
-                $display->buttons[] = array(
-                    'id' => 'display_button_schedule',
-                    'url' => $this->urlFor(
-                        $request,
-                        'schedule.add.form',
-                        ['id' => $display->displayGroupId, 'from' => 'DisplayGroup']
-                    ),
-                    'text' => __('Schedule')
-                );
-            }
-
-            // Check if limited view access is allowed
-            if (($this->getUser()->featureEnabled('displays.modify') && $this->getUser()->checkEditable($display))
-                || $this->getUser()->featureEnabled('displays.limitedView')
-            ) {
-                if ($this->getUser()->checkEditable($display)) {
-                    if ($this->getUser()->featureEnabled('layout.view')) {
-                        $display->buttons[] = [
-                            'id' => 'display_button_layouts_jump',
-                            'linkType' => '_self',
-                            'external' => true,
-                            'url' => (new HttpsDetect())->getRootUrl() . '/prototype/design/layout',
-                            'text' => __('Jump to Scheduled Layouts')
-                        ];
-                    }
-
-                    // File Associations
-                    $display->buttons[] = array(
-                        'id' => 'displaygroup_button_fileassociations',
-                        'url' => $this->urlFor($request, 'displayGroup.media.form', ['id' => $display->displayGroupId]),
-                        'text' => __('Assign Files')
-                    );
-
-                    // Layout Assignments
-                    $display->buttons[] = array(
-                        'id' => 'displaygroup_button_layout_associations',
-                        'url' => $this->urlFor($request, 'displayGroup.layout.form', ['id' => $display->displayGroupId]),
-                        'text' => __('Assign Layouts')
-                    );
-                }
-
-                // Screen Shot
-                $display->buttons[] = [
-                    'id' => 'display_button_requestScreenShot',
-                    'url' => $this->urlFor($request, 'display.screenshot.form', ['id' => $display->displayId]),
-                    'text' => __('Request Screen Shot'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        ['name' => 'auto-submit', 'value' => true],
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'display.requestscreenshot',
-                                ['id' => $display->displayId]
-                            )
-                        ],
-                        ['name' => 'commit-method', 'value' => 'put'],
-                        ['name' => 'sort-group', 'value' => 3],
-                        ['name' => 'id', 'value' => 'display_button_requestScreenShot'],
-                        ['name' => 'text', 'value' => __('Request Screen Shot')],
-                        ['name' => 'rowtitle', 'value' => $display->display]
-                    ]
-                ];
-
-                // Collect Now
-                $display->buttons[] = [
-                    'id' => 'display_button_collectNow',
-                    'url' => $this->urlFor(
-                        $request,
-                        'displayGroup.collectNow.form',
-                        ['id' => $display->displayGroupId]
-                    ),
-                    'text' => __('Collect Now'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        ['name' => 'auto-submit', 'value' => true],
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'displayGroup.action.collectNow',
-                                ['id' => $display->displayGroupId]
-                            )
-                        ],
-                        ['name' => 'commit-method', 'value' => 'post'],
-                        ['name' => 'sort-group', 'value' => 3],
-                        ['name' => 'id', 'value' => 'display_button_collectNow'],
-                        ['name' => 'text', 'value' => __('Collect Now')],
-                        ['name' => 'rowtitle', 'value' => $display->display]
-                    ]
-                ];
-
-                if ($this->getUser()->checkEditable($display)) {
-                    // Trigger webhook
-                    $display->buttons[] = [
-                        'id' => 'display_button_trigger_webhook',
-                        'url' => $this->urlFor(
-                            $request,
-                            'displayGroup.trigger.webhook.form',
-                            ['id' => $display->displayGroupId]
-                        ),
-                        'text' => __('Trigger a web hook'),
-                        'multi-select' => true,
-                        'dataAttributes' => [
-                            [
-                                'name' => 'commit-url',
-                                'value' => $this->urlFor(
-                                    $request,
-                                    'displayGroup.action.trigger.webhook',
-                                    ['id' => $display->displayGroupId]
-                                )
-                            ],
-                            ['name' => 'commit-method', 'value' => 'post'],
-                            ['name' => 'id', 'value' => 'display_button_trigger_webhook'],
-                            ['name' => 'sort-group', 'value' => 3],
-                            ['name' => 'text', 'value' => __('Trigger a web hook')],
-                            ['name' => 'rowtitle', 'value' => $display->display],
-                            ['name' => 'form-callback', 'value' => 'triggerWebhookMultiSelectFormOpen']
-                        ]
-                    ];
-
-                    if ($this->getUser()->isSuperAdmin()) {
-                        $display->buttons[] = [
-                            'id' => 'display_button_purgeAll',
-                            'url' => $this->urlFor($request, 'display.purge.all.form', ['id' => $display->displayId]),
-                            'text' => __('Purge All')
-                        ];
-                    }
-
-                    $display->buttons[] = ['divider' => true];
-                }
-            }
-
-            if ($this->getUser()->featureEnabled('displays.modify')
-                && $this->getUser()->checkPermissionsModifyable($display)
-            ) {
-                // Display Groups
-                $display->buttons[] = array(
-                    'id' => 'display_button_group_membership',
-                    'url' => $this->urlFor($request, 'display.membership.form', ['id' => $display->displayId]),
-                    'text' => __('Display Groups')
-                );
-
-                // Permissions
-                $display->buttons[] = [
-                    'id' => 'display_button_group_permissions',
-                    'url' => $this->urlFor(
-                        $request,
-                        'user.permissions.form',
-                        ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId]
-                    ),
-                    'text' => __('Share'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'user.permissions.multi',
-                                ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId]
-                            )
-                        ],
-                        ['name' => 'commit-method', 'value' => 'post'],
-                        ['name' => 'id', 'value' => 'display_button_group_permissions'],
-                        ['name' => 'text', 'value' => __('Share')],
-                        ['name' => 'rowtitle', 'value' => $display->display],
-                        ['name' => 'sort-group', 'value' => 4],
-                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        [
-                            'name' => 'custom-handler-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'user.permissions.multi.form',
-                                ['entity' => 'DisplayGroup']
-                            )
-                        ],
-                        ['name' => 'content-id-name', 'value' => 'displayGroupId']
-                    ]
-                ];
-            }
-
-            // Check if limited view access is allowed
-            if (($this->getUser()->featureEnabled('displays.modify') && $this->getUser()->checkEditable($display))
-                || $this->getUser()->featureEnabled('displays.limitedView')
-            ) {
-                if ($this->getUser()->checkPermissionsModifyable($display)) {
-                    $display->buttons[] = ['divider' => true];
-                }
-
-                if ($this->getUser()->checkEditable($display)) {
-                    // Wake On LAN
-                    $display->buttons[] = array(
-                        'id' => 'display_button_wol',
-                        'url' => $this->urlFor($request, 'display.wol.form', ['id' => $display->displayId]),
-                        'text' => __('Wake on LAN')
-                    );
-                }
-
-                // Send Command
-                $display->buttons[] = [
-                    'id' => 'displaygroup_button_command',
-                    'url' => $this->urlFor($request, 'displayGroup.command.form', ['id' => $display->displayGroupId]),
-                    'text' => __('Send Command'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'displayGroup.action.command',
-                                ['id' => $display->displayGroupId]
-                            )
-                        ],
-                        ['name' => 'commit-method', 'value' => 'post'],
-                        ['name' => 'id', 'value' => 'displaygroup_button_command'],
-                        ['name' => 'text', 'value' => __('Send Command')],
-                        ['name' => 'sort-group', 'value' => 3],
-                        ['name' => 'rowtitle', 'value' => $display->display],
-                        ['name' => 'form-callback', 'value' => 'sendCommandMultiSelectFormOpen']
-                    ]
-                ];
-
-                if ($this->getUser()->checkEditable($display)) {
-                    $display->buttons[] = ['divider' => true];
-
-                    $display->buttons[] = [
-                        'id' => 'display_button_move_cms',
-                        'url' => $this->urlFor($request, 'display.moveCms.form', ['id' => $display->displayId]),
-                        'text' => __('Transfer to another CMS'),
-                        'multi-select' => true,
-                        'dataAttributes' => [
-                            [
-                                'name' => 'commit-url',
-                                'value' => $this->urlFor(
-                                    $request,
-                                    'display.moveCms',
-                                    ['id' => $display->displayId]
-                                )
-                            ],
-                            ['name' => 'commit-method', 'value' => 'put'],
-                            ['name' => 'id', 'value' => 'display_button_move_cms'],
-                            ['name' => 'text', 'value' => __('Transfer to another CMS')],
-                            ['name' => 'sort-group', 'value' => 5],
-                            ['name' => 'rowtitle', 'value' => $display->display],
-                            ['name' => 'form-callback', 'value' => 'setMoveCmsMultiSelectFormOpen']
-                        ]
-                    ];
-
-                    $display->buttons[] = [
-                        'multi-select' => true,
-                        'multiSelectOnly' => true, // Show button only on multi-select menu
-                        'id' => 'display_button_set_bandwidth',
-                        'dataAttributes' => [
-                            [
-                                'name' => 'commit-url',
-                                'value' => $this->urlFor(
-                                    $request,
-                                    'display.setBandwidthLimitMultiple'
-                                )
-                            ],
-                            ['name' => 'commit-method', 'value' => 'post'],
-                            ['name' => 'id', 'value' => 'display_button_set_bandwidth'],
-                            ['name' => 'text', 'value' => __('Set Bandwidth')],
-                            ['name' => 'rowtitle', 'value' => $display->display],
-                            ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                            [
-                                'name' => 'custom-handler-url',
-                                'value' => $this->urlFor($request, 'display.setBandwidthLimitMultiple.form')
-                            ],
-                            ['name' => 'content-id-name', 'value' => 'displayId']
-                        ]
-                    ];
-
-                    if ($display->getUnmatchedProperty('isCmsTransferInProgress', false)) {
-                        $display->buttons[] = [
-                            'id' => 'display_button_move_cancel',
-                            'url' => $this->urlFor($request, 'display.moveCmsCancel.form', ['id' => $display->displayId]),
-                            'text' => __('Cancel CMS Transfer'),
-                        ];
-                    }
-                }
-            }
+            $this->decorateDisplayProperties($parsedQueryParams, $display, $request);
         }
 
+        if ($this->isJson($request) || $this->isApi($request)) {
+            return $response
+                ->withStatus(200)
+                ->withHeader('X-Total-Count', $this->displayFactory->countLast())
+                ->withJson($displays);
+        }
+
+        // TODO remove when no longer needed.
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->displayFactory->countLast();
         $this->getState()->setData($displays);
@@ -1281,14 +751,53 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/display/{displayId}',
+        operationId: 'DisplaySearchById',
+        description: 'Get the Display object specified by the provided displayId',
+        summary: 'Display search by ID',
+        tags: ['display']
+    )]
+    #[OA\Parameter(
+        name: 'displayId',
+        description: 'Numeric ID of the Display to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Display')
+    )]
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param int $id
+     * @return Response|ResponseInterface
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
+    {
+        $params = $this->getSanitizer($request->getQueryParams());
+        $display = $this->displayFactory->getById($id, false, false);
+
+        $this->decorateDisplayProperties($params, $display, $request);
+
+        return $response
+            ->withStatus(200)
+            ->withJson($display);
+    }
+
     /**
      * Displays on map
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws NotFoundException
      */
-    public function displayMap(Request $request, Response $response)
+    public function displayMap(Request $request, Response $response): Response|ResponseInterface
     {
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
 
@@ -1340,8 +849,15 @@ class Display extends Base
                 'lastAccessed' => $display->lastAccessed,
             ];
 
-            if (file_exists($this->getConfig()->getSetting('LIBRARY_LOCATION') . 'screenshots/' . $display->displayId . '_screenshot.jpg')) {
-                $properties['thumbnail'] = $this->urlFor($request, 'display.screenShot', ['id' => $display->displayId]) . '?' . Random::generateString();
+            if (file_exists(
+                $this->getConfig()->getSetting('LIBRARY_LOCATION') .
+                'screenshots/' . $display->displayId . '_screenshot.jpg'
+            )) {
+                $properties['thumbnail'] = $this->urlFor(
+                    $request,
+                    'display.screenShot',
+                    ['id' => $display->displayId]
+                ) . '?' . Random::generateString();
             }
 
             $longitude = ($display->longitude) ?: $this->getConfig()->getSetting('DEFAULT_LONG');
@@ -1353,160 +869,6 @@ class Display extends Base
         }
 
         return $response->withJson(new FeatureCollection($results));
-    }
-
-    /**
-     * Edit Display Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    function editForm(Request $request, Response $response, $id)
-    {
-        $display = $this->displayFactory->getById($id, true);
-
-        if (!$this->getUser()->checkEditable($display)) {
-            throw new AccessDeniedException();
-        }
-
-        // We have permission - load
-        $display->load();
-
-        // Dates
-        $auditingUntilIso = !empty($display->auditingUntil)
-            ? Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat())
-            : null;
-        $display->setUnmatchedProperty('auditingUntilIso', $auditingUntilIso);
-
-        // display profile dates
-        $displayProfile = $display->getDisplayProfile();
-
-        // Get the settings from the profile
-        $profile = $display->getSettings();
-        $displayTypes = $this->displayTypeFactory->query();
-
-        $elevateLogsUntil = $displayProfile->getSetting('elevateLogsUntil');
-        $elevateLogsUntilIso = !empty($elevateLogsUntil)
-            ? Carbon::createFromTimestamp($elevateLogsUntil)->format(DateFormatHelper::getSystemFormat())
-            : null;
-        $displayProfile->setUnmatchedProperty('elevateLogsUntilIso', $elevateLogsUntilIso);
-
-        // Get a list of timezones
-        $timeZones = [];
-        foreach (DateFormatHelper::timezoneList() as $key => $value) {
-            $timeZones[] = ['id' => $key, 'value' => $value];
-        }
-
-        // Get the currently assigned default layout
-        try {
-            $layouts = (($display->defaultLayoutId != null) ? [$this->layoutFactory->getById($display->defaultLayoutId)] : []);
-        } catch (NotFoundException $notFoundException) {
-            $layouts = [];
-        }
-
-        // Player Version Setting
-        $versionId = $display->getSetting('versionMediaId', null, ['displayOnly' => true]);
-        $profileVersionId = $display->getDisplayProfile()->getSetting('versionMediaId');
-        $playerVersions = [];
-
-        // Daypart - Operating Hours
-        $dayPartId = $display->getSetting('dayPartId', null, ['displayOnly' => true]);
-        $profileDayPartId = $display->getDisplayProfile()->getSetting('dayPartId');
-        $dayparts = [];
-
-        // Get the Player Version for this display profile type
-        if ($versionId !== null) {
-            try {
-                $playerVersions[] = $this->playerVersionFactory->getById($versionId);
-            } catch (NotFoundException $e) {
-                $this->getLog()->debug('Unknown versionId set on Display Profile for displayId ' . $display->displayId);
-            }
-        }
-
-        if ($versionId !== $profileVersionId && $profileVersionId !== null) {
-            try {
-                $playerVersions[] = $this->playerVersionFactory->getById($profileVersionId);
-            } catch (NotFoundException $e) {
-                $this->getLog()->debug('Unknown versionId set on Display Profile for displayId ' . $display->displayId);
-            }
-        }
-
-        if ($dayPartId !== null) {
-            try {
-                $dayparts[] = $this->dayPartFactory->getById($dayPartId);
-            } catch (NotFoundException $e) {
-                $this->getLog()->debug('Unknown dayPartId set on Display Profile for displayId ' . $display->displayId);
-            }
-        }
-
-        if ($dayPartId !== $profileDayPartId && $profileDayPartId !== null) {
-            try {
-                $dayparts[] = $this->dayPartFactory->getById($profileDayPartId);
-            } catch (NotFoundException $e) {
-                $this->getLog()->debug('Unknown dayPartId set on Display Profile for displayId ' . $display->displayId);
-            }
-        }
-
-        // A list of languages
-        // Build an array of supported languages
-        $languages = [];
-        $localeDir = PROJECT_ROOT . '/locale';
-        foreach (array_map('basename', glob($localeDir . '/*.mo')) as $lang) {
-            // Trim the .mo off the end
-            $lang = str_replace('.mo', '', $lang);
-            $languages[] = ['id' => $lang, 'value' => $lang];
-        }
-
-        $this->getState()->template = 'display-form-edit';
-        $this->getState()->setData([
-            'display' => $display,
-            'displayProfile' => $displayProfile,
-            'lockOptions' => json_decode($display->getDisplayProfile()->getSetting('lockOptions', '[]'), true),
-            'layouts' => $layouts,
-            'profiles' => $this->displayProfileFactory->query(null, array('type' => $display->clientType)),
-            'settings' => $profile,
-            'timeZones' => $timeZones,
-            'displayLockName' => ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
-            'versions' => $playerVersions,
-            'displayTypes' => $displayTypes,
-            'dayParts' => $dayparts,
-            'languages' => $languages,
-            'isWolDisabled' => defined('ACCOUNT_ID'),
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Delete form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    function deleteForm(Request $request, Response $response, $id)
-    {
-        $display = $this->displayFactory->getById($id);
-
-        if (!$this->getUser()->checkDeleteable($display)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'display-form-delete';
-        $this->getState()->setData([
-            'display' => $display,
-        ]);
-
-        return $this->render($request, $response);
     }
 
     #[OA\Put(
@@ -1539,7 +901,7 @@ class Display extends Base
                 ],
                 properties: [
                     new OA\Property(property: 'display', description: 'The Display Name', type: 'string'),
-                    new OA\Property(property: 'description', description: 'A description of the Display', type: 'string'),
+                    new OA\Property(property: 'description', description: 'A description of the Display', type: 'string'), // phpcs:ignore
                     new OA\Property(
                         property: 'tags',
                         description: 'A comma separated list of tags for this item',
@@ -1606,8 +968,16 @@ class Display extends Base
                         description: 'The CIDR configuration for this Display',
                         type: 'integer'
                     ),
-                    new OA\Property(property: 'latitude', description: 'The Latitude of this Display', type: 'number'),
-                    new OA\Property(property: 'longitude', description: 'The Longitude of this Display', type: 'number'),
+                    new OA\Property(
+                        property: 'latitude',
+                        description: 'The Latitude of this Display',
+                        type: 'number'
+                    ),
+                    new OA\Property(
+                        property: 'longitude',
+                        description: 'The Longitude of this Display',
+                        type: 'number'
+                    ),
                     new OA\Property(
                         property: 'timeZone',
                         description: 'The timezone for this display, or empty to use the CMS timezone',
@@ -1628,12 +998,36 @@ class Display extends Base
                         description: 'The Display Type ID of this Display',
                         type: 'integer'
                     ),
-                    new OA\Property(property: 'screenSize', description: 'The screen size of this Display', type: 'number'),
-                    new OA\Property(property: 'venueId', description: 'The Venue ID of this Display', type: 'integer'),
-                    new OA\Property(property: 'address', description: 'The Location Address of this Display', type: 'string'),
-                    new OA\Property(property: 'isMobile', description: 'Is this Display mobile?', type: 'integer'),
-                    new OA\Property(property: 'isOutdoor', description: 'Is this Display Outdoor?', type: 'integer'),
-                    new OA\Property(property: 'costPerPlay', description: 'The Cost Per Play of this Display', type: 'number'),
+                    new OA\Property(
+                        property: 'screenSize',
+                        description: 'The screen size of this Display',
+                        type: 'number'
+                    ),
+                    new OA\Property(
+                        property: 'venueId',
+                        description: 'The Venue ID of this Display',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'address',
+                        description: 'The Location Address of this Display',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'isMobile',
+                        description: 'Is this Display mobile?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'isOutdoor',
+                        description: 'Is this Display Outdoor?',
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'costPerPlay',
+                        description: 'The Cost Per Play of this Display',
+                        type: 'number'
+                    ),
                     new OA\Property(
                         property: 'impressionsPerPlay',
                         description: 'The Impressions Per Play of this Display',
@@ -1687,15 +1081,15 @@ class Display extends Base
      * Display Edit
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @param int $id
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $display = $this->displayFactory->getById($id, true);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -1805,8 +1199,8 @@ class Display extends Base
             $display->lastAccessed = Carbon::createFromTimestamp($display->lastAccessed)
                 ->format(DateFormatHelper::getSystemFormat());
             $display->auditingUntil = ($display->auditingUntil == 0)
-                    ? 0
-                    : Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
+                ? 0
+                : Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
         }
 
         // Return
@@ -1838,14 +1232,14 @@ class Display extends Base
      * Delete a display
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @param int $id
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    function delete(Request $request, Response $response, $id)
+    public function delete(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $display = $this->displayFactory->getById($id);
 
@@ -1862,91 +1256,20 @@ class Display extends Base
         $display->delete();
 
         // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Deleted %s'), $display->display),
-            'id' => $display->displayId,
-            'data' => $display
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Member of Display Groups Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function membershipForm(Request $request, Response $response, $id)
-    {
-        $display = $this->displayFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($display)) {
-            throw new AccessDeniedException();
-        }
-
-        // Groups we are assigned to
-        $groupsAssigned = $this->displayGroupFactory->getByDisplayId($display->displayId);
-
-        $this->getState()->template = 'display-form-membership';
-        $this->getState()->setData([
-            'display' => $display,
-            'extra' => [
-                'displayGroupsAssigned' => $groupsAssigned
-            ],
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Set Bandwidth to one or more displays
-     * @param Request $request
-     * @param Response $response
-     * @param $ids
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function setBandwidthLimitMultipleForm(Request $request, Response $response)
-    {
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-
-        // Check if the array of ids is passed
-        if ($sanitizedParams->getString('ids') == '') {
-            throw new InvalidArgumentException(__('The array of ids is empty!'));
-        }
-
-        // Get array of ids
-        $ids = $sanitizedParams->getString('ids');
-
-        $this->getState()->template = 'display-form-set-bandwidth';
-        $this->getState()->setData([
-            'ids' => $ids,
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(204);
     }
 
         /**
      * Set Bandwidth to one or more displays
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function setBandwidthLimitMultiple(Request $request, Response $response)
+    public function setBandwidthLimitMultiple(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -1991,10 +1314,12 @@ class Display extends Base
         $this->displayGroupFactory->setBandwidth($bandwidthLimit, $displayGroupIds);
 
         // Audit Log message
-        $this->getLog()->audit('DisplayGroup', 0, 'Batch update of bandwidth limit for ' . count($displayGroupIds) . ' items', [
-            'bandwidthLimit' => $bandwidthLimit,
-            'displayGroupIds' => $displayGroupIds
-        ]);
+        $this->getLog()->audit(
+            'DisplayGroup',
+            0,
+            'Batch update of bandwidth limit for ' . count($displayGroupIds) . ' items',
+            ['bandwidthLimit' => $bandwidthLimit, 'displayGroupIds' => $displayGroupIds]
+        );
 
         // Return
         $this->getState()->hydrate([
@@ -2011,13 +1336,13 @@ class Display extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function assignDisplayGroup(Request $request, Response $response, $id)
+    public function assignDisplayGroup(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $display = $this->displayFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -2072,7 +1397,7 @@ class Display extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
@@ -2129,46 +1454,6 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
-    /**
-     * Request ScreenShot form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function requestScreenShotForm(Request $request, Response $response, $id)
-    {
-        $display = $this->displayFactory->getById($id);
-
-        // Allow limited view access
-        if (!$this->getUser()->checkViewable($display) && !$this->getUser()->featureEnabled('displays.limitedView')) {
-            throw new AccessDeniedException();
-        }
-
-        // Work out the next collection time based on the last accessed date/time and the collection interval
-        if ($display->lastAccessed == 0) {
-            $nextCollect = __('once it has connected for the first time');
-        } else {
-            $collectionInterval = $display->getSetting('collectInterval', 300);
-            $nextCollect = Carbon::createFromTimestamp($display->lastAccessed)
-                ->addSeconds($collectionInterval)
-                ->diffForHumans();
-        }
-
-        $this->getState()->template = 'display-form-request-screenshot';
-        $this->getState()->autoSubmit = $this->getAutoSubmit('displayRequestScreenshotForm');
-        $this->getState()->setData([
-            'display' => $display,
-            'nextCollect' => $nextCollect,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
     #[OA\Put(
         path: '/display/requestscreenshot/{displayId}',
         operationId: 'displayRequestScreenshot',
@@ -2193,7 +1478,7 @@ class Display extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
@@ -2224,40 +1509,6 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
-    /**
-     * Form for wake on Lan
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function wakeOnLanForm(Request $request, Response $response, $id)
-    {
-        $display = $this->displayFactory->getById($id);
-
-        if (!$this->getUser()->checkViewable($display)) {
-            throw new AccessDeniedException();
-        }
-
-        if ($display->macAddress == '') {
-            throw new InvalidArgumentException(
-                __('This display has no mac address recorded against it yet. Make sure the display is running.'),
-                'macAddress'
-            );
-        }
-
-        $this->getState()->template = 'display-form-wakeonlan';
-        $this->getState()->setData([
-            'display' => $display,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
     #[OA\Post(
         path: '/display/wol/{displayId}',
         operationId: 'displayWakeOnLan',
@@ -2278,13 +1529,13 @@ class Display extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function wakeOnLan(Request $request, Response $response, $id)
+    public function wakeOnLan(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $display = $this->displayFactory->getById($id);
 
@@ -2338,156 +1589,17 @@ class Display extends Base
         $alwaysAlert = ($this->getConfig()->getSetting('MAINTENANCE_ALWAYS_ALERT') == 1);
 
         foreach ($displays as $display) {
-            // Should we test against the collection interval or the preset alert timeout?
-            if ($display->alertTimeout == 0 && $display->clientType != '') {
-                $timeoutToTestAgainst = ((double)$display->getSetting('collectInterval', $globalTimeout)) * 1.1;
-            } else {
-                $timeoutToTestAgainst = $globalTimeout;
-            }
-
-            // Store the timeout to test against
-            $timeOut = $display->lastAccessed + $timeoutToTestAgainst;
+            $timeOut = $this->getDisplayTimeout($globalTimeout, $display);
 
             // If the last time we accessed is less than now minus the timeout
             if ($timeOut < Carbon::now()->format('U')) {
                 $this->getLog()->debug('Timed out display. Last Accessed: '
-                    . date('Y-m-d h:i:s', $display->lastAccessed) . '. Time out: ' . date('Y-m-d h:i:s', $timeOut));
+                    . date('Y-m-d h:i:s', $display->lastAccessed) .
+                    '. Time out: ' . date('Y-m-d h:i:s', $timeOut));
 
-                // Is this the first time this display has gone "off-line"
-                $displayOffline = ($display->loggedIn == 1);
-
-                // If this is the first switch (i.e. the row was logged in before)
-                if ($displayOffline) {
-                    // Update the display and set it as logged out
-                    $display->loggedIn = 0;
-                    $display->save(\Xibo\Entity\Display::$saveOptionsMinimum);
-
-                    // Log the down event
-                    $event = $this->displayEventFactory->createEmpty();
-                    $event->displayId = $display->displayId;
-                    $event->start = $display->lastAccessed;
-                    // eventTypeId 1 is for Display up/down events.
-                    $event->eventTypeId = 1;
-                    $event->save();
-                }
-
-                $dayPartId = $display->getSetting('dayPartId');
-                $operatingHours = true;
-
-                if ($dayPartId !== null) {
-                    try {
-                        $dayPart = $this->dayPartFactory->getById($dayPartId);
-
-                        $startTimeArray = explode(':', $dayPart->startTime);
-                        $startTime = Carbon::now()->setTime(intval($startTimeArray[0]), intval($startTimeArray[1]));
-
-                        $endTimeArray = explode(':', $dayPart->endTime);
-                        $endTime = Carbon::now()->setTime(intval($endTimeArray[0]), intval($endTimeArray[1]));
-
-                        $now = Carbon::now();
-
-                        // exceptions
-                        foreach ($dayPart->exceptions as $exception) {
-                            // check if we are on exception day and if so override the start and endtime accordingly
-                            if ($exception['day'] == Carbon::now()->format('D')) {
-                                $exceptionsStartTime = explode(':', $exception['start']);
-                                $startTime = Carbon::now()->setTime(
-                                    intval($exceptionsStartTime[0]),
-                                    intval($exceptionsStartTime[1])
-                                );
-
-                                $exceptionsEndTime = explode(':', $exception['end']);
-                                $endTime = Carbon::now()->setTime(
-                                    intval($exceptionsEndTime[0]),
-                                    intval($exceptionsEndTime[1])
-                                );
-                            }
-                        }
-
-                        // check if we are inside the operating hours for this display -
-                        // we use that flag to decide if we need to create a notification and send an email.
-                        if (($now >= $startTime && $now <= $endTime)) {
-                            $operatingHours = true;
-                        } else {
-                            $operatingHours = false;
-                        }
-                    } catch (NotFoundException) {
-                        $this->getLog()->debug(
-                            'Unknown dayPartId set on Display Profile for displayId ' . $display->displayId
-                        );
-                    }
-                }
-
-                // Should we create a notification
-                if ($emailAlerts && $display->emailAlert == 1 && ($displayOffline || $alwaysAlert)) {
-                    // Alerts enabled for this display
-                    // Display just gone offline, or always alert
-                    // Fields for email
-
-                    // for displays without dayPartId set, this is always true,
-                    // otherwise we check if we are inside the operating hours set for this display
-                    if ($operatingHours) {
-                        $subject = sprintf(__('Alert for Display %s'), $display->display);
-                        $body = sprintf(
-                            __('Display ID %d is offline since %s.'),
-                            $display->displayId,
-                            Carbon::createFromTimestamp($display->lastAccessed)
-                                ->format(DateFormatHelper::getSystemFormat())
-                        );
-
-                        // Add to system
-                        $notification = $this->notificationFactory->createSystemNotification(
-                            $subject,
-                            $body,
-                            Carbon::now(),
-                            'display'
-                        );
-
-                        // Add in any displayNotificationGroups, with permissions
-                        foreach ($this->userGroupFactory
-                                     ->getDisplayNotificationGroups($display->displayGroupId) as $group) {
-                            $notification->assignUserGroup($group);
-                        }
-
-                        $notification->save();
-                    } else {
-                        $this->getLog()->info('Not sending email down alert for Display - ' . $display->display
-                            . ' we are outside of its operating hours');
-                    }
-                } elseif ($displayOffline) {
-                    $this->getLog()->info('Not sending an email for offline display - emailAlert = '
-                        . $display->emailAlert . ', alwaysAlert = ' . $alwaysAlert);
-                }
+                $this->updateTimedOutDisplay($display, $emailAlerts, $alwaysAlert);
             }
         }
-    }
-
-    /**
-     * Show the authorise form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function authoriseForm(Request $request, Response $response, $id)
-    {
-        $display = $this->displayFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($display)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'display-form-authorise';
-        $this->getState()->autoSubmit = $this->getAutoSubmit('displayAuthoriseForm');
-        $this->getState()->setData([
-            'display' => $display
-        ]);
-
-        return $this->render($request, $response);
     }
 
     #[OA\Put(
@@ -2510,7 +1622,7 @@ class Display extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
@@ -2536,40 +1648,6 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function defaultLayoutForm(Request $request, Response $response, $id)
-    {
-        $display = $this->displayFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($display)) {
-            throw new AccessDeniedException();
-        }
-
-        // Get the currently assigned default layout
-        try {
-            $layouts = (($display->defaultLayoutId != null) ? [$this->layoutFactory->getById($display->defaultLayoutId)] : []);
-        } catch (NotFoundException $notFoundException) {
-            $layouts = [];
-        }
-
-        $this->getState()->template = 'display-form-defaultlayout';
-        $this->getState()->setData([
-            'display' => $display,
-            'layouts' => $layouts
-        ]);
-
-        return $this->render($request, $response);
-    }
-
     #[OA\Put(
         path: '/display/defaultlayout/{displayId}',
         operationId: 'displayDefaultLayout',
@@ -2585,16 +1663,16 @@ class Display extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['layoutId'],
                 properties: [
                     new OA\Property(property: 'layoutId', description: 'The Layout ID', type: 'integer')
-                ],
-                required: ['layoutId']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
@@ -2602,7 +1680,7 @@ class Display extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
@@ -2643,39 +1721,7 @@ class Display extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function moveCmsForm(Request $request, Response $response, $id)
-    {
-        if ($this->getUser()->twoFactorTypeId != 2) {
-            throw new AccessDeniedException('This action requires active Google Authenticator Two Factor authentication');
-        }
-
-        $display = $this->displayFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($display)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'display-form-moveCms';
-        $this->getState()->setData([
-            'display' => $display,
-            'newCmsAddress' => $display->newCmsAddress,
-            'newCmsKey' => $display->newCmsKey
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
@@ -2683,10 +1729,12 @@ class Display extends Base
      * @throws \RobThree\Auth\TwoFactorAuthException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function moveCms(Request $request, Response $response, $id)
+    public function moveCms(Request $request, Response $response, $id): Response|ResponseInterface
     {
         if ($this->getUser()->twoFactorTypeId != 2) {
-            throw new AccessDeniedException('This action requires active Google Authenticator Two Factor authentication');
+            throw new AccessDeniedException(
+                'This action requires active Google Authenticator Two Factor authentication'
+            );
         }
 
         $display = $this->displayFactory->getById($id);
@@ -2717,7 +1765,9 @@ class Display extends Base
             $newCmsKey = $sanitizedParams->getString('newCmsKey');
 
             // validate the URL
-            if (!v::url()->notEmpty()->validate(urldecode($newCmsAddress)) || !filter_var($newCmsAddress, FILTER_VALIDATE_URL)) {
+            if (!v::url()->notEmpty()->validate(urldecode($newCmsAddress)) ||
+                !filter_var($newCmsAddress, FILTER_VALIDATE_URL)
+            ) {
                 throw new InvalidArgumentException(__('Provided CMS URL is invalid'), 'newCmsUrl');
             }
 
@@ -2743,35 +1793,12 @@ class Display extends Base
     /**
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws NotFoundException
-     */
-    public function moveCmsCancelForm(Request $request, Response $response, $id)
-    {
-        $display = $this->displayFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($display)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'display-form-moveCmsCancel';
-        $this->getState()->setData([
-            'display' => $display
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @param $id
      * @throws NotFoundException
      * @throws GeneralException
      */
-    public function moveCmsCancel(Request $request, Response $response, $id)
+    public function moveCmsCancel(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $display = $this->displayFactory->getById($id);
 
@@ -2794,26 +1821,12 @@ class Display extends Base
     /**
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function addViaCodeForm(Request $request, Response $response)
-    {
-        $this->getState()->template = 'display-form-addViaCode';
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function addViaCode(Request $request, Response $response)
+    public function addViaCode(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -2850,37 +1863,14 @@ class Display extends Base
             ]);
         } catch (\Exception $e) {
             $this->getLog()->debug($e->getMessage());
-            throw new InvalidArgumentException(__('The code provided does not match. Please double-check the code shown on the device you are trying to connect.'), 'user_code');
+            throw new InvalidArgumentException(
+                __(
+                    'The code provided does not match.
+                     Please double-check the code shown on the device you are trying to connect.'
+                ),
+                'user_code'
+            );
         }
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Check commercial licence form
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function checkLicenceForm(Request $request, Response $response, $id)
-    {
-        $display = $this->displayFactory->getById($id);
-
-        if (!$this->getUser()->checkViewable($display)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'display-form-licence-check';
-        $this->getState()->autoSubmit = $this->getAutoSubmit('displayLicenceCheckForm');
-        $this->getState()->setData([
-            'display' => $display
-        ]);
 
         return $this->render($request, $response);
     }
@@ -2906,7 +1896,7 @@ class Display extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
@@ -2922,7 +1912,10 @@ class Display extends Base
         }
 
         if (empty($display->xmrChannel)) {
-            throw new InvalidArgumentException(__('XMR is not configured for this Display'), 'xmrChannel');
+            throw new InvalidArgumentException(
+                __('XMR is not configured for this Display'),
+                'xmrChannel'
+            );
         }
 
         $this->playerAction->sendAction($display, new LicenceCheckAction());
@@ -2962,7 +1955,7 @@ class Display extends Base
      * @param Request $request
      * @param Response $response
      * @param int $id displayId
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws \Xibo\Support\Exception\AccessDeniedException
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      * @throws \Xibo\Support\Exception\NotFoundException
@@ -2977,33 +1970,6 @@ class Display extends Base
 
         return $response->withJson($display->getStatusWindow($this->pool));
     }
-
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     */
-    public function purgeAllForm(Request $request, Response $response, $id)
-    {
-        $display = $this->displayFactory->getById($id);
-
-        if (!$this->getUser()->checkViewable($display) || !$this->getUser()->isSuperAdmin()) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'display-form-purge-all';
-        $this->getState()->setData([
-            'display' => $display
-        ]);
-
-        return $this->render($request, $response);
-    }
-
 
     #[OA\Put(
         path: '/display/purgeAll/{displayId}',
@@ -3026,13 +1992,13 @@ class Display extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function purgeAll(Request $request, Response $response, $id)
+    public function purgeAll(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $display = $this->displayFactory->getById($id);
 
@@ -3041,7 +2007,10 @@ class Display extends Base
         }
 
         if (empty($display->xmrChannel)) {
-            throw new InvalidArgumentException(__('XMR is not configured for this Display'), 'xmrChannel');
+            throw new InvalidArgumentException(
+                __('XMR is not configured for this Display'),
+                'xmrChannel'
+            );
         }
 
         $this->playerAction->sendAction($display, new PurgeAllAction());
@@ -3053,5 +2022,306 @@ class Display extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Get the display timeout value
+     * @param $globalTimeout
+     * @param $display
+     * @return float
+     */
+    private function getDisplayTimeout($globalTimeout, $display): float
+    {
+        // Should we test against the collection interval or the preset alert timeout?
+        $timeoutToTestAgainst = $globalTimeout;
+
+        if ($display->alertTimeout == 0 && $display->clientType != '') {
+            $timeoutToTestAgainst = ((double)$display->getSetting('collectInterval', $globalTimeout)) * 1.1;
+        }
+
+        // Store the timeout to test against
+        return $display->lastAccessed + $timeoutToTestAgainst;
+    }
+
+    /**
+     * Update the displays that have timed out
+     * @param $display
+     * @param $emailAlerts
+     * @param $alwaysAlert
+     * @return void
+     */
+    private function updateTimedOutDisplay($display, $emailAlerts, $alwaysAlert): void
+    {
+        // Is this the first time this display has gone "off-line"
+        $displayOffline = ($display->loggedIn == 1);
+
+        // If this is the first switch (i.e. the row was logged in before)
+        if ($displayOffline) {
+            // Update the display and set it as logged out
+            $display->loggedIn = 0;
+            $display->save(\Xibo\Entity\Display::$saveOptionsMinimum);
+
+            // Log the down event
+            $event = $this->displayEventFactory->createEmpty();
+            $event->displayId = $display->displayId;
+            $event->start = $display->lastAccessed;
+            // eventTypeId 1 is for Display up/down events.
+            $event->eventTypeId = 1;
+            $event->save();
+        }
+
+        $dayPartId = $display->getSetting('dayPartId');
+        $isWithinOperatingHours = true;
+
+        if ($dayPartId !== null) {
+            $isWithinOperatingHours = $this->getIsWithinOperatingHours($dayPartId, $display);
+        }
+
+        // Should we create a notification
+        if ($emailAlerts && $display->emailAlert == 1 && ($displayOffline || $alwaysAlert)) {
+            $this->createSystemNotification($isWithinOperatingHours, $display);
+        } elseif ($displayOffline) {
+            $this->getLog()->info('Not sending an email for offline display - emailAlert = '
+                . $display->emailAlert . ', alwaysAlert = ' . $alwaysAlert);
+        }
+    }
+
+    /**
+     * Check if display is within operating hours
+     * @param $dayPartId
+     * @param $display
+     * @return bool
+     */
+    private function getIsWithinOperatingHours($dayPartId, $display): bool
+    {
+        $isWithinOperatingHours = true;
+
+        try {
+            $dayPart = $this->dayPartFactory->getById($dayPartId);
+
+            $startTimeArray = explode(':', $dayPart->startTime);
+            $startTime = Carbon::now()->setTime(intval($startTimeArray[0]), intval($startTimeArray[1]));
+
+            $endTimeArray = explode(':', $dayPart->endTime);
+            $endTime = Carbon::now()->setTime(intval($endTimeArray[0]), intval($endTimeArray[1]));
+
+            $now = Carbon::now();
+
+            // exceptions
+            foreach ($dayPart->exceptions as $exception) {
+                // check if we are on exception day and if so override the start and endtime accordingly
+                if ($exception['day'] == Carbon::now()->format('D')) {
+                    $exceptionsStartTime = explode(':', $exception['start']);
+                    $startTime = Carbon::now()->setTime(
+                        intval($exceptionsStartTime[0]),
+                        intval($exceptionsStartTime[1])
+                    );
+
+                    $exceptionsEndTime = explode(':', $exception['end']);
+                    $endTime = Carbon::now()->setTime(
+                        intval($exceptionsEndTime[0]),
+                        intval($exceptionsEndTime[1])
+                    );
+                }
+            }
+
+            // check if we are inside the operating hours for this display -
+            // we use that flag to decide if we need to create a notification and send an email.
+            $isWithinOperatingHours = ($now >= $startTime && $now <= $endTime);
+        } catch (NotFoundException) {
+            $this->getLog()->debug(
+                'Unknown dayPartId set on Display Profile for displayId ' . $display->displayId
+            );
+        }
+
+        return $isWithinOperatingHours;
+    }
+
+    /**
+     * Creates system or email notifications
+     * @param $isWithinOperatingHours
+     * @param $display
+     * @return void
+     */
+    private function createSystemNotification($isWithinOperatingHours, $display): void
+    {
+        // Alerts enabled for this display
+        // Display just gone offline, or always alert
+        // Fields for email
+
+        // for displays without dayPartId set, this is always true,
+        // otherwise we check if we are inside the operating hours set for this display
+        if ($isWithinOperatingHours) {
+            $subject = sprintf(__('Alert for Display %s'), $display->display);
+            $body = sprintf(
+                __('Display ID %d is offline since %s.'),
+                $display->displayId,
+                Carbon::createFromTimestamp($display->lastAccessed)
+                    ->format(DateFormatHelper::getSystemFormat())
+            );
+
+            // Add to system
+            $notification = $this->notificationFactory->createSystemNotification(
+                $subject,
+                $body,
+                Carbon::now(),
+                'display'
+            );
+
+            // Add in any displayNotificationGroups, with permissions
+            foreach ($this->userGroupFactory
+                         ->getDisplayNotificationGroups($display->displayGroupId) as $group) {
+                $notification->assignUserGroup($group);
+            }
+
+            $notification->save();
+        } else {
+            $this->getLog()->info('Not sending email down alert for Display - ' . $display->display
+                . ' we are outside of its operating hours');
+        }
+    }
+
+    /**
+     * @param SanitizerInterface $parsedQueryParams
+     * @param \Xibo\Entity\Display $display
+     * @param Request $request
+     * @return void
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    private function decorateDisplayProperties(
+        SanitizerInterface $parsedQueryParams,
+        \Xibo\Entity\Display $display,
+        Request $request,
+    ): void {
+        // Get all Display Profiles
+        $displayProfiles = [];
+        foreach ($this->displayProfileFactory->query() as $displayProfile) {
+            $displayProfiles[$displayProfile->displayProfileId] = $displayProfile->name;
+        }
+
+        // Embed?
+        $embed = ($parsedQueryParams->getString('embed') != null)
+            ? explode(',', $parsedQueryParams->getString('embed'))
+            : [];
+
+        /* @var \Xibo\Entity\Display $display */
+        if (in_array('displaygroups', $embed)) {
+            $display->load();
+        } else {
+            $display->excludeProperty('displayGroups');
+        }
+
+        if (in_array('overrideconfig', $embed)) {
+            $display->includeProperty('overrideConfig');
+        }
+
+        $display->setUnmatchedProperty(
+            'bandwidthLimitFormatted',
+            ByteFormatter::format($display->bandwidthLimit * 1024)
+        );
+
+        // Current layout from cache
+        $display->getCurrentLayoutId($this->pool, $this->layoutFactory);
+
+        $display->lastAccessed =
+            Carbon::createFromTimestamp($display->lastAccessed)->format(DateFormatHelper::getSystemFormat());
+        $display->auditingUntil = ($display->auditingUntil == 0)
+            ? 0
+            :Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
+
+        // use try and catch here to cover scenario
+        // when there is no default display profile set for any of the existing display types.
+        $displayProfileName = '';
+        try {
+            $defaultDisplayProfile = $this->displayProfileFactory->getDefaultByType($display->clientType);
+            $displayProfileName = $defaultDisplayProfile->name;
+        } catch (NotFoundException) {
+            $this->getLog()->debug('No default Display Profile set for Display type ' . $display->clientType);
+        }
+
+        // Add in the display profile information
+        $display->setUnmatchedProperty(
+            'displayProfile',
+            (!array_key_exists($display->displayProfileId, $displayProfiles))
+                ? $displayProfileName . __(' (Default)')
+                : $displayProfiles[$display->displayProfileId]
+        );
+
+        // Format the storage available / total space
+        $display->setUnmatchedProperty(
+            'storageAvailableSpaceFormatted',
+            ByteFormatter::format($display->storageAvailableSpace)
+        );
+        $display->setUnmatchedProperty(
+            'storageTotalSpaceFormatted',
+            ByteFormatter::format($display->storageTotalSpace)
+        );
+        $display->setUnmatchedProperty(
+            'storagePercentage',
+            ($display->storageTotalSpace == 0)
+                ? 0
+                : round($display->storageAvailableSpace / $display->storageTotalSpace * 100.0, 2)
+        );
+
+        // Set some text for the display status
+        $display->setUnmatchedProperty('statusDescription', match ($display->mediaInventoryStatus) {
+            1 => __('Display is up to date'),
+            2 => __('Display is downloading new files'),
+            3 => __('Display is out of date but has not yet checked in with the server'),
+            default => __('Unknown Display Status'),
+        });
+
+        // Commercial Licence
+        $display->setUnmatchedProperty('commercialLicenceDescription', match ($display->commercialLicence) {
+            1 => __('Display is fully licensed'),
+            2 => __('Display is on a trial licence'),
+            default => __('Display is not licensed'),
+        });
+
+        if ($display->clientCode < 400) {
+            $commercialLicenceDescription = $display->getUnmatchedProperty('commercialLicenceDescription');
+            $commercialLicenceDescription .= ' ('
+                . __('The status will be updated with each Commercial Licence check') . ')';
+            $display->setUnmatchedProperty('commercialLicenceDescription', $commercialLicenceDescription);
+        }
+
+        // Thumbnail
+        $display->setUnmatchedProperty('thumbnail', '');
+        // If we aren't logged in, and we are showThumbnail == 2, then show a circle
+        if (file_exists($this->getConfig()->getSetting('LIBRARY_LOCATION') . 'screenshots/'
+            . $display->displayId . '_screenshot.jpg')) {
+            $display->setUnmatchedProperty(
+                'thumbnail',
+                $this->urlFor($request, 'display.screenShot', [
+                    'id' => $display->displayId
+                ]) . '?' . Random::generateString()
+            );
+        }
+
+        $display->setUnmatchedProperty(
+            'teamViewerLink',
+            (!empty($display->teamViewerSerial))
+                ? 'https://start.teamviewer.com/' . $display->teamViewerSerial
+                : ''
+        );
+        $display->setUnmatchedProperty(
+            'webkeyLink',
+            (!empty($display->webkeySerial))
+                ? 'https://device.webkeyapp.com/phone?publicid=' . $display->webkeySerial
+                : ''
+        );
+        $display->setUnmatchedProperty(
+            'isPlayerSupported',
+            $display->clientCode > Environment::$PLAYER_SUPPORT
+                ? 1
+                : 0
+        );
+
+        // Is a transfer to another CMS in progress?
+        $display->setUnmatchedProperty('isCmsTransferInProgress', (!empty($display->newCmsAddress)));
+
+        // permissions
+        $display->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($display));
     }
 }

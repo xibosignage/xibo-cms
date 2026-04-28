@@ -19,10 +19,10 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { Eye, Plus, Search, Slash, Trash2 } from 'lucide-react';
-import { useState, useTransition, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 
@@ -55,6 +55,7 @@ export default function DatasetRss() {
     columnVisibility,
     setColumnVisibility,
     globalFilter,
+    debouncedFilter,
     setGlobalFilter,
     isHydrated,
   } = useTableState<Record<string, string>>(`dataset_rss_${datasetId}`, {
@@ -77,20 +78,17 @@ export default function DatasetRss() {
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [selectionCache, setSelectionCache] = useState<Record<string, DatasetRss>>({});
-  const [rssList, setRssList] = useState<DatasetRss[]>([]);
   const [itemsToDelete, setItemsToDelete] = useState<DatasetRss[]>([]);
 
   const [activeModal, setActiveModal] = useState<RssModalType>(null);
   const [selectedRss, setSelectedRss] = useState<DatasetRss | null>(null);
-
-  const [isCloning, startCloneTransition] = useTransition();
-  const [isDeleting, startDeleteTransition] = useTransition();
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const closeModal = () => {
     setActiveModal(null);
     setSelectedRss(null);
     setItemsToDelete([]);
+    setDeleteError(null);
   };
 
   const handleRefresh = () => {
@@ -112,33 +110,72 @@ export default function DatasetRss() {
     datasetId: datasetId!,
     pagination,
     sorting,
+    filter: debouncedFilter,
     enabled: isHydrated,
   });
 
-  useEffect(() => {
-    setRssList(queryData?.rows ?? []);
-  }, [queryData?.rows]);
+  const rssList = queryData?.rows ?? [];
+  const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
+  const error = isError && queryError instanceof Error ? queryError.message : '';
+  const existingNames = rssList.map((rss) => rss.title);
 
-  useEffect(() => {
-    if (!rssList || rssList.length === 0) {
-      return;
-    }
+  const getRowId = (row: DatasetRss) => {
+    return row.id.toString();
+  };
+
+  const handleRowSelectionChange = (
+    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
+  ) => {
+    const newSelection =
+      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
+
+    setRowSelection(newSelection);
 
     setSelectionCache((prev) => {
       const next = { ...prev };
-      let hasChanges = false;
-
       rssList.forEach((item) => {
-        const id = item.id.toString();
-        if (rowSelection[id] && next[id] !== item) {
+        const id = getRowId(item);
+        if (newSelection[id]) {
           next[id] = item;
-          hasChanges = true;
         }
       });
-
-      return hasChanges ? next : prev;
+      return next;
     });
-  }, [rssList, rowSelection]);
+  };
+
+  const copyMutation = useMutation({
+    mutationFn: async (payload: Omit<DatasetRss, 'id' | 'dataSetId'>) => {
+      return await createDatasetRss(datasetId!, payload);
+    },
+    onSuccess: () => {
+      closeModal();
+      handleRefresh();
+    },
+    onError: (err) => {
+      console.error('Failed to copy RSS:', err);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (items: DatasetRss[]) => {
+      for (const item of items) {
+        await deleteDatasetRss(datasetId!, item.id);
+      }
+      return items;
+    },
+    onSuccess: (deletedItems) => {
+      const newSelection = { ...rowSelection };
+      deletedItems.forEach((item) => delete newSelection[item.id.toString()]);
+      setRowSelection(newSelection);
+
+      closeModal();
+      handleRefresh();
+    },
+    onError: (err: unknown) => {
+      const apiError = err as { response?: { data?: { message?: string } } };
+      setDeleteError(apiError.response?.data?.message || t('Failed to delete RSS.'));
+    },
+  });
 
   const handleAdd = () => {
     setSelectedRss(null);
@@ -171,42 +208,23 @@ export default function DatasetRss() {
       return;
     }
 
-    startCloneTransition(async () => {
-      try {
-        const copiedPayload = {
-          title: selectedRss.title,
-          author: selectedRss.author,
-        };
+    const copiedPayload: Omit<DatasetRss, 'id' | 'dataSetId'> = {
+      title: selectedRss.title,
+      author: selectedRss.author,
+      titleColumnId: selectedRss.titleColumnId,
+      summaryColumnId: selectedRss.summaryColumnId,
+      contentColumnId: selectedRss.contentColumnId,
+      publishedDateColumnId: selectedRss.publishedDateColumnId,
+      sort: selectedRss.sort,
+      filter: selectedRss.filter,
+    };
 
-        await createDatasetRss(datasetId!, copiedPayload);
-
-        closeModal();
-        handleRefresh();
-      } catch (err) {
-        console.error('Failed to copy column:', err);
-      }
-    });
+    copyMutation.mutate(copiedPayload);
   };
 
   const confirmDelete = (items: DatasetRss[]) => {
     setDeleteError(null);
-    startDeleteTransition(async () => {
-      try {
-        for (const item of items) {
-          await deleteDatasetRss(datasetId!, item.id);
-        }
-
-        const newSelection = { ...rowSelection };
-        items.forEach((item) => delete newSelection[item.id.toString()]);
-        setRowSelection(newSelection);
-
-        closeModal();
-        handleRefresh();
-      } catch (err: unknown) {
-        const apiError = err as { response?: { data?: { message?: string } } };
-        setDeleteError(apiError.response?.data?.message || t('Failed to delete RSS.'));
-      }
-    });
+    deleteMutation.mutate(items);
   };
 
   const columns = getRssDefinitions({
@@ -235,14 +253,6 @@ export default function DatasetRss() {
       variant: 'danger' as const,
     },
   ];
-
-  const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
-  const error = isError && queryError instanceof Error ? queryError.message : '';
-  const existingNames = rssList.map((rss) => rss.title);
-
-  const getRowId = (row: DatasetRss) => {
-    return row.id.toString();
-  };
 
   const libraryTabs = useFilteredTabs('library');
 
@@ -341,7 +351,7 @@ export default function DatasetRss() {
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetching}
               rowSelection={rowSelection}
-              onRowSelectionChange={setRowSelection}
+              onRowSelectionChange={handleRowSelectionChange}
               bulkActions={bulkActions}
               onRefresh={handleRefresh}
               columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
@@ -360,14 +370,13 @@ export default function DatasetRss() {
           activeModal,
           closeModal,
           handleRefresh,
-          setRssList,
           deleteError,
-          isDeleting,
-          isCloning,
+          isDeleting: deleteMutation.isPending,
+          isCloning: copyMutation.isPending,
         }}
         selection={{
           selectedRss,
-          rssToDeleteId: itemsToDelete[0]?.id || null,
+          rssToDeleteId: itemsToDelete[0] ? itemsToDelete[0].id : null,
           itemsToDelete,
           existingNames,
         }}

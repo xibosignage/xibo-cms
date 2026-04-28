@@ -24,14 +24,20 @@
 namespace Xibo\Controller;
 
 use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Interfaces\PoolInterface;
+use Xibo\Event\DataConnectorSourceRequestEvent;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetColumnTypeFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DataTypeFactory;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class DataSetColumn
@@ -62,40 +68,18 @@ class DataSetColumn extends Base
      * @param DataTypeFactory $dataTypeFactory
      * @param PoolInterface $pool
      */
-    public function __construct($dataSetFactory, $dataSetColumnFactory, $dataSetColumnTypeFactory, $dataTypeFactory, $pool)
-    {
+    public function __construct(
+        $dataSetFactory,
+        $dataSetColumnFactory,
+        $dataSetColumnTypeFactory,
+        $dataTypeFactory,
+        $pool
+    ) {
         $this->dataSetFactory = $dataSetFactory;
         $this->dataSetColumnFactory = $dataSetColumnFactory;
         $this->dataSetColumnTypeFactory = $dataSetColumnTypeFactory;
         $this->dataTypeFactory = $dataTypeFactory;
         $this->pool = $pool;
-    }
-
-    /**
-     * Column Page
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function displayPage(Request $request, Response $response, $id)
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'dataset-column-page';
-        $this->getState()->setData([
-            'dataSet' => $dataSet
-        ]);
-
-        return $this->render($request, $response);
     }
 
     #[OA\Get(
@@ -119,9 +103,48 @@ class DataSetColumn extends Base
         required: false,
         schema: new OA\Schema(type: 'integer')
     )]
+    #[OA\Parameter(
+        name: 'keyword',
+        description: 'Filter by column heading, list content, or tooltip',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: [
+                'heading',
+                'dataType',
+                'dataSetColumnType',
+                'listContent',
+                'tooltip',
+                'columnOrder',
+                'isRequired',
+            ]
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
     #[OA\Response(
         response: 200,
         description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: '#/components/schemas/DataSetColumn')
@@ -132,13 +155,12 @@ class DataSetColumn extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws GeneralException
+     * @throws NotFoundException
      */
-    public function grid(Request $request, Response $response, $id)
+    public function grid(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
         $parsedRequestParams = $this->getSanitizer($request->getParams());
@@ -147,83 +169,80 @@ class DataSetColumn extends Base
             throw new AccessDeniedException();
         }
 
-        $dataSetColumns = $this->dataSetColumnFactory->query(
-            $this->gridRenderSort($parsedRequestParams),
-            $this->gridRenderFilter(
-                ['dataSetId' => $id, 'dataSetColumnId' => $parsedRequestParams->getInt('dataSetColumnId')],
-                $parsedRequestParams
-            )
+        $dataSetColumnsSortQuery = $this->gridRenderSort(
+            $parsedRequestParams,
+            $this->isJson($request),
+            'columnOrder'
         );
 
-        foreach ($dataSetColumns as $column) {
-            /* @var \Xibo\Entity\DataSetColumn $column */
+        $datasetsFilterQuery = $this->getDatasetsFilterQuery($id, $parsedRequestParams);
 
+        $dataSetColumns = $this->dataSetColumnFactory->query(
+            $dataSetColumnsSortQuery,
+            $datasetsFilterQuery
+        );
+
+        $userPermissions = $this->getUser()->getPermission($dataSet);
+
+        foreach ($dataSetColumns as $column) {
             $column->dataType = __($column->dataType);
             $column->dataSetColumnType = __($column->dataSetColumnType);
-
-            if ($this->isApi($request)) {
-                break;
-            }
-
-            if ($this->isJson($request)) {
-                continue;
-            }
-
-            $column->includeProperty('buttons');
-
-            if ($this->getUser()->featureEnabled('dataset.modify')) {
-                // Edit
-                $column->buttons[] = array(
-                    'id' => 'dataset_button_edit',
-                    'url' => $this->urlFor($request,'dataSet.column.edit.form', ['id' => $id, 'colId' => $column->dataSetColumnId]),
-                    'text' => __('Edit')
-                );
-
-                if ($this->getUser()->checkDeleteable($dataSet)) {
-                    // Delete
-                    $column->buttons[] = array(
-                        'id' => 'dataset_button_delete',
-                        'url' => $this->urlFor($request,'dataSet.column.delete.form', ['id' => $id, 'colId' => $column->dataSetColumnId]),
-                        'text' => __('Delete')
-                    );
-                }
-            }
+            $column->setUnmatchedProperty('userPermissions', $userPermissions);
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->setData($dataSetColumns);
-        $this->getState()->recordsTotal = $this->dataSetColumnFactory->countLast();
+        $recordsTotal = $this->dataSetColumnFactory->countLast();
 
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $recordsTotal)
+            ->withJson($dataSetColumns);
     }
 
+    #[OA\Get(
+        path: '/dataset/{id}/column/{colId}',
+        operationId: 'datasetColumnSearchById',
+        description: 'Get the DataSet column object specified by the provided datasetId and columnId',
+        summary: 'DataSet Column Search by ID',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'datasetId',
+        description: 'Numeric ID of the DataSet to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'datasetColumnId',
+        description: 'Numeric ID of the DataSet column to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DataSetColumn')
+    )]
     /**
-     * Add form
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @param int $id
+     * @param int $colId
+     * @return Response|ResponseInterface
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
-    public function addForm(Request $request, Response $response, $id)
+    public function searchById(Request $request, Response $response, int $id, int $colId): Response|ResponseInterface
     {
-        $dataSet = $this->dataSetFactory->getById($id);
+        $dataset = $this->dataSetFactory->getById($id, false);
+        $datasetColumn = $this->dataSetColumnFactory->getById($colId);
 
-        if (!$this->getUser()->checkEditable($dataSet)) {
-            throw new AccessDeniedException();
-        }
+        $datasetColumn->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($dataset));
 
-        $this->getState()->template = 'dataset-column-form-add';
-        $this->getState()->setData([
-            'dataSet' => $dataSet,
-            'dataTypes' => $this->dataTypeFactory->query(),
-            'dataSetColumnTypes' => $this->dataSetColumnTypeFactory->query(),
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson($datasetColumn);
     }
 
     #[OA\Post(
@@ -324,14 +343,14 @@ class DataSetColumn extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
-    public function add(Request $request, Response $response, $id)
+    public function add(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -357,7 +376,8 @@ class DataSetColumn extends Base
 
         if ($column->dataSetColumnTypeId == 3) {
             $this->pool->deleteItem('/dataset/cache/' . $dataSet->dataSetId);
-            $this->getLog()->debug('New remote column detected, clear cache for remote dataSet ID ' . $dataSet->dataSetId);
+            $this->getLog()->debug('New remote column detected, clear cache for remote dataSet ID '
+                . $dataSet->dataSetId);
         }
 
         // Assign the column to set the column order if necessary
@@ -380,37 +400,6 @@ class DataSetColumn extends Base
             'message' => sprintf(__('Added %s'), $column->heading),
             'id' => $column->dataSetColumnId,
             'data' => $column
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Edit Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @param $colId
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function editForm(Request $request, Response $response, $id, $colId)
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'dataset-column-form-edit';
-        $this->getState()->setData([
-            'dataSet' => $dataSet,
-            'dataSetColumn' => $this->dataSetColumnFactory->getById($colId),
-            'dataTypes' => $this->dataTypeFactory->query(),
-            'dataSetColumnTypes' => $this->dataSetColumnTypeFactory->query(),
         ]);
 
         return $this->render($request, $response);
@@ -522,14 +511,14 @@ class DataSetColumn extends Base
      * @param Response $response
      * @param $id
      * @param $colId
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
-    public function edit(Request $request, Response $response, $id, $colId)
+    public function edit(Request $request, Response $response, $id, $colId): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -557,12 +546,13 @@ class DataSetColumn extends Base
         if (substr($column->formula, 0, 1) === '$') {
             $column->showSort = 0;
         }
-        
+
         $column->save();
 
         if ($column->dataSetColumnTypeId == 3 && $column->hasPropertyChanged('remoteField')) {
             $this->pool->deleteItem('/dataset/cache/' . $dataSet->dataSetId);
-            $this->getLog()->debug('Edited remoteField detected, clear cache for remote dataSet ID ' . $dataSet->dataSetId);
+            $this->getLog()->debug('Edited remoteField detected, clear cache for remote dataSet ID '
+                . $dataSet->dataSetId);
         }
 
         $dataSet->notify();
@@ -572,35 +562,6 @@ class DataSetColumn extends Base
             'message' => sprintf(__('Edited %s'), $column->heading),
             'id' => $column->dataSetColumnId,
             'data' => $column
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Delete Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @param $colId
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function deleteForm(Request $request, Response $response, $id, $colId)
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        if (!$this->getUser()->checkDeleteable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'dataset-column-form-delete';
-        $this->getState()->setData([
-            'dataSet' => $dataSet,
-            'dataSetColumn' => $this->dataSetColumnFactory->getById($colId),
         ]);
 
         return $this->render($request, $response);
@@ -634,13 +595,13 @@ class DataSetColumn extends Base
      * @param Response $response
      * @param $id
      * @param $colId
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
      */
-    public function delete(Request $request, Response $response, $id, $colId)
+    public function delete(Request $request, Response $response, $id, $colId): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
 
@@ -659,5 +620,79 @@ class DataSetColumn extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * List of data types for dataset columns
+     * @param Request $request
+     * @param Response $response
+     * @return Response
+     * @throws AccessDeniedException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function getDataTypes(Request $request, Response $response): Response
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        if ($sanitizedParams->getInt('datasetId') <= 0) {
+            throw new InvalidArgumentException(__('Missing dataSetId'), 'dataSetId');
+        }
+
+        $dataSet = $this->dataSetFactory->getById($sanitizedParams->getInt('datasetId'));
+
+        if (!$this->getUser()->checkEditable($dataSet)) {
+            throw new AccessDeniedException();
+        }
+
+        $dataTypes = $this->dataTypeFactory->query();
+
+        return $response
+            ->withStatus(200)
+            ->withJson($dataTypes);
+    }
+
+    /**
+     * List of dataset column types
+     * @param Request $request
+     * @param Response $response
+     * @return Response
+     * @throws AccessDeniedException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function getDataSetColumnTypes(Request $request, Response $response): Response
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        if ($sanitizedParams->getInt('datasetId') <= 0) {
+            throw new InvalidArgumentException(__('Missing dataSetId'), 'dataSetId');
+        }
+
+        $dataSet = $this->dataSetFactory->getById($sanitizedParams->getInt('datasetId'));
+
+        if (!$this->getUser()->checkEditable($dataSet)) {
+            throw new AccessDeniedException();
+        }
+        $dataSetColumnTypes = $this->dataSetColumnTypeFactory->query();
+
+        return $response
+            ->withStatus(200)
+            ->withJson($dataSetColumnTypes);
+    }
+
+    /**
+     * Get the dataset column filters
+     * @param $id
+     * @param $parsedRequestParams
+     * @return array
+     */
+    private function getDatasetsFilterQuery($id, $parsedRequestParams): array
+    {
+        return $this->gridRenderFilter([
+            'dataSetId' => $id,
+            'dataSetColumnId' => $parsedRequestParams->getInt('dataSetColumnId'),
+            'keyword' => $parsedRequestParams->getString('keyword')
+        ], $parsedRequestParams);
     }
 }

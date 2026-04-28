@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -836,6 +836,23 @@ trait DisplayProfileConfigFields
                 if ($sanitizedParams->hasParam('screenShotRequestInterval')) {
                     $this->handleChangedSettings('screenShotRequestInterval', ($ownConfig) ? $displayProfile->getSetting('screenShotRequestInterval') : $display->getSetting('screenShotRequestInterval'), $sanitizedParams->getInt('screenShotRequestInterval'), $changedSettings);
                     $displayProfile->setSetting('screenShotRequestInterval', $sanitizedParams->getInt('screenShotRequestInterval'), $ownConfig, $config);
+                }
+
+                if ($sanitizedParams->hasParam('disableTimerManagement')) {
+                    $this->handleChangedSettings(
+                        'disableTimerManagement',
+                        ($ownConfig) ?
+                            $displayProfile->getSetting('disableTimerManagement') :
+                            $display->getSetting('disableTimerManagement'),
+                        $sanitizedParams->getCheckbox('disableTimerManagement'),
+                        $changedSettings,
+                    );
+                    $displayProfile->setSetting(
+                        'disableTimerManagement',
+                        $sanitizedParams->getCheckbox('disableTimerManagement'),
+                        $ownConfig,
+                        $config,
+                    );
                 }
 
                 if ($sanitizedParams->hasParam('timers')) {

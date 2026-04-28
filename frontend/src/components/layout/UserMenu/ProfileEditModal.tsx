@@ -334,7 +334,7 @@ export default function ProfileEditModal({ isOpen = true, onClose }: ProfileEdit
             label={t('Two Factor Authentication')}
             value={twoFactorType}
             onSelect={setTwoFactorType}
-            helper={t(
+            helpText={t(
               'Enable an option to provide a two factor authentication code to log into the CMS for added security.',
             )}
             options={[

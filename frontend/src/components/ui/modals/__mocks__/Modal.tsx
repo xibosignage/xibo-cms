@@ -25,7 +25,14 @@ import type Modal from '../Modal';
 
 type ModalProps = React.ComponentProps<typeof Modal>;
 
-export default function MockModal({ isOpen, title, children, actions, onClose }: ModalProps) {
+export default function MockModal({
+  isOpen = true,
+  title,
+  children,
+  actions,
+  onClose,
+  error,
+}: ModalProps) {
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e: KeyboardEvent) => {
@@ -39,6 +46,7 @@ export default function MockModal({ isOpen, title, children, actions, onClose }:
   return (
     <div role="dialog" aria-label={title}>
       <h1>{title}</h1>
+      {error && <p role="alert">{error}</p>}
       {children}
       <div>
         {actions?.map((action, i) => (

@@ -67,13 +67,13 @@ jobs:
 
       - name: Pull
         run: |
-          docker pull mysql:8
+          docker pull mysql:8.4
           docker pull ghcr.io/xibosignage/xibo-xmr:latest
           docker pull ghcr.io/xibosignage/xibo-cms:test-${{ github.event.issue.number }}
 
       - name: Run
         run: |
-          docker run --name cms-db -e MYSQL_RANDOM_ROOT_PASSWORD=yes -e MYSQL_DATABASE=cms -e MYSQL_USER=cms -e MYSQL_PASSWORD=jenkins -d mysql:8
+          docker run --name cms-db -e MYSQL_RANDOM_ROOT_PASSWORD=yes -e MYSQL_DATABASE=cms -e MYSQL_USER=cms -e MYSQL_PASSWORD=jenkins -d mysql:8.4
           docker run --name cms-xmr -d ghcr.io/xibosignage/xibo-xmr:latest
           docker run --name cms-web -e MYSQL_HOST=cms-db -e MYSQL_USER=cms -e MYSQL_PASSWORD=jenkins -e CMS_DEV_MODE=true -e XMR_HOST=cms-xmr -e CMS_USAGE_REPORT=false -e INSTALL_TYPE=ci -e MYSQL_BACKUP_ENABLED=false --link cms-db --link cms-xmr -d ghcr.io/xibosignage/xibo-cms:test-${{ github.event.issue.number }}
 

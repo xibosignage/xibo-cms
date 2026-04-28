@@ -22,7 +22,7 @@
 import type { AppRoute } from '@/config/appRoutes';
 import type { User } from '@/types/user';
 
-export const hasFeature = (user: User, featureKey: string): boolean => {
+export const hasFeature = (user: User | null, featureKey: string): boolean => {
   if (!user || !user.features) {
     return false;
   }

@@ -28,7 +28,6 @@
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import FolderActionModals from '../FolderActionModals';

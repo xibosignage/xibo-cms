@@ -19,13 +19,14 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { Filter, FilterX, Plus, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 
-import type { LayoutFilterInput } from './LayoutConfig';
+import type { LayoutFilterInput, ModalType } from './LayoutConfig';
 import { getBulkActions, getLayoutColumns, LAYOUT_INITIAL_FILTER_STATE } from './LayoutConfig';
 import LayoutPreviewer from './components/LayoutPreviewer';
 import { LayoutModals } from './components/LayoutsModal';
@@ -45,7 +46,6 @@ import { useFolderActions } from '@/hooks/useFolderActions';
 import { useOwner } from '@/hooks/useOwner';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
-import type { ModalType } from '@/pages/Library/Media/MediaConfig';
 import { fetchContextButtons } from '@/services/folderApi';
 import type { Layout } from '@/types/layout';
 
@@ -95,15 +95,25 @@ export default function Layouts() {
     folderId: canViewFolders ? homeFolderId : null,
   });
 
+  const location = useLocation();
+  const activeDisplayGroupId = location.state?.activeDisplayGroupId as number | undefined;
+
+  useEffect(() => {
+    if (!isHydrated || !activeDisplayGroupId) {
+      return;
+    }
+
+    setFilterInputs((prev) => ({ ...prev, activeDisplayGroupId }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }, [activeDisplayGroupId, isHydrated, setFilterInputs, setPagination]);
+
   const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [selectionCache, setSelectionCache] = useState<Record<string, Layout>>({});
   const [openFilter, setOpenFilter] = useState(false);
   const [showInfoPanel, setShowInfoPanel] = useState(false);
 
-  const [canAddToFolder, setCanAddToFolder] = useState(false);
   const [selectedFolderName, setSelectedFolderName] = useState(t('Root Folder'));
-
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
 
@@ -116,7 +126,6 @@ export default function Layouts() {
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
 
-  // Data fetching
   const {
     data: queryData,
     isFetching,
@@ -131,21 +140,22 @@ export default function Layouts() {
     enabled: isHydrated,
   });
 
-  // Computed values
+  const { data: folderPerms } = useQuery({
+    queryKey: ['folderPermissions', selectedFolderId],
+    queryFn: () => fetchContextButtons(selectedFolderId as number),
+    enabled: selectedFolderId !== null,
+    staleTime: 1000 * 60 * 5,
+  });
+
   const data = queryData?.rows;
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
-
-  const [layoutList, setLayoutList] = useState<Layout[]>([]);
-
-  useEffect(() => {
-    setLayoutList(data ?? []);
-  }, [data]);
+  const layoutList = data ?? [];
+  const canAddToFolder = folderPerms?.create || false;
 
   const folderActions = useFolderActions({
     onSuccess: (targetFolder) => {
       setFolderRefreshTrigger((prev) => prev + 1);
-
       if (targetFolder) {
         handleFolderChange({ id: targetFolder.id, text: targetFolder.text });
       } else {
@@ -154,61 +164,34 @@ export default function Layouts() {
     },
   });
 
-  useEffect(() => {
-    if (selectedFolderId === null) {
-      setCanAddToFolder(false);
-      return;
-    }
-
-    let active = true;
-
-    fetchContextButtons(selectedFolderId)
-      .then((perms) => {
-        if (active) {
-          setCanAddToFolder(perms.create || false);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to fetch folder permissions', err);
-        if (active) {
-          setCanAddToFolder(false);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [selectedFolderId]);
-
-  useEffect(() => {
-    if (!layoutList || layoutList.length === 0) {
-      return;
-    }
-
-    setSelectionCache((prev) => {
-      const next = { ...prev };
-      let hasChanges = false;
-
-      layoutList.forEach((item) => {
-        const id = item.layoutId.toString();
-        if (rowSelection[id] && next[id] !== item) {
-          next[id] = item;
-          hasChanges = true;
-        }
-      });
-
-      return hasChanges ? next : prev;
-    });
-  }, [layoutList, rowSelection]);
-
-  const selectedLayout = layoutList.find((m) => m.layoutId === selectedLayoutId) ?? null;
-  const existingNames = layoutList.map((m) => m.name || m.layout).filter(Boolean);
-  const ownerId = selectedLayout?.ownerId ? Number(selectedLayout.ownerId) : null;
-  const { owner, loading } = useOwner({ ownerId });
-
   const getRowId = (row: Layout) => {
     return row.layoutId.toString();
   };
+
+  const handleRowSelectionChange = (
+    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
+  ) => {
+    const newSelection =
+      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
+
+    setRowSelection(newSelection);
+
+    setSelectionCache((prev) => {
+      const next = { ...prev };
+      layoutList.forEach((item) => {
+        const id = getRowId(item);
+        if (newSelection[id]) {
+          next[id] = item;
+        }
+      });
+      return next;
+    });
+  };
+
+  const selectedLayout = layoutList.find((m) => m.layoutId === selectedLayoutId) ?? null;
+  const existingNames = layoutList.map((m) => m.layout).filter(Boolean);
+  const ownerId = selectedLayout?.ownerId ? Number(selectedLayout.ownerId) : null;
+  const { owner, loading } = useOwner({ ownerId });
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['layout'] });
@@ -314,6 +297,11 @@ export default function Layouts() {
     openModal('enableStats');
   };
 
+  const openScheduleModal = (layout: Layout) => {
+    setSelectedLayoutId(layout.layoutId);
+    openModal('schedule');
+  };
+
   const columns = getLayoutColumns({
     t,
     onDelete: handleDelete,
@@ -352,6 +340,7 @@ export default function Layouts() {
     openTemplateModal,
     openRetireModal,
     openEnableStatsModal,
+    openScheduleModal,
   });
 
   const getAllSelectedItems = (): Layout[] => {
@@ -368,11 +357,13 @@ export default function Layouts() {
       setDeleteError(null);
       openModal('delete');
     },
-    onMove: () => {
-      const allItems = getAllSelectedItems();
-      setItemsToMove(allItems);
-      openModal('move');
-    },
+    onMove: canViewFolders
+      ? () => {
+          const allItems = getAllSelectedItems();
+          setItemsToMove(allItems);
+          openModal('move');
+        }
+      : undefined,
     onShare: () => {
       const allItems = getAllSelectedItems();
       const ids = allItems.map((i) => i.layoutId);
@@ -487,7 +478,7 @@ export default function Layouts() {
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetching}
               rowSelection={rowSelection}
-              onRowSelectionChange={setRowSelection}
+              onRowSelectionChange={handleRowSelectionChange}
               onRefresh={handleRefresh}
               columnPinning={{
                 left: ['tableSelection'],
@@ -507,7 +498,6 @@ export default function Layouts() {
           activeModal,
           closeModal,
           handleRefresh,
-          setLayoutList,
           deleteError,
           isDeleting,
           isCloning,
@@ -546,7 +536,7 @@ export default function Layouts() {
       />
       <LayoutPreviewer
         layoutId={previewItem && previewItem?.layoutId}
-        name={selectedLayout?.name}
+        name={selectedLayout?.layout}
         onClose={() => {
           setPreviewItem(null);
         }}

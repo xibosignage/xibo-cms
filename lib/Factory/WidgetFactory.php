@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -26,6 +26,7 @@ namespace Xibo\Factory;
 use Xibo\Entity\Module;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
+use Xibo\Entity\WidgetHistory;
 use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -520,5 +521,21 @@ class WidgetFactory extends BaseFactory
         $this->getLog()->debug('getTemplatesForWidgets: ' . count($templates) . ' templates returned.');
 
         return $templates;
+    }
+
+    /**
+     * @param int $widgetId
+     * @return WidgetHistory[]
+     */
+    public function getWidgetHistoryById(int $widgetId): array
+    {
+        $entries = [];
+        foreach ($this->getStore()->select('SELECT * FROM `widgethistory` WHERE `widgetId` = :widgetId', [
+            'widgetId' => $widgetId
+        ]) as $row) {
+            $entries[] = (new WidgetHistory())->hydrate($row);
+        }
+
+        return $entries;
     }
 }

@@ -27,8 +27,10 @@ import DeletePlaylistModal from './DeletePlaylistModal';
 
 import FolderActionModals from '@/components/ui/FolderActionModals';
 import MoveModal from '@/components/ui/modals/MoveModal';
+import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
 import type { useFolderActions } from '@/hooks/useFolderActions';
+import { EventTypeId } from '@/types/event';
 import type { Playlist } from '@/types/playlist';
 
 interface PlaylistModalsProps {
@@ -36,7 +38,6 @@ interface PlaylistModalsProps {
     activeModal: string | null;
     closeModal: () => void;
     handleRefresh: () => void;
-    setPlaylistList: React.Dispatch<React.SetStateAction<Playlist[]>>;
     deleteError: string | null;
     isDeleting: boolean;
     isCloning: boolean;
@@ -76,14 +77,7 @@ export function PlaylistModals({
             actions.closeModal();
           }}
           data={selection.selectedPlaylist}
-          onSave={(savedPlaylist) => {
-            if (selection.selectedPlaylistId) {
-              actions.setPlaylistList((prev) =>
-                prev.map((m) => (m.playlistId === savedPlaylist.playlistId ? savedPlaylist : m)),
-              );
-            } else {
-              actions.setPlaylistList((prev) => [savedPlaylist, ...prev]);
-            }
+          onSave={() => {
             actions.handleRefresh();
           }}
         />
@@ -133,6 +127,20 @@ export function PlaylistModals({
           onConfirm={handlers.handleConfirmMove}
           items={selection.itemsToMove}
           entityLabel={t('Playlist')}
+        />
+      )}
+
+      {isModalOpen('schedule') && selection.selectedPlaylist && (
+        <ScheduleEventModal
+          isOpen
+          onClose={() => {
+            actions.closeModal();
+            actions.handleRefresh();
+          }}
+          mode="schedule"
+          eventTypeId={EventTypeId.Playlist}
+          contentId={selection.selectedPlaylist.playlistId}
+          contentName={selection.selectedPlaylist.name}
         />
       )}
     </>

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,7 +23,7 @@
 
 namespace Xibo\Helper;
 
-use Slim\Http\ServerRequest;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Class HttpsDetect
@@ -60,10 +60,10 @@ class HttpsDetect
     /**
      * Get the base URL for the instance
      *  this should give us the CMS URL including alias and file
-     * @param \Slim\Http\ServerRequest|null $request
+     * @param \Psr\Http\Message\ServerRequestInterface|null $request
      * @return string
      */
-    public function getBaseUrl(?ServerRequest $request = null): string
+    public function getBaseUrl(?ServerRequestInterface $request = null): string
     {
         // Check REQUEST_URI is set. IIS doesn't set it, so we need to build it
         // Attribution:
@@ -78,23 +78,21 @@ class HttpsDetect
         }
         // End Code Snippet
 
-        // The request URL should be everything after the host, i.e:
-        // /xmds.php?file=
-        // /xibo/xmds.php?file=
-        // /playersoftware
-        // /xibo/playersoftware
-        $requestUri = explode('?', htmlentities($_SERVER['REQUEST_URI'], ENT_QUOTES, 'UTF-8'));
-        $baseUrl = $this->getRootUrl() . '/' . ltrim($requestUri[0], '/');
+        // dirname(SCRIPT_NAME) gives the full web-accessible path to the entry file,
+        // which includes any CMS subfolder (e.g. /xibo/api/index.php → /xibo/api).
+        $scriptDir = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/');
 
-        // We use the path, if provided, to remove any known path information
-        // i.e. if we're running in a sub-folder we might be on /xibo/playersoftware
-        // in which case we want to remove /playersoftware to get to /xibo which is the base path.
-        $path = $request?->getUri()?->getPath() ?? '';
-        if (!empty($path)) {
-            $baseUrl = str_replace($path, '', $baseUrl);
+        // Non-web entry points (/api, /json, /preview) sit in a subdirectory of the
+        // CMS web root. Strip that segment so we return the true CMS root URL.
+        $entryPoint = $request?->getAttribute('_entryPoint') ?? '';
+        if (in_array(strtolower($entryPoint), ['api', 'json', 'preview'], true)) {
+            $suffix = '/' . strtolower($entryPoint);
+            if (str_ends_with($scriptDir, $suffix)) {
+                $scriptDir = rtrim(substr($scriptDir, 0, -strlen($suffix)), '/');
+            }
         }
 
-        return $baseUrl;
+        return $this->getRootUrl() . $scriptDir;
     }
 
     /**
@@ -162,7 +160,7 @@ class HttpsDetect
         $whiteListLoadBalancers = $config->getSetting('WHITELIST_LOAD_BALANCERS');
         $originIp = $_SERVER['REMOTE_ADDR'] ?? '';
         $forwardedProtoHttps = (
-            strtolower($request->getHeaderLine('HTTP_X_FORWARDED_PROTO')) === 'https'
+            strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'
             && $originIp != ''
             && (
                 $whiteListLoadBalancers === '' || in_array($originIp, explode(',', $whiteListLoadBalancers))

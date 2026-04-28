@@ -21,7 +21,7 @@
 
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Search, X, ChevronDown, Loader2, Check } from 'lucide-react';
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { fetchMedia } from '@/services/mediaApi';
@@ -106,9 +106,7 @@ export default function MediaInput({
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const mediaItems = useMemo(() => {
-    return data?.pages.flatMap((page) => page.rows) || [];
-  }, [data?.pages]);
+  const mediaItems = data?.pages.flatMap((page) => page.rows) ?? [];
 
   useEffect(() => {
     if (mediaItems.length > 0) {

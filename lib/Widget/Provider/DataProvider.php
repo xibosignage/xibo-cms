@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -28,6 +28,7 @@ use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Module;
 use Xibo\Entity\Widget;
 use Xibo\Factory\MediaFactory;
+use Xibo\Helper\Guzzle\SafeClient;
 use Xibo\Helper\SanitizerService;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
@@ -425,7 +426,7 @@ class DataProvider implements DataProviderInterface
     public function getGuzzleClient(array $requestOptions = []): Client
     {
         if ($this->client === null) {
-            $this->client = new Client(array_merge($this->guzzleProxy, $requestOptions));
+            $this->client = SafeClient::getSafeClient(array_merge($this->guzzleProxy, $requestOptions));
         }
 
         return $this->client;

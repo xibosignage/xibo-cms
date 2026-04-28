@@ -1,6 +1,6 @@
 {#
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -34,6 +34,13 @@
     </head>
     <body>
         <script type="text/javascript" nonce="{{ cspNonce }}">
+          window.addEventListener('message', function(event) {
+            if (event.data.type === 'init') {
+              console.log('Starting script');
+              xiboDC.initialise(event.data.id, event.data.params.data);
+            }
+          });
+
           window.xiboDC = (function() {
             'use strict';
 
@@ -64,10 +71,12 @@
                */
               setData: function(dataKey, data, {done, error} = {}) {
                 // Persist the data we've been given
-                window.parent.receiveData('set', {
+                window.parent.postMessage({
+                  type: 'set',
                   dataKey: dataKey,
                   data: data
-                });
+                }, '*');
+
                 if (typeof (done) == 'function') {
                   done(true);
                 }
@@ -79,7 +88,7 @@
                */
               notifyHost: function(dataKey) {
                 // Update the table.
-                window.parent.receiveData('notify', dataKey);
+                window.parent.postMessage({type: 'notify', dataKey: dataKey}, '*');
               },
 
               /**
@@ -94,7 +103,23 @@
                * @param  {callback} [options.error]
                */
               makeRequest: function(path, {type, headers, data, done, error} = {}) {
-                window.parent.makeRequest(path, {type, headers, data, done, error});
+                console.log('Request subject to CORS when tested via the CMS.');
+
+                $.ajax(path, {
+                  data: data,
+                  method: type,
+                  headers: headers,
+                  success: function(data, textStatus, jqXHR) {
+                    if (typeof(done) == 'function') {
+                      done(jqXHR.status, data);
+                    }
+                  },
+                  error: function(jqXHR, textStatus, errorThrown) {
+                    if (typeof(done) == 'function') {
+                      error(jqXHR.status, jqXHR.responseText);
+                    }
+                  }
+                });
               },
 
               /**
@@ -104,14 +129,15 @@
                * @param {int} ttl A TTL in seconds
                */
               setCriteria: function(metric, value, ttl) {
-                window.parent.receiveData('criteria', {
+                window.parent.postMessage({
+                  type: 'criteria',
                   dataKey: metric,
                   data: {
                     metric: metric,
                     value: value || null,
                     ttl: ttl,
                   }
-                });
+                }, '*');
               },
             }
             return mainLib;
@@ -122,13 +148,13 @@
             const log = console.log;
             console.log = function () {
               log.apply(this, Array.prototype.slice.call(arguments));
-              window.parent.receiveData('log', Array.prototype.slice.call(arguments));
+              window.parent.postMessage({type: 'log', data: Array.prototype.slice.call(arguments)}, '*');
             };
           }());
 
           // Say when we're loaded.
           window.onload = function () {
-            window.parent.receiveData('loaded', null);
+            window.parent.postMessage({type: 'loaded'}, '*');
           }
         </script>
         <script type="text/javascript" nonce="{{ cspNonce }}">

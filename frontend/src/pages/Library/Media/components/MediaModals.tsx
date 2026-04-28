@@ -35,9 +35,11 @@ import FolderActionModals from '@/components/ui/FolderActionModals';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
 import Modal from '@/components/ui/modals/Modal';
 import MoveModal from '@/components/ui/modals/MoveModal';
+import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
 import type { useFolderActions } from '@/hooks/useFolderActions';
 import type { UploadItem } from '@/hooks/useUploadQueue';
+import { EventTypeId } from '@/types/event';
 import type { Media } from '@/types/media';
 import type { Tag } from '@/types/tag';
 import type { User } from '@/types/user';
@@ -47,7 +49,6 @@ interface MediaModalsProps {
     activeModal: string | null;
     closeModal: () => void;
     handleRefresh: () => void;
-    setMediaList: React.Dispatch<React.SetStateAction<Media[]>>;
     deleteError: string | null;
     isDeleting: boolean;
     isCloning: boolean;
@@ -172,10 +173,7 @@ export function MediaModals({
           {isModalOpen('edit') && (
             <EditMediaModal
               onClose={actions.closeModal}
-              onSave={(updatedMedia) => {
-                actions.setMediaList((prev) =>
-                  prev.map((m) => (m.mediaId === updatedMedia.mediaId ? updatedMedia : m)),
-                );
+              onSave={() => {
                 actions.handleRefresh();
               }}
               data={selection.selectedMedia}
@@ -186,15 +184,23 @@ export function MediaModals({
             <ReplaceFileModal
               onClose={actions.closeModal}
               data={selection.selectedMedia}
-              onSave={(updatedMedia) => {
-                actions.setMediaList((prev) =>
-                  prev.map((m) => (m.mediaId === updatedMedia.mediaId ? updatedMedia : m)),
-                );
+              onSave={() => {
                 actions.handleRefresh();
               }}
             />
           )}
         </>
+      )}
+
+      {isModalOpen('schedule') && (
+        <ScheduleEventModal
+          isOpen
+          onClose={actions.closeModal}
+          mode="schedule"
+          eventTypeId={EventTypeId.Media}
+          contentId={selection.selectedMedia?.mediaId}
+          contentName={selection.selectedMedia?.name}
+        />
       )}
 
       {upload.isOpen && (

@@ -19,10 +19,10 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { Plus, Search, Slash, Table } from 'lucide-react';
-import { useState, useTransition, useEffect, useMemo } from 'react';
+import { Plus, Search, Slash, Table, Filter, FilterX } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 
@@ -33,6 +33,7 @@ import { DatasetDataModals } from './components/DatasetDataModals';
 import { useDatasetData } from './hooks/useDatasetData';
 
 import Button from '@/components/ui/Button';
+import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
@@ -61,7 +62,10 @@ export default function DatasetData() {
     columnVisibility,
     setColumnVisibility,
     globalFilter,
+    debouncedFilter,
     setGlobalFilter,
+    filterInputs,
+    setFilterInputs,
     isHydrated,
   } = useTableState<Record<string, string>>(`dataset_data_${datasetId}`, {
     pagination: { pageIndex: 0, pageSize: 10 },
@@ -73,15 +77,13 @@ export default function DatasetData() {
     folderId: null,
   });
 
+  const [openFilter, setOpenFilter] = useState(false);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [selectionCache, setSelectionCache] = useState<Record<string, DynamicRowData>>({});
   const [itemsToDelete, setItemsToDelete] = useState<DynamicRowData[]>([]);
 
   const [activeModal, setActiveModal] = useState<DataModalType>(null);
   const [selectedRow, setSelectedRow] = useState<DynamicRowData | null>(null);
-
-  const [isCloning, startCloneTransition] = useTransition();
-  const [isDeleting, startDeleteTransition] = useTransition();
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const { data: dataset } = useQuery({
@@ -93,9 +95,14 @@ export default function DatasetData() {
   const { data: columnsData, isFetching: isFetchingColumns } = useDatasetColumnsData({
     datasetId: datasetId!,
     pagination: { pageIndex: 0, pageSize: 100 },
+    filter: '',
     sorting: [],
     enabled: isHydrated,
   });
+
+  const activeColumnFilters = Object.fromEntries(
+    Object.entries(filterInputs).filter(([, v]) => v !== ''),
+  );
 
   const {
     data: queryData,
@@ -105,94 +112,141 @@ export default function DatasetData() {
   } = useDatasetData({
     datasetId: datasetId!,
     pagination,
+    filter: debouncedFilter,
     sorting,
+    columnFilters: Object.keys(activeColumnFilters).length > 0 ? activeColumnFilters : undefined,
     enabled: isHydrated && !!columnsData,
   });
 
-  const columnsSchema = useMemo(() => columnsData?.rows || [], [columnsData?.rows]);
-  const rowData = useMemo(() => queryData?.rows || [], [queryData?.rows]);
+  const columnsSchema = columnsData?.rows || [];
+  const rowData = queryData?.rows || [];
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
+
+  const filterOptions = columnsSchema
+    .filter((col) => col.showFilter)
+    .sort((a, b) => (a.columnOrder || 0) - (b.columnOrder || 0))
+    .map((col) => {
+      const listOptions = col.listContent
+        ? col.listContent
+            .split(',')
+            .map((v) => v.trim())
+            .filter(Boolean)
+        : [];
+
+      if (listOptions.length > 0) {
+        return {
+          label: col.heading,
+          name: col.heading,
+          type: 'select' as const,
+          options: listOptions.map((opt) => ({ label: opt, value: opt })),
+        };
+      }
+
+      return {
+        label: col.heading,
+        name: col.heading,
+        type: 'text' as const,
+        placeholder: t('Filter by {{heading}}', { heading: col.heading }),
+      };
+    });
+
+  const handleResetFilters = () => {
+    setFilterInputs({});
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
   const error = isError && queryError instanceof Error ? queryError.message : '';
   const isLoading = !isHydrated || isFetchingColumns;
 
-  useEffect(() => {
-    if (!rowData || rowData.length === 0) {
-      return;
-    }
+  const getRowId = (row: DynamicRowData) => {
+    const id = row.id ?? row.datasetDataId;
+    return id !== undefined && id !== null ? String(id) : '';
+  };
+
+  const handleRowSelectionChange = (
+    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
+  ) => {
+    const newSelection =
+      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
+
+    setRowSelection(newSelection);
 
     setSelectionCache((prev) => {
       const next = { ...prev };
-      let hasChanges = false;
-
       rowData.forEach((item) => {
-        const id = String(item.id || item.datasetDataId);
-        if (id && rowSelection[id] && next[id] !== item) {
+        const id = getRowId(item);
+        if (id && newSelection[id]) {
           next[id] = item;
-          hasChanges = true;
         }
       });
-
-      return hasChanges ? next : prev;
+      return next;
     });
-  }, [rowData, rowSelection]);
+  };
 
   const closeModal = () => {
     setActiveModal(null);
     setSelectedRow(null);
     setItemsToDelete([]);
+    setDeleteError(null);
   };
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['datasetData', datasetId] });
   };
 
+  const copyMutation = useMutation({
+    mutationFn: async (rowToCopy: Record<string, DatasetRowValue>) => {
+      return await createDatasetRow(datasetId!, rowToCopy);
+    },
+    onSuccess: () => {
+      closeModal();
+      handleRefresh();
+    },
+    onError: (err) => {
+      console.error('Failed to duplicate row:', err);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (items: DynamicRowData[]) => {
+      for (const item of items) {
+        const rowId = getRowId(item);
+        if (rowId) await deleteDatasetRow(datasetId!, rowId);
+      }
+      return items;
+    },
+    onSuccess: (deletedItems) => {
+      const newSelection = { ...rowSelection };
+      deletedItems.forEach((item) => {
+        const rowId = getRowId(item);
+        if (rowId) delete newSelection[rowId];
+      });
+      setRowSelection(newSelection);
+
+      closeModal();
+      handleRefresh();
+    },
+    onError: (err: unknown) => {
+      const apiError = err as { response?: { data?: { message?: string } } };
+      setDeleteError(apiError.response?.data?.message || t('Failed to delete rows.'));
+    },
+  });
+
   const handleConfirmCopy = () => {
-    if (!selectedRow) {
-      return;
-    }
+    if (!selectedRow) return;
 
-    startCloneTransition(async () => {
-      try {
-        const rowToCopy: Record<string, DatasetRowValue> = {};
-        columnsSchema.forEach((col) => {
-          if (col.dataSetColumnTypeId === 1) {
-            const columnId = String(col.dataSetColumnId);
-            rowToCopy[columnId] = selectedRow[col.heading] ?? selectedRow[columnId] ?? '';
-          }
-        });
-        await createDatasetRow(datasetId!, rowToCopy);
-
-        closeModal();
-        handleRefresh();
-      } catch (err) {
-        console.error('Failed to duplicate row:', err);
+    const rowToCopy: Record<string, DatasetRowValue> = {};
+    columnsSchema.forEach((col) => {
+      if (col.dataSetColumnTypeId === 1) {
+        const columnId = String(col.dataSetColumnId);
+        rowToCopy[columnId] = selectedRow[col.heading] ?? selectedRow[columnId] ?? '';
       }
     });
+
+    copyMutation.mutate(rowToCopy);
   };
 
   const confirmDelete = (items: DynamicRowData[]) => {
-    setDeleteError(null);
-    startDeleteTransition(async () => {
-      try {
-        for (const item of items) {
-          const rowId = String(item.id || item.datasetDataId);
-          if (rowId) await deleteDatasetRow(datasetId!, rowId);
-        }
-
-        const newSelection = { ...rowSelection };
-        items.forEach((item) => {
-          const rowId = String(item.id || item.datasetDataId);
-          if (rowId) delete newSelection[rowId];
-        });
-        setRowSelection(newSelection);
-
-        closeModal();
-        handleRefresh();
-      } catch (err: unknown) {
-        const apiError = err as { response?: { data?: { message?: string } } };
-        setDeleteError(apiError.response?.data?.message || t('Failed to delete rows.'));
-      }
-    });
+    deleteMutation.mutate(items);
   };
 
   const tableColumns = getDynamicDataColumns(columnsSchema, {
@@ -207,7 +261,7 @@ export default function DatasetData() {
       setActiveModal('copy');
     },
     onDelete: (id) => {
-      const row = rowData.find((r) => String(r.id) === String(id));
+      const row = rowData.find((r) => getRowId(r) === String(id));
       if (row) {
         setItemsToDelete([row]);
         setDeleteError(null);
@@ -255,7 +309,7 @@ export default function DatasetData() {
             <Button
               variant="secondary"
               className="font-semibold"
-              onClick={() => navigate(`/library/datasets/${datasetId}/columns`)}
+              onClick={() => navigate(`/library/datasets/${datasetId}/column`)}
               leftIcon={Table}
             >
               {t('View Columns')}
@@ -296,8 +350,29 @@ export default function DatasetData() {
                 className="py-2 px-3 pl-10 block h-11.25 bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50"
               />
             </div>
+            {filterOptions.length > 0 && (
+              <Button
+                leftIcon={!openFilter ? Filter : FilterX}
+                variant="secondary"
+                onClick={() => setOpenFilter((prev) => !prev)}
+                removeTextOnMobile
+              >
+                {t('Filters')}
+              </Button>
+            )}
           </div>
         </div>
+
+        <FilterInputs
+          onChange={(name, value) => {
+            setFilterInputs((prev) => ({ ...prev, [name]: value as string }));
+            setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+          }}
+          isOpen={openFilter}
+          values={filterInputs}
+          options={filterOptions}
+          onReset={handleResetFilters}
+        />
 
         {error && (
           <div
@@ -320,7 +395,7 @@ export default function DatasetData() {
               </p>
               <Button
                 variant="primary"
-                onClick={() => navigate(`/library/datasets/${datasetId}/columns`)}
+                onClick={() => navigate(`/library/datasets/${datasetId}/column`)}
               >
                 {t('Configure Columns')}
               </Button>
@@ -338,14 +413,14 @@ export default function DatasetData() {
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetchingData}
               rowSelection={rowSelection}
-              onRowSelectionChange={setRowSelection}
+              onRowSelectionChange={handleRowSelectionChange}
               bulkActions={bulkActions}
               onRefresh={handleRefresh}
               columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
               columnVisibility={columnVisibility}
               onColumnVisibilityChange={setColumnVisibility}
               viewMode={null}
-              getRowId={(row) => String(row.id || Math.random())}
+              getRowId={getRowId}
             />
           )}
         </div>
@@ -358,17 +433,14 @@ export default function DatasetData() {
           activeModal,
           closeModal,
           handleRefresh,
-          isCloning,
-          isDeleting,
+          isCloning: copyMutation.isPending,
+          isDeleting: deleteMutation.isPending,
           deleteError,
         }}
         selection={{
           selectedData: selectedRow,
           itemsToDelete,
-          rowToDeleteId:
-            itemsToDelete.length > 0
-              ? String(itemsToDelete[0]?.id ?? itemsToDelete[0]?.datasetDataId ?? '')
-              : null,
+          rowToDeleteId: itemsToDelete[0] ? getRowId(itemsToDelete[0]) : null,
         }}
         handlers={{
           handleConfirmCopy,

@@ -186,7 +186,11 @@ export function renderSidebar({
 }
 
 export function getChevronButton(labelText: string) {
-  const label = screen.getByText(labelText);
+  // getAllByText handles cases where a label also appears as a sublink text (e.g. "Displays").
+  // The group-header span is inside a .flex.cursor-pointer div; sublink anchors are not.
+  const labels = screen.getAllByText(labelText);
+  const label = labels.find((el) => el.closest('.flex.cursor-pointer') !== null);
+  if (!label) throw new Error(`No chevron button found for "${labelText}"`);
   const sidebarItemDiv = label.closest('.flex.cursor-pointer')!;
   return sidebarItemDiv.querySelector('button')!;
 }

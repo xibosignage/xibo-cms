@@ -28,7 +28,6 @@ interface SessionModalsProps {
     activeModal: string | null;
     closeModal: () => void;
     handleRefresh: () => void;
-    setSessionList: React.Dispatch<React.SetStateAction<Session[]>>;
     logoutError: string | null;
     isLoggingOut: boolean;
   };

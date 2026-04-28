@@ -22,7 +22,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { Filter, FilterX } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { ModalType } from './SessionsConfig';
@@ -101,45 +101,35 @@ export default function Sessions() {
     enabled: isHydrated,
   });
 
-  // Computed values
-  const data = queryData?.rows;
+  const sessionList = queryData?.rows ?? [];
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
-
-  const [sessionList, setSessionList] = useState<Session[]>([]);
-
-  useEffect(() => {
-    setSessionList(data ?? []);
-  }, [data]);
-
-  // Update the selected cache when data loads or selection changes
-  useEffect(() => {
-    if (!sessionList || sessionList.length === 0) {
-      return;
-    }
-
-    setSelectionCache((prev) => {
-      const next = { ...prev };
-      let hasChanges = false;
-
-      sessionList.forEach((item: Session) => {
-        const id = item.userId.toString();
-
-        if (rowSelection[id] && next[id] !== item) {
-          next[id] = item;
-          hasChanges = true;
-        }
-      });
-
-      return hasChanges ? next : prev;
-    });
-  }, [sessionList, rowSelection]);
 
   const getRowId = (row: Session) => {
     return row.expiresAt.toString();
   };
 
-  // Event handlers
+  const handleRowSelectionChange = (
+    updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),
+  ) => {
+    const newSelection =
+      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
+
+    setRowSelection(newSelection);
+
+    setSelectionCache((prev) => {
+      const next = { ...prev };
+      sessionList.forEach((item: Session) => {
+        const id = getRowId(item);
+
+        if (newSelection[id]) {
+          next[id] = item;
+        }
+      });
+      return next;
+    });
+  };
+
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['session'] });
   };
@@ -247,7 +237,7 @@ export default function Sessions() {
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetching}
               rowSelection={rowSelection}
-              onRowSelectionChange={setRowSelection}
+              onRowSelectionChange={handleRowSelectionChange}
               onRefresh={handleRefresh}
               enableSelection={false} // remove this for bulk session logout
               columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
@@ -266,7 +256,6 @@ export default function Sessions() {
           activeModal,
           closeModal,
           handleRefresh,
-          setSessionList,
           logoutError,
           isLoggingOut,
         }}

@@ -19,15 +19,15 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { X, FolderInput, UserPlus2, Info } from 'lucide-react';
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import {FolderInput, Info, UserPlus2, X} from 'lucide-react';
+import {useState} from 'react';
+import {useTranslation} from 'react-i18next';
 
-import { LayoutInfoPanel } from './LayoutInfoPannel';
+import {LayoutInfoPanel} from './LayoutInfoPannel';
 
-import { useKeydown } from '@/hooks/useKeydown';
-import { useOwner } from '@/hooks/useOwner';
-import type { Layout } from '@/types/layout';
+import {useKeydown} from '@/hooks/useKeydown';
+import {useOwner} from '@/hooks/useOwner';
+import type {Layout} from '@/types/layout';
 
 interface LayoutPreviewerProps {
   layoutId: number | null;
@@ -101,8 +101,8 @@ export default function LayoutPreviewer({
       {/* Preview */}
       <div className="flex flex-1 min-h-0">
         <div className="flex-1 w-full p-4 flex justify-center items-center overflow-hidden min-h-0">
-          <iframe
-            src={`/layout/preview/${layoutId}`}
+          <iframe sandbox="allow-scripts"
+            src={layoutData?.previewUrl ?? `/layout/preview/${layoutId}`}
             title={`Layout ${layoutId}`}
             className="w-full h-full min-h-125 rounded shadow-md border-0"
           />

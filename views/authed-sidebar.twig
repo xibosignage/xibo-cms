@@ -3,7 +3,7 @@
         <li class="sidebar-main"><a href="{{ url_for("home") }}">{% trans "Dashboard" %}</a></li>
 
         {% if currentUser.featureEnabled("schedule.view") %}
-            <li class="sidebar-list"><a href="{{ url_for("schedule.view") }}">{% trans "Schedule" %}</a></li>
+            <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/schedule/events">{% trans "Schedule" %}</a></li>
         {% endif %}
 
         {% if currentUser.featureEnabled("daypart.view") %}
@@ -14,7 +14,7 @@
         {% if countViewable > 0 %}
             <li class="sidebar-title"><a>{% trans "Design" %}</a></li>
             {% if currentUser.featureEnabled("campaign.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("campaign.view") }}">{% trans "Campaigns" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/design/campaign">{% trans "Campaigns" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("layout.view") %}
@@ -54,11 +54,11 @@
         {% if countViewable > 0 %}
             <li class="sidebar-title"><a>{% trans "Displays" %}</a></li>
             {% if currentUser.featureEnabled("displays.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("display.view") }}">{% trans "Displays" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/displays/displays">{% trans "Displays" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("displaygroup.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("displaygroup.view") }}">{% trans "Display Groups" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/displays/display-groups">{% trans "Display Groups" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("display.syncView") %}
@@ -66,7 +66,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("displayprofile.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("displayprofile.view") }}">{% trans "Display Settings" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/displays/settings">{% trans "Display Settings" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("playersoftware.view") %}
@@ -84,7 +84,8 @@
             {% set userMenuViewable = false %}
         {% endif %}
 
-        {% set countViewable = currentUser.featureEnabledCount(["usergroup.view", "module.view", "transition.view", "task.view"]) %}
+        {% set countViewable = currentUser.featureEnabledCount(["usergroup.view", "module.view", "transition.view", "task.view", "tag.view", "font.view"]) %}
+        
         {% if countViewable > 0 or userMenuViewable %}
             <li class="sidebar-title"><a>{% trans "Administration" %}</a></li>
 

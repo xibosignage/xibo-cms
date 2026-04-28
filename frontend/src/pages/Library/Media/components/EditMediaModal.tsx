@@ -279,7 +279,7 @@ export default function EditMediaModal({
             onSelect={(value) => {
               setDraft((prev) => ({ ...prev, enableStat: value }));
             }}
-            helper={t(
+            helpText={t(
               `Enable the collection of Proof of Play statistics for this Media Item. Ensure that 'Enable Stats Collection' is set to 'On' in the Display Settings.`,
             )}
             error={formErrors.enableStat}

@@ -29,7 +29,6 @@ interface ResolutionModalsProps {
     activeModal: string | null;
     closeModal: () => void;
     handleRefresh: () => void;
-    setResolutionList: React.Dispatch<React.SetStateAction<Resolution[]>>;
     deleteError: string | null;
     isDeleting: boolean;
   };
@@ -58,16 +57,7 @@ export function ResolutionModals({ actions, selection, handlers }: ResolutionMod
             actions.closeModal();
           }}
           data={selection.selectedResolution}
-          onSave={(savedResolution) => {
-            if (selection.selectedResolutionId) {
-              actions.setResolutionList((prev) =>
-                prev.map((m) =>
-                  m.resolutionId === savedResolution.resolutionId ? savedResolution : m,
-                ),
-              );
-            } else {
-              actions.setResolutionList((prev) => [savedResolution, ...prev]);
-            }
+          onSave={() => {
             actions.handleRefresh();
           }}
         />

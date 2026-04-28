@@ -21,10 +21,8 @@
  */
 namespace Xibo\Controller;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
-use Illuminate\Support\Str;
 use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Event\DataConnectorScriptRequestEvent;
@@ -38,6 +36,9 @@ use Xibo\Helper\Random;
 use Xibo\Helper\SendFile;
 use Xibo\Service\MediaService;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -49,7 +50,6 @@ use Xibo\Support\Exception\NotFoundException;
 #[OA\Schema(
     schema: 'importJsonSchema',
     description: 'Schema for importing JSON data into a DataSet',
-    type: 'object',
     properties: [
         new OA\Property(
             property: 'uniqueKeys',
@@ -71,7 +71,8 @@ use Xibo\Support\Exception\NotFoundException;
                 additionalProperties: new OA\AdditionalProperties(type: 'string')
             )
         )
-    ]
+    ],
+    type: 'object'
 )]
 class DataSet extends Base
 {
@@ -110,21 +111,6 @@ class DataSet extends Base
         return $this->dataSetFactory;
     }
 
-    /**
-     * View Route
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function displayPage(Request $request, Response $response)
-    {
-        $this->getState()->template = 'dataset-page';
-
-        return $this->render($request, $response);
-    }
-
     #[OA\Get(
         path: '/dataset',
         operationId: 'dataSetSearch',
@@ -134,56 +120,96 @@ class DataSet extends Base
     )]
     #[OA\Parameter(
         name: 'dataSetId',
-        in: 'query',
         description: 'Filter by DataSet Id',
+        in: 'query',
         required: false,
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
         name: 'dataSet',
-        in: 'query',
         description: 'Filter by DataSet Name',
+        in: 'query',
         required: false,
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
         name: 'code',
-        in: 'query',
         description: 'Filter by DataSet Code',
+        in: 'query',
         required: false,
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
         name: 'isRealTime',
-        in: 'query',
         description: 'Filter by real time',
+        in: 'query',
         required: false,
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
         name: 'userId',
-        in: 'query',
         description: 'Filter by user Id',
+        in: 'query',
         required: false,
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
         name: 'embed',
-        in: 'query',
         description: 'Embed related data such as columns',
+        in: 'query',
         required: false,
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
         name: 'folderId',
-        in: 'query',
         description: 'Filter by Folder ID',
+        in: 'query',
         required: false,
         schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'keyword',
+        description: 'Filter by dataset name, ID, code, or description',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: [
+                'dataSetId',
+                'dataSet',
+                'code',
+                'isRemote',
+                'isRealTime',
+                'owner',
+                'lastSync',
+                'dataLastModified'
+            ]
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
     )]
     #[OA\Response(
         response: 200,
         description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: '#/components/schemas/DataSet')
@@ -193,210 +219,33 @@ class DataSet extends Base
      * Search Data
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
-        $user = $this->getUser();
         $sanitizedParams = $this->getSanitizer($request->getQueryParams());
+        $datasetsSortQuery = $this->gridRenderSort(
+            $sanitizedParams,
+            $this->isJson($request),
+            'dataSet'
+        );
+        $datasetsFilterQuery = $this->getDatasetsFilterQuery($sanitizedParams);
 
-        // Embed?
-        $embed = ($sanitizedParams->getString('embed') != null) ? explode(',', $sanitizedParams->getString('embed')) : [];
-
-        $filter = [
-            'dataSetId' => $sanitizedParams->getInt('dataSetId'),
-            'dataSet' => $sanitizedParams->getString('dataSet'),
-            'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
-            'code' => $sanitizedParams->getString('code'),
-            'isRealTime' => $sanitizedParams->getInt('isRealTime'),
-            'userId' => $sanitizedParams->getInt('userId'),
-            'folderId' => $sanitizedParams->getInt('folderId'),
-            'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
-        ];
-
-        $dataSets = $this->dataSetFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter($filter, $sanitizedParams));
+        $dataSets = $this->dataSetFactory->query($datasetsSortQuery, $datasetsFilterQuery);
 
         foreach ($dataSets as $dataSet) {
-            /* @var \Xibo\Entity\DataSet $dataSet */
-            if (in_array('columns', $embed)) {
-                $dataSet->load();
-            }
-            if ($this->isApi($request)) {
-                break;
-            }
-
-            // Load the dataSet to get the columns
             $dataSet->load();
 
-            if ($this->isJson($request)) {
-                continue;
-            }
-
-            $dataSet->includeProperty('buttons');
-            $dataSet->buttons = [];
-
-            if ($this->getUser()->featureEnabled('dataset.data') && $user->checkEditable($dataSet)) {
-                // View Data
-                $dataSet->buttons[] = array(
-                    'id' => 'dataset_button_viewdata',
-                    'class' => 'XiboRedirectButton',
-                    'url' => $this->urlFor($request, 'dataSet.view.data', ['id' => $dataSet->dataSetId]),
-                    'text' => __('View Data')
-                );
-            }
-
-            if ($this->getUser()->featureEnabled('dataset.modify')) {
-                if ($user->checkEditable($dataSet)) {
-                    // View Columns
-                    $dataSet->buttons[] = array(
-                        'id' => 'dataset_button_viewcolumns',
-                        'url' => $this->urlFor($request, 'dataSet.column.view', ['id' => $dataSet->dataSetId]),
-                        'class' => 'XiboRedirectButton',
-                        'text' => __('View Columns')
-                    );
-
-                    // View RSS
-                    $dataSet->buttons[] = array(
-                        'id' => 'dataset_button_viewrss',
-                        'url' => $this->urlFor($request, 'dataSet.rss.view', ['id' => $dataSet->dataSetId]),
-                        'class' => 'XiboRedirectButton',
-                        'text' => __('View RSS')
-                    );
-
-                    if ($this->getUser()->featureEnabled('dataset.realtime') && $dataSet->isRealTime === 1) {
-                        $dataSet->buttons[] = [
-                            'id' => 'dataset_button_view_data_connector',
-                            'url' => $this->urlFor($request, 'dataSet.dataConnector.view', [
-                                'id' => $dataSet->dataSetId
-                            ]),
-                            'class' => 'XiboRedirectButton',
-                            'text' => __('View Data Connector'),
-                        ];
-                    }
-
-                    // Divider
-                    $dataSet->buttons[] = ['divider' => true];
-
-                    // Import DataSet
-                    if ($dataSet->isRemote !== 1) {
-                        $dataSet->buttons[] = array(
-                            'id' => 'dataset_button_import',
-                            'class' => 'dataSetImportForm',
-                            'text' => __('Import CSV')
-                        );
-                    }
-
-                    // Copy
-                    $dataSet->buttons[] = array(
-                        'id' => 'dataset_button_copy',
-                        'url' => $this->urlFor($request, 'dataSet.copy.form', ['id' => $dataSet->dataSetId]),
-                        'text' => __('Copy')
-                    );
-
-                    // Divider
-                    $dataSet->buttons[] = ['divider' => true];
-
-                    // Edit DataSet
-                    $dataSet->buttons[] = array(
-                        'id' => 'dataset_button_edit',
-                        'url' => $this->urlFor($request, 'dataSet.edit.form', ['id' => $dataSet->dataSetId]),
-                        'text' => __('Edit')
-                    );
-
-                    if ($this->getUser()->featureEnabled('folder.view')) {
-                        // Select Folder
-                        $dataSet->buttons[] = [
-                            'id' => 'dataSet_button_selectfolder',
-                            'url' => $this->urlFor($request, 'dataSet.selectfolder.form', ['id' => $dataSet->dataSetId]),
-                            'text' => __('Select Folder'),
-                            'multi-select' => true,
-                            'dataAttributes' => [
-                                [
-                                    'name' => 'commit-url',
-                                    'value' => $this->urlFor($request, 'dataSet.selectfolder', ['id' => $dataSet->dataSetId])
-                                ],
-                                ['name' => 'commit-method', 'value' => 'put'],
-                                ['name' => 'id', 'value' => 'dataSet_button_selectfolder'],
-                                ['name' => 'text', 'value' => __('Move to Folder')],
-                                ['name' => 'rowtitle', 'value' => $dataSet->dataSet],
-                                ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
-                            ]
-                        ];
-                    }
-
-                    $dataSet->buttons[] = [
-                        'id' => 'dataset_button_csv_export',
-                        'linkType' => '_self', 'external' => true,
-                        'url' => $this->urlFor($request, 'dataSet.export.csv', ['id' => $dataSet->dataSetId]),
-                        'text' => __('Export (CSV)')
-                    ];
-
-                    if ($dataSet->isRemote === 1) {
-                        $dataSet->buttons[] = [
-                            'id' => 'dataset_button_clear_cache',
-                            'url' => $this->urlFor($request, 'dataSet.clear.cache.form', ['id' => $dataSet->dataSetId]),
-                            'text' => __('Clear Cache'),
-                            'dataAttributes' => [
-                                ['name' => 'auto-submit', 'value' => true],
-                                ['name' => 'commit-url', 'value' => $this->urlFor($request, 'dataSet.clear.cache', ['id' => $dataSet->dataSetId])],
-                                ['name' => 'commit-method', 'value' => 'POST']
-                            ]
-                        ];
-                    }
-                }
-
-                if ($user->checkDeleteable($dataSet)
-                    && $dataSet->isLookup == 0
-                    && ($dataSet->isRealTime === 0 || $this->getUser()->featureEnabled('dataset.realtime'))
-                ) {
-                    $dataSet->buttons[] = ['divider' => true];
-                    // Delete DataSet
-                    $dataSet->buttons[] = [
-                        'id' => 'dataset_button_delete',
-                        'url' => $this->urlFor($request, 'dataSet.delete.form', ['id' => $dataSet->dataSetId]),
-                        'text' => __('Delete'),
-                        'multi-select' => true,
-                        'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'dataSet.delete', ['id' => $dataSet->dataSetId])],
-                            ['name' => 'commit-method', 'value' => 'delete'],
-                            ['name' => 'id', 'value' => 'dataset_button_delete'],
-                            ['name' => 'text', 'value' => __('Delete')],
-                            ['name' => 'rowtitle', 'value' => $dataSet->dataSet],
-                            ['name' => 'sort-group', 'value' => 1],
-                            ['name' => 'form-callback', 'value' => 'deleteMultiSelectFormOpen']
-                        ]
-                    ];
-                }
-
-                // Divider
-                $dataSet->buttons[] = ['divider' => true];
-
-                if ($user->checkPermissionsModifyable($dataSet)) {
-                    // Edit Permissions
-                    $dataSet->buttons[] = [
-                        'id' => 'dataset_button_permissions',
-                        'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DataSet', 'id' => $dataSet->dataSetId]),
-                        'text' => __('Share'),
-                        'multi-select' => true,
-                        'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DataSet', 'id' => $dataSet->dataSetId])],
-                            ['name' => 'commit-method', 'value' => 'post'],
-                            ['name' => 'id', 'value' => 'dataset_button_permissions'],
-                            ['name' => 'text', 'value' => __('Share')],
-                            ['name' => 'rowtitle', 'value' => $dataSet->dataSet],
-                            ['name' => 'sort-group', 'value' => 2],
-                            ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                            ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'DataSet'])],
-                            ['name' => 'content-id-name', 'value' => 'dataSetId']
-                        ]
-                    ];
-                }
-            }
+            $dataSet->setUnmatchedProperty(
+                'userPermissions',
+                $this->getUser()->getPermission($dataSet)
+            );
         }
 
+        // TODO: Convert this to a JSON response once the dataset module inside the layout editor is ready
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->dataSetFactory->countLast();
         $this->getState()->setData($dataSets);
@@ -404,32 +253,42 @@ class DataSet extends Base
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/dataset/{id}',
+        operationId: 'datasetSearchById',
+        description: 'Get the DataSet object specified by the provided datasetId',
+        summary: 'DataSet Search by ID',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'datasetId',
+        description: 'Numeric ID of the DataSet to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DataSet')
+    )]
     /**
-     * Add DataSet Form
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
+     * @param int $id
+     * @return Response|ResponseInterface
+     * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function addForm(Request $request, Response $response)
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
+        $dataset = $this->dataSetFactory->getById($id, false);
 
-        // Dispatch an event to initialize list of data sources for data connectors
-        $event = new DataConnectorSourceRequestEvent();
-        $this->getDispatcher()->dispatch($event, DataConnectorSourceRequestEvent::$NAME);
+        $dataset->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($dataset));
 
-        // Retrieve data connector sources from the event
-        $dataConnectorSources = $event->getDataConnectorSources();
-
-        $this->getState()->template = 'dataset-form-add';
-        $this->getState()->setData([
-            'dataSets' => $this->dataSetFactory->query(),
-            'dataConnectorSources' => $dataConnectorSources,
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson($dataset);
     }
 
     #[OA\Post(
@@ -567,13 +426,13 @@ class DataSet extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws InvalidArgumentException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws ControllerNotImplemented
+     * @throws DuplicateEntityException
      */
-    public function add(Request $request, Response $response)
+    public function add(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -582,8 +441,6 @@ class DataSet extends Base
         $dataSet->description = $sanitizedParams->getString('description');
         $dataSet->code = $sanitizedParams->getString('code');
         $dataSet->isRemote = $sanitizedParams->getCheckbox('isRemote');
-        $dataSet->isRealTime = $sanitizedParams->getCheckbox('isRealTime');
-        $dataSet->dataConnectorSource = $sanitizedParams->getString('dataConnectorSource');
         $dataSet->userId = $this->getUser()->userId;
 
         // Folders
@@ -621,7 +478,9 @@ class DataSet extends Base
             $dataSet->ignoreFirstRow = $sanitizedParams->getCheckbox('ignoreFirstRow');
             $dataSet->rowLimit = $sanitizedParams->getInt('rowLimit');
             $dataSet->limitPolicy = $sanitizedParams->getString('limitPolicy') ?? 'stop';
-            $dataSet->csvSeparator = ($dataSet->sourceId === 2) ? $sanitizedParams->getString('csvSeparator') ?? ',' : null;
+            $dataSet->csvSeparator = ($dataSet->sourceId === 2)
+                ? $sanitizedParams->getString('csvSeparator') ?? ','
+                : null;
         }
 
         // Also add one column
@@ -637,6 +496,11 @@ class DataSet extends Base
             $dataSet->assignColumn($dataSetColumn);
         }
 
+        if ($this->getUser()->featureEnabled('dataset.realtime')) {
+            $dataSet->isRealTime = $sanitizedParams->getCheckbox('isRealTime');
+            $dataSet->dataConnectorSource = $sanitizedParams->getString('dataConnectorSource');
+        }
+
         // Save
         $dataSet->save();
 
@@ -646,47 +510,6 @@ class DataSet extends Base
             'message' => sprintf(__('Added %s'), $dataSet->dataSet),
             'id' => $dataSet->dataSetId,
             'data' => $dataSet
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Edit DataSet Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function editForm(Request $request, Response $response, $id)
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-
-        // Dispatch an event to initialize list of data sources for data connectors
-        $event = new DataConnectorSourceRequestEvent();
-        $this->getDispatcher()->dispatch($event, DataConnectorSourceRequestEvent::$NAME);
-
-        // Retrieve data sources from the event
-        $dataConnectorSources = $event->getDataConnectorSources();
-
-        // retrieve the columns of the selected dataset
-        $dataSet->getColumn();
-
-        // Set the form
-        $this->getState()->template = 'dataset-form-edit';
-        $this->getState()->setData([
-            'dataSet' => $dataSet,
-            'dataSets' => $this->dataSetFactory->query(),
-            'script' => $dataSet->getScript(),
-            'dataConnectorSources' => $dataConnectorSources
         ]);
 
         return $this->render($request, $response);
@@ -827,15 +650,15 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws ControllerNotImplemented
+     * @throws DuplicateEntityException
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -848,8 +671,6 @@ class DataSet extends Base
         $dataSet->description = $sanitizedParams->getString('description');
         $dataSet->code = $sanitizedParams->getString('code');
         $dataSet->isRemote = $sanitizedParams->getCheckbox('isRemote');
-        $dataSet->isRealTime = $sanitizedParams->getCheckbox('isRealTime');
-        $dataSet->dataConnectorSource = $sanitizedParams->getString('dataConnectorSource');
         $dataSet->folderId = $sanitizedParams->getInt('folderId', ['default' => $dataSet->folderId]);
 
         if ($dataSet->hasPropertyChanged('folderId')) {
@@ -857,7 +678,14 @@ class DataSet extends Base
                 $this->checkRootFolderAllowSave();
             }
             $folder = $this->folderFactory->getById($dataSet->folderId);
-            $dataSet->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+            $dataSet->permissionsFolderId = ($folder->getPermissionFolderId() == null)
+                ? $folder->id
+                : $folder->getPermissionFolderId();
+        }
+
+        if ($this->getUser()->featureEnabled('dataset.realtime')) {
+            $dataSet->isRealTime = $sanitizedParams->getCheckbox('isRealTime');
+            $dataSet->dataConnectorSource = $sanitizedParams->getString('dataConnectorSource');
         }
 
         if ($dataSet->isRemote === 1) {
@@ -936,16 +764,20 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      */
-    public function updateDataConnector(Request $request, Response $response, $id)
+    public function updateDataConnector(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
+        }
+
+        if (!$this->getUser()->featureEnabled('dataset.data')) {
+            throw new AccessDeniedException(__('Feature not enabled'));
         }
 
         if ($dataSet->isRealTime === 1) {
@@ -961,38 +793,6 @@ class DataSet extends Base
             'message' => sprintf(__('Edited %s'), $dataSet->dataSet),
             'id' => $dataSet->dataSetId,
             'data' => $dataSet
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * DataSet Delete
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function deleteForm(Request $request, Response $response, $id)
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        if (!$this->getUser()->checkDeleteable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-
-        if ($dataSet->isLookup) {
-            throw new InvalidArgumentException(__('Lookup Tables cannot be deleted'));
-        }
-
-        // Set the form
-        $this->getState()->template = 'dataset-form-delete';
-        $this->getState()->setData([
-            'dataSet' => $dataSet,
         ]);
 
         return $this->render($request, $response);
@@ -1018,15 +818,15 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ConfigurationException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ConfigurationException
+     * @throws ControllerNotImplemented
      */
-    public function delete(Request $request, Response $response, $id)
+    public function delete(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -1037,7 +837,10 @@ class DataSet extends Base
 
         // Is there existing data?
         if ($sanitizedParams->getCheckbox('deleteData') == 0 && $dataSet->hasData())
-            throw new InvalidArgumentException(__('There is data assigned to this data set, cannot delete.'), 'dataSetId');
+            throw new InvalidArgumentException(
+                __('There is data assigned to this data set, cannot delete.'),
+                'dataSetId'
+            );
 
         // Otherwise delete
         $dataSet->delete();
@@ -1047,37 +850,6 @@ class DataSet extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $dataSet->dataSet)
         ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Select Folder Form
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function selectFolderForm(Request $request, Response $response, $id)
-    {
-        // Get the data set
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        // Check Permissions
-        if (!$this->getUser()->checkEditable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-
-        $data = [
-            'dataSet' => $dataSet
-        ];
-
-        $this->getState()->template = 'dataset-form-selectfolder';
-        $this->getState()->setData($data);
 
         return $this->render($request, $response);
     }
@@ -1121,14 +893,14 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @param int $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function selectFolder(Request $request, Response $response, $id)
+    public function selectFolder(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         // Get the DataSet
         $dataSet = $this->dataSetFactory->getById($id);
@@ -1146,7 +918,9 @@ class DataSet extends Base
 
         $dataSet->folderId = $folderId;
         $folder = $this->folderFactory->getById($dataSet->folderId);
-        $dataSet->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        $dataSet->permissionsFolderId = ($folder->getPermissionFolderId() == null)
+            ? $folder->id
+            : $folder->getPermissionFolderId();
 
         // Save
         $dataSet->save();
@@ -1155,34 +929,6 @@ class DataSet extends Base
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => sprintf(__('DataSet %s moved to Folder %s'), $dataSet->dataSet, $folder->text)
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Copy DataSet Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function copyForm(Request $request, Response $response, $id)
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-
-        // Set the form
-        $this->getState()->template = 'dataset-form-copy';
-        $this->getState()->setData([
-            'dataSet' => $dataSet,
         ]);
 
         return $this->render($request, $response);
@@ -1231,15 +977,15 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws ControllerNotImplemented
+     * @throws DuplicateEntityException
      */
-    public function copy(Request $request, Response $response, $id)
+    public function copy(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -1329,12 +1075,12 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ConfigurationException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ConfigurationException
+     * @throws ControllerNotImplemented
      */
-    public function import(Request $request, Response $response, $id)
+    public function import(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $this->getLog()->debug('Import DataSet');
 
@@ -1395,13 +1141,13 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function importJson(Request $request, Response $response, $id)
+    public function importJson(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
 
@@ -1422,7 +1168,8 @@ class DataSet extends Base
             throw new InvalidArgumentException(__('Malformed JSON body, rows and uniqueKeys are required'));
         }
 
-        $this->getLog()->debug('Import JSON into DataSet with ' . count($data['rows']) . ' and unique keys ' . json_encode($data['uniqueKeys']));
+        $this->getLog()->debug('Import JSON into DataSet with ' . count($data['rows']) . ' and unique keys '
+            . json_encode($data['uniqueKeys']));
 
         // Should we truncate?
         if (isset($data['truncate']) && $data['truncate']) {
@@ -1458,8 +1205,13 @@ class DataSet extends Base
                             $date = $sanitizedRow->getDate($key);
                             $value = $date->format(DateFormatHelper::getSystemFormat());
                         } catch (\Exception $e) {
-                            $this->getLog()->error(sprintf('Incorrect date provided %s, expected date format Y-m-d H:i:s ', $value));
-                            throw new InvalidArgumentException(sprintf(__('Incorrect date provided %s, expected date format Y-m-d H:i:s '), $value), 'date');
+                            $this->getLog()->error(
+                                sprintf('Incorrect date provided %s, expected date format Y-m-d H:i:s ', $value)
+                            );
+                            throw new InvalidArgumentException(
+                                sprintf(__('Incorrect date provided %s, expected date format Y-m-d H:i:s '), $value),
+                                'date'
+                            );
                         }
                     } elseif ($columns[$key] == 5) {
                         // Media Id
@@ -1527,19 +1279,19 @@ class DataSet extends Base
      * Sends out a Test Request and returns the Data as JSON to the Client so it can be shown in the Dialog
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function testRemoteRequest(Request $request, Response $response)
+    public function testRemoteRequest(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         $testDataSetId = $sanitizedParams->getInt('testDataSetId');
 
-        if ($testDataSetId !== null) {
+        if ($testDataSetId !== null && $testDataSetId > 0) {
             $dataSet = $this->dataSetFactory->getById($testDataSetId);
         } else {
             $dataSet = $this->dataSetFactory->createEmpty();
@@ -1584,14 +1336,12 @@ class DataSet extends Base
 
         $this->getLog()->debug('Results: ' . var_export($data, true));
 
-        // Return
-        $this->getState()->hydrate([
+        return $response->withJson([
+            'success' => true,
             'message' => __('Run Test-Request for %s', $dataSet->dataSet),
             'id' => $dataSet->dataSetId,
             'data' => $data
         ]);
-
-        return $this->render($request, $response);
     }
 
     #[OA\Get(
@@ -1615,11 +1365,11 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws NotFoundException
      */
-    public function exportToCsv(Request $request, Response $response, $id)
+    public function exportToCsv(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $this->setNoOutput();
         $i = 0;
@@ -1661,32 +1411,19 @@ class DataSet extends Base
         )->withHeader('Content-Type', 'text/csv;charset=utf-8'));
     }
 
-    public function clearCacheForm(Request $request, Response $response, $id)
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        $this->getState()->template = 'dataset-form-clear-cache';
-        $this->getState()->autoSubmit = $this->getAutoSubmit('dataSetClearCacheForm');
-        $this->getState()->setData([
-            'dataSet' => $dataSet
-        ]);
-
-        return $this->render($request, $response);
-    }
-
     /**
      * Clear cache for remote dataSet, only available via web interface
      *
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function clearCache(Request $request, Response $response, $id)
+    public function clearCache(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
 
@@ -1698,7 +1435,7 @@ class DataSet extends Base
 
         // Return
         $this->getState()->hydrate([
-            'message' => __('Cache cleared for %s', $dataSet->dataSet),
+            'message' => sprintf(__('Cache cleared for %s'), $dataSet->dataSet),
             'id' => $dataSet->dataSetId
         ]);
 
@@ -1721,6 +1458,10 @@ class DataSet extends Base
             throw new AccessDeniedException();
         }
 
+        if (!$this->getUser()->featureEnabled('dataset.data')) {
+            throw new AccessDeniedException(__('Feature not enabled'));
+        }
+
         $dataSet->load();
 
         if ($dataSet->dataConnectorSource == 'user_defined') {
@@ -1739,7 +1480,7 @@ class DataSet extends Base
             'script' => $script,
             ]);
 
-            return $this->render($request, $response);
+        return $this->render($request, $response);
     }
 
     /**
@@ -1770,73 +1511,6 @@ class DataSet extends Base
     }
 
     /**
-     * Real-time data script test
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return Response
-     * @throws GeneralException
-     */
-    public function dataConnectorRequest(Request $request, Response $response, $id): Response
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-
-        $params = $this->getSanitizer($request->getParams());
-        $url = $params->getString('url');
-        $method = $params->getString('method', ['default' => 'GET']);
-        $headers = $params->getArray('headers');
-        $body = $params->getArray('body');
-
-        // Verify that the requested URL appears in the script somewhere.
-        $script = $dataSet->getScript();
-
-        if (!Str::contains($script, $url)) {
-            throw new InvalidArgumentException(__('URL not found in data connector script'), 'url');
-        }
-
-        // Make the request
-        $options = [];
-        if (is_array($headers)) {
-            $options['headers'] = $headers;
-        }
-
-        if ($method === 'GET') {
-            $options['query'] = $body;
-        } else {
-            $options['body'] = $body;
-        }
-
-        $this->getLog()->debug('dataConnectorRequest: making request with options ' . var_export($options, true));
-
-        // Use guzzle to make the request
-        try {
-            $client = new Client();
-            $remoteResponse = $client->request($method, $url, $options);
-
-            // Format the response
-            $response->getBody()->write($remoteResponse->getBody()->getContents());
-            $response = $response->withAddedHeader('Content-Type', $remoteResponse->getHeader('Content-Type')[0]);
-            $response = $response->withStatus($remoteResponse->getStatusCode());
-        } catch (RequestException $exception) {
-            $this->getLog()->error('dataConnectorRequest: error with request: ' . $exception->getMessage());
-
-            if ($exception->hasResponse()) {
-                $remoteResponse = $exception->getResponse();
-                $response = $response->withStatus($remoteResponse->getStatusCode());
-                $response->getBody()->write($remoteResponse->getBody()->getContents());
-            } else {
-                $response = $response->withStatus(500);
-            }
-        }
-
-        return $response;
-    }
-
-    /**
      * List of data connector sources
      * @param Response $response
      * @return Response
@@ -1859,5 +1533,27 @@ class DataSet extends Base
                 'error' => 'Failed to retrieve data connector sources'
             ], 500);
         }
+    }
+
+    /**
+     * Get the datasets filters
+     * @param $sanitizedParams
+     * @return array
+     */
+    private function getDatasetsFilterQuery($sanitizedParams): array
+    {
+        return $this->gridRenderFilter([
+            'dataSetId' => $sanitizedParams->getInt('dataSetId'),
+            'dataSet' => $sanitizedParams->getString('dataSet'),
+            'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
+            'code' => $sanitizedParams->getString('code'),
+            'isRealTime' => $sanitizedParams->getInt('isRealTime'),
+            'userId' => $sanitizedParams->getInt('userId'),
+            'folderId' => $sanitizedParams->getInt('folderId'),
+            'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
+            'modifiedDateFrom' => $sanitizedParams->getDate('modifiedDateFrom'),
+            'modifiedDateTo' => $sanitizedParams->getDate('modifiedDateTo'),
+            'keyword' => $sanitizedParams->getString('keyword')
+        ], $sanitizedParams);
     }
 }

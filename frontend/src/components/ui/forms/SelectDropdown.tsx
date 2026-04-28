@@ -31,7 +31,7 @@ import {
   useInteractions,
   FloatingPortal,
 } from '@floating-ui/react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Search } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -44,14 +44,15 @@ export type SelectOption = {
 };
 
 interface SelectDropdownProps {
-  label: string;
+  label?: string;
   value?: string;
   placeholder?: string;
   options: SelectOption[];
   searchable?: boolean;
   searchPlaceholder?: string;
   onSelect: (value: string) => void;
-  helper?: string;
+  onSearch?: (term: string) => void;
+  helpText?: string;
   addLeftLabel?: boolean;
   leftLabelContent?: ReactNode;
   optionLabel?: string;
@@ -62,6 +63,7 @@ interface SelectDropdownProps {
   onLoadMore?: () => void;
   hasMore?: boolean;
   isLoadingMore?: boolean;
+  clearable?: boolean;
 }
 
 export default function SelectDropdown({
@@ -69,8 +71,11 @@ export default function SelectDropdown({
   value,
   placeholder = 'Select',
   options,
+  searchable,
+  searchPlaceholder,
   onSelect,
-  helper,
+  onSearch,
+  helpText,
   addLeftLabel,
   leftLabelContent,
   optionLabel,
@@ -81,12 +86,27 @@ export default function SelectDropdown({
   onLoadMore,
   hasMore,
   isLoadingMore,
+  clearable,
 }: SelectDropdownProps) {
   const { t } = useTranslation();
 
   const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const sentinelRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (!open) {
+      setSearchTerm('');
+      onSearch?.('');
+    }
+  };
+
+  const visibleOptions =
+    !onSearch && searchable && searchTerm
+      ? options.filter((o) => o.label.toLowerCase().includes(searchTerm.toLowerCase()))
+      : options;
 
   useEffect(() => {
     if (!isOpen || !hasMore || !onLoadMore || !sentinelRef.current || !scrollContainerRef.current) {
@@ -111,7 +131,7 @@ export default function SelectDropdown({
 
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
-    onOpenChange: setIsOpen,
+    onOpenChange: handleOpenChange,
     placement: 'bottom-start',
     whileElementsMounted: autoUpdate,
     middleware: [
@@ -134,12 +154,14 @@ export default function SelectDropdown({
 
   return (
     <div className={twMerge('relative overflow-visible', className)}>
-      <label className="text-sm font-semibold text-gray-500">{t(label)}</label>
+      {label && (
+        <label className="text-sm font-semibold text-gray-500 leading-5">{label && t(label)}</label>
+      )}
 
       <div
         ref={refs.setReference}
         {...getReferenceProps()}
-        className="w-full border bg-white border-gray-200 rounded-lg flex items-center cursor-pointer h-11.25"
+        className="w-full border bg-white border-gray-200 rounded-lg flex items-center cursor-pointer h-11.25 hover:border-gray-400 focus-within:border-xibo-blue-600 focus-within:ring-1 focus-within:ring-xibo-blue-600/25 focus:outline-none transition-colors"
       >
         {addLeftLabel && leftLabelContent && (
           <div className="py-2 px-3 border-r text-sm border-gray-200 text-gray-500">
@@ -148,15 +170,15 @@ export default function SelectDropdown({
         )}
         <span
           className={twMerge(
-            'py-2 px-3 flex-1 text-sm',
-            isLoading ? 'text-gray-400 italic' : 'text-gray-800 capitalize',
+            'py-2 px-3 flex-1 text-sm truncate min-w-0',
+            isLoading ? 'text-gray-400 italic' : 'text-gray-800',
           )}
         >
-          {selectedLabel || t(placeholder)}
+          {isLoading ? t('Loading...') : selectedLabel || t(placeholder)}
         </span>
         <span
           className={twMerge(
-            'p-3 text-gray-500 transition-transform duration-300 ease-in-out',
+            'p-3 text-gray-500 transition-transform duration-300 ease-in-out shrink-0',
             isOpen ? 'rotate-180' : 'rotate-0',
           )}
         >
@@ -177,20 +199,52 @@ export default function SelectDropdown({
                 {t(optionLabel)}
               </span>
             )}
+            {searchable && (
+              <div className="p-2 border-b border-gray-100 flex items-center gap-2">
+                <Search size={14} className="text-gray-400 shrink-0" />
+                <input
+                  autoFocus
+                  type="text"
+                  className="flex-1 w-full text-sm outline-none border-none bg-transparent"
+                  placeholder={searchPlaceholder ?? t('Search…')}
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    onSearch?.(e.target.value);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+            )}
             <div
               ref={scrollContainerRef}
               className="flex flex-col p-2 text-sm overflow-y-auto max-h-75"
             >
-              {options.length === 0 && !isLoadingMore && (
+              {clearable && (
+                <button
+                  type="button"
+                  className="text-left p-2 rounded-lg font-medium hover:bg-gray-100 cursor-pointer text-gray-400 italic"
+                  onClick={() => {
+                    onSelect('');
+                    handleOpenChange(false);
+                  }}
+                >
+                  {t(placeholder)}
+                </button>
+              )}
+              {visibleOptions.length === 0 && !isLoadingMore && !isLoading && (
                 <p className="text-sm text-gray-400 text-center py-2">{t('No results')}</p>
               )}
-              {options.map((option) => (
+              {isLoading && visibleOptions.length === 0 && (
+                <p className="text-sm text-gray-400 text-center py-2">{t('Loading...')}</p>
+              )}
+              {visibleOptions.map((option) => (
                 <button
                   key={option.value}
                   type="button"
                   disabled={option.disabled}
                   className={twMerge(
-                    'text-left p-2 rounded-lg font-medium flex gap-2 items-center',
+                    'text-left p-2 rounded-lg font-medium flex gap-2 items-center min-w-0',
                     option.disabled
                       ? 'text-gray-300 cursor-not-allowed'
                       : 'hover:bg-gray-100 cursor-pointer',
@@ -201,7 +255,7 @@ export default function SelectDropdown({
                     }
 
                     onSelect(option.value);
-                    setIsOpen(false);
+                    handleOpenChange(false);
                   }}
                 >
                   {addOptionAvatar && (
@@ -209,7 +263,9 @@ export default function SelectDropdown({
                       {option.label.slice(0, 1)}
                     </div>
                   )}
-                  {t(option.label)}
+                  <span className="truncate" title={option.label}>
+                    {t(option.label)}
+                  </span>
                 </button>
               ))}
               {hasMore && <div ref={sentinelRef} className="h-1" />}
@@ -224,10 +280,8 @@ export default function SelectDropdown({
       {error ? (
         <p className="text-xs text-red-600 ml-2 mt-1">{error}</p>
       ) : (
-        helper && (
-          <span className="text-xs text-gray-400 leading-snug flex mt-1 whitespace-pre-line">
-            {helper}
-          </span>
+        helpText && (
+          <span className="text-xs text-gray-400 mt-1 whitespace-pre-line">{helpText}</span>
         )
       )}
     </div>

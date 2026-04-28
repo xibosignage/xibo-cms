@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -211,33 +211,29 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         }
 
         // Widget name
+        // -----------
+        // This could come from widget.widgetId, or widgethistory.widgetId
         if (!empty($statData['widgetId'])) {
             if (array_key_exists($statData['widgetId'], $this->widgets)) {
-                $widget = $this->widgets[$statData['widgetId']];
+                $widgetName = $this->widgets[$statData['widgetId']];
             } else {
-                // We are already doing getWidgetForStat is XMDS,
-                // checking widgetId not found does not require
-                // We should always be able to get the widget
+                // Lookup and cache
                 try {
-                    $widget = $this->widgetFactory->getById($statData['widgetId']);
-
-                    // Cache widget
-                    $this->widgets[$statData['widgetId']] = $widget;
-                } catch (\Exception $error) {
-                    // Widget not found, ignore and log the stat
-                    $this->log->error('Widget not found. Widget Id: '. $statData['widgetId']);
-
-                    return;
+                    $widget = $this->widgetFactory->loadByWidgetId($statData['widgetId']);
+                    $rawName = $widget->getOptionValue('name', null);
+                    $widgetName = ($rawName === '' ? null : $rawName) ?? $widget->type;
+                } catch (\Exception) {
+                    // Fallback to the widget history record
+                    $widget = $this->widgetFactory->getWidgetHistoryById($statData['widgetId'])[0];
+                    $widgetName = ($widget?->name !== '' ? $widget?->name : null) ?? $widget?->type;
                 }
+
+                // Cache widget
+                // we might cache null here, which is fine as this lookup will always fail
+                $this->widgets[$statData['widgetId']] = $widgetName ?? null;
             }
 
-            if ($widget != null) {
-                $widget->load();
-                $widgetName = isset($mediaName) ? $mediaName : $widget->getOptionValue('name', $widget->type);
-
-                // SET widgetName
-                $statData['widgetName'] = $widgetName;
-            }
+            $statData['widgetName'] = $widgetName ?? null;
         }
 
         // Layout data

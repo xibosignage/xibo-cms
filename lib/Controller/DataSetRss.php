@@ -28,6 +28,7 @@ use Carbon\Exceptions\InvalidDateException;
 use OpenApi\Attributes as OA;
 use PicoFeed\Syndication\Rss20FeedBuilder;
 use PicoFeed\Syndication\Rss20ItemBuilder;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Interfaces\PoolInterface;
@@ -37,6 +38,7 @@ use Xibo\Factory\DataSetRssFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -75,33 +77,6 @@ class DataSetRss extends Base
         $this->store = $store;
     }
 
-    /**
-     * Display Page
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function displayPage(Request $request, Response $response, $id)
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-        
-        $this->getState()->template = 'dataset-rss-page';
-        $this->getState()->setData([
-            'dataSet' => $dataSet
-        ]);
-        
-        return $this->render($request, $response);
-    }
-
     #[OA\Get(
         path: '/dataset/{dataSetId}/rss',
         operationId: 'dataSetRSSSearch',
@@ -116,9 +91,45 @@ class DataSetRss extends Base
         required: true,
         schema: new OA\Schema(type: 'integer')
     )]
+    #[OA\Parameter(
+        name: 'keyword',
+        description: 'Filter by RSS title, ID, or author',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: [
+                'id',
+                'title',
+                'author',
+                'psk',
+            ]
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
     #[OA\Response(
         response: 200,
         description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: '#/components/schemas/DataSetRss')
@@ -129,13 +140,12 @@ class DataSetRss extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function grid(Request $request, Response $response, $id)
+    public function grid(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getQueryParams());
@@ -143,88 +153,76 @@ class DataSetRss extends Base
         if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
         }
-        
-        $feeds = $this->dataSetRssFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter([
-            'dataSetId' => $id,
-            'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName')
-        ], $sanitizedParams));
+
+        $dataRssSortQuery = $this->gridRenderSort(
+            $sanitizedParams,
+            $this->isJson($request),
+            'title'
+        );
+
+        $dataRssFilterQuery = $this->getDataRssFilterQuery($id, $sanitizedParams);
+
+        $userPermissions = $this->getUser()->getPermission($dataSet);
+
+        $feeds = $this->dataSetRssFactory->query($dataRssSortQuery, $dataRssFilterQuery);
 
         foreach ($feeds as $feed) {
-
-            if ($this->isApi($request)) {
-                break;
-            }
-
-            if ($this->isJson($request)) {
-                continue;
-            }
-
-            $feed->includeProperty('buttons');
-
-            if ($this->getUser()->featureEnabled('dataset.data')) {
-                // Edit
-                $feed->buttons[] = array(
-                    'id' => 'datasetrss_button_edit',
-                    'url' => $this->urlFor($request,'dataSet.rss.edit.form', ['id' => $id, 'rssId' => $feed->id]),
-                    'text' => __('Edit')
-                );
-
-                if ($this->getUser()->checkDeleteable($dataSet)) {
-                    // Delete
-                    $feed->buttons[] = array(
-                        'id' => 'datasetrss_button_delete',
-                        'url' => $this->urlFor($request,'dataSet.rss.delete.form', ['id' => $id, 'rssId' => $feed->id]),
-                        'text' => __('Delete')
-                    );
-                }
-            }
+            $feed->setUnmatchedProperty('userPermissions', $userPermissions);
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->setData($feeds);
-        
-        return $this->render($request, $response);
+        $recordsTotal = $this->dataSetRssFactory->countLast();
+
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $recordsTotal)
+            ->withJson($feeds);
     }
 
+    #[OA\Get(
+        path: '/dataset/{id}/rss/{rssId}}',
+        operationId: 'datasetRssSearchById',
+        description: 'Get the DataSet RSS object specified by the provided datasetId and rssId',
+        summary: 'DataSet RSS Search by ID',
+        tags: ['dataset']
+    )]
+    #[OA\Parameter(
+        name: 'datasetId',
+        description: 'Numeric ID of the DataSet to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'datasetRssId',
+        description: 'Numeric ID of the DataSet RSS to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DataSetRss')
+    )]
     /**
-     * Add form
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
+     * @param int $id
+     * @param int $rssId
+     * @return Response|ResponseInterface
+     * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function addForm(Request $request, Response $response, $id)
+    public function searchById(Request $request, Response $response, int $id, int $rssId): Response|ResponseInterface
     {
-        $dataSet = $this->dataSetFactory->getById($id);
+        $dataset = $this->dataSetFactory->getById($id, false);
+        $datasetRss = $this->dataSetRssFactory->getById($rssId);
 
-        if (!$this->getUser()->checkEditable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-        
-        $columns = $dataSet->getColumn();
-        $dateColumns = [];
+        $datasetRss->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($dataset));
 
-        foreach ($columns as $column) {
-            if ($column->dataTypeId ===  3)
-                $dateColumns[] = $column;
-        }
-
-        $this->getState()->template = 'dataset-rss-form-add';
-        $this->getState()->setData([
-            'dataSet' => $dataSet,
-            'extra' => [
-                'orderClauses' => [],
-                'filterClauses' => [],
-                'columns' => $columns,
-                'dateColumns' => $dateColumns
-            ]
-        ]);
-        
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson($datasetRss);
     }
 
     #[OA\Post(
@@ -286,14 +284,14 @@ class DataSetRss extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function add(Request $request, Response $response, $id)
+    public function add(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -343,7 +341,7 @@ class DataSetRss extends Base
      * @param Response $response
      * @param \Xibo\Entity\DataSetRss $feed
      */
-    private function handleFormFilterAndOrder(Request $request, Response $response, $feed)
+    private function handleFormFilterAndOrder(Request $request, Response $response, $feed): void
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Order criteria
@@ -399,46 +397,6 @@ class DataSetRss extends Base
             'useFilteringClause' => $sanitizedParams->getCheckbox('useFilteringClause'),
             'filterClauses' => $filterClauseMapping
         ]);
-    }
-
-    /**
-     * Edit Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @param $rssId
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function editForm(Request $request, Response $response, $id, $rssId)
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-
-        $feed = $this->dataSetRssFactory->getById($rssId);
-
-        $columns = $dataSet->getColumn();
-        $dateColumns = [];
-
-        foreach ($columns as $column) {
-            if ($column->dataTypeId ===  3)
-                $dateColumns[] = $column;
-        }
-
-        $this->getState()->template = 'dataset-rss-form-edit';
-        $this->getState()->setData([
-            'dataSet' => $dataSet,
-            'feed' => $feed,
-            'extra' => array_merge($feed->getSort(), $feed->getFilter(), ['columns' => $columns, 'dateColumns' => $dateColumns])
-        ]);
-
-        return $this->render($request, $response);
     }
 
     #[OA\Put(
@@ -498,15 +456,14 @@ class DataSetRss extends Base
      * @param Response $response
      * @param $id
      * @param $rssId
-     *
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function edit(Request $request, Response $response, $id, $rssId)
+    public function edit(Request $request, Response $response, $id, $rssId): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -551,38 +508,6 @@ class DataSetRss extends Base
         return $this->render($request, $response);
     }
 
-    /**
-     * Delete Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @param $rssId
-     *
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function deleteForm(Request $request, Response $response, $id, $rssId)
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        if (!$this->getUser()->checkDeleteable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-
-        $feed = $this->dataSetRssFactory->getById($rssId);
-
-        $this->getState()->template = 'dataset-rss-form-delete';
-        $this->getState()->setData([
-            'dataSet' => $dataSet,
-            'feed' => $feed
-        ]);
-
-        return $this->render($request, $response);
-    }
-
     #[OA\Delete(
         path: '/dataset/{dataSetId}/rss/{rssId}',
         operationId: 'dataSetRSSDelete',
@@ -611,14 +536,13 @@ class DataSetRss extends Base
      * @param Response $response
      * @param $id
      * @param $rssId
-     *
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function delete(Request $request, Response $response, $id, $rssId)
+    public function delete(Request $request, Response $response, $id, $rssId): Response|ResponseInterface
     {
         $dataSet = $this->dataSetFactory->getById($id);
 
@@ -701,7 +625,7 @@ class DataSetRss extends Base
      * @param Carbon $dataSetEditDate
      * @param \Xibo\Entity\DataSet $dataSet
      * @return string
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws NotFoundException
      */
     private function generateFeed($feed, $dataSetEditDate, $dataSet): string
     {
@@ -785,6 +709,20 @@ class DataSetRss extends Base
                         $criteria = '< \'' . $clause['filterClauseValue'] . '\'';
                         break;
 
+                    case 'is-empty':
+                        if ($i > 1) {
+                            $filtering .= ' ' . $clause['filterClauseOperator'] . ' ';
+                        }
+                        $filtering .= 'IFNULL(`' . $clause['filterClause'] . '`, \'\') = \'\'';
+                        continue 2;
+
+                    case 'is-not-empty':
+                        if ($i > 1) {
+                            $filtering .= ' ' . $clause['filterClauseOperator'] . ' ';
+                        }
+                        $filtering .= 'IFNULL(`' . $clause['filterClause'] . '`, \'\') <> \'\'';
+                        continue 2;
+
                     default:
                         // Continue out of the switch and the loop (this takes us back to our foreach)
                         continue 2;
@@ -793,14 +731,7 @@ class DataSetRss extends Base
                 if ($i > 1)
                     $filtering .= ' ' . $clause['filterClauseOperator'] . ' ';
 
-                // Ability to filter by not-empty and empty
-                if ($clause['filterClauseCriteria'] == 'is-empty') {
-                    $filtering .= 'IFNULL(`' . $clause['filterClause'] . '`, \'\') = \'\'';
-                } else if ($clause['filterClauseCriteria'] == 'is-not-empty') {
-                    $filtering .= 'IFNULL(`' . $clause['filterClause'] . '`, \'\') <> \'\'';
-                } else {
-                    $filtering .= $clause['filterClause'] . ' ' . $criteria;
-                }
+                $filtering .= $clause['filterClause'] . ' ' . $criteria;
             }
         }
 
@@ -891,5 +822,20 @@ class DataSetRss extends Base
 
         // Found, do things
         return $builder->build();
+    }
+
+    /**
+     * Get the dataset rss filters
+     * @param $id
+     * @param $sanitizedParams
+     * @return array
+     */
+    private function getDataRssFilterQuery($id, $sanitizedParams): array
+    {
+        return $this->gridRenderFilter([
+            'dataSetId' => $id,
+            'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
+            'keyword' => $sanitizedParams->getString('keyword'),
+        ], $sanitizedParams);
     }
 }

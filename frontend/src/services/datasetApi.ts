@@ -43,6 +43,7 @@ export interface FetchDatasetRequest {
   sortDir?: string;
   signal?: AbortSignal;
   folderId?: number;
+  isRealTime?: number;
 
   userId?: string;
   ownerUserGroupId?: string;
@@ -323,7 +324,7 @@ export async function importDatasetCsv(
 }
 
 export async function testRemoteDataset(payload: UpdateDatasetRequest) {
-  const response = await axios.post('/api/dataset/remote/test', payload);
+  const response = await axios.post('/dataset/remote/test', payload);
   return response.data;
 }
 
@@ -331,6 +332,7 @@ export async function testRemoteDataset(payload: UpdateDatasetRequest) {
 export interface FetchDatasetColumnsRequest {
   start: number;
   length: number;
+  keyword?: string;
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;
@@ -439,8 +441,10 @@ export async function deleteDatasetColumn(
 export interface FetchDatasetDataRequest {
   start: number;
   length: number;
+  keyword?: string;
   sortBy?: string;
   sortDir?: string;
+  columnFilters?: Record<string, string>;
   signal?: AbortSignal;
 }
 
@@ -453,10 +457,10 @@ export async function fetchDatasetData(
   datasetId: string | number,
   options: FetchDatasetDataRequest = { start: 0, length: 10 },
 ): Promise<FetchDatasetDataResponse> {
-  const { signal, ...queryParams } = options;
+  const { signal, columnFilters, ...queryParams } = options;
 
   const response = await http.get(`/dataset/data/${datasetId}`, {
-    params: queryParams,
+    params: { ...queryParams, ...columnFilters },
     signal,
   });
 
@@ -530,6 +534,7 @@ export async function deleteDatasetRow(
 export interface FetchDatasetRssRequest {
   start?: number;
   length?: number;
+  keyword?: string;
   sortBy?: string;
   sortDir?: string;
   useRegexForName?: boolean;

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,7 +22,6 @@
 namespace Xibo\Service;
 
 use Carbon\Carbon;
-use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Mimey\MimeTypes;
 use Stash\Interfaces\PoolInterface;
@@ -34,6 +33,7 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
+use Xibo\Helper\Guzzle\SafeClient;
 use Xibo\Helper\SanitizerService;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\ConfigurationException;
@@ -166,7 +166,7 @@ class MediaService implements MediaServiceInterface
     public function getDownloadInfo($url): array
     {
         $downloadInfo = [];
-        $guzzle = new Client($this->configService->getGuzzleProxy());
+        $guzzle = SafeClient::getSafeClient($this->configService->getGuzzleProxy());
 
         // first try to get the extension from pathinfo
         $info = pathinfo(parse_url($url, PHP_URL_PATH));

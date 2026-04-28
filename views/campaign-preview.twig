@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -42,9 +42,15 @@
                         <div class="row">
                             <div class="col-sm-12">
                                 <div class="embed-responsive embed-responsive-4by3">
-                                    <div class="embed-responsive-item preview-container"
-                                         data-url="{{ url_for('layout.preview', { "id": extendedLayout.layout.layoutId }) }}">
-                                        <div id="preview_canvas_container_{{extendedLayout.layout.layoutId}}" style="width: 100%; height: 100%;"></div>
+                                    <div class="embed-responsive-item preview-container">
+                                        <div id="preview_canvas_container_{{extendedLayout.layout.layoutId}}" style="width: 100%; height: 100%;">
+                                            <iframe sandbox="allow-scripts" frameborder="0"
+                                                    id="player_frame_{{extendedLayout.layout.layoutId}}"
+                                                    src="{{ extendedLayout.previewUrl }}?jwt={{ extendedLayout.previewJwt }}"
+                                                    style="position: absolute; top: 0; left: 0; pointer-events: unset"
+                                                >
+                                            </iframe>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -56,7 +62,7 @@
                                 <small>{% trans "duration" %}:</small> {{ extendedLayout.duration|datehms }}<br/>
                             </div>
                             <div class="col-sm-4">
-                                <a class="btn btn-white" href="{{ url_for("layout.preview", {id: extendedLayout.layout.layoutId}) }}" target="_blank">
+                                <a class="btn btn-white" href="{{ extendedLayout.previewUrl }}?jwt={{ extendedLayout.previewJwt }}" target="_blank">
                                     {% trans "Open full screen" %}
                                     <span class="fa fa-tablet"></span>
                                 </a>
@@ -67,46 +73,4 @@
             </div>
         </div>
     </div>
-{% endblock %}
-
-{% block javaScript %}
-    <script src="{{ theme.rootUri() }}dist/preview.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
-    <script src="{{ theme.rootUri() }}dist/vendor/html5preloader/html5Preloader.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
-    <script type="text/javascript" nonce="{{ cspNonce }}">
-        var previewTranslations = {};
-        // Translations we want always available
-        {% autoescape "js" %}
-            previewTranslations.actionControllerTitle = "{{ "Webhook Controller"|trans }}";
-            previewTranslations.navigateToLayout = "{{ "Navigate to layout with code [layoutTag]?"|trans }}";
-            previewTranslations.emptyRegionMessage = "{{ "Empty region!"|trans }}";
-            previewTranslations.nextItem = "{{ "Next Item"|trans }}";
-            previewTranslations.previousItem = "{{ "Previous Item"|trans }}";
-            previewTranslations.navWidget = "{{ "Navigate to Widget"|trans }}";
-            previewTranslations.navLayout = "{{ "Navigate to Layout"|trans }}";
-            previewTranslations.widgetId = "{{ "Widget ID"|trans }}";
-            previewTranslations.layoutCode = "{{ "Layout Code"|trans }}";
-            previewTranslations.target = "{{ "Target"|trans }}";
-        {% endautoescape %}
-
-        (function($){
-          $(document).ready(function(){
-            {% for extendedLayout in extendedLayouts %}
-                var iframe = $('<iframe>', {
-                    src: '{{ url_for("layout.preview", {id: extendedLayout.layout.layoutId}) }}', // URL to load in the iframe
-                    id: 'player_frame_{{extendedLayout.layout.layoutId}}',
-                    frameborder: 0,
-                    css: {
-                        position: 'absolute',
-                        'pointer-events': 'unset',
-                        top: 0,
-                        left: 0
-                    }
-                });
-
-                // Append the iframe to the container
-                $('#preview_canvas_container_{{extendedLayout.layout.layoutId}}').append(iframe);
-            {% endfor %}
-          });
-        }(jQuery));
-    </script>
 {% endblock %}

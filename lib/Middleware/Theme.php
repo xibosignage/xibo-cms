@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -117,17 +117,19 @@ class Theme implements Middleware
         $route = $routeContext->getRoute();
 
         // Resolve the current route name
-        $routeName = ($route == null) ? 'notfound' : $route->getName();
-        $view['baseUrl'] = $routeParser->urlFor('home');
+        if ($request->getAttribute('_entryPoint') === 'web') {
+            $routeName = ($route == null) ? 'notfound' : $route->getName();
+            $view['baseUrl'] = $routeParser->urlFor('home');
 
-        try {
-            $logoutRoute = empty($container->get('logoutRoute')) ? 'logout' : $container->get('logoutRoute');
-            $view['logoutUrl'] = $routeParser->urlFor($logoutRoute);
-        } catch (\Exception $e) {
-            $view['logoutUrl'] = $routeParser->urlFor('logout');
+            try {
+                $logoutRoute = empty($container->get('logoutRoute')) ? 'logout' : $container->get('logoutRoute');
+                $view['logoutUrl'] = $routeParser->urlFor($logoutRoute);
+            } catch (\Exception) {
+                $view['logoutUrl'] = $routeParser->urlFor('logout');
+            }
+            $view['route'] = $routeName;
         }
 
-        $view['route'] = $routeName;
         $view['theme'] = $container->get('configService');
         $view['settings'] = $settings;
         $view['helpService'] = $container->get('helpService');

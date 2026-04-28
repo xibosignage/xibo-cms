@@ -34,7 +34,7 @@
             <li class="nav-item">
         {% endif %}
                 {% if currentUser.featureEnabled("schedule.view") %}
-                    <a class="{{ groupElementClass }}" href="{{ url_for("schedule.view") }}">{% trans "Schedule" %}</a>
+                    <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/schedule/events">{% trans "Schedule" %}</a>
                 {% endif %}
                 {% if currentUser.featureEnabled("daypart.view") %}
                     <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/schedule/dayparting">{% trans "Dayparting" %}</a>
@@ -56,7 +56,7 @@
             <li class="nav-item">
         {% endif %}
             {% if currentUser.featureEnabled("campaign.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("campaign.view") }}">{% trans "Campaigns" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/design/campaign">{% trans "Campaigns" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("layout.view") %}
@@ -118,11 +118,11 @@
             <li class="nav-item">
         {% endif %}
             {% if currentUser.featureEnabled("displays.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("display.view") }}">{% trans "Displays" %}</a>
+                 <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/displays/displays">{% trans "Displays" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("displaygroup.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("displaygroup.view") }}">{% trans "Display Groups" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/displays/display-groups">{% trans "Display Groups" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("display.syncView") %}
@@ -130,7 +130,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("displayprofile.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("displayprofile.view") }}">{% trans "Display Settings" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/displays/settings">{% trans "Display Settings" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("playersoftware.view") %}

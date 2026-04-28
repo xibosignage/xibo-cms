@@ -330,11 +330,9 @@ class DataSetColumn implements \JsonSerializable
         ) {
             try {
                 $count = 0;
-                $formula = str_ireplace(
-                    Sql::DISALLOWED_KEYWORDS,
-                    '',
+                $formula = Sql::cleanup(
                     htmlspecialchars_decode($this->formula, ENT_QUOTES),
-                    $count
+                    $count,
                 );
 
                 if ($count > 0) {

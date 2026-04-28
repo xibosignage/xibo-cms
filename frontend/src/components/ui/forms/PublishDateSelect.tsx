@@ -38,6 +38,8 @@ import { twMerge } from 'tailwind-merge';
 
 import DatePicker from '../DatePicker';
 
+import { useUserContext } from '@/context/UserContext';
+
 export type PublishValue = { type: 'now' } | { type: 'scheduled'; date: Date };
 
 interface PublishDateSelectProps {
@@ -47,6 +49,8 @@ interface PublishDateSelectProps {
 
 export default function PublishDateSelect({ value, onSelect }: PublishDateSelectProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
+  const timeZone = user?.settings?.defaultTimezone;
 
   const [isOpen, setIsOpen] = useState(false);
   const [openDatePicker, setOpenDatePicker] = useState(false);
@@ -95,7 +99,7 @@ export default function PublishDateSelect({ value, onSelect }: PublishDateSelect
           {value?.type === 'now'
             ? t('Publish Now')
             : value?.type === 'scheduled'
-              ? value.date.toLocaleString()
+              ? value.date.toLocaleString(undefined, timeZone ? { timeZone } : undefined)
               : t('Select publish option')}
         </span>
         <button

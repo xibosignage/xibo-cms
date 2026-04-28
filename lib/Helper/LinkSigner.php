@@ -38,6 +38,7 @@ class LinkSigner
      * @param $itemId
      * @param string $storedAs
      * @param string|null $fileType
+     * @param bool $isRequestFromPwa
      * @return string
      * @throws \Xibo\Support\Exception\NotFoundException
      */
@@ -54,9 +55,10 @@ class LinkSigner
         // Start with the base url, which should correctly account for running with a CMS_ALIAS
         $xmdsRoot = (new HttpsDetect())->getBaseUrl();
 
-        // PWA requests resources via `/pwa/getResource`, but the link should be served from `/xmds.php`
+        // PWA requests resources via `/pwa/getResource` and `/pwa/getData`, but the link should be served from `/xmds.php`
         if ($isRequestFromPwa) {
             $xmdsRoot = str_replace('/pwa/getResource', '/xmds.php', $xmdsRoot);
+            $xmdsRoot = str_replace('/pwa/getData', '/xmds.php', $xmdsRoot);
         }
 
         // Build the rest of the URL

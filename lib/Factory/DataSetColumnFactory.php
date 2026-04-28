@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -19,7 +19,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 
 namespace Xibo\Factory;
 
@@ -75,8 +74,9 @@ class DataSetColumnFactory extends BaseFactory
     {
         $columns = $this->query(null, ['dataSetColumnId' => $dataSetColumnId]);
 
-        if (count($columns) <= 0)
+        if (count($columns) <= 0) {
             throw new NotFoundException();
+        }
 
         return $columns[0];
     }
@@ -96,9 +96,6 @@ class DataSetColumnFactory extends BaseFactory
         $entries = [];
         $params = [];
         $sanitizedFilter = $this->getSanitizer($filterBy);
-
-        if ($sortOrder == null)
-            $sortOrder = ['columnOrder'];
 
         $select = '
             SELECT dataSetColumnId,
@@ -142,10 +139,34 @@ class DataSetColumnFactory extends BaseFactory
             $params['remoteField'] = $sanitizedFilter->getInt('remoteField');
         }
 
+        if ($sanitizedFilter->getString('keyword') != null) {
+            // Fulltext search
+            $body .= $this->buildSearchQuery(
+                $sanitizedFilter->getString('keyword'),
+                $params,
+                ['datasetcolumn.heading', 'datasetcolumn.listcontent', 'datasetcolumn.tooltip'],
+                ['datasetcolumn.dataSetColumnId']
+            );
+        }
+
         // Sorting?
-        $order = '';
-        if (is_array($sortOrder))
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        $allowedColumns = [
+            'heading',
+            'dataType',
+            'dataSetColumnType',
+            'listContent',
+            'tooltip',
+            'columnOrder',
+            'isRequired',
+        ];
+
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['columnOrder ASC']
+        );
+
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         $limit = '';
         // Paging
@@ -154,7 +175,6 @@ class DataSetColumnFactory extends BaseFactory
         }
 
         $sql = $select . $body . $order . $limit;
-
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['showFilter', 'showSort']]);

@@ -12,8 +12,7 @@
     "jsx": "react-jsx",
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "baseUrl": ".",
-    "paths": { "@/*": ["src/*"] },
+    "paths": { "@/*": ["./src/*"] },
     "types": ["vite/client", "react", "vitest/globals", "@testing-library/jest-dom"]
   },
   "include": ["src", "scripts", "types", "vite-env.d.ts", "vite.config.ts"]

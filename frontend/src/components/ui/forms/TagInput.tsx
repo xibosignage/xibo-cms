@@ -40,7 +40,7 @@ interface TagInputProps {
 }
 
 function TagInput({
-  value,
+  value = [],
   onChange,
   className,
   label,
@@ -53,6 +53,7 @@ function TagInput({
 }: TagInputProps) {
   const { t } = useTranslation();
   const [input, setInput] = useState('');
+  const tags = Array.isArray(value) ? value : [];
 
   const parseTag = (raw: string): Tag | null => {
     const trimmed = raw.trim();
@@ -78,10 +79,10 @@ function TagInput({
     const newTag = parseTag(raw);
     if (!newTag) return;
 
-    const exists = value.some((t) => t.tag === newTag.tag);
+    const exists = tags.some((t) => t.tag === newTag.tag);
     if (exists) return;
 
-    onChange([...value, newTag]);
+    onChange([...tags, newTag]);
     setInput('');
   };
 
@@ -90,11 +91,11 @@ function TagInput({
       return;
     }
 
-    onChange(value.filter((t) => t.tag !== tag));
+    onChange(tags.filter((t) => t.tag !== tag));
   };
 
   return (
-    <div className="flex flex-col gap-1 relative w-full">
+    <div className={twMerge('flex flex-col gap-1 relative w-full', className)}>
       <label className="text-sm font-semibold text-gray-500 leading-5">
         {!label ? t('Tags') : label}
       </label>
@@ -104,7 +105,6 @@ function TagInput({
           'flex rounded-lg bg-white border border-gray-200 overflow-hidden transition-colors min-h-11.25',
           'focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500',
           disabled && 'opacity-50 pointer-events-none bg-gray-50',
-          className,
         )}
       >
         {prefix && (
@@ -112,7 +112,7 @@ function TagInput({
         )}
 
         <div className="flex-1 p-2 flex flex-wrap gap-2 items-center min-w-0">
-          {value.map((tagObj) => (
+          {tags.map((tagObj) => (
             <span
               key={tagObj.tag}
               className="flex items-center gap-1 px-2 py-1 text-sm font-semibold border text-xibo-blue-600 border-xibo-blue-400 rounded-full"
@@ -137,14 +137,14 @@ function TagInput({
               if (e.key === 'Enter' || e.key === ',') {
                 e.preventDefault();
                 addTag(input);
-              } else if (e.key === 'Backspace' && !input && value.length > 0) {
-                const lastTag = value[value.length - 1];
+              } else if (e.key === 'Backspace' && !input && tags.length > 0) {
+                const lastTag = tags[tags.length - 1];
                 if (lastTag) {
                   removeTag(lastTag.tag);
                 }
               }
             }}
-            placeholder={value.length === 0 ? placeholder || t('Add tags') : ''}
+            placeholder={tags.length === 0 ? placeholder || t('Add tags') : ''}
           />
         </div>
 

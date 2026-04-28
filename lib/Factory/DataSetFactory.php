@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,17 +23,18 @@
 namespace Xibo\Factory;
 
 use Carbon\Carbon;
-use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
+use Xibo\Helper\Guzzle\SafeClient;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\RespectSanitizer;
 
 /**
  * Class DataSetFactory
@@ -105,13 +106,17 @@ class DataSetFactory extends BaseFactory
 
     /**
      * Get DataSets by ID
-     * @param $dataSetId
+     * @param int $dataSetId
+     * @param bool $disableUserCheck
      * @return DataSet
      * @throws NotFoundException
      */
-    public function getById($dataSetId)
+    public function getById(int $dataSetId, bool $disableUserCheck = true): DataSet
     {
-        $dataSets = $this->query(null, ['disableUserCheck' => 1, 'dataSetId' => $dataSetId]);
+        $dataSets = $this->query(null, [
+            'disableUserCheck' => $disableUserCheck ? 1 : 0,
+            'dataSetId' => $dataSetId
+        ]);
 
         if (count($dataSets) <= 0) {
             throw new NotFoundException();
@@ -189,10 +194,6 @@ class DataSetFactory extends BaseFactory
         $params = [];
         $parsedFilter = $this->getSanitizer($filterBy);
 
-        if ($sortOrder === null) {
-            $sortOrder = ['dataSet'];
-        }
-
         $select  = '
           SELECT dataset.dataSetId,
             dataset.dataSet,
@@ -229,6 +230,7 @@ class DataSetFactory extends BaseFactory
             dataset.`folderId`,
             dataset.`permissionsFolderId`,
             user.userName AS owner,
+            folder.folderName,
             (
               SELECT GROUP_CONCAT(DISTINCT `group`.group)
                   FROM `permission`
@@ -246,6 +248,7 @@ class DataSetFactory extends BaseFactory
         $body = '
               FROM dataset
                INNER JOIN `user` ON user.userId = dataset.userId
+               INNER JOIN `folder` ON folder.folderId = dataset.folderId
              WHERE 1 = 1
         ';
 
@@ -298,18 +301,68 @@ class DataSetFactory extends BaseFactory
             $params['folderId'] = $parsedFilter->getInt('folderId');
         }
 
+        // Modified Date filter
+        if ($parsedFilter->getDate('modifiedDateFrom') !== null) {
+            $body .= ' AND (dataset.lastDataEdit = 0 OR dataset.lastDataEdit >= :modifiedDateFrom) ';
+            $params['modifiedDateFrom'] = strtotime($parsedFilter->getDate('modifiedDateFrom'));
+        }
+
+        if ($parsedFilter->getDate('modifiedDateTo') !== null) {
+            $body .= ' AND (dataset.lastDataEdit = 0 OR dataset.lastDataEdit <= :modifiedDateTo) ';
+            $params['modifiedDateTo'] = strtotime($parsedFilter->getDate('modifiedDateTo'));
+        }
+
+        if ($parsedFilter->getString('keyword') != null) {
+            // Fulltext search
+            $body .= $this->buildSearchQuery(
+                $parsedFilter->getString('keyword'),
+                $params,
+                ['dataset.dataSet', 'dataset.description', 'dataset.code'],
+                ['dataset.dataSetId']
+            );
+        }
+
         // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy, '`dataset`.permissionsFolderId');
+        $this->viewPermissionSql(
+            'Xibo\Entity\DataSet',
+            $body,
+            $params,
+            '`dataset`.dataSetId',
+            '`dataset`.userId',
+            $filterBy,
+            '`dataset`.permissionsFolderId'
+        );
 
         // Sorting?
-        $order = '';
-        if (is_array($sortOrder))
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        $allowedColumns = [
+            'dataSetId',
+            'dataSet',
+            'code',
+            'isRemote',
+            'isRealTime',
+            'owner',
+            'lastSync'
+        ];
+
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            ['dataLastModified' => '`lastDataEdit`'],
+            ['dataSetId ASC']
+        );
+
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         $limit = '';
+
         // Paging
-        if ($filterBy !== null && $parsedFilter->getInt('start') !== null && $parsedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0]) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
+        if (
+            $filterBy !== null
+            && $parsedFilter->getInt('start') !== null
+            && $parsedFilter->getInt('length') !== null
+        ) {
+            $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0]) . ', ' .
+                $parsedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
@@ -360,7 +413,7 @@ class DataSetFactory extends BaseFactory
         $maxMemory = Environment::getMemoryLimitBytes() / 2;
 
         // Guzzle for this and add proxy support.
-        $client = new Client($this->config->getGuzzleProxy());
+        $client = SafeClient::getSafeClient($this->config->getGuzzleProxy());
 
         $result = new \stdClass();
         $result->entries = [];
@@ -784,8 +837,10 @@ class DataSetFactory extends BaseFactory
                             }
                             break;
                         case 6:
-                            // HTML, without any sanitization
-                            $result[$column->heading] = $value[1];
+                            // HTML — sanitize via RespectSanitizer to match the manual entry path
+                            $result[$column->heading] = (new RespectSanitizer())
+                                ->setCollection(['html' => $value[1] ?? ''])
+                                ->getHtml('html');
                             break;
                         default:
                             // Default value, assume it will be a string and filter it accordingly.

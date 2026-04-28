@@ -264,6 +264,15 @@ class RegionFactory extends BaseFactory
             $params['userId'] = $sanitizedFilter->getInt('userId');
         }
 
+        $this->viewPermissionSql(
+            'Xibo\Entity\Region',
+            $body,
+            $params,
+            'region.regionId',
+            'region.userId',
+            $filterBy,
+        );
+
         // Order by Name
         $sql .= ' ORDER BY `region`.name ';
 

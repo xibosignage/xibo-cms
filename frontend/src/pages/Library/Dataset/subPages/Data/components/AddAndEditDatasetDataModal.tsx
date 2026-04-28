@@ -212,7 +212,7 @@ export function AddAndEditDataModal({
                   label={label}
                   value={String(currentValue || '')}
                   options={options}
-                  helper={col.tooltip}
+                  helpText={col.tooltip}
                   onSelect={(val) => {
                     updateDraft(col.dataSetColumnId, val);
                   }}

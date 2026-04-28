@@ -207,7 +207,7 @@ export function AddAndEditDatasetColumnModal({
             label={t('Data Type')}
             value={String(draft.dataTypeId)}
             options={dataTypes.map((d) => ({ label: t(d.name), value: String(d.id) }))}
-            helper={t('The DataType of the Intended Data')}
+            helpText={t('The DataType of the Intended Data')}
             onSelect={(val) => {
               updateDraft('dataTypeId', parseInt(val, 10) as DataTypeId);
             }}
@@ -217,7 +217,7 @@ export function AddAndEditDatasetColumnModal({
             label={t('Column Type')}
             value={String(draft.dataSetColumnTypeId)}
             options={columnTypes.map((c) => ({ label: t(c.name), value: String(c.id) }))}
-            helper={t('Select the Column Type')}
+            helpText={t('Select the Column Type')}
             onSelect={(val) => {
               updateDraft('dataSetColumnTypeId', parseInt(val, 10) as DataSetColumnTypeId);
             }}

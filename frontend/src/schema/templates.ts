@@ -41,5 +41,5 @@ export const getTemplateSchema = (t: TFunction) =>
       )
       .optional(),
 
-    includeWidgets: z.boolean(),
+    includeWidgets: z.boolean().optional(),
   });

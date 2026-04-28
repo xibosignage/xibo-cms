@@ -27,14 +27,18 @@ import { fetchDatasetData } from '@/services/datasetApi';
 interface UseDatasetDataProps {
   datasetId: string;
   pagination: PaginationState;
+  filter: string;
   sorting: SortingState;
+  columnFilters?: Record<string, string>;
   enabled?: boolean;
 }
 
 export function useDatasetData({
   datasetId,
   pagination,
+  filter,
   sorting,
+  columnFilters,
   enabled = true,
 }: UseDatasetDataProps) {
   const sort = sorting[0];
@@ -42,13 +46,15 @@ export function useDatasetData({
   const sortDir = sort ? (sort.desc ? 'desc' : 'asc') : undefined;
 
   return useQuery({
-    queryKey: ['datasetData', datasetId, pagination, sorting],
+    queryKey: ['datasetData', datasetId, pagination, sorting, filter, columnFilters],
     queryFn: ({ signal }) =>
       fetchDatasetData(datasetId, {
         start: pagination.pageIndex * pagination.pageSize,
         length: pagination.pageSize,
+        keyword: filter,
         sortBy,
         sortDir,
+        columnFilters,
         signal,
       }),
     placeholderData: keepPreviousData,
