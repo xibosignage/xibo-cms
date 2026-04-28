@@ -173,7 +173,9 @@ class OpenWeatherMapConnector implements ConnectorInterface
         // Cache expiry date
         $cacheExpire = Carbon::now()->addSeconds($this->getSetting('cachePeriod'));
 
-        $this->getLogger()->debug('getWeatherData: plan=' . (($this->getSetting('owmIsPaidPlan') ?? 0 == 1) ? 'paid' : 'free'));
+        $this->getLogger()->debug(
+            'getWeatherData: plan=' . (($this->getSetting('owmIsPaidPlan') ?? 0 == 1) ? 'paid' : 'free')
+        );
 
         if ($this->getSetting('owmIsPaidPlan') ?? 0 == 1) {
             // We build our data from multiple API calls
@@ -256,12 +258,15 @@ class OpenWeatherMapConnector implements ConnectorInterface
         $this->processItemIntoDay($this->currentDay, $data['current'], $units, true);
 
         $locationTz = new \DateTimeZone($this->timezone);
-        $currentDayDate = Carbon::createFromTimestamp($this->currentDay->time)->setTimezone($locationTz)->format('Y-m-d');
+        $currentDayDate = Carbon::createFromTimestamp($this->currentDay->time)
+            ->setTimezone($locationTz)
+            ->format('Y-m-d');
         $this->getLogger()->debug('getWeatherData: currentDay date=' . $currentDayDate);
         // Process each day into a forecast
         foreach ($data['daily'] as $dayItem) {
             // Skip any item that falls on the same date as currentDay
-            if (Carbon::createFromTimestamp($dayItem['dt'])->setTimezone($locationTz)->format('Y-m-d') === $currentDayDate) {
+            $dayDate = Carbon::createFromTimestamp($dayItem['dt'])->setTimezone($locationTz)->format('Y-m-d');
+            if ($dayDate === $currentDayDate) {
                 continue;
             }
 
@@ -295,7 +300,8 @@ class OpenWeatherMapConnector implements ConnectorInterface
             $this->currentDay->wicon = str_replace('-night', '', $this->currentDay->wicon);
         }
 
-        $this->getLogger()->debug('getWeatherData: ' . count($forecasts) . ' forecast days, first=' . (isset($forecasts[0]) ? date('Y-m-d', $forecasts[0]->time) : 'none'));
+        $firstDay = isset($forecasts[0]) ? date('Y-m-d', $forecasts[0]->time) : 'none';
+        $this->getLogger()->debug('getWeatherData: ' . count($forecasts) . ' forecast days, first=' . $firstDay);
 
         $dataProvider->addItem($this->currentDay);
 
