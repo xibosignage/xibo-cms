@@ -31,7 +31,13 @@
                 <div class="col-md-12">
                     {% set readDt %}<span class="notification-date">{{ notification.readDt }}</span>{% endset %}
                     <p>{% trans "Published" %} <span class="notification-date">{{ notification.releaseDt }}</span>, {% trans %}you read this {{ readDt }}.{% endtrans %}</p>
-                    {{ notification.body|raw }}
+                    <iframe
+                        sandbox="allow-scripts"
+                        frameborder="0"
+                        id="notification_{{notification.notificationId}}"
+                        srcdoc="{{ notification.body | e('html_attr') }}"
+                        style="width: 100%; height: 150px; border: none;"
+                    ></iframe>
                 </div>
             </div>
             <div class="row">

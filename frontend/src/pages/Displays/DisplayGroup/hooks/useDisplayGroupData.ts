@@ -80,7 +80,7 @@ export const useDisplayGroupData = ({
       const request: FetchDisplayGroupRequest = {
         start: startOffset,
         length: pagination.pageSize,
-        displayGroup: filter || undefined,
+        keyword: filter || undefined,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,

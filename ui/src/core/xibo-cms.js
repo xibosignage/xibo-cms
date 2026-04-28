@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -267,7 +267,9 @@ window.XiboInitialise = function(scope, options) {
     if (anchor !== undefined && anchor !== '') {
       makePagedSelect($target, $(anchor));
     } else if (inModal) {
-      makePagedSelect($target, $(scope).find('.modal-body'));
+      const $modalBody = $(scope).find('.modal-body');
+
+      makePagedSelect($target, $modalBody.length ? $modalBody : $(scope));
     } else {
       makePagedSelect($target, $('body'));
     }
@@ -295,7 +297,7 @@ window.XiboInitialise = function(scope, options) {
   $(scope + ' .colorpicker-input:not(.colorpicker-form-element)')
     .each(function(_i, el) {
       $(el).colorpicker({
-        container: $(el).find('.picker-container')
+        container: $(el).find('.picker-container'),
       });
     });
 
@@ -1702,8 +1704,8 @@ window.XiboMultiSelectFormRender = function(button) {
         // so use the form open hook if one has been provided.
         formOpenCallback = $button.data().formCallback;
 
-      // If form needs confirmation
-      formConfirm = $button.data().formConfirm;
+        // If form needs confirmation
+        formConfirm = $button.data().formConfirm;
       }
     }
   });
@@ -2665,10 +2667,6 @@ window.initDatePicker = function(
     flatpickr.l10ns.default.firstDayOfWeek =
       parseInt(moment().startOf('week').format('d'));
 
-    // Check if element is inside of a modal
-    // and set it as static
-    const isStatic = $element.parents('.modal').length > 0;
-
     // Create flatpickr
     flatpickr($element, Object.assign({
       altInput: true,
@@ -2680,7 +2678,6 @@ window.initDatePicker = function(
       dateFormat: baseFormat,
       locale: (language != 'en-GB') ? language : 'default',
       defaultHour: '00',
-      static: isStatic,
       getWeek: function(dateObj) {
         return moment(dateObj).week();
       },
@@ -2691,11 +2688,6 @@ window.initDatePicker = function(
         return moment(date).format(format);
       },
     }, options));
-
-    // If it's a static flatpickr, fix flex CSS
-    if (isStatic) {
-      $element.parent().css('flex', 1);
-    }
   }
 
   // Callback for on change event
@@ -2852,14 +2844,19 @@ window.createMiniLayoutPreview = function(previewUrl) {
     }));
   }
 
+  // Set the previewJWT on the window.
+  const previewUrlUrl = new URL(previewUrl, window.location.origin);
+  window.previewJwt = previewUrlUrl.searchParams.get('jwt');
+
+  // Create the mini preview
   const $layoutPreview = $('.mini-layout-preview');
   const $layoutPreviewContent = $layoutPreview.find('#content');
 
   // Create base template for preview content
   const previewTemplate =
     Handlebars.compile(
-      '<iframe scrolling="no" src="{{url}}" width="{{width}}px" ' +
-      'height="{{height}}px" style="border:0;"></iframe>');
+      '<iframe scrolling="no" sandbox="allow-scripts" src="{{url}}" ' +
+      'width="{{width}}px" height="{{height}}px" style="border:0;"></iframe>');
 
   // Clean all selected elements
   $layoutPreviewContent.html('');
@@ -2895,10 +2892,10 @@ window.createMiniLayoutPreview = function(previewUrl) {
 
     // Change icon based on size state
     $(ev.currentTarget).toggleClass(
-      'fa-arrow-circle-down', $layoutPreview.hasClass('large'),
+      'fa-minus-square', $layoutPreview.hasClass('large'),
     );
     $(ev.currentTarget).toggleClass(
-      'fa-arrow-circle-up', !$layoutPreview.hasClass('large'),
+      'fa-plus-square', !$layoutPreview.hasClass('large'),
     );
     // Re-show play button
     $layoutPreview.find('#playBtn').show();

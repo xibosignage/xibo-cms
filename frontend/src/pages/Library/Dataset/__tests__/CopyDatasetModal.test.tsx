@@ -68,7 +68,7 @@ describe('CopyDatasetModal', () => {
 
     expect(
       screen.getByRole('checkbox', {
-        name: /Should we copy all the row data from the original dataSet\?/i,
+        name: /Copy rows\?/i,
       }),
     ).not.toBeChecked();
   });
@@ -131,7 +131,7 @@ describe('CopyDatasetModal', () => {
 
     await user.click(
       screen.getByRole('checkbox', {
-        name: /Should we copy all the row data from the original dataSet\?/i,
+        name: /Copy rows\?/i,
       }),
     );
 

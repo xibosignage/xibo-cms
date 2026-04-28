@@ -28,6 +28,12 @@ import type { FilterConfigItem } from '../FilterInputs';
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
 }));
+// FilterInputs imports t directly from i18next (not via useTranslation). Mock it so
+// the Reset button renders with accessible text instead of an empty string.
+vi.mock('i18next', () => {
+  const t = (key: string) => key;
+  return { default: { t, language: 'en', isInitialized: true }, t };
+});
 
 type Filters = { name: string; status: string };
 

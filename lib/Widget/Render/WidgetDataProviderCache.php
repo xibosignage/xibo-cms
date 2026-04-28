@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -395,9 +395,6 @@ class WidgetDataProviderCache
             return null;
         }
 
-        // Do we need to add a URL prefix to the requests?
-        $prefix = $display->isPwa() ? '/pwa/' : '';
-
         // Media substitutes
         $matches = [];
         preg_match_all('/\[\[(.*?)\]\]/', $data, $matches);
@@ -419,7 +416,7 @@ class WidgetDataProviderCache
                     } else {
                         $url = $storedAs[$value[1]];
                     }
-                    $data = str_replace('[[' . $match . ']]', $prefix . $url, $data);
+                    $data = str_replace('[[' . $match . ']]', $url, $data);
                 } else {
                     $data = str_replace('[[' . $match . ']]', '', $data);
                 }

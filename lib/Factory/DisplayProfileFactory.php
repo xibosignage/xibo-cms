@@ -83,7 +83,7 @@ class DisplayProfileFactory extends BaseFactory
     public function getById(int $displayProfileId, bool $disableUserCheck = true): DisplayProfile
     {
         $profiles = $this->query(null, [
-            'disableUserCheck' => $disableUserCheck,
+            'disableUserCheck' => $disableUserCheck ? 1 : 0,
             'displayProfileId' => $displayProfileId
         ]);
 
@@ -347,6 +347,7 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'mediaInventoryTimer', 'default' => 0],
                 ['name' => 'screenShotRequestInterval', 'default' => 0, 'type' => 'int'],
                 ['name' => 'screenShotSize', 'default' => 1],
+                ['name' => 'disableTimerManagement', 'default' => 0, 'type' => 'checkbox'],
                 ['name' => 'timers', 'default' => '{}'],
                 ['name' => 'pictureOptions', 'default' => '{}'],
                 ['name' => 'lockOptions', 'default' => '{}'],
@@ -385,6 +386,7 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'mediaInventoryTimer', 'default' => 0],
                 ['name' => 'screenShotRequestInterval', 'default' => 0, 'type' => 'int'],
                 ['name' => 'screenShotSize', 'default' => 1],
+                ['name' => 'disableTimerManagement', 'default' => 0, 'type' => 'checkbox'],
                 ['name' => 'timers', 'default' => '{}'],
                 ['name' => 'pictureOptions', 'default' => '{}'],
                 ['name' => 'lockOptions', 'default' => '{}'],

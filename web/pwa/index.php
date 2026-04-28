@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -72,7 +72,7 @@ $app->setBasePath($container->get('basePath'));
 
 // Config
 $container->get('configService');
-$container->set('name', 'PWA');
+$container->set('name', 'pwa');
 
 // Middleware
 $app->add(new \Xibo\Middleware\ConnectorMiddleware($app));

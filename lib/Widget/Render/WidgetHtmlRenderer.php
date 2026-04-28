@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -44,6 +44,7 @@ use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
+use Xibo\Twig\TransExtension;
 
 /**
  * Class responsible for rendering out a widgets HTML, caching it if necessary
@@ -108,6 +109,7 @@ class WidgetHtmlRenderer
      * @param \Xibo\Entity\Widget $widget
      * @param \Xibo\Support\Sanitizer\SanitizerInterface $params
      * @param string $downloadUrl
+     * @param string $previewUrl
      * @param array $additionalContexts An array of additional key/value contexts for the templates
      * @return string
      * @throws \Twig\Error\LoaderError
@@ -119,6 +121,7 @@ class WidgetHtmlRenderer
         Region $region,
         Widget $widget,
         SanitizerInterface $params,
+        string $previewUrl,
         string $downloadUrl,
         array $additionalContexts = []
     ): string {
@@ -151,6 +154,7 @@ class WidgetHtmlRenderer
                     'module-html-preview.twig',
                     array_merge(
                         [
+                            'previewIframeSrc' => $previewUrl,
                             'width' => $width,
                             'height' => $height,
                             'regionId' => $region->regionId,
@@ -310,23 +314,26 @@ class WidgetHtmlRenderer
                 if (Str::startsWith($match, 'mediaId')) {
                     $params['type'] = 'image';
                 }
+                $url = $urlFor('library.download', $params);
                 $output = str_replace(
                     '[[' . $match . ']]',
-                    $urlFor('library.download', $params) . '?preview=1',
+                    $url . (Str::contains($url, '?') ? '&' : '?') . 'preview=1',
                     $output
                 );
             } else if (Str::startsWith($match, 'assetId')) {
                 $value = explode('=', $match);
+                $url = $urlFor('module.asset.download', ['assetId' => $value[1]]);
                 $output = str_replace(
                     '[[' . $match . ']]',
-                    $urlFor('module.asset.download', ['assetId' => $value[1]]) . '?preview=1',
+                    $url . (Str::contains($url, '?') ? '&' : '?') . 'preview=1',
                     $output
                 );
             } else if (Str::startsWith($match, 'assetAlias')) {
                 $value = explode('=', $match);
+                $url = $urlFor('module.asset.download', ['assetId' => $value[1]]);
                 $output = str_replace(
                     '[[' . $match . ']]',
-                    $urlFor('module.asset.download', ['assetId' => $value[1]]) . '?preview=1&isAlias=1',
+                    $url . (Str::contains($url, '?') ? '&' : '?') . 'preview=1&isAlias=1',
                     $output
                 );
             }
@@ -1038,13 +1045,16 @@ class WidgetHtmlRenderer
         // Add missing filter
         $sandbox->getEnvironment()->addFilter(new TwigFilter('url_decode', 'urldecode'));
 
+        // Add the trans extention (some previews have translations)
+        $sandbox->addExtension(new TransExtension());
+
         // Configure a security policy
         // Create a new security policy
         $policy = new SecurityPolicy();
 
         // Allowed tags
         // import is allowed for weather static templates which import a macro
-        $policy->setAllowedTags(['if', 'for', 'set', 'macro', 'import']);
+        $policy->setAllowedTags(['if', 'for', 'set', 'macro', 'import', 'trans']);
 
         // Allowed filters
         $policy->setAllowedFilters(['escape', 'raw', 'url_decode']);

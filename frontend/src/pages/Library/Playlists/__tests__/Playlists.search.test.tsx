@@ -35,7 +35,7 @@
 // =============================================================================
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, fireEvent, waitFor, act, within } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type React from 'react';
 import { MemoryRouter } from 'react-router-dom';
@@ -54,6 +54,11 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
   Trans: ({ children }: { children: React.ReactNode }) => children,
 }));
+
+vi.mock('i18next', () => {
+  const t = (key: string) => key;
+  return { default: { t, language: 'en', isInitialized: true }, t };
+});
 
 vi.mock('@/services/userApi', () => ({
   fetchUserPreference: vi.fn().mockResolvedValue(null),
@@ -304,9 +309,7 @@ describe('Playlists page - search and pagination', () => {
     // (aria-hidden="true") RTL excludes it from the accessibility tree.
     expect(screen.queryByRole('button', { name: 'Reset' })).not.toBeInTheDocument();
 
-    await act(async () => {
-      fireEvent.click(await screen.findByRole('button', { name: 'Filters' }));
-    });
+    fireEvent.click(await screen.findByRole('button', { name: 'Filters' }));
 
     expect(screen.getByRole('button', { name: 'Reset' })).toBeInTheDocument();
   });
@@ -320,18 +323,12 @@ describe('Playlists page - search and pagination', () => {
     // advancedFilters so the API call uses the right filter parameter.
     renderPage();
 
-    await act(async () => {
-      fireEvent.click(await screen.findByRole('button', { name: 'Filters' }));
-    });
+    fireEvent.click(await screen.findByRole('button', { name: 'Filters' }));
 
     const lastModLabel = screen.getByText('Last Modified');
     const lastModContainer = lastModLabel.closest('div')!;
-    await act(async () => {
-      fireEvent.click(within(lastModContainer).getByRole('button'));
-    });
-    await act(async () => {
-      fireEvent.click(within(lastModContainer).getByText('Today'));
-    });
+    fireEvent.click(within(lastModContainer).getByRole('button'));
+    fireEvent.click(within(lastModContainer).getByText('Today'));
 
     await waitFor(() => {
       expect(usePlaylistData).toHaveBeenLastCalledWith(
@@ -351,24 +348,16 @@ describe('Playlists page - search and pagination', () => {
     // so the table shows all playlists with no filter applied.
     renderPage();
 
-    await act(async () => {
-      fireEvent.click(await screen.findByRole('button', { name: 'Filters' }));
-    });
+    fireEvent.click(await screen.findByRole('button', { name: 'Filters' }));
 
     // Select Last Modified = Today to set a non-default filter value.
     const lastModLabel = screen.getByText('Last Modified');
     const lastModContainer = lastModLabel.closest('div')!;
-    await act(async () => {
-      fireEvent.click(within(lastModContainer).getByRole('button'));
-    });
-    await act(async () => {
-      fireEvent.click(within(lastModContainer).getByText('Today'));
-    });
+    fireEvent.click(within(lastModContainer).getByRole('button'));
+    fireEvent.click(within(lastModContainer).getByText('Today'));
 
     // Now reset - the filter values should return to the initial empty state.
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
-    });
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
 
     await waitFor(() => {
       expect(usePlaylistData).toHaveBeenLastCalledWith(

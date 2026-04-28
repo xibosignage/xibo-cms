@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -87,7 +87,7 @@ $container->get('configService')->setDependencies($container->get('store'), '/')
 // Check to see if the instance has been suspended
 $instanceSuspended = $container->get('configService')->getSetting('INSTANCE_SUSPENDED');
 if ($instanceSuspended == 'yes' || $instanceSuspended == 'partial') {
-    header('HTTP/1.0 503 Service Unavailable');
+    header('HTTP/1.0 403 Forbidden');
     die('CMS suspended');
 }
 
@@ -231,9 +231,20 @@ if (isset($_GET['file'])) {
 
             // Rewrite CSS for PWAs
             $cssFile = file_get_contents($libraryLocation . $file->path);
-            $matches = [];
-            preg_match_all('/url\(\'?(.*?)\'?\)/', $cssFile, $matches);
-            foreach ($matches[1] as $match) {
+
+            // Use callback to modify each match individually (to avoid substituting duplicates more than once)
+            $cssFile = preg_replace_callback('/url\(\'?(.*?)\'?\)/', function ($matches) use (
+                $requiredFileFactory,
+                $displayId,
+                $display,
+                $encryptionKey,
+                $cdnUrl,
+                $file,
+                $logger
+            ) {
+                // Process the match
+                $match = $matches[1];
+
                 // Look up the file to get the right ID/path.
                 try {
                     $replacementFile = $requiredFileFactory->getByDisplayAndDependencyPath($displayId, $match);
@@ -246,16 +257,15 @@ if (isset($_GET['file'])) {
                         $replacementFile->realId,
                         $replacementFile->path,
                         $file->fileType === 'fontCss' ? 'font' : 'asset',
+                        true,
                     );
-                    $cssFile = str_replace(
-                        $match,
-                        $url,
-                        $cssFile,
-                    );
-                } catch (Exception $exception) {
+
+                    return 'url(\'' . $url . '\')';
+                } catch (Exception) {
                     $logger->error('CSS has dependency which does not exist in Required Files: ' . $match);
+                    return $matches[0];
                 }
-            }
+            }, $cssFile);
 
             $file->size = strlen($cssFile);
 

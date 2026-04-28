@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -29,10 +29,10 @@ use Xibo\Entity\ReportForm;
 use Xibo\Entity\ReportResult;
 use Xibo\Entity\ReportSchedule;
 use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ReportScheduleFactory;
-use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\DateFormatHelper;
@@ -600,7 +600,13 @@ class ProofOfPlay implements ReportInterface
                         ON `layout`.layoutId = `layouthistory`.layoutId
                     WHERE `layouthistory`.campaignId = `stat`.campaignId)
               ) AS Layout,
-              IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) AS Media,
+              CASE 
+                 WHEN `stat`.`type` = \'media\' THEN `media`.`Name`
+                 WHEN `stat`.`type` = \'widget\' THEN IFNULL(
+                    `widgethistory`.name,
+                     IFNULL(`widgetoption`.value, `widget`.type)
+                  )
+              END AS Media,
               SUM(stat.count) AS NumberPlays,
               SUM(stat.duration) AS Duration,
               MIN(start) AS MinStart,
@@ -638,7 +644,10 @@ class ProofOfPlay implements ReportInterface
               LEFT OUTER JOIN `widgetoption`
               ON `widgetoption`.widgetId = `widget`.widgetId
                 AND `widgetoption`.type = \'attrib\'
-                AND `widgetoption`.option = \'name\'
+                AND `widgetoption`.option = \'name\'  
+              LEFT OUTER JOIN `widgethistory`
+              ON `widgethistory`.widgetId = `stat`.widgetId
+                AND `widgethistory`.layoutHistoryId = `layouthistory`.layoutHistoryId
               LEFT OUTER JOIN `media`
               ON `media`.mediaId = `stat`.mediaId
               LEFT OUTER JOIN `campaign`
@@ -858,7 +867,13 @@ class ProofOfPlay implements ReportInterface
                 stat.campaignId,
                 layout.layout, 
                 IFNULL(stat.mediaId, stat.widgetId), 
-                IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)),
+                CASE 
+                 WHEN `stat`.`type` = \'media\' THEN `media`.`Name`
+                 WHEN `stat`.`type` = \'widget\' THEN IFNULL(
+                    `widgethistory`.name,
+                     IFNULL(`widgetoption`.value, `widget`.type)
+                  )
+                END,
                 stat.layoutId,
                 stat.mediaId,
                 stat.widgetId

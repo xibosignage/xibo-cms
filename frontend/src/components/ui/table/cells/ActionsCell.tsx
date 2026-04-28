@@ -55,6 +55,7 @@ export function ActionsCell<TData>({ row, actions }: ActionsProps<TData>) {
                 ? 'text-blue-600 hover:bg-blue-50 focus:bg-blue-100'
                 : 'text-gray-600 hover:bg-gray-50 focus:bg-gray-100',
           )}
+          aria-label={action.label}
           title={action.label}
         >
           {action.icon && <action.icon className="w-4 h-4" />}

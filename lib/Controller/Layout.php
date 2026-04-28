@@ -49,11 +49,13 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetDataFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\LayoutDescription;
 use Xibo\Helper\LayoutUploadHandler;
 use Xibo\Helper\Profiler;
 use Xibo\Helper\SendFile;
 use Xibo\Helper\Status;
+use Xibo\Service\JwtServiceInterface;
 use Xibo\Service\MediaService;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -157,6 +159,7 @@ class Layout extends Base
         WidgetFactory $widgetFactory,
         private readonly WidgetDataFactory $widgetDataFactory,
         PlaylistFactory $playlistFactory,
+        private readonly JwtServiceInterface $jwtService,
     ) {
         $this->session = $session;
         $this->userFactory = $userFactory;
@@ -207,8 +210,9 @@ class Layout extends Base
         $layout = $this->layoutFactory->loadById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException();
+        }
 
         // Get the parent layout if it's editable
         if ($layout->isEditable()) {
@@ -223,10 +227,15 @@ class Layout extends Base
             } else {
                 $resolution = $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
             }
-        } catch (NotFoundException $notFoundException) {
-            $this->getLog()->info('Layout Editor with an unknown resolution, we will create it with name: ' . $layout->width . ' x ' . $layout->height);
+        } catch (NotFoundException) {
+            $this->getLog()->info('Layout Editor with an unknown resolution, we will create it with name: '
+                . $layout->width . ' x ' . $layout->height);
 
-            $resolution = $this->resolutionFactory->create($layout->width . ' x ' . $layout->height, (int)$layout->width, (int)$layout->height);
+            $resolution = $this->resolutionFactory->create(
+                $layout->width . ' x ' . $layout->height,
+                (int)$layout->width,
+                (int)$layout->height
+            );
             $resolution->userId = $this->userFactory->getSystemUser()->userId;
             $resolution->save();
         }
@@ -251,6 +260,13 @@ class Layout extends Base
             ]),
             'modules' => $moduleFactory->getAssignableModules(),
             'timeZones' => $timeZones,
+            'previewJwt' => $this->jwtService->generateJwt(
+                'Preview',
+                'layout',
+                $layout->layoutId,
+                '/preview/layout/preview/' . $layout->layoutId,
+                3600,
+            )->toString(),
         ];
 
         // Call the render the template
@@ -706,6 +722,18 @@ class Layout extends Base
         $layout->backgroundImageId = $sanitizedParams->getInt('backgroundImageId');
         $layout->backgroundzIndex = $sanitizedParams->getInt('backgroundzIndex');
         $layout->autoApplyTransitions = $sanitizedParams->getCheckbox('autoApplyTransitions');
+
+        // Check the status of the media file
+        if ($layout->backgroundImageId) {
+            $media = $this->mediaFactory->getById($layout->backgroundImageId);
+
+            if ($media->mediaType === 'image' && $media->released === 2) {
+                throw new InvalidArgumentException(sprintf(
+                    __('%s set as the layout background image is too large. Please ensure that none of the images in your layout are larger than your Resize Limit on their longest edge.'),//phpcs:ignore
+                    $media->name
+                ));
+            }
+        }
 
         // Resolution
         $saveRegions = false;
@@ -1536,6 +1564,26 @@ class Layout extends Base
                 'scheduleNowPermission',
                 $this->getUser()->featureEnabled('schedule.add')
             );
+
+            // Preview
+            if ($this->getUser()->featureEnabled('layout.view')) {
+                $baseUrl = (new HttpsDetect())->getBaseUrl($request);
+                $jwt = $this->jwtService->generateJwt(
+                    'Preview',
+                    'layout',
+                    $layout->layoutId,
+                    '/preview/layout/preview/' . $layout->layoutId,
+                    3600,
+                )->toString();
+                $layout->setUnmatchedProperty(
+                    'previewUrl',
+                    $baseUrl . '/preview/layout/preview/' . $layout->layoutId . '?jwt=' . $jwt,
+                );
+                $layout->setUnmatchedProperty(
+                    'previewDraftUrl',
+                    $baseUrl . '/preview/layout/preview/' . $layout->layoutId . '?jwt=' . $jwt,
+                );
+            }
         }
 
         // Store the table rows
@@ -2173,7 +2221,7 @@ class Layout extends Base
 
         $layout = $this->layoutFactory->getById($id);
 
-        if (!$this->getUser()->checkViewable($layout)) {
+        if (!$this->getUser()->checkViewable($layout) && $request->getAttribute('authedViaToken') !== true) {
             throw new AccessDeniedException();
         }
 

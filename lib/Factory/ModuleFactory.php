@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -360,6 +360,8 @@ class ModuleFactory extends BaseFactory
 
         foreach ($modules as $module) {
             if ($module->type === $type) {
+                // TODO: Ideally we would clone here, but I am not sure what that will do (revisit)
+                $module->undecorateProperties();
                 return $module;
             }
         }
@@ -377,10 +379,14 @@ class ModuleFactory extends BaseFactory
             if (in_array($type, $legacyTypes)) {
                 foreach ($conditions as $value) {
                     if (in_array($value, $legacyConditions)) {
+                        // TODO: Ideally we would clone here, but I am not sure what that will do (revisit)
+                        $module->undecorateProperties();
                         return $module;
                     }
                 }
 
+                // TODO: Ideally we would clone here, but I am not sure what that will do (revisit)
+                $module->undecorateProperties();
                 return $module;
             }
         }

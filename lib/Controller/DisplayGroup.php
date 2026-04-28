@@ -43,6 +43,7 @@ use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\XMR\ChangeLayoutAction;
+use Xibo\XMR\ClearStatsAndLogsAction;
 use Xibo\XMR\CollectNowAction;
 use Xibo\XMR\CommandAction;
 use Xibo\XMR\OverlayLayoutAction;
@@ -730,7 +731,7 @@ class DisplayGroup extends Base
      * @throws NotFoundException
      * @throws ControllerNotImplemented
      */
-    function delete(Request $request, Response $response, $id): Response|ResponseInterface
+    public function delete(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
         $displayGroup->load();
@@ -1591,8 +1592,7 @@ class DisplayGroup extends Base
         $displayGroup = $this->displayGroupFactory->getById($id);
 
         // Non-destructive edit-only feature; allow limited view access
-        if (
-            !$this->getUser()->checkEditable($displayGroup)
+        if (!$this->getUser()->checkEditable($displayGroup)
             && !$this->getUser()->featureEnabled('displays.limitedView')
             && !$this->getUser()->featureEnabled('displaygroup.limitedView')
         ) {
@@ -1645,7 +1645,7 @@ class DisplayGroup extends Base
             throw new AccessDeniedException();
         }
 
-        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($id), new CollectNowAction());
+        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($id), new ClearStatsAndLogsAction());
 
         // Return
         $this->getState()->hydrate([
@@ -2056,8 +2056,7 @@ class DisplayGroup extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Non-destructive edit-only feature; allow limited view access
-        if (
-            !$this->getUser()->checkEditable($displayGroup)
+        if (!$this->getUser()->checkEditable($displayGroup)
             && !$this->getUser()->featureEnabled('displaygroup.limitedView')
             && !$this->getUser()->featureEnabled('displays.limitedView')
         ) {

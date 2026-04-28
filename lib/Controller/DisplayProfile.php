@@ -170,7 +170,7 @@ class DisplayProfile extends Base
      * @throws NotFoundException
      * @throws GeneralException
      */
-    function grid(Request $request, Response $response): Response|ResponseInterface
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
 
@@ -460,7 +460,7 @@ class DisplayProfile extends Base
      * @throws GeneralException
      * @throws InvalidArgumentException
      */
-    function delete(Request $request, Response $response, $id): Response|ResponseInterface
+    public function delete(Request $request, Response $response, $id): Response|ResponseInterface
     {
         // Create a form out of the config object.
         $displayProfile = $this->displayProfileFactory->getById($id);

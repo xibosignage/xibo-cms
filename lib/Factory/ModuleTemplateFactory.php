@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -231,7 +231,7 @@ class ModuleTemplateFactory extends BaseFactory
             if ($includeUserTemplates) {
                 $this->templates = array_merge(
                     $this->templates,
-                    $this->loadUserTemplates()
+                    $this->loadUserTemplates([], [], true)
                 );
             }
         }
@@ -264,8 +264,9 @@ class ModuleTemplateFactory extends BaseFactory
     /**
      * Load user templates from the database.
      * @return ModuleTemplate[]
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function loadUserTemplates($sortOrder = [], $filterBy = []): array
+    public function loadUserTemplates($sortOrder = [], $filterBy = [], $disableUserCheck = false): array
     {
         $this->getLog()->debug('load: Loading user templates');
 
@@ -290,6 +291,8 @@ class ModuleTemplateFactory extends BaseFactory
                             AND view = 1
                 ) AS groupsWithPermissions';
 
+        $params['permissionEntityGroups'] = 'Xibo\\Entity\\ModuleTemplate';
+
         $body = ' FROM `module_templates`
                 WHERE 1 = 1 ';
 
@@ -308,16 +311,16 @@ class ModuleTemplateFactory extends BaseFactory
             $params['dataType'] = $filter->getString('dataType') ;
         }
 
-        $params['permissionEntityGroups'] = 'Xibo\\Entity\\ModuleTemplate';
-
-        $this->viewPermissionSql(
-            'Xibo\Entity\ModuleTemplate',
-            $body,
-            $params,
-            'module_templates.id',
-            'module_templates.ownerId',
-            $filterBy,
-        );
+        if (!$disableUserCheck) {
+            $this->viewPermissionSql(
+                'Xibo\Entity\ModuleTemplate',
+                $body,
+                $params,
+                'module_templates.id',
+                'module_templates.ownerId',
+                $filterBy,
+            );
+        }
 
         $order = '';
         if (is_array($sortOrder) && !empty($sortOrder)) {

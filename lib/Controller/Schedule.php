@@ -39,6 +39,8 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\ScheduleReminderFactory;
 use Xibo\Factory\SyncGroupFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\Session;
+use Xibo\Service\JwtServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
@@ -72,6 +74,7 @@ class Schedule extends Base
         private readonly ScheduleExclusionFactory $scheduleExclusionFactory,
         private readonly SyncGroupFactory $syncGroupFactory,
         private readonly ScheduleCriteriaFactory $scheduleCriteriaFactory,
+        private readonly JwtServiceInterface $jwtService
     ) {
     }
 
@@ -243,6 +246,20 @@ class Schedule extends Base
                 if ($layoutId != 0 && !array_key_exists($layoutId, $layouts)) {
                     // Look up the layout details
                     $layout = $this->layoutFactory->getById($layoutId);
+
+                    // Add preview token to layout
+                    $jwt = $this->jwtService->generateJwt(
+                        'Preview',
+                        'layout',
+                        $layout->layoutId,
+                        '/preview/layout/preview/' . $layout->layoutId,
+                        3600,
+                    )->toString();
+
+                    $layout->setUnmatchedProperty(
+                        'previewJwt',
+                        $jwt
+                    );
 
                     // Add the link to the layout
                     if (!$this->isApi($request)) {

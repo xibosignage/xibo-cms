@@ -21,9 +21,6 @@
  */
 namespace Xibo\Controller;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
-use Illuminate\Support\Str;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
@@ -444,8 +441,6 @@ class DataSet extends Base
         $dataSet->description = $sanitizedParams->getString('description');
         $dataSet->code = $sanitizedParams->getString('code');
         $dataSet->isRemote = $sanitizedParams->getCheckbox('isRemote');
-        $dataSet->isRealTime = $sanitizedParams->getCheckbox('isRealTime');
-        $dataSet->dataConnectorSource = $sanitizedParams->getString('dataConnectorSource');
         $dataSet->userId = $this->getUser()->userId;
 
         // Folders
@@ -499,6 +494,11 @@ class DataSet extends Base
         // only when we are not routing through the API
         if (!$this->isApi($request)) {
             $dataSet->assignColumn($dataSetColumn);
+        }
+
+        if ($this->getUser()->featureEnabled('dataset.realtime')) {
+            $dataSet->isRealTime = $sanitizedParams->getCheckbox('isRealTime');
+            $dataSet->dataConnectorSource = $sanitizedParams->getString('dataConnectorSource');
         }
 
         // Save
@@ -671,8 +671,6 @@ class DataSet extends Base
         $dataSet->description = $sanitizedParams->getString('description');
         $dataSet->code = $sanitizedParams->getString('code');
         $dataSet->isRemote = $sanitizedParams->getCheckbox('isRemote');
-        $dataSet->isRealTime = $sanitizedParams->getCheckbox('isRealTime');
-        $dataSet->dataConnectorSource = $sanitizedParams->getString('dataConnectorSource');
         $dataSet->folderId = $sanitizedParams->getInt('folderId', ['default' => $dataSet->folderId]);
 
         if ($dataSet->hasPropertyChanged('folderId')) {
@@ -683,6 +681,11 @@ class DataSet extends Base
             $dataSet->permissionsFolderId = ($folder->getPermissionFolderId() == null)
                 ? $folder->id
                 : $folder->getPermissionFolderId();
+        }
+
+        if ($this->getUser()->featureEnabled('dataset.realtime')) {
+            $dataSet->isRealTime = $sanitizedParams->getCheckbox('isRealTime');
+            $dataSet->dataConnectorSource = $sanitizedParams->getString('dataConnectorSource');
         }
 
         if ($dataSet->isRemote === 1) {
@@ -771,6 +774,10 @@ class DataSet extends Base
 
         if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
+        }
+
+        if (!$this->getUser()->featureEnabled('dataset.data')) {
+            throw new AccessDeniedException(__('Feature not enabled'));
         }
 
         if ($dataSet->isRealTime === 1) {
@@ -1451,6 +1458,10 @@ class DataSet extends Base
             throw new AccessDeniedException();
         }
 
+        if (!$this->getUser()->featureEnabled('dataset.data')) {
+            throw new AccessDeniedException(__('Feature not enabled'));
+        }
+
         $dataSet->load();
 
         if ($dataSet->dataConnectorSource == 'user_defined') {
@@ -1497,73 +1508,6 @@ class DataSet extends Base
         ]);
 
         return $this->render($request, $response);
-    }
-
-    /**
-     * Real-time data script test
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return Response
-     * @throws GeneralException
-     */
-    public function dataConnectorRequest(Request $request, Response $response, $id): Response
-    {
-        $dataSet = $this->dataSetFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($dataSet)) {
-            throw new AccessDeniedException();
-        }
-
-        $params = $this->getSanitizer($request->getParams());
-        $url = $params->getString('url');
-        $method = $params->getString('method', ['default' => 'GET']);
-        $headers = $params->getArray('headers');
-        $body = $params->getArray('body');
-
-        // Verify that the requested URL appears in the script somewhere.
-        $script = $dataSet->getScript();
-
-        if (!Str::contains($script, $url)) {
-            throw new InvalidArgumentException(__('URL not found in data connector script'), 'url');
-        }
-
-        // Make the request
-        $options = [];
-        if (is_array($headers)) {
-            $options['headers'] = $headers;
-        }
-
-        if ($method === 'GET') {
-            $options['query'] = $body;
-        } else {
-            $options['body'] = $body;
-        }
-
-        $this->getLog()->debug('dataConnectorRequest: making request with options ' . var_export($options, true));
-
-        // Use guzzle to make the request
-        try {
-            $client = new Client();
-            $remoteResponse = $client->request($method, $url, $options);
-
-            // Format the response
-            $response->getBody()->write($remoteResponse->getBody()->getContents());
-            $response = $response->withAddedHeader('Content-Type', $remoteResponse->getHeader('Content-Type')[0]);
-            $response = $response->withStatus($remoteResponse->getStatusCode());
-        } catch (RequestException $exception) {
-            $this->getLog()->error('dataConnectorRequest: error with request: ' . $exception->getMessage());
-
-            if ($exception->hasResponse()) {
-                $remoteResponse = $exception->getResponse();
-                $response = $response->withStatus($remoteResponse->getStatusCode());
-                $response->getBody()->write($remoteResponse->getBody()->getContents());
-            } else {
-                $response = $response->withStatus(500);
-            }
-        }
-
-        return $response;
     }
 
     /**
