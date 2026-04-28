@@ -55,63 +55,15 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class User extends Base
 {
-    /**
-     * @var UserFactory
-     */
-    private $userFactory;
-
-    /**
-     * @var UserTypeFactory
-     */
-    private $userTypeFactory;
-
-    /**
-     * @var UserGroupFactory
-     */
-    private $userGroupFactory;
-
-    /**
-     * @var PermissionFactory
-     */
-    private $permissionFactory;
-
-    /**
-     * @var ApplicationFactory
-     */
-    private $applicationFactory;
-
-    /** @var SessionFactory */
-    private $sessionFactory;
-
-    /** @var MediaService */
-    private $mediaService;
-
-    /**
-     * Set common dependencies.
-     * @param UserFactory $userFactory
-     * @param UserTypeFactory $userTypeFactory
-     * @param UserGroupFactory $userGroupFactory
-     * @param PermissionFactory $permissionFactory
-     * @param ApplicationFactory $applicationFactory
-     * @param SessionFactory $sessionFactory
-     * @param MediaService $mediaService
-     */
     public function __construct(
-        $userFactory,
-        $userTypeFactory,
-        $userGroupFactory,
-        $permissionFactory,
-        $applicationFactory,
-        $sessionFactory,
-        MediaService $mediaService
+        private readonly UserFactory $userFactory,
+        private readonly UserTypeFactory $userTypeFactory,
+        private readonly UserGroupFactory $userGroupFactory,
+        private readonly PermissionFactory $permissionFactory,
+        private readonly ApplicationFactory $applicationFactory,
+        private readonly SessionFactory $sessionFactory,
+        private readonly MediaService $mediaService
     ) {
-        $this->userFactory = $userFactory;
-        $this->userTypeFactory = $userTypeFactory;
-        $this->userGroupFactory = $userGroupFactory;
-        $this->permissionFactory = $permissionFactory;
-        $this->applicationFactory = $applicationFactory;
-        $this->sessionFactory = $sessionFactory;
-        $this->mediaService = $mediaService;
     }
 
     private function getMediaService(\Xibo\Entity\User $user): MediaService
@@ -128,7 +80,7 @@ class User extends Base
      * @return ResponseInterface|Response
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function home(Request $request, Response $response)
+    public function home(Request $request, Response $response): Response|ResponseInterface
     {
         // Should we show this user the welcome page?
         if ($this->getUser()->newUserWizard == 0) {
@@ -159,7 +111,7 @@ class User extends Base
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function welcome(Request $request, Response $response)
+    public function welcome(Request $request, Response $response): Response|ResponseInterface
     {
         $this->getState()->template = 'welcome-page';
 
@@ -192,7 +144,7 @@ class User extends Base
      * @return ResponseInterface|Response
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function myDetails(Request $request, Response $response)
+    public function myDetails(Request $request, Response $response): Response|ResponseInterface
     {
         $settings = $this->getConfig()->getSettings();
 
@@ -496,7 +448,7 @@ class User extends Base
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function add(Request $request, Response $response)
+    public function add(Request $request, Response $response): Response|ResponseInterface
     {
         // Only group admins or super admins can create Users.
         if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin()) {
@@ -571,14 +523,9 @@ class User extends Base
         }
 
         // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 201,
-            'message' => sprintf(__('Added %s'), $user->userName),
-            'id' => $user->userId,
-            'data' => $user
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(201)
+            ->withJson($user);
     }
 
     #[OA\Put(
@@ -672,7 +619,7 @@ class User extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @param $id
+     * @param int $id
      * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
@@ -681,7 +628,7 @@ class User extends Base
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $user = $this->userFactory->getById($id);
 
@@ -793,13 +740,9 @@ class User extends Base
         $user = $this->userFactory->getById($id);
 
         // Return
-        $this->getState()->hydrate([
-            'message' => sprintf(__('Edited %s'), $user->userName),
-            'id' => $user->userId,
-            'data' => $user
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson($user);
     }
 
     #[OA\Delete(
@@ -843,7 +786,7 @@ class User extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @param $id
+     * @param int $id
      * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws ConfigurationException
@@ -853,13 +796,16 @@ class User extends Base
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function delete(Request $request, Response $response, $id)
+    public function delete(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $user = $this->userFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // System User
         if ($user->userId == $this->getConfig()->getSetting('SYSTEM_USER')) {
-            throw new InvalidArgumentException(__('This User is set as System User and cannot be deleted.'), 'userId');
+            throw new InvalidArgumentException(
+                __('This User is set as System User and cannot be deleted.'),
+                'userId'
+            );
         }
 
         if (!$this->getUser()->checkDeleteable($user)) {
@@ -871,7 +817,9 @@ class User extends Base
         }
 
         if ($this->getUser()->isGroupAdmin() && $user->userTypeId !== 3) {
-            throw new InvalidArgumentException(__('Group Admin cannot remove Super Admins or other Group Admins.'));
+            throw new InvalidArgumentException(
+                __('Group Admin cannot remove Super Admins or other Group Admins.')
+            );
         }
 
         if ($sanitizedParams->getCheckbox('deleteAllItems') && $user->isSuperAdmin()) {
@@ -954,7 +902,7 @@ class User extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function homepages(Request $request, Response $response)
+    public function homepages(Request $request, Response $response): Response|ResponseInterface
     {
         // TODO change return when no longer used by old FE.
 
@@ -1032,7 +980,7 @@ class User extends Base
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function editProfileForm(Request $request, Response $response)
+    public function editProfileForm(Request $request, Response $response): Response|ResponseInterface
     {
         // TODO Remove later
         $user = $this->getUser();
@@ -1062,7 +1010,7 @@ class User extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
-    public function editProfile(Request $request, Response $response)
+    public function editProfile(Request $request, Response $response): Response|ResponseInterface
     {
         $user = $this->getUser();
 
@@ -1182,7 +1130,7 @@ class User extends Base
      * @throws \RobThree\Auth\TwoFactorAuthException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function tfaSetup(Request $request, Response $response)
+    public function tfaSetup(Request $request, Response $response): Response|ResponseInterface
     {
         $user = $this->getUser();
 
@@ -1222,7 +1170,7 @@ class User extends Base
      * @return bool
      * @throws \RobThree\Auth\TwoFactorAuthException
      */
-    public function tfaValidate($code, $user)
+    public function tfaValidate($code, $user): bool
     {
         $issuerSettings = $this->getConfig()->getSetting('TWOFACTOR_ISSUER');
         $appName = $this->getConfig()->getThemeConfig('app_name');
@@ -1254,7 +1202,7 @@ class User extends Base
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function tfaRecoveryGenerate(Request $request, Response $response)
+    public function tfaRecoveryGenerate(Request $request, Response $response): Response|ResponseInterface
     {
         $user = $this->getUser();
 
@@ -1284,7 +1232,7 @@ class User extends Base
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function tfaRecoveryShow(Request $request, Response $response)
+    public function tfaRecoveryShow(Request $request, Response $response): Response|ResponseInterface
     {
         $user = $this->getUser();
 
@@ -1418,7 +1366,7 @@ class User extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function permissionsGrid(Request $request, Response $response, $entity, $id)
+    public function permissionsGrid(Request $request, Response $response, $entity, $id): Response|ResponseInterface
     {
         // TODO change return when no longer used by old FE.
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -1497,7 +1445,7 @@ class User extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function permissionsMultiGrid(Request $request, Response $response, $entity)
+    public function permissionsMultiGrid(Request $request, Response $response, $entity): Response|ResponseInterface
     {
         // TODO change return when no longer used by old FE.
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -1585,7 +1533,7 @@ class User extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function permissionsForm(Request $request, Response $response, $entity, $id)
+    public function permissionsForm(Request $request, Response $response, $entity, $id): Response|ResponseInterface
     {
         // TODO remove later
         $requestEntity = $entity;
@@ -1642,7 +1590,7 @@ class User extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function permissionsMultiForm(Request $request, Response $response, $entity)
+    public function permissionsMultiForm(Request $request, Response $response, $entity): Response|ResponseInterface
     {
         // TODO remove later
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -1706,7 +1654,7 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @param string $entity
-     * @param $id
+     * @param int $id
      * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws ConfigurationException
@@ -1716,8 +1664,12 @@ class User extends Base
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function permissions(Request $request, Response $response, $entity, $id)
-    {
+    public function permissions(
+        Request $request,
+        Response $response,
+        string $entity,
+        int $id
+    ): Response|ResponseInterface {
         // Load our object
         $object = $this->parsePermissionsEntity($entity, $id);
 
@@ -1808,12 +1760,7 @@ class User extends Base
         }
 
         // Return
-        $this->getState()->hydrate([
-            'httpCode' => 204,
-            'message' => __('Share option Updated')
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(204);
     }
 
 
@@ -1843,7 +1790,7 @@ class User extends Base
         description: 'Array of permissions with groupId as the key',
         in: 'query',
         required: true,
-        schema: new OA\Schema(items: new OA\Items(type: 'string'), type: 'array')
+        schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'string'))
     )]
     #[OA\Parameter(
         name: 'ownerId',
@@ -1866,12 +1813,14 @@ class User extends Base
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function permissionsMulti(Request $request, Response $response, $entity)
+    public function permissionsMulti(Request $request, Response $response, string $entity): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Get array of ids
-        $ids = ($sanitizedParams->getString('ids') != '') ? explode(',', $sanitizedParams->getString('ids')) : [];
+        $ids = ($sanitizedParams->getString('ids') != '')
+            ? explode(',', $sanitizedParams->getString('ids'))
+            : [];
 
         // Check if the array of ids is passed
         if (count($ids) == 0) {
@@ -1898,7 +1847,7 @@ class User extends Base
      * @param int $objectId
      * @throws InvalidArgumentException
      */
-    private function parsePermissionsEntity($entity, $objectId)
+    private function parsePermissionsEntity(string $entity, int $objectId)
     {
         if ($entity == '') {
             throw new InvalidArgumentException(__('Sharing requested without an entity'));
@@ -1922,7 +1871,7 @@ class User extends Base
      * @param Permission[] $permissions
      * @param array $groupIds
      */
-    private function updatePermissions($permissions, $groupIds)
+    private function updatePermissions(array $permissions, array $groupIds): void
     {
         $this->getLog()->debug(
             sprintf(
@@ -1963,7 +1912,7 @@ class User extends Base
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function myApplications(Request $request, Response $response)
+    public function myApplications(Request $request, Response $response): Response|ResponseInterface
     {
         // TODO Remove later
         $this->getState()->template = 'user-applications-form';
@@ -2004,7 +1953,7 @@ class User extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function pref(Request $request, Response $response)
+    public function pref(Request $request, Response $response): Response|ResponseInterface
     {
         $requestedPreference =  $request->getQueryParam('preference');
 
@@ -2055,7 +2004,7 @@ class User extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
-    public function prefEdit(Request $request, Response $response)
+    public function prefEdit(Request $request, Response $response): Response
     {
         $parsedRequest = $this->getSanitizer($request->getParsedBody());
 
@@ -2088,7 +2037,7 @@ class User extends Base
     /**
      * @param Request $request
      * @param Response $response
-     * @param $id
+     * @param int $id
      * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
@@ -2097,7 +2046,7 @@ class User extends Base
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function assignUserGroup(Request $request, Response $response, $id)
+    public function assignUserGroup(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $user = $this->userFactory->getById($id);
 
@@ -2131,13 +2080,7 @@ class User extends Base
         }
 
         // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('%s assigned to User Groups'), $user->userName),
-            'id' => $user->userId
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(204);
     }
 
     /**
@@ -2150,18 +2093,13 @@ class User extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
-    public function userWelcomeSetUnSeen(Request $request, Response $response)
+    public function userWelcomeSetUnSeen(Request $request, Response $response): Response|ResponseInterface
     {
         $this->getUser()->newUserWizard = 0;
         $this->getUser()->save(['validate' => false]);
 
         // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('%s has started the welcome tutorial'), $this->getUser()->userName)
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(204);
     }
 
     /**
@@ -2174,18 +2112,13 @@ class User extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
-    public function userWelcomeSetSeen(Request $request, Response $response)
+    public function userWelcomeSetSeen(Request $request, Response $response): Response|ResponseInterface
     {
         $this->getUser()->newUserWizard = 1;
         $this->getUser()->save(['validate' => false]);
 
         // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('%s has seen the welcome tutorial'), $this->getUser()->userName)
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(204);
     }
 
     /**
@@ -2196,7 +2129,7 @@ class User extends Base
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function preferencesForm(Request $request, Response $response)
+    public function preferencesForm(Request $request, Response $response): Response|ResponseInterface
     {
         // TODO Remove later
         $this->getState()->template = 'user-form-preferences';
@@ -2236,7 +2169,7 @@ class User extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
-    public function prefEditFromForm(Request $request, Response $response)
+    public function prefEditFromForm(Request $request, Response $response): Response|ResponseInterface
     {
         $parsedParams = $this->getSanitizer($request->getParams());
 
@@ -2269,12 +2202,7 @@ class User extends Base
         $this->getUser()->save();
 
         // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => __('Updated Preferences')
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(204);
     }
 
     /**
@@ -2286,7 +2214,7 @@ class User extends Base
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function setHomeFolder(Request $request, Response $response, $id)
+    public function setHomeFolder(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $user = $this->userFactory->getById($id);
         $user->setChildAclDependencies($this->userGroupFactory);
@@ -2323,13 +2251,9 @@ class User extends Base
      */
     private function getUserFeatures(): array
     {
-        $userFeatures = [];
-
-        foreach ($this->userGroupFactory->getFeatures() as $key => $feature) {
-            $userFeatures[$key] = $this->getUser()->featureEnabled($feature);
-        };
-
-        return $userFeatures;
+        return array_map(function ($feature) {
+            return $this->getUser()->featureEnabled($feature);
+        }, $this->userGroupFactory->getFeatures());
     }
 
     /**
@@ -2358,7 +2282,7 @@ class User extends Base
      * @param $user
      * @throws InvalidArgumentException
      */
-    private function decorateUserProperties($user)
+    private function decorateUserProperties($user): void
     {
         $user->setUnmatchedProperty('libraryQuotaFormatted', ByteFormatter::format($user->libraryQuota * 1024));
 
@@ -2427,11 +2351,11 @@ class User extends Base
     /**
      * @param Request $request
      * @param Response $response
-     * @param $id
+     * @param int $id
      * @return ResponseInterface|Response
      * @throws AccessDeniedException
      */
-    public function applicationsGrid(Request $request, Response $response, $id)
+    public function applicationsGrid(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         // TODO change return when no longer used by old FE.
         $user = $this->userFactory->getById($id);

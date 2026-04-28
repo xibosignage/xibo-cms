@@ -31,8 +31,11 @@ use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Class UserGroup
@@ -40,24 +43,11 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class UserGroup extends Base
 {
-    private UserGroupFactory $userGroupFactory;
-    private PermissionFactory $permissionFactory;
-    private UserFactory $userFactory;
-
-    /**
-     * Set common dependencies.
-     * @param UserGroupFactory $userGroupFactory
-     * @param PermissionFactory $permissionFactory
-     * @param UserFactory $userFactory
-     */
     public function __construct(
-        UserGroupFactory $userGroupFactory,
-        PermissionFactory $permissionFactory,
-        UserFactory $userFactory
+        private readonly UserGroupFactory $userGroupFactory,
+        private readonly PermissionFactory $permissionFactory,
+        private readonly UserFactory $userFactory
     ) {
-        $this->userGroupFactory = $userGroupFactory;
-        $this->permissionFactory = $permissionFactory;
-        $this->userFactory = $userFactory;
     }
 
     #[OA\Get(
@@ -140,6 +130,8 @@ class UserGroup extends Base
      * @param Response $response
      * @return ResponseInterface|Response
      * @throws InvalidArgumentException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
      */
     public function grid(Request $request, Response $response): Response|ResponseInterface
     {
@@ -154,10 +146,19 @@ class UserGroup extends Base
             $this->decorateUserGroupProperties($group);
         }
 
-        return $response
-            ->withStatus(200)
-            ->withHeader('X-Total-Count', $this->userGroupFactory->countLast())
-            ->withJson($groups);
+        if ($this->isJson($request) || $this->isApi($request)) {
+            return $response
+                ->withStatus(200)
+                ->withHeader('X-Total-Count', $this->userGroupFactory->countLast())
+                ->withJson($groups);
+        } else {
+            // TODO remove once not needed on old FE pages.
+            $this->getState()->template = 'grid';
+            $this->getState()->recordsTotal = $this->userGroupFactory->countLast();
+            $this->getState()->setData($groups);
+
+            return $this->render($request, $response);
+        }
     }
 
     #[OA\Get(
@@ -334,13 +335,9 @@ class UserGroup extends Base
         }
 
         // Return
-        $this->getState()->hydrate([
-            'message' => sprintf(__('Added %s'), $group->group),
-            'id' => $group->groupId,
-            'data' => $group
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(201)
+            ->withJson($group);
     }
 
     #[OA\Put(
@@ -494,13 +491,9 @@ class UserGroup extends Base
         $group->save();
 
         // Return
-        $this->getState()->hydrate([
-            'message' => sprintf(__('Edited %s'), $group->group),
-            'id' => $group->groupId,
-            'data' => $group
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson($group);
     }
 
     #[OA\Delete(
@@ -545,12 +538,7 @@ class UserGroup extends Base
         $group->delete();
 
         // Return
-        $this->getState()->hydrate([
-            'message' => sprintf(__('Deleted %s'), $group->group),
-            'id' => $group->groupId
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(204);
     }
 
     /**
@@ -888,22 +876,17 @@ class UserGroup extends Base
             $permission->save();
         }
 
-        $this->getState()->hydrate([
-            'httpStatus' => 201,
-            'message' => sprintf(__('Copied %s'), $group->group),
-            'id' => $newGroup->groupId,
-            'data' => $newGroup
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(201)
+            ->withJson($newGroup);
     }
 
     /**
      * Get the user group filters
-     * @param $sanitizedQueryParams
+     * @param SanitizerInterface $sanitizedQueryParams
      * @return array
      */
-    private function getUserGroupFilters($sanitizedQueryParams): array
+    private function getUserGroupFilters(SanitizerInterface $sanitizedQueryParams): array
     {
         return $this->gridRenderFilter([
             'groupId' => $sanitizedQueryParams->getInt('userGroupId'),
@@ -913,16 +896,16 @@ class UserGroup extends Base
             'isUserSpecific' => 0,
             'userIdMember' => $sanitizedQueryParams->getInt('userIdMember'),
             'isShownForAddUser' => $sanitizedQueryParams->getInt('isShownForAddUser'),
+            'keyword' => $sanitizedQueryParams->getString('keyword'),
         ], $sanitizedQueryParams);
     }
 
     /**
      * Decorate user group properties
-     * @param $request
-     * @param $group
+     * @param \Xibo\Entity\UserGroup $group
      * @throws InvalidArgumentException
      */
-    private function decorateUserGroupProperties($group)
+    private function decorateUserGroupProperties(\Xibo\Entity\UserGroup $group): void
     {
         $group->setUnmatchedProperty(
             'libraryQuotaFormatted',

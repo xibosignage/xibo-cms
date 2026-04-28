@@ -54,13 +54,14 @@ class UserGroupFactory extends BaseFactory
      * Create Empty User Group Object
      * @return UserGroup
      */
-    public function createEmpty()
+    public function createEmpty(): UserGroup
     {
         return new UserGroup(
             $this->getStore(),
             $this->getLog(),
             $this->getDispatcher(),
-            $this, $this->getUserFactory()
+            $this,
+            $this->getUserFactory()
         );
     }
 
@@ -70,7 +71,7 @@ class UserGroupFactory extends BaseFactory
      * @param $libraryQuota
      * @return UserGroup
      */
-    public function create($userGroup, $libraryQuota)
+    public function create($userGroup, $libraryQuota): UserGroup
     {
         $group = $this->createEmpty();
         $group->group = $userGroup;
@@ -468,7 +469,7 @@ class UserGroupFactory extends BaseFactory
      * @param bool $includeIsUser
      * @return array
      */
-    public function getGroupFeaturesForUser($user, $includeIsUser = true)
+    public function getGroupFeaturesForUser(\Xibo\Entity\User $user, bool $includeIsUser = true): array
     {
         $features = [];
 
@@ -497,7 +498,7 @@ class UserGroupFactory extends BaseFactory
      * @param string $group
      * @return array
      */
-    public function getFeaturesByGroup(string $group)
+    public function getFeaturesByGroup(string $group): array
     {
         $groupFeatures = [];
         foreach ($this->getFeatures() as $feature) {
@@ -512,7 +513,7 @@ class UserGroupFactory extends BaseFactory
      * Populate the core system features and homepages
      * @return array
      */
-    public function getFeatures()
+    public function getFeatures(): array
     {
         if ($this->features === null) {
             $this->features = [
@@ -1014,7 +1015,7 @@ class UserGroupFactory extends BaseFactory
     /**
      * @return \Xibo\Entity\Homepage[]
      */
-    public function getHomepages()
+    public function getHomepages(): array
     {
         if ($this->homepages === null) {
             $this->homepages = [
@@ -1053,7 +1054,7 @@ class UserGroupFactory extends BaseFactory
      * @param string $title
      * @return $this
      */
-    public function registerCustomFeature(string $feature, string $title)
+    public function registerCustomFeature(string $feature, string $title): static
     {
         $this->getFeatures();
 
@@ -1074,8 +1075,12 @@ class UserGroupFactory extends BaseFactory
      * @param string $feature
      * @return $this
      */
-    public function registerCustomHomepage(string $homepage, string $title, string $description, string $feature)
-    {
+    public function registerCustomHomepage(
+        string $homepage,
+        string $title,
+        string $description,
+        string $feature
+    ): static {
         $this->getHomepages();
 
         if (!array_key_exists($homepage, $this->homepages)) {

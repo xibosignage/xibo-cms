@@ -33,37 +33,12 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class UserFactory extends BaseFactory
 {
-    /**
-     * @var ConfigServiceInterface
-     */
-    private $configService;
-
-    /**
-     * @var PermissionFactory
-     */
-    private $permissionFactory;
-
-    /**
-     * @var UserOptionFactory
-     */
-    private $userOptionFactory;
-
-    /** @var  ApplicationScopeFactory */
-    private $applicationScopeFactory;
-
-    /**
-     * Construct a factory
-     * @param ConfigServiceInterface $configService
-     * @param PermissionFactory $permissionFactory
-     * @param UserOptionFactory $userOptionFactory
-     * @param ApplicationScopeFactory $applicationScopeFactory
-     */
-    public function __construct($configService, $permissionFactory, $userOptionFactory, $applicationScopeFactory)
-    {
-        $this->configService = $configService;
-        $this->permissionFactory = $permissionFactory;
-        $this->userOptionFactory = $userOptionFactory;
-        $this->applicationScopeFactory = $applicationScopeFactory;
+    public function __construct(
+        private readonly ConfigServiceInterface $configService,
+        private readonly PermissionFactory      $permissionFactory,
+        private readonly UserOptionFactory      $userOptionFactory,
+        private readonly ApplicationScopeFactory $applicationScopeFactory
+    ) {
     }
 
     /**
