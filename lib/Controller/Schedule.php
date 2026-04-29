@@ -1278,9 +1278,9 @@ class Schedule extends Base
         // Get the campaignId for media/playlist events
         if ($schedule->isFullScreenSchedule()) {
             $type = $schedule->eventTypeId === \Xibo\Entity\Schedule::$MEDIA_EVENT ? 'media' : 'playlist';
-            $id = ($type === 'media') ? $sanitizedParams->getInt('mediaId') : $sanitizedParams->getInt('playlistId');
+            $fsId = ($type === 'media') ? $sanitizedParams->getInt('mediaId') : $sanitizedParams->getInt('playlistId');
 
-            if (!$id) {
+            if (!$fsId) {
                 throw new InvalidArgumentException(
                     sprintf('%sId is required when scheduling %s events.', ucfirst($type), $type)
                 );
@@ -1289,7 +1289,7 @@ class Schedule extends Base
             // Create a full screen layout for this event
             $fsLayout = $this->layoutFactory->createFullScreenLayout(
                 $type,
-                $id,
+                $fsId,
                 $sanitizedParams->getInt('resolutionId'),
                 $sanitizedParams->getString('backgroundColor'),
                 $sanitizedParams->getInt('layoutDuration'),
