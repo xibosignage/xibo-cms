@@ -401,18 +401,6 @@ $app->get('/fault/view', ['\Xibo\Controller\Fault','displayPage'])
 //
 $app->get('/license/view', ['\Xibo\Controller\Login','about'])->setName('license.view');
 
-//
-// Reporting
-//
-$app->get('/report/view', ['\Xibo\Controller\Stats','displayReportPage'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['report.view']))
-    ->setName('report.view');
-
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/stats/form/export', ['\Xibo\Controller\Stats','exportForm'])->setName('stats.export.form');
-    $group->get('/stats/getExportStatsCount', ['\Xibo\Controller\Stats','getExportStatsCount'])->setName('stats.getExportStatsCount');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['proof-of-play']));
-
 // Used in Display Manage
 $app->get('/stats/data/bandwidth', ['\Xibo\Controller\Stats','bandwidthData'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['displays.reporting']))

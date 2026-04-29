@@ -26,7 +26,7 @@
 
 {% block actionMenu %}
     <div class="widget-action-menu pull-right">
-        <button class="btn btn-success XiboRedirectButton" href="{{ url_for("report.view") }}"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Back to dashboard" %}</button>
+        <button class="btn btn-success XiboRedirectButton" href="{{ theme.rootUri() }}prototype/reporting/reports"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Back to dashboard" %}</button>
         <button class="btn btn-info XiboRedirectButton" href="{{ url_for("savedreport.view") }}"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</button>
         <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
     </div>

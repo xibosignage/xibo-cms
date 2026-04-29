@@ -116,7 +116,7 @@ $app->addErrorMiddleware(
     ->setDefaultErrorHandler(\Xibo\Middleware\Handlers::jsonErrorHandler($container));
 
 // JSON specific routes
-
+require PROJECT_ROOT . '/lib/routes-json.php';
 
 // All application routes
 require PROJECT_ROOT . '/lib/routes.php';
