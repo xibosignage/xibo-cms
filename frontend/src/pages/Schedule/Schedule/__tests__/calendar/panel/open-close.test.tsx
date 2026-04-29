@@ -54,12 +54,16 @@ const APR20_10H = Math.floor(new Date('2026-04-20T10:00:00Z').getTime() / 1000);
 function getDayCell(dayNumber: number): HTMLElement {
   const cells = screen
     .getAllByText(String(dayNumber))
-    .map((el) => el.closest('[class*="cursor-pointer"]') ?? el.parentElement?.closest('[class*="cursor-pointer"]'))
+    .map(
+      (el) =>
+        el.closest('[class*="cursor-pointer"]') ??
+        el.parentElement?.closest('[class*="cursor-pointer"]'),
+    )
     .filter(Boolean) as HTMLElement[];
   if (cells.length === 0) {
     throw new Error(`No clickable day cell found for day ${dayNumber}`);
   }
-  return cells[0];
+  return cells[0]!;
 }
 
 /**
@@ -197,7 +201,6 @@ describe('EventCalendar — panel open/close/navigation', () => {
   });
 
   test('clicking a day with no events does nothing', async () => {
-    const user = userEvent.setup();
     const event = buildEvent({
       name: 'Only On April 14',
       fromDt: APR14_10H,
@@ -211,7 +214,8 @@ describe('EventCalendar — panel open/close/navigation', () => {
     const noEventSpan = spans.find((el) => !el.closest('[class*="cursor-pointer"]'));
 
     if (noEventSpan) {
-      const parentCell = noEventSpan.closest('div[class*="overflow-hidden"]') ?? noEventSpan.parentElement;
+      const parentCell =
+        noEventSpan.closest('div[class*="overflow-hidden"]') ?? noEventSpan.parentElement;
       if (parentCell) {
         fireEvent.click(parentCell);
       }

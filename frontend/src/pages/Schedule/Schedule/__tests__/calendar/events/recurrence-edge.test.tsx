@@ -3,12 +3,12 @@
 import { screen } from '@testing-library/react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
+import { buildEvent } from '../../fixtures/event';
 import {
   CALENDAR_DATE,
   buildRecurringEvent,
   buildEventWithExclusion,
 } from '../helpers/buildCalendarEvents';
-import { buildEvent } from '../../fixtures/event';
 import { renderCalendar } from '../helpers/renderCalendar';
 
 import { testQueryClient } from '@/setupTests';

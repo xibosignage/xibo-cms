@@ -62,7 +62,7 @@ beforeEach(() => {
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('EventCalendar – grid structure', () => {
-  test("today is highlighted with a blue circle on the day number", () => {
+  test('today is highlighted with a blue circle on the day number', () => {
     const today = new Date();
     renderCalendar({ date: today });
 
@@ -82,9 +82,7 @@ describe('EventCalendar – grid structure', () => {
     // March 30 and 31 are overflow days and should carry text-gray-300.
     renderCalendar({ date: CALENDAR_DATE });
 
-    const dayNumberWrappers = document.querySelectorAll(
-      'div.text-gray-300',
-    );
+    const dayNumberWrappers = document.querySelectorAll('div.text-gray-300');
 
     expect(dayNumberWrappers.length).toBeGreaterThan(0);
 
@@ -116,9 +114,7 @@ describe('EventCalendar – grid structure', () => {
     expect(screen.getByText('Legend')).toBeInTheDocument();
 
     const allLabels = EVENT_LEGEND_BADGES.flat().map((b) => b.label);
-    const visibleLabels = allLabels.filter((label) =>
-      screen.queryByText(label) !== null,
-    );
+    const visibleLabels = allLabels.filter((label) => screen.queryByText(label) !== null);
 
     expect(visibleLabels.length).toBeGreaterThanOrEqual(4);
   });

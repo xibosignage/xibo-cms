@@ -89,12 +89,8 @@ describe('EventCalendar — grid event icons', () => {
 
     // The priority badge is a small span with a specific class pattern
     // There may be a day cell with text "3" (April 3), so we look for the badge span
-    const badgeSpans = document.querySelectorAll(
-      'span.absolute.-top-1.-right-1',
-    );
-    const priorityBadge = Array.from(badgeSpans).find(
-      (el) => el.textContent === '3',
-    );
+    const badgeSpans = document.querySelectorAll('span.absolute.-top-1.-right-1');
+    const priorityBadge = Array.from(badgeSpans).find((el) => el.textContent === '3');
     expect(priorityBadge).toBeDefined();
     expect(priorityBadge).toBeInTheDocument();
   });
@@ -103,7 +99,7 @@ describe('EventCalendar — grid event icons', () => {
     const event = buildEvent({
       name: 'No End Time Event',
       fromDt: APR14_10H,
-      toDt: undefined as any,
+      toDt: undefined as unknown as number,
     });
 
     renderCalendar({ date: CALENDAR_DATE, events: [event] });
@@ -164,8 +160,8 @@ describe('EventCalendar — grid event icons', () => {
     const badges = container.querySelectorAll('[title]');
     // Day-of-week headers and legend items may have no title; event icon spans carry the event title
     // All title attributes should be day-of-week or legend labels, none should be event names
-    const eventIcons = Array.from(badges).filter((el) =>
-      el.classList.contains('relative') && el.classList.contains('inline-flex'),
+    const eventIcons = Array.from(badges).filter(
+      (el) => el.classList.contains('relative') && el.classList.contains('inline-flex'),
     );
     expect(eventIcons.length).toBe(0);
   });

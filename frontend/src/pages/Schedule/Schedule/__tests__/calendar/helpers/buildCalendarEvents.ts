@@ -19,9 +19,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { Event, RecurrenceType } from '@/types/event';
-
 import { buildEvent } from '../../fixtures/event';
+
+import type { Event, RecurrenceType } from '@/types/event';
 
 export const CALENDAR_DATE = new Date('2026-04-01T00:00:00Z');
 export const FEBRUARY_NON_LEAP_DATE = new Date('2026-02-01T00:00:00Z');
@@ -61,10 +61,7 @@ export function buildRecurringEvent(
   });
 }
 
-export function buildEventWithExclusion(
-  excludedFromDt: number,
-  overrides?: Partial<Event>,
-): Event {
+export function buildEventWithExclusion(excludedFromDt: number, overrides?: Partial<Event>): Event {
   const fromDt = APRIL_2026_START;
   const toDt = fromDt + 3600;
   return buildEvent({

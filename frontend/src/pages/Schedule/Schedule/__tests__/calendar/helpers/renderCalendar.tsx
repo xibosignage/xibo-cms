@@ -22,6 +22,7 @@
 import { render } from '@testing-library/react';
 
 import { EventCalendar } from '../../../components/EventCalendar';
+
 import { CALENDAR_DATE } from './buildCalendarEvents';
 
 import type { Event } from '@/types/event';
@@ -35,13 +36,7 @@ interface RenderCalendarOptions {
 }
 
 export function renderCalendar(options: RenderCalendarOptions = {}) {
-  const {
-    date = CALENDAR_DATE,
-    events = [],
-    isLoading,
-    onEditEvent,
-    onDeleteEvent,
-  } = options;
+  const { date = CALENDAR_DATE, events = [], isLoading, onEditEvent, onDeleteEvent } = options;
 
   return render(
     <EventCalendar

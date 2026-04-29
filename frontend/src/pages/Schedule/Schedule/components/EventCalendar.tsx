@@ -525,7 +525,11 @@ export function EventCalendar({
   return (
     <div className={`relative flex flex-row h-full ${calendarClassName ?? ''}`}>
       {isLoading && (
-        <div role="status" aria-live="polite" className="absolute inset-0 z-10 bg-white/60 flex items-center justify-center">
+        <div
+          role="status"
+          aria-live="polite"
+          className="absolute inset-0 z-10 bg-white/60 flex items-center justify-center"
+        >
           <span className="text-sm text-gray-400 font-medium animate-pulse">{t('Loading...')}</span>
         </div>
       )}
@@ -595,7 +599,11 @@ export function EventCalendar({
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
-                        handleDayClick(e as unknown as React.MouseEvent<HTMLElement>, day, dayEvents);
+                        handleDayClick(
+                          e as unknown as React.MouseEvent<HTMLElement>,
+                          day,
+                          dayEvents,
+                        );
                       }
                     }}
                     className={`relative group flex ${dayEvents.length > 0 ? 'cursor-pointer' : ''} flex-col overflow-hidden${di > 0 ? ' border-l border-gray-200' : ''} ${isSelected ? 'bg-blue-50' : isToday ? 'bg-slate-50' : 'bg-white'}`}
@@ -631,7 +639,10 @@ export function EventCalendar({
                         <button
                           type="button"
                           aria-label={viewLabel}
-                          onClick={(e) => { e.stopPropagation(); handleDayClick(e, day, dayEvents); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDayClick(e, day, dayEvents);
+                          }}
                           className="absolute h-6.25 bottom-0 left-0 right-0 flex items-center justify-center gap-0.5 py-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white text-xs text-xibo-blue-600 font-medium cursor-pointer pointer-events-none group-hover:pointer-events-auto"
                         >
                           <span>{viewLabel}</span>

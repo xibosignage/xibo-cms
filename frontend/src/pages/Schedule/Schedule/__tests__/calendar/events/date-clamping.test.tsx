@@ -56,7 +56,7 @@ describe('EventCalendar – monthly date clamping', () => {
     expect(icons.length).toBeGreaterThanOrEqual(1);
 
     // Verify the icon appears in the April 30 cell by checking the day number nearby
-    const apr30Cell = icons[icons.length - 1].closest('[class*="flex-col"]');
+    const apr30Cell = icons[icons.length - 1]!.closest('[class*="flex-col"]');
     if (apr30Cell) {
       const dayText = apr30Cell.querySelector('div[class*="text-right"]');
       if (dayText) {
@@ -98,7 +98,9 @@ describe('EventCalendar – monthly date clamping', () => {
 
     // The February occurrence should be clamped to Feb 28 (Feb 29 doesn't exist in 2026)
     const feb28Cell = screen.getByRole('gridcell', { name: /^28 February 2026/ });
-    expect(within(feb28Cell).getAllByRole('button', { name: 'Day 29 Non-Leap' }).length).toBeGreaterThanOrEqual(1);
+    expect(
+      within(feb28Cell).getAllByRole('button', { name: 'Day 29 Non-Leap' }).length,
+    ).toBeGreaterThanOrEqual(1);
   });
 
   test('monthly event on the 29th in a leap year February shows on the 29th', () => {

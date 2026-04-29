@@ -3,9 +3,10 @@
 import { fireEvent, screen, within, waitFor } from '@testing-library/react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
+import { buildEvent } from '../fixtures/event';
+
 import { CALENDAR_DATE, buildAlwaysEvent } from './helpers/buildCalendarEvents';
 import { renderCalendar } from './helpers/renderCalendar';
-import { buildEvent } from '../fixtures/event';
 
 import { testQueryClient } from '@/setupTests';
 
@@ -34,7 +35,11 @@ beforeEach(() => {
 
 describe('EventCalendar – context menu', () => {
   test('right-clicking an event icon opens the context menu', () => {
-    const event = buildEvent({ name: 'Test Event', fromDt: APR_14_START, toDt: APR_14_START + 3600 });
+    const event = buildEvent({
+      name: 'Test Event',
+      fromDt: APR_14_START,
+      toDt: APR_14_START + 3600,
+    });
     renderCalendar({ date: CALENDAR_DATE, events: [event], onDeleteEvent: vi.fn() });
 
     const badge = screen.getByRole('button', { name: 'Test Event' });
@@ -44,7 +49,11 @@ describe('EventCalendar – context menu', () => {
   });
 
   test('context menu shows the Delete button', () => {
-    const event = buildEvent({ name: 'Confirm Delete', fromDt: APR_14_START, toDt: APR_14_START + 3600 });
+    const event = buildEvent({
+      name: 'Confirm Delete',
+      fromDt: APR_14_START,
+      toDt: APR_14_START + 3600,
+    });
     renderCalendar({ date: CALENDAR_DATE, events: [event], onDeleteEvent: vi.fn() });
 
     const badge = screen.getByRole('button', { name: 'Confirm Delete' });
@@ -55,7 +64,11 @@ describe('EventCalendar – context menu', () => {
 
   test('clicking Delete in the context menu triggers onDeleteEvent', () => {
     const onDeleteEvent = vi.fn();
-    const event = buildEvent({ name: 'Deletable Event', fromDt: APR_14_START, toDt: APR_14_START + 3600 });
+    const event = buildEvent({
+      name: 'Deletable Event',
+      fromDt: APR_14_START,
+      toDt: APR_14_START + 3600,
+    });
     renderCalendar({ date: CALENDAR_DATE, events: [event], onDeleteEvent });
 
     const badge = screen.getByRole('button', { name: 'Deletable Event' });
@@ -68,7 +81,11 @@ describe('EventCalendar – context menu', () => {
   });
 
   test('clicking outside dismisses the context menu', async () => {
-    const event = buildEvent({ name: 'Dismissable Event', fromDt: APR_14_START, toDt: APR_14_START + 3600 });
+    const event = buildEvent({
+      name: 'Dismissable Event',
+      fromDt: APR_14_START,
+      toDt: APR_14_START + 3600,
+    });
     renderCalendar({ date: CALENDAR_DATE, events: [event], onDeleteEvent: vi.fn() });
 
     const badge = screen.getByRole('button', { name: 'Dismissable Event' });
@@ -83,7 +100,11 @@ describe('EventCalendar – context menu', () => {
   });
 
   test('right-clicking the same icon twice repositions the menu', () => {
-    const event = buildEvent({ name: 'Reposition Event', fromDt: APR_14_START, toDt: APR_14_START + 3600 });
+    const event = buildEvent({
+      name: 'Reposition Event',
+      fromDt: APR_14_START,
+      toDt: APR_14_START + 3600,
+    });
     renderCalendar({ date: CALENDAR_DATE, events: [event], onDeleteEvent: vi.fn() });
 
     const badge = screen.getByRole('button', { name: 'Reposition Event' });
@@ -94,7 +115,11 @@ describe('EventCalendar – context menu', () => {
   });
 
   test('context menu shows event name', () => {
-    const event = buildEvent({ name: 'Morning Show', fromDt: APR_14_START, toDt: APR_14_START + 3600 });
+    const event = buildEvent({
+      name: 'Morning Show',
+      fromDt: APR_14_START,
+      toDt: APR_14_START + 3600,
+    });
     renderCalendar({ date: CALENDAR_DATE, events: [event], onDeleteEvent: vi.fn() });
 
     const badge = screen.getByRole('button', { name: 'Morning Show' });
@@ -123,7 +148,7 @@ describe('EventCalendar – context menu', () => {
     renderCalendar({ date: CALENDAR_DATE, events: [event], onDeleteEvent: vi.fn() });
 
     // Always events appear on every day cell — take any one of them to open the context menu
-    const badge = screen.getAllByRole('button', { name: 'Always On' })[0];
+    const badge = screen.getAllByRole('button', { name: 'Always On' })[0]!;
     fireEvent.contextMenu(badge);
 
     const menu = screen.getByRole('menu');
@@ -147,8 +172,16 @@ describe('EventCalendar – context menu', () => {
   });
 
   test('right-clicking on a different icon closes first menu and opens a new one', () => {
-    const event1 = buildEvent({ name: 'First Event', fromDt: APR_14_START, toDt: APR_14_START + 3600 });
-    const event2 = buildEvent({ name: 'Second Event', fromDt: APR_14_START + 7200, toDt: APR_14_START + 10800 });
+    const event1 = buildEvent({
+      name: 'First Event',
+      fromDt: APR_14_START,
+      toDt: APR_14_START + 3600,
+    });
+    const event2 = buildEvent({
+      name: 'Second Event',
+      fromDt: APR_14_START + 7200,
+      toDt: APR_14_START + 10800,
+    });
     renderCalendar({ date: CALENDAR_DATE, events: [event1, event2], onDeleteEvent: vi.fn() });
 
     const badge1 = screen.getByRole('button', { name: 'First Event' });

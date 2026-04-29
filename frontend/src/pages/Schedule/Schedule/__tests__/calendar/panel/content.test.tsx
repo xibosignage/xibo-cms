@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { screen, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, test, vi, expect, beforeEach } from 'vitest';
 
@@ -28,7 +28,6 @@ import { CALENDAR_DATE } from '../helpers/buildCalendarEvents';
 import { renderCalendar } from '../helpers/renderCalendar';
 
 import { useUserContext } from '@/context/UserContext';
-import type { Event } from '@/types/event';
 
 vi.mock('@/context/UserContext', () => ({
   useUserContext: vi.fn(() => ({
@@ -47,7 +46,9 @@ vi.mock('react-i18next', () => ({
 
 function mockTimezone(timezone: string) {
   vi.mocked(useUserContext).mockReturnValue({
-    user: { settings: { defaultTimezone: timezone } } as any,
+    user: { settings: { defaultTimezone: timezone } } as unknown as ReturnType<
+      typeof useUserContext
+    >['user'],
     isAuthenticated: true,
     logout: vi.fn(),
     updateUser: vi.fn(),
@@ -60,12 +61,16 @@ function mockTimezone(timezone: string) {
 function getDayCell(dayNumber: number): HTMLElement {
   const cells = screen
     .getAllByText(String(dayNumber))
-    .map((el) => el.closest('[class*="cursor-pointer"]') ?? el.parentElement?.closest('[class*="cursor-pointer"]'))
+    .map(
+      (el) =>
+        el.closest('[class*="cursor-pointer"]') ??
+        el.parentElement?.closest('[class*="cursor-pointer"]'),
+    )
     .filter(Boolean) as HTMLElement[];
   if (cells.length === 0) {
     throw new Error(`No clickable day cell found for day ${dayNumber}`);
   }
-  return cells[0];
+  return cells[0]!;
 }
 
 /**
@@ -81,7 +86,9 @@ describe('EventCalendar — panel content', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useUserContext).mockReturnValue({
-      user: { settings: { defaultTimezone: 'UTC' } } as any,
+      user: { settings: { defaultTimezone: 'UTC' } } as unknown as ReturnType<
+        typeof useUserContext
+      >['user'],
       isAuthenticated: true,
       logout: vi.fn(),
       updateUser: vi.fn(),
@@ -197,7 +204,7 @@ describe('EventCalendar — panel content', () => {
       name: 'Single Display Event',
       fromDt,
       toDt,
-      displayGroups: [{ displayGroupId: 1, displayGroup: 'Lobby Screen' } as any],
+      displayGroups: [{ displayGroupId: 1, displayGroup: 'Lobby Screen' } as never],
     });
 
     renderCalendar({ date: CALENDAR_DATE, events: [event] });
@@ -216,10 +223,10 @@ describe('EventCalendar — panel content', () => {
       fromDt,
       toDt,
       displayGroups: [
-        { displayGroupId: 1, displayGroup: 'Lobby Screen' } as any,
-        { displayGroupId: 2, displayGroup: 'Reception Screen' } as any,
-        { displayGroupId: 3, displayGroup: 'Boardroom Screen' } as any,
-      ],
+        { displayGroupId: 1, displayGroup: 'Lobby Screen' },
+        { displayGroupId: 2, displayGroup: 'Reception Screen' },
+        { displayGroupId: 3, displayGroup: 'Boardroom Screen' },
+      ] as never,
     });
 
     renderCalendar({ date: CALENDAR_DATE, events: [event] });

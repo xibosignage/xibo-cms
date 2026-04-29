@@ -50,7 +50,9 @@ vi.mock('react-i18next', () => ({
 
 function mockTimezone(timezone: string) {
   vi.mocked(useUserContext).mockReturnValue({
-    user: { settings: { defaultTimezone: timezone } } as any,
+    user: { settings: { defaultTimezone: timezone } } as unknown as ReturnType<
+      typeof useUserContext
+    >['user'],
     isAuthenticated: true,
     logout: vi.fn(),
     updateUser: vi.fn(),
@@ -58,7 +60,7 @@ function mockTimezone(timezone: string) {
 }
 
 describe('EventCalendar — timezone rendering', () => {
-  test("UTC+ shift: event at 11pm UTC appears on next calendar day for UTC+2 user", () => {
+  test('UTC+ shift: event at 11pm UTC appears on next calendar day for UTC+2 user', () => {
     mockTimezone('Europe/Paris');
 
     // April 1 23:00 UTC = April 2 01:00 Paris time (UTC+2 in April)
@@ -71,7 +73,7 @@ describe('EventCalendar — timezone rendering', () => {
     expect(screen.getByTitle('Paris Event')).toBeInTheDocument();
   });
 
-  test("UTC- shift: event at 1am UTC appears on previous calendar day for UTC-5 user", () => {
+  test('UTC- shift: event at 1am UTC appears on previous calendar day for UTC-5 user', () => {
     mockTimezone('America/New_York');
 
     // April 2 01:00 UTC = April 1 20:00 EST (UTC-5 in April — actually EDT UTC-4, but test intent is shift)
@@ -84,7 +86,7 @@ describe('EventCalendar — timezone rendering', () => {
     expect(screen.getByTitle('New York Event')).toBeInTheDocument();
   });
 
-  test("fractional offset: event at 10:30pm UTC appears on next day for UTC+5:30 user", () => {
+  test('fractional offset: event at 10:30pm UTC appears on next day for UTC+5:30 user', () => {
     mockTimezone('Asia/Kolkata');
 
     // April 1 22:30 UTC = April 2 04:00 IST (UTC+5:30)
@@ -97,7 +99,7 @@ describe('EventCalendar — timezone rendering', () => {
     expect(screen.getByTitle('Kolkata Event')).toBeInTheDocument();
   });
 
-  test("timezone month boundary: event on last day of March 11pm UTC disappears for UTC+2 user", () => {
+  test('timezone month boundary: event on last day of March 11pm UTC disappears for UTC+2 user', () => {
     mockTimezone('Europe/Paris');
 
     // March 31 23:00 UTC = April 1 01:00 Paris time — crosses into April
@@ -110,7 +112,7 @@ describe('EventCalendar — timezone rendering', () => {
     }).not.toThrow();
   });
 
-  test("DST spring forward: event at 2:30am on spring-forward night renders without crashing", () => {
+  test('DST spring forward: event at 2:30am on spring-forward night renders without crashing', () => {
     mockTimezone('America/New_York');
 
     // 2026-03-08T07:30:00Z = 2:30am EST before DST springs forward
@@ -123,7 +125,7 @@ describe('EventCalendar — timezone rendering', () => {
     }).not.toThrow();
   });
 
-  test("DST fall back: event at 2:30am on fall-back night renders without crashing", () => {
+  test('DST fall back: event at 2:30am on fall-back night renders without crashing', () => {
     mockTimezone('America/New_York');
 
     // 2026-11-01T07:30:00Z — during the fall-back ambiguous hour
@@ -136,7 +138,7 @@ describe('EventCalendar — timezone rendering', () => {
     }).not.toThrow();
   });
 
-  test("recurring event crossing DST boundary shows correct wall-clock day", () => {
+  test('recurring event crossing DST boundary shows correct wall-clock day', () => {
     mockTimezone('America/New_York');
 
     // Weekly recurring event starting March 1 2026 15:00 UTC (10am EST)

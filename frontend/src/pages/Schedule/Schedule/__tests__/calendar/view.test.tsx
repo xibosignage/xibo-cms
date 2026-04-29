@@ -100,7 +100,7 @@ describe('Events page – calendar view toggle', () => {
     testQueryClient.clear();
     vi.clearAllMocks();
     vi.mocked(useEventData).mockReturnValue(
-      EMPTY_EVENT_TABLE as ReturnType<typeof useEventData>,
+      EMPTY_EVENT_TABLE as unknown as ReturnType<typeof useEventData>,
     );
   });
 
@@ -145,7 +145,7 @@ describe('Events page – calendar view toggle', () => {
     vi.mocked(useEventData).mockReturnValue({
       ...EMPTY_EVENT_TABLE,
       isFetching: true,
-    } as ReturnType<typeof useEventData>);
+    } as unknown as ReturnType<typeof useEventData>);
 
     renderPage();
     await waitForHydration();
