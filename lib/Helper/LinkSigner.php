@@ -52,8 +52,15 @@ class LinkSigner
         ?string $fileType = null,
         bool $isRequestFromPwa = false,
     ): string {
-        // Start with the base url, which should correctly account for running with a CMS_ALIAS
-        $xmdsRoot = (new HttpsDetect())->getBaseUrl() . '/xmds.php';
+        // Start with the base url, which should correctly account for running with a CMS_ALIAS.
+        // getBaseUrl() uses $_SERVER['SCRIPT_NAME'] to find the CMS root, but when called during
+        // a PWA request it includes /pwa in the path. Strip it here since we have no request object
+        // to pass to the entry-point stripping logic inside getBaseUrl().
+        $baseUrl = (new HttpsDetect())->getBaseUrl();
+        if ($isRequestFromPwa && str_ends_with($baseUrl, '/pwa')) {
+            $baseUrl = substr($baseUrl, 0, -4);
+        }
+        $xmdsRoot = $baseUrl . '/xmds.php';
 
         // Build the rest of the URL
         $saveAsPath = $xmdsRoot
