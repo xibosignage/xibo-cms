@@ -22,6 +22,7 @@
 
 namespace Xibo\Middleware;
 
+use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -32,8 +33,17 @@ use Psr\Http\Server\RequestHandlerInterface;
  */
 class CorsPreviewMiddleware implements MiddlewareInterface
 {
+    public function __construct(private readonly ResponseFactoryInterface $responseFactory)
+    {
+    }
+
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
+        // Short-circuit OPTIONS preflight immediately — no need to invoke the handler stack
+        if ($request->getMethod() === 'OPTIONS') {
+            return $this->addCorsHeaders($this->responseFactory->createResponse());
+        }
+
         $response = $handler->handle($request->withAttribute('_entryPoint', 'preview'));
 
         // Is CORS required?
@@ -43,16 +53,20 @@ class CorsPreviewMiddleware implements MiddlewareInterface
         if ($request->getHeaderLine('Sec-Fetch-Site') === 'cross-site'
             || ($origin !== '' && !str_contains($origin, $host))
         ) {
-            // Handle CORS headers
-            $response = $response
-                ->withHeader('Access-Control-Allow-Origin', '*')
-                ->withHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
-                ->withHeader(
-                    'Access-Control-Allow-Headers',
-                    'Content-Type, X-Requested-With, Accept, Origin, X-PREVIEW-JWT'
-                );
+            return $this->addCorsHeaders($response);
         }
 
         return $response;
+    }
+
+    private function addCorsHeaders(ResponseInterface $response): ResponseInterface
+    {
+        return $response
+            ->withHeader('Access-Control-Allow-Origin', '*')
+            ->withHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
+            ->withHeader(
+                'Access-Control-Allow-Headers',
+                'Content-Type, X-Requested-With, Accept, Origin, X-PREVIEW-JWT'
+            );
     }
 }
