@@ -103,10 +103,6 @@
                 designer: {
                     url: "{{ url_for("layout.designer", {id: ':id'}) }}"
                 },
-                schedule: {
-                    url: "{{ url_for("schedule.add.form", {from: 'Layout', id: ':id'}) }}",
-                    type: 'GET'
-                },
                 saveTemplate: {
                     url: "{{ url_for("template.from.layout.form", {id: ':id'}) }}",
                     type: 'GET'

@@ -311,18 +311,6 @@ $(() => {
             action: lD.showUnlockScreen,
           },
           {
-            id: 'scheduleLayout',
-            title: layoutEditorTrans.scheduleTitle,
-            logo: 'fa fa-clock-o',
-            action: lD.showScheduleScreen,
-            inactiveCheck: function() {
-              return lD.templateEditMode ||
-                (lD.layout.editable ||
-                  !lD.layout.scheduleNowPermission);
-            },
-            inactiveCheckClass: 'd-none',
-          },
-          {
             id: 'clearLayout',
             title: layoutEditorTrans.clearLayout,
             logo: 'fas fa-broom',
