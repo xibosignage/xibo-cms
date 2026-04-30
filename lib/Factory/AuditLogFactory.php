@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -24,6 +24,7 @@
 namespace Xibo\Factory;
 
 use Xibo\Entity\AuditLog;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class AuditLogFactory
@@ -40,11 +41,27 @@ class AuditLogFactory extends BaseFactory
     }
 
     /**
-     * @param array $sortOrder
+     * @param int $logId
+     * @return AuditLog
+     * @throws NotFoundException
+     */
+    public function getById(int $logId): AuditLog
+    {
+        $logs = $this->query(null, ['logId' => $logId]);
+
+        if (count($logs) <= 0) {
+            throw new NotFoundException(null, 'AuditLog');
+        }
+
+        return $logs[0];
+    }
+
+    /**
+     * @param array|null $sortOrder
      * @param array $filterBy
      * @return array
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query(?array $sortOrder = null, array $filterBy = []): array
     {
         $this->getLog()->debug(sprintf('AuditLog Factory with filter: %s', var_export($filterBy, true)));
         $sanitizedFilter = $this->getSanitizer($filterBy);
@@ -117,7 +134,7 @@ class AuditLogFactory extends BaseFactory
                           ON `layout`.layoutId = `lkcampaignlayout`.layoutId
                           INNER JOIN `campaign`
                           ON `campaign`.campaignId = `lkcampaignlayout`.campaignId
-                     WHERE `campaign`.isLayoutSpecific = 1 
+                     WHERE `campaign`.isLayoutSpecific = 1
                         AND `layout`.layoutId = :layoutId
                 ';
 
@@ -152,10 +169,38 @@ class AuditLogFactory extends BaseFactory
             $params['sessionHistoryId'] = $sanitizedFilter->getInt('sessionHistoryId');
         }
 
-        $order = '';
-        if (is_array($sortOrder) && count($sortOrder) > 0) {
-            $order .= 'ORDER BY ' . implode(', ', $sortOrder) . ' ';
+        if ($sanitizedFilter->getInt('logId') !== null) {
+            $body .= ' AND `auditlog`.`logId` = :logId ';
+            $params['logId'] = $sanitizedFilter->getInt('logId');
         }
+
+        if ($sanitizedFilter->getString('keyword') != null) {
+            $body .= $this->buildSearchQuery(
+                $sanitizedFilter->getString('keyword'),
+                $params,
+                ['user.userName', 'auditlog.entity', 'auditlog.message', 'auditlog.ipAddress'],
+                ['auditlog.logId', 'auditlog.entityId'],
+            );
+        }
+
+        // Sorting?
+        $allowedColumns = [
+            'logId',
+            'logDate',
+            'userName',
+            'entity',
+            'entityId',
+            'ipAddress',
+            'message',
+        ];
+
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['logId DESC']
+        );
+
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         // Paging
         $limit = '';

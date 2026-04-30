@@ -650,6 +650,7 @@ $app->post('/maintenance/tidy', ['\Xibo\Controller\Maintenance','tidyLibrary'])
 //
 $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/audit', ['\Xibo\Controller\AuditLog','grid'])->setName('auditLog.search');
+    $group->get('/audit/{id}', ['\Xibo\Controller\AuditLog','searchById'])->setName('auditLog.searchById');
     $group->get('/audit/export', ['\Xibo\Controller\AuditLog','export'])->setName('auditLog.export');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['auditlog.view']));
 
