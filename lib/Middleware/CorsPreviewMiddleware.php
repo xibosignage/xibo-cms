@@ -22,7 +22,6 @@
 
 namespace Xibo\Middleware;
 
-use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -30,20 +29,12 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 /**
  * CORS middleware for preview.
+ *  OPTIONS requests are handled via a dedicated route in web/preview/index.php
  */
 class CorsPreviewMiddleware implements MiddlewareInterface
 {
-    public function __construct(private readonly ResponseFactoryInterface $responseFactory)
-    {
-    }
-
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        // Short-circuit OPTIONS preflight immediately — no need to invoke the handler stack
-        if ($request->getMethod() === 'OPTIONS') {
-            return $this->addCorsHeaders($this->responseFactory->createResponse());
-        }
-
         $response = $handler->handle($request->withAttribute('_entryPoint', 'preview'));
 
         // Is CORS required?
@@ -51,6 +42,8 @@ class CorsPreviewMiddleware implements MiddlewareInterface
         $host = $request->getUri()->getHost();
 
         if ($request->getHeaderLine('Sec-Fetch-Site') === 'cross-site'
+            || $request->getHeaderLine('Sec-Fetch-Mode') === 'cors'
+            || $origin === 'null'
             || ($origin !== '' && !str_contains($origin, $host))
         ) {
             return $this->addCorsHeaders($response);

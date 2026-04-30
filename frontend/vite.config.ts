@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,8 +23,8 @@ import path from 'node:path';
 
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import { visualizer } from 'rollup-plugin-visualizer';
-import { defineConfig } from 'vite';
+import {visualizer} from 'rollup-plugin-visualizer';
+import {defineConfig} from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig(({ mode }) => ({
@@ -58,6 +58,13 @@ export default defineConfig(({ mode }) => ({
   server: {
     port: 5173,
     open: '/prototype/',
+    cors: {
+      origin: true,
+      methods: ['GET', 'OPTIONS'],
+      allowedHeaders: [
+        'Content-Type', 'X-Requested-With', 'Accept', 'Origin', 'X-PREVIEW-JWT',
+      ],
+    },
     proxy: {
       '/json': {
         target: 'http://localhost',

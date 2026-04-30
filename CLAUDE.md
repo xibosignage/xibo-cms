@@ -84,6 +84,32 @@ npm test
 npm run cypress:open
 ```
 
+**React Frontend** (`frontend/`):
+```bash
+cd frontend
+
+# Start Vite dev server on port 5173 (requires Docker PHP app running at http://localhost)
+npm run dev
+
+# Production build — outputs to web/dist/pages/
+npm run build
+
+# Type-check only (no emit)
+npm run typecheck
+
+# Lint (ESLint)
+npm run lint
+
+# Format (Prettier)
+npm run format
+
+# Unit tests (Vitest)
+npm test
+npm run test:watch
+```
+
+The Vite dev server proxies all routes except `/prototype/` to `http://localhost` (the Docker PHP app). When developing the React frontend, Docker must be running. The proxy uses `changeOrigin: true`, so the PHP app sees requests as coming from `localhost` regardless of the Vite origin.
+
 **Database Migrations** (via Phinx):
 ```bash
 # In container or local PHP environment
@@ -240,6 +266,14 @@ frontend/
 - Authentication, authorization, feature checks, layout locking
 - Located in `lib/Middleware/`
 - Applied globally or per-route
+- Slim 4 processes middleware in **LIFO order** — the last `$app->add()` call is the outermost layer. `addErrorMiddleware()` must be called before any middleware that needs to wrap error responses (e.g. CORS headers must be added after `addErrorMiddleware` so they appear on error responses too).
+
+**Preview App — Separate Slim 4 Entrypoint** (`web/preview/index.php`):
+- Completely separate from the main web app; `.htaccess` routes `/preview/*` here
+- Has its own DI container setup, middleware stack, and route definitions
+- `CorsPreviewMiddleware` is registered as the outermost middleware (after `addErrorMiddleware`) so CORS headers are present on all responses including errors — requests to the preview app from sandboxed iframes (`Origin: null`) depend on this
+- Private routes (XLF, widget resources, downloads) are protected by `TokenAuthMiddleware` via `X-PREVIEW-JWT` header (JWT) or `X-Amz-Signature` query param (signed URL)
+- Public routes (player bundle, module assets) have no auth middleware
 
 **Widget/Module System**:
 - Widgets are pluggable modules extending a base widget interface

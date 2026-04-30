@@ -97,7 +97,7 @@ $errorMiddleware = $app->addErrorMiddleware(
 $errorMiddleware->setDefaultErrorHandler(\Xibo\Middleware\Handlers::webErrorHandler($container, true));
 
 // CORS must be outermost so it wraps the error handler — error responses also need CORS headers
-$app->add(new \Xibo\Middleware\CorsPreviewMiddleware($app->getResponseFactory()));
+$app->add(new \Xibo\Middleware\CorsPreviewMiddleware());
 
 // Application routes
 // ------------------
