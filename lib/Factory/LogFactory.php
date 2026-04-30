@@ -26,6 +26,7 @@ namespace Xibo\Factory;
 use Carbon\Carbon;
 use Xibo\Entity\LogEntry;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class LogFactory
@@ -40,6 +41,23 @@ class LogFactory extends BaseFactory
     public function createEmpty(): LogEntry
     {
         return new LogEntry($this->getStore(), $this->getLog(), $this->getDispatcher());
+    }
+
+    /**
+     * Get by Log ID
+     * @param $logId
+     * @return LogEntry
+     * @throws NotFoundException
+     */
+    public function getById($logId): LogEntry
+    {
+        $columns = $this->query(null, ['logId' => $logId]);
+
+        if (count($columns) <= 0) {
+            throw new NotFoundException();
+        }
+
+        return $columns[0];
     }
 
     /**
@@ -163,6 +181,11 @@ class LogFactory extends BaseFactory
         if ($parsedFilter->getInt('sessionHistoryId') !== null) {
             $body .= ' AND `log`.`sessionHistoryId` = :sessionHistoryId ';
             $params['sessionHistoryId'] = $parsedFilter->getInt('sessionHistoryId');
+        }
+
+        if ($parsedFilter->getInt('logId') !== null) {
+            $body .= ' AND `log`.`logId` = :logId ';
+            $params['logId'] = $parsedFilter->getInt('logId');
         }
 
         if ($parsedFilter->getString('keyword') != null) {

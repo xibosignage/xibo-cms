@@ -33,6 +33,8 @@ use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Logging
@@ -65,6 +67,7 @@ class Logging extends Base
     }
 
     /**
+     * Returns the list of log entries
      * @param Request $request
      * @param Response $response
      * @return ResponseInterface|Response
@@ -94,6 +97,26 @@ class Logging extends Base
             ->withStatus(200)
             ->withHeader('X-Total-Count', $this->logFactory->countLast())
             ->withJson($logs);
+    }
+
+    /**
+     * Logs search by ID
+     * @param Request $request
+     * @param Response $response
+     * @param int $id
+     * @return ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
+    {
+        $log = $this->logFactory->getById($id);
+
+        $log->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($log));
+
+        return $response
+            ->withStatus(200)
+            ->withJson($log);
     }
 
     /**
