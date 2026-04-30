@@ -589,7 +589,7 @@
                         reportAddBtn.addClass('disabled');
                     }
                 });
-                reportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?parentCampaignId=" + $parentCampaign.val() + "&reportName=displayPercentage" );
+                reportAddBtn.attr("href", "?parentCampaignId=" + $parentCampaign.val() + "&reportName=displayPercentage" );
             };
 
             imageLoader.hide();

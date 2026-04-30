@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -22,7 +22,6 @@
 namespace Xibo\Report;
 
 use Carbon\Carbon;
-use MongoDB\BSON\UTCDateTime;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Controller\DataTablesDotNetTrait;
@@ -33,7 +32,6 @@ use Xibo\Event\ReportDataEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ReportScheduleFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\DateFormatHelper;
@@ -122,20 +120,6 @@ class CampaignProofOfPlay implements ReportInterface
             ],
             __('Select a display')
         );
-    }
-
-    /** @inheritdoc */
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
-    {
-        $data = [];
-
-        $data['hiddenFields'] =  '';
-        $data['reportName'] = 'campaignProofOfPlay';
-
-        return [
-            'template' => 'campaign-proofofplay-schedule-form-add',
-            'data' => $data
-        ];
     }
 
     /** @inheritdoc */

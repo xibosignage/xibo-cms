@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -134,28 +134,6 @@ class DistributionReport implements ReportInterface
             ],
             __('Select a type and an item (i.e., layout/media/tag)')
         );
-    }
-
-    /** @inheritdoc */
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
-    {
-        $type = $sanitizedParams->getString('type');
-
-        $formParams = $this->getReportScheduleFormTitle($sanitizedParams);
-
-        $data = [];
-        $data['formTitle'] = $formParams['title'];
-        $data['hiddenFields'] = json_encode([
-            'type' => $type,
-            'selectedId' => $formParams['selectedId'],
-            'eventTag' => $eventTag ?? null
-        ]);
-        $data['reportName'] = 'distributionReport';
-
-        return [
-            'template' => 'distribution-schedule-form-add',
-            'data' => $data
-        ];
     }
 
     /** @inheritdoc */

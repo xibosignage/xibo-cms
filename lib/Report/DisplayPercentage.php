@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -22,7 +22,6 @@
 namespace Xibo\Report;
 
 use Carbon\Carbon;
-use MongoDB\BSON\UTCDateTime;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Controller\DataTablesDotNetTrait;
@@ -37,8 +36,6 @@ use Xibo\Factory\ReportScheduleFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
-use Xibo\Helper\Translate;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
@@ -127,22 +124,6 @@ class DisplayPercentage implements ReportInterface
             ],
             __('Select a campaign')
         );
-    }
-
-    /** @inheritdoc */
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
-    {
-        $data = [];
-
-        $data['hiddenFields'] = json_encode([
-            'parentCampaignId' => $sanitizedParams->getInt('parentCampaignId')
-        ]);
-        $data['reportName'] = 'displayPercentage';
-
-        return [
-            'template' => 'display-percentage-schedule-form-add',
-            'data' => $data
-        ];
     }
 
     /** @inheritdoc */

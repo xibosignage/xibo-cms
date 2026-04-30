@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -232,21 +232,6 @@ class ReportService implements ReportServiceInterface
             ->setFactories($this->container);
 
         return $object;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getReportScheduleFormData($reportName, Request $request)
-    {
-        $this->log->debug('Populate form title and hidden fields');
-
-        $className = $this->getReportClass($reportName);
-
-        $object = $this->createReportObject($className);
-
-        // Populate form title and hidden fields
-        return $object->getReportScheduleFormData($this->sanitizer->getSanitizer($request->getParams()));
     }
 
     /**

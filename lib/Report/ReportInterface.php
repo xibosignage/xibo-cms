@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2019 Xibo Signage Ltd
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -79,13 +79,6 @@ interface ReportInterface
      * @return ReportForm
      */
     public function getReportForm();
-
-    /**
-     * Populate form title and hidden fields
-     * @param SanitizerInterface $sanitizedParams
-     * @return array
-     */
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams);
 
     /**
      * Set Report Schedule form data

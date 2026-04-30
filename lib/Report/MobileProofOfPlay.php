@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -121,20 +121,6 @@ class MobileProofOfPlay implements ReportInterface
             ],
             __('Select a display')
         );
-    }
-
-    /** @inheritdoc */
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
-    {
-        $data = [];
-
-        $data['hiddenFields'] =  '';
-        $data['reportName'] = 'mobileProofOfPlay';
-
-        return [
-            'template' => 'mobile-proofofplay-schedule-form-add',
-            'data' => $data
-        ];
     }
 
     /** @inheritdoc */

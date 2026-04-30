@@ -541,7 +541,7 @@
                         reportAddBtn.removeAttr('href');
                     } else {
                         reportAddBtn.removeClass('disabled');
-                        reportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?type=" + typeVal + "&layoutId=" + layoutVal + "&reportName=summaryReport" );
+                        reportAddBtn.attr("href", "?type=" + typeVal + "&layoutId=" + layoutVal + "&reportName=summaryReport" );
                         reportAddBtn.removeAttr('title');
 
                     }
@@ -551,7 +551,7 @@
                         reportAddBtn.removeAttr('href');
                     } else {
                         reportAddBtn.removeClass('disabled');
-                        reportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?type=" + typeVal + "&mediaId=" + mediaVal + "&reportName=summaryReport" );
+                        reportAddBtn.attr("href", "?type=" + typeVal + "&mediaId=" + mediaVal + "&reportName=summaryReport" );
                         reportAddBtn.removeAttr('title');
 
                     }
@@ -561,7 +561,7 @@
                         reportAddBtn.removeAttr('href');
                     } else {
                         reportAddBtn.removeClass('disabled');
-                        reportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?type=" + typeVal + "&eventTag=" + eventTagVal + "&reportName=summaryReport" );
+                        reportAddBtn.attr("href", "?type=" + typeVal + "&eventTag=" + eventTagVal + "&reportName=summaryReport" );
                         reportAddBtn.removeAttr('title');
 
                     }

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -83,18 +83,6 @@ class ApiRequests implements ReportInterface
                 'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             ]
         );
-    }
-
-    /** @inheritdoc */
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams): array
-    {
-        $data = [];
-        $data['reportName'] = 'apirequests';
-
-        return [
-            'template' => 'apirequests-schedule-form-add',
-            'data' => $data
-        ];
     }
 
     /** @inheritdoc */

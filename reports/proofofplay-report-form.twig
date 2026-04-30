@@ -566,16 +566,6 @@
                         $warning.show();
                     }
                 });
-
-                let anchorReportAddBtn = $("button#reportAddBtn");
-                let type = $("#type").val();
-                let tagsType = $("#tagsType").val();
-                let tags = $("#tags").val();
-                let exactTags = $('#exactTags').is(":checked");
-
-                anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?type=" + type + "&tagsType=" + tagsType + "&tags=" + tags + "&exactTags=" + exactTags
-                    + "&reportName=proofofplayReport" );
-
             };
 
             checkReportFilter(reportFilter);

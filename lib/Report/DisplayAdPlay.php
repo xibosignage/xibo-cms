@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -22,7 +22,6 @@
 namespace Xibo\Report;
 
 use Carbon\Carbon;
-use MongoDB\BSON\UTCDateTime;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Controller\DataTablesDotNetTrait;
@@ -127,20 +126,6 @@ class DisplayAdPlay implements ReportInterface
             ],
             __('Select a display')
         );
-    }
-
-    /** @inheritdoc */
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
-    {
-        $data = [];
-
-        $data['hiddenFields'] = '';
-        $data['reportName'] = 'displayAdPlay';
-
-        return [
-            'template' => 'display-adplays-schedule-form-add',
-            'data' => $data
-        ];
     }
 
     /** @inheritdoc */

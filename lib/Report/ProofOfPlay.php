@@ -141,28 +141,6 @@ class ProofOfPlay implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
-    {
-        $data = [];
-        $data['type'] = $sanitizedParams->getString('type');
-        $data['tagsType'] = $sanitizedParams->getString('tagsType');
-
-        $exactTags = $sanitizedParams->getCheckbox('exactTags');
-        $data['exactTags'] = $exactTags == 'true';
-
-        $tags = $sanitizedParams->getString('tags');
-        $data['tags'] = $tags;
-
-        $data['hiddenFields'] =  '';
-        $data['reportName'] = 'proofofplayReport';
-
-        return [
-            'template' => 'proofofplay-schedule-form-add',
-            'data' => $data
-        ];
-    }
-
-    /** @inheritdoc */
     public function setReportScheduleFormData(SanitizerInterface $sanitizedParams)
     {
         $filter = $sanitizedParams->getString('filter');

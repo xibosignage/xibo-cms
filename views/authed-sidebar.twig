@@ -140,7 +140,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("report.scheduling") %}
-                <li class="sidebar-list"><a href="{{ url_for("reportschedule.view") }}">{% trans "Report Schedules" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/reporting/schedules">{% trans "Report Schedules" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("report.saving") %}

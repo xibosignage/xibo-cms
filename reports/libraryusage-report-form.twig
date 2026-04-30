@@ -28,7 +28,7 @@
 
 {% block actionMenu %}
     <div class="widget-action-menu pull-right">
-        <button class="btn btn-success XiboFormButton" title="Schedule" id="reportAddBtn" href="{{ url_for("reportschedule.add.form") }}?reportName=libraryusage"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</button>
+        <button class="btn btn-success" title="Schedule" id="reportAddBtn" href="?reportName=libraryusage"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</button>
         <button class="btn btn-info XiboRedirectButton" href="{{ url_for("savedreport.view") }}?reportName=libraryusage"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</button>
         <button class="btn btn-primary XiboRedirectButton" href="{{ url_for("reportschedule.view") }}?reportName=libraryusage"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</button>
     </div>

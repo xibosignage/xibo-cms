@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -125,34 +125,6 @@ class SummaryReport implements ReportInterface
             ],
             __('Select a type and an item (i.e., layout/media/tag)')
         );
-    }
-
-    /** @inheritdoc */
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
-    {
-        $type = $sanitizedParams->getString('type');
-        $formParams = $this->getReportScheduleFormTitle($sanitizedParams);
-
-        $data = ['filters' => []];
-        $data['filters'][] = ['name'=> 'Daily', 'filter'=> 'daily'];
-        $data['filters'][] = ['name'=> 'Weekly', 'filter'=> 'weekly'];
-        $data['filters'][] = ['name'=> 'Monthly', 'filter'=> 'monthly'];
-        $data['filters'][] = ['name'=> 'Yearly', 'filter'=> 'yearly'];
-
-        $data['formTitle'] = $formParams['title'];
-
-        $data['hiddenFields'] = json_encode([
-            'type' => $type,
-            'selectedId' => $formParams['selectedId'],
-            'eventTag' => $eventTag ?? null
-        ]);
-
-        $data['reportName'] = 'summaryReport';
-
-        return [
-            'template' => 'summary-report-schedule-form-add',
-            'data' => $data
-        ];
     }
 
     /** @inheritdoc */

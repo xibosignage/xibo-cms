@@ -414,7 +414,7 @@
                         reportAddBtn.removeAttr('href');
                     } else {
                         reportAddBtn.removeClass('disabled');
-                        reportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?type=" + typeVal + "&layoutId=" + layoutVal + "&reportName=distributionReport" );
+                        reportAddBtn.attr("href", "?type=" + typeVal + "&layoutId=" + layoutVal + "&reportName=distributionReport" );
                         reportAddBtn.removeAttr('title');
 
                     }
@@ -424,7 +424,7 @@
                         reportAddBtn.removeAttr('href');
                     } else {
                         reportAddBtn.removeClass('disabled');
-                        reportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?type=" + typeVal + "&mediaId=" + mediaVal + "&reportName=distributionReport" );
+                        reportAddBtn.attr("href", "?type=" + typeVal + "&mediaId=" + mediaVal + "&reportName=distributionReport" );
                         reportAddBtn.removeAttr('title');
 
                     }
@@ -434,7 +434,7 @@
                         reportAddBtn.removeAttr('href');
                     } else {
                         reportAddBtn.removeClass('disabled');
-                        reportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?type=" + typeVal + "&eventTag=" + eventTagVal + "&reportName=distributionReport" );
+                        reportAddBtn.attr("href", "?type=" + typeVal + "&eventTag=" + eventTagVal + "&reportName=distributionReport" );
                         reportAddBtn.removeAttr('title');
 
                     }
