@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -2794,6 +2794,9 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             if (response.success && response.id) {
               // Deselect previous object
               lD.selectObject();
+
+              // Update the previewJWT for the new layout
+              window.previewJwt = response.data.previewJwt;
 
               lD.reloadData(response.data,
                 {
