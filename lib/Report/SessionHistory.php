@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -39,11 +39,8 @@ class SessionHistory implements ReportInterface
 {
     use ReportDefaultTrait, DataTablesDotNetTrait;
 
-    /** @var LogFactory */
-    private $logFactory;
-
-    /** @var AuditLogFactory */
-    private $auditLogFactory;
+    private readonly LogFactory $logFactory;
+    private readonly AuditLogFactory $auditLogFactory;
 
     /** @inheritdoc */
     public function setFactories(ContainerInterface $container)
@@ -55,18 +52,21 @@ class SessionHistory implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportEmailTemplate()
+    public function getReportEmailTemplate(): string
     {
         return 'sessionhistory-email-template.twig';
     }
 
     /** @inheritdoc */
-    public function getSavedReportTemplate()
+    public function getSavedReportTemplate(): string
     {
         return 'sessionhistory-report-preview';
     }
 
-    /** @inheritdoc */
+    /**
+     * @inheritdoc
+     * Legacy Twig form — kept to satisfy ReportInterface; remove alongside the interface cleanup PR.
+     */
     public function getReportForm(): ReportForm
     {
         return new ReportForm(
@@ -137,13 +137,13 @@ class SessionHistory implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function restructureSavedReportOldJson($json)
+    public function restructureSavedReportOldJson($json): array
     {
         return $json;
     }
 
     /** @inheritdoc */
-    public function getSavedReportResults($json, $savedReport)
+    public function getSavedReportResults($json, $savedReport): ReportResult
     {
         $metadata = [
             'periodStart' => $json['metadata']['periodStart'],
@@ -162,7 +162,7 @@ class SessionHistory implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getResults(SanitizerInterface $sanitizedParams)
+    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false): ReportResult
     {
         if (!$this->getUser()->isSuperAdmin()) {
             throw new AccessDeniedException();
@@ -210,10 +210,8 @@ class SessionHistory implements ReportInterface
         }
 
         $metadata = [
-            'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))
-                ->format(DateFormatHelper::getSystemFormat()),
-            'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))
-                ->format(DateFormatHelper::getSystemFormat()),
+            'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
+            'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
         ];
 
         $type = $sanitizedParams->getString('type');
@@ -252,20 +250,21 @@ class SessionHistory implements ReportInterface
                 $params['sessionHistoryId'] = $sanitizedParams->getInt('sessionHistoryId');
             }
 
-            // Sorting?
-            $sortOrder = $this->gridRenderSort($sanitizedParams);
-
-            if (is_array($sortOrder)) {
-                $sql .= ' ORDER BY ' . implode(',', $sortOrder);
+            $keyword = $sanitizedParams->getString('keyword');
+            if ($keyword !== null) {
+                $sql .= ' AND (`auditlog`.`message` LIKE :keyword
+                          OR `auditlog`.`entity` LIKE :keyword
+                          OR `user`.`userName` LIKE :keyword
+                          OR `session_history`.`userAgent` LIKE :keyword)';
+                $params['keyword'] = '%' . $keyword . '%';
             }
+
+            $sql .= $this->buildOrderBy('audit', $sanitizedParams, $isJson);
 
             $rows = [];
             foreach ($this->store->select($sql, $params) as $row) {
                 $auditRecord = $this->auditLogFactory->create()->hydrate($row);
-                $auditRecord->setUnmatchedProperty(
-                    'userAgent',
-                    $row['userAgent']
-                );
+                $auditRecord->setUnmatchedProperty('userAgent', $row['userAgent']);
 
                 // decode for grid view, leave as json for email/preview.
                 if (!$sanitizedParams->getCheckbox('scheduledReport')) {
@@ -283,7 +282,7 @@ class SessionHistory implements ReportInterface
                 $rows,
                 count($rows),
             );
-        } else if ($type === 'debug') {
+        } elseif ($type === 'debug') {
             $params = [
                 'fromDt' => $fromDt->format(DateFormatHelper::getSystemFormat()),
                 'toDt' => $toDt->format(DateFormatHelper::getSystemFormat()),
@@ -322,30 +321,23 @@ class SessionHistory implements ReportInterface
                 $params['sessionHistoryId'] = $sanitizedParams->getInt('sessionHistoryId');
             }
 
-            // Sorting?
-            $sortOrder = $this->gridRenderSort($sanitizedParams);
-
-            if (is_array($sortOrder)) {
-                $sql .= ' ORDER BY ' . implode(',', $sortOrder);
+            $keyword = $sanitizedParams->getString('keyword');
+            if ($keyword !== null) {
+                $sql .= ' AND (`log`.`message` LIKE :keyword
+                          OR `log`.`page` LIKE :keyword
+                          OR `user`.`userName` LIKE :keyword
+                          OR `session_history`.`userAgent` LIKE :keyword)';
+                $params['keyword'] = '%' . $keyword . '%';
             }
+
+            $sql .= $this->buildOrderBy('debug', $sanitizedParams, $isJson);
 
             $rows = [];
             foreach ($this->store->select($sql, $params) as $row) {
                 $logRecord = $this->logFactory->createEmpty()->hydrate($row, ['htmlStringProperties' => ['message']]);
-                $logRecord->setUnmatchedProperty(
-                    'userAgent',
-                    $row['userAgent']
-                );
-
-                $logRecord->setUnmatchedProperty(
-                    'ipAddress',
-                    $row['ipAddress']
-                );
-
-                $logRecord->setUnmatchedProperty(
-                    'userName',
-                    $row['userName']
-                );
+                $logRecord->setUnmatchedProperty('userAgent', $row['userAgent']);
+                $logRecord->setUnmatchedProperty('ipAddress', $row['ipAddress']);
+                $logRecord->setUnmatchedProperty('userName', $row['userName']);
 
                 $rows[] = $logRecord;
             }
@@ -386,44 +378,29 @@ class SessionHistory implements ReportInterface
                 $params['sessionHistoryId'] = $sanitizedParams->getInt('sessionHistoryId');
             }
 
-            // Sorting?
-            $sortOrder = $this->gridRenderSort($sanitizedParams);
-
-            if (is_array($sortOrder)) {
-                $sql .= ' ORDER BY ' . implode(',', $sortOrder);
+            $keyword = $sanitizedParams->getString('keyword');
+            if ($keyword !== null) {
+                $sql .= ' AND (`session_history`.`userAgent` LIKE :keyword
+                          OR `session_history`.`ipAddress` LIKE :keyword
+                          OR `user`.`userName` LIKE :keyword)';
+                $params['keyword'] = '%' . $keyword . '%';
             }
+
+            $sql .= $this->buildOrderBy('sessions', $sanitizedParams, $isJson);
 
             $rows = [];
             foreach ($this->store->select($sql, $params) as $row) {
-                $sessionRecord = $this->logFactory->createEmpty()->hydrate($row, ['htmlStringProperties' => ['message']]);
+                $sessionRecord = $this->logFactory->createEmpty()
+                    ->hydrate($row, ['htmlStringProperties' => ['message']]);
                 $duration = isset($row['lastUsedTime'])
                     ? date_diff(date_create($row['startTime']), date_create($row['lastUsedTime']))->format('%H:%I:%S')
                     : null;
 
-                $sessionRecord->setUnmatchedProperty(
-                    'userAgent',
-                    $row['userAgent']
-                );
-
-                $sessionRecord->setUnmatchedProperty(
-                    'ipAddress',
-                    $row['ipAddress']
-                );
-
-                $sessionRecord->setUnmatchedProperty(
-                    'userName',
-                    $row['userName']
-                );
-
-                $sessionRecord->setUnmatchedProperty(
-                    'endTime',
-                    $row['lastUsedTime']
-                );
-
-                $sessionRecord->setUnmatchedProperty(
-                    'duration',
-                    $duration
-                );
+                $sessionRecord->setUnmatchedProperty('userAgent', $row['userAgent']);
+                $sessionRecord->setUnmatchedProperty('ipAddress', $row['ipAddress']);
+                $sessionRecord->setUnmatchedProperty('userName', $row['userName']);
+                $sessionRecord->setUnmatchedProperty('endTime', $row['lastUsedTime']);
+                $sessionRecord->setUnmatchedProperty('duration', $duration);
 
                 $rows[] = $sessionRecord;
             }
@@ -434,5 +411,38 @@ class SessionHistory implements ReportInterface
                 count($rows),
             );
         }
+    }
+
+    private function buildOrderBy(string $type, SanitizerInterface $sanitizedParams, bool $isJson): string
+    {
+        [$defaultSortBy, $allowedColumns, $defaultSort] = match ($type) {
+            'audit' => [
+                'logDate',
+                [
+                    'logId', 'logDate', 'userName', 'message', 'entity', 'entityId',
+                    'userId', 'ipAddress', 'sessionHistoryId', 'userAgent',
+                ],
+                ['logDate DESC'],
+            ],
+            'debug' => [
+                'logDate',
+                [
+                    'logId', 'logDate', 'runNo', 'channel', 'page', 'function', 'type',
+                    'message', 'userId', 'sessionHistoryId', 'userName',
+                    'displayId', 'display', 'ipAddress', 'userAgent',
+                ],
+                ['logDate DESC'],
+            ],
+            default => [
+                'startTime',
+                ['sessionId', 'startTime', 'userId', 'userAgent', 'ipAddress', 'lastUsedTime', 'userName', 'userType'],
+                ['startTime DESC'],
+            ],
+        };
+
+        $sortOrder = $this->gridRenderSort($sanitizedParams, $isJson, $defaultSortBy);
+        $order = $this->logFactory->buildSortQuery($sortOrder, $allowedColumns, defaultSort: $defaultSort);
+
+        return !empty($order) ? ' ORDER BY ' . implode(', ', $order) : '';
     }
 }
