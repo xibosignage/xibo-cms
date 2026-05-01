@@ -328,7 +328,7 @@ class ProofOfPlay implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getResults(SanitizerInterface $sanitizedParams)
+    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false)
     {
         $layoutIds = $sanitizedParams->getIntArray('layoutId', ['default' => []]);
         $mediaIds = $sanitizedParams->getIntArray('mediaId', ['default' => []]);

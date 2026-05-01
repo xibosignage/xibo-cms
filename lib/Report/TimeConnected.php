@@ -209,7 +209,7 @@ class TimeConnected implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getResults(SanitizerInterface $sanitizedParams)
+    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false)
     {
         // Get an array of display id this user has access to.
         $displayIds = $this->getDisplayIdFilter($sanitizedParams);

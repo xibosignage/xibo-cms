@@ -120,8 +120,9 @@ interface ReportInterface
      * Get results when on demand report runs and
      * This result will get saved to a json if schedule report runs
      * @param SanitizerInterface $sanitizedParams
+     * @param bool $isJson true for React/JSON API requests (sortBy/sortDir params), false for DataTables
      * @return ReportResult
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function getResults(SanitizerInterface $sanitizedParams);
+    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false);
 }

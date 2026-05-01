@@ -228,7 +228,7 @@ class CampaignProofOfPlay implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getResults(SanitizerInterface $sanitizedParams)
+    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false)
     {
         $parentCampaignId = $sanitizedParams->getInt('parentCampaignId');
 

@@ -159,7 +159,7 @@ class DisplayAlerts implements ReportInterface
         );
     }
 
-    public function getResults(SanitizerInterface $sanitizedParams)
+    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false)
     {
         $displayIds = $this->getDisplayIdFilter($sanitizedParams);
         $onlyLoggedIn = $sanitizedParams->getCheckbox('onlyLoggedIn') == 1;

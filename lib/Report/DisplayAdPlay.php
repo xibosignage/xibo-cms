@@ -236,7 +236,7 @@ class DisplayAdPlay implements ReportInterface
     }
 
     /** @inheritDoc */
-    public function getResults(SanitizerInterface $sanitizedParams)
+    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false)
     {
         $layoutId = $sanitizedParams->getInt('layoutId');
         $parentCampaignId = $sanitizedParams->getInt('parentCampaignId');

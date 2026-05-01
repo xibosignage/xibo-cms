@@ -239,7 +239,7 @@ class DisplayPercentage implements ReportInterface
     }
 
     /** @inheritDoc */
-    public function getResults(SanitizerInterface $sanitizedParams)
+    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false)
     {
         $params = [
             'parentCampaignId' => $sanitizedParams->getInt('parentCampaignId')

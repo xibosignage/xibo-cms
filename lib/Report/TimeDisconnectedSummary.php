@@ -191,7 +191,7 @@ class TimeDisconnectedSummary implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getResults(SanitizerInterface $sanitizedParams)
+    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false)
     {
         // Filter by displayId?
         $displayIds = $this->getDisplayIdFilter($sanitizedParams);
