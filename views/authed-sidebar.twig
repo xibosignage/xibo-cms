@@ -85,7 +85,7 @@
         {% endif %}
 
         {% set countViewable = currentUser.featureEnabledCount(["usergroup.view", "module.view", "transition.view", "task.view", "tag.view", "font.view"]) %}
-        
+
         {% if countViewable > 0 or userMenuViewable %}
             <li class="sidebar-title"><a>{% trans "Administration" %}</a></li>
 
@@ -162,7 +162,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("auditlog.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("auditlog.view") }}">{% trans "Audit Trail" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/advanced/audit">{% trans "Audit Trail" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("fault.view") %}

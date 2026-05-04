@@ -178,7 +178,7 @@ class AuditLogFactory extends BaseFactory
             $body .= $this->buildSearchQuery(
                 $sanitizedFilter->getString('keyword'),
                 $params,
-                ['user.userName', 'auditlog.entity', 'auditlog.message', 'auditlog.ipAddress'],
+                ['auditlog.entity', 'auditlog.message', 'auditlog.ipAddress'],
                 ['auditlog.logId', 'auditlog.entityId'],
             );
         }
