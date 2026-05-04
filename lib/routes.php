@@ -715,6 +715,8 @@ $app->group('', function (RouteCollectorProxy $group) {
 //
 $app->get('/report/savedreport', ['\Xibo\Controller\SavedReport','savedReportGrid'])
     ->setName('savedreport.search');
+$app->get('/report/savedreport/{id}', ['\Xibo\Controller\SavedReport','searchById'])
+    ->setName('savedreport.search.id');
 $app->delete('/report/savedreport/{id}', ['\Xibo\Controller\SavedReport','savedReportDelete'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['report.saving']))
     ->setName('savedreport.delete');
