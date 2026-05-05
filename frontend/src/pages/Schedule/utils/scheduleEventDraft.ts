@@ -247,10 +247,10 @@ export function createDraftFromEvent(scheduleEvent: Event): ScheduleEventDraft {
     actionTriggerCode: scheduleEvent.actionTriggerCode ?? '',
     actionLayoutCode: scheduleEvent.actionLayoutCode ?? '',
     shareOfVoice: scheduleEvent.shareOfVoice ?? 0,
-    displaySpecificGroupIds: scheduleEvent.displayGroups
+    displaySpecificGroupIds: (scheduleEvent.displayGroups ?? [])
       .filter((dg) => dg.isDisplaySpecific === 1)
       .map((dg) => dg.displayGroupId),
-    displayGroupIds: scheduleEvent.displayGroups
+    displayGroupIds: (scheduleEvent.displayGroups ?? [])
       .filter((dg) => dg.isDisplaySpecific !== 1)
       .map((dg) => dg.displayGroupId),
     dayPartId: String(scheduleEvent.dayPartId),
@@ -278,7 +278,7 @@ export function createDraftFromEvent(scheduleEvent: Event): ScheduleEventDraft {
       ? new Date(scheduleEvent.recurrenceRange * 1000).toISOString()
       : '',
     reminders:
-      scheduleEvent.scheduleReminders.length > 0
+      (scheduleEvent.scheduleReminders ?? []).length > 0
         ? scheduleEvent.scheduleReminders.map((r) => ({
             value: r.value,
             type: r.type,
@@ -289,7 +289,7 @@ export function createDraftFromEvent(scheduleEvent: Event): ScheduleEventDraft {
     isGeoAware: scheduleEvent.isGeoAware === 1,
     geoLocation: scheduleEvent.geoLocation ?? '',
     criteria:
-      scheduleEvent.criteria.length > 0
+      (scheduleEvent.criteria ?? []).length > 0
         ? scheduleEvent.criteria.map((c) => ({
             type: c.type,
             metric: c.metric,

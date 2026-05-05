@@ -226,7 +226,7 @@ class Schedule extends Base
             // If this event is active, collect extra information and add to the events list
             if (count($scheduleEvents) > 0) {
                 // Add the link to the schedule
-                if (!$this->isApi($request)) {
+                if (!$this->isApi($request) && !$this->isJson($request)) {
                     $route = 'schedule.edit.form';
                     $schedule->setUnmatchedProperty(
                         'link',
@@ -262,7 +262,7 @@ class Schedule extends Base
                     );
 
                     // Add the link to the layout
-                    if (!$this->isApi($request)) {
+                    if (!$this->isApi($request) && !$this->isJson($request)) {
                         // do not link to Layout Designer for Full screen Media/Playlist Layout.
                         $link = (in_array($event['eventTypeId'], [7, 8]))
                             ? ''

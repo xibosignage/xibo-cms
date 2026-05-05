@@ -59,6 +59,7 @@ export interface DisplayGroupMultiSelectValue {
 interface DisplayGroupMultiSelectProps {
   value: DisplayGroupMultiSelectValue;
   onChange: (value: DisplayGroupMultiSelectValue) => void;
+  onLabelsChange?: (labels: Record<number, string>) => void;
   disabled?: boolean;
   className?: string;
   triggerClassName?: string;
@@ -67,6 +68,7 @@ interface DisplayGroupMultiSelectProps {
 export function DisplayGroupMultiSelect({
   value,
   onChange,
+  onLabelsChange,
   disabled = false,
   className,
   triggerClassName,
@@ -212,6 +214,26 @@ export function DisplayGroupMultiSelect({
     ...value.displayGroupIds.map((id) => `${GROUP_PREFIX}${id}`),
   ]);
 
+  const buildLabelsMap = (selected: Set<string>): Record<number, string> => {
+    const labels: Record<number, string> = {};
+    for (const v of selected) {
+      if (v.startsWith(DISPLAY_PREFIX)) {
+        const id = Number(v.slice(DISPLAY_PREFIX.length));
+        const label = displayOptions.find((o) => o.value === v)?.label;
+        if (label) {
+          labels[id] = label;
+        }
+      } else if (v.startsWith(GROUP_PREFIX)) {
+        const id = Number(v.slice(GROUP_PREFIX.length));
+        const label = groupOptions.find((o) => o.value === v)?.label;
+        if (label) {
+          labels[id] = label;
+        }
+      }
+    }
+    return labels;
+  };
+
   const toggle = (optValue: string) => {
     const next = new Set(selectedValues);
     if (next.has(optValue)) {
@@ -230,6 +252,7 @@ export function DisplayGroupMultiSelect({
       }
     }
     onChange({ displaySpecificGroupIds, displayGroupIds });
+    onLabelsChange?.(buildLabelsMap(next));
   };
 
   const handleOpenChange = (open: boolean) => {
@@ -341,6 +364,7 @@ export function DisplayGroupMultiSelect({
             onClick={(e) => {
               e.stopPropagation();
               onChange({ displaySpecificGroupIds: [], displayGroupIds: [] });
+              onLabelsChange?.({});
             }}
             className="shrink-0 flex items-center justify-center text-gray-500 hover:text-gray-600"
           >
