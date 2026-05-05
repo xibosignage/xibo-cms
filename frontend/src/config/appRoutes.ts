@@ -239,7 +239,10 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'sync-groups',
         labelKey: 'Sync Groups',
-        externalURL: '/syncgroup/view',
+        lazy: () =>
+          import('@/pages/Displays/SyncGroups/SyncGroups').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'display.syncView',
       },
       {

@@ -122,18 +122,185 @@ export const EVENT_TYPE_OPTIONS: SelectOption[] = [
 
 export const CONDITION_OPTIONS: SelectOption[] = [
   { value: 'set', label: 'Is set' },
-  { value: 'not_set', label: 'Is not set' },
-  { value: 'equals', label: 'Equals' },
-  { value: 'not_equals', label: 'Not equals' },
-  { value: 'gt', label: 'Greater than' },
   { value: 'lt', label: 'Less than' },
+  { value: 'lte', label: 'Less than or equal to' },
+  { value: 'eq', label: 'Equal to' },
+  { value: 'neq', label: 'Not equal to' },
+  { value: 'gte', label: 'Greater than or equal to' },
+  { value: 'gt', label: 'Greater than' },
+  { value: 'contains', label: 'Contains' },
+  { value: 'ncontains', label: 'Not contains' },
 ];
 
 export const CRITERIA_TYPE_OPTIONS: SelectOption[] = [
-  { value: 'display', label: 'Display' },
-  { value: 'geoLocation', label: 'Geo Location' },
-  { value: 'time', label: 'Time' },
+  { value: 'custom', label: 'Custom' },
+  { value: 'weather', label: 'Weather' },
+  { value: 'emergency_alert', label: 'Emergency Alerts' },
 ];
+
+// Number comparison conditions shared by most weather metrics
+const NUMBER_CONDITIONS: SelectOption[] = [
+  { value: 'lt', label: 'Less than' },
+  { value: 'lte', label: 'Less than or equal to' },
+  { value: 'eq', label: 'Equal to' },
+  { value: 'gte', label: 'Greater than or equal to' },
+  { value: 'gt', label: 'Greater than' },
+];
+
+const EQ_ONLY_CONDITION: SelectOption[] = [{ value: 'eq', label: 'Equal to' }];
+
+export interface CriteriaMetricConfig {
+  id: string;
+  label: string;
+  conditions: SelectOption[];
+  inputType: 'text' | 'number' | 'dropdown';
+  values?: SelectOption[];
+}
+
+export interface CriteriaTypeConfig {
+  metrics: CriteriaMetricConfig[];
+}
+
+export const CRITERIA_TYPE_METRICS: Record<string, CriteriaTypeConfig> = {
+  weather: {
+    metrics: [
+      {
+        id: 'weather_condition',
+        label: 'Weather Condition',
+        conditions: EQ_ONLY_CONDITION,
+        inputType: 'dropdown',
+        values: [
+          { value: 'thunderstorm', label: 'Thunderstorm' },
+          { value: 'drizzle', label: 'Drizzle' },
+          { value: 'rain', label: 'Rain' },
+          { value: 'snow', label: 'Snow' },
+          { value: 'clear', label: 'Clear' },
+          { value: 'clouds', label: 'Clouds' },
+        ],
+      },
+      {
+        id: 'weather_temp_imperial',
+        label: 'Temperature (Imperial)',
+        conditions: NUMBER_CONDITIONS,
+        inputType: 'number',
+      },
+      {
+        id: 'weather_temp_metric',
+        label: 'Temperature (Metric)',
+        conditions: NUMBER_CONDITIONS,
+        inputType: 'number',
+      },
+      {
+        id: 'weather_feels_like_imperial',
+        label: 'Apparent Temperature (Imperial)',
+        conditions: NUMBER_CONDITIONS,
+        inputType: 'number',
+      },
+      {
+        id: 'weather_feels_like_metric',
+        label: 'Apparent Temperature (Metric)',
+        conditions: NUMBER_CONDITIONS,
+        inputType: 'number',
+      },
+      {
+        id: 'weather_wind_speed',
+        label: 'Wind Speed',
+        conditions: NUMBER_CONDITIONS,
+        inputType: 'number',
+      },
+      {
+        id: 'weather_wind_direction',
+        label: 'Wind Direction',
+        conditions: EQ_ONLY_CONDITION,
+        inputType: 'dropdown',
+        values: [
+          { value: 'N', label: 'North' },
+          { value: 'NE', label: 'Northeast' },
+          { value: 'E', label: 'East' },
+          { value: 'SE', label: 'Southeast' },
+          { value: 'S', label: 'South' },
+          { value: 'SW', label: 'Southwest' },
+          { value: 'W', label: 'West' },
+          { value: 'NW', label: 'Northwest' },
+        ],
+      },
+      {
+        id: 'weather_wind_degrees',
+        label: 'Wind Direction (degrees)',
+        conditions: NUMBER_CONDITIONS,
+        inputType: 'number',
+      },
+      {
+        id: 'weather_humidity',
+        label: 'Humidity (Percent)',
+        conditions: NUMBER_CONDITIONS,
+        inputType: 'number',
+      },
+      {
+        id: 'weather_pressure',
+        label: 'Pressure',
+        conditions: NUMBER_CONDITIONS,
+        inputType: 'number',
+      },
+      {
+        id: 'weather_visibility',
+        label: 'Visibility (metres)',
+        conditions: NUMBER_CONDITIONS,
+        inputType: 'number',
+      },
+    ],
+  },
+  emergency_alert: {
+    metrics: [
+      {
+        id: 'emergency_alert_status',
+        label: 'Status',
+        conditions: EQ_ONLY_CONDITION,
+        inputType: 'dropdown',
+        values: [
+          { value: 'actual_alerts', label: 'Actual Alerts' },
+          { value: 'test_alerts', label: 'Test Alerts' },
+          { value: 'no_alerts', label: 'No Alerts' },
+        ],
+      },
+      {
+        id: 'emergency_alert_category',
+        label: 'Category',
+        conditions: EQ_ONLY_CONDITION,
+        inputType: 'dropdown',
+        values: [
+          { value: 'Geo', label: 'Geo' },
+          { value: 'Met', label: 'Met' },
+          { value: 'Safety', label: 'Safety' },
+          { value: 'Security', label: 'Security' },
+          { value: 'Rescue', label: 'Rescue' },
+          { value: 'Fire', label: 'Fire' },
+          { value: 'Health', label: 'Health' },
+          { value: 'Env', label: 'Env' },
+          { value: 'Transport', label: 'Transport' },
+          { value: 'Infra', label: 'Infra' },
+          { value: 'CBRNE', label: 'CBRNE' },
+          { value: 'Other', label: 'Other' },
+        ],
+      },
+    ],
+  },
+};
+
+export function getCriteriaMetricOptions(type: string): SelectOption[] {
+  const config = CRITERIA_TYPE_METRICS[type];
+  if (!config) return [];
+  return config.metrics.map((m) => ({ value: m.id, label: m.label }));
+}
+
+export function getCriteriaMetricConfig(
+  type: string,
+  metricId: string,
+): CriteriaMetricConfig | null {
+  const config = CRITERIA_TYPE_METRICS[type];
+  if (!config) return null;
+  return config.metrics.find((m) => m.id === metricId) ?? null;
+}
 
 export const RECURRENCE_TYPE_OPTIONS: SelectOption[] = [
   { value: '', label: 'None' },
@@ -163,7 +330,7 @@ export const REMINDER_OPTION_OPTIONS: SelectOption[] = [
 export const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 
 export const EMPTY_CRITERION: DraftCriterion = {
-  type: '',
+  type: 'custom',
   metric: '',
   condition: 'set',
   value: '',

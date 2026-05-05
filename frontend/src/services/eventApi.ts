@@ -333,6 +333,7 @@ export async function updateEvent(
 
   if (data.scheduleReminders && data.scheduleReminders.length > 0) {
     data.scheduleReminders.forEach((r, i) => {
+      params.append(`reminder_scheduleReminderId[${i}]`, '0');
       params.append(`reminder_value[${i}]`, String(r.reminder_value));
       params.append(`reminder_type[${i}]`, String(r.reminder_type));
       params.append(`reminder_option[${i}]`, String(r.reminder_option));

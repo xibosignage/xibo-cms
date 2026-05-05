@@ -86,6 +86,7 @@ $app->group('', function(RouteCollectorProxy $group) {
  * Layouts
  */
 $app->get('/layout', ['\Xibo\Controller\Layout','grid'])->setName('layout.search');
+$app->get('/layout/codes', ['\Xibo\Controller\Layout', 'getLayoutCodes'])->setName('layout.code.search');
 $app->get('/layout/status/{id}', ['\Xibo\Controller\Layout','status'])->setName('layout.status');
 $app->put('/layout/lock/release/{id}', ['\Xibo\Controller\Layout', 'releaseLock'])->setName('layout.lock.release');
 

@@ -82,10 +82,10 @@ class HttpsDetect
         // which includes any CMS subfolder (e.g. /xibo/api/index.php → /xibo/api).
         $scriptDir = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/');
 
-        // Non-web entry points (/api, /json, /preview) sit in a subdirectory of the
+        // Non-web entry points (/api, /json, /preview, /pwa) sit in a subdirectory of the
         // CMS web root. Strip that segment so we return the true CMS root URL.
         $entryPoint = $request?->getAttribute('_entryPoint') ?? '';
-        if (in_array(strtolower($entryPoint), ['api', 'json', 'preview'], true)) {
+        if (in_array(strtolower($entryPoint), ['api', 'json', 'preview', 'pwa'], true)) {
             $suffix = '/' . strtolower($entryPoint);
             if (str_ends_with($scriptDir, $suffix)) {
                 $scriptDir = rtrim(substr($scriptDir, 0, -strlen($suffix)), '/');

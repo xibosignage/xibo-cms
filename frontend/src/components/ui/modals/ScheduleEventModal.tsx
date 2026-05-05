@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import type { ColumnDef } from '@tanstack/react-table';
 import { ArrowLeft, ArrowRight, CalendarClock, Minus, Plus, Tablet } from 'lucide-react';
 import { useEffect, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -33,6 +34,8 @@ import DatePickerInput from '../forms/DatePickerInput';
 import NumberInput from '../forms/NumberInput';
 import SelectDropdown from '../forms/SelectDropdown';
 import TextInput from '../forms/TextInput';
+import { DataTable } from '../table/DataTable';
+import { TextCell } from '../table/cells';
 
 import Modal, { type ModalAction } from './Modal';
 
@@ -62,6 +65,8 @@ import {
   getPrefilledOption,
   getStepLabels,
   buildSteps,
+  getCriteriaMetricOptions,
+  getCriteriaMetricConfig,
 } from '@/pages/Schedule/utils/scheduleEventDraft';
 import { getScheduleEventSchema } from '@/schema/scheduleEvent';
 import { fetchCampaigns } from '@/services/campaignApi';
@@ -73,8 +78,9 @@ import { fetchLayouts, fetchLayoutCodes } from '@/services/layoutsApi';
 import { fetchMedia } from '@/services/mediaApi';
 import { fetchPlaylist } from '@/services/playlistApi';
 import { fetchResolution } from '@/services/resolutionApi';
-import { fetchSyncGroups } from '@/services/syncGroupApi';
+import { fetchSyncGroups, fetchSyncGroupDisplays } from '@/services/syncGroupApi';
 import { EventTypeId, type Event } from '@/types/event';
+import type { SyncGroupDisplay } from '@/types/syncGroup';
 import { hasFeature } from '@/utils/permissions';
 
 const DROPDOWN_PAGE_SIZE = 10;
@@ -145,6 +151,11 @@ export default function ScheduleEventModal({
 
   const [alwaysDayPartId, setAlwaysDayPartId] = useState<string>('');
   const [customDayPartId, setCustomDayPartId] = useState<string>('');
+
+  // Sync group per-display layout state
+  const [syncDisplays, setSyncDisplays] = useState<SyncGroupDisplay[]>([]);
+  const [syncLayoutOptions, setSyncLayoutOptions] = useState<SelectOption[]>([]);
+  const [isLoadingSyncDisplays, setIsLoadingSyncDisplays] = useState(false);
 
   const [isPending, startTransition] = useTransition();
   const [apiError, setApiError] = useState<string | undefined>();
@@ -494,6 +505,51 @@ export default function ScheduleEventModal({
       });
   }, [isOpen, draft.eventTypeId]);
 
+  // Fetch displays for the selected sync group
+  useEffect(() => {
+    if (!isOpen || !isSyncType || !draft.syncGroupId) {
+      setSyncDisplays([]);
+      setSyncLayoutOptions([]);
+      return;
+    }
+
+    let cancelled = false;
+    setIsLoadingSyncDisplays(true);
+
+    Promise.all([
+      fetchSyncGroupDisplays(draft.syncGroupId, isEditMode ? event?.eventId : undefined),
+      fetchLayouts({ start: 0, length: 100 }),
+    ])
+      .then(([displays, { rows: layouts }]) => {
+        if (cancelled) return;
+        setSyncDisplays(displays);
+        setSyncLayoutOptions(layouts.map((l) => ({ value: String(l.layoutId), label: l.layout })));
+        // Pre-populate syncDisplayLayouts from fetched data (edit mode)
+        const layoutMap: Record<number, number | null> = {};
+        displays.forEach((d) => {
+          layoutMap[d.displayId] = d.layoutId ?? null;
+        });
+        setDraft((prev) => ({
+          ...prev,
+          syncDisplayLayouts: { ...layoutMap, ...prev.syncDisplayLayouts },
+        }));
+      })
+      .catch(() => {
+        if (!cancelled) {
+          notify.error(t('Failed to load sync group displays.'));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoadingSyncDisplays(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, isSyncType, draft.syncGroupId]);
+
   const updateDraft = <K extends keyof ScheduleEventDraft>(
     key: K,
     value: ScheduleEventDraft[K],
@@ -706,9 +762,15 @@ export default function ScheduleEventModal({
           ...(!isCustomDaypart && !isAlwaysDaypart && draft.fromDt ? { fromDt: draft.fromDt } : {}),
 
           ...(draft.name ? { name: draft.name } : {}),
-          ...(draft.resolutionId ? { resolutionId: Number(draft.resolutionId) } : {}),
-          ...(draft.layoutDuration ? { layoutDuration: draft.layoutDuration } : {}),
-          ...(draft.backgroundColor ? { backgroundColor: draft.backgroundColor } : {}),
+          ...((isMediaType || isPlaylistType) && draft.resolutionId
+            ? { resolutionId: Number(draft.resolutionId) }
+            : {}),
+          ...((isMediaType || isPlaylistType) && draft.layoutDuration
+            ? { layoutDuration: draft.layoutDuration }
+            : {}),
+          ...((isMediaType || isPlaylistType) && draft.backgroundColor
+            ? { backgroundColor: draft.backgroundColor }
+            : {}),
           displayOrder: draft.displayOrder,
           isPriority: draft.isPriority,
           maxPlaysPerHour: draft.maxPlaysPerHour,
@@ -770,10 +832,45 @@ export default function ScheduleEventModal({
     );
     setOptionalTab('general');
     setShowDisplayBanner(false);
+    setSyncDisplays([]);
+    setSyncLayoutOptions([]);
     setFormErrors({});
     setApiError(undefined);
     onClose();
   };
+
+  const syncDisplayColumns: ColumnDef<SyncGroupDisplay>[] = [
+    {
+      accessorKey: 'display',
+      header: t('Display'),
+      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+    },
+    {
+      id: 'layout',
+      header: t('Layout'),
+      cell: ({ row }) => (
+        <SelectDropdown
+          value={
+            draft.syncDisplayLayouts[row.original.displayId]
+              ? String(draft.syncDisplayLayouts[row.original.displayId])
+              : ''
+          }
+          options={syncLayoutOptions}
+          onSelect={(value) => {
+            setDraft((prev) => ({
+              ...prev,
+              syncDisplayLayouts: {
+                ...prev.syncDisplayLayouts,
+                [row.original.displayId]: Number(value),
+              },
+            }));
+          }}
+          placeholder={t('Select Layout')}
+          searchable
+        />
+      ),
+    },
+  ];
 
   const actions: ModalAction[] = (() => {
     const result: ModalAction[] = [
@@ -972,7 +1069,30 @@ export default function ScheduleEventModal({
                   </div>
                 )}
 
-              {/* TODO: Sync per-display layout selection — deferred to next sprint */}
+              {/* Sync Group: per-display layout selection table */}
+              {isSyncType && draft.syncGroupId && (
+                <div className="space-y-2">
+                  <DataTable
+                    columns={syncDisplayColumns}
+                    data={syncDisplays}
+                    pageCount={1}
+                    pagination={{ pageIndex: 0, pageSize: syncDisplays.length || 10 }}
+                    onPaginationChange={() => {}}
+                    sorting={[]}
+                    onSortingChange={() => {}}
+                    globalFilter=""
+                    onGlobalFilterChange={() => {}}
+                    rowSelection={{}}
+                    onRowSelectionChange={() => {}}
+                    loading={isLoadingSyncDisplays}
+                    enableSelection={false}
+                    hideToolbar
+                  />
+                  {formErrors.syncDisplayLayouts && (
+                    <p className="text-xs text-red-600 ml-2">{formErrors.syncDisplayLayouts}</p>
+                  )}
+                </div>
+              )}
 
               {/* Data Connector: Parameters field */}
               {isDataConnectorType && draft.dataSetId && (
@@ -1100,134 +1220,138 @@ export default function ScheduleEventModal({
                 />
               )}
 
-              {/* Interrupt: Share of Voice */}
-              {isInterruptType && (
-                <div className="grid grid-cols-2 gap-4">
-                  <NumberInput
-                    name="shareOfVoice"
-                    label={t('Share of Voice')}
-                    value={draft.shareOfVoice}
-                    onChange={(num) => updateDraft('shareOfVoice', num)}
-                    helpText={t(
-                      'The amount of time this Layout should be shown, in seconds per hour.',
-                    )}
-                    error={formErrors.shareOfVoice}
-                  />
-                  <div className="flex flex-col gap-1">
-                    <label className="text-sm font-semibold text-gray-500">
-                      {t('As a percentage')}
-                    </label>
-                    <input
-                      type="text"
-                      readOnly
-                      value={((draft.shareOfVoice / 3600) * 100).toFixed(2)}
-                      className="h-11.25 rounded-lg border border-gray-200 px-3 text-sm bg-gray-50 text-gray-500"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Named daypart: Start Time only (date, no time picker) */}
-              {isNamedDaypart && (
-                <DatePickerInput
-                  label={t('Start Time')}
-                  value={draft.fromDt}
-                  onChange={(value) => updateDraft('fromDt', value)}
-                  helpText={t('Select the start time for this event.')}
-                  showTimePicker={false}
-                />
-              )}
-
-              {/* Custom daypart + Command: Start Time only (no End Time) */}
-              {isCommandEvent && !draft.useRelativeTime && (
-                <DatePickerInput
-                  label={t('Start Time')}
-                  value={draft.fromDt}
-                  onChange={(value) => updateDraft('fromDt', value)}
-                  error={formErrors.fromDt}
-                />
-              )}
-
-              {/* Custom daypart (non-Command): Start + End Time (or relative time) */}
-              {isCustomDaypart && !isCommandEvent && !draft.useRelativeTime && (
-                <div className="grid grid-cols-2 gap-4">
-                  <DatePickerInput
-                    label={t('Start Time')}
-                    value={draft.fromDt}
-                    onChange={(value) => updateDraft('fromDt', value)}
-                    error={formErrors.fromDt}
-                  />
-                  <DatePickerInput
-                    label={t('End Time')}
-                    value={draft.toDt}
-                    onChange={(value) => updateDraft('toDt', value)}
-                    error={formErrors.toDt}
-                  />
-                </div>
-              )}
-
-              {/* Use Relative Time — for Custom daypart (Command included) */}
-              {isCustomDaypart && (
-                <div className="bg-gray-50 py-3">
-                  <Checkbox
-                    id="useRelativeTime"
-                    checked={draft.useRelativeTime}
-                    onChange={(e) => updateDraft('useRelativeTime', e.target.checked)}
-                    title={t('Use Relative Time')}
-                    label={t('Duration-based offsets')}
-                    className="px-3 py-2.5"
-                  />
-
-                  {/* Relative time fields */}
-                  {draft.useRelativeTime && (
-                    <div className="flex flex-col px-3 gap-2.5">
-                      {(draft.relativeHours > 0 ||
-                        draft.relativeMinutes > 0 ||
-                        draft.relativeSeconds > 0) && (
-                        <div className="flex items-center gap-2 text-sm  bg-gray-100 rounded-lg p-3">
-                          <CalendarClock className="h-3.5 w-3.5 text-gray-500" />
-                          <span className="font-medium text-sm text-gray-500">
-                            {t('Event Schedule:')}
-                          </span>
-                          <span className="text-gray-800">
-                            {(() => {
-                              const now = new Date();
-                              const end = new Date(now);
-                              end.setHours(end.getHours() + draft.relativeHours);
-                              end.setMinutes(end.getMinutes() + draft.relativeMinutes);
-                              end.setSeconds(end.getSeconds() + draft.relativeSeconds);
-                              return `${now.toLocaleString()} - ${end.toLocaleString()}`;
-                            })()}
-                          </span>
-                        </div>
-                      )}
-                      <p className="text-xs text-gray-400">
-                        {t("Total duration for this event in each Display's local time zone.")}
-                      </p>
-                      <div className="grid grid-cols-3 gap-3">
-                        <NumberInput
-                          name="relativeHours"
-                          label={t('Hours')}
-                          value={draft.relativeHours}
-                          onChange={(num) => updateDraft('relativeHours', num)}
-                          error={formErrors.relativeHours}
-                        />
-                        <NumberInput
-                          name="relativeMinutes"
-                          label={t('Minutes')}
-                          value={draft.relativeMinutes}
-                          onChange={(num) => updateDraft('relativeMinutes', num)}
-                        />
-                        <NumberInput
-                          name="relativeSeconds"
-                          label={t('Seconds')}
-                          value={draft.relativeSeconds}
-                          onChange={(num) => updateDraft('relativeSeconds', num)}
+              {!pagination.daypart.isLoading && (
+                <>
+                  {/* Interrupt: Share of Voice */}
+                  {isInterruptType && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <NumberInput
+                        name="shareOfVoice"
+                        label={t('Share of Voice')}
+                        value={draft.shareOfVoice}
+                        onChange={(num) => updateDraft('shareOfVoice', num)}
+                        helpText={t(
+                          'The amount of time this Layout should be shown, in seconds per hour.',
+                        )}
+                        error={formErrors.shareOfVoice}
+                      />
+                      <div className="flex flex-col gap-1">
+                        <label className="text-sm font-semibold text-gray-500">
+                          {t('As a percentage')}
+                        </label>
+                        <input
+                          type="text"
+                          readOnly
+                          value={((draft.shareOfVoice / 3600) * 100).toFixed(2)}
+                          className="h-11.25 rounded-lg border border-gray-200 px-3 text-sm bg-gray-50 text-gray-500"
                         />
                       </div>
                     </div>
                   )}
-                </div>
+
+                  {/* Named daypart: Start Time only (date, no time picker) */}
+                  {isNamedDaypart && (
+                    <DatePickerInput
+                      label={t('Start Time')}
+                      value={draft.fromDt}
+                      onChange={(value) => updateDraft('fromDt', value)}
+                      helpText={t('Select the start time for this event.')}
+                      showTimePicker={false}
+                    />
+                  )}
+
+                  {/* Custom daypart + Command: Start Time only (no End Time) */}
+                  {isCommandEvent && !draft.useRelativeTime && (
+                    <DatePickerInput
+                      label={t('Start Time')}
+                      value={draft.fromDt}
+                      onChange={(value) => updateDraft('fromDt', value)}
+                      error={formErrors.fromDt}
+                    />
+                  )}
+
+                  {/* Custom daypart (non-Command): Start + End Time (or relative time) */}
+                  {isCustomDaypart && !isCommandEvent && !draft.useRelativeTime && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <DatePickerInput
+                        label={t('Start Time')}
+                        value={draft.fromDt}
+                        onChange={(value) => updateDraft('fromDt', value)}
+                        error={formErrors.fromDt}
+                      />
+                      <DatePickerInput
+                        label={t('End Time')}
+                        value={draft.toDt}
+                        onChange={(value) => updateDraft('toDt', value)}
+                        error={formErrors.toDt}
+                      />
+                    </div>
+                  )}
+
+                  {/* Use Relative Time — for Custom daypart (Command included) */}
+                  {isCustomDaypart && (
+                    <div className="bg-gray-50 py-3">
+                      <Checkbox
+                        id="useRelativeTime"
+                        checked={draft.useRelativeTime}
+                        onChange={(e) => updateDraft('useRelativeTime', e.target.checked)}
+                        title={t('Use Relative Time')}
+                        label={t('Duration-based offsets')}
+                        className="px-3 py-2.5"
+                      />
+
+                      {/* Relative time fields */}
+                      {draft.useRelativeTime && (
+                        <div className="flex flex-col px-3 gap-2.5">
+                          {(draft.relativeHours > 0 ||
+                            draft.relativeMinutes > 0 ||
+                            draft.relativeSeconds > 0) && (
+                            <div className="flex items-center gap-2 text-sm  bg-gray-100 rounded-lg p-3">
+                              <CalendarClock className="h-3.5 w-3.5 text-gray-500" />
+                              <span className="font-medium text-sm text-gray-500">
+                                {t('Event Schedule:')}
+                              </span>
+                              <span className="text-gray-800">
+                                {(() => {
+                                  const now = new Date();
+                                  const end = new Date(now);
+                                  end.setHours(end.getHours() + draft.relativeHours);
+                                  end.setMinutes(end.getMinutes() + draft.relativeMinutes);
+                                  end.setSeconds(end.getSeconds() + draft.relativeSeconds);
+                                  return `${now.toLocaleString()} - ${end.toLocaleString()}`;
+                                })()}
+                              </span>
+                            </div>
+                          )}
+                          <p className="text-xs text-gray-400">
+                            {t("Total duration for this event in each Display's local time zone.")}
+                          </p>
+                          <div className="grid grid-cols-3 gap-3">
+                            <NumberInput
+                              name="relativeHours"
+                              label={t('Hours')}
+                              value={draft.relativeHours}
+                              onChange={(num) => updateDraft('relativeHours', num)}
+                              error={formErrors.relativeHours}
+                            />
+                            <NumberInput
+                              name="relativeMinutes"
+                              label={t('Minutes')}
+                              value={draft.relativeMinutes}
+                              onChange={(num) => updateDraft('relativeMinutes', num)}
+                            />
+                            <NumberInput
+                              name="relativeSeconds"
+                              label={t('Seconds')}
+                              value={draft.relativeSeconds}
+                              onChange={(num) => updateDraft('relativeSeconds', num)}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -1588,56 +1712,137 @@ export default function ScheduleEventModal({
                     </div>
 
                     {/* Criteria rows */}
-                    {draft.criteria.map((criterion, index) => (
-                      <div
-                        key={index}
-                        className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-center mb-2.5"
-                      >
-                        <SelectDropdown
-                          value={criterion.type}
-                          options={CRITERIA_TYPE_OPTIONS}
-                          onSelect={(value) => updateCriterion(index, 'type', value)}
-                          placeholder={t('Select Type')}
-                          className="w-full"
-                        />
-                        <TextInput
-                          name={`metric-${index}`}
-                          value={criterion.metric}
-                          placeholder={t('Enter Metric')}
-                          onChange={(value) => updateCriterion(index, 'metric', value)}
-                          className="w-full"
-                        />
-                        <SelectDropdown
-                          value={criterion.condition}
-                          options={CONDITION_OPTIONS}
-                          onSelect={(value) => updateCriterion(index, 'condition', value)}
-                          placeholder={t('Is set')}
-                          className="w-full"
-                        />
-                        <TextInput
-                          name={`value-${index}`}
-                          value={criterion.value}
-                          placeholder={t('Enter Value')}
-                          onChange={(value) => updateCriterion(index, 'value', value)}
-                          className="w-full"
-                        />
-                        <button
-                          type="button"
-                          className="flex items-center justify-center size-9 rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-100"
-                          onClick={() =>
-                            index === draft.criteria.length - 1
-                              ? addCriterion()
-                              : removeCriterion(index)
-                          }
+                    {draft.criteria.map((criterion, index) => {
+                      const isCustomType = criterion.type === 'custom' || !criterion.type;
+                      const metricOptions = getCriteriaMetricOptions(criterion.type);
+                      const metricConfig = getCriteriaMetricConfig(
+                        criterion.type,
+                        criterion.metric,
+                      );
+                      const conditionOptions = metricConfig?.conditions ?? CONDITION_OPTIONS;
+                      const valueOptions = metricConfig?.values;
+                      const valueInputType = metricConfig?.inputType ?? 'text';
+
+                      return (
+                        <div
+                          key={index}
+                          className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-center mb-2.5"
                         >
-                          {index === draft.criteria.length - 1 ? (
-                            <Plus size={16} />
+                          <SelectDropdown
+                            value={criterion.type}
+                            options={CRITERIA_TYPE_OPTIONS}
+                            onSelect={(value) => {
+                              setDraft((prev) => {
+                                const isCustom = value === 'custom';
+                                const firstMetricId = isCustom
+                                  ? ''
+                                  : (getCriteriaMetricOptions(value)[0]?.value ?? '');
+                                const firstMetric = isCustom
+                                  ? null
+                                  : getCriteriaMetricConfig(value, firstMetricId);
+                                const criteria = prev.criteria.map((c, i) =>
+                                  i === index
+                                    ? {
+                                        ...c,
+                                        type: value,
+                                        metric: firstMetricId,
+                                        condition: firstMetric?.conditions[0]?.value ?? 'set',
+                                        value: firstMetric?.values?.[0]?.value ?? '',
+                                      }
+                                    : c,
+                                );
+                                return { ...prev, criteria };
+                              });
+                            }}
+                            placeholder={t('Select Type')}
+                            className="w-full"
+                          />
+                          {isCustomType ? (
+                            <TextInput
+                              name={`metric-${index}`}
+                              value={criterion.metric}
+                              placeholder={t('Enter Metric')}
+                              onChange={(value) => updateCriterion(index, 'metric', value)}
+                              className="w-full"
+                            />
                           ) : (
-                            <Minus size={16} />
+                            <SelectDropdown
+                              value={criterion.metric}
+                              options={metricOptions}
+                              onSelect={(value) => {
+                                setDraft((prev) => {
+                                  const newMetricConfig = getCriteriaMetricConfig(
+                                    criterion.type,
+                                    value,
+                                  );
+                                  const criteria = prev.criteria.map((c, i) =>
+                                    i === index
+                                      ? {
+                                          ...c,
+                                          metric: value,
+                                          condition: newMetricConfig?.conditions[0]?.value ?? 'set',
+                                          value: newMetricConfig?.values?.[0]?.value ?? '',
+                                        }
+                                      : c,
+                                  );
+                                  return { ...prev, criteria };
+                                });
+                              }}
+                              placeholder={t('Select Metric')}
+                              className="w-full"
+                            />
                           )}
-                        </button>
-                      </div>
-                    ))}
+                          <SelectDropdown
+                            value={criterion.condition}
+                            options={conditionOptions}
+                            onSelect={(value) => updateCriterion(index, 'condition', value)}
+                            placeholder={t('Is set')}
+                            className="w-full"
+                          />
+                          {valueInputType === 'dropdown' && valueOptions ? (
+                            <SelectDropdown
+                              value={criterion.value}
+                              options={valueOptions}
+                              onSelect={(value) => updateCriterion(index, 'value', value)}
+                              placeholder={t('Select Value')}
+                              className="w-full"
+                            />
+                          ) : valueInputType === 'number' ? (
+                            <TextInput
+                              name={`value-${index}`}
+                              value={criterion.value}
+                              placeholder={t('Enter Value')}
+                              onChange={(value) => updateCriterion(index, 'value', value)}
+                              className="w-full"
+                              type="number"
+                            />
+                          ) : (
+                            <TextInput
+                              name={`value-${index}`}
+                              value={criterion.value}
+                              placeholder={t('Enter Value')}
+                              onChange={(value) => updateCriterion(index, 'value', value)}
+                              className="w-full"
+                            />
+                          )}
+                          <button
+                            type="button"
+                            className="flex items-center justify-center size-9 rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-100"
+                            onClick={() =>
+                              index === draft.criteria.length - 1
+                                ? addCriterion()
+                                : removeCriterion(index)
+                            }
+                          >
+                            {index === draft.criteria.length - 1 ? (
+                              <Plus size={16} />
+                            ) : (
+                              <Minus size={16} />
+                            )}
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
