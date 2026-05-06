@@ -142,11 +142,21 @@ function CalendarEventBadge({
   const title = scheduleEvent.name ?? scheduleEvent.campaign ?? scheduleEvent.command ?? '';
   return (
     <span
+      role="button"
+      tabIndex={0}
       className="relative inline-flex shrink-0"
+      aria-label={title}
       title={title}
       onClick={(e) => {
         e.stopPropagation();
         onEdit?.(scheduleEvent);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          e.stopPropagation();
+          onEdit?.(scheduleEvent);
+        }
       }}
       onContextMenu={(e) => {
         e.preventDefault();
@@ -196,6 +206,8 @@ function DayDetailPanel({
 
   return (
     <div
+      role="dialog"
+      aria-label={dateLabel}
       ref={floatingRef}
       style={floatingStyles}
       {...getFloatingProps()}
@@ -207,10 +219,11 @@ function DayDetailPanel({
         </div>
         <button
           type="button"
+          aria-label={t('Close')}
           onClick={onClose}
           className="text-gray-400 hover:text-gray-600 transition-colors shrink-0 mt-0.5"
         >
-          <X className="w-4 h-4" />
+          <X className="w-4 h-4" aria-hidden="true" />
         </button>
       </div>
       <div className="p-8 pt-3 flex flex-col gap-3 flex-1 min-h-0 overflow-hidden">
@@ -233,9 +246,17 @@ function DayDetailPanel({
             return (
               <li
                 key={`${event.eventId}-${event.fromDt}`}
+                tabIndex={onEditEvent ? 0 : undefined}
                 onClick={() => {
                   onEditEvent?.(event);
                   onClose();
+                }}
+                onKeyDown={(e) => {
+                  if ((e.key === 'Enter' || e.key === ' ') && onEditEvent) {
+                    e.preventDefault();
+                    onEditEvent(event);
+                    onClose();
+                  }
                 }}
                 onContextMenu={(e) => {
                   e.preventDefault();
@@ -329,6 +350,8 @@ function EventContextMenu({
 
   return (
     <div
+      role="menu"
+      aria-label={t('Event actions')}
       ref={floatingRef}
       style={floatingStyles}
       {...getFloatingProps()}
@@ -379,6 +402,7 @@ function EventContextMenu({
         </div>
         {onDelete && (
           <Button
+            role="menuitem"
             variant="tertiary"
             leftIcon={Trash2}
             className="text-red-500 hover:text-red-800 hover:bg-white shrink-0"
@@ -501,30 +525,37 @@ export function EventCalendar({
   return (
     <div className={`relative flex flex-row h-full ${calendarClassName ?? ''}`}>
       {isLoading && (
-        <div className="absolute inset-0 z-10 bg-white/60 flex items-center justify-center">
+        <div
+          role="status"
+          aria-live="polite"
+          className="absolute inset-0 z-10 bg-white/60 flex items-center justify-center"
+        >
           <span className="text-sm text-gray-400 font-medium animate-pulse">{t('Loading...')}</span>
         </div>
       )}
       <div className="flex flex-col bg-white w-40 h-full border border-r-0 border-gray-200 shrink-0 self-start">
-        <div className="text-sm font-semibold text-gray-500 bg-gray-50 px-3 py-2 uppercase tracking-tight border-b border-gray-200">
+        <h3 className="text-sm font-semibold text-gray-500 bg-gray-50 px-3 py-2 uppercase tracking-tight border-b border-gray-200">
           {t('Legend')}
-        </div>
-        <div className="px-3 py-5 flex flex-col gap-5 overflow-y-auto">
+        </h3>
+        <ul className="px-3 py-5 flex flex-col gap-5 overflow-y-auto list-none">
           {EVENT_LEGEND_BADGES.map((group, gi) => (
-            <div key={gi} className="flex flex-col gap-3">
-              {group.map(({ icon: Icon, label, bg, text }) => (
-                <div key={label} className="flex items-center gap-1">
-                  <span
-                    className={`inline-flex items-center justify-center w-6.5 h-6.5 rounded-full shrink-0 ${bg} ${text}`}
-                  >
-                    <Icon className="w-4 h-4" />
-                  </span>
-                  <span className="text-xs font-semibold text-gray-500">{label}</span>
-                </div>
-              ))}
-            </div>
+            <li key={gi}>
+              <ul className="flex flex-col gap-3 list-none">
+                {group.map(({ icon: Icon, label, bg, text }) => (
+                  <li key={label} className="flex items-center gap-1">
+                    <span
+                      aria-hidden="true"
+                      className={`inline-flex items-center justify-center w-6.5 h-6.5 rounded-full shrink-0 ${bg} ${text}`}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </span>
+                    <span className="text-xs font-semibold text-gray-500">{label}</span>
+                  </li>
+                ))}
+              </ul>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
 
       <div className="flex-1 min-h-0 h-full border border-gray-200 flex flex-col">
@@ -532,6 +563,8 @@ export function EventCalendar({
           {DAYS_OF_WEEK.map((day, i) => (
             <div
               key={day}
+              role="columnheader"
+              aria-label={t(day)}
               className={`text-sm font-semibold text-gray-500 bg-gray-50 text-left uppercase tracking-tight px-3 py-2 border-b border-gray-200${i > 0 ? ' border-l border-gray-200' : ''}`}
             >
               {t(day)}
@@ -540,6 +573,7 @@ export function EventCalendar({
         </div>
 
         <div
+          role="grid"
           className="flex-1 grid min-h-0 overflow-hidden"
           style={{ gridTemplateRows: `repeat(${weeks.length}, 1fr)` }}
         >
@@ -558,7 +592,20 @@ export function EventCalendar({
                 return (
                   <div
                     key={di}
+                    role="gridcell"
+                    tabIndex={dayEvents.length > 0 ? 0 : -1}
+                    aria-label={`${day.toFormat('d LLLL yyyy')}${dayEvents.length > 0 ? `, ${dayEvents.length} ${dayEvents.length === 1 ? t('event') : t('events')}` : ''}`}
                     onClick={(e) => handleDayClick(e, day, dayEvents)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleDayClick(
+                          e as unknown as React.MouseEvent<HTMLElement>,
+                          day,
+                          dayEvents,
+                        );
+                      }
+                    }}
                     className={`relative group flex ${dayEvents.length > 0 ? 'cursor-pointer' : ''} flex-col overflow-hidden${di > 0 ? ' border-l border-gray-200' : ''} ${isSelected ? 'bg-blue-50' : isToday ? 'bg-slate-50' : 'bg-white'}`}
                   >
                     {isToday && (
@@ -589,10 +636,18 @@ export function EventCalendar({
                             />
                           ))}
                         </div>
-                        <div className="absolute h-6.25 bottom-0 left-0 right-0 flex items-center justify-center gap-0.5 py-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white text-xs text-xibo-blue-600 font-medium cursor-pointer pointer-events-none group-hover:pointer-events-auto">
+                        <button
+                          type="button"
+                          aria-label={viewLabel}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDayClick(e, day, dayEvents);
+                          }}
+                          className="absolute h-6.25 bottom-0 left-0 right-0 flex items-center justify-center gap-0.5 py-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white text-xs text-xibo-blue-600 font-medium cursor-pointer pointer-events-none group-hover:pointer-events-auto"
+                        >
                           <span>{viewLabel}</span>
-                          <ViewIcon className="w-3 h-3" />
-                        </div>
+                          <ViewIcon className="w-3 h-3" aria-hidden="true" />
+                        </button>
                       </>
                     )}
                   </div>
