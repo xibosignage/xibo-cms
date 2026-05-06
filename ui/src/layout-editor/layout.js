@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -50,6 +50,7 @@ const Layout = function(id, data) {
   // Layout properties
   this.id = 'layout_' + id;
   this.layoutId = id;
+  this.previewUrl = data.previewUrl;
 
   this.folderId = data.folderId;
 

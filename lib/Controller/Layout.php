@@ -923,18 +923,6 @@ class Layout extends Base
             rename($layout->getUnmatchedProperty('thumbnail'), $template->getThumbnailUri());
         }
 
-        // Add a new previewJWT for this layout
-        $template->setUnmatchedProperty(
-            'previewJwt',
-            $this->jwtService->generateJwt(
-                'Preview',
-                'layout',
-                $template->layoutId,
-                '/preview/layout/preview/' . $template->layoutId,
-                3600,
-            )->toString()
-        );
-
         // Return
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $layout->layout),

@@ -809,6 +809,10 @@ lD.reloadData = function(
         // get Layout folder id
         lD.folderId = lD.layout.folderId;
 
+        // Update the previewJWT for the new layout
+        const previewUrl = new URL(lD.layout.previewUrl);
+        window.previewJwt = previewUrl.searchParams.get('jwt');
+
         // Select the same object
         const selectObjectId = (lD.selectedObject.type === 'element') ?
           lD.selectedObject.elementId :
@@ -2794,9 +2798,6 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             if (response.success && response.id) {
               // Deselect previous object
               lD.selectObject();
-
-              // Update the previewJWT for the new layout
-              window.previewJwt = response.data.previewJwt;
 
               lD.reloadData(response.data,
                 {
