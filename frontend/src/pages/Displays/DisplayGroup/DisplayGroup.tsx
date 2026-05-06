@@ -39,6 +39,7 @@ import { useDisplayGroupFilterOptions } from './hooks/useDisplayGroupFilterOptio
 
 import Button from '@/components/ui/Button';
 import FilterInputs from '@/components/ui/FilterInputs';
+import FolderActionModals from '@/components/ui/FolderActionModals';
 import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import FolderSidebar from '@/components/ui/FolderSidebar';
 import TabNav from '@/components/ui/TabNav';
@@ -453,6 +454,7 @@ export default function DisplayGroupPage() {
           getAllSelectedItems,
         }}
       />
+      {canViewFolders && <FolderActionModals folderActions={folderActions} />}
     </section>
   );
 }
