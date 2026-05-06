@@ -39,15 +39,24 @@ import { useSyncGroupData } from './hooks/useSyncGroupsData';
 
 import Button from '@/components/ui/Button';
 import FilterInputs from '@/components/ui/FilterInputs';
+import FolderActionModals from '@/components/ui/FolderActionModals';
+import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
+import FolderSidebar from '@/components/ui/FolderSidebar';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
+import { useFolderActions } from '@/hooks/useFolderActions';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import type { SyncGroup } from '@/types/syncGroup';
 
 export default function SyncGroups() {
   const { t } = useTranslation();
+  const { user } = useUserContext();
   const queryClient = useQueryClient();
+  const canViewFolders = usePermissions()?.canViewFolders;
+  const homeFolderId = user?.homeFolderId ?? 1;
 
   const {
     pagination,
@@ -61,6 +70,8 @@ export default function SyncGroups() {
     setGlobalFilter,
     filterInputs,
     setFilterInputs,
+    folderId: selectedFolderId,
+    setFolderId: setSelectedFolderId,
     isHydrated,
   } = useTableState<SyncGroupsFilterInput>('syncgroup_page', {
     pagination: { pageIndex: 0, pageSize: 10 },
@@ -72,19 +83,45 @@ export default function SyncGroups() {
     viewMode: 'table',
     globalFilter: '',
     filterInputs: INITIAL_FILTER_STATE,
+    folderId: canViewFolders ? homeFolderId : null,
   });
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [selectionCache, setSelectionCache] = useState<Record<string, SyncGroup>>({});
   const [openFilter, setOpenFilter] = useState(false);
+  const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
+  const [showFolderSidebar, setShowFolderSidebar] = useState(false);
 
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
-
   const [itemsToDelete, setItemsToDelete] = useState<SyncGroup[]>([]);
   const [selectedSyncGroupId, setSelectedSyncGroupId] = useState<number | null>(null);
 
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['syncGroups'] });
+  };
+
+  const handleFolderChange = (folder: { id: number | null; text: string | '' }) => {
+    setSelectedFolderId(folder.id);
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    setRowSelection({});
+  };
+
+  const folderActions = useFolderActions({
+    onSuccess: (targetFolder) => {
+      setFolderRefreshTrigger((prev) => prev + 1);
+      if (targetFolder?.id === -1) {
+        targetFolder.id = homeFolderId;
+      }
+      if (targetFolder) {
+        handleFolderChange({ id: targetFolder.id, text: targetFolder.text });
+      } else {
+        handleRefresh();
+      }
+    },
+  });
 
   const {
     data: queryData,
@@ -95,6 +132,7 @@ export default function SyncGroups() {
     pagination,
     sorting,
     filter: debouncedFilter,
+    folderId: canViewFolders ? selectedFolderId : null,
     advancedFilters: filterInputs,
     enabled: isHydrated,
   });
@@ -132,10 +170,6 @@ export default function SyncGroups() {
 
   const getRowId = (row: SyncGroup) => {
     return row.syncGroupId.toString();
-  };
-
-  const handleRefresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['syncGroups'] });
   };
 
   const { isDeleting, deleteError, setDeleteError, confirmDelete } = useSyncGroupActions({
@@ -209,6 +243,17 @@ export default function SyncGroups() {
   return (
     <>
       <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
+        {canViewFolders && (
+          <FolderSidebar
+            isOpen={showFolderSidebar}
+            selectedFolderId={selectedFolderId}
+            onSelect={handleFolderChange}
+            onClose={() => setShowFolderSidebar(false)}
+            onAction={folderActions.openAction}
+            refreshTrigger={folderRefreshTrigger}
+          />
+        )}
+
         <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
           <div className="flex flex-row justify-between py-4 items-center gap-4">
             <TabNav activeTab="Sync Groups" navigation={libraryTabs} />
@@ -225,7 +270,19 @@ export default function SyncGroups() {
             </div>
           </div>
 
-          <div className="flex flex-col lg:flex-row justify-end items-center gap-4">
+          <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
+            <div className="w-full lg:flex-1 md:min-w-0">
+              {canViewFolders && (
+                <FolderBreadcrumb
+                  currentFolderId={selectedFolderId}
+                  onNavigate={handleFolderChange}
+                  isSidebarOpen={showFolderSidebar}
+                  onToggleSidebar={() => setShowFolderSidebar(!showFolderSidebar)}
+                  onAction={folderActions.openAction}
+                  refreshTrigger={folderRefreshTrigger}
+                />
+              )}
+            </div>
             <div className="flex items-center gap-2 w-full xl:w-115 lg:w-75 shrink-0">
               <div className="relative flex-1 flex">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -330,6 +387,7 @@ export default function SyncGroups() {
           confirmDelete,
         }}
       />
+      {canViewFolders && <FolderActionModals folderActions={folderActions} />}
     </>
   );
 }
