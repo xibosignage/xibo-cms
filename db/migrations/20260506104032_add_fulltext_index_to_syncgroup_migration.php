@@ -22,6 +22,10 @@
 
 use Phinx\Migration\AbstractMigration;
 
+/**
+ * Add search index to Sync Group Table
+ * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
+ */
 class AddFulltextIndexToSyncgroupMigration extends AbstractMigration
 {
     public function change(): void
