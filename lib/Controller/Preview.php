@@ -170,10 +170,10 @@ class Preview extends Base
                 throw new AccessDeniedException();
             }
 
-            echo file_get_contents($layout->xlfToDisk([
+            $response->getBody()->write(file_get_contents($layout->xlfToDisk([
                 'notify' => false,
                 'collectNow' => false,
-            ]));
+            ])));
 
             $this->setNoOutput();
         } finally {
