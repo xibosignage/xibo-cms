@@ -1,21 +1,31 @@
 name: Test Suite
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-  pull_request_review:
-    types: [submitted]
+  issue_comment:
+    types: [created]
 
 jobs:
   phpunit:
     name: Run PHPUnit
-    if: >
-      github.event_name == 'pull_request' ||
-      (github.event_name == 'pull_request_review' && github.event.review.state == 'approved')
+    if: github.event.issue.pull_request && contains(github.event.comment.body, 'TEST:')
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout PR branch
+      - name: Get branch of PR
+        uses: xt0rted/pull-request-comment-branch@v1
+        id: comment-branch
+
+      - name: Set latest commit status as pending
+        uses: myrotvorets/set-commit-status-action@master
+        with:
+          sha: ${{ steps.comment-branch.outputs.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: pending
+
+      - name: Checkout PR branch ${{ steps.comment-branch.outputs.head_ref }}
         uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.comment-branch.outputs.head_sha }}
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
@@ -28,13 +38,13 @@ jobs:
         run: |
           docker pull mysql:8.4
           docker pull ghcr.io/xibosignage/xibo-xmr:latest
-          docker pull ghcr.io/xibosignage/xibo-cms:test-${{ github.event.pull_request.number }}
+          docker pull ghcr.io/xibosignage/xibo-cms:test-${{ github.event.issue.number }}
 
       - name: Run
         run: |
           docker run --name cms-db -e MYSQL_RANDOM_ROOT_PASSWORD=yes -e MYSQL_DATABASE=cms -e MYSQL_USER=cms -e MYSQL_PASSWORD=jenkins -d mysql:8.4
           docker run --name cms-xmr -d ghcr.io/xibosignage/xibo-xmr:latest
-          docker run --name cms-web -e MYSQL_HOST=cms-db -e MYSQL_USER=cms -e MYSQL_PASSWORD=jenkins -e CMS_DEV_MODE=true -e XMR_HOST=cms-xmr -e CMS_USAGE_REPORT=false -e INSTALL_TYPE=ci -e MYSQL_BACKUP_ENABLED=false --link cms-db --link cms-xmr -d ghcr.io/xibosignage/xibo-cms:test-${{ github.event.pull_request.number }}
+          docker run --name cms-web -e MYSQL_HOST=cms-db -e MYSQL_USER=cms -e MYSQL_PASSWORD=jenkins -e CMS_DEV_MODE=true -e XMR_HOST=cms-xmr -e CMS_USAGE_REPORT=false -e INSTALL_TYPE=ci -e MYSQL_BACKUP_ENABLED=false --link cms-db --link cms-xmr -d ghcr.io/xibosignage/xibo-cms:test-${{ github.event.issue.number }}
 
       - name: Wait for CMS
         run: |
@@ -55,15 +65,82 @@ jobs:
         run: |
           docker exec --user www-data -t cms-web /bin/bash -c "cd /var/www/cms; php vendor/bin/phpunit --log-junit results.xml"
 
+      - name: Add workflow result as comment on PR
+        uses: actions/github-script@v6
+        if: always()
+        with:
+          script: |
+            const name = '${{ github.workflow }} (PHPUnit)';
+            const url = '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}';
+            const success = '${{ job.status }}' === 'success';
+            const body = `${name}: ${success ? 'succeeded ✅' : 'failed ❌'}\n${url}`;
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            })
+
+      - name: Set latest commit status as ${{ job.status }}
+        uses: myrotvorets/set-commit-status-action@master
+        if: always()
+        with:
+          sha: ${{ steps.comment-branch.outputs.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: ${{ job.status }}
+
   vitest:
     name: Run Vitest
-    if: >
-      github.event_name == 'pull_request' ||
-      (github.event_name == 'pull_request_review' && github.event.review.state == 'approved')
+    if: github.event.issue.pull_request && contains(github.event.comment.body, 'TEST:')
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      - name: Get branch of PR
+        uses: xt0rted/pull-request-comment-branch@v1
+        id: comment-branch
+
+      - name: Set latest commit status as pending
+        uses: myrotvorets/set-commit-status-action@master
+        with:
+          sha: ${{ steps.comment-branch.outputs.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: pending
+
+      - name: Checkout PR branch ${{ steps.comment-branch.outputs.head_ref }}
         uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.comment-branch.outputs.head_sha }}
+
+      - name: Check Comment
+        id: check_comment
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          # Detect --no-coverage flag
+          if echo "$COMMENT_BODY" | grep -q '\-\-no-coverage'; then
+            echo "with_coverage=false" >> $GITHUB_ENV
+            COMMENT_BODY="${COMMENT_BODY/--no-coverage/}"
+          else
+            echo "with_coverage=true" >> $GITHUB_ENV
+          fi
+
+          COMMENT_BODY="$(echo "$COMMENT_BODY" | xargs)"
+
+          if [[ "$COMMENT_BODY" =~ ^TEST:\ *(all|\*)?$ ]]; then
+            echo "test_pattern=" >> $GITHUB_ENV
+          elif [[ "$COMMENT_BODY" =~ ^TEST:\ *(.+)$ ]]; then
+            raw="${BASH_REMATCH[1]}"
+            IFS=',' read -ra parts <<< "$raw"
+            patterns=()
+            for p in "${parts[@]}"; do
+              patterns+=("$(echo "$p" | xargs)")
+            done
+            echo "test_pattern=${patterns[*]}" >> $GITHUB_ENV
+          else
+            echo "Comment does not match expected format. Use: TEST: all, TEST: Layout, or TEST: Layout, Displays"
+            exit 1
+          fi
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -77,11 +154,43 @@ jobs:
         run: npm install
 
       - name: Run Vitest with coverage
+        if: env.with_coverage == 'true'
         working-directory: frontend
-        run: npm run test:ci
+        run: npm run test:ci -- ${{ env.test_pattern }}
+
+      - name: Run Vitest without coverage
+        if: env.with_coverage == 'false'
+        working-directory: frontend
+        run: npx vitest run ${{ env.test_pattern }}
 
       - name: Upload coverage report
+        if: env.with_coverage == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: vitest-coverage-report
           path: frontend/coverage
+
+      - name: Add workflow result as comment on PR
+        uses: actions/github-script@v6
+        if: always()
+        with:
+          script: |
+            const name = '${{ github.workflow }} (Vitest)';
+            const url = '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}';
+            const success = '${{ job.status }}' === 'success';
+            const body = `${name}: ${success ? 'succeeded ✅' : 'failed ❌'}\n${url}`;
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            })
+
+      - name: Set latest commit status as ${{ job.status }}
+        uses: myrotvorets/set-commit-status-action@master
+        if: always()
+        with:
+          sha: ${{ steps.comment-branch.outputs.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: ${{ job.status }}
