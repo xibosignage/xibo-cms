@@ -792,6 +792,7 @@ $app->group('', function (RouteCollectorProxy $group) {
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['font.view']));
 
 $app->get('/syncgroups', ['\Xibo\Controller\SyncGroup', 'grid'])->setName('syncgroup.search');
+$app->get('/syncgroup/{id}', ['\Xibo\Controller\SyncGroup', 'searchById'])->setName('syncgroup.search.id');
 $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/syncgroup/{id}/displays', ['\Xibo\Controller\SyncGroup', 'fetchDisplays'])
         ->setName('syncgroup.fetch.displays');
