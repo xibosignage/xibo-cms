@@ -29,10 +29,10 @@ use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\SyncGroupFactory;
 use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Class SyncGroup
@@ -40,36 +40,17 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class SyncGroup extends Base
 {
-    private SyncGroupFactory $syncGroupFactory;
-    private FolderFactory $folderFactory;
-
     public function __construct(
-        SyncGroupFactory $syncGroupFactory,
-        FolderFactory $folderFactory
+        private readonly SyncGroupFactory $syncGroupFactory,
+        private readonly FolderFactory $folderFactory
     ) {
-        $this->syncGroupFactory = $syncGroupFactory;
-        $this->folderFactory = $folderFactory;
-    }
-
-    /**
-     * Sync Group Page Render
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function displayPage(Request $request, Response $response)
-    {
-        $this->getState()->template = 'syncgroup-page';
-
-        return $this->render($request, $response);
     }
 
     #[OA\Get(
         path: '/syncgroups',
         operationId: 'syncGroupSearch',
-        summary: 'Get Sync Groups',
+        description: 'Search for Sync Groups viewable by this user',
+        summary: 'Search Sync Groups',
         tags: ['syncGroup']
     )]
     #[OA\Parameter(
@@ -81,7 +62,14 @@ class SyncGroup extends Base
     )]
     #[OA\Parameter(
         name: 'name',
-        description: 'Filter by syncGroup Name',
+        description: 'Filter by partial Sync Group name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'keyword',
+        description: 'Filter by Sync Group name or ID',
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'string')
@@ -100,20 +88,43 @@ class SyncGroup extends Base
         required: false,
         schema: new OA\Schema(type: 'integer')
     )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: [
+                'syncGroupId',
+                'name',
+                'owner',
+                'createdDt',
+                'modifiedDt',
+            ]
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
     #[OA\Response(
         response: 200,
-        description: 'a successful response',
-        content: new OA\JsonContent(
-            type: 'array',
-            items: new OA\Items(ref: '#/components/schemas/SyncGroup')
-        ),
+        description: 'successful operation',
         headers: [
             new OA\Header(
                 header: 'X-Total-Count',
                 description: 'The total number of records',
                 schema: new OA\Schema(type: 'integer')
             )
-        ]
+        ],
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/SyncGroup')
+        )
     )]
     /**
      * @param Request $request
@@ -121,93 +132,65 @@ class SyncGroup extends Base
      * @return Response|ResponseInterface
      * @throws AccessDeniedException
      * @throws GeneralException
-     * @throws ControllerNotImplemented
      * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
-    public function grid(Request $request, Response $response): Response|\Psr\Http\Message\ResponseInterface
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
 
-        $filter = [
-            'syncGroupId' => $parsedQueryParams->getInt('syncGroupId'),
-            'name' => $parsedQueryParams->getString('name'),
-            'folderId' => $parsedQueryParams->getInt('folderId'),
-            'ownerId' => $parsedQueryParams->getInt('ownerId'),
-            'leadDisplayId' => $parsedQueryParams->getInt('leadDisplayId')
-        ];
-
         $syncGroups = $this->syncGroupFactory->query(
-            $this->gridRenderSort($parsedQueryParams),
-            $this->gridRenderFilter($filter, $parsedQueryParams)
+            $this->gridRenderSort($parsedQueryParams, $this->isJson($request)),
+            $this->getSyncGroupFilters($parsedQueryParams)
         );
 
         foreach ($syncGroups as $syncGroup) {
-            if (!empty($syncGroup->leadDisplayId)) {
-                try {
-                    $display = $this->syncGroupFactory->getLeadDisplay($syncGroup->leadDisplayId);
-                    $syncGroup->leadDisplay = $display->display;
-                } catch (NotFoundException $exception) {
-                    $this->getLog()->error(
-                        sprintf(
-                            'Lead Display %d not found for %s',
-                            $syncGroup->leadDisplayId,
-                            $syncGroup->name
-                        )
-                    );
-                }
-            }
-
-            if ($this->isApi($request) || $this->isJson($request)) {
-                continue;
-            }
-
-            $syncGroup->includeProperty('buttons');
-
-            if ($this->getUser()->featureEnabled('display.syncModify')
-                && $this->getUser()->checkEditable($syncGroup)
-            ) {
-                // Edit
-                $syncGroup->buttons[] = [
-                    'id' => 'syncgroup_button_group_edit',
-                    'url' => $this->urlFor($request, 'syncgroup.form.edit', ['id' => $syncGroup->syncGroupId]),
-                    'text' => __('Edit')
-                ];
-                // Group Members
-                $syncGroup->buttons[] = [
-                    'id' => 'syncgroup_button_group_members',
-                    'url' => $this->urlFor($request, 'syncgroup.form.members', ['id' => $syncGroup->syncGroupId]),
-                    'text' => __('Members')
-                ];
-                $syncGroup->buttons[] = ['divider' => true];
-
-                // Delete
-                $syncGroup->buttons[] = [
-                    'id' => 'syncgroup_button_group_delete',
-                    'url' => $this->urlFor($request, 'syncgroup.form.delete', ['id' => $syncGroup->syncGroupId]),
-                    'text' => __('Delete')
-                ];
-            }
+            $this->decorateSyncGroupProperties($syncGroup);
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->syncGroupFactory->countLast();
-        $this->getState()->setData($syncGroups);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $this->syncGroupFactory->countLast())
+            ->withJson($syncGroups);
     }
 
+    #[OA\Get(
+        path: '/syncgroup/{syncGroupId}',
+        operationId: 'syncGroupSearchById',
+        description: 'Get the Sync Group object specified by the provided syncGroupId',
+        summary: 'Search Sync Groups by ID',
+        tags: ['syncGroup']
+    )]
+    #[OA\Parameter(
+        name: 'syncGroupId',
+        description: 'Numeric ID of the Sync Group to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/SyncGroup')
+    )]
     /**
      * @param Request $request
      * @param Response $response
+     * @param int $id
      * @return Response|ResponseInterface
-     * @throws ControllerNotImplemented
      * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
-    public function addForm(Request $request, Response $response): Response|ResponseInterface
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
-        $this->getState()->template = 'syncgroup-form-add';
+        $syncGroup = $this->syncGroupFactory->getById($id, false);
 
-        return $this->render($request, $response);
+        $this->decorateSyncGroupProperties($syncGroup);
+
+        return $response
+            ->withStatus(200)
+            ->withJson($syncGroup);
     }
 
     #[OA\Post(
@@ -218,9 +201,11 @@ class SyncGroup extends Base
         tags: ['syncGroup']
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['name'],
                 properties: [
                     new OA\Property(property: 'name', description: 'The Sync Group Name', type: 'string'),
                     new OA\Property(
@@ -229,27 +214,35 @@ class SyncGroup extends Base
                         type: 'integer'
                     ),
                     new OA\Property(
+                        property: 'syncSwitchDelay',
+                        description: 'The delay (in ms) when displaying the changes in content - default 750', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
+                        property: 'syncVideoPauseDelay',
+                        description: 'The delay (in ms) before unpausing the video on start - default 100', // phpcs:ignore
+                        type: 'integer'
+                    ),
+                    new OA\Property(
                         property: 'folderId',
                         description: 'Folder ID to which this object should be assigned to',
                         type: 'integer'
                     )
-                ],
-                required: ['name']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(
         response: 201,
         description: 'successful operation',
-        content: new OA\JsonContent(ref: '#/components/schemas/DisplayGroup'),
         headers: [
             new OA\Header(
                 header: 'Location',
-                description: 'Location of the new DisplayGroup',
+                description: 'Location of the new SyncGroup',
                 schema: new OA\Schema(type: 'string')
             )
-        ]
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/SyncGroup')
     )]
     /**
      * Adds a Sync Group
@@ -257,7 +250,6 @@ class SyncGroup extends Base
      * @param Response $response
      * @return Response|ResponseInterface
      * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
@@ -294,47 +286,7 @@ class SyncGroup extends Base
         $syncGroup->save();
 
         // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 201,
-            'message' => sprintf(__('Added %s'), $syncGroup->name),
-            'id' => $syncGroup->syncGroupId,
-            'data' => $syncGroup
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return Response|ResponseInterface
-     * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     */
-    public function membersForm(Request $request, Response $response, $id): Response|ResponseInterface
-    {
-        $syncGroup = $this->syncGroupFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($syncGroup)) {
-            throw new AccessDeniedException();
-        }
-
-        // Displays in Group
-        $displaysAssigned = $syncGroup->getSyncGroupMembers();
-
-        $this->getState()->template = 'syncgroup-form-members';
-        $this->getState()->setData([
-            'syncGroup' => $syncGroup,
-            'extra' => [
-                'displaysAssigned' => $displaysAssigned,
-            ],
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(201)->withJson($syncGroup);
     }
 
     #[OA\Post(
@@ -352,27 +304,27 @@ class SyncGroup extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['displayId'],
                 properties: [
                     new OA\Property(
                         property: 'displayId',
                         description: 'The Display Ids to assign',
-                        items: new OA\Items(type: 'integer'),
-                        type: 'array'
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
                     ),
                     new OA\Property(
                         property: 'unassignDisplayId',
                         description: 'An optional array of Display IDs to unassign',
-                        items: new OA\Items(type: 'integer'),
-                        type: 'array'
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
                     )
-                ],
-                required: ['displayId']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
@@ -381,7 +333,6 @@ class SyncGroup extends Base
      * @param $id
      * @return Response|ResponseInterface
      * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
@@ -425,47 +376,7 @@ class SyncGroup extends Base
         $syncGroup->save(['validate' => false]);
 
         // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Displays assigned to %s'), $syncGroup->name),
-            'id' => $syncGroup->syncGroupId
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return Response|ResponseInterface
-     * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     */
-    public function editForm(Request $request, Response $response, $id): Response|ResponseInterface
-    {
-        $syncGroup = $this->syncGroupFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($syncGroup)) {
-            throw new AccessDeniedException();
-        }
-
-        $leadDisplay = null;
-
-        if (!empty($syncGroup->leadDisplayId)) {
-            $leadDisplay = $this->syncGroupFactory->getLeadDisplay($syncGroup->leadDisplayId);
-        }
-
-        $this->getState()->template = 'syncgroup-form-edit';
-        $this->getState()->setData([
-            'syncGroup' => $syncGroup,
-            'leadDisplay' => $leadDisplay,
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(204);
     }
 
     #[OA\Post(
@@ -477,15 +388,17 @@ class SyncGroup extends Base
     )]
     #[OA\Parameter(
         name: 'syncGroupId',
-        description: 'The Sync Group to assign to',
+        description: 'The Sync Group to edit',
         in: 'path',
         required: true,
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['name', 'leadDisplayId'],
                 properties: [
                     new OA\Property(property: 'name', description: 'The Sync Group Name', type: 'string'),
                     new OA\Property(
@@ -513,23 +426,21 @@ class SyncGroup extends Base
                         description: 'Folder ID to which this object should be assigned to',
                         type: 'integer'
                     )
-                ],
-                required: ['name', 'leadDisplayId']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(
         response: 201,
         description: 'successful operation',
-        content: new OA\JsonContent(ref: '#/components/schemas/DisplayGroup'),
         headers: [
             new OA\Header(
                 header: 'Location',
-                description: 'Location of the new DisplayGroup',
+                description: 'Location of the new SyncGroup',
                 schema: new OA\Schema(type: 'string')
             )
-        ]
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/SyncGroup')
     )]
     /**
      * Edits a Sync Group
@@ -538,7 +449,6 @@ class SyncGroup extends Base
      * @param $id
      * @return Response|ResponseInterface
      * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
@@ -576,41 +486,9 @@ class SyncGroup extends Base
         $syncGroup->save();
 
         // Return
-        $this->getState()->hydrate([
-            'message' => sprintf(__('Edited %s'), $syncGroup->name),
-            'id' => $syncGroup->syncGroupId,
-            'data' => $syncGroup
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return Response|ResponseInterface
-     * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     */
-    public function deleteForm(Request $request, Response $response, $id): Response|ResponseInterface
-    {
-        $syncGroup = $this->syncGroupFactory->getById($id);
-
-        if (!$this->getUser()->checkDeleteable($syncGroup)) {
-            throw new AccessDeniedException();
-        }
-
-        // Set the form
-        $this->getState()->template = 'syncgroup-form-delete';
-        $this->getState()->setData([
-            'syncGroup' => $syncGroup,
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson($syncGroup);
     }
 
     #[OA\Delete(
@@ -634,7 +512,6 @@ class SyncGroup extends Base
      * @param $id
      * @return Response|ResponseInterface
      * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
@@ -661,12 +538,13 @@ class SyncGroup extends Base
     #[OA\Get(
         path: '/syncgroup/{syncGroupId}/displays',
         operationId: 'syncGroupDisplays',
-        summary: 'Get members of this sync group',
+        description: 'Get the Display members of the specified Sync Group',
+        summary: 'Get Sync Group members',
         tags: ['syncGroup']
     )]
     #[OA\Parameter(
         name: 'syncGroupId',
-        description: 'The syncGroupId to delete',
+        description: 'The ID of the Sync Group to get members for',
         in: 'path',
         required: true,
         schema: new OA\Schema(type: 'integer')
@@ -680,7 +558,7 @@ class SyncGroup extends Base
     )]
     #[OA\Response(
         response: 200,
-        description: 'a successful response',
+        description: 'successful operation',
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: '#/components/schemas/SyncGroup')
@@ -691,7 +569,6 @@ class SyncGroup extends Base
      * @param Response $response
      * @param $id
      * @return Response|ResponseInterface
-     * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws NotFoundException
      */
@@ -715,10 +592,43 @@ class SyncGroup extends Base
             $displays = $syncGroup->getGroupMembersForForm();
         }
 
-        $this->getState()->setData([
-            'displays' => $displays
-        ]);
+        return $response
+            ->withStatus(200)
+            ->withJson(['displays' => $displays]);
+    }
 
-        return $this->render($request, $response);
+    private function getSyncGroupFilters(SanitizerInterface $sanitizedParams): array
+    {
+        return $this->gridRenderFilter([
+            'syncGroupId'   => $sanitizedParams->getInt('syncGroupId'),
+            'name'          => $sanitizedParams->getString('name'),
+            'keyword'       => $sanitizedParams->getString('keyword'),
+            'folderId'      => $sanitizedParams->getInt('folderId'),
+            'ownerId'       => $sanitizedParams->getInt('ownerId'),
+            'leadDisplayId' => $sanitizedParams->getInt('leadDisplayId'),
+        ], $sanitizedParams);
+    }
+
+    /**
+     * @param \Xibo\Entity\SyncGroup $syncGroup
+     * @return void
+     * @throws InvalidArgumentException
+     */
+    private function decorateSyncGroupProperties(\Xibo\Entity\SyncGroup $syncGroup): void
+    {
+        // User permissions
+        $syncGroup->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($syncGroup));
+        if (!empty($syncGroup->leadDisplayId)) {
+            try {
+                $display = $this->syncGroupFactory->getLeadDisplay($syncGroup->leadDisplayId);
+                $syncGroup->leadDisplay = $display->display;
+            } catch (NotFoundException $exception) {
+                $this->getLog()->error(sprintf(
+                    'Lead Display %d not found for %s',
+                    $syncGroup->leadDisplayId,
+                    $syncGroup->name
+                ));
+            }
+        }
     }
 }

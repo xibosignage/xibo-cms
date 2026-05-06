@@ -29,6 +29,9 @@ export interface FetchSyncGroupsRequest {
   length: number;
   keyword?: string;
   leadDisplayId?: number | null;
+  folderId?: number | null;
+  sortBy?: string;
+  sortDir?: string;
   signal?: AbortSignal;
 }
 

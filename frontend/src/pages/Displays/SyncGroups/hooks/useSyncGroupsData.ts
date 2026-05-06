@@ -36,6 +36,7 @@ interface UseSyncGroupParams {
   pagination: PaginationState;
   sorting: SortingState;
   filter: string;
+  folderId: number | null;
   advancedFilters: SyncGroupsFilterInput;
   enabled?: boolean;
 }
@@ -44,6 +45,7 @@ export const useSyncGroupData = ({
   pagination,
   sorting,
   filter,
+  folderId,
   advancedFilters,
   enabled = true,
 }: UseSyncGroupParams) => {
@@ -52,6 +54,7 @@ export const useSyncGroupData = ({
     pageSize: pagination.pageSize,
     sorting,
     filter,
+    folderId,
     ...advancedFilters,
   };
 
@@ -60,11 +63,16 @@ export const useSyncGroupData = ({
 
     queryFn: async ({ signal }) => {
       const startOffset = pagination.pageIndex * pagination.pageSize;
+      const sortBy = sorting?.[0]?.id;
+      const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
 
       return fetchSyncGroups({
         start: startOffset,
         length: pagination.pageSize,
         keyword: filter || undefined,
+        sortBy,
+        sortDir: sorting.length ? sortDir : undefined,
+        ...(typeof folderId === 'number' ? { folderId } : {}),
         ...(advancedFilters.leadDisplayId ? { leadDisplayId: advancedFilters.leadDisplayId } : {}),
         signal,
       });

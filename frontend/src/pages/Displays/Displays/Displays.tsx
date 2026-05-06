@@ -40,6 +40,7 @@ import { useDisplaysFilterOptions } from './hooks/useDisplaysFilterOptions';
 
 import Button from '@/components/ui/Button';
 import FilterInputs from '@/components/ui/FilterInputs';
+import FolderActionModals from '@/components/ui/FolderActionModals';
 import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import FolderSidebar from '@/components/ui/FolderSidebar';
 import TabNav from '@/components/ui/TabNav';
@@ -557,6 +558,7 @@ export default function Displays() {
           confirmBulkMoveCms,
         }}
       />
+      {canViewFolders && <FolderActionModals folderActions={folderActions} />}
     </section>
   );
 }
