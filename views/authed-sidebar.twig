@@ -166,7 +166,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("fault.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("fault.view") }}">{% trans "Report Fault" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/advanced/fault">{% trans "Report Fault" %}</a></li>
             {% endif %}
         {% endif %}
 

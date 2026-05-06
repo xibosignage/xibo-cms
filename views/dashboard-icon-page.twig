@@ -89,7 +89,7 @@
 
         {% if currentUser.featureEnabled("troubleshooting.fault") %}
             <div class="dashicons">
-                <a href="{{ url_for("fault.view") }}">
+                <a href="{{ theme.rootUri() }}prototype/advanced/fault">
                     <img src="{{ theme.uri("img/dashboard/help.png") }}" class="dash_button" />
                     <span class="dash_text">{% trans "Report Fault" %}</span>
                 </a>

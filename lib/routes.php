@@ -658,6 +658,7 @@ $app->group('', function (RouteCollectorProxy $group) {
 // Fault
 //
 $app->group('', function (RouteCollectorProxy $group) {
+    $group->get('/fault', ['\Xibo\Controller\Fault','initializeReportPage'])->setName('fault.initialize');
     $group->put('/fault/debug/on', ['\Xibo\Controller\Fault','debugOn'])->setName('fault.debug.on');
     $group->put('/fault/debug/off', ['\Xibo\Controller\Fault','debugOff'])->setName('fault.debug.off');
     $group->get('/fault/collect', ['\Xibo\Controller\Fault','collect'])->setName('fault.collect');
