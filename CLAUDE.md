@@ -267,6 +267,7 @@ frontend/
 - Located in `lib/Middleware/`
 - Applied globally or per-route
 - Slim 4 processes middleware in **LIFO order** — the last `$app->add()` call is the outermost layer. `addErrorMiddleware()` must be called before any middleware that needs to wrap error responses (e.g. CORS headers must be added after `addErrorMiddleware` so they appear on error responses too).
+- **Never use `echo` in a controller** — Slim's `ResponseEmitter` skips `emitHeaders()` entirely if `headers_sent() === true`. An `echo` that flushes the output buffer before the emitter runs silently drops all PSR-7 headers (including CORS, auth, etc.). Always write to `$response->getBody()->write(...)` instead.
 
 **Preview App — Separate Slim 4 Entrypoint** (`web/preview/index.php`):
 - Completely separate from the main web app; `.htaccess` routes `/preview/*` here

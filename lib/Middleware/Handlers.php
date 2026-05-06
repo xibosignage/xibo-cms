@@ -129,7 +129,14 @@ class Handlers
             $response = HttpsDetect::decorateWithStsIfNecessary($configService, $request, $response);
 
             // Is CORS required?
-            if ($isAllowCors && $request->getHeaderLine('Sec-Fetch-Site') === 'cross-site') {
+            $origin = $request->getHeaderLine('Origin');
+            $host = $request->getUri()->getHost();
+            if ($isAllowCors && (
+                $request->getHeaderLine('Sec-Fetch-Site') === 'cross-site'
+                || $request->getHeaderLine('Sec-Fetch-Mode') === 'cors'
+                || $origin === 'null'
+                || ($origin !== '' && !str_contains($origin, $host))
+            )) {
                 // Handle CORS headers
                 $response = $response
                     ->withHeader('Access-Control-Allow-Origin', '*')
@@ -172,7 +179,12 @@ class Handlers
                         'message' => __('Sorry we could not find that page.')
                     ], 404);
                 } else {
-                    return $twig->render($response, 'not-found.twig', $viewParams)->withStatus(404);
+                    try {
+                        return $twig->render($response, 'not-found.twig', $viewParams)->withStatus(404);
+                    } catch (\Exception) {
+                        $response->getBody()->write('Not found');
+                        return $response->withStatus(404);
+                    }
                 }
             } else {
                 // Make a friendly message
