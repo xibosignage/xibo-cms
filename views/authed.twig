@@ -118,7 +118,7 @@
         data-help-links="{{ helpLinks|json_encode }}"
         data-url-help-landing-page={{ helpService.getLandingPage() }}
         data-fault-view-enabled={{faultViewEnabled}}
-        data-fault-view-url={{ url_for("fault.view") }}
+        data-fault-view-url={{ theme.rootUri() }}prototype/advanced/fault
     >
         <div class="help-pane-container" style="display: none;">
         </div>

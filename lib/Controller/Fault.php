@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,8 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
+use Exception;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\DisplayFactory;
@@ -30,7 +32,10 @@ use Xibo\Helper\Environment;
 use Xibo\Helper\Random;
 use Xibo\Helper\SendFile;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Fault
@@ -65,11 +70,9 @@ class Fault extends Base
     /**
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @return ResponseInterface|Response
      */
-    public function displayPage(Request $request, Response $response)
+    public function initializeReportPage(Request $request, Response $response): Response|ResponseInterface
     {
         $url = $request->getUri() . $request->getUri()->getPath();
 
@@ -77,6 +80,7 @@ class Fault extends Base
 
         $binLogError = false;
         $binLogCheckError = null;
+
         try {
             $binLogError = ($config->checkBinLogEnabled() && !$config->checkBinLogFormat());
         } catch (\PDOException $e) {
@@ -93,20 +97,20 @@ class Fault extends Base
             'urlError' => !Environment::checkUrl($url)
         ];
 
-        $this->getState()->template = 'fault-page';
-        $this->getState()->setData($data);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson($data);
     }
 
     /**
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @return ResponseInterface|Response
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws Exception
      */
-    public function collect(Request $request, Response $response)
+    public function collect(Request $request, Response $response): Response|ResponseInterface
     {
         $this->setNoOutput(true);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -116,6 +120,7 @@ class Fault extends Base
         $zip = new \ZipArchive();
 
         $result = $zip->open($tempFileName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+
         if ($result !== true) {
             throw new InvalidArgumentException(__('Can\'t create ZIP. Error Code: ' . $result));
         }
@@ -151,8 +156,10 @@ class Fault extends Base
 
         // Should we output a log?
         if ($outputLog) {
-            $tempLogFile = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/log_' . Random::generateString();
+            $tempLogFile = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/log_' .
+                Random::generateString();
             $out = fopen($tempLogFile, 'w');
+
             fputcsv(
                 $out,
                 [
@@ -242,14 +249,17 @@ class Fault extends Base
     /**
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @return ResponseInterface|Response
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
      */
-    public function debugOn(Request $request, Response $response)
+    public function debugOn(Request $request, Response $response): Response|ResponseInterface
     {
         $this->getConfig()->changeSetting('audit', 'debug');
-        $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', Carbon::now()->addMinutes(30)->format('U'));
+        $this->getConfig()->changeSetting(
+            'ELEVATE_LOG_UNTIL',
+            Carbon::now()->addMinutes(30)->format('U')
+        );
 
         // Return
         $this->getState()->hydrate([
@@ -262,11 +272,11 @@ class Fault extends Base
     /**
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @return ResponseInterface|Response
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
      */
-    public function debugOff(Request $request, Response $response)
+    public function debugOff(Request $request, Response $response): Response|ResponseInterface
     {
         $this->getConfig()->changeSetting('audit', $this->getConfig()->getSetting('RESTING_LOG_LEVEL'));
         $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', '');

@@ -387,13 +387,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['transition.view']));
 
 //
-// fault
-//
-$app->get('/fault/view', ['\Xibo\Controller\Fault','displayPage'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['fault.view']))
-    ->setName('fault.view');
-
-//
 // license
 //
 $app->get('/license/view', ['\Xibo\Controller\Login','about'])->setName('license.view');
