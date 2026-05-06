@@ -23,7 +23,14 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { vi, beforeEach, afterEach, describe, test, expect } from 'vitest';
 
+vi.mock('@/context/UserContext', () => ({
+  useUserContext: vi.fn(),
+}));
+
 import DatePicker from '../DatePicker';
+import { useUserContext } from '@/context/UserContext';
+
+const mockUseUserContext = useUserContext as ReturnType<typeof vi.fn>;
 
 // -----------------------------------------------------------------------------
 // Clock — Set the system clock so the calendar always shows March 2026 and we
@@ -32,6 +39,7 @@ import DatePicker from '../DatePicker';
 beforeEach(() => {
   vi.useFakeTimers({ shouldAdvanceTime: true });
   vi.setSystemTime(new Date('2026-03-15T12:00:00'));
+  mockUseUserContext.mockReturnValue({ user: { settings: { defaultTimezone: undefined } } });
 });
 
 afterEach(() => {

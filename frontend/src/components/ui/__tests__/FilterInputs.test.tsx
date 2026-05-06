@@ -120,6 +120,7 @@ describe('FilterInputs', () => {
   // When the user types in a filter box, the page needs to know two things:
   // which filter changed (e.g. "name") and what the new value is (e.g. "xibo")
   test('typing in a filter tells the page which filter changed and what was typed', () => {
+    vi.useFakeTimers();
     const onChange = vi.fn();
     const options: FilterConfigItem<Filters>[] = [
       { label: 'Name', name: 'name', type: 'text', placeholder: 'Search' },
@@ -127,7 +128,9 @@ describe('FilterInputs', () => {
     renderFilters({ options, onChange });
 
     fireEvent.change(screen.getByPlaceholderText('Search'), { target: { value: 'xibo' } });
+    vi.runAllTimers();
 
     expect(onChange).toHaveBeenCalledWith('name', 'xibo');
+    vi.useRealTimers();
   });
 });
