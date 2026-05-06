@@ -24,7 +24,7 @@
     "@tanstack/react-table": "^8.21.3",
     "@types/leaflet-fullscreen": "^1.0.10",
     "@types/luxon": "^3.7.1",
-    "axios": "^1.11.0",
+    "axios": "^1.15.2",
     "i18next": "^25.4.0",
     "jszip": "^3.10.1",
     "leaflet": "^1.9.4",
