@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import type { FetchEventResponse } from '@/services/eventApi';
 import type { Event } from '@/types/event';
 import { EventTypeId } from '@/types/event';
 
@@ -74,8 +75,83 @@ export function buildEvent(overrides?: Partial<Event>): Event {
   };
 }
 
-export const mockEvent = buildEvent();
+// -----------------------------------------------------------------------------
+// Canonical event fixtures shared by both test suites (table view and calendar
+// view). Field values like eventId 1001 and the "Morning Promo - Spring
+// Campaign" label are asserted on directly by the table-view tests, so they
+// must be kept stable.
+//
+// Note: building these three fixtures eagerly at module load advances
+// eventIdCounter by 3. Calendar tests don't rely on a specific starting
+// counter value - only that subsequent buildEvent() calls produce unique IDs.
+// -----------------------------------------------------------------------------
 
-export const SINGLE_EVENT = { rows: [mockEvent], totalCount: 1 };
+// One realistic non-recurring Layout-type event row.
+export const mockEvent: Event = buildEvent({
+  eventId: 1001,
+  fromDt: 1735776000,
+  toDt: 1735862400,
+  dayPartId: 1,
+  isCustom: 1,
+  name: 'Morning Promo',
+  campaignId: 42,
+  campaign: 'Spring Campaign',
+  displayGroups: [
+    {
+      displayGroupId: 5,
+      displayGroup: 'Lobby Screens',
+      isDisplaySpecific: 0,
+      isDynamic: 0,
+      userId: 1,
+      tags: [],
+      createdDt: '2026-01-01 00:00:00',
+      modifiedDt: '2026-01-01 00:00:00',
+      folderId: 1,
+      permissionsFolderId: 1,
+    },
+  ],
+  isEditable: true,
+});
 
-export const EMPTY_EVENT_TABLE = { rows: [], totalCount: 0 };
+// A second event used for bulk-delete tests where we need >1 selectable row.
+export const mockEvent2: Event = {
+  ...mockEvent,
+  eventId: 1002,
+  name: 'Lunch Promo',
+};
+
+// A recurring event - drives the "Delete this instance / entire series" branch
+// in the delete modal.
+export const mockRecurringEvent: Event = {
+  ...mockEvent,
+  eventId: 1003,
+  name: 'Weekly Special',
+  recurrenceType: 'Week',
+  recurrenceDetail: 1,
+  recurringEvent: true,
+  recurringEventDescription: 'Repeats every week',
+};
+
+// -----------------------------------------------------------------------------
+// useEventData return shapes
+// -----------------------------------------------------------------------------
+
+export const SINGLE_EVENT: FetchEventResponse = {
+  rows: [mockEvent],
+  totalCount: 1,
+};
+
+export const TWO_EVENTS: FetchEventResponse = {
+  rows: [mockEvent, mockEvent2],
+  totalCount: 2,
+};
+
+export const SINGLE_RECURRING_EVENT: FetchEventResponse = {
+  rows: [mockRecurringEvent],
+  totalCount: 1,
+};
+
+export const EMPTY_EVENT_TABLE: FetchEventResponse = {
+  rows: [],
+  totalCount: 0,
+};
