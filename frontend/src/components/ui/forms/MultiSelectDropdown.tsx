@@ -57,6 +57,7 @@ interface MultiSelectDropdownProps {
   className?: string;
   showTags?: boolean;
   onDropdownClose?: () => void;
+  optional?: boolean;
 }
 
 export default function MultiSelectDropdown({
@@ -73,6 +74,7 @@ export default function MultiSelectDropdown({
   className,
   showTags = false,
   onDropdownClose,
+  optional = false,
 }: MultiSelectDropdownProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
@@ -178,7 +180,10 @@ export default function MultiSelectDropdown({
 
   return (
     <div className={twMerge('flex flex-col gap-1 relative w-full', className)}>
-      <label className="text-sm font-semibold text-gray-500 leading-5">{t(label)}</label>
+      <label className="flex items-center justify-between text-sm font-semibold text-gray-500 leading-5">
+        <span>{t(label)}</span>
+        {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
+      </label>
 
       <div
         ref={refs.setReference}

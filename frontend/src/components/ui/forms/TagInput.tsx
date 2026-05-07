@@ -37,6 +37,7 @@ interface TagInputProps {
   prefix?: React.ReactNode;
   suffix?: React.ReactNode;
   error?: string;
+  optional?: boolean;
 }
 
 function TagInput({
@@ -50,6 +51,7 @@ function TagInput({
   prefix,
   suffix,
   error,
+  optional = false,
 }: TagInputProps) {
   const { t } = useTranslation();
   const [input, setInput] = useState('');
@@ -96,8 +98,9 @@ function TagInput({
 
   return (
     <div className={twMerge('flex flex-col gap-1 relative w-full', className)}>
-      <label className="text-sm font-semibold text-gray-500 leading-5">
-        {!label ? t('Tags') : label}
+      <label className="flex items-center justify-between text-sm font-semibold text-gray-500 leading-5">
+        <span>{!label ? t('Tags') : label}</span>
+        {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
       </label>
 
       <div

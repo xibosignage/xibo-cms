@@ -58,7 +58,7 @@ export default function DatasetColumns() {
     debouncedFilter,
     setGlobalFilter,
     isHydrated,
-  } = useTableState<Record<string, string>>(`dataset_columns_${datasetId}`, {
+  } = useTableState<Record<string, string>>('dataset_columns', {
     pagination: { pageIndex: 0, pageSize: 10 },
     sorting: [],
     columnVisibility: {

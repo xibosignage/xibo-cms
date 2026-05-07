@@ -34,6 +34,7 @@ interface NumberInputProps {
   className?: string;
   disabled?: boolean;
   min?: number;
+  optional?: boolean;
 }
 
 export default function NumberInput({
@@ -47,6 +48,7 @@ export default function NumberInput({
   error,
   disabled = false,
   min = 0,
+  optional = false,
 }: NumberInputProps) {
   const { t } = useTranslation();
   const generatedId = useId();
@@ -54,8 +56,9 @@ export default function NumberInput({
   return (
     <div className="flex flex-col gap-1 w-full">
       {label && (
-        <label htmlFor={generatedId} className="text-sm font-semibold text-gray-500 leading-4.5">
-          {!label ? t('Text') : label}
+        <label htmlFor={generatedId} className="flex items-center justify-between text-sm font-semibold text-gray-500 leading-4.5">
+          <span>{label}</span>
+          {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
         </label>
       )}
       <input

@@ -42,6 +42,7 @@ import NumberInput from '@/components/ui/forms/NumberInput';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import type { SelectOption } from '@/components/ui/forms/SelectDropdown';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
+import Switch from '@/components/ui/forms/Switch';
 import TagInput from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import TimezoneSelect from '@/components/ui/forms/TimezoneSelect';
@@ -865,10 +866,7 @@ export default function EditDisplayModal({
       ]}
     >
       <div className="flex flex-col h-full overflow-y-hidden overflow-x-visible px-4">
-        <nav
-          className="flex px-4 overflow-x-auto shrink-0 border-b border-gray-200"
-          aria-label="Tabs"
-        >
+        <nav className="flex px-4 overflow-x-auto shrink-0" aria-label="Tabs">
           <button type="button" className={tab('general')} onClick={() => setActiveTab('general')}>
             {t('General')}
           </button>
@@ -955,16 +953,6 @@ export default function EditDisplayModal({
                 onChange={(tags) => set('tags', tags)}
               />
               <SelectDropdown
-                label={t('Authorise display?')}
-                helpText={t('Use one of the available slots for this display?')}
-                value={String(draft.licensed)}
-                options={[
-                  { value: '0', label: t('No') },
-                  { value: '1', label: t('Yes') },
-                ]}
-                onSelect={(v) => set('licensed', Number(v))}
-              />
-              <SelectDropdown
                 label={t('Default Layout')}
                 helpText={t(
                   'Set the Default Layout to use when no other content is scheduled to this Display. This will override the global Default Layout as set in CMS Administrator Settings. If left blank a global Default Layout will be automatically set for this Display.',
@@ -980,6 +968,12 @@ export default function EditDisplayModal({
                 searchable
                 searchPlaceholder={t('Search layouts...')}
                 onSearch={(v) => setLayoutSearch(v)}
+              />
+              <Switch
+                label={t('Authorise display?')}
+                helpText={t('Use one of the available slots for this display?')}
+                checked={draft.licensed === 1}
+                onChange={(v) => set('licensed', v ? 1 : 0)}
               />
             </>
           )}

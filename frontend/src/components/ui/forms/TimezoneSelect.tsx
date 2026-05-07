@@ -83,6 +83,7 @@ interface TimezoneSelectProps {
   onChange: (value: string) => void;
   helpText?: string;
   placeholder?: string;
+  optional?: boolean;
 }
 
 export default function TimezoneSelect({
@@ -91,6 +92,7 @@ export default function TimezoneSelect({
   onChange,
   helpText,
   placeholder = ' ',
+  optional = false,
 }: TimezoneSelectProps) {
   const { t } = useTranslation();
 
@@ -104,6 +106,7 @@ export default function TimezoneSelect({
       helpText={helpText}
       searchable
       searchPlaceholder={t('Search timezones…')}
+      optional={optional}
     />
   );
 }

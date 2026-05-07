@@ -208,7 +208,28 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'menu-boards',
         labelKey: 'Menu Boards',
-        externalURL: '/menuboard/view',
+        lazy: () =>
+          import('@/pages/Library/MenuBoard/MenuBoards').then((m) => ({ Component: m.default })),
+        feature: 'menuBoard.view',
+      },
+      {
+        path: 'menu-boards/:menuId/categories',
+        labelKey: 'Menu Board Categories',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Library/MenuBoard/subPages/Categories/MenuBoardCategories').then((m) => ({
+            Component: m.default,
+          })),
+        feature: 'menuBoard.view',
+      },
+      {
+        path: 'menu-boards/:menuId/categories/:categoryId/products',
+        labelKey: 'Menu Board Products',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Library/MenuBoard/subPages/Products/MenuBoardProducts').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'menuBoard.view',
       },
     ],
