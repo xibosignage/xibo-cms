@@ -48,7 +48,11 @@ interface PublishDateSelectProps {
   optional?: boolean;
 }
 
-export default function PublishDateSelect({ value, onSelect, optional = false }: PublishDateSelectProps) {
+export default function PublishDateSelect({
+  value,
+  onSelect,
+  optional = false,
+}: PublishDateSelectProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
   const timeZone = user?.settings?.defaultTimezone;

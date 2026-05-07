@@ -42,7 +42,9 @@ export default function Switch({
   const { t } = useTranslation();
   const id = useId();
   const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <div className="flex flex-col gap-1 w-full">

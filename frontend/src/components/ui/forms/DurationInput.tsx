@@ -46,7 +46,12 @@ function parseTimeToSeconds(value: string): number {
   return h * 3600 + m * 60 + s;
 }
 
-export default function DurationInput({ value, onChange, error, optional = false }: DurationInputProps) {
+export default function DurationInput({
+  value,
+  onChange,
+  error,
+  optional = false,
+}: DurationInputProps) {
   const { t } = useTranslation();
   const [displayValue, setDisplayValue] = useState(formatSeconds(value));
   const STEP = 1;

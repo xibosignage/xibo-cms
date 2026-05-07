@@ -48,7 +48,12 @@ interface ExpiryDateSelectProps {
   optional?: boolean;
 }
 
-export default function ExpiryDateSelect({ value, options, onSelect, optional = false }: ExpiryDateSelectProps) {
+export default function ExpiryDateSelect({
+  value,
+  options,
+  onSelect,
+  optional = false,
+}: ExpiryDateSelectProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
   const timeZone = user?.settings?.defaultTimezone;
