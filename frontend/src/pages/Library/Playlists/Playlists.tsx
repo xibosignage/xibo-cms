@@ -239,6 +239,10 @@ export default function Playlist() {
     }
   };
 
+  const handleOpenTimeline = (playlistId: number) => {
+    window.open(`/playlist/designer/${playlistId}`, '_blank');
+  };
+
   const handleResetFilters = () => {
     setFilterInputs(INITIAL_FILTER_STATE);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
@@ -268,6 +272,7 @@ export default function Playlist() {
     },
     copyPlaylist: openCopyModal,
     openScheduleModal,
+    openTimeline: handleOpenTimeline,
   });
 
   const getAllSelectedItems = (): Playlist[] => {
