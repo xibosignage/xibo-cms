@@ -206,6 +206,18 @@ export const APP_ROUTES: AppRoute[] = [
         feature: 'dataset.view',
       },
       {
+        path: 'datasets/:datasetId/dataconnector',
+        labelKey: 'Dataset Data Connector',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Library/Dataset/subPages/DataConnector/DatasetDataConnector').then(
+            (m) => ({
+              Component: m.default,
+            }),
+          ),
+        feature: 'dataset.view',
+      },
+      {
         path: 'menu-boards',
         labelKey: 'Menu Boards',
         lazy: () =>

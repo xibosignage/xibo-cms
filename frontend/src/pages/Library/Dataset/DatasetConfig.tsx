@@ -173,6 +173,15 @@ export const getDatasetItemActions = ({
         onNavigate(`/library/datasets/${dataset.dataSetId}/rss`);
       },
     },
+    ...(dataset.isRealTime
+      ? [
+          {
+            label: t('View Data Connector'),
+            isNavigation: true,
+            onClick: () => onNavigate(`/library/datasets/${dataset.dataSetId}/dataconnector`),
+          },
+        ]
+      : []),
     { isSeparator: true },
     {
       label: t('Delete'),

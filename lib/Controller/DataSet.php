@@ -1443,6 +1443,39 @@ class DataSet extends Base
     }
 
     /**
+     * Get data connector script as JSON
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return Response
+     * @throws GeneralException
+     */
+    public function getDataConnectorScript(Request $request, Response $response, $id): Response
+    {
+        $dataSet = $this->dataSetFactory->getById($id);
+
+        if (!$this->getUser()->checkEditable($dataSet)) {
+            throw new AccessDeniedException();
+        }
+
+        if (!$this->getUser()->featureEnabled('dataset.data')) {
+            throw new AccessDeniedException(__('Feature not enabled'));
+        }
+
+        $dataSet->load();
+
+        if ($dataSet->dataConnectorSource !== 'user_defined') {
+            $event = new DataConnectorScriptRequestEvent($dataSet);
+            $this->getDispatcher()->dispatch($event, DataConnectorScriptRequestEvent::$NAME);
+        }
+
+        return $response->withJson([
+            'script' => $dataSet->getScript(),
+            'dataConnectorSource' => $dataSet->dataConnectorSource,
+        ]);
+    }
+
+    /**
      * Real-time data script editor
      * @param Request $request
      * @param Response $response
