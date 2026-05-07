@@ -126,7 +126,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("display.syncView") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("syncgroup.view") }}">{% trans "Sync Groups" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/displays/sync-groups">{% trans "Sync Groups" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("displayprofile.view") %}
