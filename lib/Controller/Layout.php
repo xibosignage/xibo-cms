@@ -2075,7 +2075,15 @@ class Layout extends Base
     public function status(Request $request, Response $response, $id)
     {
         // Get the layout
-        $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($id));
+        $layout = $this->layoutFactory->getById($id);
+
+        // Ensure this layout is viewable for this user.
+        if (!$this->getUser()->checkViewable($layout)) {
+            throw new AccessDeniedException();
+        }
+
+        // Take out a lock
+        $layout = $this->layoutFactory->concurrentRequestLock($layout);
         try {
             $layout = $this->layoutFactory->decorateLockedProperties($layout);
             $layout->xlfToDisk();
