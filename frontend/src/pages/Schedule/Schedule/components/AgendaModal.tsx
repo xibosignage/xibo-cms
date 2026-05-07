@@ -259,7 +259,11 @@ function MapZoomControls() {
   return null;
 }
 
-function MapClickHandler({ onChange }: { onChange: (lat: number, lng: number) => void }) {
+interface MapClickHandlerProps {
+  onChange: (lat: number, lng: number) => void;
+}
+
+function MapClickHandler({ onChange }: MapClickHandlerProps) {
   useMapEvents({
     click(e) {
       onChange(e.latlng.lat, e.latlng.lng);
@@ -268,19 +272,15 @@ function MapClickHandler({ onChange }: { onChange: (lat: number, lng: number) =>
   return null;
 }
 
-function AgendaGeoMap({
-  lat,
-  lng,
-  defaultLat,
-  defaultLng,
-  onChange,
-}: {
+interface AgendaGeoMapProps {
   lat: string;
   lng: string;
   defaultLat: number;
   defaultLng: number;
   onChange: (lat: string, lng: string) => void;
-}) {
+}
+
+function AgendaGeoMap({ lat, lng, defaultLat, defaultLng, onChange }: AgendaGeoMapProps) {
   const parsedLat = lat !== '' ? Number(lat) : null;
   const parsedLng = lng !== '' ? Number(lng) : null;
   const center: [number, number] = [parsedLat ?? defaultLat, parsedLng ?? defaultLng];
@@ -304,6 +304,23 @@ function AgendaGeoMap({
   );
 }
 
+interface AgendaFilterBarProps {
+  showTimeline: boolean;
+  onToggleTimeline: () => void;
+  timeMinutes: number;
+  onTimeChange: (v: number) => void;
+  geoLat: string;
+  geoLng: string;
+  onGeoLatChange: (v: string) => void;
+  onGeoLngChange: (v: string) => void;
+  onGetLocation: () => void;
+  onClearLocation: () => void;
+  showMap: boolean;
+  onToggleMap: () => void;
+  defaultLat: number;
+  defaultLng: number;
+}
+
 function AgendaFilterBar({
   showTimeline,
   onToggleTimeline,
@@ -319,22 +336,7 @@ function AgendaFilterBar({
   onToggleMap,
   defaultLat,
   defaultLng,
-}: {
-  showTimeline: boolean;
-  onToggleTimeline: () => void;
-  timeMinutes: number;
-  onTimeChange: (v: number) => void;
-  geoLat: string;
-  geoLng: string;
-  onGeoLatChange: (v: string) => void;
-  onGeoLngChange: (v: string) => void;
-  onGetLocation: () => void;
-  onClearLocation: () => void;
-  showMap: boolean;
-  onToggleMap: () => void;
-  defaultLat: number;
-  defaultLng: number;
-}) {
+}: AgendaFilterBarProps) {
   const { t } = useTranslation();
   const [localMinutes, setLocalMinutes] = useState(timeMinutes);
   const hasGeo = geoLat !== '' && geoLng !== '';
@@ -508,17 +510,14 @@ function AgendaFilterBar({
 
 const LAYOUT_EDITOR_TYPES = new Set([1, 3, 4]);
 
-function BreadcrumbPanel({
-  row,
-  data,
-  selectedGroupId,
-  onEdit,
-}: {
+interface BreadcrumbPanelProps {
   row: SelectedRow;
   data: FetchAgendaEventsResponse;
   selectedGroupId: number;
   onEdit: (eventId: number) => void;
-}) {
+}
+
+function BreadcrumbPanel({ row, data, selectedGroupId, onEdit }: BreadcrumbPanelProps) {
   const { t } = useTranslation();
   const event = data.events.find(
     (ev) => ev.layoutId === row.layoutId && ev.eventId === row.eventId,
@@ -626,19 +625,21 @@ function getPaginationItems(pageIndex: number, pageCount: number): (number | '..
 
 const PAGE_SIZE_OPTIONS = [5, 10, 25, 50];
 
+interface AgendaTablePaginationProps {
+  pageIndex: number;
+  pageCount: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
+}
+
 function AgendaTablePagination({
   pageIndex,
   pageCount,
   pageSize,
   onPageChange,
   onPageSizeChange,
-}: {
-  pageIndex: number;
-  pageCount: number;
-  pageSize: number;
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (size: number) => void;
-}) {
+}: AgendaTablePaginationProps) {
   usePreline();
   const { t } = useTranslation();
   const dropdownId = useId();
@@ -797,7 +798,11 @@ function sortEventRows(
   });
 }
 
-function LayoutStatusIcon({ status }: { status?: number }) {
+interface LayoutStatusIconProps {
+  status?: number;
+}
+
+function LayoutStatusIcon({ status }: LayoutStatusIconProps) {
   const { t } = useTranslation();
   if (status === 1) {
     return (
@@ -849,19 +854,15 @@ function LayoutStatusIcon({ status }: { status?: number }) {
   );
 }
 
-function SortableHeader({
-  col,
-  label,
-  sortCol,
-  sortDir,
-  onSort,
-}: {
+interface SortableHeaderProps {
   col: SortCol;
   label: string;
   sortCol: SortCol;
   sortDir: SortDir;
   onSort: (col: SortCol) => void;
-}) {
+}
+
+function SortableHeader({ col, label, sortCol, sortDir, onSort }: SortableHeaderProps) {
   const isActive = sortCol === col;
   return (
     <th className="relative">
@@ -888,6 +889,16 @@ function SortableHeader({
   );
 }
 
+interface EventTypeTableProps {
+  typeId: number;
+  events: AgendaScheduleEvent[];
+  layouts: Record<string, AgendaLayout | { layout: string }>;
+  formatDt: (ts: number) => string;
+  selectedRow: SelectedRow | null;
+  linkedLayoutKeys: Set<string>;
+  onRowClick: (row: SelectedRow) => void;
+}
+
 function EventTypeTable({
   typeId,
   events,
@@ -896,15 +907,7 @@ function EventTypeTable({
   selectedRow,
   linkedLayoutKeys,
   onRowClick,
-}: {
-  typeId: number;
-  events: AgendaScheduleEvent[];
-  layouts: Record<string, AgendaLayout | { layout: string }>;
-  formatDt: (ts: number) => string;
-  selectedRow: SelectedRow | null;
-  linkedLayoutKeys: Set<string>;
-  onRowClick: (row: SelectedRow) => void;
-}) {
+}: EventTypeTableProps) {
   const { t } = useTranslation();
   const label = EVENT_TYPE_LABELS[typeId];
   const [sortCol, setSortCol] = useState<SortCol>('fromDt');
@@ -1069,19 +1072,15 @@ function EventTypeTable({
   );
 }
 
-function SidebarList({
-  title,
-  items,
-  isSelected,
-  isLinked,
-  onRowClick,
-}: {
+interface SidebarListProps {
   title: string;
   items: { id: number; name: string; badge?: React.ReactNode }[];
   isSelected: (id: number) => boolean;
   isLinked: (id: number) => boolean;
   onRowClick: (id: number) => void;
-}) {
+}
+
+function SidebarList({ title, items, isSelected, isLinked, onRowClick }: SidebarListProps) {
   return (
     <section>
       <h3 className="text-xs font-semibold text-gray-500 bg-gray-100 uppercase px-3 py-2">
@@ -1111,15 +1110,17 @@ function SidebarList({
   );
 }
 
+interface DisplayGroupScrollerProps {
+  displayGroups: { id: number; name: string }[];
+  selectedGroupId: number | null;
+  onSelect: (id: number) => void;
+}
+
 function DisplayGroupScroller({
   displayGroups,
   selectedGroupId,
   onSelect,
-}: {
-  displayGroups: { id: number; name: string }[];
-  selectedGroupId: number | null;
-  onSelect: (id: number) => void;
-}) {
+}: DisplayGroupScrollerProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (dir: 'left' | 'right') => {
