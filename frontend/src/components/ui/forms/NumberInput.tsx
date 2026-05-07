@@ -30,7 +30,7 @@ interface NumberInputProps {
   placeholder?: string;
   helpText?: string;
   error?: string;
-  onChange: (num: number | undefined) => void;
+  onChange: (num: number) => void;
   className?: string;
   disabled?: boolean;
   min?: number;
@@ -73,7 +73,7 @@ export default function NumberInput({
           const clamped = min != null ? Math.max(min, numericValue) : numericValue;
           onChange(max != null ? Math.min(max, clamped) : clamped);
         } else {
-          onChange(undefined);
+          onChange(0);
         }
       }}
       placeholder={placeholder || t('Add text')}
