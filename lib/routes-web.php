@@ -148,6 +148,9 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 $app->get('/playlist/form/timeline/{id}', ['\Xibo\Controller\Playlist','timelineForm'])
     ->setName('playlist.timeline.form');
 
+$app->get('/playlist/designer/{id}', ['\Xibo\Controller\Playlist', 'displayDesigner'])
+    ->setName('playlist.designer');
+
 //
 // library
 //

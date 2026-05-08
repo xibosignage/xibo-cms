@@ -96,6 +96,7 @@ export interface PlaylistActionsProps {
   openMoveModal?: (row: Playlist | Playlist[]) => void;
   copyPlaylist?: (row: number) => void;
   openScheduleModal?: (row: Playlist) => void;
+  openTimeline?: (id: number) => void;
 }
 
 export const getPlaylistItemActions = ({
@@ -106,6 +107,7 @@ export const getPlaylistItemActions = ({
   openMoveModal,
   copyPlaylist,
   openScheduleModal,
+  openTimeline,
 }: PlaylistActionsProps): ((playlist: Playlist) => ActionItem[]) => {
   return (playlist: Playlist) => [
     // Quick Actions
@@ -119,7 +121,7 @@ export const getPlaylistItemActions = ({
     {
       label: t('Timeline'),
       icon: BarChartHorizontalBig,
-      onClick: () => console.log('Open Playlist Editor', playlist.playlistId),
+      onClick: () => openTimeline && openTimeline(playlist.playlistId),
       isQuickAction: true,
     },
 
@@ -156,7 +158,7 @@ export const getPlaylistItemActions = ({
     {
       label: t('Timeline'),
       icon: BarChartHorizontalBig,
-      onClick: () => console.log('Open Playlist Editor', playlist.playlistId),
+      onClick: () => openTimeline && openTimeline(playlist.playlistId),
     },
     { isSeparator: true },
     {

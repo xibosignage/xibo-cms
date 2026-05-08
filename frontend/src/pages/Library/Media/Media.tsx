@@ -59,12 +59,14 @@ import { useTableState } from '@/hooks/useTableState';
 import { useMediaFilterOptions } from '@/pages/Library/Media/hooks/useMediaFilterOptions';
 import { downloadMedia, downloadMediaAsZip } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
+import { hasFeature } from '@/utils/permissions';
 
 export default function Media() {
   const { t } = useTranslation();
   const { user } = useUserContext();
   const queryClient = useQueryClient();
   const canViewFolders = usePermissions()?.canViewFolders;
+  const canSchedule = hasFeature(user, 'schedule.add');
   const homeFolderId = user?.homeFolderId ?? 1;
   const location = useLocation();
   const layoutId = location.state?.layoutId;
@@ -328,7 +330,7 @@ export default function Media() {
     },
     copyMedia: openCopyModal,
     openReplaceModal: openReplaceFileModal,
-    openScheduleModal,
+    openScheduleModal: canSchedule ? openScheduleModal : undefined,
   });
 
   const getAllSelectedItems = (): Media[] => {
@@ -462,7 +464,7 @@ export default function Media() {
     },
     copyMedia: openCopyModal,
     openReplaceModal: openReplaceFileModal,
-    openScheduleModal,
+    openScheduleModal: canSchedule ? openScheduleModal : undefined,
   } as MediaActionsProps);
 
   const { filterOptions } = useMediaFilterOptions(t);

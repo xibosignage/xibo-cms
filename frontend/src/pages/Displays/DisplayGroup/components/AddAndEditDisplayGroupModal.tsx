@@ -304,6 +304,7 @@ export default function AddAndEditDisplayGroupModal({
 
   return (
     <Modal
+      variant="tabbed"
       isOpen={isOpen}
       title={type === 'edit' ? t('Edit Display Group') : t('Add Display Group')}
       onClose={onClose}

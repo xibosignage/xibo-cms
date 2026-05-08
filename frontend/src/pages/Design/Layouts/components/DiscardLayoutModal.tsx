@@ -45,6 +45,7 @@ export default function DiscardLayoutModal({
 
   return (
     <Modal
+      variant="confirmation"
       isOpen={isOpen}
       isPending={isLoading}
       onClose={isLoading ? () => {} : onClose}

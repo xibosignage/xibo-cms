@@ -674,6 +674,35 @@ export type DatasetDataConnectorSource = {
   name: string;
 };
 
+export interface DataConnectorScriptResponse {
+  script: string;
+  dataConnectorSource: string;
+}
+
+export async function getDataConnectorScript(
+  datasetId: string | number,
+  signal?: AbortSignal,
+): Promise<DataConnectorScriptResponse> {
+  const response = await http.get(`/dataset/dataConnector/${datasetId}/script`, { signal });
+  return response.data;
+}
+
+export async function saveDataConnectorScript(
+  datasetId: string | number,
+  script: string,
+  signal?: AbortSignal,
+): Promise<void> {
+  const params = new URLSearchParams();
+  params.append('dataConnectorScript', script);
+  await http.put(`/dataset/dataConnector/${datasetId}`, params.toString(), {
+    signal,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+  });
+}
+
 export async function fetchDataConnectorSource(): Promise<DatasetDataConnectorSource[]> {
   const response = await http.get('/dataset/dataconnector/source');
 

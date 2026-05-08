@@ -49,12 +49,14 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import { fetchContextButtons } from '@/services/folderApi';
 import type { Template } from '@/types/templates';
+import { hasFeature } from '@/utils/permissions';
 
 export default function Templates() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { user } = useUserContext();
   const canViewFolders = usePermissions()?.canViewFolders;
+  const canSchedule = hasFeature(user, 'schedule.add');
   const homeFolderId = user?.homeFolderId ?? 1;
 
   const {
@@ -239,6 +241,11 @@ export default function Templates() {
     openModal('copy');
   };
 
+  const openScheduleModal = (template: Template) => {
+    setSelectedTemplateId(template.layoutId);
+    openModal('schedule');
+  };
+
   const columns = getTemplateColumn({
     t,
     onDelete: handleDelete,
@@ -252,6 +259,7 @@ export default function Templates() {
         }
       : undefined,
     openCopyModal,
+    onSchedule: canSchedule ? openScheduleModal : undefined,
   });
 
   const getAllSelectedItems = (): Template[] => {

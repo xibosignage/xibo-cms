@@ -283,6 +283,7 @@ export default function AddAndEditDatasetModal({
 
   return (
     <Modal
+      variant="tabbed"
       title={modalTitle}
       onClose={onClose}
       isOpen={isOpen}

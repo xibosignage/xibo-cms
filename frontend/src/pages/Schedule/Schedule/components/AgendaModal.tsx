@@ -1146,7 +1146,7 @@ function DisplayGroupScroller({
               leftIcon={MonitorPlay}
               onClick={() => onSelect(group.id)}
               className={twMerge(
-                'focus:outline-2 -outline-offset-2',
+                'shrink-0 whitespace-nowrap focus:outline-2 -outline-offset-2',
                 isActive ? 'text-xibo-blue-500' : ' text-gray-500 hover:text-gray-700',
               )}
             >
@@ -1250,7 +1250,8 @@ export function AgendaModal({ date, displayGroups, onClose }: AgendaModalProps) 
       onClose={onClose}
       title={t('Agenda View') + ' — ' + date.toFormat('cccc, d LLL yyyy')}
       size="xl"
-      align="top"
+      variant="tabbed"
+      showCloseButton
     >
       <div className="p-6 flex flex-col gap-3">
         <AgendaFilterBar

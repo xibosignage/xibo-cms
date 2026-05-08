@@ -75,6 +75,7 @@ export function EnableStatsLayoutModal({
 
   return (
     <Modal
+      variant="confirmation"
       title={t('Enable Stats Collection')}
       isOpen={isOpen}
       onClose={onClose}

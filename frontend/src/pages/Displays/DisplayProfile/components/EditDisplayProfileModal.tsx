@@ -468,6 +468,7 @@ export default function EditDisplayProfileModal({
 
   return (
     <Modal
+      variant="tabbed"
       title={title}
       onClose={onClose}
       isOpen={isOpen}

@@ -259,6 +259,7 @@ export default function EditCampaignModal({
 
   return (
     <Modal
+      variant="tabbed"
       isOpen={isOpen}
       title={t('Edit Campaign')}
       onClose={onClose}

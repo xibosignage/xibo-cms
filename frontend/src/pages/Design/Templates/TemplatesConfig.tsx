@@ -56,7 +56,7 @@ export const TEMPLATE_INITIAL_FILTER_STATE: TemplatesFilterInput = {
   tags: [],
 };
 
-export type ModalType = BaseModalType | null;
+export type ModalType = BaseModalType | 'schedule' | null;
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<Record<string, unknown>>[] => [
   {
@@ -80,6 +80,7 @@ export interface TemplatesActionsProps {
   alterTemplate?: (id: number) => void;
   openDetails?: (id: number) => void;
   openTemplate?: (id: number) => void;
+  onSchedule?: (template: Template) => void;
 }
 
 export const getTemplateColumn = (props: TemplatesActionsProps): ColumnDef<Template>[] => {
@@ -257,6 +258,7 @@ export const getTemplateItemActions = ({
   openMoveModal,
   openCopyModal,
   alterTemplate,
+  onSchedule,
 }: TemplatesActionsProps): ((template: Template) => ActionItem[]) => {
   return (template: Template) => [
     {
@@ -301,7 +303,7 @@ export const getTemplateItemActions = ({
     {
       label: t('Schedule'),
       icon: CalendarClock,
-      onClick: () => console.log('Schedule', template.layoutId),
+      onClick: () => onSchedule && onSchedule(template),
     },
     { isSeparator: true },
     {

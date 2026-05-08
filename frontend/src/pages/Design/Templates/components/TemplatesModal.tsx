@@ -27,8 +27,10 @@ import DeleteTemplateModal from './DeleteTemplateModal';
 
 import FolderActionModals from '@/components/ui/FolderActionModals';
 import MoveModal from '@/components/ui/modals/MoveModal';
+import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
 import type { useFolderActions } from '@/hooks/useFolderActions';
+import { EventTypeId } from '@/types/event';
 import type { Template } from '@/types/templates';
 
 interface TemplatesModalsProps {
@@ -123,6 +125,19 @@ export function TemplateModals({
           onConfirm={handlers?.handleConfirmMove}
           items={selection.itemsToMove}
           entityLabel={t('Templates')}
+        />
+      )}
+      {isModalOpen('schedule') && selection.selectedTemplate && (
+        <ScheduleEventModal
+          isOpen
+          onClose={() => {
+            actions.closeModal();
+            actions.handleRefresh();
+          }}
+          mode="schedule"
+          eventTypeId={EventTypeId.Layout}
+          contentId={selection.selectedTemplate.campaignId}
+          contentName={selection.selectedTemplate.layout}
         />
       )}
     </>
