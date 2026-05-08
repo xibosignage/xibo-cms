@@ -555,14 +555,11 @@ $app->group('', function (RouteCollectorProxy $group) {
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['users.modify']));
 
 // Dashboards
-$app->get('/icondashboard', ['\Xibo\Controller\IconDashboard', 'displayPage'])
-    ->setName('icondashboard.view');
-
 $app->get('/statusdashboard', ['\Xibo\Controller\StatusDashboard', 'displayPage'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.status']))
     ->setName('statusdashboard.view');
 
-$app->get('/mediamanager', ['\Xibo\Controller\MediaManager', 'displayPage'])
+$app->get('/mediamanager', ['\Xibo\Controller\MediaManager', 'getLibraryUsage'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.media.manager']))
     ->setName('mediamanager.view');
 

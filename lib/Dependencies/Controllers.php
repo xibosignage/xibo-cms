@@ -231,11 +231,6 @@ class Controllers
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
-            '\Xibo\Controller\IconDashboard' => function (ContainerInterface $c) {
-                $controller =  new \Xibo\Controller\IconDashboard();
-                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
-                return $controller;
-            },
             '\Xibo\Controller\Layout' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Layout(
                     $c->get('session'),
@@ -349,9 +344,7 @@ class Controllers
                 $controller = new \Xibo\Controller\PlaylistDashboard(
                     $c->get('playlistFactory'),
                     $c->get('moduleFactory'),
-                    $c->get('widgetFactory'),
                     $c->get('mediaFactory'),
-                    $c
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
@@ -536,7 +529,6 @@ class Controllers
                     $c->get('pool'),
                     $c->get('userFactory'),
                     $c->get('displayFactory'),
-                    $c->get('displayGroupFactory'),
                     $c->get('mediaFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
