@@ -128,7 +128,7 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/layout/setenablestat/{id}',['\Xibo\Controller\Layout', 'setEnableStat'])->setName('layout.setenablestat');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify']));
 
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
+$app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
     $group->post('/layout/export/{id}', ['\Xibo\Controller\Layout', 'export'])->setName('layout.export');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.export']));
 
