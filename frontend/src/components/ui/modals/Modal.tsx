@@ -19,8 +19,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { CircleX, type LucideIcon } from 'lucide-react';
+import { CircleX, type LucideIcon, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
 import type { ButtonProps } from '../Button';
@@ -53,6 +54,7 @@ interface ModalProps {
   isPending?: boolean;
   error?: string;
   align?: 'center' | 'top';
+  showCloseButton?: boolean;
 }
 
 export default function Modal({
@@ -68,7 +70,9 @@ export default function Modal({
   isPending = false,
   error,
   align = 'center',
+  showCloseButton = false,
 }: ModalProps) {
+  const { t } = useTranslation();
   useKeydown('Escape', onClose, isOpen);
 
   const titleId = title ? `modal-title-${title.replace(/\s+/g, '-').toLowerCase()}` : undefined;
@@ -111,11 +115,23 @@ export default function Modal({
         )}
 
         {/* Header */}
-        {title && (
-          <div className="shrink-0 p-8 pb-3">
-            <h2 id={titleId} className="text-lg font-semibold truncate">
-              {title}
-            </h2>
+        {(title || showCloseButton) && (
+          <div className="shrink-0 flex items-start justify-between align-middle p-8 pb-3">
+            {title && (
+              <h2 id={titleId} className="text-lg font-semibold truncate">
+                {title}
+              </h2>
+            )}
+            {showCloseButton && (
+              <button
+                type="button"
+                aria-label={t('Close')}
+                onClick={onClose}
+                className="size-6 shrink-0 text-gray-500 cursor-pointer hover:text-gray-600 transition-colors"
+              >
+                <X className="w-4 h-4" aria-hidden="true" />
+              </button>
+            )}
           </div>
         )}
 
