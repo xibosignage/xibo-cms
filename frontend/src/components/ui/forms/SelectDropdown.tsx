@@ -32,7 +32,7 @@ import {
   FloatingPortal,
 } from '@floating-ui/react';
 import { ChevronDown, Search } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useId, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
@@ -91,6 +91,7 @@ export default function SelectDropdown({
   optional = false,
 }: SelectDropdownProps) {
   const { t } = useTranslation();
+  const id = useId();
 
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -157,7 +158,10 @@ export default function SelectDropdown({
   return (
     <div className={twMerge('relative overflow-visible', className)}>
       {label && (
-        <label className="flex items-center justify-between text-sm font-semibold text-gray-500 leading-5">
+        <label
+          id={`${id}-label`}
+          className="flex items-center justify-between text-sm font-semibold text-gray-500 leading-5"
+        >
           <span>{t(label)}</span>
           {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
         </label>
@@ -166,6 +170,12 @@ export default function SelectDropdown({
       <div
         ref={refs.setReference}
         {...getReferenceProps()}
+        role="combobox"
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        aria-labelledby={label ? `${id}-label` : undefined}
+        aria-controls={`${id}-listbox`}
+        tabIndex={0}
         className="w-full border bg-white border-gray-200 rounded-lg flex items-center cursor-pointer h-11.25 hover:border-gray-400 focus-within:border-xibo-blue-600 focus-within:ring-1 focus-within:ring-xibo-blue-600/25 focus:outline-none transition-colors"
       >
         {addLeftLabel && leftLabelContent && (
@@ -222,6 +232,8 @@ export default function SelectDropdown({
               </div>
             )}
             <div
+              id={`${id}-listbox`}
+              role="listbox"
               ref={scrollContainerRef}
               className="flex flex-col p-2 text-sm overflow-y-auto max-h-75"
             >
@@ -247,6 +259,8 @@ export default function SelectDropdown({
                 <button
                   key={option.value}
                   type="button"
+                  role="option"
+                  aria-selected={option.value === value}
                   disabled={option.disabled}
                   className={twMerge(
                     'text-left p-2 rounded-lg font-medium flex gap-2 items-center min-w-0',

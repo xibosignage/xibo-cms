@@ -867,50 +867,107 @@ export default function EditDisplayModal({
       ]}
     >
       <div className="flex flex-col h-full overflow-y-hidden overflow-x-visible px-4">
-        <nav className="flex px-4 overflow-x-auto shrink-0" aria-label="Tabs">
-          <button type="button" className={tab('general')} onClick={() => setActiveTab('general')}>
+        <div
+          role="tablist"
+          aria-label={t('Display settings tabs')}
+          className="flex px-4 overflow-x-auto shrink-0"
+        >
+          <button
+            role="tab"
+            type="button"
+            id="tab-general"
+            aria-selected={activeTab === 'general'}
+            aria-controls="tabpanel-display"
+            className={tab('general')}
+            onClick={() => setActiveTab('general')}
+          >
             {t('General')}
           </button>
-          <button type="button" className={tab('details')} onClick={() => setActiveTab('details')}>
+          <button
+            role="tab"
+            type="button"
+            id="tab-details"
+            aria-selected={activeTab === 'details'}
+            aria-controls="tabpanel-display"
+            className={tab('details')}
+            onClick={() => setActiveTab('details')}
+          >
             {t('Details')}
           </button>
           <button
+            role="tab"
             type="button"
+            id="tab-reference"
+            aria-selected={activeTab === 'reference'}
+            aria-controls="tabpanel-display"
             className={tab('reference')}
             onClick={() => setActiveTab('reference')}
           >
             {t('Reference')}
           </button>
           <button
+            role="tab"
             type="button"
+            id="tab-maintenance"
+            aria-selected={activeTab === 'maintenance'}
+            aria-controls="tabpanel-display"
             className={tab('maintenance')}
             onClick={() => setActiveTab('maintenance')}
           >
             {t('Maintenance')}
           </button>
-          <button type="button" className={tab('wol')} onClick={() => setActiveTab('wol')}>
+          <button
+            role="tab"
+            type="button"
+            id="tab-wol"
+            aria-selected={activeTab === 'wol'}
+            aria-controls="tabpanel-display"
+            className={tab('wol')}
+            onClick={() => setActiveTab('wol')}
+          >
             {t('Wake on LAN')}
           </button>
           <button
+            role="tab"
             type="button"
+            id="tab-settings"
+            aria-selected={activeTab === 'settings'}
+            aria-controls="tabpanel-display"
             className={tab('settings')}
             onClick={() => setActiveTab('settings')}
           >
             {t('Settings')}
           </button>
-          <button type="button" className={tab('remote')} onClick={() => setActiveTab('remote')}>
+          <button
+            role="tab"
+            type="button"
+            id="tab-remote"
+            aria-selected={activeTab === 'remote'}
+            aria-controls="tabpanel-display"
+            className={tab('remote')}
+            onClick={() => setActiveTab('remote')}
+          >
             {t('Remote')}
           </button>
           <button
+            role="tab"
             type="button"
+            id="tab-advanced"
+            aria-selected={activeTab === 'advanced'}
+            aria-controls="tabpanel-display"
             className={tab('advanced')}
             onClick={() => setActiveTab('advanced')}
           >
             {t('Advanced')}
           </button>
-        </nav>
+        </div>
 
-        <div className="flex-1 overflow-y-auto py-4 px-8 space-y-4">
+        <div
+          role="tabpanel"
+          id="tabpanel-display"
+          aria-labelledby={`tab-${activeTab}`}
+          className="flex-1 overflow-y-auto py-4 px-8 space-y-4"
+        >
           {activeTab === 'general' && (
             <>
               <div className="relative z-20">

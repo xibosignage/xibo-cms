@@ -32,7 +32,7 @@ import {
   useInteractions,
 } from '@floating-ui/react';
 import { ChevronDown, Search, X } from 'lucide-react';
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useId, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
@@ -77,6 +77,7 @@ export default function MultiSelectDropdown({
   optional = false,
 }: MultiSelectDropdownProps) {
   const { t } = useTranslation();
+  const id = useId();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -180,7 +181,10 @@ export default function MultiSelectDropdown({
 
   return (
     <div className={twMerge('flex flex-col gap-1 relative w-full', className)}>
-      <label className="flex items-center justify-between text-sm font-semibold text-gray-500 leading-5">
+      <label
+        id={`${id}-label`}
+        className="flex items-center justify-between text-sm font-semibold text-gray-500 leading-5"
+      >
         <span>{t(label)}</span>
         {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
       </label>
@@ -188,6 +192,12 @@ export default function MultiSelectDropdown({
       <div
         ref={refs.setReference}
         {...getReferenceProps()}
+        role="combobox"
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        aria-labelledby={`${id}-label`}
+        aria-controls={`${id}-listbox`}
+        tabIndex={0}
         className={twMerge(
           'w-full border bg-white border-gray-200 rounded-lg flex items-center cursor-pointer hover:border-gray-400 focus-within:border-xibo-blue-600 focus-within:ring-1 focus-within:ring-xibo-blue-600/25 focus:outline-none transition-colors',
           showTags && value.length > 0 ? 'min-h-11.25 py-2 px-2' : 'h-11.25',
@@ -258,7 +268,12 @@ export default function MultiSelectDropdown({
                 onClick={(e) => e.stopPropagation()}
               />
             </div>
-            <div className="flex flex-col p-2 text-sm overflow-y-auto max-h-75">
+            <div
+              id={`${id}-listbox`}
+              role="listbox"
+              aria-multiselectable="true"
+              className="flex flex-col p-2 text-sm overflow-y-auto max-h-75"
+            >
               {(() => {
                 const allChecked = options.length > 0 && value.length === options.length;
                 const someChecked = value.length > 0 && value.length < options.length;
