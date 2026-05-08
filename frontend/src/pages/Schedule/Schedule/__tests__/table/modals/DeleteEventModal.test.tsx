@@ -125,7 +125,12 @@ describe('DeleteEventModal', () => {
     // phrase "this event" rather than showing a blank space.
     test('shows "this event" fallback when no eventName is provided', () => {
       render(
-        <DeleteEventModal onClose={onClose} onDelete={onDelete} itemCount={1} isRecurring={false} />,
+        <DeleteEventModal
+          onClose={onClose}
+          onDelete={onDelete}
+          itemCount={1}
+          isRecurring={false}
+        />,
       );
 
       expect(screen.getAllByText('this event').length).toBeGreaterThan(0);

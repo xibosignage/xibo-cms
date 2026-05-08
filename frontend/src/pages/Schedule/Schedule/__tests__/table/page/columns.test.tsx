@@ -27,7 +27,6 @@ import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import Events from '../../../Events';
 import { useEventActions } from '../../../hooks/useEventActions';
-
 import { SINGLE_EVENT } from '../../fixtures/event';
 import { mockUser } from '../../fixtures/user';
 import { defaultEventActions, mockEventData } from '../helpers/eventActions';

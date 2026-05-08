@@ -24,7 +24,6 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 import Events from '../../../Events';
-
 import { mockEvent } from '../../fixtures/event';
 import { mockUser } from '../../fixtures/user';
 
@@ -66,10 +65,7 @@ export const openCopyModal = async () => {
 // `{ hydrate: false }` to skip the cache pre-seed (which is what flips
 // isHydrated to true the moment React Query sees a value).
 // -----------------------------------------------------------------------------
-export const renderEventsPage = (
-  user?: User,
-  { hydrate = true }: { hydrate?: boolean } = {},
-) => {
+export const renderEventsPage = (user?: User, { hydrate = true }: { hydrate?: boolean } = {}) => {
   const resolvedUser = user ?? mockUser;
   if (hydrate) {
     testQueryClient.setQueryData(['userPref', 'event_page'], null);

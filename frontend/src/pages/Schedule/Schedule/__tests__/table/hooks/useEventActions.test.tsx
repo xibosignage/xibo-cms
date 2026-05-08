@@ -24,7 +24,6 @@ import type { TFunction } from 'i18next';
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 
 import { useEventActions } from '../../../hooks/useEventActions';
-
 import { mockEvent } from '../../fixtures/event';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────

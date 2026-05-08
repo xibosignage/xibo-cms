@@ -24,7 +24,6 @@ import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import { useEventActions } from '../../../hooks/useEventActions';
-
 import { SINGLE_EVENT, TWO_EVENTS, mockEvent } from '../../fixtures/event';
 import { defaultEventActions, mockEventData } from '../helpers/eventActions';
 import { renderEventsPage } from '../helpers/renderEventsPage';
@@ -71,15 +70,9 @@ vi.mock('@/components/ui/modals/ScheduleEventModal', () => ({
   )),
 }));
 vi.mock('../../../components/DeleteEventModal', () => ({
-  default: vi.fn(
-    ({ itemCount, eventName }: { itemCount: number; eventName?: string }) => (
-      <div
-        data-testid="delete-modal"
-        data-item-count={itemCount}
-        data-event-name={eventName ?? ''}
-      />
-    ),
-  ),
+  default: vi.fn(({ itemCount, eventName }: { itemCount: number; eventName?: string }) => (
+    <div data-testid="delete-modal" data-item-count={itemCount} data-event-name={eventName ?? ''} />
+  )),
 }));
 vi.mock('../../../components/CopyEventModal', () => ({
   default: vi.fn(({ scheduleEvent }: { scheduleEvent: { eventId: number } | null }) => (

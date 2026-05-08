@@ -24,7 +24,6 @@ import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import CopyEventModal from '../../../components/CopyEventModal';
-
 import { mockEvent } from '../../fixtures/event';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────

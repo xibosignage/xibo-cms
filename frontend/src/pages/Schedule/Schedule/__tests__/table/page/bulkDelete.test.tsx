@@ -24,7 +24,6 @@ import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import { useEventActions } from '../../../hooks/useEventActions';
-
 import { TWO_EVENTS, mockEvent, mockEvent2 } from '../../fixtures/event';
 import { defaultEventActions, mockEventData } from '../helpers/eventActions';
 import { renderEventsPage } from '../helpers/renderEventsPage';

@@ -25,7 +25,6 @@ import { vi, beforeEach, describe, test, expect } from 'vitest';
 import CopyEventModal from '../../../components/CopyEventModal';
 import DeleteEventModal from '../../../components/DeleteEventModal';
 import { EventModals } from '../../../components/EventModals';
-
 import { mockEvent, mockEvent2, mockRecurringEvent } from '../../fixtures/event';
 
 import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
@@ -63,6 +62,7 @@ const buildProps = (overrides: Partial<EventModalsProps> = {}): EventModalsProps
     isDeleting: false,
     isCloning: false,
     agendaDate: null,
+    displayGroups: [],
     ...overrides.actions,
   },
   selection: {
