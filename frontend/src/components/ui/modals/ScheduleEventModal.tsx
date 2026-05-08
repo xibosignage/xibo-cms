@@ -96,6 +96,8 @@ interface ScheduleEventModalProps {
   contentId?: number;
   contentName?: string;
   event?: Event;
+  displaySpecificGroupIds?: number[];
+  displayGroupIds?: number[];
 }
 
 export default function ScheduleEventModal({
@@ -107,6 +109,8 @@ export default function ScheduleEventModal({
   contentId,
   contentName,
   event,
+  displaySpecificGroupIds,
+  displayGroupIds,
 }: ScheduleEventModalProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
@@ -130,7 +134,14 @@ export default function ScheduleEventModal({
     setMaxReachedStep((prev) => Math.max(prev, step));
   };
   const [draft, setDraft] = useState<ScheduleEventDraft>(() =>
-    isEditMode ? createDraftFromEvent(event) : createInitialDraft(prefilledEventTypeId, contentId),
+    isEditMode
+      ? createDraftFromEvent(event)
+      : createInitialDraft(
+          prefilledEventTypeId,
+          contentId,
+          displaySpecificGroupIds,
+          displayGroupIds,
+        ),
   );
   const [optionalTab, setOptionalTab] = useState<OptionalTab>('general');
 
@@ -828,7 +839,12 @@ export default function ScheduleEventModal({
     setDraft(
       isEditMode
         ? createDraftFromEvent(event)
-        : createInitialDraft(prefilledEventTypeId, contentId),
+        : createInitialDraft(
+            prefilledEventTypeId,
+            contentId,
+            displaySpecificGroupIds,
+            displayGroupIds,
+          ),
     );
     setOptionalTab('general');
     setShowDisplayBanner(false);
@@ -936,6 +952,7 @@ export default function ScheduleEventModal({
 
   return (
     <Modal
+      variant="tabbed"
       isOpen={isOpen}
       onClose={handleClose}
       title={isEditMode ? t('Edit Event') : t('Schedule Event')}
@@ -944,7 +961,6 @@ export default function ScheduleEventModal({
       actions={actions}
       isPending={isPending}
       error={apiError}
-      className="min-h-[90vh]"
     >
       <div className="flex flex-col flex-1 min-h-0 max-h-full">
         {/* Stepper */}

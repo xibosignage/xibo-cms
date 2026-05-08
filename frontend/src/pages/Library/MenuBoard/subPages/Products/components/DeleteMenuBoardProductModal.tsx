@@ -47,6 +47,7 @@ export default function DeleteMenuBoardProductModal({
 
   return (
     <Modal
+      variant="confirmation"
       isOpen={isOpen}
       isPending={isLoading}
       onClose={onClose}

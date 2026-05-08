@@ -51,12 +51,14 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import { fetchContextButtons } from '@/services/folderApi';
 import type { Playlist } from '@/types/playlist';
+import { hasFeature } from '@/utils/permissions';
 
 export default function Playlist() {
   const { t } = useTranslation();
   const { user } = useUserContext();
   const queryClient = useQueryClient();
   const canViewFolders = usePermissions()?.canViewFolders;
+  const canSchedule = hasFeature(user, 'schedule.add');
   const homeFolderId = user?.homeFolderId ?? 1;
   const location = useLocation();
   const layoutId = location.state?.layoutId;
@@ -271,7 +273,7 @@ export default function Playlist() {
       openModal('share');
     },
     copyPlaylist: openCopyModal,
-    openScheduleModal,
+    openScheduleModal: canSchedule ? openScheduleModal : undefined,
     openTimeline: handleOpenTimeline,
   });
 

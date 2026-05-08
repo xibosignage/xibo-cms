@@ -225,6 +225,7 @@ export default function AddAndEditMenuBoardProductModal({
 
   return (
     <Modal
+      variant="tabbed"
       title={type === 'add' ? t('Add Product') : t('Edit Product')}
       onClose={onClose}
       isOpen={isOpen}

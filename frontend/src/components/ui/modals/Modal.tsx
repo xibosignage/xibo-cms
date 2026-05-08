@@ -53,7 +53,7 @@ interface ModalProps {
   scrollable?: boolean;
   isPending?: boolean;
   error?: string;
-  align?: 'center' | 'top';
+  variant?: 'standard' | 'tabbed' | 'confirmation';
   showCloseButton?: boolean;
 }
 
@@ -69,7 +69,7 @@ export default function Modal({
   scrollable = true,
   isPending = false,
   error,
-  align = 'center',
+  variant = 'standard',
   showCloseButton = false,
 }: ModalProps) {
   const { t } = useTranslation();
@@ -92,7 +92,7 @@ export default function Modal({
     <div
       className={twMerge(
         'fixed inset-0 z-50 flex justify-center p-4',
-        align === 'top' ? 'items-start pt-16' : 'items-center',
+        variant === 'confirmation' ? 'items-center' : 'items-start pt-[5vh]',
       )}
     >
       <div
@@ -104,7 +104,8 @@ export default function Modal({
         open
         aria-labelledby={titleId}
         className={twMerge(
-          'relative flex flex-col w-full bg-white rounded-xl overflow-hidden outline-none max-h-[90vh] shadow-lg',
+          'relative flex flex-col w-full bg-white rounded-xl overflow-hidden outline-none shadow-lg',
+          variant === 'tabbed' ? 'h-[90vh]' : 'max-h-[90vh]',
           sizeClasses[size],
           className,
         )}

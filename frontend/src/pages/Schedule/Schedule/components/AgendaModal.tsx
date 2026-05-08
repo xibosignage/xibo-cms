@@ -1250,7 +1250,7 @@ export function AgendaModal({ date, displayGroups, onClose }: AgendaModalProps) 
       onClose={onClose}
       title={t('Agenda View') + ' — ' + date.toFormat('cccc, d LLL yyyy')}
       size="xl"
-      align="top"
+      variant="tabbed"
       showCloseButton
     >
       <div className="p-6 flex flex-col gap-3">

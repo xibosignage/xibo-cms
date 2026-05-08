@@ -46,12 +46,14 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import { fetchContextButtons } from '@/services/folderApi';
 import type { Campaign } from '@/types/campaign';
+import { hasFeature } from '@/utils/permissions';
 
 export default function Campaigns() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { user } = useUserContext();
   const canViewFolders = usePermissions()?.canViewFolders;
+  const canSchedule = hasFeature(user, 'schedule.add');
   const homeFolderId = user?.homeFolderId ?? 1;
 
   const location = useLocation();
@@ -247,6 +249,11 @@ export default function Campaigns() {
     openModal('move');
   };
 
+  const openScheduleModal = (campaign: Campaign) => {
+    setSelectedCampaignId(campaign.campaignId);
+    openModal('schedule');
+  };
+
   const openAddModal = () => {
     openModal('add');
   };
@@ -263,6 +270,7 @@ export default function Campaigns() {
     openCopyModal,
     openMoveModal,
     openShareModal,
+    onSchedule: canSchedule ? openScheduleModal : undefined,
   });
 
   const getAllSelectedItems = (): Campaign[] => {

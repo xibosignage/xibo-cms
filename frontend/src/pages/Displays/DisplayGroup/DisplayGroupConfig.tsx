@@ -116,7 +116,7 @@ export interface DisplayGroupActionsProps {
   openCopyModal: (displayGroup: DisplayGroup) => void;
   openMembersModal: (displayGroup: DisplayGroup) => void;
   openMoveModal?: (displayGroup: DisplayGroup) => void;
-  openScheduleModal: (displayGroup: DisplayGroup) => void;
+  openScheduleModal?: (displayGroup: DisplayGroup) => void;
   openAssignFilesModal: (displayGroup: DisplayGroup) => void;
   openAssignLayoutsModal: (displayGroup: DisplayGroup) => void;
   openShareModal: (displayGroup: DisplayGroup) => void;
@@ -185,12 +185,16 @@ export const getDisplayGroupItemActions = ({
       icon: UserPlus2,
       onClick: () => openShareModal(displayGroup),
     },
-    { isSeparator: true },
-    {
-      label: t('Schedule'),
-      icon: Calendar,
-      onClick: () => openScheduleModal(displayGroup),
-    },
+    ...(openScheduleModal
+      ? [
+          { isSeparator: true as const },
+          {
+            label: t('Schedule'),
+            icon: Calendar,
+            onClick: () => openScheduleModal(displayGroup),
+          },
+        ]
+      : []),
     { isSeparator: true },
     {
       label: t('Assign Files'),

@@ -104,7 +104,7 @@ export const getCampaignFilterKeys = (t: TFunction): FilterConfigItem<CampaignFi
   },
 ];
 
-export type ModalType = BaseModalType | null;
+export type ModalType = BaseModalType | 'schedule' | null;
 
 interface CampaignActionsProps {
   t: TFunction;
@@ -113,6 +113,7 @@ interface CampaignActionsProps {
   openShareModal?: (id: number) => void;
   openMoveModal?: (row: Campaign | Campaign[]) => void;
   openCopyModal?: (campaign: Campaign) => void;
+  onSchedule?: (campaign: Campaign) => void;
 }
 
 export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campaign>[] => {
@@ -355,6 +356,7 @@ export const getCampaignItemActions = ({
   openShareModal,
   openMoveModal,
   openCopyModal,
+  onSchedule,
 }: CampaignActionsProps): ((campaign: Campaign) => ActionItem[]) => {
   return (campaign: Campaign) => [
     ...(campaign.type !== 'ad'
@@ -371,7 +373,7 @@ export const getCampaignItemActions = ({
     {
       label: t('Schedule'),
       icon: CalendarClock,
-      onClick: () => {},
+      onClick: () => onSchedule && onSchedule(campaign),
     },
     {
       label: t('Preview Campaign'),

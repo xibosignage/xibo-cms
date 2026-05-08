@@ -69,6 +69,7 @@ export function RetireLayoutModal({
 
   return (
     <Modal
+      variant="confirmation"
       title={t('Retire Layout')}
       isOpen={isOpen}
       onClose={onClose}

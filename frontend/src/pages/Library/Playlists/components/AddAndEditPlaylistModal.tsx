@@ -304,6 +304,7 @@ export default function AddAndEditPlaylistModal({
 
   return (
     <Modal
+      variant="tabbed"
       title={modalTitle}
       onClose={onClose}
       isOpen={isOpen}

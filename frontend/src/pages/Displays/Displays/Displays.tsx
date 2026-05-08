@@ -52,12 +52,14 @@ import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import type { Display } from '@/types/display';
+import { hasFeature } from '@/utils/permissions';
 
 export default function Displays() {
   const { t } = useTranslation();
   const { user } = useUserContext();
   const queryClient = useQueryClient();
   const canViewFolders = usePermissions()?.canViewFolders;
+  const canSchedule = hasFeature(user, 'schedule.add');
   const homeFolderId = user?.homeFolderId ?? 1;
 
   const {
@@ -324,6 +326,7 @@ export default function Displays() {
     onAssignFiles: (display) => openActionModal(display, 'assignMedia'),
     onSendCommand: (display) => openActionModal(display, 'sendCommand'),
     onJumpToScheduledLayouts: handleJumpToScheduledLayouts,
+    onSchedule: canSchedule ? (display) => openActionModal(display, 'schedule') : undefined,
   });
 
   const getAllSelectedItems = (): Display[] => {

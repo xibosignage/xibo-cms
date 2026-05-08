@@ -42,6 +42,7 @@ export default function AboutModal({ isOpen = true, onClose }: AboutModalProps) 
 
   return (
     <Modal
+      variant="confirmation"
       isOpen={isOpen}
       onClose={onClose}
       title={t('About')}

@@ -281,6 +281,7 @@ export function AddAndEditDatasetRssModal({
 
   return (
     <Modal
+      variant="tabbed"
       title={type === 'add' ? t('Add RSS') : t('Edit RSS')}
       onClose={onClose}
       isOpen={isOpen}
