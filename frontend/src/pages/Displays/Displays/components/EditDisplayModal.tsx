@@ -849,6 +849,7 @@ export default function EditDisplayModal({
 
   return (
     <Modal
+      variant="tabbed"
       title={title}
       onClose={onClose}
       isOpen={isOpen}

@@ -298,6 +298,7 @@ export default function ManageMembersModal({
 
   return (
     <Modal
+      variant="tabbed"
       isOpen={isOpen}
       title={t('Manage Membership for {{name}}', { name: displayGroup?.displayGroup })}
       onClose={onClose}

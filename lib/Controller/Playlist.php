@@ -925,6 +925,29 @@ class Playlist extends Base
         return $this->render($request, $response);
     }
 
+    public function displayDesigner(Request $request, Response $response, $id): Response|ResponseInterface
+    {
+        $playlist = $this->playlistFactory->getById($id);
+
+        if (!$this->getUser()->checkEditable($playlist)) {
+            throw new AccessDeniedException();
+        }
+
+        $timeZones = [];
+        foreach (DateFormatHelper::timezoneList() as $key => $value) {
+            $timeZones[] = ['id' => $key, 'value' => $value];
+        }
+
+        $this->getState()->template = 'playlist-designer-page';
+        $this->getState()->setData([
+            'playlist'  => $playlist,
+            'timeZones' => $timeZones,
+            'modules'   => $this->moduleFactory->getAssignableModules(),
+        ]);
+
+        return $this->render($request, $response);
+    }
+
     #[OA\Post(
         path: '/playlist/library/assign/{playlistId}',
         operationId: 'playlistLibraryAssign',

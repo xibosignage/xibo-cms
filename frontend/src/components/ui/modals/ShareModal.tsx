@@ -368,6 +368,7 @@ export default function ShareModal({
   return (
     <div>
       <Modal
+        variant="tabbed"
         title={title}
         isOpen={isOpen}
         onClose={onClose}

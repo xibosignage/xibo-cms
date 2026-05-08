@@ -346,6 +346,8 @@ export const EMPTY_REMINDER: DraftReminder = {
 export function createInitialDraft(
   eventTypeId?: EventTypeId,
   contentId?: number,
+  prefilledDisplaySpecificGroupIds?: number[],
+  prefilledDisplayGroupIds?: number[],
 ): ScheduleEventDraft {
   return {
     eventTypeId: eventTypeId ?? EventTypeId.Layout,
@@ -370,8 +372,8 @@ export function createInitialDraft(
     actionTriggerCode: '',
     actionLayoutCode: '',
     shareOfVoice: 0,
-    displaySpecificGroupIds: [],
-    displayGroupIds: [],
+    displaySpecificGroupIds: prefilledDisplaySpecificGroupIds ?? [],
+    displayGroupIds: prefilledDisplayGroupIds ?? [],
     dayPartId: '',
     fromDt: '',
     toDt: '',

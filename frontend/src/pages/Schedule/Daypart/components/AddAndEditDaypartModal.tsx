@@ -218,6 +218,7 @@ export default function AddAndEditDaypartModal({
 
   return (
     <Modal
+      variant="tabbed"
       title={modalTitle}
       onClose={onClose}
       isOpen={isOpen}

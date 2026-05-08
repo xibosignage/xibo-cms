@@ -69,6 +69,7 @@ export default function DeleteEventModal({
 
   return (
     <Modal
+      variant="confirmation"
       isOpen={isOpen}
       isPending={isLoading}
       onClose={onClose}

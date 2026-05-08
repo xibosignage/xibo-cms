@@ -108,6 +108,7 @@ export type ModalType =
   | 'bulkDefaultLayout'
   | 'bulkSendCommand'
   | 'bulkMoveCms'
+  | 'schedule'
   | null;
 
 export const INITIAL_FILTER_STATE: DisplayFilterInput = {
@@ -185,9 +186,9 @@ const getInventoryStatusType = (status: number): UIStatus => {
     case 1:
       return 'success';
     case 2:
-      return 'warning';
-    case 3:
       return 'danger';
+    case 3:
+      return 'warning';
     default:
       return 'neutral';
   }
@@ -385,6 +386,7 @@ export interface DisplayActionsProps {
   onAssignFiles: (display: Display) => void;
   onSendCommand: (display: Display) => void;
   onJumpToScheduledLayouts?: (displayGroupId: number) => void;
+  onSchedule?: (display: Display) => void;
 }
 
 export const getDisplayItemActions = ({
@@ -409,6 +411,7 @@ export const getDisplayItemActions = ({
   onAssignFiles,
   onSendCommand,
   onJumpToScheduledLayouts,
+  onSchedule,
 }: DisplayActionsProps): ((display: Display) => ActionItem[]) => {
   return (display: Display) => {
     const actions: ActionItem[] = [];
@@ -455,11 +458,11 @@ export const getDisplayItemActions = ({
     actions.push({
       label: t('Schedule'),
       icon: CalendarDays,
-      onClick: () => console.log('Schedule', display.displayGroupId),
+      onClick: () => onSchedule && onSchedule(display),
     });
 
     actions.push({
-      label: t('Update Thumbnail'),
+      label: t('Request Screenshot'),
       icon: RotateCw,
       onClick: () => onRequestScreenShot(display),
     });

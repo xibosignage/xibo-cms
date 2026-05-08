@@ -513,7 +513,7 @@ export function FileUploader({
                 type="url"
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
-                placeholder="https://www.exampleurl.com/funnycat4364"
+                placeholder="https://www.example.com/example"
                 className="hs-trailing-button-add-on-with-leading-and-trailing p-3 w-full border-gray-200 border-r-0 focus:border-r text-gray-800 placeholder:text-gray-400 focus:shadow-none focus:border-xibo-blue-500"
               />
               <button
