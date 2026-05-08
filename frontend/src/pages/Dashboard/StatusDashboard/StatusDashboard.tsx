@@ -96,7 +96,7 @@ function NewsArticle({ news }: { news: NewsItem }) {
       <div className="flex items-end justify-between gap-4">
         <h4 className="text-[16px] font-semibold leading-snug text-gray-800">{news.title}</h4>
         <span className="shrink-0 text-xs text-gray-500 uppercase font-semibold">
-          {formatRelativeDate(news.date)}
+          {formatRelativeDate(news.date, t)}
         </span>
       </div>
       <p className="line-clamp-6 text-sm leading-relaxed text-gray-500">

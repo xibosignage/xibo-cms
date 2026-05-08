@@ -50,7 +50,7 @@ export interface SpotWidget {
   name: string;
   regionSpecific: number;
   moduleIcon: string;
-  viewble: boolean;
+  viewable: boolean;
   editable: boolean;
   deletable: boolean;
   mediaIds: number[];

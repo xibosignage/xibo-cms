@@ -29,7 +29,7 @@ import {
   Users,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { twMerge } from 'tailwind-merge';
@@ -104,10 +104,7 @@ export default function IconDashboard() {
   const { user } = useUserContext();
   const [showAbout, setShowAbout] = useState(false);
 
-  const visibleItems = useMemo(
-    () => (user ? DASHBOARD_ITEMS.filter((item) => item.visible(user)) : []),
-    [user],
-  );
+  const visibleItems = user ? DASHBOARD_ITEMS.filter((item) => item.visible(user)) : [];
 
   const cardClasses = (index: number) =>
     twMerge(

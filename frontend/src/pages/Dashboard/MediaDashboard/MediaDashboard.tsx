@@ -153,8 +153,6 @@ export default function MediaDashboard() {
   const countItems = library ? buildChartItems(library.types, 'count') : [];
   const sizeItems = library ? buildChartItems(library.types, 'size') : [];
 
-  console.log('Media Dashboard Data:', library);
-
   return (
     <section className="flex flex-col gap-5 p-5 min-h-screen h-screen max-h-max">
       {/* Top Stats */}
