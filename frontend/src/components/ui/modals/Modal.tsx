@@ -46,12 +46,13 @@ interface ModalProps {
   title?: string;
   children: React.ReactNode;
   actions?: ModalAction[];
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   closeOnOverlay?: boolean;
   className?: string;
   scrollable?: boolean;
   isPending?: boolean;
   error?: string;
+  align?: 'center' | 'top';
 }
 
 export default function Modal({
@@ -66,6 +67,7 @@ export default function Modal({
   scrollable = true,
   isPending = false,
   error,
+  align = 'center',
 }: ModalProps) {
   useKeydown('Escape', onClose, isOpen);
 
@@ -79,10 +81,16 @@ export default function Modal({
     sm: 'max-w-lg',
     md: 'max-w-2xl',
     lg: 'max-w-4xl',
+    xl: 'max-w-300',
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div
+      className={twMerge(
+        'fixed inset-0 z-50 flex justify-center p-4',
+        align === 'top' ? 'items-start pt-16' : 'items-center',
+      )}
+    >
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-xs"
         onClick={closeOnOverlay ? onClose : () => {}}

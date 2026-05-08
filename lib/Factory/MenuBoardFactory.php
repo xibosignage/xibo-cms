@@ -265,6 +265,16 @@ class MenuBoardFactory extends BaseFactory
             $params['code'] = '%' . $sanitizedFilter->getString('code') . '%';
         }
 
+        if ($sanitizedFilter->getDate('modifiedDateFrom') !== null) {
+            $body .= ' AND `menu_board`.modifiedDt >= :modifiedDateFrom ';
+            $params['modifiedDateFrom'] = strtotime($sanitizedFilter->getDate('modifiedDateFrom'));
+        }
+
+        if ($sanitizedFilter->getDate('modifiedDateTo') !== null) {
+            $body .= ' AND `menu_board`.modifiedDt <= :modifiedDateTo ';
+            $params['modifiedDateTo'] = strtotime($sanitizedFilter->getDate('modifiedDateTo'));
+        }
+
         // Sorting?
         $order = '';
 

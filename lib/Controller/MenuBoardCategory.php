@@ -159,10 +159,6 @@ class MenuBoardCategory extends Base
 
 
         foreach ($menuBoardCategories as $menuBoardCategory) {
-            if ($this->isApi($request)) {
-                continue;
-            }
-
             if ($menuBoardCategory->mediaId != 0) {
                 $menuBoardCategory->setUnmatchedProperty(
                     'thumbnail',
@@ -173,6 +169,16 @@ class MenuBoardCategory extends Base
                         ['preview' => 1],
                     )
                 );
+                try {
+                    $media = $this->mediaFactory->getById($menuBoardCategory->mediaId);
+                    $menuBoardCategory->setUnmatchedProperty('mediaType', $media->mediaType);
+                } catch (\Exception $e) {
+                    $menuBoardCategory->setUnmatchedProperty('mediaType', null);
+                }
+            }
+
+            if ($this->isApi($request) || $this->isJson($request)) {
+                continue;
             }
 
             $menuBoardCategory->includeProperty('buttons');

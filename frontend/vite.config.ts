@@ -23,8 +23,8 @@ import path from 'node:path';
 
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import {visualizer} from 'rollup-plugin-visualizer';
-import {defineConfig} from 'vite';
+import { visualizer } from 'rollup-plugin-visualizer';
+import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig(({ mode }) => ({
@@ -61,9 +61,7 @@ export default defineConfig(({ mode }) => ({
     cors: {
       origin: true,
       methods: ['GET', 'OPTIONS'],
-      allowedHeaders: [
-        'Content-Type', 'X-Requested-With', 'Accept', 'Origin', 'X-PREVIEW-JWT',
-      ],
+      allowedHeaders: ['Content-Type', 'X-Requested-With', 'Accept', 'Origin', 'X-PREVIEW-JWT'],
     },
     proxy: {
       '/json': {

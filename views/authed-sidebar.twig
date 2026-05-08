@@ -46,7 +46,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("menuBoard.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("menuBoard.view") }}">{% trans "Menu Boards" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/library/menu-boards">{% trans "Menu Boards" %}</a></li>
             {% endif %}
         {% endif %}
 

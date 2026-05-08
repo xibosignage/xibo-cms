@@ -357,3 +357,69 @@ export async function updateEvent(
     throw error;
   }
 }
+
+export interface AgendaDisplayGroup {
+  displayGroupId: number;
+  displayGroup: string;
+  isDisplaySpecific: number;
+}
+
+export interface AgendaLayout {
+  layoutId: number;
+  layout: string;
+  link?: string;
+  status?: number;
+  duration?: number;
+  previewJwt?: string;
+}
+
+export interface AgendaCampaign {
+  campaignId: number;
+  campaign: string;
+  cyclePlaybackEnabled?: number;
+}
+
+export interface AgendaScheduleEvent {
+  eventId: number;
+  eventTypeId: number;
+  layoutId: number;
+  displayGroupId: number;
+  campaignId?: number;
+  fromDt: number;
+  toDt: number;
+  campaign?: string;
+  isPriority: number;
+  intermediateDisplayGroupIds: number[];
+  displayOrder?: number;
+  shareOfVoice?: number;
+  isAlways?: number;
+  geoLocation?: string;
+}
+
+export interface FetchAgendaEventsRequest {
+  displayGroupId: number;
+  singlePointInTime: 0 | 1;
+  date?: string;
+  startDate?: string;
+  endDate?: string;
+  signal?: AbortSignal;
+}
+
+export interface FetchAgendaEventsResponse {
+  events: AgendaScheduleEvent[];
+  displayGroups: Record<string, AgendaDisplayGroup>;
+  layouts: Record<string, AgendaLayout | { layout: string }>;
+  campaigns: Record<string, AgendaCampaign>;
+}
+
+export async function fetchAgendaEvents({
+  displayGroupId,
+  signal,
+  ...params
+}: FetchAgendaEventsRequest): Promise<FetchAgendaEventsResponse> {
+  const response = await http.get(`/schedule/${displayGroupId}/events`, {
+    params,
+    signal,
+  });
+  return response.data;
+}

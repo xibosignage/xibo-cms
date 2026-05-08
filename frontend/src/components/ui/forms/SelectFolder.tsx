@@ -48,6 +48,7 @@ interface SelectFolderProps {
   placeholder?: string;
   onSelect: (folder: { id: number; text: string } | null) => void;
   onAction?: (action: FolderAction, folder: Folder) => void;
+  optional?: boolean;
 }
 
 export default function SelectFolder({
@@ -56,6 +57,7 @@ export default function SelectFolder({
   placeholder,
   onSelect,
   onAction,
+  optional = false,
 }: SelectFolderProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
@@ -201,8 +203,9 @@ export default function SelectFolder({
 
   return (
     <div className="relative">
-      <label className="block text-sm font-semibold text-gray-500 mb-1">
-        {t('Select folder location')}
+      <label className="flex items-center justify-between text-sm font-semibold text-gray-500 mb-1">
+        <span>{t('Select folder location')}</span>
+        {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
       </label>
 
       <div

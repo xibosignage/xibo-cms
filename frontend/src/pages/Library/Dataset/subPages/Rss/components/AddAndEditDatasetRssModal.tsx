@@ -294,10 +294,7 @@ export function AddAndEditDatasetRssModal({
       ]}
     >
       <div className="flex flex-col h-full overflow-y-hidden overflow-x-visible px-4">
-        <nav
-          className="flex px-4 overflow-x-auto shrink-0 border-b border-gray-200"
-          aria-label="Tabs"
-        >
+        <nav className="flex px-4 overflow-x-auto shrink-0" aria-label="Tabs">
           <button
             type="button"
             className={getTabClass('general')}

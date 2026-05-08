@@ -188,6 +188,7 @@ interface DayDetailPanelProps {
   onClose: () => void;
   onEditEvent?: (scheduleEvent: Event) => void;
   onContextMenu?: (scheduleEvent: Event, x: number, y: number) => void;
+  onAgenda?: (day: DateTime, events: Event[]) => void;
 }
 
 function DayDetailPanel({
@@ -200,6 +201,7 @@ function DayDetailPanel({
   onClose,
   onEditEvent,
   onContextMenu,
+  onAgenda,
 }: DayDetailPanelProps) {
   const { t } = useTranslation();
   const dateLabel = day.toFormat('cccc, d LLL yyyy');
@@ -231,7 +233,9 @@ function DayDetailPanel({
           <p className="text-xs font-semibold text-gray-500">
             {events.length === 1 ? t('1 Event') : t('{{count}} Events', { count: events.length })}
           </p>
-          <Button variant="tertiary">{t('Agenda')}</Button>
+          <Button variant="tertiary" onClick={() => onAgenda?.(day, events)}>
+            {t('Agenda')}
+          </Button>
         </div>
         <ul className="flex flex-col gap-3 overflow-y-auto overflow-x-hidden flex-1 min-h-0">
           {events.map((event) => {
@@ -426,6 +430,7 @@ interface EventCalendarProps {
   calendarClassName?: string;
   onEditEvent?: (event: Event) => void;
   onDeleteEvent?: (event: Event) => void;
+  onAgenda?: (day: DateTime, events: Event[]) => void;
 }
 
 export function EventCalendar({
@@ -435,6 +440,7 @@ export function EventCalendar({
   calendarClassName,
   onEditEvent,
   onDeleteEvent,
+  onAgenda,
 }: EventCalendarProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
@@ -670,6 +676,7 @@ export function EventCalendar({
             onClose={() => setSelectedCell(null)}
             onEditEvent={onEditEvent}
             onContextMenu={(ev, x, y) => setContextMenuEvent({ event: ev, x, y })}
+            onAgenda={onAgenda}
           />
         </FloatingPortal>
       )}

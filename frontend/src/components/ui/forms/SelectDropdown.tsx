@@ -64,6 +64,7 @@ interface SelectDropdownProps {
   hasMore?: boolean;
   isLoadingMore?: boolean;
   clearable?: boolean;
+  optional?: boolean;
 }
 
 export default function SelectDropdown({
@@ -87,6 +88,7 @@ export default function SelectDropdown({
   hasMore,
   isLoadingMore,
   clearable,
+  optional = false,
 }: SelectDropdownProps) {
   const { t } = useTranslation();
 
@@ -155,7 +157,10 @@ export default function SelectDropdown({
   return (
     <div className={twMerge('relative overflow-visible', className)}>
       {label && (
-        <label className="text-sm font-semibold text-gray-500 leading-5">{label && t(label)}</label>
+        <label className="flex items-center justify-between text-sm font-semibold text-gray-500 leading-5">
+          <span>{t(label)}</span>
+          {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
+        </label>
       )}
 
       <div

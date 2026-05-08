@@ -40,6 +40,7 @@ interface TextInputProps {
   multiline?: boolean;
   rows?: number;
   type?: React.HTMLInputTypeAttribute;
+  optional?: boolean;
 }
 
 export default function TextInput({
@@ -59,6 +60,7 @@ export default function TextInput({
   multiline = false,
   rows,
   type,
+  optional = false,
 }: TextInputProps) {
   const { t } = useTranslation();
   const generatedId = useId();
@@ -68,9 +70,13 @@ export default function TextInput({
       {label && (
         <label
           htmlFor={generatedId}
-          className={twMerge('text-sm font-semibold text-gray-500 leading-4.5', labelClassName)}
+          className={twMerge(
+            'flex items-center justify-between text-sm font-semibold text-gray-500 leading-4.5',
+            labelClassName,
+          )}
         >
-          {label}
+          <span>{label}</span>
+          {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
         </label>
       )}
       <div

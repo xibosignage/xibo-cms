@@ -69,6 +69,7 @@ interface BandwidthInputProps {
   onChange: (kb: number | null) => void;
   label?: string;
   helpText?: string;
+  optional?: boolean;
 }
 
 export default function BandwidthInput({
@@ -76,6 +77,7 @@ export default function BandwidthInput({
   onChange,
   label,
   helpText,
+  optional = false,
 }: BandwidthInputProps) {
   const { t } = useTranslation();
   const [unit, setUnit] = useState<BandwidthUnit>(() => detectUnit(valueKb));
@@ -95,7 +97,10 @@ export default function BandwidthInput({
 
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-sm font-semibold text-gray-500">{label ?? t('Bandwidth limit')}</label>
+      <label className="flex items-center justify-between text-sm font-semibold text-gray-500">
+        <span>{label ?? t('Bandwidth limit')}</span>
+        {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
+      </label>
       <div className="flex gap-2">
         <div className="flex-1">
           <NumberInput name="bandwidthLimit" value={displayValue} onChange={handleValueChange} />

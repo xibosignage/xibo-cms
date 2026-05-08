@@ -21,9 +21,10 @@
 
 import { vi } from 'vitest';
 
+import { useDisplayGroupData } from '../../hooks/useDisplayGroupData';
+
 import { fetchDisplayGroups } from '@/services/displayGroupApi';
 import type { FetchDisplayGroupsResponse } from '@/services/displayGroupApi';
-import { useDisplayGroupData } from '../../hooks/useDisplayGroupData';
 
 export type UseDisplayGroupReturn = ReturnType<typeof useDisplayGroupData>;
 

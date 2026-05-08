@@ -106,6 +106,20 @@ class MenuBoard extends Base
         required: false,
         schema: new OA\Schema(type: 'string')
     )]
+    #[OA\Parameter(
+        name: 'modifiedDateFrom',
+        description: 'Filter by modified date (from)',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'modifiedDateTo',
+        description: 'Filter by modified date (to)',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
     #[OA\Response(
         response: 200,
         description: 'successful operation',
@@ -133,6 +147,8 @@ class MenuBoard extends Base
             'code' => $parsedParams->getString('code'),
             'folderId' => $parsedParams->getInt('folderId'),
             'logicalOperatorName' => $parsedParams->getString('logicalOperatorName'),
+            'modifiedDateFrom' => $parsedParams->getDate('modifiedDateFrom'),
+            'modifiedDateTo' => $parsedParams->getDate('modifiedDateTo'),
         ];
 
         $menuBoards = $this->menuBoardFactory->query(
@@ -141,7 +157,7 @@ class MenuBoard extends Base
         );
 
         foreach ($menuBoards as $menuBoard) {
-            if ($this->isApi($request)) {
+            if ($this->isApi($request) || $this->isJson($request)) {
                 continue;
             }
 

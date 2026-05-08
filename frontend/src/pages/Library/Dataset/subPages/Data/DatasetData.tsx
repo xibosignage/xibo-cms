@@ -67,7 +67,7 @@ export default function DatasetData() {
     filterInputs,
     setFilterInputs,
     isHydrated,
-  } = useTableState<Record<string, string>>(`dataset_data_${datasetId}`, {
+  } = useTableState<Record<string, string>>('dataset_data', {
     pagination: { pageIndex: 0, pageSize: 10 },
     sorting: [],
     columnVisibility: {},

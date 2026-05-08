@@ -36,6 +36,7 @@ interface CommandDropdownProps {
   label?: string;
   helpText?: string;
   error?: string;
+  optional?: boolean;
 }
 
 export default function CommandDropdown({
@@ -45,6 +46,7 @@ export default function CommandDropdown({
   label,
   helpText,
   error,
+  optional = false,
 }: CommandDropdownProps) {
   const { t } = useTranslation();
 
@@ -115,6 +117,7 @@ export default function CommandDropdown({
       searchPlaceholder={t('Search commands...')}
       onSearch={(v) => setSearchTerm(v)}
       error={error}
+      optional={optional}
     />
   );
 }

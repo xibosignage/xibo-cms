@@ -171,19 +171,32 @@ class MenuBoardProduct extends Base
         );
 
         foreach ($menuBoardProducts as $menuBoardProduct) {
-            if ($this->isApi($request)) {
+            if ($menuBoardProduct->mediaId != 0) {
+                $menuBoardProduct->setUnmatchedProperty(
+                    'thumbnail',
+                    $this->urlFor(
+                        $request,
+                        'library.download',
+                        ['id' => $menuBoardProduct->mediaId],
+                        ['preview' => 1],
+                    )
+                );
+                try {
+                    $media = $this->mediaFactory->getById($menuBoardProduct->mediaId);
+                    $menuBoardProduct->setUnmatchedProperty('mediaType', $media->mediaType);
+                } catch (\Exception $e) {
+                    $menuBoardProduct->setUnmatchedProperty('mediaType', null);
+                }
+            }
+
+            if ($this->isApi($request) || $this->isJson($request)) {
+                $menuBoardProduct->productOptions = $menuBoardProduct->getOptions();
                 continue;
             }
 
             $menuBoardProduct->includeProperty('buttons');
             $menuBoardProduct->buttons = [];
 
-            if ($menuBoardProduct->mediaId != 0) {
-                $menuBoardProduct->setUnmatchedProperty(
-                    'thumbnail',
-                    $this->urlFor($request, 'library.download', ['id' => $menuBoardProduct->mediaId], ['preview' => 1]),
-                );
-            }
 
             if ($this->getUser()->featureEnabled('menuBoard.modify') && $this->getUser()->checkEditable($menuBoard)) {
                 $menuBoardProduct->buttons[] = [
@@ -378,7 +391,7 @@ class MenuBoardProduct extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         $name = $sanitizedParams->getString('name');
-        $mediaId = $sanitizedParams->getInt('mediaId');
+        $mediaId = $sanitizedParams->getInt('mediaId') ?: null;
         $price = $sanitizedParams->getDouble('price');
         $description = $sanitizedParams->getString('description');
         $allergyInfo = $sanitizedParams->getString('allergyInfo');
@@ -559,7 +572,7 @@ class MenuBoardProduct extends Base
         $menuBoardProduct->calories = $sanitizedParams->getInt('calories');
         $menuBoardProduct->displayOrder = $sanitizedParams->getInt('displayOrder');
         $menuBoardProduct->availability = $sanitizedParams->getCheckbox('availability');
-        $menuBoardProduct->mediaId = $sanitizedParams->getInt('mediaId');
+        $menuBoardProduct->mediaId = $sanitizedParams->getInt('mediaId') ?: null;
         $menuBoardProduct->code = $sanitizedParams->getString('code');
         $productOptions = $sanitizedParams->getArray('productOptions', ['default' => []]);
         $productValues = $sanitizedParams->getArray('productValues', ['default' => []]);
