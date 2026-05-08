@@ -62,6 +62,7 @@ const buildProps = (overrides: Partial<EventModalsProps> = {}): EventModalsProps
     deleteError: null,
     isDeleting: false,
     isCloning: false,
+    agendaDate: null,
     ...overrides.actions,
   },
   selection: {
