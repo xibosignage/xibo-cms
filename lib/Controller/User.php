@@ -134,20 +134,10 @@ class User extends Base
             return $response->withRedirect($this->urlFor($request, 'welcome.view'));
         }
 
-        // User wizard seen, go to home page
+        // User wizard seen, go to the React dashboard
         $this->getLog()->debug('Showing the homepage: ' . $this->getUser()->homePageId);
 
-        try {
-            $homepage = $this->userGroupFactory->getHomepageByName($this->getUser()->homePageId);
-        } catch (NotFoundException $exception) {
-            return $response->withRedirect($this->urlFor($request, 'icondashboard.view'));
-        }
-
-        if (!$this->getUser()->featureEnabled($homepage->feature)) {
-            return $response->withRedirect($this->urlFor($request, 'icondashboard.view'));
-        } else {
-            return $response->withRedirect($this->urlFor($request, $homepage->homepage));
-        }
+        return $response->withRedirect('/prototype/dashboard');
     }
 
     /**

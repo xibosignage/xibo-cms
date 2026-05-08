@@ -570,6 +570,13 @@ $app->get('/playlistdashboard', ['\Xibo\Controller\PlaylistDashboard', 'displayP
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.playlist']))
     ->setName('playlistdashboard.view');
 
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->get('/playlistdashboard/data', ['\Xibo\Controller\PlaylistDashboard', 'grid'])
+        ->setName('playlistdashboard.search');
+    $group->get('/playlistdashboard/{id}', ['\Xibo\Controller\PlaylistDashboard', 'show'])
+        ->setName('playlistdashboard.show');
+})->add(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.playlist']));
+
 /**
  * User Group
  */

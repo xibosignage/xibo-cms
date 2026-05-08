@@ -43,17 +43,6 @@ $app->group('', function (RouteCollectorProxy $group) {
         ->setName('mediamanager.search');
 })->add(new FeatureAuth($app->getContainer(), ['dashboard.media.manager']));
 
-$app->group('', function (RouteCollectorProxy $group) {
-    $group->get('/playlistdashboard/data', ['\Xibo\Controller\PlaylistDashboard', 'grid'])
-        ->setName('playlistdashboard.search');
-    $group->get('/playlistdashboard/{id}', ['\Xibo\Controller\PlaylistDashboard', 'show'])
-        ->setName('playlistdashboard.show');
-    $group->get('/playlistdashboard/widget/form/delete/{id}', [
-        '\Xibo\Controller\PlaylistDashboard',
-        'deletePlaylistWidgetForm',
-    ])->setName('playlist.module.widget.delete.form');
-})->add(new FeatureAuth($app->getContainer(), ['dashboard.playlist']));
-
 // Login Form
 $app->get('/login', ['\Xibo\Controller\Login', 'loginForm'])->setName('login');
 

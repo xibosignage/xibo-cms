@@ -1,6 +1,6 @@
 <div id="sidebar-wrapper">
     <ul class="sidebar">
-        <li class="sidebar-main"><a href="{{ url_for("home") }}">{% trans "Dashboard" %}</a></li>
+        <li class="sidebar-main"><a href="{{ theme.rootUri() }}prototype/dashboard">{% trans "Dashboard" %}</a></li>
 
         {% if currentUser.featureEnabled("schedule.view") %}
             <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/schedule/events">{% trans "Schedule" %}</a></li>

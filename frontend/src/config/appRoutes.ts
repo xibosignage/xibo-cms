@@ -92,7 +92,7 @@ export const APP_ROUTES: AppRoute[] = [
     path: 'dashboard',
     labelKey: 'Dashboard',
     icon: LayoutDashboard,
-    externalURL: '/statusdashboard',
+    lazy: () => import('@/pages/Dashboard/DashboardRouter').then((m) => ({ Component: m.default })),
   },
   {
     path: 'schedule',
