@@ -97,12 +97,16 @@ export default function SelectDropdown({
   const [searchTerm, setSearchTerm] = useState('');
   const sentinelRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const labelCache = useRef<Map<string, string>>(new Map());
+  const isLoadingMoreRef = useRef(isLoadingMore);
+  isLoadingMoreRef.current = isLoadingMore;
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
-    if (!open) {
-      setSearchTerm('');
+    if (open) {
       onSearch?.('');
+    } else {
+      setSearchTerm('');
     }
   };
 
@@ -119,7 +123,7 @@ export default function SelectDropdown({
     const el = sentinelRef.current;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting && !isLoadingMore) {
+        if (entries[0]?.isIntersecting && !isLoadingMoreRef.current) {
           onLoadMore();
         }
       },
@@ -128,9 +132,14 @@ export default function SelectDropdown({
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [isOpen, hasMore, onLoadMore, isLoadingMore]);
+  }, [isOpen, hasMore, onLoadMore]);
 
-  const selectedLabel = options.find((o) => o.value === value)?.label ?? '';
+  for (const o of options) {
+    labelCache.current.set(o.value, o.label);
+  }
+  const selectedLabel =
+    options.find((o) => o.value === value)?.label ??
+    (value ? (labelCache.current.get(value) ?? '') : '');
 
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
@@ -278,7 +287,7 @@ export default function SelectDropdown({
                   }}
                 >
                   {addOptionAvatar && (
-                    <div className="bg-xibo-blue-100 h-6.5 w-6.5 text-[12px] center rounded-full text-xibo-blue-800 font-semibold flex items-center justify-center">
+                    <div className="bg-xibo-blue-100 h-6.5 w-6.5 text-xs center rounded-full text-xibo-blue-800 font-semibold flex items-center justify-center">
                       {option.label.slice(0, 1)}
                     </div>
                   )}

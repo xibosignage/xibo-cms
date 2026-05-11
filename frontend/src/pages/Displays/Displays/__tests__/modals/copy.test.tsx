@@ -29,8 +29,8 @@ import userEvent from '@testing-library/user-event';
 import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-import { mockDisplay } from '../fixtures/display';
 import CopyDisplayModal from '../../components/CopyDisplayModal';
+import { mockDisplay } from '../fixtures/display';
 
 import { testQueryClient } from '@/setupTests';
 

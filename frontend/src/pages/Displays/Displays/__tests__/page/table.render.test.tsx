@@ -96,9 +96,7 @@ describe('Displays page - render', () => {
     mockFetchDisplays(EMPTY_DISPLAY_TABLE);
     renderDisplaysPage();
 
-    expect(
-      await screen.findByPlaceholderText('Search displays...'),
-    ).toBeInTheDocument();
+    expect(await screen.findByPlaceholderText('Search displays...')).toBeInTheDocument();
   });
 
   // ---------------------------------------------------------------------------

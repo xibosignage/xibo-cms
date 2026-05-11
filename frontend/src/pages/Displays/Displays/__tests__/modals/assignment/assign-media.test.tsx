@@ -25,8 +25,8 @@ import userEvent from '@testing-library/user-event';
 import type React from 'react';
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 
-import { mockDisplay } from '../../fixtures/display';
 import AssignMediaModal from '../../../components/AssignMediaModal';
+import { mockDisplay } from '../../fixtures/display';
 
 import { assignMedia } from '@/services/displaysApi';
 import { fetchMedia } from '@/services/mediaApi';
@@ -70,11 +70,7 @@ vi.mock('@/components/ui/forms/SelectDropdown', () => ({
     options: { value: string; label: string }[];
     onSelect: (v: string) => void;
   }) => (
-    <select
-      data-testid="type-filter"
-      value={value}
-      onChange={(e) => onSelect(e.target.value)}
-    >
+    <select data-testid="type-filter" value={value} onChange={(e) => onSelect(e.target.value)}>
       <option value="">All</option>
       {options.map((o) => (
         <option key={o.value} value={o.value}>
@@ -102,11 +98,7 @@ vi.mock('@/components/ui/SearchAssignPanel', () => ({
     <div data-testid="search-assign-panel">
       {extraFilters}
       <span data-testid="assigned-count">{assignedItems.length}</span>
-      <button
-        onClick={() =>
-          onAddItem({ mediaId: 77, name: 'Promo Video', mediaType: 'video' })
-        }
-      >
+      <button onClick={() => onAddItem({ mediaId: 77, name: 'Promo Video', mediaType: 'video' })}>
         Add Media
       </button>
       {assignedItems.map((m) => (
@@ -229,7 +221,9 @@ describe('AssignMediaModal', () => {
   // ---------------------------------------------------------------------------
   test('Save button is disabled and shows pending label while saving', async () => {
     let resolve!: () => void;
-    const pending = new Promise<void>((res) => { resolve = res; });
+    const pending = new Promise<void>((res) => {
+      resolve = res;
+    });
     vi.mocked(assignMedia).mockReturnValueOnce(pending);
 
     const user = userEvent.setup();

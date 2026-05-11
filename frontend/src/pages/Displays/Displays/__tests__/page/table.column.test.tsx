@@ -91,9 +91,7 @@ describe('Displays page - column visibility', () => {
     // Wait for the page to hydrate and data to load before asserting absence.
     await screen.findByText(mockDisplay.display);
 
-    expect(
-      screen.queryByRole('columnheader', { name: /device name/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /device name/i })).not.toBeInTheDocument();
   });
 
   // ---------------------------------------------------------------------------
@@ -126,9 +124,7 @@ describe('Displays page - column visibility', () => {
 
     await user.click(checkbox);
 
-    expect(
-      await screen.findByRole('columnheader', { name: /device name/i }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole('columnheader', { name: /device name/i })).toBeInTheDocument();
   });
 
   // ---------------------------------------------------------------------------
@@ -149,9 +145,7 @@ describe('Displays page - column visibility', () => {
 
     await user.click(idCheckbox);
 
-    expect(
-      screen.queryByRole('columnheader', { name: /^id$/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /^id$/i })).not.toBeInTheDocument();
   });
 
   // ---------------------------------------------------------------------------

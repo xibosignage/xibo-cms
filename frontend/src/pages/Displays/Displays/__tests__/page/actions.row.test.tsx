@@ -58,8 +58,8 @@ vi.mock('react-i18next', () => {
 // Spy on navigate — must be declared before any test renders the component.
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('react-router-dom')>();
-  return { ...actual, useNavigate: () => mockNavigate };
+  const actual = await importOriginal();
+  return { ...(actual as object), useNavigate: () => mockNavigate };
 });
 
 vi.mock('@/services/displaysApi');
@@ -205,10 +205,7 @@ describe('Displays page — row action wiring', () => {
     await openMoreActions(user);
     await user.click(screen.getByRole('button', { name: /^manage$/i }));
 
-    expect(window.open).toHaveBeenCalledWith(
-      `/display/manage/${mockDisplay.displayId}`,
-      '_blank',
-    );
+    expect(window.open).toHaveBeenCalledWith(`/display/manage/${mockDisplay.displayId}`, '_blank');
   });
 
   // ---------------------------------------------------------------------------

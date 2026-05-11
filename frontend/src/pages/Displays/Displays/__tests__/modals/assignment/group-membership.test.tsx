@@ -25,8 +25,8 @@ import userEvent from '@testing-library/user-event';
 import type React from 'react';
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 
-import { mockDisplay } from '../../fixtures/display';
 import ManageGroupMembershipModal from '../../../components/ManageGroupMembershipModal';
+import { mockDisplay } from '../../fixtures/display';
 
 import { assignDisplayGroups, fetchDisplayGroupMembership } from '@/services/displaysApi';
 import { testQueryClient } from '@/setupTests';
@@ -73,9 +73,7 @@ vi.mock('@/components/ui/SearchAssignPanel', () => ({
   }) => (
     <div data-testid="search-assign-panel">
       <span data-testid="assigned-count">{assignedItems.length}</span>
-      <button
-        onClick={() => onAddItem({ displayGroupId: 99, displayGroup: 'New Group' })}
-      >
+      <button onClick={() => onAddItem({ displayGroupId: 99, displayGroup: 'New Group' })}>
         Add Group
       </button>
       {assignedItems.map((g) => (
@@ -188,7 +186,9 @@ describe('ManageGroupMembershipModal', () => {
     await user.click(screen.getByRole('button', { name: /add group/i }));
     await user.click(screen.getByRole('button', { name: /^save$/i }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Failed to update group membership.');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Failed to update group membership.',
+    );
   });
 
   // ---------------------------------------------------------------------------
@@ -198,7 +198,9 @@ describe('ManageGroupMembershipModal', () => {
   // ---------------------------------------------------------------------------
   test('Save button is disabled and shows pending label while saving', async () => {
     let resolve!: () => void;
-    const pending = new Promise<void>((res) => { resolve = res; });
+    const pending = new Promise<void>((res) => {
+      resolve = res;
+    });
     vi.mocked(assignDisplayGroups).mockReturnValueOnce(pending);
 
     const user = userEvent.setup();

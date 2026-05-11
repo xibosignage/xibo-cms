@@ -150,9 +150,7 @@ describe('Displays page - filters', () => {
 
     await waitFor(
       () => {
-        expect(fetchDisplays).toHaveBeenCalledWith(
-          expect.objectContaining({ keyword: 'lobby' }),
-        );
+        expect(fetchDisplays).toHaveBeenCalledWith(expect.objectContaining({ keyword: 'lobby' }));
       },
       { timeout: 2000 },
     );

@@ -25,8 +25,8 @@ import userEvent from '@testing-library/user-event';
 import type React from 'react';
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 
-import { mockDisplay } from '../../fixtures/display';
 import AssignLayoutModal from '../../../components/AssignLayoutModal';
+import { mockDisplay } from '../../fixtures/display';
 
 import { assignLayouts } from '@/services/displaysApi';
 import { fetchLayouts } from '@/services/layoutsApi';
@@ -191,7 +191,9 @@ describe('AssignLayoutModal', () => {
   // ---------------------------------------------------------------------------
   test('Save button is disabled and shows pending label while saving', async () => {
     let resolve!: () => void;
-    const pending = new Promise<void>((res) => { resolve = res; });
+    const pending = new Promise<void>((res) => {
+      resolve = res;
+    });
     vi.mocked(assignLayouts).mockReturnValueOnce(pending);
 
     const user = userEvent.setup();

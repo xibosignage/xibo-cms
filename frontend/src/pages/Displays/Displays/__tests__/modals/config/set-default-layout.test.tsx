@@ -24,8 +24,8 @@ import userEvent from '@testing-library/user-event';
 import type React from 'react';
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 
-import { buildDisplay } from '../../fixtures/display';
 import SetDefaultLayoutModal from '../../../components/SetDefaultLayoutModal';
+import { buildDisplay } from '../../fixtures/display';
 
 import { testQueryClient } from '@/setupTests';
 
@@ -67,11 +67,7 @@ vi.mock('@/components/ui/forms/SelectDropdown', () => ({
     onSelect: (v: string) => void;
     label?: string;
   }) => (
-    <select
-      aria-label={label ?? 'select'}
-      value={value}
-      onChange={(e) => onSelect(e.target.value)}
-    >
+    <select aria-label={label ?? 'select'} value={value} onChange={(e) => onSelect(e.target.value)}>
       <option value="">-- select --</option>
       {options.map((o) => (
         <option key={o.value} value={o.value}>

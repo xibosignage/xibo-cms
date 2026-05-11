@@ -24,8 +24,8 @@ import userEvent from '@testing-library/user-event';
 import type React from 'react';
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 
-import { buildDisplay, mockDisplay } from '../../fixtures/display';
 import { DisplayModals } from '../../../components/DisplaysModals';
+import { buildDisplay, mockDisplay } from '../../fixtures/display';
 
 import { testQueryClient } from '@/setupTests';
 
@@ -275,7 +275,6 @@ describe('DisplayModals — inline action modals', () => {
 
     expect(confirmMoveCmsCancel).toHaveBeenCalledWith(mockDisplay);
   });
-
 });
 
 describe('DisplayModals — bulk inline action modals', () => {
@@ -343,7 +342,10 @@ describe('DisplayModals — bulk inline action modals', () => {
     const confirmBulkRequestScreenShot = vi.fn();
     const user = userEvent.setup();
 
-    renderModals({ activeModal: 'bulkRequestScreenShot', handlers: { confirmBulkRequestScreenShot } });
+    renderModals({
+      activeModal: 'bulkRequestScreenShot',
+      handlers: { confirmBulkRequestScreenShot },
+    });
 
     screen.getByRole('heading', { name: /request screen shot/i });
     await user.click(screen.getByRole('button', { name: /request screenshot/i }));
@@ -388,4 +390,3 @@ describe('DisplayModals — bulk inline action modals', () => {
     expect(closeModal).toHaveBeenCalledOnce();
   });
 });
-

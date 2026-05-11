@@ -55,12 +55,15 @@ export default function CommandDropdown({
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const debouncedSearch = useDebounce(searchTerm, 300);
+  const debouncedSearch = useDebounce(searchTerm, searchTerm ? 300 : 0);
   const pageRef = useRef(0);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     setIsLoading(true);
     setOptions([]);
+    setTotalCount(0);
     pageRef.current = 0;
 
     fetchCommands({
@@ -68,14 +71,25 @@ export default function CommandDropdown({
       length: PAGE_SIZE,
       type,
       command: debouncedSearch || undefined,
+      signal: controller.signal,
     })
       .then((res) => {
         setOptions(res.rows.map((c) => ({ value: String(c.commandId), label: c.command })));
         setTotalCount(res.totalCount);
         pageRef.current = 1;
       })
-      .catch(() => setOptions([]))
-      .finally(() => setIsLoading(false));
+      .catch((err) => {
+        if (err?.name !== 'AbortError') {
+          setOptions([]);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => controller.abort();
   }, [type, debouncedSearch]);
 
   const handleLoadMore = () => {
