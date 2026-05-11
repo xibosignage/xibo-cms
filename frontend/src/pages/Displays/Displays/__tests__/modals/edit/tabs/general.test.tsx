@@ -24,7 +24,7 @@ import userEvent from '@testing-library/user-event';
 import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-import { buildDisplay, mockDisplay } from '../../fixtures/display';
+import { buildDisplay, mockDisplay } from '../../../fixtures/display';
 import { renderEditModal } from '../helpers/renderEditModal';
 
 import { testQueryClient } from '@/setupTests';
@@ -166,7 +166,6 @@ describe('Display - edit form: General tab', () => {
     await user.click(screen.getByRole('tab', { name: 'General' }));
 
     const tagsInput = screen.getByRole('textbox', { name: /^Tags$/i });
-    expect(tagsInput).toBeInTheDocument();
     await user.type(tagsInput, 'my-tag');
     expect(tagsInput).toHaveValue('my-tag');
   });
@@ -180,7 +179,7 @@ describe('Display - edit form: General tab', () => {
     await renderEditModal();
     await user.click(screen.getByRole('tab', { name: 'General' }));
 
-    expect(screen.getByRole('switch', { name: /authorise/i })).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: /authorise/i })).not.toBeDisabled();
   });
 
   // ---------------------------------------------------------------------------
@@ -192,6 +191,6 @@ describe('Display - edit form: General tab', () => {
     await renderEditModal();
     await user.click(screen.getByRole('tab', { name: 'General' }));
 
-    expect(screen.getByRole('combobox', { name: /default layout/i })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /default layout/i })).not.toBeDisabled();
   });
 });

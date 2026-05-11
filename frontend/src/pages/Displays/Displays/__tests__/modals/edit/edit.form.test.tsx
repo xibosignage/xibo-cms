@@ -24,7 +24,7 @@ import userEvent from '@testing-library/user-event';
 import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-import { buildDisplay, mockDisplay } from '../fixtures/display';
+import { buildDisplay, mockDisplay } from '../../fixtures/display';
 
 import { renderEditModal } from './helpers/renderEditModal';
 
@@ -134,7 +134,7 @@ describe('Display - edit form fields', () => {
     await user.clear(screen.getByRole('textbox', { name: /^Display$/i }));
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
-    expect(await screen.findByText('Name is required')).toBeInTheDocument();
+    await screen.findByText('Name is required');
     expect(updateDisplay).not.toHaveBeenCalled();
   });
 
@@ -191,7 +191,7 @@ describe('Display - edit form fields', () => {
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
     expect(updateDisplay).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    screen.getByRole('dialog', { name: /edit/i });
     expect(await screen.findByRole('alert')).toHaveTextContent('Display name already exists');
   });
 

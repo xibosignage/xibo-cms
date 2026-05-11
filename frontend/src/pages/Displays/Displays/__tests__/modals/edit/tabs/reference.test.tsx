@@ -24,7 +24,7 @@ import userEvent from '@testing-library/user-event';
 import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-import { buildDisplay } from '../../fixtures/display';
+import { buildDisplay } from '../../../fixtures/display';
 import { renderEditModal } from '../helpers/renderEditModal';
 
 import { testQueryClient } from '@/setupTests';

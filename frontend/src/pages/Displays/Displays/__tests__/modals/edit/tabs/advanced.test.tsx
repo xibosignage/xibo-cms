@@ -24,7 +24,6 @@ import userEvent from '@testing-library/user-event';
 import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-import { buildDisplay } from '../../fixtures/display';
 import { renderEditModal } from '../helpers/renderEditModal';
 
 import { testQueryClient } from '@/setupTests';
@@ -78,44 +77,70 @@ vi.mock('@/components/ui/forms/SelectFolder', () => ({
 // Tests
 // =============================================================================
 
-describe('Display - edit form: Maintenance tab', () => {
+describe('Display - edit form: Advanced tab', () => {
   beforeEach(() => {
     testQueryClient.clear();
     vi.clearAllMocks();
   });
 
   // ---------------------------------------------------------------------------
-  // Use the Global Timeout?
+  // Clear Cached Data
+  // Draft initialises clearCachedData to 1 regardless of the stored value,
+  // so the checkbox is always checked when the modal opens.
   // ---------------------------------------------------------------------------
 
-  test('alert timeout checkbox reflects the existing value', async () => {
+  test('clear cached data checkbox is checked by default when the modal opens', async () => {
     const user = userEvent.setup();
-    await renderEditModal({ data: buildDisplay({ alertTimeout: 1 }) });
-    await user.click(screen.getByRole('tab', { name: 'Maintenance' }));
+    await renderEditModal();
+    await user.click(screen.getByRole('tab', { name: 'Advanced' }));
 
-    expect(screen.getByRole('checkbox', { name: /use the global timeout/i })).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: /clear cached data/i })).toBeChecked();
   });
 
-  test('alert timeout checkbox can be toggled', async () => {
+  test('clear cached data checkbox can be toggled', async () => {
     const user = userEvent.setup();
-    await renderEditModal({ data: buildDisplay({ alertTimeout: 0 }) });
-    await user.click(screen.getByRole('tab', { name: 'Maintenance' }));
+    await renderEditModal();
+    await user.click(screen.getByRole('tab', { name: 'Advanced' }));
 
-    const checkbox = screen.getByRole('checkbox', { name: /use the global timeout/i });
+    const checkbox = screen.getByRole('checkbox', { name: /clear cached data/i });
+    await user.click(checkbox);
+    expect(checkbox).not.toBeChecked();
+  });
+
+  // ---------------------------------------------------------------------------
+  // Reconfigure XMR
+  // rekeyXmr is hardcoded to 0 on every modal open — it is a one-shot action,
+  // not pre-populated from stored data (same pattern as clearCachedData).
+  // ---------------------------------------------------------------------------
+
+  test('reconfigure XMR checkbox is unchecked by default when the modal opens', async () => {
+    const user = userEvent.setup();
+    await renderEditModal();
+    await user.click(screen.getByRole('tab', { name: 'Advanced' }));
+
+    expect(screen.getByRole('checkbox', { name: /reconfigure xmr/i })).not.toBeChecked();
+  });
+
+  test('reconfigure XMR checkbox can be toggled', async () => {
+    const user = userEvent.setup();
+    await renderEditModal();
+    await user.click(screen.getByRole('tab', { name: 'Advanced' }));
+
+    const checkbox = screen.getByRole('checkbox', { name: /reconfigure xmr/i });
     expect(checkbox).not.toBeChecked();
     await user.click(checkbox);
     expect(checkbox).toBeChecked();
   });
 
   // ---------------------------------------------------------------------------
-  // Email Alerts (SelectDropdown with role="combobox")
+  // Interleave Default (SelectDropdown with role="combobox")
   // ---------------------------------------------------------------------------
 
-  test('email alerts combobox is present', async () => {
+  test('interleave default combobox is present', async () => {
     const user = userEvent.setup();
     await renderEditModal();
-    await user.click(screen.getByRole('tab', { name: 'Maintenance' }));
+    await user.click(screen.getByRole('tab', { name: 'Advanced' }));
 
-    expect(screen.getByRole('combobox', { name: /email alerts/i })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /interleave default/i })).not.toBeDisabled();
   });
 });

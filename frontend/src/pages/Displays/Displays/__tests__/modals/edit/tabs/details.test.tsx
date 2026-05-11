@@ -24,7 +24,7 @@ import userEvent from '@testing-library/user-event';
 import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-import { buildDisplay } from '../../fixtures/display';
+import { buildDisplay } from '../../../fixtures/display';
 import { renderEditModal } from '../helpers/renderEditModal';
 
 import { fetchDisplayLocales, updateDisplay } from '@/services/displaysApi';
@@ -311,7 +311,7 @@ describe('Display - edit form: Details tab', () => {
     await renderEditModal();
     await user.click(screen.getByRole('tab', { name: 'Details' }));
 
-    expect(screen.getByRole('combobox', { name: /timezone/i })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /timezone/i })).not.toBeDisabled();
   });
 
   // ---------------------------------------------------------------------------
@@ -323,7 +323,7 @@ describe('Display - edit form: Details tab', () => {
     await renderEditModal();
     await user.click(screen.getByRole('tab', { name: 'Details' }));
 
-    expect(screen.getByRole('combobox', { name: /languages/i })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /languages/i })).not.toBeDisabled();
   });
 
   // ---------------------------------------------------------------------------
@@ -335,7 +335,7 @@ describe('Display - edit form: Details tab', () => {
     await renderEditModal();
     await user.click(screen.getByRole('tab', { name: 'Details' }));
 
-    expect(screen.getByRole('combobox', { name: /display type/i })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /display type/i })).not.toBeDisabled();
   });
 
   // ---------------------------------------------------------------------------
@@ -347,7 +347,7 @@ describe('Display - edit form: Details tab', () => {
     await renderEditModal();
     await user.click(screen.getByRole('tab', { name: 'Details' }));
 
-    expect(screen.getByRole('combobox', { name: /venue/i })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /venue/i })).not.toBeDisabled();
   });
 
   // ---------------------------------------------------------------------------

@@ -24,7 +24,6 @@ import userEvent from '@testing-library/user-event';
 import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-import { buildDisplay } from '../../fixtures/display';
 import { renderEditModal } from '../helpers/renderEditModal';
 
 import { testQueryClient } from '@/setupTests';
@@ -78,57 +77,32 @@ vi.mock('@/components/ui/forms/SelectFolder', () => ({
 // Tests
 // =============================================================================
 
-describe('Display - edit form: Remote tab', () => {
+describe('Display - edit form: Settings tab', () => {
   beforeEach(() => {
     testQueryClient.clear();
     vi.clearAllMocks();
   });
 
-  // ---------------------------------------------------------------------------
-  // TeamViewer Serial
-  // ---------------------------------------------------------------------------
-
-  test('TeamViewer serial is pre-populated with the existing value', async () => {
-    const user = userEvent.setup();
-    await renderEditModal({ data: buildDisplay({ teamViewerSerial: 'TV-123456' }) });
-    await user.click(screen.getByRole('tab', { name: 'Remote' }));
-
-    expect(screen.getByRole('textbox', { name: /teamviewer serial/i })).toHaveValue('TV-123456');
-  });
-
-  test('TeamViewer serial is editable and reflects typed input', async () => {
+  // When no display profile is assigned and the default profile returns no
+  // settings, the tab shows a "no settings" message rather than the overrides
+  // table. This smoke test confirms the tab renders without errors.
+  test('shows no-settings message when no profile is configured', async () => {
     const user = userEvent.setup();
     await renderEditModal();
-    await user.click(screen.getByRole('tab', { name: 'Remote' }));
+    await user.click(screen.getByRole('tab', { name: 'Settings' }));
 
-    const input = screen.getByRole('textbox', { name: /teamviewer serial/i });
-    await user.clear(input);
-    await user.type(input, 'TV-NEW-789');
-
-    expect(input).toHaveValue('TV-NEW-789');
+    await screen.findByText('No settings available for this profile.');
   });
 
   // ---------------------------------------------------------------------------
-  // Webkey Serial
+  // Settings Profile (SelectDropdown with role="combobox")
   // ---------------------------------------------------------------------------
 
-  test('Webkey serial is pre-populated with the existing value', async () => {
-    const user = userEvent.setup();
-    await renderEditModal({ data: buildDisplay({ webkeySerial: 'WK-654321' }) });
-    await user.click(screen.getByRole('tab', { name: 'Remote' }));
-
-    expect(screen.getByRole('textbox', { name: /webkey serial/i })).toHaveValue('WK-654321');
-  });
-
-  test('Webkey serial is editable and reflects typed input', async () => {
+  test('settings profile combobox is present', async () => {
     const user = userEvent.setup();
     await renderEditModal();
-    await user.click(screen.getByRole('tab', { name: 'Remote' }));
+    await user.click(screen.getByRole('tab', { name: 'Settings' }));
 
-    const input = screen.getByRole('textbox', { name: /webkey serial/i });
-    await user.clear(input);
-    await user.type(input, 'WK-NEW-987');
-
-    expect(input).toHaveValue('WK-NEW-987');
+    expect(screen.getByRole('combobox', { name: /settings profile/i })).not.toBeDisabled();
   });
 });

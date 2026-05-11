@@ -24,9 +24,9 @@ import userEvent, { type UserEvent } from '@testing-library/user-event';
 import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-import { EMPTY_DISPLAY_TABLE } from './fixtures/display';
-import { renderDisplaysPage } from './helpers/renderDisplaysPage';
-import { mockFetchDisplays } from './mocks/displaysApi';
+import { EMPTY_DISPLAY_TABLE } from '../fixtures/display';
+import { renderDisplaysPage } from '../helpers/renderDisplaysPage';
+import { mockFetchDisplays } from '../mocks/displaysApi';
 
 import { notify } from '@/components/ui/Notification';
 import { addDisplayViaCode } from '@/services/displaysApi';
@@ -70,7 +70,7 @@ vi.mock('@/components/ui/FolderActionModals', () => ({ default: () => null }));
 vi.mock('@/components/ui/Notification', () => ({
   notify: { success: vi.fn(), error: vi.fn() },
 }));
-vi.mock('../hooks/useDisplaysFilterOptions', () => ({
+vi.mock('../../hooks/useDisplaysFilterOptions', () => ({
   useDisplaysFilterOptions: () => ({ filterOptions: [], isLoading: false }),
 }));
 

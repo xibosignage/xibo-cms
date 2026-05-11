@@ -25,8 +25,8 @@ import type React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
 
-import EditDisplayModal from '../../../components/EditDisplayModal';
-import { mockDisplay, mockUser } from '../../fixtures/display';
+import EditDisplayModal from '../../../../components/EditDisplayModal';
+import { mockDisplay, mockUser } from '../../../fixtures/display';
 
 import { UserProvider } from '@/context/UserContext';
 import { testQueryClient } from '@/setupTests';
@@ -52,6 +52,6 @@ export const renderEditModal = async (
       </UserProvider>
     </QueryClientProvider>,
   );
-  await screen.findByRole('dialog');
+  await screen.findByRole('dialog', { name: /edit/i });
   return utils;
 };

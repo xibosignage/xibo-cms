@@ -19,13 +19,20 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// =============================================================================
+// Test type: Page integration test
+// Tests the edit flow on the Displays page — modal opens on Edit click,
+// table refreshes with updated data after save.
+// Form field logic lives in edit/edit.form.test.tsx.
+// =============================================================================
+
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import type EditDisplayModalComponent from '../../components/EditDisplayModal';
-import { mockDisplay, SINGLE_DISPLAY } from '../fixtures/display';
+import { mockDisplay } from '../fixtures/display';
 import { renderDisplaysPage } from '../helpers/renderDisplaysPage';
 import { mockFetchDisplays } from '../mocks/displaysApi';
 
@@ -37,13 +44,10 @@ import type { Display } from '@/types/display';
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next', () => {
-  const t = (key: string) => key;
-  return {
-    useTranslation: () => ({ t, i18n: { changeLanguage: vi.fn() } }),
-    Trans: ({ children }: { children: React.ReactNode }) => children,
-  };
-});
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
+  Trans: ({ children }: { children: React.ReactNode }) => children,
+}));
 
 vi.mock('@/services/displaysApi');
 vi.mock('@/services/displayGroupApi', () => ({
@@ -73,21 +77,22 @@ vi.mock('../../hooks/useDisplaysFilterOptions', () => ({
 }));
 
 // These tests verify page-level behaviour only: does clicking Edit open the
-// modal, and does clicking Save refresh the table? Form field logic belongs in
-// a separate form test, so the real modal is replaced with a minimal stub that
-// acts purely as a behavioural trigger.
-//
-// The stub calls onSave() to simulate the user completing a save. The page's
-// onSave handler ignores the argument — it only calls handleRefresh(), which
-// invalidates the React Query cache. The updated row comes from the queued
-// mockResolvedValueOnce response, not from anything passed to onSave.
+// modal, and does clicking Save refresh the table? Form field logic lives in
+// edit/edit.form.test.tsx, so the real modal is replaced with a minimal stub
+// that acts purely as a behavioural trigger.
 vi.mock('../../components/EditDisplayModal', () => ({
-  default: ({ data, onClose, onSave }: React.ComponentProps<typeof EditDisplayModalComponent>) => (
-    <div role="dialog" aria-label="Edit Display">
-      <button onClick={() => onClose()}>Cancel</button>
-      <button onClick={() => onSave(data as Display)}>Save Display</button>
-    </div>
-  ),
+  default: ({
+    isOpen = true,
+    data,
+    onClose,
+    onSave,
+  }: React.ComponentProps<typeof EditDisplayModalComponent>) =>
+    isOpen ? (
+      <div role="dialog" aria-label="Edit Display">
+        <button onClick={() => onClose()}>Cancel</button>
+        <button onClick={() => onSave(data as Display)}>Save Display</button>
+      </div>
+    ) : null,
 }));
 
 // =============================================================================
@@ -100,42 +105,39 @@ const updatedDisplay = { ...mockDisplay, display: 'Test Display - Edited' };
 // Tests
 // =============================================================================
 
-describe('Displays page - edit', () => {
+describe('Displays page — edit', () => {
   beforeEach(() => {
     testQueryClient.clear();
     vi.clearAllMocks();
-    mockFetchDisplays(SINGLE_DISPLAY);
+    mockFetchDisplays({ rows: [mockDisplay], totalCount: 1 });
   });
 
   // ---------------------------------------------------------------------------
-  // Clicking the Edit quick action on a row opens the Edit modal.
+  // Clicking the Edit quick-action button on a table row should open the
+  // Edit modal.
   // ---------------------------------------------------------------------------
   test('opens the Edit modal when the Edit action is clicked on a row', async () => {
     const user = userEvent.setup();
     renderDisplaysPage();
 
-    // Wait for the row to be rendered before looking for the action button.
     await screen.findByText(mockDisplay.display);
-    const editButton = await screen.findByRole('button', { name: /edit/i });
+    const editButton = screen.getByRole('button', { name: /^edit$/i });
     await user.click(editButton);
 
-    expect(await screen.findByRole('dialog', { name: /edit display/i })).toBeInTheDocument();
+    await screen.findByRole('dialog', { name: /edit display/i });
   });
 
   // ---------------------------------------------------------------------------
   // After the user saves their changes, the table should reload and show the
-  // updated name. We also verify the page actually asked the server for fresh
+  // updated display name. We also verify the page asked the server for fresh
   // data rather than just patching the display locally.
   // ---------------------------------------------------------------------------
   test('saving an edit refreshes the table and shows the updated row name', async () => {
     const user = userEvent.setup();
     renderDisplaysPage();
 
-    // Wait for the original row to appear before interacting.
-    expect(await screen.findByText(mockDisplay.display)).toBeInTheDocument();
-
-    const editButton = await screen.findByRole('button', { name: /edit/i });
-    await user.click(editButton);
+    await screen.findByText(mockDisplay.display);
+    await user.click(screen.getByRole('button', { name: /^edit$/i }));
 
     // Queue the updated data so the table gets it when it re-fetches after save.
     vi.mocked(fetchDisplays).mockResolvedValueOnce({
@@ -147,9 +149,8 @@ describe('Displays page - edit', () => {
 
     // Await the new name first — this confirms the refetch completed.
     // Only then check the old name is gone, because keepPreviousData keeps the
-    // old row visible during the fetch, so a synchronous negative check before
-    // this point would fail.
-    expect(await screen.findByText(updatedDisplay.display)).toBeInTheDocument();
+    // old row visible during the fetch.
+    await screen.findByText(updatedDisplay.display);
     expect(screen.queryByText(mockDisplay.display)).not.toBeInTheDocument();
   });
 });

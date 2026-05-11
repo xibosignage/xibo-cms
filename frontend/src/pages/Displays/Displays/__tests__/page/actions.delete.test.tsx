@@ -24,9 +24,9 @@ import userEvent, { type UserEvent } from '@testing-library/user-event';
 import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-import { mockDisplay, SINGLE_DISPLAY } from './fixtures/display';
-import { renderDisplaysPage } from './helpers/renderDisplaysPage';
-import { mockFetchDisplays } from './mocks/displaysApi';
+import { mockDisplay, SINGLE_DISPLAY } from '../fixtures/display';
+import { renderDisplaysPage } from '../helpers/renderDisplaysPage';
+import { mockFetchDisplays } from '../mocks/displaysApi';
 
 import { deleteDisplay } from '@/services/displaysApi';
 import { testQueryClient } from '@/setupTests';
@@ -63,7 +63,7 @@ vi.mock('@/services/folderApi', () => ({
 }));
 vi.mock('@/components/ui/modals/Modal');
 vi.mock('@/components/ui/FolderActionModals', () => ({ default: () => null }));
-vi.mock('../hooks/useDisplaysFilterOptions', () => ({
+vi.mock('../../hooks/useDisplaysFilterOptions', () => ({
   useDisplaysFilterOptions: () => ({ filterOptions: [], isLoading: false }),
 }));
 
@@ -104,9 +104,8 @@ describe('Delete Display', () => {
 
     const dialog = await openDeleteModal(user);
 
-    expect(dialog).toBeInTheDocument();
-    expect(within(dialog).getByText('Delete Display?')).toBeInTheDocument();
-    expect(within(dialog).getByText(mockDisplay.display)).toBeInTheDocument();
+    within(dialog).getByRole('heading', { name: /delete display\?/i });
+    within(dialog).getByText(mockDisplay.display);
   });
 
   // ---------------------------------------------------------------------------
@@ -186,7 +185,7 @@ describe('Delete Display', () => {
     await user.click(screen.getByRole('button', { name: 'Yes, Delete' }));
 
     expect(deleteDisplay).toHaveBeenCalledTimes(1);
-    expect(await screen.findByText(/could not be deleted/i)).toBeInTheDocument();
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    await screen.findByText(/could not be deleted/i);
+    screen.getByRole('dialog');
   });
 });

@@ -427,6 +427,7 @@ export default function Displays() {
               </div>
               <input
                 name="search"
+                aria-label={t('Search displays')}
                 value={globalFilter}
                 disabled={!isHydrated}
                 onChange={(e) => {
