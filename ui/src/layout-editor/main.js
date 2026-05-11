@@ -5899,13 +5899,17 @@ lD.calculateLayers = function(
     layerMap[calculatedLayers.top + 1] === undefined &&
     !isSingleOnTopLayer
   ) {
-    // If we don't have any layers yet, set to 0
+    const backgroundTop = (lD.layout.backgroundImage !== null) ?
+      lD.layout.backgroundzIndex : -1;
+
+    // If we don't have any layers yet, start above the background (or 0)
     if (layerMap.length === 0) {
-      calculatedLayers.availableTop = 0;
+      calculatedLayers.availableTop = backgroundTop + 1;
     } else {
-      // Set top value, but not over the limit
+      // Set top value above both existing layers and the background,
+      // but not over the limit
       calculatedLayers.availableTop = Math.min(
-        (calculatedLayers.top + 1),
+        Math.max(calculatedLayers.top + 1, backgroundTop + 1),
         limits.top,
       );
     }
