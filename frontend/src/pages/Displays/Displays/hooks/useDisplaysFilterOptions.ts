@@ -24,9 +24,9 @@ import { useEffect, useState } from 'react';
 
 import { getBaseFilterKeys } from '../DisplaysConfig';
 
-import type { FilterOption } from '@/components/ui/SelectFilter';
 import { fetchDisplayGroups } from '@/services/displayGroupApi';
 import { fetchDisplayProfile } from '@/services/displayProfileApi';
+import type { FilterOption } from '@/types/filter';
 
 export function useDisplaysFilterOptions(t: TFunction) {
   const [filterOptions, setFilterOptions] = useState(() => getBaseFilterKeys(t));

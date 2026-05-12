@@ -195,7 +195,7 @@ export default function SelectDropdown({
         <span
           className={twMerge(
             'py-2 px-3 flex-1 text-sm truncate min-w-0',
-            isLoading ? 'text-gray-400 italic' : 'text-gray-800',
+            isLoading ? 'text-gray-400 italic' : selectedLabel ? 'text-gray-800' : 'text-gray-500',
           )}
         >
           {isLoading ? t('Loading...') : selectedLabel || t(placeholder)}
@@ -224,13 +224,13 @@ export default function SelectDropdown({
               </span>
             )}
             {searchable && (
-              <div className="p-2 border-b border-gray-100 flex items-center gap-2">
-                <Search size={14} className="text-gray-400 shrink-0" />
+              <div className="m-2 p-3 border border-gray-200 rounded-lg flex items-center gap-2 focus-within:border-xibo-blue-600 focus-within:ring-1 focus-within:ring-xibo-blue-600/25">
+                <Search size={14} className="text-gray-500 shrink-0" />
                 <input
                   autoFocus
                   type="text"
-                  className="flex-1 w-full text-sm outline-none border-none bg-transparent"
-                  placeholder={searchPlaceholder ?? t('Search…')}
+                  className="flex-1 w-full p-0 text-sm outline-none border-none bg-transparent hover:border-none focus:ring-0 focus:shadow-none"
+                  placeholder={searchPlaceholder ?? t('Search')}
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value);

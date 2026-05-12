@@ -44,7 +44,6 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DaypartFilterI
   {
     label: t('Retired'),
     name: 'retired',
-    showAllOption: false,
     options: getCommonFormOptions(t).retired,
   },
 ];

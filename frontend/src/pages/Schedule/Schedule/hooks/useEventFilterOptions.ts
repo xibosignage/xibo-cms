@@ -24,9 +24,9 @@ import { useEffect, useState } from 'react';
 
 import { getBaseFilterKeys } from '../EventsConfig';
 
-import type { FilterOption } from '@/components/ui/SelectFilter';
 import { useDebounce } from '@/hooks/useDebounce';
 import { fetchCampaigns } from '@/services/campaignApi';
+import type { FilterOption } from '@/types/filter';
 
 const PAGE_SIZE = 10;
 

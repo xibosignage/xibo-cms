@@ -81,18 +81,14 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayGroupFi
   {
     label: t('Display'),
     name: 'displayIdDropdown',
-    type: 'paged-select',
     placeholder: t('All'),
     options: [],
-    shouldTranslateOptions: false,
   },
   {
     label: t('Nested Display'),
     name: 'nestedDisplayId',
-    type: 'paged-select',
     placeholder: t('All'),
     options: [],
-    shouldTranslateOptions: false,
   },
   {
     label: t('Dynamic Criteria'),
@@ -105,7 +101,6 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayGroupFi
     name: 'tags',
     type: 'tags',
     className: 'max-w-auto md:max-w-80',
-    shouldTranslateOptions: false,
   },
 ];
 

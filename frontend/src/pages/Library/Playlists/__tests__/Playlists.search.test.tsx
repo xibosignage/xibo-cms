@@ -85,8 +85,6 @@ vi.mock('../hooks/usePlaylistFilterOptions', () => ({
           { label: 'Today', value: 'today' },
           { label: 'Last 7 days', value: '7d' },
         ],
-        shouldTranslateOptions: true,
-        showAllOption: false,
       },
     ],
     isLoading: false,

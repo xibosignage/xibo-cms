@@ -24,9 +24,9 @@ import { useState, useEffect } from 'react';
 
 import { getBaseFilterKeys } from '../DatasetConfig';
 
-import type { FilterOption } from '@/components/ui/SelectFilter';
 import { fetchUsers } from '@/services/userApi';
 import { fetchUserGroups } from '@/services/userGroupApi';
+import type { FilterOption } from '@/types/filter';
 
 export function useDatasetFilterOptions(t: TFunction) {
   const [filterOptions, setFilterOptions] = useState(() => getBaseFilterKeys(t));

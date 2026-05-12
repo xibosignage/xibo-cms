@@ -22,10 +22,10 @@
 import type { TFunction } from 'i18next';
 import { useState, useEffect } from 'react';
 
-import type { FilterOption } from '@/components/ui/SelectFilter';
 import { getBaseFilterKeys } from '@/pages/Library/Media/MediaConfig';
 import { fetchUsers } from '@/services/userApi';
 import { fetchUserGroups } from '@/services/userGroupApi';
+import type { FilterOption } from '@/types/filter';
 
 export function useMediaFilterOptions(t: TFunction) {
   const [filterOptions, setFilterOptions] = useState(() => getBaseFilterKeys(t));

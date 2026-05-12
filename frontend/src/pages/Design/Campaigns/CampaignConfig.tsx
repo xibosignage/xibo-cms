@@ -60,8 +60,6 @@ export const getCampaignFilterKeys = (t: TFunction): FilterConfigItem<CampaignFi
     label: t('Layout'),
     name: 'hasLayouts',
     className: '',
-    shouldTranslateOptions: false,
-    showAllOption: false,
     options: [
       { label: t('All'), value: '' },
       { label: t('Yes'), value: '1' },
@@ -81,8 +79,6 @@ export const getCampaignFilterKeys = (t: TFunction): FilterConfigItem<CampaignFi
     label: t('Type'),
     name: 'type',
     className: '',
-    shouldTranslateOptions: false,
-    showAllOption: false,
     options: [
       { label: t('All'), value: '' },
       { label: t('Layout List'), value: 'list' },
@@ -94,8 +90,6 @@ export const getCampaignFilterKeys = (t: TFunction): FilterConfigItem<CampaignFi
     label: t('Cycle Based'),
     name: 'cyclePlaybackEnabled',
     className: '',
-    shouldTranslateOptions: false,
-    showAllOption: false,
     options: [
       { label: t('All'), value: '' },
       { label: t('Enabled'), value: '1' },

@@ -19,36 +19,34 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { t } from 'i18next';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Button from './Button';
+import DateRangeFilter from './DateRangeFilter';
 import InputFilter from './InputFilter';
-import type { FilterOption } from './SelectFilter';
-import SelectFilter from './SelectFilter';
 import SelectDropdown from './forms/SelectDropdown';
 import type { SelectOption } from './forms/SelectDropdown';
 import TagInput from './forms/TagInput';
 
+import type { FilterOption } from '@/types/filter';
 import type { Tag } from '@/types/tag';
+
+export type { FilterOption };
 
 export interface FilterConfigItem<T> {
   label: string;
   name: keyof T & string;
   placeholder?: string;
-  type?: 'select' | 'text' | 'number' | 'tags' | 'paged-select';
+  type?: 'select' | 'text' | 'number' | 'tags' | 'date-range';
   className?: string;
   options?: FilterOption[];
-  shouldTranslateOptions?: boolean;
-  showAllOption?: boolean;
-  allLabel?: string;
-  allowCustomRange?: boolean;
-  isJalali?: boolean;
   onLoadMore?: () => void;
   hasMore?: boolean;
   isLoadingMore?: boolean;
   isLoading?: boolean;
   onSearch?: (term: string) => void;
+  isJalali?: boolean;
 }
 
 type FilterValue = string | number | null | Tag[];
@@ -99,6 +97,7 @@ export default function FilterInputs<T>({
   onChange,
   onReset,
 }: FilterInputsProps<T>) {
+  const { t } = useTranslation();
   return (
     <div
       aria-hidden={!isOpen}
@@ -152,51 +151,57 @@ export default function FilterInputs<T>({
             );
           }
 
-          if (filterType === 'paged-select') {
-            const pagedOptions: SelectOption[] = (filter.options ?? []).map((o) => ({
-              label: o.label,
-              value: String(o.value ?? ''),
-            }));
-            const currentValue = values[filter.name];
-            const stringValue =
-              currentValue !== null && currentValue !== undefined ? String(currentValue) : '';
-
+          if (filterType === 'date-range') {
             return (
-              <SelectDropdown
+              <DateRangeFilter
                 key={filter.name}
                 label={filter.label}
-                value={stringValue}
-                options={pagedOptions}
-                onSelect={(val) =>
-                  onChange(filter.name as keyof T & string, val === '' ? null : Number(val))
-                }
-                searchable
-                clearable
-                placeholder={filter.placeholder ?? 'All'}
-                onLoadMore={filter.onLoadMore}
-                hasMore={filter.hasMore}
-                isLoadingMore={filter.isLoadingMore}
-                isLoading={filter.isLoading}
-                onSearch={filter.onSearch}
-                className={`w-full md:w-auto md:flex-1 min-w-0 ${filter.className ?? ''}`}
+                name={filter.name}
+                value={(values[filter.name] as string) ?? ''}
+                options={filter.options ?? []}
+                onChange={(name, val) => onChange(name as keyof T & string, val)}
+                isJalali={filter.isJalali}
+                className={filter.className}
               />
             );
           }
 
+          const allOpts = filter.options ?? [];
+          const clearOpt = allOpts.find((o) => o.value === null || o.value === '');
+          const realOpts = allOpts.filter((o) => o.value !== null && o.value !== '');
+          const placeholder = clearOpt?.label ?? filter.placeholder ?? t('All');
+
+          const selectOptions: SelectOption[] = realOpts.map((o) => ({
+            label: o.label,
+            value: String(o.value),
+          }));
+
+          const raw = values[filter.name];
+          const currentStr = raw != null && raw !== '' ? String(raw) : '';
+
           return (
-            <SelectFilter
+            <SelectDropdown
               key={filter.name}
               label={filter.label}
-              name={filter.name}
-              value={values[filter.name] as string}
-              onChange={(name, val) => onChange(name as keyof T & string, val)}
-              options={filter.options ?? []}
-              className={filter?.className}
-              shouldTranslateOptions={filter.shouldTranslateOptions}
-              showAllOption={filter.showAllOption}
-              allLabel={filter.allLabel}
-              allowCustomRange={filter.allowCustomRange}
-              isJalali={filter.isJalali}
+              value={currentStr}
+              options={selectOptions}
+              searchable
+              clearable
+              placeholder={placeholder}
+              onSelect={(val) => {
+                if (!val) {
+                  onChange(filter.name, null);
+                } else {
+                  const orig = realOpts.find((o) => String(o.value) === val);
+                  onChange(filter.name, orig !== undefined ? orig.value : val);
+                }
+              }}
+              onSearch={filter.onSearch}
+              onLoadMore={filter.onLoadMore}
+              hasMore={filter.hasMore}
+              isLoadingMore={filter.isLoadingMore}
+              isLoading={filter.isLoading}
+              className={`w-full md:w-auto md:flex-1 min-w-0 ${filter.className ?? ''}`}
             />
           );
         })}

@@ -54,8 +54,6 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayProfile
     label: t('Type'),
     name: 'type',
     className: '',
-    shouldTranslateOptions: false,
-    showAllOption: true,
     options: getTypeOptions(t),
   },
 ];

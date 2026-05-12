@@ -107,7 +107,6 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<MediaFilterInp
   {
     label: t('Type'),
     name: 'type',
-    shouldTranslateOptions: true,
     options: [
       { label: 'Image', value: 'image' },
       { label: 'Video', value: 'video' },
@@ -120,15 +119,11 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<MediaFilterInp
   {
     label: t('Owner'),
     name: 'ownerId',
-    shouldTranslateOptions: false,
-    showAllOption: false,
     options: [{ label: 'Select Owner', value: null }],
   },
   {
     label: t('User Group'),
     name: 'ownerUserGroupId',
-    shouldTranslateOptions: false,
-    showAllOption: false,
     options: [{ label: 'Select Group', value: null }],
   },
   {
@@ -139,8 +134,6 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<MediaFilterInp
   {
     label: t('Retired'),
     name: 'retired',
-    shouldTranslateOptions: true,
-    showAllOption: false,
     options: [
       { label: 'Any', value: null },
       { label: 'No', value: 0 },
@@ -150,9 +143,7 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<MediaFilterInp
   {
     label: t('Last Modified'),
     name: 'lastModified',
-    shouldTranslateOptions: true,
-    showAllOption: false,
-    allowCustomRange: true,
+    type: 'date-range',
     options: getCommonFormOptions(t).lastModifiedFilter,
   },
 ];

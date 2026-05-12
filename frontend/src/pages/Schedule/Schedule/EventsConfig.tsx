@@ -82,6 +82,7 @@ const EVENT_TYPE_LABELS: Record<number, string> = {
 };
 
 const YES_NO_OPTIONS = [
+  { value: '', label: 'All' },
   { value: 0, label: 'No' },
   { value: 1, label: 'Yes' },
 ];
@@ -110,7 +111,6 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<EventFilterInp
   {
     label: t('Event Type'),
     name: 'eventTypeId',
-    showAllOption: true,
     options: Object.entries(EVENT_TYPE_LABELS).map(([value, label]) => ({
       value: Number(value),
       label: t(label),
@@ -119,47 +119,33 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<EventFilterInp
   {
     label: t('Layout'),
     name: 'layoutCampaignId',
-    type: 'paged-select',
     placeholder: t('All'),
     options: [],
   },
   {
     label: t('Campaign'),
     name: 'campaignId',
-    type: 'paged-select',
     placeholder: t('All'),
     options: [],
   },
   {
     label: t('Geo Aware'),
     name: 'geoAware',
-    showAllOption: true,
-    allLabel: t('All'),
-    shouldTranslateOptions: true,
     options: YES_NO_OPTIONS,
   },
   {
     label: t('Recurring'),
     name: 'recurring',
-    showAllOption: true,
-    allLabel: t('All'),
-    shouldTranslateOptions: true,
     options: YES_NO_OPTIONS,
   },
   {
     label: t('Direct Schedule'),
     name: 'directSchedule',
-    showAllOption: true,
-    allLabel: t('All'),
-    shouldTranslateOptions: true,
     options: YES_NO_OPTIONS,
   },
   {
     label: t('Shared Schedule'),
     name: 'sharedSchedule',
-    showAllOption: true,
-    allLabel: t('All'),
-    shouldTranslateOptions: true,
     options: YES_NO_OPTIONS,
   },
 ];

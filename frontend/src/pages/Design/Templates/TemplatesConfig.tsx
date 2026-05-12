@@ -64,8 +64,6 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<Record<string,
     name: 'tags',
     type: 'tags',
     className: 'max-w-auto md:max-w-80',
-    shouldTranslateOptions: false,
-    showAllOption: false,
   },
 ];
 

@@ -48,17 +48,13 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<SessionFilterI
     label: t('From Date'),
     name: 'lastModified',
     className: '',
-    shouldTranslateOptions: true,
-    showAllOption: false,
-    allowCustomRange: true,
+    type: 'date-range',
     options: getCommonFormOptions(t).lastModifiedFilter,
   },
   {
     label: t('Type'),
     name: 'type',
     className: '',
-    shouldTranslateOptions: true,
-    showAllOption: true,
     options: [
       { label: 'Active', value: 'active' },
       { label: 'Guest', value: 'guest' },

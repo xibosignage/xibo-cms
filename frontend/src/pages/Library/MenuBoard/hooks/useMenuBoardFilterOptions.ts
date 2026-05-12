@@ -24,8 +24,8 @@ import { useEffect, useState } from 'react';
 
 import { getBaseFilterKeys } from '../MenuBoardConfig';
 
-import type { FilterOption } from '@/components/ui/SelectFilter';
 import { fetchUsers } from '@/services/userApi';
+import type { FilterOption } from '@/types/filter';
 
 export function useMenuBoardFilterOptions(t: TFunction) {
   const [filterOptions, setFilterOptions] = useState(() => getBaseFilterKeys(t));

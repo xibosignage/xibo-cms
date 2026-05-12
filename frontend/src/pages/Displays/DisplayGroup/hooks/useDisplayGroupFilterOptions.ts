@@ -24,8 +24,8 @@ import { useEffect, useState } from 'react';
 
 import { getBaseFilterKeys } from '../DisplayGroupConfig';
 
-import type { FilterOption } from '@/components/ui/SelectFilter';
 import { fetchDisplays } from '@/services/displaysApi';
+import type { FilterOption } from '@/types/filter';
 
 const PAGE_SIZE = 10;
 

@@ -65,17 +65,13 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<MenuBoardFilte
     label: t('Owner'),
     name: 'userId',
     className: '',
-    shouldTranslateOptions: false,
-    showAllOption: false,
     options: [{ label: t('Select Owner'), value: null }],
   },
   {
     label: t('Last Modified'),
     name: 'lastModified',
     className: '',
-    shouldTranslateOptions: true,
-    showAllOption: false,
-    allowCustomRange: true,
+    type: 'date-range',
     options: getCommonFormOptions(t).lastModifiedFilter,
   },
 ];
