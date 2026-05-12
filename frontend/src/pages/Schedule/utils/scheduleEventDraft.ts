@@ -415,7 +415,7 @@ export function createDraftFromEvent(scheduleEvent: Event): ScheduleEventDraft {
     actionType: scheduleEvent.actionType ?? '',
     actionTriggerCode: scheduleEvent.actionTriggerCode ?? '',
     actionLayoutCode: scheduleEvent.actionLayoutCode ?? '',
-    shareOfVoice: scheduleEvent.shareOfVoice ?? 0,
+    shareOfVoice: Number(scheduleEvent.shareOfVoice ?? 0),
     displaySpecificGroupIds: (scheduleEvent.displayGroups ?? [])
       .filter((dg) => dg.isDisplaySpecific === 1)
       .map((dg) => dg.displayGroupId),
@@ -430,28 +430,28 @@ export function createDraftFromEvent(scheduleEvent: Event): ScheduleEventDraft {
     relativeMinutes: 0,
     relativeSeconds: 0,
     name: scheduleEvent.name ?? '',
-    layoutDuration: scheduleEvent.layoutDuration ?? 0,
+    layoutDuration: Number(scheduleEvent.layoutDuration ?? 0),
     resolutionId: scheduleEvent.resolutionId ? String(scheduleEvent.resolutionId) : '',
     backgroundColor: scheduleEvent.backgroundColor ?? '#000000',
-    displayOrder: scheduleEvent.displayOrder ?? 0,
-    isPriority: scheduleEvent.isPriority ?? 0,
-    maxPlaysPerHour: scheduleEvent.maxPlaysPerHour ?? 0,
+    displayOrder: Number(scheduleEvent.displayOrder ?? 0),
+    isPriority: Number(scheduleEvent.isPriority ?? 0),
+    maxPlaysPerHour: Number(scheduleEvent.maxPlaysPerHour ?? 0),
     syncTimezone: scheduleEvent.syncTimezone === 1,
     recurrenceType: scheduleEvent.recurrenceType ?? '',
-    recurrenceDetail: scheduleEvent.recurrenceDetail ?? 1,
+    recurrenceDetail: Number(scheduleEvent.recurrenceDetail ?? 1),
     recurrenceRepeatsOn: scheduleEvent.recurrenceRepeatsOn
       ? scheduleEvent.recurrenceRepeatsOn.split(',')
       : [],
-    recurrenceMonthlyRepeatsOn: scheduleEvent.recurrenceMonthlyRepeatsOn ?? 0,
+    recurrenceMonthlyRepeatsOn: Number(scheduleEvent.recurrenceMonthlyRepeatsOn ?? 0),
     recurrenceRange: scheduleEvent.recurrenceRange
       ? new Date(scheduleEvent.recurrenceRange * 1000).toISOString()
       : '',
     reminders:
       (scheduleEvent.scheduleReminders ?? []).length > 0
         ? scheduleEvent.scheduleReminders.map((r) => ({
-            value: r.value,
-            type: r.type,
-            option: r.option,
+            value: Number(r.value),
+            type: Number(r.type),
+            option: Number(r.option),
             isEmail: r.isEmail === 1,
           }))
         : [{ ...EMPTY_REMINDER }],
