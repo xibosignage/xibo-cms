@@ -5899,10 +5899,11 @@ lD.calculateLayers = function(
     layerMap[calculatedLayers.top + 1] === undefined &&
     !isSingleOnTopLayer
   ) {
-    const backgroundTop = (lD.layout.backgroundImage !== null) ?
-      lD.layout.backgroundzIndex : -1;
+    // Layer 0 is reserved for the background; regions always start at 1+
+    const backgroundTop = (!!lD.layout.backgroundImage) ?
+      lD.layout.backgroundzIndex : 0;
 
-    // If we don't have any layers yet, start above the background (or 0)
+    // If we don't have any layers yet, start above the background (or 1)
     if (layerMap.length === 0) {
       calculatedLayers.availableTop = backgroundTop + 1;
     } else {
