@@ -866,7 +866,7 @@ export default function EditDisplayModal({
         },
       ]}
     >
-      <div className="flex flex-col h-full overflow-y-hidden overflow-x-visible px-4">
+      <div className="flex flex-col flex-1 min-h-0 overflow-hidden px-4">
         <div
           role="tablist"
           aria-label={t('Display settings tabs')}
@@ -1256,6 +1256,7 @@ export default function EditDisplayModal({
                 )}
                 value={draft.displayProfileId ? String(draft.displayProfileId) : ''}
                 placeholder={t('None (use default)')}
+                searchable
                 clearable
                 options={profiles.map((p) => ({
                   value: String(p.displayProfileId),

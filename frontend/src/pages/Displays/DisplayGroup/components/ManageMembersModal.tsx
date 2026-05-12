@@ -315,7 +315,7 @@ export default function ManageMembersModal({
       ]}
     >
       {/* Tab bar */}
-      <div className="flex flex-col h-full overflow-y-hidden overflow-x-visible px-6">
+      <div className="flex flex-col shrink-0 overflow-x-visible px-6">
         <nav className="flex overflow-x-auto" aria-label="Tabs">
           {tabs.map((tab) => (
             <button
