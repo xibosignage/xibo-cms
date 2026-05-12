@@ -70,7 +70,7 @@
     "ajax-bootstrap-select": "^1.4.5",
     "blueimp-file-upload": "^10.32.0",
     "blueimp-load-image": "~5.16.0",
-    "bootbox": "^6.0.0",
+    "bootbox": "^6.0.4",
     "bootstrap": "^4.6.2",
     "bootstrap-calendar": "~0.2.4",
     "bootstrap-colorpicker": "~2.5.2",
@@ -129,6 +129,11 @@
     "xibo-interactive-control": "git+https://github.com/xibosignage/xibo-interactive-control.git#10eede7e15b60091c9890fd9ee02ace09879b244"
   },
   "overrides": {
-    "serialize-javascript": "^7.0.3"
+    "serialize-javascript": "^7.0.3",
+    "minimatch": "^3.1.5",
+    "flatted": "^3.4.2",
+    "brace-expansion": "^1.1.14",
+    "picomatch": "^2.3.2",
+    "fast-uri": "^3.1.2"
   }
 }
