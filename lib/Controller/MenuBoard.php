@@ -150,10 +150,18 @@ class MenuBoard extends Base
             $menuBoard->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($menuBoard));
         }
 
-        return $response
-            ->withStatus(200)
-            ->withHeader('X-Total-Count', $this->menuBoardFactory->countLast())
-            ->withJson($menuBoards);
+        if ($this->isJson($request)) {
+            return $response
+                ->withStatus(200)
+                ->withHeader('X-Total-Count', $this->menuBoardFactory->countLast())
+                ->withJson($menuBoards);
+        }
+
+        // TODO remove once Layout Designer is updated.
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = $this->menuBoardFactory->countLast();
+        $this->getState()->setData($menuBoards);
+        return $this->render($request, $response);
     }
 
     private function getMenuBoardFilters(SanitizerInterface $params): array
@@ -192,7 +200,7 @@ class MenuBoard extends Base
     )]
     public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
-        $menuBoard = $this->menuBoardFactory->getById($id);
+        $menuBoard = $this->menuBoardFactory->getById($id, false);
         $menuBoard->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($menuBoard));
 
         return $response

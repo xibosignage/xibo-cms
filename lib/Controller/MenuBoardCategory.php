@@ -31,9 +31,6 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\MenuBoardCategoryFactory;
 use Xibo\Factory\MenuBoardFactory;
 use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\GeneralException;
-use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
 class MenuBoardCategory extends Base
@@ -122,7 +119,7 @@ class MenuBoardCategory extends Base
     public function grid(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $parsedParams = $this->getSanitizer($request->getQueryParams());
-        $menuBoard = $this->menuBoardFactory->getById($id);
+        $menuBoard = $this->menuBoardFactory->getById($id, false);
 
         $menuBoardCategories = $this->menuBoardCategoryFactory->query(
             $this->gridRenderSort($parsedParams, $this->isJson($request)),
@@ -133,10 +130,18 @@ class MenuBoardCategory extends Base
             $this->decorateCategoryForGrid($request, $menuBoardCategory);
         }
 
-        return $response
-            ->withStatus(200)
-            ->withHeader('X-Total-Count', $this->menuBoardCategoryFactory->countLast())
-            ->withJson($menuBoardCategories);
+        if ($this->isJson($request)) {
+            return $response
+                ->withStatus(200)
+                ->withHeader('X-Total-Count', $this->menuBoardCategoryFactory->countLast())
+                ->withJson($menuBoardCategories);
+        }
+
+        // TODO remove once Layout Designer is updated.
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = $this->menuBoardCategoryFactory->countLast();
+        $this->getState()->setData($menuBoardCategories);
+        return $this->render($request, $response);
     }
 
     private function getMenuBoardCategoryFilters(SanitizerInterface $params, int $menuId): array
@@ -191,6 +196,7 @@ class MenuBoardCategory extends Base
     public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $menuBoardCategory = $this->menuBoardCategoryFactory->getById($id);
+        $this->menuBoardFactory->getById($menuBoardCategory->menuId, false);
         $this->decorateCategoryForGrid($request, $menuBoardCategory);
 
         return $response

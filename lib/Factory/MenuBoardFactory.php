@@ -74,11 +74,14 @@ class MenuBoardFactory extends BaseFactory
     /**
      * @throws NotFoundException
      */
-    public function getById(int $menuId): MenuBoard
+    public function getById(int $menuId, bool $disableUserCheck = true): MenuBoard
     {
         $this->getLog()->debug('MenuBoardFactory getById ' . $menuId);
 
-        $menuBoards = $this->query(null, ['disableUserCheck' => 1, 'menuId' => $menuId]);
+        $menuBoards = $this->query(null, [
+            'disableUserCheck' => $disableUserCheck ? 1 : 0,
+            'menuId' => $menuId
+        ]);
 
         if (count($menuBoards) <= 0) {
             $this->getLog()->debug('Menu Board not found with ID ' . $menuId);
@@ -99,9 +102,12 @@ class MenuBoardFactory extends BaseFactory
     /**
      * @throws NotFoundException
      */
-    public function getByMenuCategoryId(int $menuCategoryId): MenuBoard
+    public function getByMenuCategoryId(int $menuCategoryId, bool $disableUserCheck = true): MenuBoard
     {
-        $menuBoards = $this->query(null, ['disableUserCheck' => 1, 'menuCategoryId' => $menuCategoryId]);
+        $menuBoards = $this->query(null, [
+            'disableUserCheck' => $disableUserCheck ? 1 : 0,
+            'menuCategoryId' => $menuCategoryId
+        ]);
 
         if (count($menuBoards) <= 0) {
             $this->getLog()->debug('Menu Board not found with Menu Board Category ID ' . $menuCategoryId);

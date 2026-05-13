@@ -121,7 +121,7 @@ class MenuBoardProduct extends Base
     public function grid(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $parsedParams = $this->getSanitizer($request->getQueryParams());
-        $menuBoard = $this->menuBoardFactory->getByMenuCategoryId($id);
+        $menuBoard = $this->menuBoardFactory->getByMenuCategoryId($id, false);
 
         $menuBoardProducts = $this->menuBoardCategoryFactory->getProductData(
             $this->gridRenderSort($parsedParams, $this->isJson($request)),
@@ -148,6 +148,7 @@ class MenuBoardProduct extends Base
             'name'           => $params->getString('name'),
             'code'           => $params->getString('code'),
             'keyword'        => $params->getString('keyword'),
+            'availability'   => $params->getInt('availability'),
         ], $params);
     }
 
@@ -192,6 +193,7 @@ class MenuBoardProduct extends Base
     public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $menuBoardProduct = $this->menuBoardCategoryFactory->getByProductId($id);
+        $this->menuBoardFactory->getById($menuBoardProduct->menuId, false);
         $this->decorateProductForGrid($request, $menuBoardProduct);
 
         return $response
@@ -202,6 +204,10 @@ class MenuBoardProduct extends Base
     public function productsForWidget(Request $request, Response $response): Response|ResponseInterface
     {
         $parsedParams = $this->getSanitizer($request->getQueryParams());
+
+        if ($parsedParams->getInt('menuId') !== null) {
+            $this->menuBoardFactory->getById($parsedParams->getInt('menuId'), false);
+        }
 
         $filter = $this->gridRenderFilter([
             'menuId'         => $parsedParams->getInt('menuId'),
