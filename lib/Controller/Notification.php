@@ -816,7 +816,7 @@ class Notification extends Base
      */
     public function exportAttachment(Request $request, Response $response, $id)
     {
-        $notification = $this->notificationFactory->getById($id);
+        $notification = $this->userNotificationFactory->getByNotificationId($id);
 
         $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'attachment/' . $notification->filename;
 
