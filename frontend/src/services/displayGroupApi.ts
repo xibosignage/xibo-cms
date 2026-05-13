@@ -27,6 +27,8 @@ export interface FetchDisplayGroupRequest {
   start: number;
   length: number;
   folderId?: number | null;
+  displayGroupId?: number;
+  displayGroupIds?: number[];
   displayId?: number;
   nestedDisplayId?: number;
   dynamicCriteria?: string;

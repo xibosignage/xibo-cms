@@ -47,6 +47,8 @@ interface SelectDropdownProps {
   label?: string;
   value?: string;
   placeholder?: string;
+  initialLabel?: string;
+  resolveLabel?: (value: string) => Promise<string>;
   options: SelectOption[];
   searchable?: boolean;
   searchPlaceholder?: string;
@@ -71,6 +73,8 @@ export default function SelectDropdown({
   label,
   value,
   placeholder = 'Select',
+  initialLabel,
+  resolveLabel,
   options,
   searchable,
   searchPlaceholder,
@@ -100,6 +104,31 @@ export default function SelectDropdown({
   const labelCache = useRef<Map<string, string>>(new Map());
   const isLoadingMoreRef = useRef(isLoadingMore);
   isLoadingMoreRef.current = isLoadingMore;
+  const resolvingRef = useRef<string | undefined>(undefined);
+  const [, setResolveVersion] = useState(0);
+
+  useEffect(() => {
+    if (!value || !resolveLabel) {
+      return;
+    }
+    if (labelCache.current.has(value)) {
+      return;
+    }
+    if (resolvingRef.current === value) {
+      return;
+    }
+
+    resolvingRef.current = value;
+    resolveLabel(value)
+      .then((label) => {
+        labelCache.current.set(value, label);
+        setResolveVersion((v) => v + 1);
+      })
+      .catch(() => {})
+      .finally(() => {
+        resolvingRef.current = undefined;
+      });
+  }, [value, resolveLabel]);
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
@@ -139,7 +168,7 @@ export default function SelectDropdown({
   }
   const selectedLabel =
     options.find((o) => o.value === value)?.label ??
-    (value ? (labelCache.current.get(value) ?? '') : '');
+    (value ? (labelCache.current.get(value) ?? initialLabel ?? '') : '');
 
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,

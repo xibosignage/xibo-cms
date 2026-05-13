@@ -1017,6 +1017,7 @@ export default function EditDisplayModal({
                 )}
                 value={draft.defaultLayoutId ? String(draft.defaultLayoutId) : ''}
                 placeholder={t('Global default')}
+                initialLabel={data?.defaultLayout ?? undefined}
                 options={layoutOptions}
                 onSelect={(v) => set('defaultLayoutId', v ? Number(v) : null)}
                 isLoading={isLoadingLayouts}

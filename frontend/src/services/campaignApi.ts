@@ -183,3 +183,8 @@ export async function deleteCampaign(campaignId: number) {
   const response = await http.delete(`/campaign/${campaignId}`);
   return response.data;
 }
+
+export async function fetchCampaignById(campaignId: number): Promise<Campaign> {
+  const response = await http.get(`/campaign/${campaignId}`);
+  return response.data;
+}

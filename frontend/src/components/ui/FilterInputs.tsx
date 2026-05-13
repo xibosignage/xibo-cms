@@ -47,6 +47,8 @@ export interface FilterConfigItem<T> {
   isLoading?: boolean;
   onSearch?: (term: string) => void;
   isJalali?: boolean;
+  initialLabel?: string;
+  resolveLabel?: (value: string) => Promise<string>;
 }
 
 type FilterValue = string | number | null | Tag[];
@@ -184,6 +186,8 @@ export default function FilterInputs<T>({
               key={filter.name}
               label={filter.label}
               value={currentStr}
+              initialLabel={filter.initialLabel}
+              resolveLabel={filter.resolveLabel}
               options={selectOptions}
               searchable
               clearable
