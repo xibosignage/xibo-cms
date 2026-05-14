@@ -1375,8 +1375,13 @@ class DataSet extends Base
         $i = 0;
         $dataSet = $this->dataSetFactory->getById($id);
 
+        if (!$this->getUser()->checkEditable($dataSet)) {
+            throw new AccessDeniedException();
+        }
+
         // Create a CSV file
-        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . Random::generateString() .'.csv';
+        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' .
+            Random::generateString() .'.csv';
 
         $out = fopen($tempFileName, 'w');
 

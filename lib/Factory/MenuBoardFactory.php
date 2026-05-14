@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -33,58 +33,19 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class MenuBoardFactory extends BaseFactory
 {
-    /** @var  ConfigServiceInterface */
-    private $config;
-
-    /** @var PoolInterface */
-    private $pool;
-
-    /**
-     * @var PermissionFactory
-     */
-    private $permissionFactory;
-
-    /**
-     * @var MenuBoardCategoryFactory
-     */
-    private $menuBoardCategoryFactory;
-
-    /** @var DisplayNotifyServiceInterface */
-    private $displayNotifyService;
-
-    /**
-     * Construct a factory
-     * @param User $user
-     * @param UserFactory $userFactory
-     * @param ConfigServiceInterface $config
-     * @param PoolInterface $pool
-     * @param PermissionFactory $permissionFactory
-     * @param MenuBoardCategoryFactory $menuBoardCategoryFactory
-     * @param DisplayNotifyServiceInterface $displayNotifyService
-     */
     public function __construct(
-        $user,
-        $userFactory,
-        $config,
-        $pool,
-        $permissionFactory,
-        $menuBoardCategoryFactory,
-        $displayNotifyService
+        User $user,
+        UserFactory $userFactory,
+        private readonly ConfigServiceInterface $config,
+        private readonly PoolInterface $pool,
+        private readonly PermissionFactory $permissionFactory,
+        private readonly MenuBoardCategoryFactory $menuBoardCategoryFactory,
+        private readonly DisplayNotifyServiceInterface $displayNotifyService,
     ) {
         $this->setAclDependencies($user, $userFactory);
-        $this->config = $config;
-        $this->pool = $pool;
-
-        $this->permissionFactory = $permissionFactory;
-        $this->menuBoardCategoryFactory = $menuBoardCategoryFactory;
-        $this->displayNotifyService = $displayNotifyService;
     }
 
-    /**
-     * Create Empty
-     * @return MenuBoard
-     */
-    public function createEmpty()
+    public function createEmpty(): MenuBoard
     {
         return new MenuBoard(
             $this->getStore(),
@@ -99,13 +60,6 @@ class MenuBoardFactory extends BaseFactory
         );
     }
 
-    /**
-     * Create a new menuboard
-     * @param string $name
-     * @param string|null $description
-     * @param string|null $code
-     * @return MenuBoard
-     */
     public function create(string $name, ?string $description, ?string $code): MenuBoard
     {
         $menuBoard = $this->createEmpty();
@@ -118,15 +72,16 @@ class MenuBoardFactory extends BaseFactory
     }
 
     /**
-     * @param int $menuId
-     * @return MenuBoard
      * @throws NotFoundException
      */
-    public function getById(int $menuId)
+    public function getById(int $menuId, bool $disableUserCheck = true): MenuBoard
     {
         $this->getLog()->debug('MenuBoardFactory getById ' . $menuId);
 
-        $menuBoards = $this->query(null, ['disableUserCheck' => 1, 'menuId' => $menuId]);
+        $menuBoards = $this->query(null, [
+            'disableUserCheck' => $disableUserCheck ? 1 : 0,
+            'menuId' => $menuId
+        ]);
 
         if (count($menuBoards) <= 0) {
             $this->getLog()->debug('Menu Board not found with ID ' . $menuId);
@@ -136,11 +91,8 @@ class MenuBoardFactory extends BaseFactory
         return $menuBoards[0];
     }
 
-
     /**
-     * @param int $userId
      * @return MenuBoard[]
-     * @throws NotFoundException
      */
     public function getByOwnerId(int $userId): array
     {
@@ -148,13 +100,14 @@ class MenuBoardFactory extends BaseFactory
     }
 
     /**
-     * @param int $menuCategoryId
-     * @return MenuBoard
      * @throws NotFoundException
      */
-    public function getByMenuCategoryId(int $menuCategoryId)
+    public function getByMenuCategoryId(int $menuCategoryId, bool $disableUserCheck = true): MenuBoard
     {
-        $menuBoards = $this->query(null, ['disableUserCheck' => 1, 'menuCategoryId' => $menuCategoryId]);
+        $menuBoards = $this->query(null, [
+            'disableUserCheck' => $disableUserCheck ? 1 : 0,
+            'menuCategoryId' => $menuCategoryId
+        ]);
 
         if (count($menuBoards) <= 0) {
             $this->getLog()->debug('Menu Board not found with Menu Board Category ID ' . $menuCategoryId);
@@ -165,34 +118,26 @@ class MenuBoardFactory extends BaseFactory
     }
 
     /**
-     * @param $folderId
      * @return MenuBoard[]
-     * @throws NotFoundException
      */
-    public function getByFolderId($folderId)
+    public function getByFolderId(int $folderId): array
     {
         return $this->query(null, ['disableUserCheck' => 1, 'folderId' => $folderId]);
     }
 
     /**
-     * @param null $sortOrder
-     * @param array $filterBy
      * @return MenuBoard[]
      * @throws NotFoundException
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query(?array $sortOrder = null, array $filterBy = []): array
     {
-        if ($sortOrder === null) {
-            $sortOrder = ['menuId DESC'];
-        }
-
         $sanitizedFilter = $this->getSanitizer($filterBy);
 
         $params = [];
         $entries = [];
 
         $select = '
-            SELECT 
+            SELECT
                `menu_board`.menuId,
                `menu_board`.name,
                `menu_board`.description,
@@ -202,6 +147,7 @@ class MenuBoardFactory extends BaseFactory
                `user`.UserName AS owner,
                `menu_board`.folderId,
                `menu_board`.permissionsFolderId,
+               `folder`.folderName,
                (SELECT GROUP_CONCAT(DISTINCT `group`.group)
                           FROM `permission`
                             INNER JOIN `permissionentity`
@@ -217,6 +163,7 @@ class MenuBoardFactory extends BaseFactory
 
         $body = ' FROM menu_board
                      INNER JOIN `user` ON `user`.userId = `menu_board`.userId
+                     LEFT OUTER JOIN `folder` ON `menu_board`.folderId = `folder`.folderId
         ';
 
         if ($sanitizedFilter->getInt('menuCategoryId') !== null) {
@@ -224,7 +171,15 @@ class MenuBoardFactory extends BaseFactory
         }
 
         $body .= ' WHERE 1 = 1 ';
-        $this->viewPermissionSql('Xibo\Entity\MenuBoard', $body, $params, 'menu_board.menuId', 'menu_board.userId', $filterBy, '`menu_board`.permissionsFolderId');
+        $this->viewPermissionSql(
+            'Xibo\Entity\MenuBoard',
+            $body,
+            $params,
+            'menu_board.menuId',
+            'menu_board.userId',
+            $filterBy,
+            '`menu_board`.permissionsFolderId'
+        );
 
         if ($sanitizedFilter->getInt('menuId') !== null) {
             $body .= ' AND `menu_board`.menuId = :menuId ';
@@ -265,6 +220,15 @@ class MenuBoardFactory extends BaseFactory
             $params['code'] = '%' . $sanitizedFilter->getString('code') . '%';
         }
 
+        if ($sanitizedFilter->getString('keyword') != null) {
+            $body .= $this->buildSearchQuery(
+                $sanitizedFilter->getString('keyword'),
+                $params,
+                ['menu_board.name'],
+                ['menu_board.menuId']
+            );
+        }
+
         if ($sanitizedFilter->getDate('modifiedDateFrom') !== null) {
             $body .= ' AND `menu_board`.modifiedDt >= :modifiedDateFrom ';
             $params['modifiedDateFrom'] = strtotime($sanitizedFilter->getDate('modifiedDateFrom'));
@@ -275,27 +239,23 @@ class MenuBoardFactory extends BaseFactory
             $params['modifiedDateTo'] = strtotime($sanitizedFilter->getDate('modifiedDateTo'));
         }
 
-        // Sorting?
-        $order = '';
-
-        if (is_array($sortOrder)) {
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
-        }
+        $allowedColumns = ['menuId', 'name', 'code', 'modifiedDt', 'owner', 'folderName'];
+        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, [], ['name ASC']);
+        $order = empty($sortOrder) ? '' : ' ORDER BY ' . implode(', ', $sortOrder);
 
         $limit = '';
-        // Paging
-        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null &&
+            $sanitizedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' .
+                $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $menuBoard = $this->createEmpty()->hydrate($row);
-            $entries[] = $menuBoard;
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
-        // Paging
         if ($limit != '' && count($entries) > 0) {
             unset($params['permissionEntityForGroup']);
             $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);

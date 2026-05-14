@@ -23,69 +23,23 @@
 namespace Xibo\Controller;
 
 use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Entity\MenuBoardCategory as MenuBoardCategoryEntity;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\MenuBoardCategoryFactory;
 use Xibo\Factory\MenuBoardFactory;
 use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\GeneralException;
-use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 class MenuBoardCategory extends Base
 {
-    /**
-     * @var MenuBoardFactory
-     */
-    private $menuBoardFactory;
-
-    /**
-     * @var MenuBoardCategoryFactory
-     */
-    private $menuBoardCategoryFactory;
-
-    /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
-
-    /**
-     * Set common dependencies.
-     * @param MenuBoardFactory $menuBoardFactory
-     * @param $menuBoardCategoryFactory
-     * @param MediaFactory $mediaFactory
-     */
     public function __construct(
-        $menuBoardFactory,
-        $menuBoardCategoryFactory,
-        $mediaFactory
+        private readonly MenuBoardFactory $menuBoardFactory,
+        private readonly MenuBoardCategoryFactory $menuBoardCategoryFactory,
+        private readonly MediaFactory $mediaFactory,
     ) {
-        $this->menuBoardFactory = $menuBoardFactory;
-        $this->menuBoardCategoryFactory = $menuBoardCategoryFactory;
-        $this->mediaFactory = $mediaFactory;
-    }
-
-    /**
-     * Displays the Menu Board Categories Page
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function displayPage(Request $request, Response $response, $id)
-    {
-        $menuBoard = $this->menuBoardFactory->getById($id);
-
-        // Call to render the template
-        $this->getState()->template = 'menuboard-category-page';
-        $this->getState()->setData([
-            'menuBoard' => $menuBoard
-        ]);
-
-        return $this->render($request, $response);
     }
 
     #[OA\Get(
@@ -123,132 +77,208 @@ class MenuBoardCategory extends Base
         required: false,
         schema: new OA\Schema(type: 'string')
     )]
+    #[OA\Parameter(
+        name: 'keyword',
+        description: 'Filter by keyword (searches name)',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: ['menuCategoryId', 'name', 'code']
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
     #[OA\Response(
         response: 200,
         description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: '#/components/schemas/MenuBoard')
         )
     )]
-    /**
-     * Returns a Grid of Menu Board Categories
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     */
-    public function grid(Request $request, Response $response, $id): Response
+    public function grid(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $parsedParams = $this->getSanitizer($request->getQueryParams());
-        $menuBoard = $this->menuBoardFactory->getById($id);
-
-        $filter = [
-            'menuId' => $menuBoard->menuId,
-            'menuCategoryId' => $parsedParams->getInt('menuCategoryId'),
-            'name' => $parsedParams->getString('name'),
-            'code' => $parsedParams->getString('code')
-        ];
+        $menuBoard = $this->menuBoardFactory->getById($id, false);
 
         $menuBoardCategories = $this->menuBoardCategoryFactory->query(
-            $this->gridRenderSort($parsedParams),
-            $this->gridRenderFilter($filter, $parsedParams)
+            $this->gridRenderSort($parsedParams, $this->isJson($request)),
+            $this->getMenuBoardCategoryFilters($parsedParams, $menuBoard->menuId)
         );
 
-
         foreach ($menuBoardCategories as $menuBoardCategory) {
-            if ($menuBoardCategory->mediaId != 0) {
-                $menuBoardCategory->setUnmatchedProperty(
-                    'thumbnail',
-                    $this->urlFor(
-                        $request,
-                        'library.download',
-                        ['id' => $menuBoardCategory->mediaId],
-                        ['preview' => 1],
-                    )
-                );
-                try {
-                    $media = $this->mediaFactory->getById($menuBoardCategory->mediaId);
-                    $menuBoardCategory->setUnmatchedProperty('mediaType', $media->mediaType);
-                } catch (\Exception $e) {
-                    $menuBoardCategory->setUnmatchedProperty('mediaType', null);
-                }
-            }
-
-            if ($this->isApi($request) || $this->isJson($request)) {
-                continue;
-            }
-
-            $menuBoardCategory->includeProperty('buttons');
-            $menuBoardCategory->buttons = [];
-
-            if ($this->getUser()->featureEnabled('menuBoard.modify') && $this->getUser()->checkEditable($menuBoard)) {
-                $menuBoardCategory->buttons[] = [
-                    'id' => 'menuBoardCategory_button_viewproducts',
-                    'url' => $this->urlFor($request, 'menuBoard.product.view', ['id' => $menuBoardCategory->menuCategoryId]),
-                    'class' => 'XiboRedirectButton',
-                    'text' => __('View Products')
-                ];
-
-                $menuBoardCategory->buttons[] = [
-                    'id' => 'menuBoardCategory_edit_button',
-                    'url' => $this->urlFor($request, 'menuBoard.category.edit.form', ['id' => $menuBoardCategory->menuCategoryId]),
-                    'text' => __('Edit')
-                ];
-            }
-
-            if ($this->getUser()->featureEnabled('menuBoard.modify') && $this->getUser()->checkDeleteable($menuBoard)) {
-                $menuBoardCategory->buttons[] = ['divider' => true];
-
-                $menuBoardCategory->buttons[] = [
-                    'id' => 'menuBoardCategory_delete_button',
-                    'url' => $this->urlFor($request, 'menuBoard.category.delete.form', ['id' => $menuBoardCategory->menuCategoryId]),
-                    'text' => __('Delete')
-                ];
-            }
+            $this->decorateCategoryForGrid($request, $menuBoardCategory);
         }
 
+        if ($this->isJson($request)) {
+            return $response
+                ->withStatus(200)
+                ->withHeader('X-Total-Count', $this->menuBoardCategoryFactory->countLast())
+                ->withJson($menuBoardCategories);
+        }
+
+        // TODO remove once Layout Designer is updated.
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->menuBoardCategoryFactory->countLast();
         $this->getState()->setData($menuBoardCategories);
-
         return $this->render($request, $response);
     }
 
-    /**
-     * Menu Board Category Add Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     */
-    public function addForm(Request $request, Response $response, $id): Response
+    private function getMenuBoardCategoryFilters(SanitizerInterface $params, int $menuId): array
     {
-        $menuBoard = $this->menuBoardFactory->getById($id);
+        return $this->gridRenderFilter([
+            'menuId'         => $menuId,
+            'menuCategoryId' => $params->getInt('menuCategoryId'),
+            'name'           => $params->getString('name'),
+            'code'           => $params->getString('code'),
+            'keyword'        => $params->getString('keyword'),
+        ], $params);
+    }
 
-        if (!$this->getUser()->checkEditable($menuBoard)) {
+    private function decorateCategoryForGrid(Request $request, MenuBoardCategoryEntity $category): void
+    {
+        if ($category->mediaId == 0) {
+            return;
+        }
+
+        $category->setUnmatchedProperty(
+            'thumbnail',
+            $this->urlFor($request, 'library.download', ['id' => $category->mediaId], ['preview' => 1])
+        );
+
+        try {
+            $media = $this->mediaFactory->getById($category->mediaId);
+            $category->setUnmatchedProperty('mediaType', $media->mediaType);
+        } catch (\Exception $e) {
+            $category->setUnmatchedProperty('mediaType', null);
+        }
+    }
+
+    #[OA\Get(
+        path: '/menuboard/category/{menuCategoryId}',
+        operationId: 'menuBoardCategorySearchById',
+        description: 'Get the Menu Board Category object specified by the provided menuCategoryId',
+        summary: 'Search Menu Board Category by ID',
+        tags: ['menuBoard']
+    )]
+    #[OA\Parameter(
+        name: 'menuCategoryId',
+        description: 'Numeric ID of the Menu Board Category to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/MenuBoardCategory')
+    )]
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
+    {
+        $menuBoardCategory = $this->menuBoardCategoryFactory->getById($id);
+        $this->menuBoardFactory->getById($menuBoardCategory->menuId, false);
+        $this->decorateCategoryForGrid($request, $menuBoardCategory);
+
+        return $response
+            ->withStatus(200)
+            ->withJson($menuBoardCategory);
+    }
+
+    #[OA\Post(
+        path: '/menuboard/category/copy/{menuCategoryId}',
+        operationId: 'menuBoardCategoryCopy',
+        description: 'Copy a Menu Board Category and all of its Products',
+        summary: 'Copy Menu Board Category',
+        tags: ['menuBoard']
+    )]
+    #[OA\Parameter(
+        name: 'menuCategoryId',
+        description: 'The Menu Board Category ID to copy',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['name'],
+                properties: [
+                    new OA\Property(property: 'name', description: 'Menu Board Category name', type: 'string'),
+                    new OA\Property(
+                        property: 'description',
+                        description: 'Menu Board Category description',
+                        type: 'string'
+                    ),
+                    new OA\Property(
+                        property: 'code',
+                        description: 'Menu Board Category code identifier',
+                        type: 'string'
+                    )
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/MenuBoardCategory')
+    )]
+    public function copy(Request $request, Response $response, int $id): Response|ResponseInterface
+    {
+        $menuBoardCategory = $this->menuBoardCategoryFactory->getById($id);
+        $menuBoard = $this->menuBoardFactory->getByMenuCategoryId($id);
+
+        if (!$this->getUser()->checkViewable($menuBoard)) {
             throw new AccessDeniedException();
         }
 
-        $this->getState()->template = 'menuboard-category-form-add';
-        $this->getState()->setData([
-            'menuBoard' => $menuBoard
-        ]);
+        $params = $this->getSanitizer($request->getParams());
+        $newCategory = $menuBoardCategory->copyWithCascade(
+            $menuBoardCategory->menuId,
+            $params->getString('name'),
+            $params->getString('description'),
+            $params->getString('code')
+        );
 
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(201)
+            ->withJson($newCategory);
     }
 
     #[OA\Post(
         path: '/menuboard/{menuId}/category',
         operationId: 'menuBoardCategoryAdd',
         description: 'Add a new Menu Board Category',
-        summary: 'Add Menu Board',
+        summary: 'Add Menu Board Category',
         tags: ['menuBoard']
     )]
     #[OA\Parameter(
@@ -259,9 +289,11 @@ class MenuBoardCategory extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['name'],
                 properties: [
                     new OA\Property(property: 'name', description: 'Menu Board Category name', type: 'string'),
                     new OA\Property(
@@ -279,35 +311,23 @@ class MenuBoardCategory extends Base
                         description: 'Menu Board Category description',
                         type: 'string'
                     )
-                ],
-                required: ['name']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(
         response: 201,
         description: 'successful operation',
-        content: new OA\JsonContent(ref: '#/components/schemas/MenuBoard'),
         headers: [
             new OA\Header(
                 header: 'Location',
                 description: 'Location of the new record',
                 schema: new OA\Schema(type: 'string')
             )
-        ]
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/MenuBoard')
     )]
-    /**
-     * Add a new Menu Board Category
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     */
-    public function add(Request $request, Response $response, $id): Response
+    public function add(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -317,53 +337,19 @@ class MenuBoardCategory extends Base
             throw new AccessDeniedException();
         }
 
-        $name = $sanitizedParams->getString('name');
-        $mediaId = $sanitizedParams->getInt('mediaId');
-        $code = $sanitizedParams->getString('code');
-        $description = $sanitizedParams->getString('description');
-
-        $menuBoardCategory = $this->menuBoardCategoryFactory->create($id, $name, $mediaId, $code, $description);
+        $menuBoardCategory = $this->menuBoardCategoryFactory->create(
+            $id,
+            $sanitizedParams->getString('name'),
+            $sanitizedParams->getInt('mediaId'),
+            $sanitizedParams->getString('code'),
+            $sanitizedParams->getString('description')
+        );
         $menuBoardCategory->save();
         $menuBoard->save(['audit' => false]);
 
-        // Return
-        $this->getState()->hydrate([
-            'message' => __('Added Menu Board Category'),
-            'httpStatus' => 201,
-            'id' => $menuBoardCategory->menuCategoryId,
-            'data' => $menuBoardCategory,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
-     * @return Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     */
-    public function editForm(Request $request, Response $response, $id): Response
-    {
-        $menuBoard = $this->menuBoardFactory->getByMenuCategoryId($id);
-
-        if (!$this->getUser()->checkEditable($menuBoard)) {
-            throw new AccessDeniedException();
-        }
-
-        $menuBoardCategory = $this->menuBoardCategoryFactory->getById($id);
-
-        $this->getState()->template = 'menuboard-category-form-edit';
-        $this->getState()->setData([
-            'menuBoardCategory' => $menuBoardCategory,
-            'media' => $menuBoardCategory->mediaId != null ? $this->mediaFactory->getById($menuBoardCategory->mediaId) : null
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(201)
+            ->withJson($menuBoardCategory);
     }
 
     #[OA\Put(
@@ -381,9 +367,11 @@ class MenuBoardCategory extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['name'],
                 properties: [
                     new OA\Property(property: 'name', description: 'Menu Board name', type: 'string'),
                     new OA\Property(
@@ -401,24 +389,12 @@ class MenuBoardCategory extends Base
                         description: 'Menu Board Category description',
                         type: 'string'
                     )
-                ],
-                required: ['name']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(response: 204, description: 'successful operation')]
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
-     * @return Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     */
-    public function edit(Request $request, Response $response, $id): Response
+    public function edit(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $menuBoard = $this->menuBoardFactory->getByMenuCategoryId($id);
 
@@ -436,42 +412,9 @@ class MenuBoardCategory extends Base
         $menuBoardCategory->save();
         $menuBoard->save();
 
-        // Success
-        $this->getState()->hydrate([
-            'httpStatus' => 200,
-            'message' => sprintf(__('Edited %s'), $menuBoardCategory->name),
-            'id' => $menuBoardCategory->menuCategoryId,
-            'data' => $menuBoardCategory
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-
-    /**
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
-     * @return Response
-     * @throws GeneralException
-     */
-    public function deleteForm(Request $request, Response $response, $id): Response
-    {
-        $menuBoard = $this->menuBoardFactory->getByMenuCategoryId($id);
-
-        if (!$this->getUser()->checkDeleteable($menuBoard)) {
-            throw new AccessDeniedException();
-        }
-
-        $menuBoardCategory = $this->menuBoardCategoryFactory->getById($id);
-
-        $this->getState()->template = 'menuboard-category-form-delete';
-        $this->getState()->setData([
-            'menuBoardCategory' => $menuBoardCategory
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson($menuBoardCategory);
     }
 
     #[OA\Delete(
@@ -482,24 +425,14 @@ class MenuBoardCategory extends Base
         tags: ['menuBoard']
     )]
     #[OA\Parameter(
-        name: 'menuId',
-        description: 'The menuId to Delete',
+        name: 'menuCategoryId',
+        description: 'The Menu Board Category ID to Delete',
         in: 'path',
         required: true,
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Response(response: 204, description: 'successful operation')]
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     */
-    public function delete(Request $request, Response $response, $id): Response
+    public function delete(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $menuBoard = $this->menuBoardFactory->getByMenuCategoryId($id);
 
@@ -508,16 +441,8 @@ class MenuBoardCategory extends Base
         }
 
         $menuBoardCategory = $this->menuBoardCategoryFactory->getById($id);
-
-        // Issue the delete
         $menuBoardCategory->delete();
 
-        // Success
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Deleted %s'), $menuBoardCategory->name)
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(204);
     }
 }

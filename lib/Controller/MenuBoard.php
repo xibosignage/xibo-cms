@@ -23,45 +23,23 @@
 namespace Xibo\Controller;
 
 use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\MenuBoardFactory;
 use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\GeneralException;
-use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Menu Board Controller
  */
 class MenuBoard extends Base
 {
-    /**
-     * Set common dependencies.
-     * @param MenuBoardFactory $menuBoardFactory
-     * @param FolderFactory $folderFactory
-     */
     public function __construct(
         private readonly MenuBoardFactory $menuBoardFactory,
         private readonly FolderFactory $folderFactory
     ) {
-    }
-
-    /**
-     * Displays the Menu Board Page
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function displayPage(Request $request, Response $response)
-    {
-        // Call to render the template
-        $this->getState()->template = 'menuboard-page';
-
-        return $this->render($request, $response);
     }
 
     #[OA\Get(
@@ -120,145 +98,175 @@ class MenuBoard extends Base
         required: false,
         schema: new OA\Schema(type: 'string')
     )]
+    #[OA\Parameter(
+        name: 'keyword',
+        description: 'Filter by keyword (searches name)',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: ['menuId', 'name', 'code', 'modifiedDt', 'owner', 'folderName']
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
     #[OA\Response(
         response: 200,
         description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: '#/components/schemas/MenuBoard')
         )
     )]
-    /**
-     * Returns a Grid of Menu Boards
-     *
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     */
-    public function grid(Request $request, Response $response): Response
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
         $parsedParams = $this->getSanitizer($request->getQueryParams());
 
-        $filter = [
-            'menuId' => $parsedParams->getInt('menuId'),
-            'userId' => $parsedParams->getInt('userId'),
-            'name' => $parsedParams->getString('name'),
-            'code' => $parsedParams->getString('code'),
-            'folderId' => $parsedParams->getInt('folderId'),
-            'logicalOperatorName' => $parsedParams->getString('logicalOperatorName'),
-            'modifiedDateFrom' => $parsedParams->getDate('modifiedDateFrom'),
-            'modifiedDateTo' => $parsedParams->getDate('modifiedDateTo'),
-        ];
-
         $menuBoards = $this->menuBoardFactory->query(
-            $this->gridRenderSort($parsedParams),
-            $this->gridRenderFilter($filter, $parsedParams)
+            $this->gridRenderSort($parsedParams, $this->isJson($request)),
+            $this->getMenuBoardFilters($parsedParams)
         );
 
         foreach ($menuBoards as $menuBoard) {
-            if ($this->isApi($request) || $this->isJson($request)) {
-                continue;
-            }
-
-            $menuBoard->includeProperty('buttons');
-            $menuBoard->buttons = [];
-
-            if ($this->getUser()->featureEnabled('menuBoard.modify') && $this->getUser()->checkEditable($menuBoard)) {
-                $menuBoard->buttons[] = [
-                    'id' => 'menuBoard_button_viewcategories',
-                    'url' => $this->urlFor($request, 'menuBoard.category.view', ['id' => $menuBoard->menuId]),
-                    'class' => 'XiboRedirectButton',
-                    'text' => __('View Categories')
-                ];
-
-                $menuBoard->buttons[] = [
-                    'id' => 'menuBoard_edit_button',
-                    'url' => $this->urlFor($request, 'menuBoard.edit.form', ['id' => $menuBoard->menuId]),
-                    'text' => __('Edit')
-                ];
-
-                if ($this->getUser()->featureEnabled('folder.view')) {
-                    // Select Folder
-                    $menuBoard->buttons[] = [
-                        'id' => 'menuBoard_button_selectfolder',
-                        'url' => $this->urlFor($request, 'menuBoard.selectfolder.form', ['id' => $menuBoard->menuId]),
-                        'text' => __('Select Folder'),
-                        'multi-select' => true,
-                        'dataAttributes' => [
-                            [
-                                'name' => 'commit-url',
-                                'value' => $this->urlFor($request, 'menuBoard.selectfolder', ['id' => $menuBoard->menuId])
-                            ],
-                            ['name' => 'commit-method', 'value' => 'put'],
-                            ['name' => 'id', 'value' => 'menuBoard_button_selectfolder'],
-                            ['name' => 'text', 'value' => __('Move to Folder')],
-                            ['name' => 'rowtitle', 'value' => $menuBoard->name],
-                            ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
-                        ]
-                    ];
-                }
-            }
-
-            if ($this->getUser()->featureEnabled('menuBoard.modify') && $this->getUser()->checkPermissionsModifyable($menuBoard)) {
-                $menuBoard->buttons[] = ['divider' => true];
-
-                // Share button
-                $menuBoard->buttons[] = [
-                    'id' => 'menuBoard_button_permissions',
-                    'url' => $this->urlFor($request, 'user.permissions.form', ['entity' => 'MenuBoard', 'id' => $menuBoard->menuId]),
-                    'text' => __('Share'),
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor($request, 'user.permissions.multi', ['entity' => 'MenuBoard', 'id' => $menuBoard->menuId])
-                        ],
-                        ['name' => 'commit-method', 'value' => 'post'],
-                        ['name' => 'id', 'value' => 'menuBoard_button_permissions'],
-                        ['name' => 'text', 'value' => __('Share')],
-                        ['name' => 'rowtitle', 'value' => $menuBoard->name],
-                        ['name' => 'sort-group', 'value' => 2],
-                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        [
-                            'name' => 'custom-handler-url',
-                            'value' => $this->urlFor($request, 'user.permissions.multi.form', ['entity' => 'MenuBoard'])
-                        ],
-                        ['name' => 'content-id-name', 'value' => 'menuId']
-                    ]
-                ];
-            }
-
-            if ($this->getUser()->featureEnabled('menuBoard.modify')
-                && $this->getUser()->checkDeleteable($menuBoard)
-            ) {
-                $menuBoard->buttons[] = ['divider' => true];
-
-                $menuBoard->buttons[] = [
-                    'id' => 'menuBoard_delete_button',
-                    'url' => $this->urlFor($request, 'menuBoard.delete.form', ['id' => $menuBoard->menuId]),
-                    'text' => __('Delete')
-                ];
-            }
+            $menuBoard->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($menuBoard));
         }
 
+        if ($this->isJson($request)) {
+            return $response
+                ->withStatus(200)
+                ->withHeader('X-Total-Count', $this->menuBoardFactory->countLast())
+                ->withJson($menuBoards);
+        }
+
+        // TODO remove once Layout Designer is updated.
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->menuBoardFactory->countLast();
         $this->getState()->setData($menuBoards);
-
         return $this->render($request, $response);
     }
 
-    /**
-     * Menu Board Add Form
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     */
-    public function addForm(Request $request, Response $response): Response
+    private function getMenuBoardFilters(SanitizerInterface $params): array
     {
-        $this->getState()->template = 'menuboard-form-add';
-        return $this->render($request, $response);
+        return $this->gridRenderFilter([
+            'menuId'              => $params->getInt('menuId'),
+            'userId'              => $params->getInt('userId'),
+            'name'                => $params->getString('name'),
+            'code'                => $params->getString('code'),
+            'folderId'            => $params->getInt('folderId'),
+            'logicalOperatorName' => $params->getString('logicalOperatorName'),
+            'modifiedDateFrom'    => $params->getDate('modifiedDateFrom'),
+            'modifiedDateTo'      => $params->getDate('modifiedDateTo'),
+            'keyword'             => $params->getString('keyword'),
+        ], $params);
+    }
+
+    #[OA\Get(
+        path: '/menuboard/{menuId}',
+        operationId: 'menuBoardSearchById',
+        description: 'Get the Menu Board object specified by the provided menuId',
+        summary: 'Search Menu Board by ID',
+        tags: ['menuBoard']
+    )]
+    #[OA\Parameter(
+        name: 'menuId',
+        description: 'Numeric ID of the Menu Board to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/MenuBoard')
+    )]
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
+    {
+        $menuBoard = $this->menuBoardFactory->getById($id, false);
+        $menuBoard->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($menuBoard));
+
+        return $response
+            ->withStatus(200)
+            ->withJson($menuBoard);
+    }
+
+    #[OA\Post(
+        path: '/menuboard/copy/{menuId}',
+        operationId: 'menuBoardCopy',
+        description: 'Copy a Menu Board and all of its Categories and Products',
+        summary: 'Copy Menu Board',
+        tags: ['menuBoard']
+    )]
+    #[OA\Parameter(
+        name: 'menuId',
+        description: 'The Menu Board ID to copy',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\MediaType(
+            mediaType: 'application/x-www-form-urlencoded',
+            schema: new OA\Schema(
+                required: ['name'],
+                properties: [
+                    new OA\Property(property: 'name', description: 'Menu Board name', type: 'string'),
+                    new OA\Property(property: 'description', description: 'Menu Board description', type: 'string'),
+                    new OA\Property(property: 'code', description: 'Menu Board code identifier', type: 'string')
+                ]
+            )
+        )
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'Location',
+                description: 'Location of the new record',
+                schema: new OA\Schema(type: 'string')
+            )
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/MenuBoard')
+    )]
+    public function copy(Request $request, Response $response, int $id): Response|ResponseInterface
+    {
+        $menuBoard = $this->menuBoardFactory->getById($id);
+
+        if (!$this->getUser()->checkViewable($menuBoard)) {
+            throw new AccessDeniedException();
+        }
+
+        $params = $this->getSanitizer($request->getParams());
+        $newMenuBoard = $menuBoard->copyWithCascade(
+            $params->getString('name'),
+            $params->getString('description'),
+            $params->getString('code'),
+            $this->getUser()->userId
+        );
+
+        return $response
+            ->withStatus(201)
+            ->withJson($newMenuBoard);
     }
 
     #[OA\Post(
@@ -269,42 +277,33 @@ class MenuBoard extends Base
         tags: ['menuBoard']
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['name'],
                 properties: [
                     new OA\Property(property: 'name', description: 'Menu Board name', type: 'string'),
                     new OA\Property(property: 'description', description: 'Menu Board description', type: 'string'),
                     new OA\Property(property: 'code', description: 'Menu Board code identifier', type: 'string'),
                     new OA\Property(property: 'folderId', description: 'Menu Board Folder Id', type: 'integer')
-                ],
-                required: ['name']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(
         response: 201,
         description: 'successful operation',
-        content: new OA\JsonContent(ref: '#/components/schemas/MenuBoard'),
         headers: [
             new OA\Header(
                 header: 'Location',
                 description: 'Location of the new record',
                 schema: new OA\Schema(type: 'string')
             )
-        ]
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/MenuBoard')
     )]
-    /**
-     * Add a new Menu Board
-     *
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
-     */
-    public function add(Request $request, Response $response): Response
+    public function add(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -328,39 +327,9 @@ class MenuBoard extends Base
         $menuBoard->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
         $menuBoard->save();
 
-        // Return
-        $this->getState()->hydrate([
-            'message' => __('Added Menu Board'),
-            'httpStatus' => 201,
-            'id' => $menuBoard->menuId,
-            'data' => $menuBoard,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
-     * @return Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function editForm(Request $request, Response $response, $id): Response
-    {
-        $menuBoard = $this->menuBoardFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($menuBoard)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'menuboard-form-edit';
-        $this->getState()->setData([
-            'menuBoard' => $menuBoard
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(201)
+            ->withJson($menuBoard);
     }
 
     #[OA\Put(
@@ -378,32 +347,22 @@ class MenuBoard extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['name'],
                 properties: [
                     new OA\Property(property: 'name', description: 'Menu Board name', type: 'string'),
                     new OA\Property(property: 'description', description: 'Menu Board description', type: 'string'),
                     new OA\Property(property: 'code', description: 'Menu Board code identifier', type: 'string'),
                     new OA\Property(property: 'folderId', description: 'Menu Board Folder Id', type: 'integer')
-                ],
-                required: ['name']
+                ]
             )
-        ),
-        required: true
+        )
     )]
-    #[OA\Response(response: 204, description: 'successful operation')]
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
-     * @return Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     */
-    public function edit(Request $request, Response $response, $id): Response
+    #[OA\Response(response: 200, description: 'successful operation')]
+    public function edit(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $menuBoard = $this->menuBoardFactory->getById($id);
 
@@ -423,46 +382,16 @@ class MenuBoard extends Base
                 $this->checkRootFolderAllowSave();
             }
             $folder = $this->folderFactory->getById($menuBoard->folderId);
-            $menuBoard->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+            $menuBoard->permissionsFolderId = ($folder->getPermissionFolderId() == null)
+                ? $folder->id
+                : $folder->getPermissionFolderId();
         }
 
         $menuBoard->save();
 
-        // Success
-        $this->getState()->hydrate([
-            'httpStatus' => 200,
-            'message' => sprintf(__('Edited %s'), $menuBoard->name),
-            'id' => $menuBoard->menuId,
-            'data' => $menuBoard
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-
-    /**
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
-     * @return Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function deleteForm(Request $request, Response $response, $id): Response
-    {
-        $menuBoard = $this->menuBoardFactory->getById($id);
-
-        if (!$this->getUser()->checkDeleteable($menuBoard)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'menuboard-form-delete';
-        $this->getState()->setData([
-            'menuBoard' => $menuBoard
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson($menuBoard);
     }
 
     #[OA\Delete(
@@ -480,17 +409,7 @@ class MenuBoard extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Response(response: 204, description: 'successful operation')]
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     */
-    public function delete(Request $request, Response $response, $id): Response
+    public function delete(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $menuBoard = $this->menuBoardFactory->getById($id);
 
@@ -498,47 +417,9 @@ class MenuBoard extends Base
             throw new AccessDeniedException();
         }
 
-        // Issue the delete
         $menuBoard->delete();
 
-        // Success
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Deleted %s'), $menuBoard->name)
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Select Folder Form
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function selectFolderForm(Request $request, Response $response, $id)
-    {
-        // Get the Menu Board
-        $menuBoard = $this->menuBoardFactory->getById($id);
-
-        // Check Permissions
-        if (!$this->getUser()->checkEditable($menuBoard)) {
-            throw new AccessDeniedException();
-        }
-
-        $data = [
-            'menuBoard' => $menuBoard
-        ];
-
-        $this->getState()->template = 'menuboard-form-selectfolder';
-        $this->getState()->setData($data);
-
-        return $this->render($request, $response);
+        return $response->withStatus(204);
     }
 
     #[OA\Put(
@@ -556,43 +437,30 @@ class MenuBoard extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['folderId'],
                 properties: [
                     new OA\Property(
                         property: 'folderId',
                         description: 'Folder ID to which this object should be assigned to',
                         type: 'integer'
                     )
-                ],
-                required: ['folderId']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(
         response: 200,
         description: 'successful operation',
         content: new OA\JsonContent(ref: '#/components/schemas/MenuBoard')
     )]
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function selectFolder(Request $request, Response $response, $id)
+    public function selectFolder(Request $request, Response $response, int $id): Response|ResponseInterface
     {
-        // Get the Menu Board
         $menuBoard = $this->menuBoardFactory->getById($id);
 
-        // Check Permissions
         if (!$this->getUser()->checkEditable($menuBoard)) {
             throw new AccessDeniedException();
         }
@@ -605,17 +473,12 @@ class MenuBoard extends Base
 
         $menuBoard->folderId = $folderId;
         $folder = $this->folderFactory->getById($menuBoard->folderId);
-        $menuBoard->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        $menuBoard->permissionsFolderId = ($folder->getPermissionFolderId() == null)
+            ? $folder->id
+            : $folder->getPermissionFolderId();
 
-        // Save
         $menuBoard->save();
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Menu Board %s moved to Folder %s'), $menuBoard->name, $folder->text)
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(204);
     }
 }

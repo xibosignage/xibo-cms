@@ -24,6 +24,7 @@ namespace Xibo\Entity;
 
 use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Factory\MenuBoardProductOptionFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -39,107 +40,55 @@ class MenuBoardProduct implements \JsonSerializable
 {
     use EntityTrait;
 
-    /**
-     * @var int
-     */
     #[OA\Property(description: 'The Menu Board Product Id')]
     public $menuProductId;
 
-    /**
-     * @var int
-     */
     #[OA\Property(description: 'The Menu Board Category Id')]
     public $menuCategoryId;
 
-    /**
-     * @var int
-     */
     #[OA\Property(description: 'The Menu Board Id')]
     public $menuId;
 
-    /**
-     * @var string
-     */
     #[OA\Property(description: 'The Menu Board Category name')]
     public $name;
 
-    /**
-     * @var double
-     */
     #[OA\Property(description: 'The Menu Board Product price')]
     public $price;
 
-    /**
-     * @var string
-     */
     #[OA\Property(description: 'The Menu Board Product description')]
     public $description;
 
-    /**
-     * @var string
-     */
     #[OA\Property(description: 'The Menu Board Product code identifier')]
     public $code;
 
-    /**
-     * @var int
-     */
     #[OA\Property(description: 'The Menu Board Product display order, used for sorting')]
     public $displayOrder;
 
-    /**
-     * @var int
-     */
     #[OA\Property(description: 'The Menu Board Product availability')]
     public $availability;
 
-    /**
-     * @var string
-     */
     #[OA\Property(description: 'The Menu Board Product allergy information')]
     public $allergyInfo;
 
-    /**
-     * @var int
-     */
     #[OA\Property(description: 'The Menu Board Product allergy information')]
     public $calories;
 
-    /**
-     * @var int
-     */
     #[OA\Property(description: 'The Menu Board Product associated mediaId')]
     public $mediaId;
 
-    /**
-     * @var MenuBoardProductOption[]
-     */
+    /** @var MenuBoardProductOption[] */
     #[OA\Property(description: 'The Menu Board Product array of options', items: new OA\Items(type: 'string'))]
     public $productOptions;
 
-    /**
-     * @var MenuBoardProductOptionFactory
-     */
-    private $menuBoardProductOptionFactory;
-
-    /**
-     * Entity constructor.
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
-     * @param MenuBoardProductOptionFactory $menuBoardProductOptionFactory
-     */
-    public function __construct($store, $log, $dispatcher, $menuBoardProductOptionFactory)
-    {
+    public function __construct(
+        StorageServiceInterface $store,
+        LogServiceInterface $log,
+        EventDispatcherInterface $dispatcher,
+        private readonly MenuBoardProductOptionFactory $menuBoardProductOptionFactory,
+    ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
-        $this->menuBoardProductOptionFactory = $menuBoardProductOptionFactory;
     }
 
-
-    /**
-     * Get the Id
-     * @return int
-     */
     public function getId(): int
     {
         return $this->menuProductId;
@@ -162,10 +111,12 @@ class MenuBoardProduct implements \JsonSerializable
         }
     }
 
-    /**
-     * @return string
-     */
-    public function __toString()
+    public function __clone(): void
+    {
+        $this->menuProductId = null;
+    }
+
+    public function __toString(): string
     {
         return sprintf(
             'MenuProductId %d, MenuCategoryId %d, MenuId %d, Name %s, Price %s, Media %d, Code %s',
@@ -179,10 +130,6 @@ class MenuBoardProduct implements \JsonSerializable
         );
     }
 
-    /**
-     * Convert this to a Product
-     * @return Product
-     */
     public function toProduct(): Product
     {
         $product = new Product();
@@ -203,11 +150,9 @@ class MenuBoardProduct implements \JsonSerializable
     }
 
     /**
-     * Save this Menu Board Product
-     * @param array $options
      * @throws InvalidArgumentException
      */
-    public function save($options = [])
+    public function save(array $options = []): void
     {
         $options = array_merge([
             'validate' => true,
@@ -226,9 +171,6 @@ class MenuBoardProduct implements \JsonSerializable
         }
     }
 
-    /**
-     * Add Menu Board Product
-     */
     private function add(): void
     {
         $this->menuProductId = $this->getStore()->insert('
@@ -264,7 +206,7 @@ class MenuBoardProduct implements \JsonSerializable
             'name' => $this->name,
             'price' => $this->price,
             'description' => $this->description,
-            'mediaId' => $this->mediaId,
+            'mediaId' => $this->mediaId ?: null,
             'displayOrder' => $this->displayOrder,
             'availability' => $this->availability,
             'allergyInfo' => $this->allergyInfo,
@@ -273,9 +215,6 @@ class MenuBoardProduct implements \JsonSerializable
         ]);
     }
 
-    /**
-     * Update Menu Board Product
-     */
     private function update(): void
     {
         $this->getStore()->update('
@@ -304,27 +243,28 @@ class MenuBoardProduct implements \JsonSerializable
         ]);
     }
 
-    /**
-     * Delete Menu Board Product
-     */
-    public function delete()
+    public function delete(): void
     {
         $this->removeOptions();
-        $this->getStore()->update('DELETE FROM `menu_product` WHERE menuProductId = :menuProductId', ['menuProductId' => $this->menuProductId]);
+        $this->getStore()->update(
+            'DELETE FROM `menu_product` WHERE menuProductId = :menuProductId',
+            ['menuProductId' => $this->menuProductId]
+        );
     }
 
     /**
      * @return MenuBoardProductOption[]
      */
-    public function getOptions()
+    public function getOptions(): array
     {
-        $options = $this->menuBoardProductOptionFactory->getByMenuProductId($this->menuProductId);
-
-        return $options;
+        return $this->menuBoardProductOptionFactory->getByMenuProductId($this->menuProductId);
     }
 
-    public function removeOptions()
+    public function removeOptions(): void
     {
-        $this->getStore()->update('DELETE FROM `menu_product_options` WHERE menuProductId = :menuProductId', ['menuProductId' => $this->menuProductId]);
+        $this->getStore()->update(
+            'DELETE FROM `menu_product_options` WHERE menuProductId = :menuProductId',
+            ['menuProductId' => $this->menuProductId]
+        );
     }
 }
