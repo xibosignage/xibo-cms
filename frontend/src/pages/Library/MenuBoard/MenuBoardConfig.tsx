@@ -33,6 +33,7 @@ import type { ActionItem, BaseModalType } from '@/types/table';
 import { formatDateTime } from '@/utils/date';
 
 export interface MenuBoardFilterInput {
+  name: string;
   menuId: string;
   code: string;
   userId: string;
@@ -42,6 +43,7 @@ export interface MenuBoardFilterInput {
 export type ModalType = BaseModalType | null;
 
 export const INITIAL_FILTER_STATE: MenuBoardFilterInput = {
+  name: '',
   menuId: '',
   userId: '',
   code: '',
@@ -50,14 +52,21 @@ export const INITIAL_FILTER_STATE: MenuBoardFilterInput = {
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<MenuBoardFilterInput>[] => [
   {
-    label: t('Menu Board ID'),
-    placeholder: t('Enter ID'),
+    label: t('ID'),
+    placeholder: ' ',
     name: 'menuId',
     type: 'number',
   },
   {
+    label: t('Name'),
+    name: 'name',
+    type: 'text',
+    className: '',
+    placeholder: ' ',
+  },
+  {
     label: t('Code'),
-    placeholder: t('Enter Code'),
+    placeholder: ' ',
     name: 'code',
     type: 'text',
   },

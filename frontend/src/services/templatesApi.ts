@@ -26,6 +26,7 @@ export interface FetchTemplateRequest {
   start: number;
   length: number;
   keyword?: string;
+  template?: string;
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;

@@ -27,16 +27,20 @@ export interface FetchMediaRequest {
   start: number;
   length: number;
   keyword?: string;
+  media?: string;
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;
   folderId?: number;
+  mediaId?: number;
 
   type?: string;
+  tags?: string;
   ownerId?: string;
   ownerUserGroupId?: string;
   orientation?: string;
-  retired?: string;
+  retired?: number | string;
+  layoutId?: number;
   lastModified?: string;
   displayGroupId?: number;
 }

@@ -32,6 +32,8 @@ export interface FetchDisplaysRequest {
   length: number;
   keyword?: string;
   displayId?: number;
+  display?: string;
+  tags?: string;
   mediaInventoryStatus?: number | string;
   loggedIn?: number | string;
   authorised?: number | string;

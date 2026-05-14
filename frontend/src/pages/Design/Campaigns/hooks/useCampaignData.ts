@@ -60,6 +60,8 @@ export const useCampaignData = ({
         signal,
         folderId: folderId ?? undefined,
 
+        ...(advancedFilters.name && { name: advancedFilters.name }),
+
         ...(advancedFilters.type && { type: advancedFilters.type }),
 
         ...(advancedFilters.hasLayouts === '1' && {
@@ -78,6 +80,8 @@ export const useCampaignData = ({
         }),
 
         ...(normalizedTags && { tags: normalizedTags }),
+
+        ...(advancedFilters.retired != null && { retired: advancedFilters.retired }),
       };
 
       return fetchCampaigns(request);

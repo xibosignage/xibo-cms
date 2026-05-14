@@ -37,9 +37,15 @@ export interface FetchLayoutRequest {
 
   userId?: string;
   ownerUserGroupId?: string;
+  tags?: string;
+  codeLike?: string;
+  orientation?: string;
+  layoutStatusId?: number;
+  showDescriptionId?: number;
+  mediaLike?: string;
+  layoutId?: number;
   lastModified?: string;
   activeDisplayGroupId?: number;
-  displayGroupId?: number;
 }
 
 export interface FetchLayoutResponse {
@@ -201,6 +207,11 @@ export async function publishLayout(
     },
   });
 
+  return data;
+}
+
+export async function retireLayout(layoutId: number | string): Promise<Layout> {
+  const { data } = await http.put(`/layout/retire/${layoutId}`);
   return data;
 }
 

@@ -48,6 +48,7 @@ export interface Layout {
   modifiedDt: string;
   code?: string | number;
   description?: string;
+  descriptionFormatted?: string;
   ownerId: number;
   userPermissions?: LayoutPermissions;
   permissionsFolderId: number;

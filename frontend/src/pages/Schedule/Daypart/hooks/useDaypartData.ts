@@ -70,6 +70,7 @@ export const useDaypartData = ({
         start: startOffset,
         length: pagination.pageSize,
         keyword: filter,
+        name: advancedFilters.name ?? undefined,
         isRetired: advancedFilters.retired ?? undefined,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,

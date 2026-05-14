@@ -208,7 +208,13 @@ export function LayoutModals({
       )}
 
       {isModalOpen('retire') && selection.selectedLayout && (
-        <RetireLayoutModal layout={selection.selectedLayout} onClose={actions.closeModal} />
+        <RetireLayoutModal
+          layout={selection.selectedLayout}
+          onClose={() => {
+            actions.closeModal();
+            actions.handleRefresh();
+          }}
+        />
       )}
 
       {isModalOpen('enableStats') && selection.selectedLayout && (

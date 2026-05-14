@@ -70,7 +70,10 @@ export const usePlaylistData = ({
       const sortBy = sorting?.[0]?.id;
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
 
-      const { lastModified, ...restFilters } = advancedFilters;
+      const { lastModified, tags, ...restFilters } = advancedFilters;
+
+      const normalizedTags =
+        tags && tags.length > 0 ? tags.map((tag) => tag.tag).join(',') : undefined;
 
       const request: FetchPlaylistRequest = {
         start: startOffset,
@@ -80,6 +83,7 @@ export const usePlaylistData = ({
         sortDir: sorting.length ? sortDir : undefined,
         signal,
         ...restFilters,
+        ...(normalizedTags ? { tags: normalizedTags } : {}),
         ...resolveLastModified(lastModified),
       } as FetchPlaylistRequest;
 

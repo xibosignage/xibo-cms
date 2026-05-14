@@ -152,6 +152,7 @@ function TagInput({
                 }
               }
             }}
+            onBlur={() => addTag(input)}
             placeholder={tags.length === 0 ? placeholder || t('Add tags') : ''}
           />
         </div>

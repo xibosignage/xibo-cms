@@ -56,7 +56,8 @@ export type ModalType =
   | null;
 
 export interface DisplayGroupFilterInput {
-  displayId: number | null;
+  displayGroup: string;
+  displayGroupId: number | null;
   displayIdDropdown: number | null;
   nestedDisplayId: number | null;
   dynamicCriteria: string;
@@ -64,7 +65,8 @@ export interface DisplayGroupFilterInput {
 }
 
 export const INITIAL_FILTER_STATE: DisplayGroupFilterInput = {
-  displayId: null,
+  displayGroup: '',
+  displayGroupId: null,
   displayIdDropdown: null,
   nestedDisplayId: null,
   dynamicCriteria: '',
@@ -73,10 +75,17 @@ export const INITIAL_FILTER_STATE: DisplayGroupFilterInput = {
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayGroupFilterInput>[] => [
   {
-    label: t('Display ID'),
-    name: 'displayId',
+    label: t('ID'),
+    name: 'displayGroupId',
     type: 'number',
-    placeholder: t('Enter display ID...'),
+    placeholder: ' ',
+  },
+  {
+    label: t('Name'),
+    name: 'displayGroup',
+    type: 'text',
+    className: '',
+    placeholder: ' ',
   },
   {
     label: t('Display'),
@@ -94,13 +103,14 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayGroupFi
     label: t('Dynamic Criteria'),
     name: 'dynamicCriteria',
     type: 'text',
-    placeholder: t('Filter by criteria...'),
+    placeholder: ' ',
   },
   {
     label: t('Tags'),
     name: 'tags',
     type: 'tags',
-    className: 'max-w-auto md:max-w-80',
+    placeholder: ' ',
+    className: '',
   },
 ];
 

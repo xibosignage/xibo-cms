@@ -19,6 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import type { TFunction } from 'i18next';
+
 import {
   EventTypeId,
   ReminderType,
@@ -107,47 +109,48 @@ export interface SelectOption {
 
 export const STEP_LABELS = ['Content', 'Displays', 'Time', 'Optional'] as const;
 
-export const EVENT_TYPE_OPTIONS: SelectOption[] = [
-  { value: String(EventTypeId.Layout), label: 'Layout' },
-  { value: String(EventTypeId.Command), label: 'Command' },
-  { value: String(EventTypeId.Overlay), label: 'Overlay Layout' },
-  { value: String(EventTypeId.Interrupt), label: 'Interrupt Layout' },
-  { value: String(EventTypeId.Campaign), label: 'Campaign' },
-  { value: String(EventTypeId.Action), label: 'Action' },
-  { value: String(EventTypeId.Media), label: 'Media' },
-  { value: String(EventTypeId.Playlist), label: 'Playlist' },
-  { value: String(EventTypeId.Sync), label: 'Synchronised Event' },
-  { value: String(EventTypeId.DataConnector), label: 'Data Connector' },
+export const getEventTypeOptions = (t: TFunction): SelectOption[] => [
+  { value: String(EventTypeId.Layout), label: t('Layout') },
+  { value: String(EventTypeId.Command), label: t('Command') },
+  { value: String(EventTypeId.Overlay), label: t('Overlay Layout') },
+  { value: String(EventTypeId.Interrupt), label: t('Interrupt Layout') },
+  { value: String(EventTypeId.Campaign), label: t('Campaign') },
+  { value: String(EventTypeId.Action), label: t('Action') },
+  { value: String(EventTypeId.Media), label: t('Media') },
+  { value: String(EventTypeId.Playlist), label: t('Playlist') },
+  { value: String(EventTypeId.Sync), label: t('Synchronised Event') },
+  { value: String(EventTypeId.DataConnector), label: t('Data Connector') },
 ];
 
-export const CONDITION_OPTIONS: SelectOption[] = [
-  { value: 'set', label: 'Is set' },
-  { value: 'lt', label: 'Less than' },
-  { value: 'lte', label: 'Less than or equal to' },
-  { value: 'eq', label: 'Equal to' },
-  { value: 'neq', label: 'Not equal to' },
-  { value: 'gte', label: 'Greater than or equal to' },
-  { value: 'gt', label: 'Greater than' },
-  { value: 'contains', label: 'Contains' },
-  { value: 'ncontains', label: 'Not contains' },
+export const getConditionOptions = (t: TFunction): SelectOption[] => [
+  { value: 'set', label: t('Is set') },
+  { value: 'lt', label: t('Less than') },
+  { value: 'lte', label: t('Less than or equal to') },
+  { value: 'eq', label: t('Equal to') },
+  { value: 'neq', label: t('Not equal to') },
+  { value: 'gte', label: t('Greater than or equal to') },
+  { value: 'gt', label: t('Greater than') },
+  { value: 'contains', label: t('Contains') },
+  { value: 'ncontains', label: t('Not contains') },
 ];
 
-export const CRITERIA_TYPE_OPTIONS: SelectOption[] = [
-  { value: 'custom', label: 'Custom' },
-  { value: 'weather', label: 'Weather' },
-  { value: 'emergency_alert', label: 'Emergency Alerts' },
+export const getCriteriaTypeOptions = (t: TFunction): SelectOption[] => [
+  { value: 'custom', label: t('Custom') },
+  { value: 'weather', label: t('Weather') },
+  { value: 'emergency_alert', label: t('Emergency Alerts') },
 ];
 
-// Number comparison conditions shared by most weather metrics
-const NUMBER_CONDITIONS: SelectOption[] = [
-  { value: 'lt', label: 'Less than' },
-  { value: 'lte', label: 'Less than or equal to' },
-  { value: 'eq', label: 'Equal to' },
-  { value: 'gte', label: 'Greater than or equal to' },
-  { value: 'gt', label: 'Greater than' },
+const getNumberConditions = (t: TFunction): SelectOption[] => [
+  { value: 'lt', label: t('Less than') },
+  { value: 'lte', label: t('Less than or equal to') },
+  { value: 'eq', label: t('Equal to') },
+  { value: 'gte', label: t('Greater than or equal to') },
+  { value: 'gt', label: t('Greater than') },
 ];
 
-const EQ_ONLY_CONDITION: SelectOption[] = [{ value: 'eq', label: 'Equal to' }];
+const getEqOnlyCondition = (t: TFunction): SelectOption[] => [
+  { value: 'eq', label: t('Equal to') },
+];
 
 export interface CriteriaMetricConfig {
   id: string;
@@ -161,134 +164,136 @@ export interface CriteriaTypeConfig {
   metrics: CriteriaMetricConfig[];
 }
 
-export const CRITERIA_TYPE_METRICS: Record<string, CriteriaTypeConfig> = {
-  weather: {
-    metrics: [
-      {
-        id: 'weather_condition',
-        label: 'Weather Condition',
-        conditions: EQ_ONLY_CONDITION,
-        inputType: 'dropdown',
-        values: [
-          { value: 'thunderstorm', label: 'Thunderstorm' },
-          { value: 'drizzle', label: 'Drizzle' },
-          { value: 'rain', label: 'Rain' },
-          { value: 'snow', label: 'Snow' },
-          { value: 'clear', label: 'Clear' },
-          { value: 'clouds', label: 'Clouds' },
-        ],
-      },
-      {
-        id: 'weather_temp_imperial',
-        label: 'Temperature (Imperial)',
-        conditions: NUMBER_CONDITIONS,
-        inputType: 'number',
-      },
-      {
-        id: 'weather_temp_metric',
-        label: 'Temperature (Metric)',
-        conditions: NUMBER_CONDITIONS,
-        inputType: 'number',
-      },
-      {
-        id: 'weather_feels_like_imperial',
-        label: 'Apparent Temperature (Imperial)',
-        conditions: NUMBER_CONDITIONS,
-        inputType: 'number',
-      },
-      {
-        id: 'weather_feels_like_metric',
-        label: 'Apparent Temperature (Metric)',
-        conditions: NUMBER_CONDITIONS,
-        inputType: 'number',
-      },
-      {
-        id: 'weather_wind_speed',
-        label: 'Wind Speed',
-        conditions: NUMBER_CONDITIONS,
-        inputType: 'number',
-      },
-      {
-        id: 'weather_wind_direction',
-        label: 'Wind Direction',
-        conditions: EQ_ONLY_CONDITION,
-        inputType: 'dropdown',
-        values: [
-          { value: 'N', label: 'North' },
-          { value: 'NE', label: 'Northeast' },
-          { value: 'E', label: 'East' },
-          { value: 'SE', label: 'Southeast' },
-          { value: 'S', label: 'South' },
-          { value: 'SW', label: 'Southwest' },
-          { value: 'W', label: 'West' },
-          { value: 'NW', label: 'Northwest' },
-        ],
-      },
-      {
-        id: 'weather_wind_degrees',
-        label: 'Wind Direction (degrees)',
-        conditions: NUMBER_CONDITIONS,
-        inputType: 'number',
-      },
-      {
-        id: 'weather_humidity',
-        label: 'Humidity (Percent)',
-        conditions: NUMBER_CONDITIONS,
-        inputType: 'number',
-      },
-      {
-        id: 'weather_pressure',
-        label: 'Pressure',
-        conditions: NUMBER_CONDITIONS,
-        inputType: 'number',
-      },
-      {
-        id: 'weather_visibility',
-        label: 'Visibility (metres)',
-        conditions: NUMBER_CONDITIONS,
-        inputType: 'number',
-      },
-    ],
-  },
-  emergency_alert: {
-    metrics: [
-      {
-        id: 'emergency_alert_status',
-        label: 'Status',
-        conditions: EQ_ONLY_CONDITION,
-        inputType: 'dropdown',
-        values: [
-          { value: 'actual_alerts', label: 'Actual Alerts' },
-          { value: 'test_alerts', label: 'Test Alerts' },
-          { value: 'no_alerts', label: 'No Alerts' },
-        ],
-      },
-      {
-        id: 'emergency_alert_category',
-        label: 'Category',
-        conditions: EQ_ONLY_CONDITION,
-        inputType: 'dropdown',
-        values: [
-          { value: 'Geo', label: 'Geo' },
-          { value: 'Met', label: 'Met' },
-          { value: 'Safety', label: 'Safety' },
-          { value: 'Security', label: 'Security' },
-          { value: 'Rescue', label: 'Rescue' },
-          { value: 'Fire', label: 'Fire' },
-          { value: 'Health', label: 'Health' },
-          { value: 'Env', label: 'Env' },
-          { value: 'Transport', label: 'Transport' },
-          { value: 'Infra', label: 'Infra' },
-          { value: 'CBRNE', label: 'CBRNE' },
-          { value: 'Other', label: 'Other' },
-        ],
-      },
-    ],
-  },
-};
+export function getCriteriaTypeMetrics(t: TFunction): Record<string, CriteriaTypeConfig> {
+  return {
+    weather: {
+      metrics: [
+        {
+          id: 'weather_condition',
+          label: t('Weather Condition'),
+          conditions: getEqOnlyCondition(t),
+          inputType: 'dropdown',
+          values: [
+            { value: 'thunderstorm', label: t('Thunderstorm') },
+            { value: 'drizzle', label: t('Drizzle') },
+            { value: 'rain', label: t('Rain') },
+            { value: 'snow', label: t('Snow') },
+            { value: 'clear', label: t('Clear') },
+            { value: 'clouds', label: t('Clouds') },
+          ],
+        },
+        {
+          id: 'weather_temp_imperial',
+          label: t('Temperature (Imperial)'),
+          conditions: getNumberConditions(t),
+          inputType: 'number',
+        },
+        {
+          id: 'weather_temp_metric',
+          label: t('Temperature (Metric)'),
+          conditions: getNumberConditions(t),
+          inputType: 'number',
+        },
+        {
+          id: 'weather_feels_like_imperial',
+          label: t('Apparent Temperature (Imperial)'),
+          conditions: getNumberConditions(t),
+          inputType: 'number',
+        },
+        {
+          id: 'weather_feels_like_metric',
+          label: t('Apparent Temperature (Metric)'),
+          conditions: getNumberConditions(t),
+          inputType: 'number',
+        },
+        {
+          id: 'weather_wind_speed',
+          label: t('Wind Speed'),
+          conditions: getNumberConditions(t),
+          inputType: 'number',
+        },
+        {
+          id: 'weather_wind_direction',
+          label: t('Wind Direction'),
+          conditions: getEqOnlyCondition(t),
+          inputType: 'dropdown',
+          values: [
+            { value: 'N', label: t('North') },
+            { value: 'NE', label: t('Northeast') },
+            { value: 'E', label: t('East') },
+            { value: 'SE', label: t('Southeast') },
+            { value: 'S', label: t('South') },
+            { value: 'SW', label: t('Southwest') },
+            { value: 'W', label: t('West') },
+            { value: 'NW', label: t('Northwest') },
+          ],
+        },
+        {
+          id: 'weather_wind_degrees',
+          label: t('Wind Direction (degrees)'),
+          conditions: getNumberConditions(t),
+          inputType: 'number',
+        },
+        {
+          id: 'weather_humidity',
+          label: t('Humidity (Percent)'),
+          conditions: getNumberConditions(t),
+          inputType: 'number',
+        },
+        {
+          id: 'weather_pressure',
+          label: t('Pressure'),
+          conditions: getNumberConditions(t),
+          inputType: 'number',
+        },
+        {
+          id: 'weather_visibility',
+          label: t('Visibility (metres)'),
+          conditions: getNumberConditions(t),
+          inputType: 'number',
+        },
+      ],
+    },
+    emergency_alert: {
+      metrics: [
+        {
+          id: 'emergency_alert_status',
+          label: t('Status'),
+          conditions: getEqOnlyCondition(t),
+          inputType: 'dropdown',
+          values: [
+            { value: 'actual_alerts', label: t('Actual Alerts') },
+            { value: 'test_alerts', label: t('Test Alerts') },
+            { value: 'no_alerts', label: t('No Alerts') },
+          ],
+        },
+        {
+          id: 'emergency_alert_category',
+          label: t('Category'),
+          conditions: getEqOnlyCondition(t),
+          inputType: 'dropdown',
+          values: [
+            { value: 'Geo', label: t('Geo') },
+            { value: 'Met', label: t('Met') },
+            { value: 'Safety', label: t('Safety') },
+            { value: 'Security', label: t('Security') },
+            { value: 'Rescue', label: t('Rescue') },
+            { value: 'Fire', label: t('Fire') },
+            { value: 'Health', label: t('Health') },
+            { value: 'Env', label: t('Env') },
+            { value: 'Transport', label: t('Transport') },
+            { value: 'Infra', label: t('Infra') },
+            { value: 'CBRNE', label: t('CBRNE') },
+            { value: 'Other', label: t('Other') },
+          ],
+        },
+      ],
+    },
+  };
+}
 
-export function getCriteriaMetricOptions(type: string): SelectOption[] {
-  const config = CRITERIA_TYPE_METRICS[type];
+export function getCriteriaMetricOptions(type: string, t: TFunction): SelectOption[] {
+  const config = getCriteriaTypeMetrics(t)[type];
   if (!config) return [];
   return config.metrics.map((m) => ({ value: m.id, label: m.label }));
 }
@@ -296,35 +301,36 @@ export function getCriteriaMetricOptions(type: string): SelectOption[] {
 export function getCriteriaMetricConfig(
   type: string,
   metricId: string,
+  t: TFunction,
 ): CriteriaMetricConfig | null {
-  const config = CRITERIA_TYPE_METRICS[type];
+  const config = getCriteriaTypeMetrics(t)[type];
   if (!config) return null;
   return config.metrics.find((m) => m.id === metricId) ?? null;
 }
 
-export const RECURRENCE_TYPE_OPTIONS: SelectOption[] = [
-  { value: '', label: 'None' },
-  { value: 'Minute', label: 'Minute' },
-  { value: 'Hour', label: 'Hour' },
-  { value: 'Day', label: 'Day' },
-  { value: 'Week', label: 'Week' },
-  { value: 'Month', label: 'Month' },
-  { value: 'Year', label: 'Year' },
+export const getRecurrenceTypeOptions = (t: TFunction): SelectOption[] => [
+  { value: '', label: t('None') },
+  { value: 'Minute', label: t('Minute') },
+  { value: 'Hour', label: t('Hour') },
+  { value: 'Day', label: t('Day') },
+  { value: 'Week', label: t('Week') },
+  { value: 'Month', label: t('Month') },
+  { value: 'Year', label: t('Year') },
 ];
 
-export const REMINDER_TYPE_OPTIONS: SelectOption[] = [
-  { value: String(ReminderType.Minute), label: 'Minute' },
-  { value: String(ReminderType.Hour), label: 'Hour' },
-  { value: String(ReminderType.Day), label: 'Day' },
-  { value: String(ReminderType.Week), label: 'Week' },
-  { value: String(ReminderType.Month), label: 'Month' },
+export const getReminderTypeOptions = (t: TFunction): SelectOption[] => [
+  { value: String(ReminderType.Minute), label: t('Minute') },
+  { value: String(ReminderType.Hour), label: t('Hour') },
+  { value: String(ReminderType.Day), label: t('Day') },
+  { value: String(ReminderType.Week), label: t('Week') },
+  { value: String(ReminderType.Month), label: t('Month') },
 ];
 
-export const REMINDER_OPTION_OPTIONS: SelectOption[] = [
-  { value: String(ReminderOption.BeforeStart), label: 'Before schedule starts' },
-  { value: String(ReminderOption.AfterStart), label: 'After schedule starts' },
-  { value: String(ReminderOption.BeforeEnd), label: 'Before schedule ends' },
-  { value: String(ReminderOption.AfterEnd), label: 'After schedule ends' },
+export const getReminderOptionOptions = (t: TFunction): SelectOption[] => [
+  { value: String(ReminderOption.BeforeStart), label: t('Before schedule starts') },
+  { value: String(ReminderOption.AfterStart), label: t('After schedule starts') },
+  { value: String(ReminderOption.BeforeEnd), label: t('Before schedule ends') },
+  { value: String(ReminderOption.AfterEnd), label: t('After schedule ends') },
 ];
 
 export const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;

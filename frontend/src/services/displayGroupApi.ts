@@ -33,6 +33,7 @@ export interface FetchDisplayGroupRequest {
   nestedDisplayId?: number;
   dynamicCriteria?: string;
   tags?: string;
+  displayGroup?: string;
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;

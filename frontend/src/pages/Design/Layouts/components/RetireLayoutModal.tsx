@@ -24,7 +24,7 @@ import { useTranslation } from 'react-i18next';
 
 import Checkbox from '@/components/ui/forms/Checkbox';
 import Modal from '@/components/ui/modals/Modal';
-import { updateLayout } from '@/services/layoutsApi';
+import { retireLayout } from '@/services/layoutsApi';
 import type { Layout } from '@/types/layout';
 
 interface RetireLayoutModalProps {
@@ -51,9 +51,7 @@ export function RetireLayoutModal({
     try {
       setIsLoading(true);
 
-      const updated = await updateLayout(layout.layoutId, {
-        retired: 1,
-      });
+      const updated = await retireLayout(layout.layoutId);
 
       onSuccess?.(updated);
       onClose();

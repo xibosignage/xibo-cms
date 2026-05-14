@@ -59,15 +59,17 @@ import { formatDuration } from '@/utils/formatters';
 
 export interface MediaFilterInput {
   type?: string;
+  mediaId?: number | null;
+  media?: string;
+  tags?: Tag[];
   ownerId?: string;
   ownerUserGroupId?: string;
   orientation?: string;
   retired?: number;
   lastModified?: string;
-  media?: string;
-  tags?: string;
   exactTags?: boolean;
   folderId?: number;
+  layoutId?: number | null;
   logicalOperator?: 'OR' | 'AND';
   logicalOperatorName?: 'OR' | 'AND';
 }
@@ -96,35 +98,59 @@ type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
 export type ModalType = BaseModalType | 'replace' | 'schedule' | null;
 
 export const INITIAL_FILTER_STATE: MediaFilterInput = {
+  mediaId: null,
+  media: '',
+  tags: [],
   type: '',
   ownerId: '',
   ownerUserGroupId: '',
   orientation: '',
+  layoutId: null,
   lastModified: '',
 };
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<MediaFilterInput>[] => [
   {
-    label: t('Type'),
-    name: 'type',
-    options: [
-      { label: 'Image', value: 'image' },
-      { label: 'Video', value: 'video' },
-      { label: 'Audio', value: 'audio' },
-      { label: 'PDF', value: 'pdf' },
-      { label: 'Archive', value: 'archive' },
-      { label: 'Other', value: 'other' },
-    ],
+    label: t('ID'),
+    placeholder: ' ',
+    name: 'mediaId',
+    type: 'number',
+  },
+  {
+    label: t('Name'),
+    name: 'media',
+    type: 'text',
+    className: '',
+    placeholder: ' ',
+  },
+  {
+    label: t('Tags'),
+    name: 'tags',
+    type: 'tags',
+    placeholder: ' ',
+    className: '',
   },
   {
     label: t('Owner'),
     name: 'ownerId',
-    options: [{ label: 'Select Owner', value: null }],
+    options: [{ label: t('Select Owner'), value: null }],
   },
   {
     label: t('User Group'),
     name: 'ownerUserGroupId',
-    options: [{ label: 'Select Group', value: null }],
+    options: [{ label: t('Select Group'), value: null }],
+  },
+  {
+    label: t('Type'),
+    name: 'type',
+    options: [
+      { label: t('Image'), value: 'image' },
+      { label: t('Video'), value: 'video' },
+      { label: t('Audio'), value: 'audio' },
+      { label: t('PDF'), value: 'pdf' },
+      { label: t('Archive'), value: 'archive' },
+      { label: t('Other'), value: 'other' },
+    ],
   },
   {
     label: t('Orientation'),
@@ -134,11 +160,14 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<MediaFilterInp
   {
     label: t('Retired'),
     name: 'retired',
-    options: [
-      { label: 'Any', value: null },
-      { label: 'No', value: 0 },
-      { label: 'Yes', value: 1 },
-    ],
+    options: getCommonFormOptions(t).retired,
+  },
+  {
+    label: t('Layout ID'),
+    name: 'layoutId',
+    type: 'number',
+    className: '',
+    placeholder: ' ',
   },
   {
     label: t('Last Modified'),

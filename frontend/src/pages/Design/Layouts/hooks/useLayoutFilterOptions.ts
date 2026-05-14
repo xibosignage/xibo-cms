@@ -25,6 +25,7 @@ import { useEffect, useState } from 'react';
 import { getBaseFilterKeys } from '../LayoutConfig';
 
 import { useDebounce } from '@/hooks/useDebounce';
+import { fetchDisplayGroups } from '@/services/displayGroupApi';
 import { fetchUsers } from '@/services/userApi';
 import { fetchUserGroups } from '@/services/userGroupApi';
 import type { FilterOption } from '@/types/filter';
@@ -47,6 +48,14 @@ export function useLayoutFilterOptions(t: TFunction) {
   const [isLoadingMoreGroups, setIsLoadingMoreGroups] = useState(false);
   const [groupSearch, setGroupSearch] = useState('');
   const debouncedGroupSearch = useDebounce(groupSearch, 300);
+
+  const [displayGroupOptions, setDisplayGroupOptions] = useState<FilterOption[]>([]);
+  const [displayGroupPage, setDisplayGroupPage] = useState(0);
+  const [hasMoreDisplayGroups, setHasMoreDisplayGroups] = useState(false);
+  const [isLoadingDisplayGroups, setIsLoadingDisplayGroups] = useState(false);
+  const [isLoadingMoreDisplayGroups, setIsLoadingMoreDisplayGroups] = useState(false);
+  const [displayGroupSearch, setDisplayGroupSearch] = useState('');
+  const debouncedDisplayGroupSearch = useDebounce(displayGroupSearch, 300);
 
   useEffect(() => {
     let ignore = false;
@@ -98,6 +107,38 @@ export function useLayoutFilterOptions(t: TFunction) {
     };
   }, [debouncedGroupSearch]);
 
+  useEffect(() => {
+    let ignore = false;
+    setIsLoadingDisplayGroups(true);
+    setDisplayGroupOptions([]);
+    setDisplayGroupPage(0);
+    setHasMoreDisplayGroups(false);
+    fetchDisplayGroups({
+      start: 0,
+      length: PAGE_SIZE,
+      displayGroup: debouncedDisplayGroupSearch || undefined,
+      isDisplaySpecific: -1,
+    })
+      .then((res) => {
+        if (ignore) {
+          return;
+        }
+        setDisplayGroupOptions(
+          res.rows.map((g) => ({ label: g.displayGroup, value: g.displayGroupId.toString() })),
+        );
+        setHasMoreDisplayGroups(res.rows.length === PAGE_SIZE);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!ignore) {
+          setIsLoadingDisplayGroups(false);
+        }
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [debouncedDisplayGroupSearch]);
+
   const handleLoadMoreOwners = () => {
     if (isLoadingMoreOwners || !hasMoreOwners) return;
     const nextPage = ownerPage + 1;
@@ -140,6 +181,28 @@ export function useLayoutFilterOptions(t: TFunction) {
       .finally(() => setIsLoadingMoreGroups(false));
   };
 
+  const handleLoadMoreDisplayGroups = () => {
+    if (isLoadingMoreDisplayGroups || !hasMoreDisplayGroups) return;
+    const nextPage = displayGroupPage + 1;
+    setIsLoadingMoreDisplayGroups(true);
+    fetchDisplayGroups({
+      start: nextPage * PAGE_SIZE,
+      length: PAGE_SIZE,
+      displayGroup: debouncedDisplayGroupSearch || undefined,
+      isDisplaySpecific: -1,
+    })
+      .then((res) => {
+        setDisplayGroupOptions((prev) => [
+          ...prev,
+          ...res.rows.map((g) => ({ label: g.displayGroup, value: g.displayGroupId.toString() })),
+        ]);
+        setDisplayGroupPage(nextPage);
+        setHasMoreDisplayGroups(res.rows.length === PAGE_SIZE);
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingMoreDisplayGroups(false));
+  };
+
   const filterOptions = getBaseFilterKeys(t).map((item) => {
     if (item.name === 'ownerId') {
       return {
@@ -173,10 +236,29 @@ export function useLayoutFilterOptions(t: TFunction) {
       };
     }
 
+    if (item.name === 'activeDisplayGroupId') {
+      return {
+        ...item,
+        options: displayGroupOptions,
+        onLoadMore: handleLoadMoreDisplayGroups,
+        hasMore: hasMoreDisplayGroups,
+        isLoadingMore: isLoadingMoreDisplayGroups,
+        isLoading: isLoadingDisplayGroups,
+        onSearch: (term: string) => setDisplayGroupSearch(term),
+        resolveLabel: (value: string) =>
+          fetchDisplayGroups({
+            start: 0,
+            length: 1,
+            displayGroupId: Number(value),
+            isDisplaySpecific: -1,
+          }).then((res) => res.rows[0]?.displayGroup ?? value),
+      };
+    }
+
     return item;
   });
 
-  const isLoading = isLoadingOwners || isLoadingGroups;
+  const isLoading = isLoadingOwners || isLoadingGroups || isLoadingDisplayGroups;
 
   return { filterOptions, isLoading };
 }

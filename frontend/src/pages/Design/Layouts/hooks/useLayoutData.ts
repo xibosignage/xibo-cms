@@ -69,7 +69,25 @@ export const useLayoutData = ({
       const sortBy = sorting?.[0]?.id;
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
 
-      const { lastModified, ...restFilters } = advancedFilters;
+      const {
+        campaignId,
+        name,
+        tags,
+        code,
+        ownerId,
+        ownerUserGroupId,
+        orientation,
+        retired,
+        layoutStatusId,
+        showDescriptionId,
+        mediaLike,
+        layoutId,
+        lastModified,
+        activeDisplayGroupId,
+      } = advancedFilters;
+
+      const normalizedTags =
+        tags && tags.length > 0 ? tags.map((tag) => tag.tag).join(',') : undefined;
 
       const request: FetchLayoutRequest = {
         start: startOffset,
@@ -78,7 +96,19 @@ export const useLayoutData = ({
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
-        ...restFilters,
+        ...(campaignId != null ? { campaignId } : {}),
+        ...(name ? { layout: name } : {}),
+        ...(normalizedTags ? { tags: normalizedTags } : {}),
+        ...(code ? { codeLike: code } : {}),
+        ...(ownerId ? { userId: ownerId } : {}),
+        ...(ownerUserGroupId ? { ownerUserGroupId } : {}),
+        ...(orientation ? { orientation } : {}),
+        ...(retired !== '' && retired != null ? { retired } : {}),
+        ...(layoutStatusId != null ? { layoutStatusId } : {}),
+        ...(showDescriptionId != null ? { showDescriptionId } : {}),
+        ...(mediaLike ? { mediaLike } : {}),
+        ...(layoutId != null ? { layoutId } : {}),
+        ...(activeDisplayGroupId != null ? { activeDisplayGroupId } : {}),
         ...resolveLastModified(lastModified),
       };
 

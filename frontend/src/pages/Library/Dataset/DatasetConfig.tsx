@@ -32,6 +32,7 @@ import type { Dataset } from '@/types/dataset';
 import type { ActionItem, BaseModalType } from '@/types/table';
 
 export interface DatasetFilterInput {
+  dataSet: string;
   dataSetId: string;
   code: string;
   userId: string;
@@ -41,6 +42,7 @@ export interface DatasetFilterInput {
 export type ModalType = BaseModalType | null;
 
 export const INITIAL_FILTER_STATE: DatasetFilterInput = {
+  dataSet: '',
   dataSetId: '',
   userId: '',
   code: '',
@@ -49,14 +51,21 @@ export const INITIAL_FILTER_STATE: DatasetFilterInput = {
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DatasetFilterInput>[] => [
   {
-    label: t('Dataset ID'),
-    placeholder: t('Enter ID'),
+    label: t('ID'),
+    placeholder: ' ',
     name: 'dataSetId',
     type: 'number',
   },
   {
+    label: t('Name'),
+    name: 'dataSet',
+    type: 'text',
+    className: '',
+    placeholder: ' ',
+  },
+  {
     label: t('Code'),
-    placeholder: t('Enter Code'),
+    placeholder: ' ',
     name: 'code',
     type: 'text',
   },

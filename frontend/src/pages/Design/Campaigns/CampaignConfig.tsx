@@ -27,19 +27,23 @@ import type { ComponentProps } from 'react';
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
 import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
 import { TextCell, TagsCell, StatusCell, ActionsCell } from '@/components/ui/table/cells';
+import { getCommonFormOptions } from '@/config/commonForms';
 import type { Campaign } from '@/types/campaign';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 
 export interface CampaignFilterInput {
+  name?: string;
   tags?: Tag[];
   hasLayouts?: string;
   layoutId?: string;
   type?: string;
   cyclePlaybackEnabled?: string;
+  retired?: number | null;
 }
 
 export const CAMPAIGN_INITIAL_FILTER_STATE: CampaignFilterInput = {
+  name: '',
   tags: [],
   hasLayouts: '',
   layoutId: '',
@@ -49,10 +53,18 @@ export const CAMPAIGN_INITIAL_FILTER_STATE: CampaignFilterInput = {
 
 export const getCampaignFilterKeys = (t: TFunction): FilterConfigItem<CampaignFilterInput>[] => [
   {
+    label: t('Name'),
+    name: 'name',
+    type: 'text',
+    className: '',
+    placeholder: ' ',
+  },
+
+  {
     label: t('Tags'),
     name: 'tags',
     type: 'tags',
-    placeholder: t('Add tags'),
+    placeholder: ' ',
     className: 'md:w-auto md:flex-1 min-w-0',
   },
 
@@ -95,6 +107,12 @@ export const getCampaignFilterKeys = (t: TFunction): FilterConfigItem<CampaignFi
       { label: t('Enabled'), value: '1' },
       { label: t('Disabled'), value: '0' },
     ],
+  },
+
+  {
+    label: t('Retired'),
+    name: 'retired',
+    options: getCommonFormOptions(t).retired,
   },
 ];
 

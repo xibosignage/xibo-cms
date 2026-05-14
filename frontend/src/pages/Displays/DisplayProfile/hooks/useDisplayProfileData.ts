@@ -73,6 +73,9 @@ export const useDisplayProfileData = ({
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
+        ...(advancedFilters.displayProfile
+          ? { displayProfile: advancedFilters.displayProfile }
+          : {}),
         ...(advancedFilters.type
           ? { type: advancedFilters.type as FetchDisplayProfileRequest['type'] }
           : {}),

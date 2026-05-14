@@ -69,13 +69,17 @@ export const useDisplayGroupData = ({
       const sortBy = sorting?.[0]?.id;
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
 
-      const { tags, displayId, displayIdDropdown, nestedDisplayId, dynamicCriteria } =
-        advancedFilters;
+      const {
+        displayGroup,
+        tags,
+        displayGroupId,
+        displayIdDropdown,
+        nestedDisplayId,
+        dynamicCriteria,
+      } = advancedFilters;
 
       const normalizedTags =
         tags && tags.length > 0 ? tags.map((tag) => tag.tag).join(',') : undefined;
-
-      const resolvedDisplayId = displayIdDropdown ?? displayId ?? undefined;
 
       const request: FetchDisplayGroupRequest = {
         start: startOffset,
@@ -85,7 +89,9 @@ export const useDisplayGroupData = ({
         sortDir: sorting.length ? sortDir : undefined,
         signal,
         ...(folderId != null ? { folderId } : {}),
-        ...(resolvedDisplayId != null ? { displayId: resolvedDisplayId } : {}),
+        ...(displayGroup ? { displayGroup } : {}),
+        ...(displayGroupId != null ? { displayGroupId } : {}),
+        ...(displayIdDropdown != null ? { displayId: displayIdDropdown } : {}),
         ...(nestedDisplayId != null ? { nestedDisplayId } : {}),
         ...(dynamicCriteria ? { dynamicCriteria } : {}),
         ...(normalizedTags ? { tags: normalizedTags } : {}),

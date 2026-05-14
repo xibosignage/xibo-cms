@@ -70,7 +70,10 @@ export const useMediaData = ({
       const sortBy = sorting?.[0]?.id;
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
 
-      const { lastModified, ...restFilters } = advancedFilters;
+      const { lastModified, tags, mediaId, layoutId, ...restFilters } = advancedFilters;
+
+      const normalizedTags =
+        tags && tags.length > 0 ? tags.map((tag) => tag.tag).join(',') : undefined;
 
       const request: FetchMediaRequest = {
         start: startOffset,
@@ -80,8 +83,11 @@ export const useMediaData = ({
         sortDir: sorting.length ? sortDir : undefined,
         signal,
         ...restFilters,
+        ...(mediaId != null ? { mediaId } : {}),
+        ...(layoutId != null ? { layoutId } : {}),
+        ...(normalizedTags ? { tags: normalizedTags } : {}),
         ...resolveLastModified(lastModified),
-      } as FetchMediaRequest;
+      };
 
       if (typeof folderId === 'number') {
         request.folderId = folderId;

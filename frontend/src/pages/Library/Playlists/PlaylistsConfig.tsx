@@ -48,20 +48,48 @@ import type { Tag } from '@/types/tag';
 import { formatDuration } from '@/utils/formatters';
 
 export interface PlaylistFilterInput {
-  userId: string;
-  ownerUserGroupId: string;
-  lastModified: string;
+  playlistId?: number | null;
+  name?: string;
+  tags?: Tag[];
+  userId?: string;
+  ownerUserGroupId?: string;
+  layoutId?: number | null;
+  lastModified?: string;
 }
 
 export type ModalType = BaseModalType | 'schedule' | null;
 
 export const INITIAL_FILTER_STATE: PlaylistFilterInput = {
+  playlistId: null,
+  name: '',
+  tags: [],
   userId: '',
   ownerUserGroupId: '',
+  layoutId: null,
   lastModified: '',
 };
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<PlaylistFilterInput>[] => [
+  {
+    label: t('ID'),
+    placeholder: ' ',
+    name: 'playlistId',
+    type: 'number',
+  },
+  {
+    label: t('Name'),
+    name: 'name',
+    type: 'text',
+    className: '',
+    placeholder: ' ',
+  },
+  {
+    label: t('Tags'),
+    name: 'tags',
+    type: 'tags',
+    placeholder: ' ',
+    className: '',
+  },
   {
     label: t('Owner'),
     name: 'userId',
@@ -72,6 +100,13 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<PlaylistFilter
     label: t('User Group'),
     name: 'ownerUserGroupId',
     options: [{ label: t('Select Group'), value: null }],
+  },
+  {
+    label: t('Layout ID'),
+    name: 'layoutId',
+    type: 'number',
+    className: '',
+    placeholder: ' ',
   },
   {
     label: t('Last Modified'),

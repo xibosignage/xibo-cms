@@ -69,7 +69,7 @@ export const useMenuBoardData = ({
       const sortBy = sorting?.[0]?.id;
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
 
-      const { menuId, userId, code, lastModified } = advancedFilters;
+      const { name, menuId, userId, code, lastModified } = advancedFilters;
 
       const request: FetchMenuBoardRequest = {
         start: startOffset,
@@ -78,6 +78,7 @@ export const useMenuBoardData = ({
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
+        name: name || undefined,
         menuId: menuId ? Number(menuId) : undefined,
         userId: userId ? Number(userId) : undefined,
         code: code || undefined,

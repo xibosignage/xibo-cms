@@ -23,6 +23,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Button from './Button';
+import DateFilter from './DateFilter';
 import DateRangeFilter from './DateRangeFilter';
 import InputFilter from './InputFilter';
 import SelectDropdown from './forms/SelectDropdown';
@@ -38,7 +39,7 @@ export interface FilterConfigItem<T> {
   label: string;
   name: keyof T & string;
   placeholder?: string;
-  type?: 'select' | 'text' | 'number' | 'tags' | 'date-range';
+  type?: 'select' | 'text' | 'number' | 'tags' | 'date-range' | 'date';
   className?: string;
   options?: FilterOption[];
   onLoadMore?: () => void;
@@ -149,6 +150,20 @@ export default function FilterInputs<T>({
                 onChange={(tags) => onChange(filter.name, tags)}
                 className={filter.className}
                 placeholder={filter.placeholder}
+              />
+            );
+          }
+
+          if (filterType === 'date') {
+            return (
+              <DateFilter
+                key={filter.name}
+                label={filter.label}
+                name={filter.name}
+                value={(values[filter.name] as string) ?? ''}
+                onChange={(name, val) => onChange(name as keyof T & string, val)}
+                isJalali={filter.isJalali}
+                className={filter.className}
               />
             );
           }

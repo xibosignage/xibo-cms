@@ -56,9 +56,9 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<SessionFilterI
     name: 'type',
     className: '',
     options: [
-      { label: 'Active', value: 'active' },
-      { label: 'Guest', value: 'guest' },
-      { label: 'Expired', value: 'expired' },
+      { label: t('Active'), value: 'active' },
+      { label: t('Guest'), value: 'guest' },
+      { label: t('Expired'), value: 'expired' },
     ],
   },
 ];

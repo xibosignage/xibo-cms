@@ -73,6 +73,8 @@ export const useSyncGroupData = ({
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         ...(typeof folderId === 'number' ? { folderId } : {}),
+        ...(advancedFilters.syncGroupId ? { syncGroupId: advancedFilters.syncGroupId } : {}),
+        ...(advancedFilters.name ? { name: advancedFilters.name } : {}),
         ...(advancedFilters.leadDisplayId ? { leadDisplayId: advancedFilters.leadDisplayId } : {}),
         signal,
       });

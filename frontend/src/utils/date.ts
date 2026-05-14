@@ -158,3 +158,8 @@ export function resolveLastModified(value?: string | null) {
 
   return {};
 }
+
+export function resolveLastAccessed(value?: string | null) {
+  if (!value) return {};
+  return { lastAccessed: value };
+}

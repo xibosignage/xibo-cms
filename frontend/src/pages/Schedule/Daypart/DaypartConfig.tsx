@@ -33,6 +33,7 @@ import type { ActionItem, BaseModalType } from '@/types/table';
 
 export interface DaypartFilterInput {
   keyword?: string;
+  name?: string;
   retired?: number | null;
 }
 
@@ -41,6 +42,13 @@ export type ModalType = BaseModalType | null;
 export const INITIAL_FILTER_STATE: DaypartFilterInput = {};
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DaypartFilterInput>[] => [
+  {
+    label: t('Name'),
+    name: 'name',
+    type: 'text',
+    className: '',
+    placeholder: ' ',
+  },
   {
     label: t('Retired'),
     name: 'retired',

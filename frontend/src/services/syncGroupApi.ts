@@ -28,6 +28,8 @@ export interface FetchSyncGroupsRequest {
   start: number;
   length: number;
   keyword?: string;
+  syncGroupId?: number | null;
+  name?: string;
   leadDisplayId?: number | null;
   folderId?: number | null;
   sortBy?: string;

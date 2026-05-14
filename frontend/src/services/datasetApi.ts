@@ -39,6 +39,7 @@ export interface FetchDatasetRequest {
   start: number;
   length: number;
   keyword?: string;
+  dataSet?: string;
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;

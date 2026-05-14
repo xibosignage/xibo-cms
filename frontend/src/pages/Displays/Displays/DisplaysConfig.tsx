@@ -63,6 +63,9 @@ import type { Tag } from '@/types/tag';
 import type { UIStatus } from '@/types/uiStatus';
 
 export interface DisplayFilterInput {
+  displayId?: number | null;
+  name?: string;
+  tags?: Tag[];
   mediaInventoryStatus: string | null;
   loggedIn: string | null;
   authorised: string | null;
@@ -112,6 +115,9 @@ export type ModalType =
   | null;
 
 export const INITIAL_FILTER_STATE: DisplayFilterInput = {
+  displayId: null,
+  name: '',
+  tags: [],
   mediaInventoryStatus: null,
   loggedIn: null,
   authorised: null,
@@ -224,6 +230,26 @@ export const getClientTypeOptions = (t: TFunction): { label: string; value: stri
 ];
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayFilterInput>[] => [
+  {
+    label: t('ID'),
+    placeholder: ' ',
+    name: 'displayId',
+    type: 'number',
+  },
+  {
+    label: t('Name'),
+    name: 'name',
+    type: 'text',
+    className: '',
+    placeholder: ' ',
+  },
+  {
+    label: t('Tags'),
+    name: 'tags',
+    type: 'tags',
+    placeholder: ' ',
+    className: '',
+  },
   {
     label: t('Status'),
     name: 'mediaInventoryStatus',
@@ -348,9 +374,8 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayFilterI
   {
     label: t('Last Accessed'),
     name: 'lastAccessed',
-    type: 'text',
+    type: 'date',
     className: '',
-    placeholder: t('YYYY-MM-DD'),
   },
 ];
 

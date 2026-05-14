@@ -47,23 +47,31 @@ import type { Tag } from '@/types/tag';
 import type { Template } from '@/types/templates';
 
 export interface TemplatesFilterInput {
-  name?: string;
+  template?: string;
   tags?: Tag[];
 }
 
 export const TEMPLATE_INITIAL_FILTER_STATE: TemplatesFilterInput = {
-  name: '',
+  template: '',
   tags: [],
 };
 
 export type ModalType = BaseModalType | 'schedule' | null;
 
-export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<Record<string, unknown>>[] => [
+export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<TemplatesFilterInput>[] => [
   {
-    label: t('Tag'),
+    label: t('Name'),
+    name: 'template',
+    type: 'text',
+    className: '',
+    placeholder: ' ',
+  },
+  {
+    label: t('Tags'),
     name: 'tags',
     type: 'tags',
-    className: 'max-w-auto md:max-w-80',
+    placeholder: ' ',
+    className: '',
   },
 ];
 

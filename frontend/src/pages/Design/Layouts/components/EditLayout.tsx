@@ -123,6 +123,7 @@ export default function EditLayout({ isOpen = true, onClose, data, onSave }: Edi
         name: draft.name,
         description: draft.description,
         tags: serializedTags,
+        code: draft.code,
         retired: draft.retired ? 1 : 0,
         enableStat: draft.enableStat ? 1 : 0,
         folderId: draft.folderId,

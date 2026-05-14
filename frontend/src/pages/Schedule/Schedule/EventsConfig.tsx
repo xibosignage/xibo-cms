@@ -81,10 +81,10 @@ const EVENT_TYPE_LABELS: Record<number, string> = {
   [EventTypeId.DataConnector]: 'Data Connector',
 };
 
-const YES_NO_OPTIONS = [
-  { value: '', label: 'All' },
-  { value: 0, label: 'No' },
-  { value: 1, label: 'Yes' },
+const getYesNoOptions = (t: TFunction) => [
+  { value: '', label: t('All') },
+  { value: 0, label: t('No') },
+  { value: 1, label: t('Yes') },
 ];
 
 const EVENT_TYPE_STATUS: Record<number, UIStatus> = {
@@ -106,7 +106,7 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<EventFilterInp
     name: 'name',
     type: 'text',
     className: '',
-    placeholder: t('Event Name'),
+    placeholder: ' ',
   },
   {
     label: t('Event Type'),
@@ -131,22 +131,22 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<EventFilterInp
   {
     label: t('Geo Aware'),
     name: 'geoAware',
-    options: YES_NO_OPTIONS,
+    options: getYesNoOptions(t),
   },
   {
     label: t('Recurring'),
     name: 'recurring',
-    options: YES_NO_OPTIONS,
+    options: getYesNoOptions(t),
   },
   {
     label: t('Direct Schedule'),
     name: 'directSchedule',
-    options: YES_NO_OPTIONS,
+    options: getYesNoOptions(t),
   },
   {
     label: t('Shared Schedule'),
     name: 'sharedSchedule',
-    options: YES_NO_OPTIONS,
+    options: getYesNoOptions(t),
   },
 ];
 

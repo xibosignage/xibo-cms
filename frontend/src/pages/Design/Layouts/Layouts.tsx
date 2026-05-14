@@ -343,6 +343,7 @@ export default function Layouts() {
     openRetireModal,
     openEnableStatsModal,
     openScheduleModal: canSchedule ? openScheduleModal : undefined,
+    showDescriptionId: filterInputs.showDescriptionId,
   });
 
   const getAllSelectedItems = (): Layout[] => {
