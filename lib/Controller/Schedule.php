@@ -1792,7 +1792,7 @@ class Schedule extends Base
         }
 
         $events = $this->scheduleFactory->query(
-            $this->gridRenderSort($params, $this->isJson($request)),
+            $this->gridRenderSort($params, $this->isJson($request), 'eventId'),
             $this->getScheduleFilters($params, $resolvedDisplayGroupIds)
         );
 

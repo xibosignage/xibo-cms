@@ -725,7 +725,7 @@ class Display extends Base
 
         // Get a list of displays
         $displays = $this->displayFactory->query(
-            $this->gridRenderSort($parsedQueryParams, $this->isJson($request)),
+            $this->gridRenderSort($parsedQueryParams, $this->isJson($request), 'display'),
             $this->gridRenderFilter($filter, $parsedQueryParams)
         );
 
