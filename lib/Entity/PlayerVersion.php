@@ -21,12 +21,11 @@
  */
 namespace Xibo\Entity;
 
-
 use Carbon\Carbon;
 use OpenApi\Attributes as OA;
 use Slim\Http\ServerRequest;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Filesystem\Filesystem;
-use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\HttpsDetect;
@@ -47,107 +46,58 @@ class PlayerVersion implements \JsonSerializable
 {
     use EntityTrait;
 
-    /**
-     * @var int
-     */
     #[OA\Property(description: 'Version ID')]
-    public $versionId;
+    public ?int $versionId = null;
 
-    /**
-     * @var string
-     */
     #[OA\Property(description: 'Player type')]
-    public $type;
+    public ?string $type = null;
 
-    /**
-     * @var string
-     */
     #[OA\Property(description: 'Version number')]
-    public $version;
+    public ?string $version = null;
 
-    /**
-     * @var int
-     */
     #[OA\Property(description: 'Code number')]
-    public $code;
+    public ?int $code = null;
 
-    /**
-     * @var string
-     */
     #[OA\Property(description: 'Player version to show')]
-    public $playerShowVersion;
+    public ?string $playerShowVersion = null;
 
-    /**
-     * @var string
-     */
     #[OA\Property(description: 'The Player Version created date')]
-    public $createdAt;
+    public ?string $createdAt = null;
 
-    /**
-     * @var string
-     */
     #[OA\Property(description: 'The Player Version modified date')]
-    public $modifiedAt;
+    public ?string $modifiedAt = null;
 
-    /**
-     * @var string
-     */
     #[OA\Property(description: 'The name of the user that modified this Player Version last')]
-    public $modifiedBy;
+    public ?string $modifiedBy = null;
 
-    /**
-     * @var string
-     */
     #[OA\Property(description: 'The Player Version file name')]
-    public $fileName;
+    public ?string $fileName = null;
 
-    /**
-     * @var int
-     */
     #[OA\Property(description: 'The Player Version file size in bytes')]
-    public $size;
+    public ?int $size = null;
 
-    /**
-     * @var string
-     */
     #[OA\Property(description: 'A MD5 checksum of the stored Player Version file')]
-    public $md5;
+    public ?string $md5 = null;
 
-    /**
-     * @var ConfigServiceInterface
-     */
-    private $config;
-
-    /**
-     * @var PlayerVersionFactory
-     */
-    private $playerVersionFactory;
-
-    /**
-     * Entity constructor.
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
-     * @param ConfigServiceInterface $config
-     * @param MediaFactory $mediaFactory
-     * @param PlayerVersionFactory $playerVersionFactory
-     */
-    public function __construct($store, $log, $dispatcher, $config, $playerVersionFactory)
-    {
+    public function __construct(
+        StorageServiceInterface $store,
+        LogServiceInterface $log,
+        EventDispatcherInterface $dispatcher,
+        private readonly ConfigServiceInterface $config,
+        private readonly PlayerVersionFactory $playerVersionFactory,
+    ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
-
-        $this->config = $config;
-        $this->playerVersionFactory = $playerVersionFactory;
     }
 
-    /**
-     * Add
-     */
-    private function add()
+    private function add(): void
     {
         $this->versionId = $this->getStore()->insert('
-            INSERT INTO `player_software` (`player_type`, `player_version`, `player_code`, `playerShowVersion`,`createdAt`, `modifiedAt`, `modifiedBy`, `fileName`, `size`, `md5`)
-              VALUES (:type, :version, :code, :playerShowVersion, :createdAt, :modifiedAt, :modifiedBy, :fileName, :size, :md5)
+            INSERT INTO `player_software`
+                (`player_type`, `player_version`, `player_code`, `playerShowVersion`,
+                 `createdAt`, `modifiedAt`, `modifiedBy`, `fileName`, `size`, `md5`)
+            VALUES
+                (:type, :version, :code, :playerShowVersion,
+                 :createdAt, :modifiedAt, :modifiedBy, :fileName, :size, :md5)
         ', [
             'type' => $this->type,
             'version' => $this->version,
@@ -162,10 +112,7 @@ class PlayerVersion implements \JsonSerializable
         ]);
     }
 
-    /**
-     * Edit
-     */
-    private function edit()
+    private function edit(): void
     {
         $sql = '
           UPDATE `player_software`
@@ -190,10 +137,7 @@ class PlayerVersion implements \JsonSerializable
     }
 
 
-    /**
-     * Delete
-     */
-    public function delete()
+    public function delete(): void
     {
         $this->load();
 
@@ -339,22 +283,16 @@ class PlayerVersion implements \JsonSerializable
         return $this;
     }
 
-    /**
-     * Load
-     */
-    public function load()
+    public function load(): void
     {
-        if ($this->loaded || $this->versionId == null)
+        if ($this->loaded || $this->versionId == null) {
             return;
+        }
 
         $this->loaded = true;
     }
 
-    /**
-     * Save this media
-     * @param array $options
-     */
-    public function save($options = [])
+    public function save(array $options = []): void
     {
         $options = array_merge([
             'validate' => true
@@ -371,7 +309,8 @@ class PlayerVersion implements \JsonSerializable
         }
     }
 
-    public function validate() {
+    public function validate(): void
+    {
         // do we already have a file with the same exact name?
         $params = [];
         $checkSQL = 'SELECT `fileName` FROM `player_software` WHERE `fileName` = :fileName';

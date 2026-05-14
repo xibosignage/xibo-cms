@@ -455,12 +455,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/report/data/{name}', ['\Xibo\Controller\Report','getReportData'])->setName('report.data');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['report.view']));
 
-// Player Software
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/playersoftware/view', ['\Xibo\Controller\PlayerSoftware','displayPage'])->setName('playersoftware.view');
-    $group->get('/playersoftware/form/edit/{id}', ['\Xibo\Controller\PlayerSoftware','editForm'])->setName('playersoftware.edit.form');
-    $group->get('/playersoftware/form/delete/{id}', ['\Xibo\Controller\PlayerSoftware','deleteForm'])->setName('playersoftware.delete.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['playersoftware.view']));
 
 // Tags
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
