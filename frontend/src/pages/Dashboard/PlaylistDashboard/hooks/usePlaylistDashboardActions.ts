@@ -35,6 +35,7 @@ export interface SpotUploadState {
   progress: number;
   status: 'uploading' | 'completed' | 'error';
   error?: string;
+  blobUrl?: string;
 }
 
 export function usePlaylistDashboardActions(queryClient: QueryClient, playlistId: number | null) {
@@ -64,6 +65,10 @@ export function usePlaylistDashboardActions(queryClient: QueryClient, playlistId
   const clearUpload = (spotIndex: number) => {
     setUploadStates((prev) => {
       const next = new Map(prev);
+      const current = next.get(spotIndex);
+      if (current?.blobUrl) {
+        URL.revokeObjectURL(current.blobUrl);
+      }
       next.delete(spotIndex);
       return next;
     });
@@ -72,6 +77,8 @@ export function usePlaylistDashboardActions(queryClient: QueryClient, playlistId
   const startUpload = async (spotIndex: number, file: File, widget?: SpotWidget) => {
     if (playlistId === null) return;
 
+    const blobUrl = file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined;
+
     setUploadStates((prev) => {
       const next = new Map(prev);
       next.set(spotIndex, {
@@ -79,6 +86,7 @@ export function usePlaylistDashboardActions(queryClient: QueryClient, playlistId
         fileSize: file.size,
         progress: 0,
         status: 'uploading',
+        blobUrl,
       });
       return next;
     });

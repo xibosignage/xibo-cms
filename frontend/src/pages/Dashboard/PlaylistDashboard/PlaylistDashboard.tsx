@@ -19,9 +19,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQueryClient } from '@tanstack/react-query';
-import { Info } from 'lucide-react';
-import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Info, Loader2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import DeleteSpotModal from './components/DeleteSpotModal';
@@ -30,13 +30,52 @@ import SpotRow from './components/SpotRow';
 import { usePlaylistDashboardActions } from './hooks/usePlaylistDashboardActions';
 import { usePlaylistSpots } from './hooks/usePlaylistSpots';
 
+import { fetchUserPreference, saveUserPreference } from '@/services/userApi';
 import type { SpotWidget } from '@/types/dashboard';
+
+const PREF_KEY = 'playlist_dashboard';
+
+interface PlaylistDashboardPref {
+  selectedPlaylistId: number | null;
+}
 
 export default function PlaylistDashboard() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<number | null>(null);
+
+  // Load saved playlist selection
+  const { data: savedPref, isSuccess: hasLoadedPref } = useQuery({
+    queryKey: ['userPref', PREF_KEY],
+    queryFn: () => fetchUserPreference<PlaylistDashboardPref>(PREF_KEY),
+    staleTime: Infinity,
+  });
+
+  const isHydrated = useRef(false);
+
+  useEffect(() => {
+    if (hasLoadedPref && !isHydrated.current) {
+      isHydrated.current = true;
+      if (savedPref?.selectedPlaylistId != null) {
+        setSelectedPlaylistId(savedPref.selectedPlaylistId);
+      }
+    }
+  }, [hasLoadedPref, savedPref]);
+
+  // Persist selection on change (debounced)
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => {
+    if (!isHydrated.current) return;
+    clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      saveUserPreference({
+        option: PREF_KEY,
+        value: { selectedPlaylistId },
+      });
+    }, 500);
+    return () => clearTimeout(saveTimeoutRef.current);
+  }, [selectedPlaylistId]);
   const [deleteTarget, setDeleteTarget] = useState<
     | {
         type: 'single';
@@ -75,37 +114,46 @@ export default function PlaylistDashboard() {
   };
 
   return (
-    <section className="flex flex-col mx-auto w-203.75 gap-3 p-5">
+    <section className="flex flex-col mx-auto max-w-151 gap-5 p-5">
       {/* Playlist Dropdown */}
-      <PlaylistDropdown value={selectedPlaylistId} onSelect={setSelectedPlaylistId} />
-      <h2 className="text-lg font-semibold text-gray-800">{t('Playlist Content')}</h2>
-      <div className="flex gap-x-1 w-fit bg-gray-50 p-2">
-        <p className="flex items-center gap-1.5 text-sm text-gray-800 text-[12px]">
+      <div>
+        <PlaylistDropdown value={selectedPlaylistId} onSelect={setSelectedPlaylistId} />
+      </div>
+      <div className="space-y-2">
+        <div className="flex justify-between">
+          <h2 className="text-lg font-semibold text-gray-800">{t('Playlist Content')}</h2>
+          {selectedPlaylistId !== null && !isLoading && data && (
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm font-semibold text-gray-500">
+                {availableSpots}/{spotsFound} {t('Spots Available')}
+              </span>
+              {widgets.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setDeleteTarget({ type: 'all', widgets })}
+                  disabled={isDeleting}
+                  className="text-sm font-medium text-red-500 hover:text-red-700 disabled:opacity-50 cursor-pointer"
+                >
+                  {t('Remove All')}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="flex gap-x-2 w-fit bg-gray-50 p-2">
           <Info className="h-4 w-4 shrink-0" />
-          {t('Click')}
-          <strong>{t('Select File')}</strong>
-          {t('to fill an empty spot or select an existing spot to replace its media.')}{' '}
-          <strong>{t('Maximum file size is 2GB.')}</strong>
-        </p>
+          <span className=" text-sm text-gray-800 text-[12px]">
+            <strong>{t('Drag and drop file')}</strong> {t('or')}{' '}
+            <strong>{t('Select File')} </strong>
+            {t(
+              'to fill an empty spot or select an existing spot to replace its media. Maximum file size is 2GB.',
+            )}
+          </span>
+        </div>
       </div>
 
       {selectedPlaylistId !== null && !isLoading && data && (
         <>
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-gray-700">
-              {availableSpots}/{spotsFound} {t('Spots Available')}
-            </span>
-            {widgets.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setDeleteTarget({ type: 'all', widgets })}
-                disabled={isDeleting}
-                className="text-sm font-medium text-red-500 hover:text-red-700 disabled:opacity-50"
-              >
-                {t('Remove All')}
-              </button>
-            )}
-          </div>
           {spotsFound <= 0 && (
             <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-700">
               {t('This Playlist does not have any Spots for you to manage. Please choose another.')}
@@ -133,8 +181,9 @@ export default function PlaylistDashboard() {
 
       {/* Loading state */}
       {selectedPlaylistId !== null && isLoading && (
-        <div className="flex items-center justify-center py-10 text-gray-400">
-          <span className="animate-pulse">{t('Loading...')}</span>
+        <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+          <Loader2 className="w-8 h-8 animate-spin text-gray-600" />
+          <span className="mt-2 text-gray-500">{t('Loading...')}</span>
         </div>
       )}
 

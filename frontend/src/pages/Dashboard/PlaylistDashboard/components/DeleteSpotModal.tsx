@@ -52,6 +52,7 @@ export default function DeleteSpotModal({
 
   return (
     <Modal
+      variant="confirmation"
       onClose={onClose}
       isPending={isLoading}
       actions={[
