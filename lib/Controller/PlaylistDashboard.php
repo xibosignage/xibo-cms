@@ -28,8 +28,10 @@ use Xibo\Event\SubPlaylistItemsEvent;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PlaylistFactory;
+use Xibo\Helper\ByteFormatter;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class PlaylistDashboard
@@ -160,9 +162,36 @@ class PlaylistDashboard extends Base
                 $widget->setUnmatchedProperty('regionSpecific', $module->regionSpecific);
                 $widget->setUnmatchedProperty('moduleIcon', $module->icon);
 
+                // Build mediaFiles from all mediaIds, caching objects to avoid double-fetch below
+                $mediaMap = [];
+                $mediaFiles = [];
+                foreach ($widget->mediaIds as $mediaId) {
+                    try {
+                        $media = $this->mediaFactory->getById($mediaId);
+                        $mediaMap[$mediaId] = $media;
+                        $mediaFiles[] = [
+                            'widgetId' => $widget->widgetId,
+                            'mediaId' => $mediaId,
+                            'fileName' => $media->fileName,
+                            'fileSize' => ByteFormatter::format($media->fileSize),
+                        ];
+                    } catch (NotFoundException $e) {
+                        $this->getLog()->error(
+                            sprintf(
+                                'MediaId %d assigned to widgetId %d, missing' ,
+                                $mediaId,
+                                $widget->widgetId
+                            )
+                        );
+                        // media record missing — skip
+                    }
+                }
+                $widget->setUnmatchedProperty('mediaFiles', $mediaFiles);
+
                 // Check my permissions
                 if ($module->regionSpecific == 0) {
-                    $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
+                    $media = $mediaMap[$widget->getPrimaryMediaId()]
+                        ?? $this->mediaFactory->getById($widget->getPrimaryMediaId());
                     $widget->setUnmatchedProperty('viewable', $user->checkViewable($media));
                     $widget->setUnmatchedProperty('editable', $user->checkEditable($media));
                     $widget->setUnmatchedProperty('deletable', $user->checkDeleteable($media));
