@@ -52,6 +52,7 @@ interface AddAndEditDatasetModalProps {
   type: 'add' | 'edit';
   isOpen?: boolean;
   data?: Dataset | null;
+  defaultFolderId?: number;
   dataConnectorSources?: { id: string; name: string }[];
   onClose: () => void;
   onSave: (updated: Dataset) => void;
@@ -95,9 +96,12 @@ const DEFAULT_DRAFT: UpdateDatasetRequest = {
   limitPolicy: 'stop',
 };
 
-const createDraftFromData = (data?: Dataset | null): UpdateDatasetRequest => {
+const createDraftFromData = (
+  data?: Dataset | null,
+  defaultFolderId?: number,
+): UpdateDatasetRequest => {
   if (!data) {
-    return { ...DEFAULT_DRAFT };
+    return { ...DEFAULT_DRAFT, folderId: defaultFolderId ?? null };
   }
 
   return {
@@ -137,6 +141,7 @@ export default function AddAndEditDatasetModal({
   isOpen = true,
   onClose,
   data,
+  defaultFolderId,
   onSave,
 }: AddAndEditDatasetModalProps) {
   const { t } = useTranslation();
@@ -152,7 +157,9 @@ export default function AddAndEditDatasetModal({
   const [activeTab, setActiveTab] = useState<'general' | 'remote' | 'auth' | 'data' | 'advanced'>(
     'general',
   );
-  const [draft, setDraft] = useState<UpdateDatasetRequest>(() => createDraftFromData(data));
+  const [draft, setDraft] = useState<UpdateDatasetRequest>(() =>
+    createDraftFromData(data, defaultFolderId),
+  );
   const [dataConnectorSources, setDataConnectorSources] = useState<{ id: string; name: string }[]>(
     [],
   );
@@ -204,12 +211,12 @@ export default function AddAndEditDatasetModal({
 
   useEffect(() => {
     if (isOpen) {
-      setDraft(createDraftFromData(data));
+      setDraft(createDraftFromData(data, defaultFolderId));
       setApiError(undefined);
       setFormErrors({});
       setActiveTab('general');
     }
-  }, [data, isOpen]);
+  }, [data, isOpen, defaultFolderId]);
 
   const handleSave = () => {
     const schema = getDatasetSchema(t);

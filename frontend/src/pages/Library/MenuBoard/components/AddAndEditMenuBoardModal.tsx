@@ -34,6 +34,7 @@ interface AddAndEditMenuBoardModalProps {
   type: 'add' | 'edit';
   isOpen?: boolean;
   data?: MenuBoard | null;
+  defaultFolderId?: number;
   onClose: () => void;
   onSave: () => void;
 }
@@ -58,9 +59,9 @@ const DEFAULT_DRAFT: MenuBoardDraft = {
   folderId: null,
 };
 
-const createDraftFromData = (data?: MenuBoard | null): MenuBoardDraft => {
+const createDraftFromData = (data?: MenuBoard | null, defaultFolderId?: number): MenuBoardDraft => {
   if (!data) {
-    return { ...DEFAULT_DRAFT };
+    return { ...DEFAULT_DRAFT, folderId: defaultFolderId ?? null };
   }
   return {
     name: data.name ?? '',
@@ -75,6 +76,7 @@ export default function AddAndEditMenuBoardModal({
   isOpen = true,
   onClose,
   data,
+  defaultFolderId,
   onSave,
 }: AddAndEditMenuBoardModalProps) {
   const { t } = useTranslation();
@@ -83,15 +85,17 @@ export default function AddAndEditMenuBoardModal({
   const [formErrors, setFormErrors] = useState<MenuBoardFormErrors>({});
   const canViewFolders = usePermissions()?.canViewFolders;
 
-  const [draft, setDraft] = useState<MenuBoardDraft>(() => createDraftFromData(data));
+  const [draft, setDraft] = useState<MenuBoardDraft>(() =>
+    createDraftFromData(data, defaultFolderId),
+  );
 
   useEffect(() => {
     if (isOpen) {
-      setDraft(createDraftFromData(data));
+      setDraft(createDraftFromData(data, defaultFolderId));
       setApiError(undefined);
       setFormErrors({});
     }
-  }, [data, isOpen]);
+  }, [data, isOpen, defaultFolderId]);
 
   const updateDraft = <K extends keyof MenuBoardDraft>(field: K, value: MenuBoardDraft[K]) => {
     setDraft((prev) => ({ ...prev, [field]: value }));

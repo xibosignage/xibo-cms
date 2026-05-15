@@ -34,6 +34,7 @@ import type { Tag } from '@/types/tag';
 
 interface AddCampaignModalProps {
   isOpen?: boolean;
+  defaultFolderId?: number;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -68,23 +69,27 @@ const DEFAULT_DRAFT: CampaignDraft = {
 
 export default function AddCampaignModal({
   isOpen = true,
+  defaultFolderId,
   onClose,
   onSuccess,
 }: AddCampaignModalProps) {
   const { t } = useTranslation();
   const [isPending, startTransition] = useTransition();
 
-  const [draft, setDraft] = useState<CampaignDraft>(DEFAULT_DRAFT);
+  const [draft, setDraft] = useState<CampaignDraft>(() => ({
+    ...DEFAULT_DRAFT,
+    folderId: defaultFolderId ?? null,
+  }));
   const [formErrors, setFormErrors] = useState<CampaignFormErrors>({});
   const [apiError, setApiError] = useState<string | undefined>();
 
   useEffect(() => {
     if (!isOpen) {
-      setDraft(DEFAULT_DRAFT);
+      setDraft({ ...DEFAULT_DRAFT, folderId: defaultFolderId ?? null });
       setFormErrors({});
       setApiError(undefined);
     }
-  }, [isOpen]);
+  }, [isOpen, defaultFolderId]);
 
   const handleSave = () => {
     setFormErrors({});

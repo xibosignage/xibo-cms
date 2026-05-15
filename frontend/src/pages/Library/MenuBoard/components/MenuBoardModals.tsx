@@ -43,6 +43,7 @@ interface MenuBoardModalsProps {
   selection: {
     selectedMenuBoard: MenuBoard | null;
     selectedMenuBoardId: number | null;
+    defaultFolderId?: number;
     itemsToDelete: MenuBoard[];
     itemsToMove: MenuBoard[];
     existingNames: string[];
@@ -71,6 +72,7 @@ export function MenuBoardModals({
       {isModalOpen('edit') && (
         <AddAndEditMenuBoardModal
           type={selection.selectedMenuBoardId ? 'edit' : 'add'}
+          defaultFolderId={selection.defaultFolderId}
           onClose={actions.closeModal}
           data={selection.selectedMenuBoard}
           onSave={() => {

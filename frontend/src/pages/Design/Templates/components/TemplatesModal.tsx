@@ -45,6 +45,7 @@ interface TemplatesModalsProps {
   selection: {
     selectedTemplate: Template | null;
     selectedTemplateId: number | null;
+    defaultFolderId?: number;
     itemsToDelete: Template[];
     existingNames: string[];
     itemsToMove: Template[];
@@ -74,6 +75,7 @@ export function TemplateModals({
       {isModalOpen('edit') && (
         <AddAndEditTemplateModal
           type={selection.selectedTemplateId ? 'edit' : 'add'}
+          defaultFolderId={selection.defaultFolderId}
           onClose={() => {
             actions.closeModal();
           }}

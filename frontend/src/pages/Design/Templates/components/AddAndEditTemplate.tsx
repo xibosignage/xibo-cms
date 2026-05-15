@@ -40,6 +40,7 @@ interface AddAndEditTemplateModalProps {
   type: 'add' | 'edit';
   isOpen?: boolean;
   data?: Template | null;
+  defaultFolderId?: number;
   onClose: () => void;
   onSave: (updated: Template) => void;
 }
@@ -69,6 +70,7 @@ export default function AddAndEditTemplateModal({
   isOpen = true,
   onClose,
   data,
+  defaultFolderId,
   onSave,
 }: AddAndEditTemplateModalProps) {
   const { t } = useTranslation();
@@ -89,7 +91,7 @@ export default function AddAndEditTemplateModal({
         resolutionId: null,
       };
     }
-    return DEFAULT_DRAFT;
+    return { ...DEFAULT_DRAFT, folderId: defaultFolderId ?? null };
   });
 
   useEffect(() => {
@@ -125,9 +127,9 @@ export default function AddAndEditTemplateModal({
         resolutionId: data.resolutionId,
       });
     } else {
-      setDraft(DEFAULT_DRAFT);
+      setDraft({ ...DEFAULT_DRAFT, folderId: defaultFolderId ?? null });
     }
-  }, [data, type]);
+  }, [data, type, defaultFolderId]);
 
   const resolutionOptions = resolutions.map((r) => ({
     label: r.resolution,

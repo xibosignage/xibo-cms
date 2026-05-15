@@ -45,6 +45,7 @@ interface CampaignModalsProps {
   };
   selection: {
     selectedCampaign: Campaign | null;
+    defaultFolderId?: number;
     itemsToDelete: Campaign[];
     itemsToMove: Campaign[];
     existingNames: string[];
@@ -84,6 +85,7 @@ export function CampaignModals({
       {/* Add */}
       {isModalOpen('add') && (
         <AddCampaignModal
+          defaultFolderId={selection.defaultFolderId}
           onClose={actions.closeModal}
           onSuccess={() => {
             actions.handleRefresh();

@@ -52,6 +52,7 @@ interface AddAndEditPlaylistModalProps {
   type: 'add' | 'edit';
   isOpen?: boolean;
   data?: Playlist | null;
+  defaultFolderId?: number;
   onClose: () => void;
   onSave: (updated: Playlist) => void;
 }
@@ -93,6 +94,7 @@ export default function AddAndEditPlaylistModal({
   isOpen = true,
   onClose,
   data,
+  defaultFolderId,
   onSave,
 }: AddAndEditPlaylistModalProps) {
   const { t } = useTranslation();
@@ -118,7 +120,7 @@ export default function AddAndEditPlaylistModal({
         maxNumberOfItems: data.maxNumberOfItems || 0,
       };
     }
-    return { ...DEFAULT_DRAFT };
+    return { ...DEFAULT_DRAFT, folderId: defaultFolderId ?? null };
   });
 
   const [previewPagination, setPreviewPagination] = useState<PaginationState>({
@@ -167,12 +169,12 @@ export default function AddAndEditPlaylistModal({
         maxNumberOfItems: data.maxNumberOfItems || 0,
       });
     } else {
-      setDraft({ ...DEFAULT_DRAFT });
+      setDraft({ ...DEFAULT_DRAFT, folderId: defaultFolderId ?? null });
     }
 
     setApiError(undefined);
     setFormErrors({});
-  }, [data, type]);
+  }, [data, type, defaultFolderId]);
 
   const handleSave = () => {
     startTransition(async () => {
