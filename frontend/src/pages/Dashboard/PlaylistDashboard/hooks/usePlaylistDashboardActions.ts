@@ -20,7 +20,7 @@
  */
 
 import type { QueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { playlistDashboardQueryKeys } from './usePlaylistSpots';
@@ -42,6 +42,17 @@ export function usePlaylistDashboardActions(queryClient: QueryClient, playlistId
   const { t } = useTranslation();
   const [uploadStates, setUploadStates] = useState<Map<number, SpotUploadState>>(new Map());
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Revoke any active blob URLs on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      uploadStates.forEach((state) => {
+        if (state.blobUrl) {
+          URL.revokeObjectURL(state.blobUrl);
+        }
+      });
+    };
+  }, [uploadStates]);
 
   const invalidateSpots = () => {
     if (playlistId !== null) {

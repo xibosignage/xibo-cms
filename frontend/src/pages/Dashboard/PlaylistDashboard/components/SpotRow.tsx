@@ -29,12 +29,7 @@ import type { SpotUploadState } from '../hooks/usePlaylistDashboardActions';
 import Button from '@/components/ui/Button';
 import { ACCEPTED_MIME_TYPES, getMediaIcon } from '@/pages/Library/Media/MediaConfig';
 import type { SpotWidget } from '@/types/dashboard';
-function formatFileSizeIEC(bytes: number): string {
-  if (bytes === 0) return '0 B';
-  const units = ['B', 'KiB', 'MiB', 'GiB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return `${parseFloat((bytes / Math.pow(1024, i)).toFixed(2))} ${units[i]}`;
-}
+import { formatFileSizeIEC } from '@/utils/formatters';
 
 interface SpotRowProps {
   spotIndex: number;
@@ -93,7 +88,7 @@ export default function SpotRow({
     if (!widget) return undefined;
     const widgetType = widget.type.toLowerCase();
     const extensions = Object.entries(ACCEPTED_MIME_TYPES)
-      .filter(([mime]) => mime.startsWith(widgetType + '\\') || mime.startsWith(widgetType + '/'))
+      .filter(([mime]) => mime.startsWith(widgetType + '/'))
       .flatMap(([, exts]) => exts);
     return extensions.length > 0 ? extensions.join(',') : undefined;
   })();
@@ -236,7 +231,7 @@ export default function SpotRow({
 
     // Empty spot
     return (
-      <div className="flex flex-1 item">
+      <div className="flex flex-1">
         <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
         <div
           className={`w-full h-16 flex justify-center items-center border space-x-2 border-dashed rounded-lg transition-colors ${isDragOver ? 'border-xibo-blue-600 bg-blue-100' : 'border-xibo-blue-600'}`}
@@ -245,6 +240,7 @@ export default function SpotRow({
           <span className="text-sm text-gray-500">
             {t('Drag and drop files or ')}
             <button
+              type="button"
               onClick={() => fileInputRef.current?.click()}
               className="text-xibo-blue-600 cursor-pointer"
             >
