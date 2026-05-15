@@ -35,11 +35,16 @@ export interface DaypartFilterInput {
   keyword?: string;
   name?: string;
   retired?: number | null;
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: boolean;
 }
 
 export type ModalType = BaseModalType | null;
 
-export const INITIAL_FILTER_STATE: DaypartFilterInput = {};
+export const INITIAL_FILTER_STATE: DaypartFilterInput = {
+  logicalOperatorName: 'OR',
+  useRegexForName: false,
+};
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DaypartFilterInput>[] => [
   {
@@ -48,6 +53,10 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DaypartFilterI
     type: 'text',
     className: '',
     placeholder: ' ',
+    showAndOr: true,
+    andOrKey: 'logicalOperatorName',
+    showRegex: true,
+    regexKey: 'useRegexForName',
   },
   {
     label: t('Retired'),

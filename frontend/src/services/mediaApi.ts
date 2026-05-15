@@ -43,6 +43,10 @@ export interface FetchMediaRequest {
   layoutId?: number;
   lastModified?: string;
   displayGroupId?: number;
+  exactTags?: number;
+  logicalOperator?: 'OR' | 'AND';
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: number;
 }
 
 export interface FetchMediaResponse {

@@ -39,6 +39,10 @@ export interface FetchDisplayGroupRequest {
   signal?: AbortSignal;
   keyword?: string;
   isDisplaySpecific?: number;
+  useRegexForName?: number;
+  logicalOperatorName?: 'OR' | 'AND';
+  exactTags?: number;
+  logicalOperator?: 'OR' | 'AND';
 }
 
 export interface FetchDisplayGroupsResponse {
@@ -69,10 +73,10 @@ export interface CreateDisplayGroupRequest {
   tags?: string;
   isDynamic?: number;
   dynamicCriteria?: string;
-  logicalOperatorName?: string;
+  logicalOperatorName?: 'OR' | 'AND';
   dynamicCriteriaTags?: string;
   exactTags?: number;
-  logicalOperator?: string;
+  logicalOperator?: 'OR' | 'AND';
   folderId?: number | null;
   keyword?: string;
 }
@@ -104,10 +108,10 @@ export interface UpdateDisplayGroupRequest {
   tags?: string;
   isDynamic?: number;
   dynamicCriteria?: string;
-  logicalOperatorName?: string;
+  logicalOperatorName?: 'OR' | 'AND';
   dynamicCriteriaTags?: string;
   exactTags?: number;
-  logicalOperator?: string;
+  logicalOperator?: 'OR' | 'AND';
   folderId?: number | null;
   ref1?: string;
   ref2?: string;

@@ -46,6 +46,11 @@ export interface FetchLayoutRequest {
   layoutId?: number;
   lastModified?: string;
   activeDisplayGroupId?: number;
+
+  useRegexForName?: number;
+  logicalOperatorName?: 'OR' | 'AND';
+  exactTags?: number;
+  logicalOperator?: 'OR' | 'AND';
 }
 
 export interface FetchLayoutResponse {

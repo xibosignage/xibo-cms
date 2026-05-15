@@ -28,6 +28,7 @@ import type { PlaylistFilterInput } from '../PlaylistsConfig';
 import type { FetchPlaylistRequest } from '@/services/playlistApi';
 import { fetchPlaylist } from '@/services/playlistApi';
 import { resolveLastModified } from '@/utils/date';
+import { isValidRegex } from '@/utils/regex';
 
 export const playlistQueryKeys = {
   all: ['playlist'] as const,
@@ -70,7 +71,15 @@ export const usePlaylistData = ({
       const sortBy = sorting?.[0]?.id;
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
 
-      const { lastModified, tags, ...restFilters } = advancedFilters;
+      const {
+        lastModified,
+        tags,
+        useRegexForName,
+        exactTags,
+        logicalOperator,
+        logicalOperatorName,
+        ...restFilters
+      } = advancedFilters;
 
       const normalizedTags =
         tags && tags.length > 0 ? tags.map((tag) => tag.tag).join(',') : undefined;
@@ -85,6 +94,12 @@ export const usePlaylistData = ({
         ...restFilters,
         ...(normalizedTags ? { tags: normalizedTags } : {}),
         ...resolveLastModified(lastModified),
+        ...(useRegexForName && restFilters.name && isValidRegex(restFilters.name)
+          ? { useRegexForName: 1 }
+          : {}),
+        ...(logicalOperatorName ? { logicalOperatorName } : {}),
+        ...(exactTags !== undefined ? { exactTags: exactTags ? 1 : 0 } : {}),
+        ...(logicalOperator ? { logicalOperator } : {}),
       } as FetchPlaylistRequest;
 
       if (typeof folderId === 'number') {

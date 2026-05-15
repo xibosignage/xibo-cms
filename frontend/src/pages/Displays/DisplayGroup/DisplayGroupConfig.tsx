@@ -62,6 +62,10 @@ export interface DisplayGroupFilterInput {
   nestedDisplayId: number | null;
   dynamicCriteria: string;
   tags: Tag[];
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: boolean;
+  logicalOperator?: 'OR' | 'AND';
+  exactTags?: boolean;
 }
 
 export const INITIAL_FILTER_STATE: DisplayGroupFilterInput = {
@@ -71,6 +75,10 @@ export const INITIAL_FILTER_STATE: DisplayGroupFilterInput = {
   nestedDisplayId: null,
   dynamicCriteria: '',
   tags: [],
+  logicalOperatorName: 'OR',
+  useRegexForName: false,
+  logicalOperator: 'OR',
+  exactTags: false,
 };
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayGroupFilterInput>[] => [
@@ -86,6 +94,10 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayGroupFi
     type: 'text',
     className: '',
     placeholder: ' ',
+    showAndOr: true,
+    andOrKey: 'logicalOperatorName',
+    showRegex: true,
+    regexKey: 'useRegexForName',
   },
   {
     label: t('Display'),
@@ -111,6 +123,10 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayGroupFi
     type: 'tags',
     placeholder: ' ',
     className: '',
+    showAndOr: true,
+    andOrKey: 'logicalOperator',
+    showExactTags: true,
+    exactTagsKey: 'exactTags',
   },
 ];
 

@@ -34,6 +34,8 @@ export interface SyncGroupsFilterInput {
   syncGroupId?: number | null;
   name?: string;
   leadDisplayId: number | null;
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: boolean;
 }
 
 export type ModalType = BaseModalType | 'members' | null;
@@ -42,6 +44,8 @@ export const INITIAL_FILTER_STATE: SyncGroupsFilterInput = {
   syncGroupId: null,
   name: '',
   leadDisplayId: null,
+  logicalOperatorName: 'OR',
+  useRegexForName: false,
 };
 
 export const getFilterKeys = (t: TFunction): FilterConfigItem<SyncGroupsFilterInput>[] => [
@@ -57,6 +61,10 @@ export const getFilterKeys = (t: TFunction): FilterConfigItem<SyncGroupsFilterIn
     type: 'text',
     className: '',
     placeholder: ' ',
+    showAndOr: true,
+    andOrKey: 'logicalOperatorName',
+    showRegex: true,
+    regexKey: 'useRegexForName',
   },
   {
     label: t('Lead Display ID'),

@@ -55,6 +55,10 @@ export interface PlaylistFilterInput {
   ownerUserGroupId?: string;
   layoutId?: number | null;
   lastModified?: string;
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: boolean;
+  logicalOperator?: 'OR' | 'AND';
+  exactTags?: boolean;
 }
 
 export type ModalType = BaseModalType | 'schedule' | null;
@@ -67,6 +71,10 @@ export const INITIAL_FILTER_STATE: PlaylistFilterInput = {
   ownerUserGroupId: '',
   layoutId: null,
   lastModified: '',
+  logicalOperatorName: 'OR',
+  useRegexForName: false,
+  logicalOperator: 'OR',
+  exactTags: false,
 };
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<PlaylistFilterInput>[] => [
@@ -82,6 +90,10 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<PlaylistFilter
     type: 'text',
     className: '',
     placeholder: ' ',
+    showAndOr: true,
+    andOrKey: 'logicalOperatorName',
+    showRegex: true,
+    regexKey: 'useRegexForName',
   },
   {
     label: t('Tags'),
@@ -89,6 +101,10 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<PlaylistFilter
     type: 'tags',
     placeholder: ' ',
     className: '',
+    showAndOr: true,
+    andOrKey: 'logicalOperator',
+    showExactTags: true,
+    exactTagsKey: 'exactTags',
   },
   {
     label: t('Owner'),

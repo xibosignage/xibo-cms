@@ -137,7 +137,7 @@ export default function AddAndEditPlaylistModal({
     advancedFilters: {
       ...INITIAL_FILTER_STATE,
       media: debouncedFilterMediaName,
-      tags: draft.filterMediaTag.map((t) => t.tag).join(','),
+      tags: draft.filterMediaTag,
       exactTags: draft.exactTags,
       logicalOperator: draft.logicalOperator,
       logicalOperatorName: draft.logicalOperatorName,

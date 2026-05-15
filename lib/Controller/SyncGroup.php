@@ -600,12 +600,14 @@ class SyncGroup extends Base
     private function getSyncGroupFilters(SanitizerInterface $sanitizedParams): array
     {
         return $this->gridRenderFilter([
-            'syncGroupId'   => $sanitizedParams->getInt('syncGroupId'),
-            'name'          => $sanitizedParams->getString('name'),
-            'keyword'       => $sanitizedParams->getString('keyword'),
-            'folderId'      => $sanitizedParams->getInt('folderId'),
-            'ownerId'       => $sanitizedParams->getInt('ownerId'),
-            'leadDisplayId' => $sanitizedParams->getInt('leadDisplayId'),
+            'syncGroupId'         => $sanitizedParams->getInt('syncGroupId'),
+            'name'                => $sanitizedParams->getString('name'),
+            'keyword'             => $sanitizedParams->getString('keyword'),
+            'folderId'            => $sanitizedParams->getInt('folderId'),
+            'ownerId'             => $sanitizedParams->getInt('ownerId'),
+            'leadDisplayId'       => $sanitizedParams->getInt('leadDisplayId'),
+            'useRegexForName'     => $sanitizedParams->getCheckbox('useRegexForName'),
+            'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
         ], $sanitizedParams);
     }
 

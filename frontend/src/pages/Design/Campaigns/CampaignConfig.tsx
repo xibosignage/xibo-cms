@@ -40,6 +40,10 @@ export interface CampaignFilterInput {
   type?: string;
   cyclePlaybackEnabled?: string;
   retired?: number | null;
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: boolean;
+  logicalOperator?: 'OR' | 'AND';
+  exactTags?: boolean;
 }
 
 export const CAMPAIGN_INITIAL_FILTER_STATE: CampaignFilterInput = {
@@ -49,6 +53,10 @@ export const CAMPAIGN_INITIAL_FILTER_STATE: CampaignFilterInput = {
   layoutId: '',
   type: '',
   cyclePlaybackEnabled: '',
+  logicalOperatorName: 'OR',
+  useRegexForName: false,
+  logicalOperator: 'OR',
+  exactTags: false,
 };
 
 export const getCampaignFilterKeys = (t: TFunction): FilterConfigItem<CampaignFilterInput>[] => [
@@ -58,6 +66,10 @@ export const getCampaignFilterKeys = (t: TFunction): FilterConfigItem<CampaignFi
     type: 'text',
     className: '',
     placeholder: ' ',
+    showAndOr: true,
+    andOrKey: 'logicalOperatorName',
+    showRegex: true,
+    regexKey: 'useRegexForName',
   },
 
   {
@@ -66,6 +78,10 @@ export const getCampaignFilterKeys = (t: TFunction): FilterConfigItem<CampaignFi
     type: 'tags',
     placeholder: ' ',
     className: 'md:w-auto md:flex-1 min-w-0',
+    showAndOr: true,
+    andOrKey: 'logicalOperator',
+    showExactTags: true,
+    exactTagsKey: 'exactTags',
   },
 
   {

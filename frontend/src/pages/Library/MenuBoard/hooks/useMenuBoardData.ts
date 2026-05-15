@@ -28,6 +28,7 @@ import type { MenuBoardFilterInput } from '../MenuBoardConfig';
 import type { FetchMenuBoardRequest } from '@/services/menuBoardApi';
 import { fetchMenuBoard } from '@/services/menuBoardApi';
 import { resolveLastModified } from '@/utils/date';
+import { isValidRegex } from '@/utils/regex';
 
 export const MenuBoardQueryKeys = {
   all: ['menuBoard'] as const,
@@ -69,7 +70,8 @@ export const useMenuBoardData = ({
       const sortBy = sorting?.[0]?.id;
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
 
-      const { name, menuId, userId, code, lastModified } = advancedFilters;
+      const { name, menuId, userId, code, lastModified, useRegexForName, logicalOperatorName } =
+        advancedFilters;
 
       const request: FetchMenuBoardRequest = {
         start: startOffset,
@@ -83,6 +85,8 @@ export const useMenuBoardData = ({
         userId: userId ? Number(userId) : undefined,
         code: code || undefined,
         ...resolveLastModified(lastModified),
+        ...(useRegexForName && name && isValidRegex(name) ? { useRegexForName: 1 } : {}),
+        ...(logicalOperatorName ? { logicalOperatorName } : {}),
       };
 
       if (typeof folderId === 'number') {

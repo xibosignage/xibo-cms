@@ -33,6 +33,8 @@ export interface FetchDaypartRequest {
   signal?: AbortSignal;
   isAlways?: 0 | 1;
   isCustom?: 0 | 1;
+  useRegexForName?: number;
+  logicalOperatorName?: 'OR' | 'AND';
 }
 
 export interface FetchDaypartResponse {

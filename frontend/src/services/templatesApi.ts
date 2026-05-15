@@ -35,6 +35,12 @@ export interface FetchTemplateRequest {
   userId?: string;
   ownerUserGroupId?: string;
   lastModified?: string;
+  tags?: string;
+
+  useRegexForName?: number;
+  logicalOperatorName?: 'OR' | 'AND';
+  exactTags?: number;
+  logicalOperator?: 'OR' | 'AND';
 }
 
 export interface FetchTemplateResponse {

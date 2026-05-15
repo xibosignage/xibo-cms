@@ -49,6 +49,8 @@ export interface FetchDatasetRequest {
   userId?: string;
   ownerUserGroupId?: string;
   lastModified?: string;
+  useRegexForName?: number;
+  logicalOperatorName?: 'OR' | 'AND';
 }
 
 export interface FetchDatasetResponse {

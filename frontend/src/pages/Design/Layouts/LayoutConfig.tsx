@@ -72,6 +72,10 @@ export interface LayoutFilterInput {
   layoutId?: number | null;
   lastModified?: string;
   activeDisplayGroupId?: number;
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: boolean;
+  logicalOperator?: 'OR' | 'AND';
+  exactTags?: boolean;
 }
 
 export const LAYOUT_INITIAL_FILTER_STATE: LayoutFilterInput = {
@@ -89,6 +93,10 @@ export const LAYOUT_INITIAL_FILTER_STATE: LayoutFilterInput = {
   layoutId: null,
   lastModified: '',
   activeDisplayGroupId: undefined,
+  logicalOperatorName: 'OR',
+  useRegexForName: false,
+  logicalOperator: 'OR',
+  exactTags: false,
 };
 
 export type ModalType =
@@ -117,6 +125,10 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<LayoutFilterIn
     type: 'text',
     className: '',
     placeholder: ' ',
+    showAndOr: true,
+    andOrKey: 'logicalOperatorName',
+    showRegex: true,
+    regexKey: 'useRegexForName',
   },
   {
     label: t('Tags'),
@@ -124,6 +136,10 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<LayoutFilterIn
     type: 'tags',
     placeholder: ' ',
     className: '',
+    showAndOr: true,
+    andOrKey: 'logicalOperator',
+    showExactTags: true,
+    exactTagsKey: 'exactTags',
   },
   {
     label: t('Code'),

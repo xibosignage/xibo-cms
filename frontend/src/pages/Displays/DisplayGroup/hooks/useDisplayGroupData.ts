@@ -27,6 +27,7 @@ import type { DisplayGroupFilterInput } from '../DisplayGroupConfig';
 
 import type { FetchDisplayGroupRequest } from '@/services/displayGroupApi';
 import { fetchDisplayGroups } from '@/services/displayGroupApi';
+import { isValidRegex } from '@/utils/regex';
 
 export const displayGroupQueryKeys = {
   all: ['displayGroup'] as const,
@@ -76,6 +77,10 @@ export const useDisplayGroupData = ({
         displayIdDropdown,
         nestedDisplayId,
         dynamicCriteria,
+        useRegexForName,
+        logicalOperatorName,
+        exactTags,
+        logicalOperator,
       } = advancedFilters;
 
       const normalizedTags =
@@ -95,6 +100,12 @@ export const useDisplayGroupData = ({
         ...(nestedDisplayId != null ? { nestedDisplayId } : {}),
         ...(dynamicCriteria ? { dynamicCriteria } : {}),
         ...(normalizedTags ? { tags: normalizedTags } : {}),
+        ...(useRegexForName && displayGroup && isValidRegex(displayGroup)
+          ? { useRegexForName: 1 }
+          : {}),
+        ...(logicalOperatorName ? { logicalOperatorName } : {}),
+        ...(exactTags !== undefined ? { exactTags: exactTags ? 1 : 0 } : {}),
+        ...(logicalOperator ? { logicalOperator } : {}),
       };
 
       return fetchDisplayGroups(request);

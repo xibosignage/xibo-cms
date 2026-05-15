@@ -19,8 +19,21 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import {
+  autoUpdate,
+  flip,
+  FloatingPortal,
+  offset,
+  shift,
+  useClick,
+  useDismiss,
+  useFloating,
+  useInteractions,
+} from '@floating-ui/react';
+import { ChevronDown, Equal, Regex } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { twMerge } from 'tailwind-merge';
 
 import Button from './Button';
 import DateFilter from './DateFilter';
@@ -29,6 +42,7 @@ import InputFilter from './InputFilter';
 import SelectDropdown from './forms/SelectDropdown';
 import type { SelectOption } from './forms/SelectDropdown';
 import TagInput from './forms/TagInput';
+import TextInput from './forms/TextInput';
 
 import type { FilterOption } from '@/types/filter';
 import type { Tag } from '@/types/tag';
@@ -50,9 +64,15 @@ export interface FilterConfigItem<T> {
   isJalali?: boolean;
   initialLabel?: string;
   resolveLabel?: (value: string) => Promise<string>;
+  showAndOr?: boolean;
+  andOrKey?: keyof T & string;
+  showRegex?: boolean;
+  regexKey?: keyof T & string;
+  showExactTags?: boolean;
+  exactTagsKey?: keyof T & string;
 }
 
-type FilterValue = string | number | null | Tag[];
+type FilterValue = string | number | boolean | null | Tag[];
 
 type DebouncedInputFilterProps = {
   name: string;
@@ -85,6 +105,172 @@ function DebouncedInputFilter({ externalValue, onChange, ...props }: DebouncedIn
   return <InputFilter {...props} value={localValue} onChange={handleChange} />;
 }
 
+function AndOrButton({
+  value,
+  onChange,
+}: {
+  value: 'AND' | 'OR';
+  onChange: (value: 'AND' | 'OR') => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const { refs, floatingStyles, context } = useFloating({
+    open: isOpen,
+    onOpenChange: setIsOpen,
+    placement: 'bottom-start',
+    whileElementsMounted: autoUpdate,
+    middleware: [offset(4), flip(), shift()],
+  });
+  const click = useClick(context);
+  const dismiss = useDismiss(context);
+  const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
+
+  return (
+    <>
+      <button
+        type="button"
+        ref={refs.setReference}
+        {...getReferenceProps()}
+        className="flex items-center gap-2 p-3 h-full text-sm font-semibold text-gray-500 cursor-pointer bg-transparent border-none"
+      >
+        {value}
+        <ChevronDown
+          size={12}
+          className={twMerge('transition-transform duration-200', isOpen && 'rotate-180')}
+        />
+      </button>
+      <FloatingPortal>
+        {isOpen && (
+          <div
+            ref={refs.setFloating}
+            style={floatingStyles}
+            {...getFloatingProps()}
+            className="z-9999 bg-white shadow-md rounded-lg border border-gray-200 flex flex-col overflow-clip"
+          >
+            {(['AND', 'OR'] as const).map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => {
+                  onChange(opt);
+                  setIsOpen(false);
+                }}
+                className={twMerge(
+                  'p-3 text-sm font-semibold text-left hover:bg-gray-100 cursor-pointer',
+                  value === opt && 'text-xibo-blue-600',
+                )}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+        )}
+      </FloatingPortal>
+    </>
+  );
+}
+
+type DebouncedTextWithControlsProps = {
+  name: string;
+  label: string;
+  placeholder?: string;
+  externalValue: string;
+  onChange: (name: string, value: string) => void;
+  showAndOr?: boolean;
+  andOr?: 'AND' | 'OR';
+  onAndOrChange?: (value: 'AND' | 'OR') => void;
+  showRegex?: boolean;
+  isRegex?: boolean;
+  onRegexChange?: (value: boolean) => void;
+};
+
+function DebouncedTextWithControls({
+  name,
+  label,
+  placeholder,
+  externalValue,
+  onChange,
+  showAndOr,
+  andOr = 'OR',
+  onAndOrChange,
+  showRegex,
+  isRegex = false,
+  onRegexChange,
+}: DebouncedTextWithControlsProps) {
+  const { t } = useTranslation();
+  const [localValue, setLocalValue] = useState<string>(String(externalValue ?? ''));
+  const [regexError, setRegexError] = useState<string>('');
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setLocalValue(String(externalValue ?? ''));
+  }, [externalValue]);
+
+  useEffect(() => {
+    if (!isRegex) {
+      setRegexError('');
+    }
+  }, [isRegex]);
+
+  const handleChange = (val: string) => {
+    setLocalValue(val);
+
+    if (isRegex && val) {
+      try {
+        new RegExp(val);
+        setRegexError('');
+      } catch {
+        setRegexError(t('Invalid regular expression'));
+        if (debounceRef.current) {
+          clearTimeout(debounceRef.current);
+        }
+        return;
+      }
+    } else {
+      setRegexError('');
+    }
+
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = setTimeout(() => {
+      onChange(name, val);
+    }, 300);
+  };
+
+  const prefix = showAndOr ? (
+    <AndOrButton value={andOr} onChange={(val) => onAndOrChange?.(val)} />
+  ) : undefined;
+
+  const suffix = showRegex ? (
+    <div className="p-2 flex items-center cursor-pointer justify-center">
+      <Button
+        variant="tertiary"
+        onClick={() => onRegexChange && onRegexChange(!isRegex)}
+        title={t('Toggle regular expression')}
+        leftIcon={Regex}
+        className={
+          isRegex
+            ? 'bg-xibo-blue-600 text-white hover:bg-xibo-blue-700 hover:text-white'
+            : 'text-xibo-blue-600 hover:text-xibo-blue-800'
+        }
+      ></Button>
+    </div>
+  ) : undefined;
+
+  return (
+    <TextInput
+      name={name}
+      label={label}
+      placeholder={placeholder}
+      value={localValue}
+      onChange={handleChange}
+      prefix={prefix}
+      suffix={suffix}
+      error={regexError || undefined}
+    />
+  );
+}
+
 type FilterInputsProps<T> = {
   isOpen: boolean;
   values: T;
@@ -113,7 +299,7 @@ export default function FilterInputs<T>({
         }
       `}
     >
-      <div className="relative bg-slate-50 p-5 pt-7 grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-4 items-end">
+      <div className="relative bg-slate-50 p-5 pt-7 grid grid-cols-[repeat(auto-fit,minmax(15rem,1fr))] gap-4 items-end">
         {onReset && (
           <Button
             variant="tertiary"
@@ -127,6 +313,39 @@ export default function FilterInputs<T>({
           const filterType = filter.type || 'select';
 
           if (filterType === 'text' || filterType === 'number') {
+            const hasControls = filterType === 'text' && (filter.showAndOr || filter.showRegex);
+
+            if (hasControls) {
+              return (
+                <DebouncedTextWithControls
+                  key={filter.name}
+                  name={filter.name}
+                  label={filter.label}
+                  placeholder={filter.placeholder}
+                  externalValue={values[filter.name] as string}
+                  onChange={(name, val) => onChange(name as keyof T & string, val)}
+                  showAndOr={filter.showAndOr}
+                  andOr={
+                    filter.andOrKey ? ((values[filter.andOrKey] as 'AND' | 'OR') ?? 'OR') : 'OR'
+                  }
+                  onAndOrChange={(val) => {
+                    if (filter.andOrKey) {
+                      onChange(filter.andOrKey, val);
+                    }
+                  }}
+                  showRegex={filter.showRegex}
+                  isRegex={
+                    filter.regexKey ? ((values[filter.regexKey] as boolean) ?? false) : false
+                  }
+                  onRegexChange={(val) => {
+                    if (filter.regexKey) {
+                      onChange(filter.regexKey, val);
+                    }
+                  }}
+                />
+              );
+            }
+
             return (
               <DebouncedInputFilter
                 key={filter.name}
@@ -142,6 +361,36 @@ export default function FilterInputs<T>({
           }
 
           if (filterType === 'tags') {
+            const andOr = filter.andOrKey
+              ? ((values[filter.andOrKey] as 'AND' | 'OR') ?? 'OR')
+              : 'OR';
+            const exactTags = filter.exactTagsKey
+              ? ((values[filter.exactTagsKey] as boolean) ?? false)
+              : false;
+
+            const prefix = filter.showAndOr ? (
+              <AndOrButton
+                value={andOr}
+                onChange={(val) => filter.andOrKey && onChange(filter.andOrKey, val)}
+              />
+            ) : undefined;
+
+            const suffix = filter.showExactTags ? (
+              <div className="p-2 flex items-center cursor-pointer justify-center">
+                <Button
+                  variant="tertiary"
+                  onClick={() => filter.exactTagsKey && onChange(filter.exactTagsKey, !exactTags)}
+                  title={t('Exact tags')}
+                  leftIcon={Equal}
+                  className={
+                    exactTags
+                      ? 'bg-xibo-blue-600 text-white hover:bg-xibo-blue-700 hover:text-white'
+                      : 'text-xibo-blue-600 hover:text-xibo-blue-800'
+                  }
+                ></Button>
+              </div>
+            ) : undefined;
+
             return (
               <TagInput
                 key={filter.name}
@@ -150,6 +399,8 @@ export default function FilterInputs<T>({
                 onChange={(tags) => onChange(filter.name, tags)}
                 className={filter.className}
                 placeholder={filter.placeholder}
+                prefix={prefix}
+                suffix={suffix}
               />
             );
           }

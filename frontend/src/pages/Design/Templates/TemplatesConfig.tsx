@@ -49,11 +49,19 @@ import type { Template } from '@/types/templates';
 export interface TemplatesFilterInput {
   template?: string;
   tags?: Tag[];
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: boolean;
+  logicalOperator?: 'OR' | 'AND';
+  exactTags?: boolean;
 }
 
 export const TEMPLATE_INITIAL_FILTER_STATE: TemplatesFilterInput = {
   template: '',
   tags: [],
+  logicalOperatorName: 'OR',
+  useRegexForName: false,
+  logicalOperator: 'OR',
+  exactTags: false,
 };
 
 export type ModalType = BaseModalType | 'schedule' | null;
@@ -65,6 +73,10 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<TemplatesFilte
     type: 'text',
     className: '',
     placeholder: ' ',
+    showAndOr: true,
+    andOrKey: 'logicalOperatorName',
+    showRegex: true,
+    regexKey: 'useRegexForName',
   },
   {
     label: t('Tags'),
@@ -72,6 +84,10 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<TemplatesFilte
     type: 'tags',
     placeholder: ' ',
     className: '',
+    showAndOr: true,
+    andOrKey: 'logicalOperator',
+    showExactTags: true,
+    exactTagsKey: 'exactTags',
   },
 ];
 

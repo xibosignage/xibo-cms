@@ -32,6 +32,8 @@ export interface FetchDisplayProfileRequest {
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;
+  useRegexForName?: number;
+  logicalOperatorName?: 'OR' | 'AND';
 }
 
 export interface FetchDisplayProfileResponse {

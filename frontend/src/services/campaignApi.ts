@@ -42,6 +42,11 @@ export interface FetchCampaignRequest {
   type?: string;
   cyclePlaybackEnabled?: number;
 
+  useRegexForName?: number;
+  logicalOperatorName?: 'OR' | 'AND';
+  exactTags?: number;
+  logicalOperator?: 'OR' | 'AND';
+
   signal?: AbortSignal;
 }
 

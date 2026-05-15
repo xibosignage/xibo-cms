@@ -35,6 +35,8 @@ export interface FetchSyncGroupsRequest {
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;
+  useRegexForName?: number;
+  logicalOperatorName?: 'OR' | 'AND';
 }
 
 export interface FetchSyncGroupsResponse {

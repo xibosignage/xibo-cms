@@ -62,11 +62,16 @@ export interface EventFilterInput {
   sharedSchedule?: number | null;
   fromDt?: string | null;
   toDt?: string | null;
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: boolean;
 }
 
 export type ModalType = BaseModalType | 'schedule' | 'agenda' | null;
 
-export const INITIAL_FILTER_STATE: EventFilterInput = {};
+export const INITIAL_FILTER_STATE: EventFilterInput = {
+  logicalOperatorName: 'OR',
+  useRegexForName: false,
+};
 
 const EVENT_TYPE_LABELS: Record<number, string> = {
   [EventTypeId.Layout]: 'Layout',
@@ -107,6 +112,10 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<EventFilterInp
     type: 'text',
     className: '',
     placeholder: ' ',
+    showAndOr: true,
+    andOrKey: 'logicalOperatorName',
+    showRegex: true,
+    regexKey: 'useRegexForName',
   },
   {
     label: t('Event Type'),

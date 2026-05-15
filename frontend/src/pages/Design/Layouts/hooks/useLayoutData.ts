@@ -28,6 +28,7 @@ import type { LayoutFilterInput } from '../LayoutConfig';
 import type { FetchLayoutRequest } from '@/services/layoutsApi';
 import { fetchLayouts } from '@/services/layoutsApi';
 import { resolveLastModified } from '@/utils/date';
+import { isValidRegex } from '@/utils/regex';
 
 export const layoutQueryKeys = {
   all: ['layout'] as const,
@@ -84,6 +85,10 @@ export const useLayoutData = ({
         layoutId,
         lastModified,
         activeDisplayGroupId,
+        useRegexForName,
+        logicalOperatorName,
+        exactTags,
+        logicalOperator,
       } = advancedFilters;
 
       const normalizedTags =
@@ -110,6 +115,10 @@ export const useLayoutData = ({
         ...(layoutId != null ? { layoutId } : {}),
         ...(activeDisplayGroupId != null ? { activeDisplayGroupId } : {}),
         ...resolveLastModified(lastModified),
+        ...(useRegexForName && name && isValidRegex(name) ? { useRegexForName: 1 } : {}),
+        ...(logicalOperatorName ? { logicalOperatorName } : {}),
+        ...(exactTags !== undefined ? { exactTags: exactTags ? 1 : 0 } : {}),
+        ...(logicalOperator ? { logicalOperator } : {}),
       };
 
       if (typeof folderId === 'number') {

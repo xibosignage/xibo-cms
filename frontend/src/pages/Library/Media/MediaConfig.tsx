@@ -72,6 +72,7 @@ export interface MediaFilterInput {
   layoutId?: number | null;
   logicalOperator?: 'OR' | 'AND';
   logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: boolean;
 }
 
 export const getMediaIcon = (mediaType: string) => {
@@ -107,6 +108,10 @@ export const INITIAL_FILTER_STATE: MediaFilterInput = {
   orientation: '',
   layoutId: null,
   lastModified: '',
+  logicalOperatorName: 'OR',
+  useRegexForName: false,
+  logicalOperator: 'OR',
+  exactTags: false,
 };
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<MediaFilterInput>[] => [
@@ -122,6 +127,10 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<MediaFilterInp
     type: 'text',
     className: '',
     placeholder: ' ',
+    showAndOr: true,
+    andOrKey: 'logicalOperatorName',
+    showRegex: true,
+    regexKey: 'useRegexForName',
   },
   {
     label: t('Tags'),
@@ -129,6 +138,10 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<MediaFilterInp
     type: 'tags',
     placeholder: ' ',
     className: '',
+    showAndOr: true,
+    andOrKey: 'logicalOperator',
+    showExactTags: true,
+    exactTagsKey: 'exactTags',
   },
   {
     label: t('Owner'),

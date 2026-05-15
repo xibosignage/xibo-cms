@@ -37,6 +37,8 @@ export interface DatasetFilterInput {
   code: string;
   userId: string;
   lastModified: string;
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: boolean;
 }
 
 export type ModalType = BaseModalType | null;
@@ -47,6 +49,8 @@ export const INITIAL_FILTER_STATE: DatasetFilterInput = {
   userId: '',
   code: '',
   lastModified: '',
+  logicalOperatorName: 'OR',
+  useRegexForName: false,
 };
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DatasetFilterInput>[] => [
@@ -62,6 +66,10 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DatasetFilterI
     type: 'text',
     className: '',
     placeholder: ' ',
+    showAndOr: true,
+    andOrKey: 'logicalOperatorName',
+    showRegex: true,
+    regexKey: 'useRegexForName',
   },
   {
     label: t('Code'),

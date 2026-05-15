@@ -38,6 +38,8 @@ export interface MenuBoardFilterInput {
   code: string;
   userId: string;
   lastModified: string;
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: boolean;
 }
 
 export type ModalType = BaseModalType | null;
@@ -48,6 +50,8 @@ export const INITIAL_FILTER_STATE: MenuBoardFilterInput = {
   userId: '',
   code: '',
   lastModified: '',
+  logicalOperatorName: 'OR',
+  useRegexForName: false,
 };
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<MenuBoardFilterInput>[] => [
@@ -63,6 +67,10 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<MenuBoardFilte
     type: 'text',
     className: '',
     placeholder: ' ',
+    showAndOr: true,
+    andOrKey: 'logicalOperatorName',
+    showRegex: true,
+    regexKey: 'useRegexForName',
   },
   {
     label: t('Code'),
