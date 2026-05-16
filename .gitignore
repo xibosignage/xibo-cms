@@ -14,6 +14,7 @@ results.xml
 containers/
 web/dist
 modules/bundle*.js*
+modules/vendor-*.min.js*
 modules/assets/pdfjs
 
 # The OpenOOH specification
