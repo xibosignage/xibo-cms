@@ -112,6 +112,7 @@ function AndOrButton({
   value: 'AND' | 'OR';
   onChange: (value: 'AND' | 'OR') => void;
 }) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
@@ -130,6 +131,7 @@ function AndOrButton({
         type="button"
         ref={refs.setReference}
         {...getReferenceProps()}
+        title={value === 'AND' ? t('Match ALL entered terms') : t('Match ANY entered terms')}
         className="flex items-center gap-2 p-3 h-full text-sm font-semibold text-gray-500 cursor-pointer bg-transparent border-none"
       >
         {value}
@@ -242,17 +244,20 @@ function DebouncedTextWithControls({
   ) : undefined;
 
   const suffix = showRegex ? (
-    <div className="p-2 flex items-center cursor-pointer justify-center">
+    <div
+      className="px-3 py-2 flex items-center cursor-pointer justify-center"
+      onClick={() => onRegexChange && onRegexChange(!isRegex)}
+      title={t('Use RegEx pattern matching')}
+    >
       <Button
         variant="tertiary"
-        onClick={() => onRegexChange && onRegexChange(!isRegex)}
-        title={t('Toggle regular expression')}
         leftIcon={Regex}
-        className={
+        className={twMerge(
+          'p-1.5',
           isRegex
             ? 'bg-xibo-blue-600 text-white hover:bg-xibo-blue-700 hover:text-white'
-            : 'text-xibo-blue-600 hover:text-xibo-blue-800'
-        }
+            : 'text-xibo-blue-600 hover:text-xibo-blue-800',
+        )}
       ></Button>
     </div>
   ) : undefined;
@@ -376,17 +381,20 @@ export default function FilterInputs<T>({
             ) : undefined;
 
             const suffix = filter.showExactTags ? (
-              <div className="p-2 flex items-center cursor-pointer justify-center">
+              <div
+                className="px-3 py-2 flex items-center cursor-pointer justify-center"
+                onClick={() => filter.exactTagsKey && onChange(filter.exactTagsKey, !exactTags)}
+                title={t('Match exact characters only')}
+              >
                 <Button
                   variant="tertiary"
-                  onClick={() => filter.exactTagsKey && onChange(filter.exactTagsKey, !exactTags)}
-                  title={t('Exact tags')}
                   leftIcon={Equal}
-                  className={
+                  className={twMerge(
+                    'p-1.5',
                     exactTags
                       ? 'bg-xibo-blue-600 text-white hover:bg-xibo-blue-700 hover:text-white'
-                      : 'text-xibo-blue-600 hover:text-xibo-blue-800'
-                  }
+                      : 'text-xibo-blue-600 hover:text-xibo-blue-800',
+                  )}
                 ></Button>
               </div>
             ) : undefined;
