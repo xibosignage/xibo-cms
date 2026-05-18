@@ -326,8 +326,8 @@ describe('AddAndEditMenuBoardProductModal', () => {
       const [optionNameInput] = screen.getAllByPlaceholderText('Option Name');
       const [optionValueInput] = screen.getAllByPlaceholderText('Option Value');
 
-      await user.type(optionNameInput, 'Size');
-      await user.type(optionValueInput, '12');
+      await user.type(optionNameInput!, 'Size');
+      await user.type(optionValueInput!, '12');
 
       await user.click(screen.getByRole('button', { name: 'Save' }));
 

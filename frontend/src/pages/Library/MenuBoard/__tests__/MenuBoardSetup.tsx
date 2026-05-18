@@ -85,7 +85,7 @@ export const mockMenuBoardCategory = (overrides = {}): MenuBoardCategory =>
     name: 'Test Category',
     description: 'A test category description',
     code: 'CAT_01',
-    mediaId: null,
+    mediaId: undefined,
     ...overrides,
   }) as MenuBoardCategory;
 
@@ -102,7 +102,7 @@ export const mockMenuBoardProduct = (overrides = {}): MenuBoardProduct =>
     availability: 1,
     allergyInfo: '',
     calories: 200,
-    mediaId: null,
+    mediaId: undefined,
     productOptions: [],
     ...overrides,
   }) as MenuBoardProduct;
