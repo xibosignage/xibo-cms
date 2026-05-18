@@ -109,7 +109,7 @@ const createDraftFromData = (
     dataSet: data.dataSet ?? '',
     description: data.description ?? '',
     code: data.code ?? '',
-    folderId: data.folderId ?? null,
+    folderId: data.folderId != null ? Number(data.folderId) : null,
     isRemote: Boolean(data.isRemote),
     isRealTime: Boolean(data.isRealTime),
     ignoreFirstRow: Boolean(data.ignoreFirstRow),
@@ -129,10 +129,10 @@ const createDraftFromData = (
     summarize: (data.summarize || 'none') as DatasetSummarize,
     summarizeField: data.summarizeField ?? '',
     limitPolicy: (data.limitPolicy || 'stop') as DatasetLimitPolicy,
-    refreshRate: data.refreshRate ?? 0,
-    clearRate: data.clearRate ?? 1,
-    runsAfter: data.runsAfter ?? 0,
-    rowLimit: data.rowLimit ?? 0,
+    refreshRate: data.refreshRate != null ? Number(data.refreshRate) : 0,
+    clearRate: data.clearRate != null ? Number(data.clearRate) : 1,
+    runsAfter: data.runsAfter != null ? Number(data.runsAfter) : 0,
+    rowLimit: data.rowLimit != null ? Number(data.rowLimit) : 0,
   };
 };
 
@@ -238,7 +238,7 @@ export default function AddAndEditDatasetModal({
       } else if (draft.isRemote && (fieldErrors.uri || fieldErrors.username)) {
         setActiveTab(fieldErrors.uri ? 'remote' : 'auth');
       }
-
+      setApiError(t('Please fix the highlighted errors before saving.'));
       return;
     }
 

@@ -144,6 +144,7 @@ export function AddAndEditDatasetColumnModal({
       setFormErrors({
         heading: fieldErrors.heading?.[0],
       });
+      setApiError(t('Please fix the highlighted errors before saving.'));
       return;
     }
 

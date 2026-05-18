@@ -60,12 +60,7 @@ function renderEditModal(dataOverrides = {}) {
   const mockOnSave = vi.fn();
   const board = mockMenuBoard(dataOverrides);
   renderWithProviders(
-    <AddAndEditMenuBoardModal
-      type="edit"
-      data={board}
-      onClose={mockOnClose}
-      onSave={mockOnSave}
-    />,
+    <AddAndEditMenuBoardModal type="edit" data={board} onClose={mockOnClose} onSave={mockOnSave} />,
   );
   return { mockOnClose, mockOnSave, board };
 }
@@ -100,7 +95,11 @@ describe('AddAndEditMenuBoardModal', () => {
 
       await waitFor(() => {
         expect(mockCreateMenuBoard).toHaveBeenCalledWith(
-          expect.objectContaining({ name: 'New Board', code: 'NB_01', description: 'A description' }),
+          expect.objectContaining({
+            name: 'New Board',
+            code: 'NB_01',
+            description: 'A description',
+          }),
         );
         expect(mockOnSave).toHaveBeenCalled();
         expect(mockOnClose).toHaveBeenCalled();

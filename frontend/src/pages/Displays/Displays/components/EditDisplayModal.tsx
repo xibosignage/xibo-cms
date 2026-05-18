@@ -429,7 +429,7 @@ export default function EditDisplayModal({
   ];
   const [activeTab, setActiveTab] = useState<ActiveTab>('general');
   const [apiError, setApiError] = useState<string | undefined>();
-  const [nameError, setNameError] = useState<string | undefined>();
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({});
 
   const [draft, setDraft] = useState<EditDraft>({
     display: '',
@@ -509,7 +509,7 @@ export default function EditDisplayModal({
 
     setActiveTab('general');
     setApiError(undefined);
-    setNameError(undefined);
+    setFieldErrors({});
     setActiveProfile(null);
     setProfileFlat({});
     setProfileDefaults({});
@@ -524,8 +524,8 @@ export default function EditDisplayModal({
       tags: data.tags ?? [],
       licensed: data.licensed ?? 0,
       defaultLayoutId: data.defaultLayoutId ?? null,
-      latitude: data.latitude ?? null,
-      longitude: data.longitude ?? null,
+      latitude: data.latitude != null ? Number(data.latitude) : null,
+      longitude: data.longitude != null ? Number(data.longitude) : null,
       timeZone: data.timeZone ?? '',
       languages: data.languages
         ? data.languages
@@ -539,8 +539,8 @@ export default function EditDisplayModal({
       screenSize: data.screenSize ?? null,
       isMobile: data.isMobile ?? 0,
       isOutdoor: data.isOutdoor ?? 0,
-      costPerPlay: data.costPerPlay ?? null,
-      impressionsPerPlay: data.impressionsPerPlay ?? null,
+      costPerPlay: data.costPerPlay != null ? Number(data.costPerPlay) : null,
+      impressionsPerPlay: data.impressionsPerPlay != null ? Number(data.impressionsPerPlay) : null,
       ref1: data.ref1 ?? '',
       ref2: data.ref2 ?? '',
       ref3: data.ref3 ?? '',
@@ -723,12 +723,14 @@ export default function EditDisplayModal({
       });
 
       if (!result.success) {
-        setApiError(undefined);
-        setNameError(result.error.flatten().fieldErrors.display?.[0]);
+        const flat = result.error.flatten().fieldErrors;
+        setFieldErrors(Object.fromEntries(Object.entries(flat).map(([k, v]) => [k, v?.[0]])));
+        setApiError(t('Please fix the highlighted errors before saving.'));
         return;
       }
 
-      setNameError(undefined);
+      setFieldErrors({});
+      setApiError(undefined);
 
       const tagString =
         draft.tags.length > 0
@@ -983,7 +985,7 @@ export default function EditDisplayModal({
                 placeholder={t('Enter name')}
                 value={draft.display}
                 onChange={(v) => set('display', v)}
-                error={nameError}
+                error={fieldErrors.display}
               />
               <TextInput
                 name="license"
@@ -1045,6 +1047,7 @@ export default function EditDisplayModal({
                 placeholder=" "
                 value={draft.latitude ?? undefined}
                 onChange={(v) => set('latitude', v || null)}
+                error={fieldErrors.latitude}
               />
               <NumberInput
                 name="longitude"
@@ -1053,6 +1056,7 @@ export default function EditDisplayModal({
                 placeholder=" "
                 value={draft.longitude ?? undefined}
                 onChange={(v) => set('longitude', v || null)}
+                error={fieldErrors.longitude}
               />
               <TimezoneSelect
                 value={draft.timeZone}
@@ -1134,6 +1138,7 @@ export default function EditDisplayModal({
                 placeholder=" "
                 value={draft.costPerPlay ?? undefined}
                 onChange={(v) => set('costPerPlay', v || null)}
+                error={fieldErrors.costPerPlay}
               />
               <NumberInput
                 name="impressionsPerPlay"
@@ -1142,6 +1147,7 @@ export default function EditDisplayModal({
                 placeholder=" "
                 value={draft.impressionsPerPlay ?? undefined}
                 onChange={(v) => set('impressionsPerPlay', v || null)}
+                error={fieldErrors.impressionsPerPlay}
               />
             </>
           )}

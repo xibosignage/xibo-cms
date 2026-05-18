@@ -110,6 +110,7 @@ export default function AddCampaignModal({
         });
 
         setFormErrors(mappedErrors);
+        setApiError(t('Please fix the highlighted errors before saving.'));
         return;
       }
 

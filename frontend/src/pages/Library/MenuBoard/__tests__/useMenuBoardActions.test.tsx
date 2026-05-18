@@ -156,12 +156,7 @@ describe('useMenuBoardActions', () => {
       const { result } = renderActions();
 
       await act(async () => {
-        await result.current.handleConfirmClone(
-          mockMenuBoard({ menuId: 5 }),
-          'Copy',
-          'desc',
-          'CP',
-        );
+        await result.current.handleConfirmClone(mockMenuBoard({ menuId: 5 }), 'Copy', 'desc', 'CP');
       });
 
       expect(mockCopyMenuBoard).toHaveBeenCalledWith({

@@ -23,12 +23,8 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import { renderWithProviders, mockMenuBoardCategory } from '../../../__tests__/MenuBoardSetup';
 import AddAndEditMenuBoardCategoryModal from '../components/AddAndEditMenuBoardCategoryModal';
-
-import {
-  renderWithProviders,
-  mockMenuBoardCategory,
-} from '../../../__tests__/MenuBoardSetup';
 
 // -- Module mocks --
 

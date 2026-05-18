@@ -76,7 +76,7 @@ export default function AddDisplayProfileModal({
       const result = schema.safeParse(draft);
 
       if (!result.success) {
-        setApiError(undefined);
+        setApiError(t('Please fix the highlighted errors before saving.'));
         const fieldErrors = result.error.flatten().fieldErrors;
         const mappedErrors: AddFormErrors = {};
         Object.entries(fieldErrors).forEach(([key, value]) => {

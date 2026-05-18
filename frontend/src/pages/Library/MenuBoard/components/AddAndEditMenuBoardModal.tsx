@@ -116,6 +116,7 @@ export default function AddAndEditMenuBoardModal({
         description: fieldErrors.description?.[0],
         code: fieldErrors.code?.[0],
       });
+      setApiError(t('Please fix the highlighted errors before saving.'));
       return;
     }
 

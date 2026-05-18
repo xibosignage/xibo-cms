@@ -66,7 +66,7 @@ const createDraftFromData = (data?: MenuBoardCategory | null): CategoryDraft => 
     name: data.name ?? '',
     description: data.description ?? '',
     code: data.code ?? '',
-    mediaId: data.mediaId ?? null,
+    mediaId: data.mediaId != null ? Number(data.mediaId) : null,
   };
 };
 
@@ -112,6 +112,7 @@ export default function AddAndEditMenuBoardCategoryModal({
         description: fieldErrors.description?.[0],
         code: fieldErrors.code?.[0],
       });
+      setApiError(t('Please fix the highlighted errors before saving.'));
       return;
     }
 

@@ -249,6 +249,7 @@ export function AddAndEditDatasetRssModal({
 
       setFormErrors(errors);
       setActiveTab('general');
+      setApiError(t('Please fix the highlighted errors before saving.'));
       return;
     }
 

@@ -55,11 +55,7 @@ describe('DeleteMenuBoardModal', () => {
   // Scenario 27 — bulk delete confirmation
   it('shows plural confirmation message with count when deleting multiple boards', () => {
     renderWithProviders(
-      <DeleteMenuBoardModal
-        onClose={mockOnClose}
-        onDelete={mockOnDelete}
-        itemCount={3}
-      />,
+      <DeleteMenuBoardModal onClose={mockOnClose} onDelete={mockOnDelete} itemCount={3} />,
     );
 
     expect(screen.getByText('Delete Menu Boards?')).toBeInTheDocument();
@@ -86,11 +82,7 @@ describe('DeleteMenuBoardModal', () => {
   it('calls onClose when Cancel is clicked', async () => {
     const user = userEvent.setup();
     renderWithProviders(
-      <DeleteMenuBoardModal
-        onClose={mockOnClose}
-        onDelete={mockOnDelete}
-        itemCount={1}
-      />,
+      <DeleteMenuBoardModal onClose={mockOnClose} onDelete={mockOnDelete} itemCount={1} />,
     );
 
     await user.click(screen.getByRole('button', { name: 'Cancel' }));

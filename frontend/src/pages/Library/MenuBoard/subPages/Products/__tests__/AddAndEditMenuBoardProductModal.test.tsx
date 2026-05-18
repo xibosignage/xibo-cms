@@ -23,12 +23,8 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import { renderWithProviders, mockMenuBoardProduct } from '../../../__tests__/MenuBoardSetup';
 import AddAndEditMenuBoardProductModal from '../components/AddAndEditMenuBoardProductModal';
-
-import {
-  renderWithProviders,
-  mockMenuBoardProduct,
-} from '../../../__tests__/MenuBoardSetup';
 
 // -- Module mocks --
 
@@ -293,16 +289,16 @@ describe('AddAndEditMenuBoardProductModal', () => {
 
       await user.click(screen.getByRole('button', { name: 'Product Options' }));
       // Add one row
-      const addBtn = screen.getAllByRole('button').find(
-        (b) => !b.textContent?.trim() && !b.getAttribute('aria-label'),
-      );
+      const addBtn = screen
+        .getAllByRole('button')
+        .find((b) => !b.textContent?.trim() && !b.getAttribute('aria-label'));
       await user.click(addBtn!);
       expect(screen.getAllByPlaceholderText('Option Name')).toHaveLength(1);
 
       // Remove it
-      const removeBtn = screen.getAllByRole('button').find(
-        (b) => !b.textContent?.trim() && !b.getAttribute('aria-label') && b !== addBtn,
-      );
+      const removeBtn = screen
+        .getAllByRole('button')
+        .find((b) => !b.textContent?.trim() && !b.getAttribute('aria-label') && b !== addBtn);
       if (removeBtn) {
         await user.click(removeBtn);
       }
