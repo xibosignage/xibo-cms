@@ -25,16 +25,21 @@ import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import { buildEvent, mockEvent } from '../../../fixtures/event';
-import { setupCampaignMocks } from '../../../mocks/campaignApi';
-import { setupCommandMocks } from '../../../mocks/commandApi';
-import { setupDatasetMocks } from '../../../mocks/datasetApi';
-import { ALWAYS_ONLY, mockDaypartRows, setupDaypartMocks } from '../../../mocks/daypartApi';
-import { mockFetchEventById, setupEventApiMocks } from '../../../mocks/eventApi';
-import { setupLayoutsMocks } from '../../../mocks/layoutsApi';
-import { setupMediaMocks } from '../../../mocks/mediaApi';
-import { setupPlaylistMocks } from '../../../mocks/playlistApi';
-import { setupResolutionMocks } from '../../../mocks/resolutionApi';
-import { setupSyncGroupMocks } from '../../../mocks/syncGroupApi';
+import {
+  ALWAYS_ONLY,
+  mockDaypartRows,
+  mockFetchEventById,
+  setupCampaignMocks,
+  setupCommandMocks,
+  setupDatasetMocks,
+  setupDaypartMocks,
+  setupEventMocks,
+  setupLayoutsMocks,
+  setupMediaMocks,
+  setupPlaylistMocks,
+  setupResolutionMocks,
+  setupSyncGroupMocks,
+} from '../../../mocks/api';
 
 import { renderScheduleModal } from './helpers/renderScheduleModal';
 
@@ -97,7 +102,7 @@ describe('ScheduleEventModal - edit mode (pre-fill & save)', () => {
   beforeEach(() => {
     testQueryClient.clear();
     vi.clearAllMocks();
-    setupEventApiMocks();
+    setupEventMocks();
     setupDaypartMocks();
     setupResolutionMocks();
     setupLayoutsMocks();

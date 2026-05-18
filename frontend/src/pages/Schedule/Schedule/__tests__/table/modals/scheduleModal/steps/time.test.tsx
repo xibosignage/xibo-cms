@@ -24,20 +24,20 @@ import userEvent, { type UserEvent } from '@testing-library/user-event';
 import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-import { setupCampaignMocks } from '../../../../mocks/campaignApi';
-import { setupCommandMocks } from '../../../../mocks/commandApi';
-import { setupDatasetMocks } from '../../../../mocks/datasetApi';
 import {
   ALWAYS_AND_CUSTOM,
   mockDaypartRows,
+  setupCampaignMocks,
+  setupCommandMocks,
+  setupDatasetMocks,
   setupDaypartMocks,
-} from '../../../../mocks/daypartApi';
-import { setupEventApiMocks } from '../../../../mocks/eventApi';
-import { setupLayoutsMocks } from '../../../../mocks/layoutsApi';
-import { setupMediaMocks } from '../../../../mocks/mediaApi';
-import { setupPlaylistMocks } from '../../../../mocks/playlistApi';
-import { setupResolutionMocks } from '../../../../mocks/resolutionApi';
-import { setupSyncGroupMocks } from '../../../../mocks/syncGroupApi';
+  setupEventMocks,
+  setupLayoutsMocks,
+  setupMediaMocks,
+  setupPlaylistMocks,
+  setupResolutionMocks,
+  setupSyncGroupMocks,
+} from '../../../../mocks/api';
 import { renderScheduleModal } from '../helpers/renderScheduleModal';
 
 import { testQueryClient } from '@/setupTests';
@@ -144,7 +144,7 @@ describe('ScheduleEventModal - Step 2 (Time)', () => {
     testQueryClient.clear();
     vi.clearAllMocks();
 
-    setupEventApiMocks();
+    setupEventMocks();
     setupDaypartMocks();
     setupResolutionMocks();
     setupLayoutsMocks();
