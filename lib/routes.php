@@ -599,6 +599,14 @@ $app->group('', function (RouteCollectorProxy $group) {
 //
 
 $app->group('', function (RouteCollectorProxy $group) {
+    $group->get('/application', ['\Xibo\Controller\Applications', 'grid'])
+        ->setName('application.search');
+    $group->get('/application/scope', ['\Xibo\Controller\Applications', 'scopeSearch'])
+        ->setName('application.scope.search');
+    $group->get('/application/{id}', ['\Xibo\Controller\Applications', 'getById'])
+        ->setName('application.search.id');
+})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['application.view']));
+$app->group('', function (RouteCollectorProxy $group) {
     $group->post('/application', ['\Xibo\Controller\Applications','add'])->setName('application.add');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['application.add']));
 $app->group('', function (RouteCollectorProxy $group) {

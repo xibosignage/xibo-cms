@@ -281,14 +281,6 @@ $app->get('/application/authorize', ['\Xibo\Controller\Applications','authorizeR
 $app->post('/application/authorize', ['\Xibo\Controller\Applications','authorize'])
     ->setName('application.authorize');
 
-$app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/application', ['\Xibo\Controller\Applications','grid'])
-        ->setName('application.search');
-    $group->get('/application/scope', ['\Xibo\Controller\Applications','scopeSearch'])
-        ->setName('application.scope.search');
-    $group->get('/application/{id}', ['\Xibo\Controller\Applications','getById'])
-        ->setName('application.search.id');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['application.view']));
 
 $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
     // We can only view/edit these through the web app
