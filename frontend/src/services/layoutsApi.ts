@@ -46,6 +46,7 @@ export interface FetchLayoutRequest {
   layoutId?: number;
   lastModified?: string;
   activeDisplayGroupId?: number;
+  displayGroupId?: number;
 
   useRegexForName?: number;
   logicalOperatorName?: 'OR' | 'AND';
