@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { isAxiosError } from 'axios';
 import { useEffect, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -132,8 +133,9 @@ export default function AddAndEditMenuBoardCategoryModal({
         onSave();
         onClose();
       } catch (err: unknown) {
-        const axiosError = err as { response?: { data?: { message?: string } } };
-        setApiError(axiosError.response?.data?.message ?? t('An unexpected error occurred.'));
+        setApiError(
+          (isAxiosError(err) && err.response?.data?.message) || t('An unexpected error occurred.'),
+        );
       }
     });
   };

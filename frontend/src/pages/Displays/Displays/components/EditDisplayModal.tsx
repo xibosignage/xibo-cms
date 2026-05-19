@@ -29,6 +29,7 @@ import {
   useFloating,
   useInteractions,
 } from '@floating-ui/react';
+import { isAxiosError } from 'axios';
 import type { TFunction } from 'i18next';
 import { useEffect, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -95,8 +96,10 @@ function formatSettingName(name: string): string {
 }
 
 function getApiErrorMessage(err: unknown, fallback: string): string {
-  const e = err as { response?: { data?: { message?: string } } };
-  return e.response?.data?.message ?? (err instanceof Error ? err.message : fallback);
+  return (
+    (isAxiosError(err) && err.response?.data?.message) ||
+    (err instanceof Error ? err.message : fallback)
+  );
 }
 
 function configArrayToFlat(

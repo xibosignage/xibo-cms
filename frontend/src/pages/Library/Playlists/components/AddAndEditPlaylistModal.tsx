@@ -20,6 +20,7 @@
  */
 
 import type { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table';
+import { isAxiosError } from 'axios';
 import { useEffect, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -237,10 +238,8 @@ export default function AddAndEditPlaylistModal({
       } catch (err: unknown) {
         console.error('Failed to save playlist:', err);
 
-        const apiError = err as { response?: { data?: { message?: string } } };
-
-        if (apiError.response?.data?.message) {
-          setApiError(apiError.response.data.message);
+        if (isAxiosError(err) && err.response?.data?.message) {
+          setApiError(err.response.data.message);
         } else if (err instanceof Error) {
           setApiError(err.message);
         } else {

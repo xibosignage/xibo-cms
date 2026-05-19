@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { isAxiosError } from 'axios';
 import { Check, Copy } from 'lucide-react';
 import { useEffect, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -260,8 +261,9 @@ export default function AddAndEditDatasetModal({
         onClose();
       } catch (err: unknown) {
         console.error('Failed to save Dataset:', err);
-        const apiError = err as { response?: { data?: { message?: string } } };
-        setApiError(apiError.response?.data?.message || t('An unexpected error occurred.'));
+        setApiError(
+          (isAxiosError(err) && err.response?.data?.message) || t('An unexpected error occurred.'),
+        );
       }
     });
   };

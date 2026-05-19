@@ -168,6 +168,7 @@ describe('Displays page - add display', () => {
   test('wrong code keeps the modal open and shows the server error message', async () => {
     const user = userEvent.setup();
     vi.mocked(addDisplayViaCode).mockRejectedValueOnce({
+      isAxiosError: true,
       response: {
         data: {
           message:

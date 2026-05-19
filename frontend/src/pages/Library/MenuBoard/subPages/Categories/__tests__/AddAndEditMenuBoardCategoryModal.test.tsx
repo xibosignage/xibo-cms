@@ -151,6 +151,7 @@ describe('AddAndEditMenuBoardCategoryModal', () => {
     it('displays API error message when createMenuBoardCategory rejects', async () => {
       const user = userEvent.setup();
       mockCreateMenuBoardCategory.mockRejectedValue({
+        isAxiosError: true,
         response: { data: { message: 'Permission denied' } },
       });
       renderAddModal();

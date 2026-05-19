@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { isAxiosError } from 'axios';
 import { useEffect, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -140,9 +141,8 @@ export default function AddAndEditSyncGroupModal({
           onClose();
         }
       } catch (err: unknown) {
-        const apiErr = err as { response?: { data?: { message?: string } } };
-        if (apiErr.response?.data?.message) {
-          setApiError(apiErr.response.data.message);
+        if (isAxiosError(err) && err.response?.data?.message) {
+          setApiError(err.response.data.message);
         } else if (err instanceof Error) {
           setApiError(err.message);
         } else {

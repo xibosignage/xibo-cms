@@ -181,6 +181,7 @@ describe('AddAndEditMenuBoardProductModal', () => {
     it('displays API error message when createMenuBoardProduct rejects', async () => {
       const user = userEvent.setup();
       mockCreateMenuBoardProduct.mockRejectedValue({
+        isAxiosError: true,
         response: { data: { message: 'Category not found' } },
       });
       renderAddModal();

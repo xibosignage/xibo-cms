@@ -143,6 +143,7 @@ describe('AddAndEditMenuBoardModal', () => {
     it('displays API error message when createMenuBoard rejects', async () => {
       const user = userEvent.setup();
       mockCreateMenuBoard.mockRejectedValue({
+        isAxiosError: true,
         response: { data: { message: 'Server error from API' } },
       });
       renderAddModal();

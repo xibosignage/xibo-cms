@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { isAxiosError } from 'axios';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -47,8 +48,10 @@ type ConfigValue = string | number | null;
 type FlatConfig = Record<string, ConfigValue>;
 
 function getApiErrorMessage(err: unknown, fallback: string): string {
-  const e = err as { response?: { data?: { message?: string } } };
-  return e.response?.data?.message ?? (err instanceof Error ? err.message : fallback);
+  return (
+    (isAxiosError(err) && err.response?.data?.message) ||
+    (err instanceof Error ? err.message : fallback)
+  );
 }
 
 interface EditDraft {
