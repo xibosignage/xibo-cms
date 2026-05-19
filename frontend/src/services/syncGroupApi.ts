@@ -28,11 +28,15 @@ export interface FetchSyncGroupsRequest {
   start: number;
   length: number;
   keyword?: string;
+  syncGroupId?: number | null;
+  name?: string;
   leadDisplayId?: number | null;
   folderId?: number | null;
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;
+  useRegexForName?: number;
+  logicalOperatorName?: 'OR' | 'AND';
 }
 
 export interface FetchSyncGroupsResponse {

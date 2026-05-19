@@ -31,22 +31,46 @@ import type { SyncGroup } from '@/types/syncGroup';
 import type { ActionItem, BaseModalType } from '@/types/table';
 
 export interface SyncGroupsFilterInput {
+  syncGroupId?: number | null;
+  name?: string;
   leadDisplayId: number | null;
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: boolean;
 }
 
 export type ModalType = BaseModalType | 'members' | null;
 
 export const INITIAL_FILTER_STATE: SyncGroupsFilterInput = {
+  syncGroupId: null,
+  name: '',
   leadDisplayId: null,
+  logicalOperatorName: 'OR',
+  useRegexForName: false,
 };
 
 export const getFilterKeys = (t: TFunction): FilterConfigItem<SyncGroupsFilterInput>[] => [
   {
+    label: t('ID'),
+    placeholder: ' ',
+    name: 'syncGroupId',
+    type: 'number',
+  },
+  {
+    label: t('Name'),
+    name: 'name',
+    type: 'text',
+    className: '',
+    placeholder: ' ',
+    showAndOr: true,
+    andOrKey: 'logicalOperatorName',
+    showRegex: true,
+    regexKey: 'useRegexForName',
+  },
+  {
     label: t('Lead Display ID'),
     name: 'leadDisplayId',
     type: 'number',
-    placeholder: t('Enter lead display ID...'),
-    className: 'w-48',
+    placeholder: ' ',
   },
 ];
 

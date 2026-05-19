@@ -62,11 +62,16 @@ export interface EventFilterInput {
   sharedSchedule?: number | null;
   fromDt?: string | null;
   toDt?: string | null;
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: boolean;
 }
 
 export type ModalType = BaseModalType | 'schedule' | 'agenda' | null;
 
-export const INITIAL_FILTER_STATE: EventFilterInput = {};
+export const INITIAL_FILTER_STATE: EventFilterInput = {
+  logicalOperatorName: 'OR',
+  useRegexForName: false,
+};
 
 const EVENT_TYPE_LABELS: Record<number, string> = {
   [EventTypeId.Layout]: 'Layout',
@@ -81,9 +86,10 @@ const EVENT_TYPE_LABELS: Record<number, string> = {
   [EventTypeId.DataConnector]: 'Data Connector',
 };
 
-const YES_NO_OPTIONS = [
-  { value: 0, label: 'No' },
-  { value: 1, label: 'Yes' },
+const getYesNoOptions = (t: TFunction) => [
+  { value: '', label: t('All') },
+  { value: 0, label: t('No') },
+  { value: 1, label: t('Yes') },
 ];
 
 const EVENT_TYPE_STATUS: Record<number, UIStatus> = {
@@ -105,12 +111,15 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<EventFilterInp
     name: 'name',
     type: 'text',
     className: '',
-    placeholder: t('Event Name'),
+    placeholder: ' ',
+    showAndOr: true,
+    andOrKey: 'logicalOperatorName',
+    showRegex: true,
+    regexKey: 'useRegexForName',
   },
   {
     label: t('Event Type'),
     name: 'eventTypeId',
-    showAllOption: true,
     options: Object.entries(EVENT_TYPE_LABELS).map(([value, label]) => ({
       value: Number(value),
       label: t(label),
@@ -119,48 +128,34 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<EventFilterInp
   {
     label: t('Layout'),
     name: 'layoutCampaignId',
-    type: 'paged-select',
     placeholder: t('All'),
     options: [],
   },
   {
     label: t('Campaign'),
     name: 'campaignId',
-    type: 'paged-select',
     placeholder: t('All'),
     options: [],
   },
   {
     label: t('Geo Aware'),
     name: 'geoAware',
-    showAllOption: true,
-    allLabel: t('All'),
-    shouldTranslateOptions: true,
-    options: YES_NO_OPTIONS,
+    options: getYesNoOptions(t),
   },
   {
     label: t('Recurring'),
     name: 'recurring',
-    showAllOption: true,
-    allLabel: t('All'),
-    shouldTranslateOptions: true,
-    options: YES_NO_OPTIONS,
+    options: getYesNoOptions(t),
   },
   {
     label: t('Direct Schedule'),
     name: 'directSchedule',
-    showAllOption: true,
-    allLabel: t('All'),
-    shouldTranslateOptions: true,
-    options: YES_NO_OPTIONS,
+    options: getYesNoOptions(t),
   },
   {
     label: t('Shared Schedule'),
     name: 'sharedSchedule',
-    showAllOption: true,
-    allLabel: t('All'),
-    shouldTranslateOptions: true,
-    options: YES_NO_OPTIONS,
+    options: getYesNoOptions(t),
   },
 ];
 

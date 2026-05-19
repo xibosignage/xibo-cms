@@ -27,41 +27,67 @@ import type { ComponentProps } from 'react';
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
 import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
 import { TextCell, TagsCell, StatusCell, ActionsCell } from '@/components/ui/table/cells';
+import { getCommonFormOptions } from '@/config/commonForms';
 import type { Campaign } from '@/types/campaign';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 
 export interface CampaignFilterInput {
+  name?: string;
   tags?: Tag[];
   hasLayouts?: string;
   layoutId?: string;
   type?: string;
   cyclePlaybackEnabled?: string;
+  retired?: number | null;
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: boolean;
+  logicalOperator?: 'OR' | 'AND';
+  exactTags?: boolean;
 }
 
 export const CAMPAIGN_INITIAL_FILTER_STATE: CampaignFilterInput = {
+  name: '',
   tags: [],
   hasLayouts: '',
   layoutId: '',
   type: '',
   cyclePlaybackEnabled: '',
+  logicalOperatorName: 'OR',
+  useRegexForName: false,
+  logicalOperator: 'OR',
+  exactTags: false,
 };
 
 export const getCampaignFilterKeys = (t: TFunction): FilterConfigItem<CampaignFilterInput>[] => [
   {
+    label: t('Name'),
+    name: 'name',
+    type: 'text',
+    className: '',
+    placeholder: ' ',
+    showAndOr: true,
+    andOrKey: 'logicalOperatorName',
+    showRegex: true,
+    regexKey: 'useRegexForName',
+  },
+
+  {
     label: t('Tags'),
     name: 'tags',
     type: 'tags',
-    placeholder: t('Add tags'),
+    placeholder: ' ',
     className: 'md:w-auto md:flex-1 min-w-0',
+    showAndOr: true,
+    andOrKey: 'logicalOperator',
+    showExactTags: true,
+    exactTagsKey: 'exactTags',
   },
 
   {
     label: t('Layout'),
     name: 'hasLayouts',
     className: '',
-    shouldTranslateOptions: false,
-    showAllOption: false,
     options: [
       { label: t('All'), value: '' },
       { label: t('Yes'), value: '1' },
@@ -81,8 +107,6 @@ export const getCampaignFilterKeys = (t: TFunction): FilterConfigItem<CampaignFi
     label: t('Type'),
     name: 'type',
     className: '',
-    shouldTranslateOptions: false,
-    showAllOption: false,
     options: [
       { label: t('All'), value: '' },
       { label: t('Layout List'), value: 'list' },
@@ -94,13 +118,17 @@ export const getCampaignFilterKeys = (t: TFunction): FilterConfigItem<CampaignFi
     label: t('Cycle Based'),
     name: 'cyclePlaybackEnabled',
     className: '',
-    shouldTranslateOptions: false,
-    showAllOption: false,
     options: [
       { label: t('All'), value: '' },
       { label: t('Enabled'), value: '1' },
       { label: t('Disabled'), value: '0' },
     ],
+  },
+
+  {
+    label: t('Retired'),
+    name: 'retired',
+    options: getCommonFormOptions(t).retired,
   },
 ];
 

@@ -84,15 +84,6 @@ export function useTemplateActions({
       setRowSelection({});
       handleRefresh();
       closeModal();
-    } catch (error) {
-      console.error(error);
-
-      const message =
-        isAxiosError(error) && error.response?.data?.message
-          ? error.response.data.message
-          : t('Some selected items are in use and cannot be deleted.');
-
-      setDeleteError(message);
     } finally {
       setIsDeleting(false);
     }
@@ -119,7 +110,6 @@ export function useTemplateActions({
       notify.success(t('Template copied successfully'));
       handleRefresh();
       closeModal();
-      console.log('copy template', selectedTemplate, newName, description, copyMediaFiles);
     } catch (error) {
       console.error('Copy template failed', error);
       notify.error(t('Failed to copy template'));

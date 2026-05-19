@@ -21,6 +21,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
+import { isAxiosError } from 'axios';
 import { Eye, Plus, Search, Slash, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -172,8 +173,9 @@ export default function DatasetRss() {
       handleRefresh();
     },
     onError: (err: unknown) => {
-      const apiError = err as { response?: { data?: { message?: string } } };
-      setDeleteError(apiError.response?.data?.message || t('Failed to delete RSS.'));
+      setDeleteError(
+        (isAxiosError(err) && err.response?.data?.message) || t('Failed to delete RSS.'),
+      );
     },
   });
 

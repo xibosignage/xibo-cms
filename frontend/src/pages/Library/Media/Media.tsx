@@ -145,6 +145,7 @@ export default function Media() {
 
   const targetUploadFolderId = canViewFolders ? (selectedFolderId ?? homeFolderId) : homeFolderId;
   const canAddToFolder = targetUploadFolderId !== null;
+  const targetUploadFolderName = selectedFolderId === null ? t('Root Folder') : selectedFolderName;
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['media'] });
@@ -503,7 +504,7 @@ export default function Media() {
                     <div className="size-6.5 flex justify-center items-center">
                       <Folder className="size-4" />
                     </div>
-                    {canViewFolders ? `"${selectedFolderName}"` : t('Home Folder')}
+                    {canViewFolders ? `"${targetUploadFolderName}"` : t('Home Folder')}
                   </span>
                 </div>
               </>

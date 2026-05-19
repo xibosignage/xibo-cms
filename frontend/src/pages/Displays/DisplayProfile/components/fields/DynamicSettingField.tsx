@@ -157,6 +157,7 @@ export function DynamicSettingField({
         helpText={meta.helpText}
         value={value ? String(value) : ''}
         options={meta.options ?? []}
+        searchable
         onSelect={onChange}
       />
     );
@@ -212,6 +213,7 @@ export function DynamicSettingField({
           contextData.dayparts?.map((d) => ({ value: String(d.dayPartId), label: d.name })) || []
         }
         placeholder=" "
+        searchable
         onSelect={onChange}
         hasMore={contextData.daypartsHasMore}
         onLoadMore={contextData.onLoadMoreDayparts}
@@ -232,6 +234,7 @@ export function DynamicSettingField({
           })) || []
         }
         placeholder=" "
+        searchable
         onSelect={onChange}
         hasMore={contextData.playerVersionsHasMore}
         onLoadMore={contextData.onLoadMorePlayerVersions}

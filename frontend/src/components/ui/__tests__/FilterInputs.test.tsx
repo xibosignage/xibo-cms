@@ -98,12 +98,11 @@ describe('FilterInputs', () => {
         label: 'Status',
         name: 'status',
         options: [{ label: 'Active', value: 'active' }],
-        showAllOption: false,
       },
     ];
     renderFilters({ options });
 
-    expect(screen.getByRole('button')).toBeInTheDocument();
+    expect(screen.getByRole('combobox')).toBeInTheDocument();
   });
 
   // If the user already typed "hello" in the Name filter and then opens the

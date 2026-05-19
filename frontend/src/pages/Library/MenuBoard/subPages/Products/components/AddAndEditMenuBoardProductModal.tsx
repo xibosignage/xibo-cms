@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { isAxiosError } from 'axios';
 import { Minus, Plus } from 'lucide-react';
 import { useEffect, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -90,13 +91,13 @@ const createDraftFromData = (data?: MenuBoardProduct | null): ProductDraft => {
   }
   return {
     name: data.name ?? '',
-    price: data.price ?? null,
+    price: data.price != null ? Number(data.price) : null,
     description: data.description ?? '',
     code: data.code ?? '',
-    displayOrder: data.displayOrder ?? null,
+    displayOrder: data.displayOrder != null ? Number(data.displayOrder) : null,
     availability: (data.availability ?? 1) === 1,
     allergyInfo: data.allergyInfo ?? '',
-    calories: data.calories ?? null,
+    calories: data.calories != null ? Number(data.calories) : null,
     mediaId: data.mediaId || null,
     productOptions: (data.productOptions ?? []).map((o, i) => ({
       id: i,
@@ -198,6 +199,7 @@ export default function AddAndEditMenuBoardProductModal({
       } else if (errors.description || errors.allergyInfo) {
         setActiveTab('details');
       }
+      setApiError(t('Please fix the highlighted errors before saving.'));
       return;
     }
 
@@ -217,8 +219,9 @@ export default function AddAndEditMenuBoardProductModal({
         onSave();
         onClose();
       } catch (err: unknown) {
-        const axiosError = err as { response?: { data?: { message?: string } } };
-        setApiError(axiosError.response?.data?.message ?? t('An unexpected error occurred.'));
+        setApiError(
+          (isAxiosError(err) && err.response?.data?.message) || t('An unexpected error occurred.'),
+        );
       }
     });
   };

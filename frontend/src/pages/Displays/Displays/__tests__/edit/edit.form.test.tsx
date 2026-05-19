@@ -182,6 +182,7 @@ describe('Display - edit form fields', () => {
   test('Failed save keeps the modal open and shows the error', async () => {
     const user = userEvent.setup();
     vi.mocked(updateDisplay).mockRejectedValueOnce({
+      isAxiosError: true,
       message: 'Request failed with status code 422',
       response: { data: { message: 'Display name already exists' } },
     });

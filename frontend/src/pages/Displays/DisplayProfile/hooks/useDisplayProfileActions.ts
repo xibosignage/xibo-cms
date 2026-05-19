@@ -73,13 +73,6 @@ export function useDisplayProfileActions({
       setRowSelection({});
       handleRefresh();
       closeModal();
-    } catch (error) {
-      console.error(error);
-      const message =
-        isAxiosError(error) && error.response?.data?.message
-          ? error.response.data.message
-          : t('Some selected items cannot be deleted.');
-      setDeleteError(message);
     } finally {
       setIsDeleting(false);
     }

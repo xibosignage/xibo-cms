@@ -137,7 +137,7 @@ function TagInput({
           ))}
           <input
             id={inputId}
-            className="flex-1 min-w-30 text-sm p-1 bg-transparent border-none outline-none focus:outline-none focus:ring-0"
+            className="flex-1 min-w-10 text-sm p-1 bg-transparent border-none outline-none focus:outline-none focus:ring-0"
             value={input}
             disabled={disabled}
             onChange={(e) => setInput(e.target.value)}
@@ -152,6 +152,7 @@ function TagInput({
                 }
               }
             }}
+            onBlur={() => addTag(input)}
             placeholder={tags.length === 0 ? placeholder || t('Add tags') : ''}
           />
         </div>

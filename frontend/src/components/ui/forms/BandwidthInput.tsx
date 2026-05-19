@@ -110,15 +110,15 @@ export default function BandwidthInput({
           onSelect={(value) => handleUnitChange(value as BandwidthUnit)}
           options={[
             {
-              label: 'KiB',
+              label: t('KiB'),
               value: 'kb',
             },
             {
-              label: 'MiB',
+              label: t('MiB'),
               value: 'mb',
             },
             {
-              label: 'GiB',
+              label: t('GiB'),
               value: 'gb',
             },
           ]}

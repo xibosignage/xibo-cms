@@ -159,6 +159,7 @@ describe('Playlists page - edit form fields', () => {
   // ---------------------------------------------------------------------------
   test('Failed save keeps the modal open', async () => {
     vi.mocked(updatePlaylist).mockRejectedValueOnce({
+      isAxiosError: true,
       response: { data: { message: 'Playlist name already exists' } },
     });
 

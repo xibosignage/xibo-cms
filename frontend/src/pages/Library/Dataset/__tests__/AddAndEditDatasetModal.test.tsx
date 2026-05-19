@@ -137,9 +137,7 @@ describe('AddAndEditDatasetModal', () => {
 
       renderAddModal();
 
-      await user.click(
-        screen.getByRole('checkbox', { name: /Real-time/i }),
-      );
+      await user.click(screen.getByRole('checkbox', { name: /Real-time/i }));
 
       expect(screen.getByText('Data Connector Source')).toBeInTheDocument();
     });
@@ -192,9 +190,7 @@ describe('AddAndEditDatasetModal', () => {
       const user = userEvent.setup();
       renderAddModal();
 
-      await user.click(
-        screen.getByRole('checkbox', { name: /^Remote$/i }),
-      );
+      await user.click(screen.getByRole('checkbox', { name: /^Remote$/i }));
 
       expect(screen.getByRole('button', { name: 'Remote' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Authentication' })).toBeInTheDocument();
@@ -220,9 +216,7 @@ describe('AddAndEditDatasetModal', () => {
       renderAddModal();
 
       await user.type(screen.getByLabelText('Name'), 'My Remote Dataset');
-      await user.click(
-        screen.getByRole('checkbox', { name: /^Remote$/i }),
-      );
+      await user.click(screen.getByRole('checkbox', { name: /^Remote$/i }));
 
       await user.click(screen.getByRole('button', { name: 'Save' }));
 

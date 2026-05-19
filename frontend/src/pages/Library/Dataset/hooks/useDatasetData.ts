@@ -28,6 +28,7 @@ import type { DatasetFilterInput } from '../DatasetConfig';
 import type { FetchDatasetRequest } from '@/services/datasetApi';
 import { fetchDataset } from '@/services/datasetApi';
 import { resolveLastModified } from '@/utils/date';
+import { isValidRegex } from '@/utils/regex';
 
 export const DatasetQueryKeys = {
   all: ['dataset'] as const,
@@ -69,7 +70,8 @@ export const useDatasetData = ({
       const sortBy = sorting?.[0]?.id;
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
 
-      const { lastModified, ...restFilters } = advancedFilters;
+      const { lastModified, useRegexForName, logicalOperatorName, ...restFilters } =
+        advancedFilters;
 
       const request: FetchDatasetRequest = {
         start: startOffset,
@@ -80,6 +82,10 @@ export const useDatasetData = ({
         signal,
         ...restFilters,
         ...resolveLastModified(lastModified),
+        ...(useRegexForName && advancedFilters.dataSet && isValidRegex(advancedFilters.dataSet)
+          ? { useRegexForName: 1 }
+          : {}),
+        ...(logicalOperatorName ? { logicalOperatorName } : {}),
       } as FetchDatasetRequest;
 
       if (typeof folderId === 'number') {

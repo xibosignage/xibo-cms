@@ -102,7 +102,7 @@ export default function TextInput({
             onChange={(e) => onChange && onChange(e.target.value)}
             placeholder={placeholder || t('Add text')}
             className={twMerge(
-              'flex-1 p-3 text-sm font-normal text-gray-800 placeholder:text-gray-500',
+              'flex-1 min-w-0 p-3 text-sm font-normal text-gray-800 placeholder:text-gray-500',
               'bg-transparent border-none outline-none focus:ring-0 resize-none',
               className,
             )}
@@ -117,7 +117,7 @@ export default function TextInput({
             placeholder={placeholder || t('Add text')}
             type={type || 'text'}
             className={twMerge(
-              'flex-1 p-3 text-sm font-normal text-gray-800 placeholder:text-gray-500',
+              'flex-1 min-w-0 p-3 text-sm font-normal text-gray-800 placeholder:text-gray-500',
               'bg-transparent border-none outline-none focus:ring-0',
               className,
             )}

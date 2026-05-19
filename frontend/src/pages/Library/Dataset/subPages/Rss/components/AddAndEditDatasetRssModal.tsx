@@ -20,6 +20,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
+import { isAxiosError } from 'axios';
 import { Minus, Plus } from 'lucide-react';
 import { useEffect, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -249,6 +250,7 @@ export function AddAndEditDatasetRssModal({
 
       setFormErrors(errors);
       setActiveTab('general');
+      setApiError(t('Please fix the highlighted errors before saving.'));
       return;
     }
 
@@ -264,8 +266,9 @@ export function AddAndEditDatasetRssModal({
         onSave();
         onClose();
       } catch (err: unknown) {
-        const apiErr = err as { response?: { data?: { message?: string } } };
-        setApiError(apiErr.response?.data?.message || t('An unexpected error occurred.'));
+        setApiError(
+          (isAxiosError(err) && err.response?.data?.message) || t('An unexpected error occurred.'),
+        );
       }
     });
   };

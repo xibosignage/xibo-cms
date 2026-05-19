@@ -374,7 +374,7 @@ export default function ShareModal({
         onClose={onClose}
         size="lg"
         actions={[
-          { label: 'Cancel', onClick: onClose, variant: 'secondary' },
+          { label: t('Cancel'), onClick: onClose, variant: 'secondary' },
           {
             label: isPending ? t('Saving...') : t('Save'),
             onClick: handleSave,
@@ -386,7 +386,7 @@ export default function ShareModal({
         <div className="flex flex-col min-h-[60vh] px-8 gap-y-3 py-8">
           {!Array.isArray(entityId) && showOwner && (
             <SelectDropdown
-              label="Select Owner"
+              label={t('Select Owner')}
               value={user as string}
               placeholder={ownerLoading ? t('Loading...') : t('Select Owner')}
               options={ownerOptions}
@@ -399,15 +399,15 @@ export default function ShareModal({
                   <UserRound size={14} /> {t('Owner')}
                 </span>
               }
-              optionLabel="Select Owner"
+              optionLabel={t('Select Owner')}
               addOptionAvatar
             />
           )}
 
           <div className="flex relative gap-2 items-end px-3 py-5 bg-slate-50">
             <SelectDropdown
-              label="Filter by"
-              placeholder="All"
+              label={t('Filter by')}
+              placeholder={t('All')}
               value={filter}
               options={[
                 { label: t('All'), value: 'all' },
@@ -444,7 +444,7 @@ export default function ShareModal({
                 setPagination((prev) => ({ ...prev, pageIndex: 0 }));
               }}
             >
-              Reset
+              {t('Reset')}
             </Button>
           </div>
 

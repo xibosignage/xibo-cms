@@ -173,6 +173,7 @@ class MenuBoard extends Base
             'code'                => $params->getString('code'),
             'folderId'            => $params->getInt('folderId'),
             'logicalOperatorName' => $params->getString('logicalOperatorName'),
+            'useRegexForName'     => $params->getCheckbox('useRegexForName'),
             'modifiedDateFrom'    => $params->getDate('modifiedDateFrom'),
             'modifiedDateTo'      => $params->getDate('modifiedDateTo'),
             'keyword'             => $params->getString('keyword'),

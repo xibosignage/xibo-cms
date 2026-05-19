@@ -81,8 +81,6 @@ vi.mock('../hooks/useLayoutFilterOptions', () => ({
           { label: 'No', value: 0 },
           { label: 'Yes', value: 1 },
         ],
-        shouldTranslateOptions: false,
-        showAllOption: false,
       },
       {
         label: 'Orientation',
@@ -92,8 +90,6 @@ vi.mock('../hooks/useLayoutFilterOptions', () => ({
           { label: 'Landscape', value: 'landscape' },
           { label: 'Square', value: 'square' },
         ],
-        shouldTranslateOptions: false,
-        showAllOption: false,
       },
       {
         label: 'Last Modified',
@@ -103,8 +99,6 @@ vi.mock('../hooks/useLayoutFilterOptions', () => ({
           { label: 'Today', value: 'today' },
           { label: 'Last 7 days', value: '7d' },
         ],
-        shouldTranslateOptions: true,
-        showAllOption: false,
       },
     ],
     isLoading: false,

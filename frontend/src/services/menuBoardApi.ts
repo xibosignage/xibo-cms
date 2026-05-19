@@ -38,7 +38,8 @@ export interface FetchMenuBoardRequest {
   userId?: number;
   name?: string;
   code?: string;
-  logicalOperatorName?: string;
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: number;
   modifiedDateFrom?: string;
   modifiedDateTo?: string;
 }

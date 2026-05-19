@@ -68,8 +68,6 @@ vi.mock('../hooks/useTemplateFilterOptions', () => ({
           { label: 'Published', value: '1' },
           { label: 'Draft', value: '2' },
         ],
-        shouldTranslateOptions: false,
-        showAllOption: false,
       },
     ],
     isLoading: false,

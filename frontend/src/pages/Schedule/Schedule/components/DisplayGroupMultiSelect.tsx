@@ -91,23 +91,116 @@ export function DisplayGroupMultiSelect({
   const [isLoadingGroups, setIsLoadingGroups] = useState(false);
   const [isLoadingMoreGroups, setIsLoadingMoreGroups] = useState(false);
 
+  const [labelsCache, setLabelsCache] = useState<Record<string, string>>({});
+  const fetchedIdsRef = useRef<Set<string>>(new Set());
+
   const displaySentinelRef = useRef<HTMLDivElement>(null);
   const groupSentinelRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const displayIdsKey = value.displaySpecificGroupIds.join(',');
+  const groupIdsKey = value.displayGroupIds.join(',');
+  useEffect(() => {
+    const displayIds = displayIdsKey ? displayIdsKey.split(',').map(Number) : [];
+    const groupIds = groupIdsKey ? groupIdsKey.split(',').map(Number) : [];
+
+    const missingDisplayIds = displayIds.filter(
+      (id) => !fetchedIdsRef.current.has(`${DISPLAY_PREFIX}${id}`),
+    );
+    const missingGroupIds = groupIds.filter(
+      (id) => !fetchedIdsRef.current.has(`${GROUP_PREFIX}${id}`),
+    );
+
+    if (missingDisplayIds.length === 0 && missingGroupIds.length === 0) {
+      return;
+    }
+
+    missingDisplayIds.forEach((id) => fetchedIdsRef.current.add(`${DISPLAY_PREFIX}${id}`));
+    missingGroupIds.forEach((id) => fetchedIdsRef.current.add(`${GROUP_PREFIX}${id}`));
+
+    if (missingDisplayIds.length > 0) {
+      fetchDisplays({
+        displayGroupIds: missingDisplayIds,
+        start: 0,
+        length: missingDisplayIds.length,
+      })
+        .then((res) => {
+          setLabelsCache((prev) => {
+            const next = { ...prev };
+            res.rows.forEach((d) => {
+              next[`${DISPLAY_PREFIX}${d.displayGroupId}`] = d.display;
+            });
+            return next;
+          });
+        })
+        .catch(() => {});
+    }
+
+    if (missingGroupIds.length > 0) {
+      fetchDisplayGroups({
+        displayGroupIds: missingGroupIds,
+        start: 0,
+        length: missingGroupIds.length,
+      })
+        .then((res) => {
+          setLabelsCache((prev) => {
+            const next = { ...prev };
+            res.rows.forEach((g) => {
+              next[`${GROUP_PREFIX}${g.displayGroupId}`] = g.displayGroup;
+            });
+            return next;
+          });
+        })
+        .catch(() => {});
+    }
+  }, [displayIdsKey, groupIdsKey]);
+
+  useEffect(() => {
+    if (!onLabelsChange) {
+      return;
+    }
+    const allKeys = [
+      ...(displayIdsKey ? displayIdsKey.split(',') : []).map((id) => `${DISPLAY_PREFIX}${id}`),
+      ...(groupIdsKey ? groupIdsKey.split(',') : []).map((id) => `${GROUP_PREFIX}${id}`),
+    ];
+    if (allKeys.length === 0) {
+      return;
+    }
+    const labelsMap: Record<number, string> = {};
+    for (const key of allKeys) {
+      const label = labelsCache[key];
+      if (label) {
+        const id = Number(
+          key.startsWith(DISPLAY_PREFIX)
+            ? key.slice(DISPLAY_PREFIX.length)
+            : key.slice(GROUP_PREFIX.length),
+        );
+        labelsMap[id] = label;
+      }
+    }
+    onLabelsChange(labelsMap);
+  }, [labelsCache, onLabelsChange, displayIdsKey, groupIdsKey]);
 
   useEffect(() => {
     setIsLoadingDisplays(true);
     setDisplayOptions([]);
     setDisplayPage(0);
+    setHasMoreDisplays(false);
     fetchDisplays({ start: 0, length: PAGE_SIZE, keyword: debouncedSearch || undefined })
       .then((res) => {
-        setDisplayOptions(
-          res.rows.map((d) => ({
-            label: d.display,
-            value: `${DISPLAY_PREFIX}${d.displayGroupId}`,
-          })),
-        );
+        const opts = res.rows.map((d) => ({
+          label: d.display,
+          value: `${DISPLAY_PREFIX}${d.displayGroupId}`,
+        }));
+        setDisplayOptions(opts);
         setHasMoreDisplays(res.rows.length === PAGE_SIZE);
+        setLabelsCache((prev) => {
+          const next = { ...prev };
+          res.rows.forEach((d) => {
+            next[`${DISPLAY_PREFIX}${d.displayGroupId}`] = d.display;
+          });
+          return next;
+        });
       })
       .catch(() => {})
       .finally(() => setIsLoadingDisplays(false));
@@ -117,6 +210,7 @@ export function DisplayGroupMultiSelect({
     setIsLoadingGroups(true);
     setGroupOptions([]);
     setGroupPage(0);
+    setHasMoreGroups(false);
     fetchDisplayGroups({
       start: 0,
       length: PAGE_SIZE,
@@ -124,13 +218,19 @@ export function DisplayGroupMultiSelect({
       keyword: debouncedSearch || undefined,
     })
       .then((res) => {
-        setGroupOptions(
-          res.rows.map((g) => ({
-            label: g.displayGroup,
-            value: `${GROUP_PREFIX}${g.displayGroupId}`,
-          })),
-        );
+        const opts = res.rows.map((g) => ({
+          label: g.displayGroup,
+          value: `${GROUP_PREFIX}${g.displayGroupId}`,
+        }));
+        setGroupOptions(opts);
         setHasMoreGroups(res.rows.length === PAGE_SIZE);
+        setLabelsCache((prev) => {
+          const next = { ...prev };
+          res.rows.forEach((g) => {
+            next[`${GROUP_PREFIX}${g.displayGroupId}`] = g.displayGroup;
+          });
+          return next;
+        });
       })
       .catch(() => {})
       .finally(() => setIsLoadingGroups(false));
@@ -161,6 +261,13 @@ export function DisplayGroupMultiSelect({
               ]);
               setDisplayPage(nextPage);
               setHasMoreDisplays(res.rows.length === PAGE_SIZE);
+              setLabelsCache((prev) => {
+                const next = { ...prev };
+                res.rows.forEach((d) => {
+                  next[`${DISPLAY_PREFIX}${d.displayGroupId}`] = d.display;
+                });
+                return next;
+              });
             })
             .catch(() => {})
             .finally(() => setIsLoadingMoreDisplays(false));
@@ -198,6 +305,13 @@ export function DisplayGroupMultiSelect({
               ]);
               setGroupPage(nextPage);
               setHasMoreGroups(res.rows.length === PAGE_SIZE);
+              setLabelsCache((prev) => {
+                const next = { ...prev };
+                res.rows.forEach((g) => {
+                  next[`${GROUP_PREFIX}${g.displayGroupId}`] = g.displayGroup;
+                });
+                return next;
+              });
             })
             .catch(() => {})
             .finally(() => setIsLoadingMoreGroups(false));
@@ -217,18 +331,14 @@ export function DisplayGroupMultiSelect({
   const buildLabelsMap = (selected: Set<string>): Record<number, string> => {
     const labels: Record<number, string> = {};
     for (const v of selected) {
-      if (v.startsWith(DISPLAY_PREFIX)) {
-        const id = Number(v.slice(DISPLAY_PREFIX.length));
-        const label = displayOptions.find((o) => o.value === v)?.label;
-        if (label) {
-          labels[id] = label;
-        }
-      } else if (v.startsWith(GROUP_PREFIX)) {
-        const id = Number(v.slice(GROUP_PREFIX.length));
-        const label = groupOptions.find((o) => o.value === v)?.label;
-        if (label) {
-          labels[id] = label;
-        }
+      const label = labelsCache[v];
+      if (label) {
+        const id = Number(
+          v.startsWith(DISPLAY_PREFIX)
+            ? v.slice(DISPLAY_PREFIX.length)
+            : v.slice(GROUP_PREFIX.length),
+        );
+        labels[id] = label;
       }
     }
     return labels;
@@ -308,13 +418,10 @@ export function DisplayGroupMultiSelect({
           <span className="flex-1 text-sm text-gray-400">
             {t('Search Display and Display Groups')}
           </span>
-        ) : isLoading ? (
-          <span className="flex-1 text-sm text-gray-400">{t('Loading…')}</span>
         ) : (
           <div className="flex flex-wrap gap-1.5 flex-1 max-h-17 overflow-y-auto">
             {value.displaySpecificGroupIds.map((id) => {
-              const label =
-                displayOptions.find((o) => o.value === `${DISPLAY_PREFIX}${id}`)?.label ?? `${id}`;
+              const label = labelsCache[`${DISPLAY_PREFIX}${id}`] ?? `${id}`;
               return (
                 <span
                   key={`${DISPLAY_PREFIX}${id}`}
@@ -335,8 +442,7 @@ export function DisplayGroupMultiSelect({
               );
             })}
             {value.displayGroupIds.map((id) => {
-              const label =
-                groupOptions.find((o) => o.value === `${GROUP_PREFIX}${id}`)?.label ?? `${id}`;
+              const label = labelsCache[`${GROUP_PREFIX}${id}`] ?? `${id}`;
               return (
                 <span
                   key={`${GROUP_PREFIX}${id}`}

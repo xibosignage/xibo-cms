@@ -26,6 +26,7 @@ import type { AxiosError } from 'axios';
 import type { SyncGroupsFilterInput } from '../SyncGroupsConfig';
 
 import { fetchSyncGroups } from '@/services/syncGroupApi';
+import { isValidRegex } from '@/utils/regex';
 
 export const syncGroupQueryKeys = {
   all: ['syncGroups'] as const,
@@ -66,6 +67,8 @@ export const useSyncGroupData = ({
       const sortBy = sorting?.[0]?.id;
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
 
+      const { useRegexForName, logicalOperatorName } = advancedFilters;
+
       return fetchSyncGroups({
         start: startOffset,
         length: pagination.pageSize,
@@ -73,7 +76,13 @@ export const useSyncGroupData = ({
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         ...(typeof folderId === 'number' ? { folderId } : {}),
+        ...(advancedFilters.syncGroupId ? { syncGroupId: advancedFilters.syncGroupId } : {}),
+        ...(advancedFilters.name ? { name: advancedFilters.name } : {}),
         ...(advancedFilters.leadDisplayId ? { leadDisplayId: advancedFilters.leadDisplayId } : {}),
+        ...(useRegexForName && advancedFilters.name && isValidRegex(advancedFilters.name)
+          ? { useRegexForName: 1 }
+          : {}),
+        ...(logicalOperatorName ? { logicalOperatorName } : {}),
         signal,
       });
     },

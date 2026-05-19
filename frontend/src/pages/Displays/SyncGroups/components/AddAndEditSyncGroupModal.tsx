@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { isAxiosError } from 'axios';
 import { useEffect, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -83,9 +84,9 @@ export default function AddAndEditSyncGroupModal({
       if (isEdit && syncGroup) {
         setDraft({
           name: syncGroup.name,
-          syncPublisherPort: syncGroup.syncPublisherPort,
-          syncSwitchDelay: syncGroup.syncSwitchDelay,
-          syncVideoPauseDelay: syncGroup.syncVideoPauseDelay,
+          syncPublisherPort: Number(syncGroup.syncPublisherPort),
+          syncSwitchDelay: Number(syncGroup.syncSwitchDelay),
+          syncVideoPauseDelay: Number(syncGroup.syncVideoPauseDelay),
           leadDisplayId: syncGroup.leadDisplayId || null,
           folderId: syncGroup.folderId || null,
         });
@@ -110,7 +111,7 @@ export default function AddAndEditSyncGroupModal({
       const result = schema.safeParse(draft);
 
       if (!result.success) {
-        setApiError(undefined);
+        setApiError(t('Please fix the highlighted errors before saving.'));
         const fieldErrors = result.error.flatten().fieldErrors;
         const mappedErrors: FormErrors = {};
         Object.entries(fieldErrors).forEach(([key, value]) => {
@@ -140,9 +141,8 @@ export default function AddAndEditSyncGroupModal({
           onClose();
         }
       } catch (err: unknown) {
-        const apiErr = err as { response?: { data?: { message?: string } } };
-        if (apiErr.response?.data?.message) {
-          setApiError(apiErr.response.data.message);
+        if (isAxiosError(err) && err.response?.data?.message) {
+          setApiError(err.response.data.message);
         } else if (err instanceof Error) {
           setApiError(err.message);
         } else {

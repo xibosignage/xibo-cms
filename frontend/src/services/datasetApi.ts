@@ -39,6 +39,7 @@ export interface FetchDatasetRequest {
   start: number;
   length: number;
   keyword?: string;
+  dataSet?: string;
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;
@@ -48,6 +49,8 @@ export interface FetchDatasetRequest {
   userId?: string;
   ownerUserGroupId?: string;
   lastModified?: string;
+  useRegexForName?: number;
+  logicalOperatorName?: 'OR' | 'AND';
 }
 
 export interface FetchDatasetResponse {

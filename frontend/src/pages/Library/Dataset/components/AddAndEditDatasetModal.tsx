@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { isAxiosError } from 'axios';
 import { Check, Copy } from 'lucide-react';
 import { useEffect, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -52,6 +53,7 @@ interface AddAndEditDatasetModalProps {
   type: 'add' | 'edit';
   isOpen?: boolean;
   data?: Dataset | null;
+  defaultFolderId?: number;
   dataConnectorSources?: { id: string; name: string }[];
   onClose: () => void;
   onSave: (updated: Dataset) => void;
@@ -95,9 +97,12 @@ const DEFAULT_DRAFT: UpdateDatasetRequest = {
   limitPolicy: 'stop',
 };
 
-const createDraftFromData = (data?: Dataset | null): UpdateDatasetRequest => {
+const createDraftFromData = (
+  data?: Dataset | null,
+  defaultFolderId?: number,
+): UpdateDatasetRequest => {
   if (!data) {
-    return { ...DEFAULT_DRAFT };
+    return { ...DEFAULT_DRAFT, folderId: defaultFolderId ?? null };
   }
 
   return {
@@ -105,7 +110,7 @@ const createDraftFromData = (data?: Dataset | null): UpdateDatasetRequest => {
     dataSet: data.dataSet ?? '',
     description: data.description ?? '',
     code: data.code ?? '',
-    folderId: data.folderId ?? null,
+    folderId: data.folderId != null ? Number(data.folderId) : null,
     isRemote: Boolean(data.isRemote),
     isRealTime: Boolean(data.isRealTime),
     ignoreFirstRow: Boolean(data.ignoreFirstRow),
@@ -125,10 +130,10 @@ const createDraftFromData = (data?: Dataset | null): UpdateDatasetRequest => {
     summarize: (data.summarize || 'none') as DatasetSummarize,
     summarizeField: data.summarizeField ?? '',
     limitPolicy: (data.limitPolicy || 'stop') as DatasetLimitPolicy,
-    refreshRate: data.refreshRate ?? 0,
-    clearRate: data.clearRate ?? 1,
-    runsAfter: data.runsAfter ?? 0,
-    rowLimit: data.rowLimit ?? 0,
+    refreshRate: data.refreshRate != null ? Number(data.refreshRate) : 0,
+    clearRate: data.clearRate != null ? Number(data.clearRate) : 1,
+    runsAfter: data.runsAfter != null ? Number(data.runsAfter) : 0,
+    rowLimit: data.rowLimit != null ? Number(data.rowLimit) : 0,
   };
 };
 
@@ -137,6 +142,7 @@ export default function AddAndEditDatasetModal({
   isOpen = true,
   onClose,
   data,
+  defaultFolderId,
   onSave,
 }: AddAndEditDatasetModalProps) {
   const { t } = useTranslation();
@@ -152,7 +158,9 @@ export default function AddAndEditDatasetModal({
   const [activeTab, setActiveTab] = useState<'general' | 'remote' | 'auth' | 'data' | 'advanced'>(
     'general',
   );
-  const [draft, setDraft] = useState<UpdateDatasetRequest>(() => createDraftFromData(data));
+  const [draft, setDraft] = useState<UpdateDatasetRequest>(() =>
+    createDraftFromData(data, defaultFolderId),
+  );
   const [dataConnectorSources, setDataConnectorSources] = useState<{ id: string; name: string }[]>(
     [],
   );
@@ -204,12 +212,12 @@ export default function AddAndEditDatasetModal({
 
   useEffect(() => {
     if (isOpen) {
-      setDraft(createDraftFromData(data));
+      setDraft(createDraftFromData(data, defaultFolderId));
       setApiError(undefined);
       setFormErrors({});
       setActiveTab('general');
     }
-  }, [data, isOpen]);
+  }, [data, isOpen, defaultFolderId]);
 
   const handleSave = () => {
     const schema = getDatasetSchema(t);
@@ -231,7 +239,7 @@ export default function AddAndEditDatasetModal({
       } else if (draft.isRemote && (fieldErrors.uri || fieldErrors.username)) {
         setActiveTab(fieldErrors.uri ? 'remote' : 'auth');
       }
-
+      setApiError(t('Please fix the highlighted errors before saving.'));
       return;
     }
 
@@ -253,8 +261,9 @@ export default function AddAndEditDatasetModal({
         onClose();
       } catch (err: unknown) {
         console.error('Failed to save Dataset:', err);
-        const apiError = err as { response?: { data?: { message?: string } } };
-        setApiError(apiError.response?.data?.message || t('An unexpected error occurred.'));
+        setApiError(
+          (isAxiosError(err) && err.response?.data?.message) || t('An unexpected error occurred.'),
+        );
       }
     });
   };

@@ -71,8 +71,6 @@ vi.mock('../hooks/useLayoutFilterOptions', () => ({
           { label: 'No', value: 0 },
           { label: 'Yes', value: 1 },
         ],
-        shouldTranslateOptions: false,
-        showAllOption: false,
       },
     ],
     isLoading: false,

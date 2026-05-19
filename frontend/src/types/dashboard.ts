@@ -43,6 +43,13 @@ export interface MediaDashboardData {
   };
 }
 
+export interface SpotMediaFile {
+  mediaId: number;
+  fileName: string;
+  mediaType: string;
+  fileSize: string;
+}
+
 export interface SpotWidget {
   widgetId: number;
   type: string;
@@ -54,6 +61,7 @@ export interface SpotWidget {
   editable: boolean;
   deletable: boolean;
   mediaIds: number[];
+  mediaFiles: SpotMediaFile[];
 }
 
 export interface PlaylistSpotsResponse {

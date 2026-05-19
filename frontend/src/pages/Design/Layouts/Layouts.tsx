@@ -142,10 +142,10 @@ export default function Layouts() {
     enabled: isHydrated,
   });
 
+  const effectiveFolderId = selectedFolderId ?? homeFolderId;
   const { data: folderPerms } = useQuery({
-    queryKey: ['folderPermissions', selectedFolderId],
-    queryFn: () => fetchContextButtons(selectedFolderId as number),
-    enabled: selectedFolderId !== null,
+    queryKey: ['folderPermissions', effectiveFolderId],
+    queryFn: () => fetchContextButtons(effectiveFolderId),
     staleTime: 1000 * 60 * 5,
   });
 
@@ -343,6 +343,7 @@ export default function Layouts() {
     openRetireModal,
     openEnableStatsModal,
     openScheduleModal: canSchedule ? openScheduleModal : undefined,
+    showDescriptionId: filterInputs.showDescriptionId,
   });
 
   const getAllSelectedItems = (): Layout[] => {

@@ -27,6 +27,7 @@ import type { TemplatesFilterInput } from '../TemplatesConfig';
 
 import type { FetchTemplateRequest } from '@/services/templatesApi';
 import { fetchTemplates } from '@/services/templatesApi';
+import { isValidRegex } from '@/utils/regex';
 
 export const templateQueryKeys = {
   all: ['template'] as const,
@@ -68,7 +69,14 @@ export const useTemplateData = ({
       const sortBy = sorting?.[0]?.id;
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
 
-      const { tags, ...restFilters } = advancedFilters;
+      const {
+        tags,
+        useRegexForName,
+        exactTags,
+        logicalOperator,
+        logicalOperatorName,
+        ...restFilters
+      } = advancedFilters;
 
       const normalizedTags = tags && tags.length > 0 ? tags.map((t) => t.tag).join(',') : undefined;
 
@@ -81,6 +89,12 @@ export const useTemplateData = ({
         signal,
         ...restFilters,
         ...(normalizedTags ? { tags: normalizedTags } : {}),
+        ...(useRegexForName && restFilters.template && isValidRegex(restFilters.template)
+          ? { useRegexForName: 1 }
+          : {}),
+        ...(logicalOperatorName ? { logicalOperatorName } : {}),
+        ...(exactTags !== undefined ? { exactTags: exactTags ? 1 : 0 } : {}),
+        ...(logicalOperator ? { logicalOperator } : {}),
       };
 
       if (typeof folderId === 'number') {

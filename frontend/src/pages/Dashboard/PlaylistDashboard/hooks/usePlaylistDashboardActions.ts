@@ -20,7 +20,7 @@
  */
 
 import type { QueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { playlistDashboardQueryKeys } from './usePlaylistSpots';
@@ -35,12 +35,24 @@ export interface SpotUploadState {
   progress: number;
   status: 'uploading' | 'completed' | 'error';
   error?: string;
+  blobUrl?: string;
 }
 
 export function usePlaylistDashboardActions(queryClient: QueryClient, playlistId: number | null) {
   const { t } = useTranslation();
   const [uploadStates, setUploadStates] = useState<Map<number, SpotUploadState>>(new Map());
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Revoke any active blob URLs on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      uploadStates.forEach((state) => {
+        if (state.blobUrl) {
+          URL.revokeObjectURL(state.blobUrl);
+        }
+      });
+    };
+  }, [uploadStates]);
 
   const invalidateSpots = () => {
     if (playlistId !== null) {
@@ -64,6 +76,10 @@ export function usePlaylistDashboardActions(queryClient: QueryClient, playlistId
   const clearUpload = (spotIndex: number) => {
     setUploadStates((prev) => {
       const next = new Map(prev);
+      const current = next.get(spotIndex);
+      if (current?.blobUrl) {
+        URL.revokeObjectURL(current.blobUrl);
+      }
       next.delete(spotIndex);
       return next;
     });
@@ -72,6 +88,8 @@ export function usePlaylistDashboardActions(queryClient: QueryClient, playlistId
   const startUpload = async (spotIndex: number, file: File, widget?: SpotWidget) => {
     if (playlistId === null) return;
 
+    const blobUrl = file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined;
+
     setUploadStates((prev) => {
       const next = new Map(prev);
       next.set(spotIndex, {
@@ -79,6 +97,7 @@ export function usePlaylistDashboardActions(queryClient: QueryClient, playlistId
         fileSize: file.size,
         progress: 0,
         status: 'uploading',
+        blobUrl,
       });
       return next;
     });

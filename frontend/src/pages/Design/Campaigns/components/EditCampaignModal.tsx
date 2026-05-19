@@ -21,6 +21,7 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table';
+import { isAxiosError } from 'axios';
 import { useEffect, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -216,9 +217,8 @@ export default function EditCampaignModal({
         onSuccess();
         onClose();
       } catch (err: unknown) {
-        const apiErr = err as { response?: { data?: { message?: string } } };
-        if (apiErr.response?.data?.message) {
-          setApiError(apiErr.response.data.message);
+        if (isAxiosError(err) && err.response?.data?.message) {
+          setApiError(err.response.data.message);
         } else if (err instanceof Error) {
           setApiError(err.message);
         } else {
