@@ -75,7 +75,7 @@ export function DataTableOptions<TData>({
 
   const columns = (table?.getAllLeafColumns() ?? []).filter((column) => column.getCanHide());
 
-  const isTableMode = viewMode === 'table';
+  const isTableMode = viewMode == null || viewMode === 'table';
   const isGridMode = viewMode === 'grid';
   const isMapMode = viewMode === 'map';
   const isCalendarMode = viewMode === 'calendar';

@@ -288,9 +288,12 @@ export const APP_ROUTES: AppRoute[] = [
         feature: 'displayprofile.view',
       },
       {
-        path: 'playersoftware',
+        path: 'player-versions',
         labelKey: 'Player Versions',
-        externalURL: '/playersoftware/view',
+        lazy: () =>
+          import('@/pages/Displays/PlayerVersions/PlayerVersions').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'playersoftware.view',
       },
       {
