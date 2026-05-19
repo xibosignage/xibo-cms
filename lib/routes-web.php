@@ -291,11 +291,6 @@ $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['application.view']));
 
 $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
-    $group->put('/application/{id}', ['\Xibo\Controller\Applications','edit'])
-        ->setName('application.edit');
-    $group->delete('/application/{id}', ['\Xibo\Controller\Applications','delete'])
-        ->setName('application.delete');
-
     // We can only view/edit these through the web app
     $group->get('/connectors', ['\Xibo\Controller\Connector','grid'])->setName('connector.search');
     $group->get('/connectors/form/edit/{id}', ['\Xibo\Controller\Connector','editForm'])
