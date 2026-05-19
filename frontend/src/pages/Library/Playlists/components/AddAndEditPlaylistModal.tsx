@@ -52,6 +52,7 @@ interface AddAndEditPlaylistModalProps {
   type: 'add' | 'edit';
   isOpen?: boolean;
   data?: Playlist | null;
+  defaultFolderId?: number;
   onClose: () => void;
   onSave: (updated: Playlist) => void;
 }
@@ -93,6 +94,7 @@ export default function AddAndEditPlaylistModal({
   isOpen = true,
   onClose,
   data,
+  defaultFolderId,
   onSave,
 }: AddAndEditPlaylistModalProps) {
   const { t } = useTranslation();
@@ -105,7 +107,7 @@ export default function AddAndEditPlaylistModal({
       return {
         ...DEFAULT_DRAFT,
         name: data.name,
-        folderId: data.folderId ?? null,
+        folderId: data.folderId != null ? Number(data.folderId) : null,
         tags: data.tags.map((t) => ({ ...t })),
         enableStat: data.enableStat || 'Inherit',
         isDynamic: data.isDynamic,
@@ -114,11 +116,11 @@ export default function AddAndEditPlaylistModal({
         filterMediaTag: data.filterMediaTag ? data.filterMediaTag.map((t) => ({ ...t })) : [],
         exactTags: data.exactTags || false,
         logicalOperator: data.logicalOperator || 'OR',
-        filterFolderId: data.filterFolderId ?? null,
-        maxNumberOfItems: data.maxNumberOfItems || 0,
+        filterFolderId: data.filterFolderId != null ? Number(data.filterFolderId) : null,
+        maxNumberOfItems: Number(data.maxNumberOfItems) || 0,
       };
     }
-    return { ...DEFAULT_DRAFT };
+    return { ...DEFAULT_DRAFT, folderId: defaultFolderId ?? null };
   });
 
   const [previewPagination, setPreviewPagination] = useState<PaginationState>({
@@ -154,7 +156,7 @@ export default function AddAndEditPlaylistModal({
       setDraft({
         ...DEFAULT_DRAFT,
         name: data.name,
-        folderId: data.folderId ?? null,
+        folderId: data.folderId != null ? Number(data.folderId) : null,
         tags: data.tags.map((t) => ({ ...t })),
         enableStat: data.enableStat || 'Inherit',
         isDynamic: data.isDynamic,
@@ -163,16 +165,16 @@ export default function AddAndEditPlaylistModal({
         filterMediaTag: data.filterMediaTag ? data.filterMediaTag.map((t) => ({ ...t })) : [],
         exactTags: data.exactTags || false,
         logicalOperator: data.logicalOperator || 'OR',
-        filterFolderId: data.filterFolderId || null,
-        maxNumberOfItems: data.maxNumberOfItems || 0,
+        filterFolderId: data.filterFolderId != null ? Number(data.filterFolderId) : null,
+        maxNumberOfItems: Number(data.maxNumberOfItems) || 0,
       });
     } else {
-      setDraft({ ...DEFAULT_DRAFT });
+      setDraft({ ...DEFAULT_DRAFT, folderId: defaultFolderId ?? null });
     }
 
     setApiError(undefined);
     setFormErrors({});
-  }, [data, type]);
+  }, [data, type, defaultFolderId]);
 
   const handleSave = () => {
     startTransition(async () => {
@@ -180,7 +182,7 @@ export default function AddAndEditPlaylistModal({
       const result = schema.safeParse(draft);
 
       if (!result.success) {
-        setApiError(undefined);
+        setApiError(t('Please fix the highlighted errors before saving.'));
         const fieldErrors = result.error.flatten().fieldErrors;
         const mappedErrors: PlaylistFormErrors = {};
 

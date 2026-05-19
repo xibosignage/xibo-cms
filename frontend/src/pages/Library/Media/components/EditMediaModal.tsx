@@ -131,6 +131,7 @@ export default function EditMediaModal({
       });
 
       setFormErrors(fieldErrors);
+      setApiError(t('Please fix the highlighted errors before saving.'));
       return;
     }
 

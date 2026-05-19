@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Get PR base branch
         id: pr_info
-        uses: actions/github-script@v6
+        uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6
         with:
           script: |
             const pr = await github.rest.pulls.get({
@@ -32,11 +32,11 @@ jobs:
 
     steps:
       - name: Get branch of PR
-        uses: xt0rted/pull-request-comment-branch@v1
+        uses: xt0rted/pull-request-comment-branch@653a7d5ca8bd91d3c5cb83286063314d0b063b8e # v1
         id: comment-branch
 
       - name: Set latest commit status as pending
-        uses: myrotvorets/set-commit-status-action@master
+        uses: myrotvorets/set-commit-status-action@dc2658db021f5e1e4d0afe92fba053fd8d44ce6e # master
         with:
           sha: ${{ steps.comment-branch.outputs.head_sha }}
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -86,7 +86,58 @@ jobs:
           docker exec --user www-data -t cms-web /bin/bash -c "cd /var/www/cms; php vendor/bin/phpunit --log-junit results.xml"
 
       - name: Set latest commit status as ${{ job.status }}
-        uses: myrotvorets/set-commit-status-action@master
+        uses: myrotvorets/set-commit-status-action@dc2658db021f5e1e4d0afe92fba053fd8d44ce6e # master
+        if: always()
+        with:
+          sha: ${{ steps.comment-branch.outputs.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: ${{ job.status }}
+
+  lint:
+    name: Run ESLint
+    if: github.event.issue.pull_request && contains(github.event.comment.body, 'TEST:')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get branch of PR
+        uses: xt0rted/pull-request-comment-branch@653a7d5ca8bd91d3c5cb83286063314d0b063b8e # v1
+        id: comment-branch
+
+      - name: Set latest commit status as pending
+        uses: myrotvorets/set-commit-status-action@dc2658db021f5e1e4d0afe92fba053fd8d44ce6e # master
+        with:
+          sha: ${{ steps.comment-branch.outputs.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: pending
+
+      - name: Checkout PR branch ${{ steps.comment-branch.outputs.head_ref }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.comment-branch.outputs.head_sha }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Set latest commit status as ${{ job.status }}
+        uses: myrotvorets/set-commit-status-action@dc2658db021f5e1e4d0afe92fba053fd8d44ce6e # master
         if: always()
         with:
           sha: ${{ steps.comment-branch.outputs.head_sha }}
@@ -101,11 +152,11 @@ jobs:
 
     steps:
       - name: Get branch of PR
-        uses: xt0rted/pull-request-comment-branch@v1
+        uses: xt0rted/pull-request-comment-branch@653a7d5ca8bd91d3c5cb83286063314d0b063b8e # v1
         id: comment-branch
 
       - name: Set latest commit status as pending
-        uses: myrotvorets/set-commit-status-action@master
+        uses: myrotvorets/set-commit-status-action@dc2658db021f5e1e4d0afe92fba053fd8d44ce6e # master
         with:
           sha: ${{ steps.comment-branch.outputs.head_sha }}
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -150,22 +201,36 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
 
       - name: Install dependencies
         working-directory: frontend
-        run: npm install
+        run: npm ci
 
       - name: Run Vitest with coverage
         if: env.with_coverage == 'true'
         working-directory: frontend
-        run: npm run test:ci -- ${{ env.test_pattern }}
+        env:
+          TEST_PATTERN: ${{ env.test_pattern }}
+        run: |
+          read -ra args <<< "$TEST_PATTERN"
+          npm run test:ci -- "${args[@]}"
 
       - name: Run Vitest without coverage
         if: env.with_coverage == 'false'
         working-directory: frontend
-        run: npx vitest run ${{ env.test_pattern }}
+        env:
+          TEST_PATTERN: ${{ env.test_pattern }}
+        run: |
+          read -ra args <<< "$TEST_PATTERN"
+          npx vitest run "${args[@]}"
 
       - name: Upload coverage report
         if: env.with_coverage == 'true'
@@ -175,7 +240,7 @@ jobs:
           path: frontend/coverage
 
       - name: Set latest commit status as ${{ job.status }}
-        uses: myrotvorets/set-commit-status-action@master
+        uses: myrotvorets/set-commit-status-action@dc2658db021f5e1e4d0afe92fba053fd8d44ce6e # master
         if: always()
         with:
           sha: ${{ steps.comment-branch.outputs.head_sha }}
@@ -184,25 +249,31 @@ jobs:
 
   comment:
     name: Post Result Comment
-    needs: [check-base-branch, phpunit, vitest]
+    needs: [check-base-branch, phpunit, lint, vitest]
     if: always() && needs.check-base-branch.outputs.base_ref == 'develop'
     runs-on: ubuntu-latest
     steps:
       - name: Add workflow result as comment on PR
-        uses: actions/github-script@v6
+        uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6
         with:
           script: |
             const phpunit = '${{ needs.phpunit.result }}';
+            const lint = '${{ needs.lint.result }}';
             const vitest = '${{ needs.vitest.result }}';
             const url = '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}';
 
+            const icon = (r) => r === 'success' ? '✅' : r === 'skipped' ? '⏭️' : '❌';
+
             let body;
-            if (phpunit === 'success' && vitest === 'success') {
-              body = `Test Suite: succeeded ✅\n${url}`;
-            } else if (phpunit !== 'success') {
-              body = `Test Suite: failed ❌ (PHPUnit ${phpunit})\n${url}`;
+            if (phpunit === 'success' && lint === 'success' && vitest === 'success') {
+              body = `Test Suite: all passed ✅\n${url}`;
             } else {
-              body = `Test Suite: failed ❌ (Vitest ${vitest})\n${url}`;
+              const lines = [
+                `PHPUnit: ${icon(phpunit)}`,
+                `ESLint: ${icon(lint)}`,
+                `Vitest: ${icon(vitest)}`,
+              ].join('\n');
+              body = `Test Suite: failed ❌\n${lines}\n${url}`;
             }
 
             await github.rest.issues.createComment({
@@ -219,11 +290,11 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Get branch of PR
-        uses: xt0rted/pull-request-comment-branch@v1
+        uses: xt0rted/pull-request-comment-branch@653a7d5ca8bd91d3c5cb83286063314d0b063b8e # v1
         id: comment-branch
 
       - name: Set latest commit status as pending
-        uses: myrotvorets/set-commit-status-action@master
+        uses: myrotvorets/set-commit-status-action@dc2658db021f5e1e4d0afe92fba053fd8d44ce6e # master
         with:
           sha: ${{ steps.comment-branch.outputs.head_sha }}
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -240,7 +311,7 @@ jobs:
           COMMENT_BODY: ${{ github.event.comment.body }}
         run: |
           if [[ "$COMMENT_BODY" =~ ^TEST:\ (all|\*)$ ]]; then
-            test_all=true
+            echo "test_all=true" >> $GITHUB_ENV
           elif [[ "$COMMENT_BODY" =~ ^TEST:(.*?)END$ ]]; then
             specs="${BASH_REMATCH[1]}"
             IFS=',' read -ra content_array <<< "$specs"
@@ -300,7 +371,7 @@ jobs:
           rm package-lock.json
 
       - name: Configure Testmo
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
 
@@ -348,12 +419,12 @@ jobs:
           if [[ ${{ steps.cypress.outcome }} == 'success' ]]; then
             echo "Cypress tests succeeded"
           else
-            echo "Cypress tests failed with exit code ${{ steps.cypress.exitCode }}"
+            echo "Cypress tests failed"
             exit 1
           fi
 
       - name: Add workflow result as comment on PR
-        uses: actions/github-script@v6
+        uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6
         if: always()
         with:
           script: |
@@ -370,7 +441,7 @@ jobs:
             })
 
       - name: Set latest commit status as ${{ job.status }}
-        uses: myrotvorets/set-commit-status-action@master
+        uses: myrotvorets/set-commit-status-action@dc2658db021f5e1e4d0afe92fba053fd8d44ce6e # master
         if: always()
         with:
           sha: ${{ steps.comment-branch.outputs.head_sha }}

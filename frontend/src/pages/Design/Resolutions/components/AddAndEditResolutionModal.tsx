@@ -72,8 +72,8 @@ export default function AddAndEditResolutionModal({
       return {
         ...DEFAULT_DRAFT,
         resolution: data.resolution,
-        width: data.width,
-        height: data.height,
+        width: Number(data.width),
+        height: Number(data.height),
         enabled: Boolean(data.enabled),
       };
     }
@@ -85,8 +85,8 @@ export default function AddAndEditResolutionModal({
       setDraft({
         ...DEFAULT_DRAFT,
         resolution: data.resolution,
-        width: data.width,
-        height: data.height,
+        width: Number(data.width),
+        height: Number(data.height),
         enabled: Boolean(data.enabled),
       });
     } else {

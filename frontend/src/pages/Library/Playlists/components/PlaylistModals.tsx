@@ -45,6 +45,7 @@ interface PlaylistModalsProps {
   selection: {
     selectedPlaylist: Playlist | null;
     selectedPlaylistId: number | null;
+    defaultFolderId?: number;
     itemsToDelete: Playlist[];
     itemsToMove: Playlist[];
     existingNames: string[];
@@ -73,6 +74,7 @@ export function PlaylistModals({
       {isModalOpen('edit') && (
         <AddAndEditPlaylistModal
           type={selection.selectedPlaylistId ? 'edit' : 'add'}
+          defaultFolderId={selection.defaultFolderId}
           onClose={() => {
             actions.closeModal();
           }}

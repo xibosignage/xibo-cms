@@ -87,7 +87,7 @@ export default function SaveAsTemplateModal({
       setFormErrors({
         name: fieldErrors.name?.[0],
       });
-
+      setApiError(t('Please fix the highlighted errors before saving.'));
       return;
     }
 

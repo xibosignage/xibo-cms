@@ -340,7 +340,7 @@ export default function EditDisplayProfileModal({
       const result = schema.safeParse({ name: draft.name, isDefault: draft.isDefault });
 
       if (!result.success) {
-        setApiError(undefined);
+        setApiError(t('Please fix the highlighted errors before saving.'));
         setNameError(result.error.flatten().fieldErrors.name?.[0]);
         return;
       }

@@ -90,13 +90,13 @@ const createDraftFromData = (data?: MenuBoardProduct | null): ProductDraft => {
   }
   return {
     name: data.name ?? '',
-    price: data.price ?? null,
+    price: data.price != null ? Number(data.price) : null,
     description: data.description ?? '',
     code: data.code ?? '',
-    displayOrder: data.displayOrder ?? null,
+    displayOrder: data.displayOrder != null ? Number(data.displayOrder) : null,
     availability: (data.availability ?? 1) === 1,
     allergyInfo: data.allergyInfo ?? '',
-    calories: data.calories ?? null,
+    calories: data.calories != null ? Number(data.calories) : null,
     mediaId: data.mediaId || null,
     productOptions: (data.productOptions ?? []).map((o, i) => ({
       id: i,
@@ -198,6 +198,7 @@ export default function AddAndEditMenuBoardProductModal({
       } else if (errors.description || errors.allergyInfo) {
         setActiveTab('details');
       }
+      setApiError(t('Please fix the highlighted errors before saving.'));
       return;
     }
 
