@@ -37,8 +37,7 @@ import type { TabNavItem } from '@/components/ui/TabNav';
 import type { User } from '@/types/user';
 import { filterRoutesByUser } from '@/utils/permissions';
 
-// TODO: Hardcoded for now, change to default page later
-export const DEFAULT_INTERNAL_ROUTE = '/library/media';
+export const DEFAULT_INTERNAL_ROUTE = 'dashboard';
 
 enum UserType {
   SuperAdmin = 1,
@@ -327,7 +326,10 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'applications',
         labelKey: 'Applications',
-        externalURL: '/application/view',
+        lazy: () =>
+          import('@/pages/Administration/Applications/Applications').then((m) => ({
+            Component: m.default,
+          })),
         validator: isSuperAdmin,
       },
       {

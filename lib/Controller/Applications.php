@@ -63,6 +63,49 @@ class Applications extends Base
     }
 
     /**
+     * Search all available OAuth scopes
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     */
+    public function scopeSearch(Request $request, Response $response)
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $filterBy = [];
+
+        if ($sanitizedParams->getString('clientId') !== null) {
+            $filterBy['clientId'] = $sanitizedParams->getString('clientId');
+        }
+
+        $scopes = $this->applicationScopeFactory->query(null, $filterBy);
+
+        return $response->withStatus(200)->withJson($scopes);
+    }
+
+    /**
+     * Get a single application by id, with redirect URIs and scopes loaded
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function getById(Request $request, Response $response, $id)
+    {
+        $client = $this->applicationFactory->getById($id);
+
+        if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1) {
+            throw new AccessDeniedException();
+        }
+
+        $client->load();
+
+        return $response->withStatus(200)->withJson($client);
+    }
+
+    /**
      * Display page grid
      * @param Request $request
      * @param Response $response

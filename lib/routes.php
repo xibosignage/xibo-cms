@@ -597,9 +597,14 @@ $app->group('', function (RouteCollectorProxy $group) {
 //
 // Applications
 //
+
 $app->group('', function (RouteCollectorProxy $group) {
     $group->post('/application', ['\Xibo\Controller\Applications','add'])->setName('application.add');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['application.add']));
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->put('/application/{id}', ['\Xibo\Controller\Applications','edit'])->setName('application.edit');
+    $group->delete('/application/{id}', ['\Xibo\Controller\Applications','delete'])->setName('application.delete');
+})->addMiddleware(new SuperAdminAuth($app->getContainer()));
 $app->delete('/application/revoke/{id}/{userId}', ['\Xibo\Controller\Applications', 'revokeAccess'])
     ->setName('application.revoke');
 

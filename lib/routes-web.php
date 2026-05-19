@@ -284,7 +284,9 @@ $app->post('/application/authorize', ['\Xibo\Controller\Applications','authorize
 $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/application', ['\Xibo\Controller\Applications','grid'])
         ->setName('application.search');
-    $group->get('/application/{id}', ['\Xibo\Controller\Applications','searchById'])
+    $group->get('/application/scope', ['\Xibo\Controller\Applications','scopeSearch'])
+        ->setName('application.scope.search');
+    $group->get('/application/{id}', ['\Xibo\Controller\Applications','getById'])
         ->setName('application.search.id');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['application.view']));
 
