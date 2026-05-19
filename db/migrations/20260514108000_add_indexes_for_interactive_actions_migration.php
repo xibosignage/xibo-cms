@@ -77,7 +77,8 @@ class AddIndexesForInteractiveActionsMigration extends AbstractMigration
         foreach ($columns as $column) {
             $i++;
 
-            $sql .= (($i == 1) ? '' : ' OR') . ' (seq_in_index = \'' . $i . '\' AND column_name = \'' . $column . '\') ';
+            $sql .= (($i == 1) ? '' : ' OR')
+                . ' (seq_in_index = \'' . $i . '\' AND column_name = \'' . $column . '\') ';
         }
 
         $sql .= ' )';
