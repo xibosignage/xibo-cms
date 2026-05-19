@@ -300,24 +300,24 @@ function UploadItemRow({ item, onRemove, onUpdate }: RowProps) {
               </span>
             </div>
 
-            <div className="flex gap-2 items-center">
-              <div className="bg-gray-200 h-2.5 rounded-full w-full overflow-hidden">
+            {!isError && (
+              <div className="flex gap-2 items-center">
+                <div className="bg-gray-200 h-2.5 rounded-full w-full overflow-hidden">
+                  <div
+                    className="h-full transition-all duration-300 rounded-full bg-xibo-blue-600"
+                    style={{ width: `${item.progress}%` }}
+                  />
+                </div>
                 <div
                   className={twMerge(
-                    'h-full transition-all duration-300 rounded-full',
-                    isError ? 'bg-red-600' : 'bg-xibo-blue-600',
+                    'text-sm font-semibold w-11 text-right shrink-0',
+                    isCompleted ? 'text-xibo-blue-600' : 'text-gray-800',
                   )}
-                  style={{ width: `${item.progress}%` }}
-                />
+                >
+                  {item.progress}%
+                </div>
               </div>
-              <div
-                className={`text-sm font-semibold w-11 text-right shrink-0 ${
-                  isError ? 'text-red-600' : isCompleted ? 'text-xibo-blue-600' : 'text-gray-800'
-                }`}
-              >
-                {item.progress}%
-              </div>
-            </div>
+            )}
 
             {item.error && (
               <p className="text-[11px] text-red-600 font-bold font-mono mt-1 wrap-break-word">
