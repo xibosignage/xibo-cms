@@ -144,7 +144,7 @@ class Font extends Base
         foreach ($fonts as $font) {
             $font->setUnmatchedProperty('fileSizeFormatted', ByteFormatter::format($font->size));
             $font->buttons = [];
-            if ($this->isApi($request)) {
+            if ($this->isApi($request) || $this->isJson($request)) {
                 break;
             }
 

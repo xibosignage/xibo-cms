@@ -363,7 +363,8 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'fonts',
         labelKey: 'Fonts',
-        externalURL: '/fonts/view',
+        lazy: () =>
+          import('@/pages/Administration/Fonts/Fonts').then((m) => ({ Component: m.default })),
         feature: 'font.view',
       },
     ],
