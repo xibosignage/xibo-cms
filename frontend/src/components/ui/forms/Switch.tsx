@@ -41,7 +41,7 @@ export default function Switch({
   optional = false,
   disabled = false,
   onChange,
-  hideOnOff: hideOnOf = false,
+  hideOnOff = false,
   size = 'default',
 }: SwitchProps) {
   const { t } = useTranslation();
@@ -63,7 +63,7 @@ export default function Switch({
         </label>
       )}
       <div className="flex items-center gap-3">
-        {!hideOnOf && (
+        {!hideOnOff && (
           <span
             className={twMerge('text-sm font-medium', checked ? 'text-gray-400' : 'text-gray-700')}
           >
@@ -119,7 +119,7 @@ export default function Switch({
             )}
           </span>
         </button>
-        {!hideOnOf && (
+        {!hideOnOff && (
           <span
             className={twMerge('text-sm font-medium', checked ? 'text-blue-600' : 'text-gray-400')}
           >

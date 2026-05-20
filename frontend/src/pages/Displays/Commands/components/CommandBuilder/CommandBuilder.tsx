@@ -158,8 +158,6 @@ export default function CommandBuilder({ value, onChange, error }: CommandBuilde
         )}
       </div>
 
-      {/* Command String Preview */}
-
       {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   );

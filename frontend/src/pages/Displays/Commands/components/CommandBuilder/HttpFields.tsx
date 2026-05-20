@@ -183,7 +183,7 @@ export default function HttpFields({
       {/* Query Builder */}
       <div className="rounded-lg border border-gray-200 bg-white p-4 flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-sm font-bold text-gray-800 text-[16px]">{t('Query Builder')}</h4>
+          <h4 className="font-bold text-gray-800 text-base">{t('Query Builder')}</h4>
           <div className="shrink-0">
             <Switch size="sm" checked={showQueryBuilder} onChange={setShowQueryBuilder} hideOnOff />
           </div>
@@ -209,7 +209,7 @@ export default function HttpFields({
       {/* Headers */}
       <div className="rounded-lg border border-gray-200 bg-white p-4 flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-sm font-bold text-gray-800 text-[16px]">{t('Raw Headers')}</h4>
+          <h4 className="font-bold text-gray-800 text-base">{t('Raw Headers')}</h4>
           <div className="shrink-0">
             <Switch size="sm" checked={showRawHeaders} onChange={setShowRawHeaders} hideOnOff />
           </div>
@@ -245,7 +245,7 @@ export default function HttpFields({
       {/* Body Data */}
       <div className="rounded-lg border border-gray-200 bg-white p-4 flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-sm font-bold text-gray-800 text-[16px]">{t('Raw Body')}</h4>
+          <h4 className="font-bold text-gray-800 text-base">{t('Raw Body')}</h4>
           <div className="shrink-0">
             <Switch size="sm" checked={showRawBody} onChange={setShowRawBody} hideOnOff />
           </div>
