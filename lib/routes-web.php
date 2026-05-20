@@ -281,23 +281,6 @@ $app->get('/application/authorize', ['\Xibo\Controller\Applications','authorizeR
 $app->post('/application/authorize', ['\Xibo\Controller\Applications','authorize'])
     ->setName('application.authorize');
 
-
-$app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
-    // We can only view/edit these through the web app
-    $group->get('/connectors', ['\Xibo\Controller\Connector','grid'])->setName('connector.search');
-    // TODO remove editForm once converted.
-    $group->get('/connectors/form/edit/{id}', ['\Xibo\Controller\Connector','editForm'])
-        ->setName('connector.edit.form');
-    $group->get('/connectors/{id}', ['\Xibo\Controller\Connector','searchById'])
-        ->setName('connector.search.id');
-    $group->map(
-        ['GET', 'POST'],
-        '/connectors/form/{id}/proxy/{method}',
-        ['\Xibo\Controller\Connector', 'editFormProxy']
-    )->setName('connector.edit.form.proxy');
-    $group->put('/connectors/{id}', ['\Xibo\Controller\Connector','edit'])->setName('connector.edit');
-})->addMiddleware(new SuperAdminAuth($app->getContainer()));
-
 //
 // module
 //

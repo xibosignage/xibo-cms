@@ -597,7 +597,7 @@ $app->group('', function (RouteCollectorProxy $group) {
 //
 // Applications
 //
-
+// TODO applications routes will want to be moved to routes-json.
 $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/application', ['\Xibo\Controller\Applications', 'grid'])
         ->setName('application.search');
@@ -616,6 +616,25 @@ $app->group('', function (RouteCollectorProxy $group) {
 $app->delete('/application/revoke/{id}/{userId}', ['\Xibo\Controller\Applications', 'revokeAccess'])
     ->setName('application.revoke');
 
+//
+// Connectors
+//
+// TODO connectors routes will want to be moved to routes-json.
+$app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
+    // We can only view/edit these through the web app
+    $group->get('/connectors', ['\Xibo\Controller\Connector','grid'])->setName('connector.search');
+    // TODO remove editForm once converted.
+    $group->get('/connectors/form/edit/{id}', ['\Xibo\Controller\Connector','editForm'])
+        ->setName('connector.edit.form');
+    $group->get('/connectors/{id}', ['\Xibo\Controller\Connector','searchById'])
+        ->setName('connector.search.id');
+    $group->map(
+        ['GET', 'POST'],
+        '/connectors/form/{id}/proxy/{method}',
+        ['\Xibo\Controller\Connector', 'editFormProxy']
+    )->setName('connector.edit.form.proxy');
+    $group->put('/connectors/{id}', ['\Xibo\Controller\Connector','edit'])->setName('connector.edit');
+})->addMiddleware(new SuperAdminAuth($app->getContainer()));
 
 /**
  * Modules
