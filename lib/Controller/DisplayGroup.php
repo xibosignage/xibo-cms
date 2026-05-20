@@ -43,6 +43,7 @@ use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\XMR\ChangeLayoutAction;
+use Xibo\XMR\ClearStatsAndLogsAction;
 use Xibo\XMR\CollectNowAction;
 use Xibo\XMR\CommandAction;
 use Xibo\XMR\OverlayLayoutAction;
@@ -1644,7 +1645,7 @@ class DisplayGroup extends Base
             throw new AccessDeniedException();
         }
 
-        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($id), new CollectNowAction());
+        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($id), new ClearStatsAndLogsAction());
 
         // Return
         $this->getState()->hydrate([
@@ -2417,8 +2418,17 @@ class DisplayGroup extends Base
      * @throws NotFoundException
      * @throws PlayerActionException
      */
-    public function pushCriteriaUpdate(Request $request, Response $response, int $displayGroupId): Response|ResponseInterface
-    {
+    public function pushCriteriaUpdate(
+        Request $request,
+        Response $response,
+        int $displayGroupId
+    ): Response|ResponseInterface {
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup)) {
+            throw new AccessDeniedException();
+        }
+
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Get criteria updates

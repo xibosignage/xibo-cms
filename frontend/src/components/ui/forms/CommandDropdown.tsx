@@ -19,11 +19,12 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import type { SelectOption } from '@/components/ui/forms/SelectDropdown';
+import { useDebounce } from '@/hooks/useDebounce';
 import { fetchCommands } from '@/services/commandApi';
 
 const PAGE_SIZE = 10;
@@ -35,6 +36,7 @@ interface CommandDropdownProps {
   label?: string;
   helpText?: string;
   error?: string;
+  optional?: boolean;
 }
 
 export default function CommandDropdown({
@@ -44,6 +46,7 @@ export default function CommandDropdown({
   label,
   helpText,
   error,
+  optional = false,
 }: CommandDropdownProps) {
   const { t } = useTranslation();
 
@@ -51,30 +54,56 @@ export default function CommandDropdown({
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, searchTerm ? 300 : 0);
   const pageRef = useRef(0);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     setIsLoading(true);
     setOptions([]);
+    setTotalCount(0);
     pageRef.current = 0;
 
-    fetchCommands({ start: 0, length: PAGE_SIZE, type })
+    fetchCommands({
+      start: 0,
+      length: PAGE_SIZE,
+      type,
+      command: debouncedSearch || undefined,
+      signal: controller.signal,
+    })
       .then((res) => {
         setOptions(res.rows.map((c) => ({ value: String(c.commandId), label: c.command })));
         setTotalCount(res.totalCount);
         pageRef.current = 1;
       })
-      .catch(() => setOptions([]))
-      .finally(() => setIsLoading(false));
-  }, [type]);
+      .catch((err) => {
+        if (err?.name !== 'AbortError') {
+          setOptions([]);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      });
 
-  const handleLoadMore = useCallback(() => {
+    return () => controller.abort();
+  }, [type, debouncedSearch]);
+
+  const handleLoadMore = () => {
     if (isLoadingMore || options.length >= totalCount) {
       return;
     }
 
     setIsLoadingMore(true);
-    fetchCommands({ start: pageRef.current * PAGE_SIZE, length: PAGE_SIZE, type })
+    fetchCommands({
+      start: pageRef.current * PAGE_SIZE,
+      length: PAGE_SIZE,
+      type,
+      command: debouncedSearch || undefined,
+    })
       .then((res) => {
         setOptions((prev) => [
           ...prev,
@@ -85,7 +114,7 @@ export default function CommandDropdown({
       })
       .catch(() => {})
       .finally(() => setIsLoadingMore(false));
-  }, [isLoadingMore, options.length, totalCount, type]);
+  };
 
   return (
     <SelectDropdown
@@ -100,7 +129,9 @@ export default function CommandDropdown({
       isLoadingMore={isLoadingMore}
       searchable
       searchPlaceholder={t('Search commands...')}
+      onSearch={(v) => setSearchTerm(v)}
       error={error}
+      optional={optional}
     />
   );
 }

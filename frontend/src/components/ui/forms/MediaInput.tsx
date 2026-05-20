@@ -19,6 +19,18 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import {
+  useFloating,
+  autoUpdate,
+  offset,
+  flip,
+  shift,
+  size,
+  useClick,
+  useDismiss,
+  useInteractions,
+  FloatingPortal,
+} from '@floating-ui/react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Search, X, ChevronDown, Loader2, Check } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
@@ -32,6 +44,8 @@ interface MediaInputProps {
   onChange: (value: string) => void;
   helpText?: string;
   isMulti?: boolean;
+  optional?: boolean;
+  mediaType?: string;
 }
 
 export default function MediaInput({
@@ -40,18 +54,45 @@ export default function MediaInput({
   onChange,
   helpText,
   isMulti = false,
+  optional = false,
+  mediaType = 'image',
 }: MediaInputProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-
   const [nameCache, setNameCache] = useState<Record<string, string>>({});
-
-  const containerRef = useRef<HTMLDivElement>(null);
   const observerTarget = useRef<HTMLDivElement>(null);
 
   const selectedIds = value ? String(value).split(',').filter(Boolean) : [];
+
+  const { refs, floatingStyles, context } = useFloating({
+    open: isOpen,
+    onOpenChange: (open) => {
+      setIsOpen(open);
+      if (!open) {
+        setSearchTerm('');
+      }
+    },
+    placement: 'bottom-start',
+    whileElementsMounted: autoUpdate,
+    middleware: [
+      offset(4),
+      flip(),
+      shift(),
+      size({
+        apply({ rects, elements }) {
+          Object.assign(elements.floating.style, {
+            width: `${rects.reference.width}px`,
+          });
+        },
+      }),
+    ],
+  });
+
+  const click = useClick(context);
+  const dismiss = useDismiss(context);
+  const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -60,24 +101,14 @@ export default function MediaInput({
     return () => clearTimeout(handler);
   }, [searchTerm]);
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
-    queryKey: ['libraryMedia', debouncedSearch],
+    queryKey: ['libraryMedia', debouncedSearch, mediaType],
     queryFn: async ({ pageParam = 0, signal }) => {
       return fetchMedia({
         start: pageParam,
         length: 20,
         keyword: debouncedSearch || undefined,
-        type: 'image',
+        type: mediaType || undefined,
         signal,
       });
     },
@@ -148,12 +179,16 @@ export default function MediaInput({
   };
 
   return (
-    <div className="flex flex-col gap-1.5 relative" ref={containerRef}>
-      <label className="text-sm font-semibold text-gray-500">{label}</label>
+    <div className="flex flex-col gap-1.5">
+      <label className="flex items-center justify-between text-sm font-semibold text-gray-500">
+        <span>{label}</span>
+        {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
+      </label>
 
       <div
-        onClick={() => setIsOpen(!isOpen)}
-        className={`flex flex-wrap items-center gap-1.5 py-1.5 px-2 bg-white border rounded-lg min-h-11.25 transition-colors ${
+        ref={refs.setReference}
+        {...getReferenceProps()}
+        className={`flex flex-wrap items-center gap-1.5 py-1.5 px-2 bg-white border rounded-lg min-h-11.25 transition-colors cursor-pointer ${
           isOpen
             ? 'border-xibo-blue-500 ring-1 ring-xibo-blue-500'
             : 'border-gray-200 hover:border-gray-300'
@@ -193,72 +228,82 @@ export default function MediaInput({
 
       {helpText && <p className="text-xs text-gray-500">{helpText}</p>}
 
-      {/* Dropdown Popover */}
-      {isOpen && (
-        <div className="absolute z-50 top-full left-0 mt-0.5 w-full bg-white border border-gray-200 rounded-lg shadow-lg flex flex-col overflow-hidden">
-          <div className="px-3 py-2 text-sm bg-gray-100 text-gray-500 font-semibold uppercase">
-            {t('Select Media')}
-          </div>
-          <div className="p-2">
-            <div className="relative flex-1 flex">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <Search className="w-4 h-4 text-gray-500" />
+      <FloatingPortal>
+        {isOpen && (
+          <div
+            ref={refs.setFloating}
+            style={floatingStyles}
+            {...getFloatingProps()}
+            className="z-9999 bg-white border border-gray-200 rounded-lg shadow-lg flex flex-col overflow-hidden"
+          >
+            <div className="px-3 py-2 text-sm bg-gray-100 text-gray-500 font-semibold uppercase">
+              {t('Select Media')}
+            </div>
+            <div className="p-2">
+              <div className="relative flex-1 flex">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <Search className="w-4 h-4 text-gray-500" />
+                </div>
+                <input
+                  type="text"
+                  placeholder={t('Search')}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="py-2 px-3 pl-10 block h-11.25 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none disabled:bg-gray-200"
+                  autoFocus
+                />
               </div>
-              <input
-                type="text"
-                placeholder={t('Search')}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="py-2 px-3 pl-10 block h-11.25 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none disabled:bg-gray-200"
-                autoFocus
-              />
+            </div>
+
+            <div className="max-h-60 overflow-y-auto p-2">
+              {isLoading && mediaItems.length === 0 ? (
+                <div className="flex justify-center items-center py-4">
+                  <Loader2 className="h-5 w-5 text-gray-400 animate-spin" />
+                </div>
+              ) : mediaItems.length === 0 ? (
+                <div className="py-4 text-center text-sm text-gray-500">{t('No media found.')}</div>
+              ) : (
+                <ul className="flex flex-col gap-0.5">
+                  {mediaItems.map((media) => {
+                    const idString = String(media.mediaId);
+                    const isSelected = selectedIds.includes(idString);
+
+                    return (
+                      <li key={media.mediaId}>
+                        <button
+                          type="button"
+                          onClick={() => handleSelect(idString)}
+                          className={`w-full text-left px-3 py-2 text-sm font-semibold text-gray-800 rounded-md cursor-pointer flex items-center justify-between transition-colors ${
+                            isSelected
+                              ? 'bg-xibo-blue-50 text-xibo-blue-700 font-medium'
+                              : 'text-gray-700 hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className="truncate pr-2">
+                            <span className="truncate">{media.name}</span>
+                          </div>
+                          {isSelected && (
+                            <Check size={16} className="text-xibo-blue-600 shrink-0" />
+                          )}
+                        </button>
+                      </li>
+                    );
+                  })}
+
+                  <div
+                    ref={observerTarget}
+                    className="h-4 w-full flex justify-center items-center mt-2"
+                  >
+                    {isFetchingNextPage && (
+                      <Loader2 className="h-4 w-4 text-gray-400 animate-spin" />
+                    )}
+                  </div>
+                </ul>
+              )}
             </div>
           </div>
-
-          <div className="max-h-60 overflow-y-auto p-2">
-            {isLoading && mediaItems.length === 0 ? (
-              <div className="flex justify-center items-center py-4">
-                <Loader2 className="h-5 w-5 text-gray-400 animate-spin" />
-              </div>
-            ) : mediaItems.length === 0 ? (
-              <div className="py-4 text-center text-sm text-gray-500">{t('No media found.')}</div>
-            ) : (
-              <ul className="flex flex-col gap-0.5">
-                {mediaItems.map((media) => {
-                  const idString = String(media.mediaId);
-                  const isSelected = selectedIds.includes(idString);
-
-                  return (
-                    <li key={media.mediaId}>
-                      <button
-                        type="button"
-                        onClick={() => handleSelect(idString)}
-                        className={`w-full text-left px-3 py-2 text-sm font-semibold text-gray-800 rounded-md cursor-pointer flex items-center justify-between transition-colors ${
-                          isSelected
-                            ? 'bg-xibo-blue-50 text-xibo-blue-700 font-medium'
-                            : 'text-gray-700 hover:bg-gray-50'
-                        }`}
-                      >
-                        <div className="truncate pr-2">
-                          <span className="truncate">{media.name}</span>
-                        </div>
-                        {isSelected && <Check size={16} className="text-xibo-blue-600 shrink-0" />}
-                      </button>
-                    </li>
-                  );
-                })}
-
-                <div
-                  ref={observerTarget}
-                  className="h-4 w-full flex justify-center items-center mt-2"
-                >
-                  {isFetchingNextPage && <Loader2 className="h-4 w-4 text-gray-400 animate-spin" />}
-                </div>
-              </ul>
-            )}
-          </div>
-        </div>
-      )}
+        )}
+      </FloatingPortal>
     </div>
   );
 }

@@ -47,6 +47,7 @@ export function DeleteDatasetColumnModal({
 
   return (
     <Modal
+      variant="confirmation"
       isOpen={isOpen}
       isPending={isLoading}
       onClose={onClose}

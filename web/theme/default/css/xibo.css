@@ -1051,6 +1051,10 @@ ul li.active.tab-design:hover a {
     display: none !important;
 }
 
+.XiboSchedule #calendar-view.loading {
+    opacity: 0.5;
+}
+
 .XiboFilter .controls-date-range .controls-date-inputs {
     display: inline-flex;
     gap: 0.25rem;

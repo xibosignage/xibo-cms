@@ -38,15 +38,24 @@ import { twMerge } from 'tailwind-merge';
 
 import DatePicker from '../DatePicker';
 
+import { useUserContext } from '@/context/UserContext';
+
 export type PublishValue = { type: 'now' } | { type: 'scheduled'; date: Date };
 
 interface PublishDateSelectProps {
   value?: PublishValue;
   onSelect: (value: PublishValue) => void;
+  optional?: boolean;
 }
 
-export default function PublishDateSelect({ value, onSelect }: PublishDateSelectProps) {
+export default function PublishDateSelect({
+  value,
+  onSelect,
+  optional = false,
+}: PublishDateSelectProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
+  const timeZone = user?.settings?.defaultTimezone;
 
   const [isOpen, setIsOpen] = useState(false);
   const [openDatePicker, setOpenDatePicker] = useState(false);
@@ -81,7 +90,10 @@ export default function PublishDateSelect({ value, onSelect }: PublishDateSelect
 
   return (
     <div className="relative overflow-visible">
-      <label className="text-sm font-semibold text-gray-500">{t('Expiry Date')}</label>
+      <label className="flex items-center justify-between text-sm font-semibold text-gray-500">
+        <span>{t('Publish Date')}</span>
+        {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
+      </label>
 
       <div
         ref={refs.setReference}
@@ -95,7 +107,7 @@ export default function PublishDateSelect({ value, onSelect }: PublishDateSelect
           {value?.type === 'now'
             ? t('Publish Now')
             : value?.type === 'scheduled'
-              ? value.date.toLocaleString()
+              ? value.date.toLocaleString(undefined, timeZone ? { timeZone } : undefined)
               : t('Select publish option')}
         </span>
         <button

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -2606,6 +2606,7 @@ Viewer.prototype.playPreview = function(dimensions) {
     url: requestPath,
     width: dimensions.width,
     height: dimensions.height,
+    previewJwt: previewJwt,
   });
 
   // Clear temp data
@@ -3917,10 +3918,11 @@ Viewer.prototype.updateRegionContent = function(
   changed = false,
 ) {
   const $container = this.DOMObject.find(`#${region.id}`);
+  const $iframe = $container.find('iframe');
 
   // Update iframe
-  const updateIframe = function($iframe) {
-    $iframe.css({
+  const updateIframe = function($targetIframe) {
+    $targetIframe.css({
       width: region.scaledDimensions.width,
       height: region.scaledDimensions.height,
     });
@@ -3934,36 +3936,62 @@ Viewer.prototype.updateRegionContent = function(
 
     // Check if it's the first call
     // If it is, send a flag to pause effects on start
-    if (!$iframe.data('notFirstCall')) {
-      $iframe.data('notFirstCall', true);
+    if (!$targetIframe.data('notFirstCall')) {
+      $targetIframe.data('notFirstCall', true);
       options.pauseEffectOnStart = true;
     }
 
     // We need to recalculate the scale inside of the iframe
-    $iframe[0].contentWindow
-      .postMessage({
+    if ($targetIframe[0].contentWindow) {
+      $targetIframe[0].contentWindow.postMessage({
         method: 'renderContent',
         options: options,
       }, '*');
+    }
   };
-
-  // Get iframe
-  const $iframe = $container.find('iframe');
 
   // Check if iframe exists, and is loaded
   if ($iframe.length) {
-    // If iframe globalOptions are not loaded
-    // wait for the iframe to load
-    if (!$iframe[0].contentWindow.window.globalOptions) {
-      // Wait for the iframe to load and update it
-      $iframe[0].onload = function() {
-        $iframe.data('notFirstCall', true);
-        updateIframe($iframe);
-      };
-    } else {
-      // Update iframe
-      updateIframe($iframe);
+    const rawIframe = $iframe[0];
+
+    // Clean up previous listeners
+    if (rawIframe._loadedMessageHandler) {
+      window.removeEventListener('message', rawIframe._loadedMessageHandler);
+      rawIframe._loadedMessageHandler = null;
     }
+
+
+    // Define the new message handler
+    const messageHandler = (event) => {
+      // Only accept messages from OUR iframe
+      if (
+        event.source === rawIframe.contentWindow &&
+        event.data.type === 'loaded'
+      ) {
+        // Cleanup handler
+        window.removeEventListener('message', messageHandler);
+        rawIframe._loadedMessageHandler = null;
+
+        $iframe.data('notFirstCall', false);
+
+        updateIframe($iframe);
+      }
+    };
+
+    // Attach handler and store reference
+    rawIframe._loadedMessageHandler = messageHandler;
+    window.addEventListener('message', messageHandler);
+
+    // Fallback - if we missed the message event
+    $iframe.off('load.viewerUpdate').on('load.viewerUpdate', function() {
+      $iframe.data('notFirstCall', false);
+      updateIframe($iframe);
+    });
+
+    // Always try to update, even if the frame isn't loaded yet
+    // we check there for iframe content not being available
+    // with $targetIframe[0].contentWindow
+    updateIframe($iframe);
   }
 
   // Process image and video/playlist thumbs
@@ -3973,6 +4001,7 @@ Viewer.prototype.updateRegionContent = function(
       '[data-type="widget_video"], ' +
       '[data-type="playlist"]',
     );
+
   if ($imageContainer.length) {
     const $image = $imageContainer.find('img');
 

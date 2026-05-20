@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (C) 2025 Xibo Signage Ltd
+# Copyright (C) 2026 Xibo Signage Ltd
 #
 # Xibo - Digital Signage - https://xibosignage.com
 #
@@ -67,7 +67,7 @@ fi
 
 # Pull necessary Docker images
 echo "Pulling Docker images..."
-docker pull mysql:8
+docker pull mysql:8.4
 docker pull ghcr.io/xibosignage/xibo-xmr:latest
 docker pull ghcr.io/xibosignage/xibo-cms:test-"$PR_NUMBER"
 docker pull mongo:4.2
@@ -80,7 +80,7 @@ docker run --name test-pr-db-"$SERVER_PORT" \
   -e MYSQL_USER=cms \
   -e MYSQL_PASSWORD=jenkins \
   -d \
-  mysql:8
+  mysql:8.4
 
 # Check if MongoDB container exists before creating
 if ! docker ps -a --format '{{.Names}}' | grep -q "test-pr-mongo"; then

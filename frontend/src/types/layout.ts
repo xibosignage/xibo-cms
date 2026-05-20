@@ -39,6 +39,8 @@ export interface Layout {
   status: string;
   duration: number;
   thumbnail?: string;
+  previewUrl?: string;
+  previewDraftUrl?: string;
   owner: string;
   groupsWithPermissions?: string;
   valid?: number;
@@ -46,6 +48,7 @@ export interface Layout {
   modifiedDt: string;
   code?: string | number;
   description?: string;
+  descriptionFormatted?: string;
   ownerId: number;
   userPermissions?: LayoutPermissions;
   permissionsFolderId: number;

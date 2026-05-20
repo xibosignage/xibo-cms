@@ -64,6 +64,7 @@ export const mockEditMedia: MediaItem = {
   mediaNoExpiryDate: '1',
   enableStat: 'Inherit',
   expires: '',
+  released: 1,
   retired: false,
   updateInLayouts: false,
   userPermissions: { view: 1, edit: 1, delete: 1 },

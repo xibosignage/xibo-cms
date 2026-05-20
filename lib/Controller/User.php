@@ -134,20 +134,10 @@ class User extends Base
             return $response->withRedirect($this->urlFor($request, 'welcome.view'));
         }
 
-        // User wizard seen, go to home page
+        // User wizard seen, go to the React dashboard
         $this->getLog()->debug('Showing the homepage: ' . $this->getUser()->homePageId);
 
-        try {
-            $homepage = $this->userGroupFactory->getHomepageByName($this->getUser()->homePageId);
-        } catch (NotFoundException $exception) {
-            return $response->withRedirect($this->urlFor($request, 'icondashboard.view'));
-        }
-
-        if (!$this->getUser()->featureEnabled($homepage->feature)) {
-            return $response->withRedirect($this->urlFor($request, 'icondashboard.view'));
-        } else {
-            return $response->withRedirect($this->urlFor($request, $homepage->homepage));
-        }
+        return $response->withRedirect('/prototype/dashboard');
     }
 
     /**
@@ -236,14 +226,8 @@ class User extends Base
         ];
         $settings['accountId'] = defined('ACCOUNT_ID') ? constant('ACCOUNT_ID') : null;
 
-        $homePageUrl = $this->urlFor(
-            $request,
-            $this->userGroupFactory->getHomepageByName($this->getUser()->homePageId)->homepage
-        );
-
         // TODO: output some settings
         return $response->withJson(array_merge($this->getUser()->toArray(), [
-            'homePageUrl' => $homePageUrl,
             'settings' => $settings,
             'features' => $this->getUserFeatures()
         ]));
@@ -620,7 +604,7 @@ class User extends Base
         $user->userName = $sanitizedParams->getString('userName');
         $user->email = $sanitizedParams->getString('email');
         $user->homePageId = $sanitizedParams->getString('homePageId');
-        $user->libraryQuota = $sanitizedParams->getInt('libraryQuota');
+        $user->libraryQuota = $sanitizedParams->getInt('libraryQuota', ['default' => $user->libraryQuota]);
         $user->retired = $sanitizedParams->getCheckbox('retired');
 
         // Are user home folders enabled? Don't change unless they are.

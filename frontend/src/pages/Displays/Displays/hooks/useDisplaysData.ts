@@ -27,6 +27,7 @@ import type { DisplayFilterInput } from '../DisplaysConfig';
 
 import type { FetchDisplaysRequest } from '@/services/displaysApi';
 import { fetchDisplays } from '@/services/displaysApi';
+import { resolveLastAccessed } from '@/utils/date';
 
 export const displayQueryKeys = {
   all: ['display'] as const,
@@ -68,6 +69,11 @@ export const useDisplaysData = ({
       const sortBy = sorting?.[0]?.id;
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
 
+      const normalizedTags =
+        advancedFilters.tags && advancedFilters.tags.length > 0
+          ? advancedFilters.tags.map((tag) => tag.tag).join(',')
+          : undefined;
+
       const request: FetchDisplaysRequest = {
         start: startOffset,
         length: pagination.pageSize,
@@ -75,6 +81,9 @@ export const useDisplaysData = ({
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
+        ...(advancedFilters.displayId != null ? { displayId: advancedFilters.displayId } : {}),
+        ...(advancedFilters.name ? { display: advancedFilters.name } : {}),
+        ...(normalizedTags ? { tags: normalizedTags } : {}),
         ...(advancedFilters.mediaInventoryStatus
           ? { mediaInventoryStatus: advancedFilters.mediaInventoryStatus }
           : {}),
@@ -107,7 +116,7 @@ export const useDisplaysData = ({
         ...(advancedFilters.customId ? { customId: advancedFilters.customId } : {}),
         ...(advancedFilters.macAddress ? { macAddress: advancedFilters.macAddress } : {}),
         ...(advancedFilters.clientAddress ? { clientAddress: advancedFilters.clientAddress } : {}),
-        ...(advancedFilters.lastAccessed ? { lastAccessed: advancedFilters.lastAccessed } : {}),
+        ...resolveLastAccessed(advancedFilters.lastAccessed),
         ...(folderId ? { folderId } : {}),
       };
 

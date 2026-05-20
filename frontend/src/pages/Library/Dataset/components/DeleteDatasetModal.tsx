@@ -52,6 +52,7 @@ export default function DeleteDatasetModal({
 
   return (
     <Modal
+      variant="confirmation"
       isOpen={isOpen}
       isPending={isLoading}
       onClose={onClose}

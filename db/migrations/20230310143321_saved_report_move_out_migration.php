@@ -54,6 +54,13 @@ class SavedReportMoveOutMigration extends AbstractMigration
 
             // get all existing savedreport records in media table and convert them
             foreach ($this->fetchAll('SELECT mediaId, name, type, createdDt, modifiedDt, storedAs, md5, fileSize FROM `media` WHERE media.type = \'savedreport\'') as $savedreportMedia) {
+
+                // Fix fileSize being empty
+                // shouldn't happen, but seen in the wild.
+                if ($savedreportMedia['fileSize'] == '') {
+                    $savedreportMedia['fileSize'] = 0;
+                }
+
                 $this->execute('UPDATE `saved_report` SET fileName = \'' . $savedreportMedia['storedAs'] . '\',
                                     size = ' . $savedreportMedia['fileSize'] . ',
                                     md5 = \'' . $savedreportMedia['md5'] . '\'

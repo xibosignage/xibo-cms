@@ -51,12 +51,14 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import { fetchContextButtons } from '@/services/folderApi';
 import type { Playlist } from '@/types/playlist';
+import { hasFeature } from '@/utils/permissions';
 
 export default function Playlist() {
   const { t } = useTranslation();
   const { user } = useUserContext();
   const queryClient = useQueryClient();
   const canViewFolders = usePermissions()?.canViewFolders;
+  const canSchedule = hasFeature(user, 'schedule.add');
   const homeFolderId = user?.homeFolderId ?? 1;
   const location = useLocation();
   const layoutId = location.state?.layoutId;
@@ -142,10 +144,10 @@ export default function Playlist() {
     enabled: isHydrated,
   });
 
+  const effectiveFolderId = selectedFolderId ?? homeFolderId;
   const { data: folderPerms } = useQuery({
-    queryKey: ['folderPermissions', selectedFolderId],
-    queryFn: () => fetchContextButtons(selectedFolderId as number),
-    enabled: selectedFolderId !== null,
+    queryKey: ['folderPermissions', effectiveFolderId],
+    queryFn: () => fetchContextButtons(effectiveFolderId),
     staleTime: 1000 * 60 * 5,
   });
 
@@ -239,6 +241,10 @@ export default function Playlist() {
     }
   };
 
+  const handleOpenTimeline = (playlistId: number) => {
+    window.open(`/playlist/designer/${playlistId}`, '_blank');
+  };
+
   const handleResetFilters = () => {
     setFilterInputs(INITIAL_FILTER_STATE);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
@@ -247,6 +253,11 @@ export default function Playlist() {
   const openCopyModal = (playlistId: number) => {
     setSelectedPlaylistId(playlistId);
     openModal('copy');
+  };
+
+  const openScheduleModal = (playlist: Playlist) => {
+    setSelectedPlaylistId(playlist.playlistId);
+    openModal('schedule');
   };
 
   const columns = getPlaylistColumns({
@@ -262,6 +273,8 @@ export default function Playlist() {
       openModal('share');
     },
     copyPlaylist: openCopyModal,
+    openScheduleModal: canSchedule ? openScheduleModal : undefined,
+    openTimeline: handleOpenTimeline,
   });
 
   const getAllSelectedItems = (): Playlist[] => {
@@ -426,6 +439,7 @@ export default function Playlist() {
         selection={{
           selectedPlaylist,
           selectedPlaylistId,
+          defaultFolderId: effectiveFolderId,
           itemsToDelete,
           itemsToMove,
           existingNames,

@@ -40,6 +40,11 @@ vi.mock('react-i18next', () => ({
   Trans: ({ children }: { children: React.ReactNode }) => children,
 }));
 
+vi.mock('i18next', () => {
+  const t = (key: string) => key;
+  return { default: { t, language: 'en', isInitialized: true }, t };
+});
+
 // Services
 vi.mock('@/services/userApi', () => ({
   fetchUserPreference: vi.fn().mockResolvedValue(null),
@@ -62,8 +67,6 @@ vi.mock('../hooks/useTemplateFilterOptions', () => ({
           { label: 'Published', value: '1' },
           { label: 'Draft', value: '2' },
         ],
-        shouldTranslateOptions: false,
-        showAllOption: false,
       },
     ],
     isLoading: false,
@@ -241,7 +244,7 @@ describe('Templates page - search and pagination', () => {
 
     // Now reset - the filter values should return to the initial empty state.
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Reset' }));
     });
 
     await waitFor(() => {

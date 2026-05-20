@@ -44,6 +44,7 @@ interface DatasetModalsProps {
   selection: {
     selectedDataset: Dataset | null;
     selectedDatasetId: number | null;
+    defaultFolderId?: number;
     itemsToDelete: Dataset[];
     itemsToMove: Dataset[];
     existingNames: string[];
@@ -72,6 +73,7 @@ export function DatasetModals({ actions, selection, handlers, folderActions }: D
       {isModalOpen('edit') && (
         <AddAndEditDatasetModal
           type={selection.selectedDatasetId ? 'edit' : 'add'}
+          defaultFolderId={selection.defaultFolderId}
           onClose={() => {
             actions.closeModal();
           }}

@@ -20,7 +20,16 @@
  */
 
 import type { Table, VisibilityState } from '@tanstack/react-table';
-import { ChevronDown, Printer, FileDown, RefreshCw, List, LayoutGrid, Map } from 'lucide-react';
+import {
+  ChevronDown,
+  Printer,
+  FileDown,
+  RefreshCw,
+  List,
+  LayoutGrid,
+  Map,
+  CalendarRange,
+} from 'lucide-react';
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -32,7 +41,7 @@ import type { ViewMode } from './types';
 import { useClickOutside } from '@/hooks/useClickOutside';
 
 interface DataTableOptionsProps<TData> {
-  table: Table<TData>;
+  table?: Table<TData>;
   onPrint?: () => void;
   onRefresh?: () => void;
   onCSVExport?: () => void;
@@ -62,13 +71,14 @@ export function DataTableOptions<TData>({
 
   useClickOutside(dropdownRef, () => setIsOpen(false));
 
-  const currentVisibility = columnVisibility ?? table.getState().columnVisibility;
+  const currentVisibility = columnVisibility ?? table?.getState().columnVisibility ?? {};
 
-  const columns = table.getAllLeafColumns().filter((column) => column.getCanHide());
+  const columns = (table?.getAllLeafColumns() ?? []).filter((column) => column.getCanHide());
 
   const isTableMode = viewMode === 'table';
   const isGridMode = viewMode === 'grid';
   const isMapMode = viewMode === 'map';
+  const isCalendarMode = viewMode === 'calendar';
 
   return (
     <div className="flex gap-3">
@@ -116,7 +126,7 @@ export function DataTableOptions<TData>({
                         className="px-3 py-2.5 gap-4"
                         classNameLabel="m-0 font-semibold text-gray-800"
                         onChange={(e) => {
-                          table.toggleAllColumnsVisible(!!e.target.checked);
+                          table?.toggleAllColumnsVisible(!!e.target.checked);
                         }}
                       />
                       {columns.map((column) => {
@@ -153,8 +163,7 @@ export function DataTableOptions<TData>({
         </div>
       )}
 
-      {/* Don't Print and CSV on grid or map mode  */}
-      {!isGridMode && !isMapMode && (
+      {isTableMode && (
         <>
           <Button type="button" onClick={onPrint} variant="tertiary" leftIcon={Printer}>
             {t('Print')}
@@ -199,6 +208,16 @@ export function DataTableOptions<TData>({
               title={t('Map View')}
             >
               <Map className="size-4" />
+            </Button>
+          )}
+          {(!availableViewModes || availableViewModes.includes('calendar')) && (
+            <Button
+              variant="tertiary"
+              onClick={() => onViewModeChange('calendar')}
+              className={getToggleButtonStyle(isCalendarMode)}
+              title={t('Calendar View')}
+            >
+              <CalendarRange className="size-4" />
             </Button>
           )}
         </div>

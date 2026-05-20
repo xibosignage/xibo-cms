@@ -475,7 +475,7 @@ class Notification extends Base
         $options = [
             'userId' => $this->getUser()->userId,
             'controller' => $this,
-            'accept_file_types' => '/\.jpg|.jpeg|.png|.bmp|.gif|.zip|.pdf/i'
+            'accept_file_types' => '/\.(jpg|jpeg|png|bmp|gif|zip|pdf)$/i'
         ];
 
         // Output handled by UploadHandler
@@ -563,7 +563,7 @@ class Notification extends Base
 
         $notification = $this->notificationFactory->createEmpty();
         $notification->subject = $sanitizedParams->getString('subject');
-        $notification->body = $request->getParam('body', '');
+        $notification->body = $sanitizedParams->getHtml('body');
         $notification->createDt = Carbon::now()->format('U');
         $notification->releaseDt = $sanitizedParams->getDate('releaseDt');
 
@@ -816,7 +816,7 @@ class Notification extends Base
      */
     public function exportAttachment(Request $request, Response $response, $id)
     {
-        $notification = $this->notificationFactory->getById($id);
+        $notification = $this->userNotificationFactory->getByNotificationId($id);
 
         $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'attachment/' . $notification->filename;
 

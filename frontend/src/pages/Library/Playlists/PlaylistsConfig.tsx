@@ -48,42 +48,87 @@ import type { Tag } from '@/types/tag';
 import { formatDuration } from '@/utils/formatters';
 
 export interface PlaylistFilterInput {
-  userId: string;
-  ownerUserGroupId: string;
-  lastModified: string;
+  playlistId?: number | null;
+  name?: string;
+  tags?: Tag[];
+  userId?: string;
+  ownerUserGroupId?: string;
+  layoutId?: number | null;
+  lastModified?: string;
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: boolean;
+  logicalOperator?: 'OR' | 'AND';
+  exactTags?: boolean;
 }
 
-export type ModalType = BaseModalType | null;
+export type ModalType = BaseModalType | 'schedule' | null;
 
 export const INITIAL_FILTER_STATE: PlaylistFilterInput = {
+  playlistId: null,
+  name: '',
+  tags: [],
   userId: '',
   ownerUserGroupId: '',
+  layoutId: null,
   lastModified: '',
+  logicalOperatorName: 'OR',
+  useRegexForName: false,
+  logicalOperator: 'OR',
+  exactTags: false,
 };
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<PlaylistFilterInput>[] => [
   {
+    label: t('ID'),
+    placeholder: ' ',
+    name: 'playlistId',
+    type: 'number',
+  },
+  {
+    label: t('Name'),
+    name: 'name',
+    type: 'text',
+    className: '',
+    placeholder: ' ',
+    showAndOr: true,
+    andOrKey: 'logicalOperatorName',
+    showRegex: true,
+    regexKey: 'useRegexForName',
+  },
+  {
+    label: t('Tags'),
+    name: 'tags',
+    type: 'tags',
+    placeholder: ' ',
+    className: '',
+    showAndOr: true,
+    andOrKey: 'logicalOperator',
+    showExactTags: true,
+    exactTagsKey: 'exactTags',
+  },
+  {
     label: t('Owner'),
     name: 'userId',
     className: '',
-    shouldTranslateOptions: false,
-    showAllOption: false,
     options: [{ label: t('Select Owner'), value: null }],
   },
   {
     label: t('User Group'),
     name: 'ownerUserGroupId',
-    shouldTranslateOptions: false,
-    showAllOption: false,
     options: [{ label: t('Select Group'), value: null }],
+  },
+  {
+    label: t('Layout ID'),
+    name: 'layoutId',
+    type: 'number',
+    className: '',
+    placeholder: ' ',
   },
   {
     label: t('Last Modified'),
     name: 'lastModified',
     className: '',
-    shouldTranslateOptions: true,
-    showAllOption: false,
-    allowCustomRange: true,
+    type: 'date-range',
     options: getCommonFormOptions(t).lastModifiedFilter,
   },
 ];
@@ -95,6 +140,8 @@ export interface PlaylistActionsProps {
   openShareModal?: (id: number) => void;
   openMoveModal?: (row: Playlist | Playlist[]) => void;
   copyPlaylist?: (row: number) => void;
+  openScheduleModal?: (row: Playlist) => void;
+  openTimeline?: (id: number) => void;
 }
 
 export const getPlaylistItemActions = ({
@@ -104,6 +151,8 @@ export const getPlaylistItemActions = ({
   openShareModal,
   openMoveModal,
   copyPlaylist,
+  openScheduleModal,
+  openTimeline,
 }: PlaylistActionsProps): ((playlist: Playlist) => ActionItem[]) => {
   return (playlist: Playlist) => [
     // Quick Actions
@@ -117,7 +166,7 @@ export const getPlaylistItemActions = ({
     {
       label: t('Timeline'),
       icon: BarChartHorizontalBig,
-      onClick: () => console.log('Open Playlist Editor', playlist.playlistId),
+      onClick: () => openTimeline && openTimeline(playlist.playlistId),
       isQuickAction: true,
     },
 
@@ -142,15 +191,19 @@ export const getPlaylistItemActions = ({
       icon: UserPlus2,
       onClick: () => openShareModal && openShareModal(playlist.playlistId),
     },
-    {
-      label: t('Schedule'),
-      icon: CalendarClock,
-      onClick: () => console.log('Schedule', playlist.playlistId),
-    },
+    ...(openScheduleModal
+      ? [
+          {
+            label: t('Schedule'),
+            icon: CalendarClock,
+            onClick: () => openScheduleModal(playlist),
+          },
+        ]
+      : []),
     {
       label: t('Timeline'),
       icon: BarChartHorizontalBig,
-      onClick: () => console.log('Open Playlist Editor', playlist.playlistId),
+      onClick: () => openTimeline && openTimeline(playlist.playlistId),
     },
     { isSeparator: true },
     {
