@@ -479,12 +479,6 @@ $app->group('', function (RouteCollectorProxy $group) {
 $app->get('/fonts/fontcss', ['\Xibo\Controller\Font','fontCss'])->setName('library.font.css');
 
 $app->group('', function (RouteCollectorProxy $group) {
-    $group->get('/fonts/view', ['\Xibo\Controller\Font', 'displayPage'])->setName('font.view');
-    $group->get('/fonts/{id}/form/delete', ['\Xibo\Controller\Font', 'deleteForm'])->setName('font.form.delete');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['font.view']));
-
-
-$app->group('', function (RouteCollectorProxy $group) {
     $group->get('/schedule/form/sync', ['\Xibo\Controller\Schedule', 'syncForm'])->setName('schedule.add.sync.form');
     $group->get('/schedule/form/{id}/sync', ['\Xibo\Controller\Schedule', 'syncEditForm'])->setName('schedule.edit.sync.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['schedule.sync']));
