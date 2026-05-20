@@ -25,8 +25,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Modal from '@/components/ui/modals/Modal';
-import http from '@/lib/api';
-import { fetchFontDetails } from '@/services/fontApi';
+import { fetchFontBlob, fetchFontDetails } from '@/services/fontApi';
 import type { Font } from '@/types/font';
 import { formatFileSize } from '@/utils/formatters';
 
@@ -61,10 +60,9 @@ export default function FontDetailsModal({
     const familyName = `xibo-preview-${fontId}`;
 
     setIsFontLoading(true);
-    http
-      .get(`/fonts/download/${fontId}`, { responseType: 'blob' })
-      .then((response) => {
-        blobUrl = URL.createObjectURL(new Blob([response.data]));
+    fetchFontBlob(fontId)
+      .then((blob) => {
+        blobUrl = URL.createObjectURL(blob);
         const fontFace = new FontFace(familyName, `url(${blobUrl})`);
         return fontFace.load();
       })

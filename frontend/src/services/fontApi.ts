@@ -89,6 +89,13 @@ export async function uploadFont(
   return uploaded;
 }
 
+export async function fetchFontBlob(id: number): Promise<Blob> {
+  const response = await http.get(`/fonts/download/${id}`, {
+    responseType: 'blob',
+  });
+  return new Blob([response.data]);
+}
+
 export async function fetchFontDetails(id: number): Promise<FontDetails> {
   const response = await http.get(`/fonts/details/${id}`);
   return response.data.details;

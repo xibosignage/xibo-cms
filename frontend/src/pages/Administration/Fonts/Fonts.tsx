@@ -155,7 +155,9 @@ export default function Fonts() {
 
   const handleDownload = (font: Font) => {
     notify.info(t('Downloading "{{name}}"...', { name: font.fileName }));
-    downloadFont(font.id, font.fileName);
+    downloadFont(font.id, font.fileName).catch(() => {
+      notify.error(t('Failed to download "{{name}}"', { name: font.fileName }));
+    });
   };
 
   const handleResetFilters = () => {
