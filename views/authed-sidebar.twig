@@ -74,7 +74,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("command.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("command.view") }}">{% trans "Commands" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/displays/commands">{% trans "Commands" %}</a></li>
             {% endif %}
         {% endif %}
 
