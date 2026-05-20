@@ -167,8 +167,6 @@ class Font extends Base
 
         foreach ($fonts as $font) {
             $font->setUnmatchedProperty('fileSizeFormatted', ByteFormatter::format($font->size));
-
-            $font->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($font));
         }
 
         $recordsTotal = $this->fontFactory->countLast();
