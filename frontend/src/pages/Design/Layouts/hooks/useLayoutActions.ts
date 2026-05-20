@@ -94,13 +94,6 @@ export function useLayoutActions({
       setRowSelection({});
       handleRefresh();
       closeModal();
-    } catch (error) {
-      console.error(error);
-      const message =
-        isAxiosError(error) && error.response?.data?.message
-          ? error.response.data.message
-          : t('Some selected items could not be deleted.');
-      setDeleteError(message);
     } finally {
       setIsDeleting(false);
     }
@@ -249,8 +242,8 @@ export function useLayoutActions({
       closeModal();
     } catch (error) {
       console.error(error);
-      const apiErr = error as { response?: { data?: { message?: string } } };
-      const message = apiErr.response?.data?.message ?? t('Failed to publish layout');
+      const message =
+        (isAxiosError(error) && error.response?.data?.message) || t('Failed to publish layout');
       notify.error(message);
     } finally {
       setIsPublishing(false);
@@ -304,9 +297,6 @@ export function useLayoutActions({
       a.click();
 
       window.URL.revokeObjectURL(url);
-
-      const text = await blob.text();
-      console.log('TEXT RESPONSE:', text);
 
       notify.success(t('Layout exported successfully'));
       closeModal();

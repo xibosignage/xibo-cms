@@ -151,7 +151,7 @@ describe('FileUploader component', () => {
   test('Upload button stays disabled when folder is locked even if a URL is typed', () => {
     renderUploader([], { disabled: true });
 
-    const urlInput = screen.getByPlaceholderText('https://www.exampleurl.com/funnycat4364');
+    const urlInput = screen.getByPlaceholderText('https://www.example.com/example');
     fireEvent.change(urlInput, { target: { value: 'https://example.com/file.mp4' } });
 
     expect(screen.getByRole('button', { name: 'Upload' })).toBeDisabled();
@@ -314,7 +314,7 @@ describe('FileUploader component', () => {
   test('clicking Upload sends the URL to onUrlUpload and clears the input', () => {
     const spies = renderUploader();
 
-    const urlInput = screen.getByPlaceholderText('https://www.exampleurl.com/funnycat4364');
+    const urlInput = screen.getByPlaceholderText('https://www.example.com/example');
     fireEvent.change(urlInput, { target: { value: 'https://example.com/file.mp4' } });
     fireEvent.click(screen.getByRole('button', { name: 'Upload' }));
 

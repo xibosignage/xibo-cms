@@ -214,7 +214,7 @@ class Layout extends Base
             throw new AccessDeniedException();
         }
 
-        // Get the parent layout if it's editable
+        // Get the draft layout if it's editable
         if ($layout->isEditable()) {
             // Get the Layout using the Draft ID
             $layout = $this->layoutFactory->getByParentId($id);
@@ -1568,21 +1568,41 @@ class Layout extends Base
             // Preview
             if ($this->getUser()->featureEnabled('layout.view')) {
                 $baseUrl = (new HttpsDetect())->getBaseUrl($request);
-                $jwt = $this->jwtService->generateJwt(
-                    'Preview',
-                    'layout',
-                    $layout->layoutId,
-                    '/preview/layout/preview/' . $layout->layoutId,
-                    3600,
-                )->toString();
+
+                // Published layout (this one)
                 $layout->setUnmatchedProperty(
                     'previewUrl',
-                    $baseUrl . '/preview/layout/preview/' . $layout->layoutId . '?jwt=' . $jwt,
+                    $baseUrl . '/preview/layout/preview/' . $layout->layoutId . '?jwt='
+                    . $this->jwtService->generateJwt(
+                        'Preview',
+                        'layout',
+                        $layout->layoutId,
+                        '/preview/layout/preview/' . $layout->layoutId,
+                        3600,
+                    )->toString(),
                 );
-                $layout->setUnmatchedProperty(
-                    'previewDraftUrl',
-                    $baseUrl . '/preview/layout/preview/' . $layout->layoutId . '?jwt=' . $jwt,
-                );
+
+                // If we are a draft, output the draft URL
+                if ($layout->isEditable()) {
+                    // Draft
+                    try {
+                        $draftLayout = $this->layoutFactory->getByParentId($layout->layoutId);
+
+                        $layout->setUnmatchedProperty(
+                            'previewDraftUrl',
+                            $baseUrl . '/preview/layout/preview/' . $draftLayout->layoutId . '?jwt='
+                            . $this->jwtService->generateJwt(
+                                'Preview',
+                                'layout',
+                                $draftLayout->layoutId,
+                                '/preview/layout/preview/' . $draftLayout->layoutId,
+                                3600,
+                            )->toString(),
+                        );
+                    } catch (NotFoundException) {
+                        // There should be a draft layout, but there isn't
+                    }
+                }
             }
         }
 
@@ -2043,7 +2063,15 @@ class Layout extends Base
     public function status(Request $request, Response $response, $id)
     {
         // Get the layout
-        $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($id));
+        $layout = $this->layoutFactory->getById($id);
+
+        // Ensure this layout is viewable for this user.
+        if (!$this->getUser()->checkViewable($layout)) {
+            throw new AccessDeniedException();
+        }
+
+        // Take out a lock
+        $layout = $this->layoutFactory->concurrentRequestLock($layout);
         try {
             $layout = $this->layoutFactory->decorateLockedProperties($layout);
             $layout->xlfToDisk();

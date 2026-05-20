@@ -27,6 +27,7 @@ import type { DisplayProfileFilterInput } from '../DisplayProfileConfig';
 
 import type { FetchDisplayProfileRequest } from '@/services/displayProfileApi';
 import { fetchDisplayProfile } from '@/services/displayProfileApi';
+import { isValidRegex } from '@/utils/regex';
 
 export const displayProfileQueryKeys = {
   all: ['displayProfile'] as const,
@@ -66,6 +67,8 @@ export const useDisplayProfileData = ({
       const sortBy = sorting?.[0]?.id;
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
 
+      const { useRegexForName, logicalOperatorName } = advancedFilters;
+
       const request: FetchDisplayProfileRequest = {
         start: startOffset,
         length: pagination.pageSize,
@@ -73,9 +76,18 @@ export const useDisplayProfileData = ({
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
+        ...(advancedFilters.displayProfile
+          ? { displayProfile: advancedFilters.displayProfile }
+          : {}),
         ...(advancedFilters.type
           ? { type: advancedFilters.type as FetchDisplayProfileRequest['type'] }
           : {}),
+        ...(useRegexForName &&
+        advancedFilters.displayProfile &&
+        isValidRegex(advancedFilters.displayProfile)
+          ? { useRegexForName: 1 }
+          : {}),
+        ...(logicalOperatorName ? { logicalOperatorName } : {}),
       };
 
       return fetchDisplayProfile(request);

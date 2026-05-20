@@ -24,9 +24,9 @@ import { useEffect, useState } from 'react';
 
 import { getBaseFilterKeys } from '../EventsConfig';
 
-import type { FilterOption } from '@/components/ui/SelectFilter';
 import { useDebounce } from '@/hooks/useDebounce';
-import { fetchCampaigns } from '@/services/campaignApi';
+import { fetchCampaignById, fetchCampaigns } from '@/services/campaignApi';
+import type { FilterOption } from '@/types/filter';
 
 const PAGE_SIZE = 10;
 
@@ -51,6 +51,7 @@ export function useEventFilterOptions(t: TFunction) {
     setIsLoadingLayouts(true);
     setLayoutOptions([]);
     setLayoutPage(0);
+    setHasMoreLayouts(false);
     fetchCampaigns({
       start: 0,
       length: PAGE_SIZE,
@@ -69,6 +70,7 @@ export function useEventFilterOptions(t: TFunction) {
     setIsLoadingCampaigns(true);
     setCampaignOptions([]);
     setCampaignPage(0);
+    setHasMoreCampaigns(false);
     fetchCampaigns({
       start: 0,
       length: PAGE_SIZE,
@@ -141,6 +143,7 @@ export function useEventFilterOptions(t: TFunction) {
         isLoadingMore: isLoadingMoreLayouts,
         isLoading: isLoadingLayouts,
         onSearch: (term: string) => setLayoutSearch(term),
+        resolveLabel: (value: string) => fetchCampaignById(Number(value)).then((c) => c.campaign),
       };
     }
 
@@ -153,6 +156,7 @@ export function useEventFilterOptions(t: TFunction) {
         isLoadingMore: isLoadingMoreCampaigns,
         isLoading: isLoadingCampaigns,
         onSearch: (term: string) => setCampaignSearch(term),
+        resolveLabel: (value: string) => fetchCampaignById(Number(value)).then((c) => c.campaign),
       };
     }
 

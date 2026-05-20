@@ -62,6 +62,17 @@
                     });
 
                     window.xlr = xiboLayoutRenderer;
+
+                  // Listen to post messages from the host document.
+                  // BroadcastChannel cannot cross distinct opaque origins in sandboxed iframes,
+                  // so we forward xiboDC messages to child widget iframes via postMessage instead.
+                  window.onmessage = function(e) {
+                    if (e.data.method === 'xiboDC') {
+                      document.querySelectorAll('iframe').forEach(function(iframe) {
+                        iframe.contentWindow.postMessage(e.data.options.data, '*');
+                      });
+                    }
+                  };
                 });
             }(window.jQuery));
         </script>

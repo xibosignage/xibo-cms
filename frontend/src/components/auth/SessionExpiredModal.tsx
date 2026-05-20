@@ -118,6 +118,7 @@ export function SessionExpiredModal() {
 
   return (
     <Modal
+      variant="confirmation"
       isOpen={isOpen}
       onClose={() => {}}
       closeOnOverlay={false}

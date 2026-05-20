@@ -524,6 +524,7 @@ class Campaign implements \JsonSerializable
         $options = array_merge([
             'validate' => true,
             'notify' => true,
+            'audit' => false,
             'collectNow' => true,
             'saveTags' => true,
             'isTagEdit' => false
@@ -543,8 +544,19 @@ class Campaign implements \JsonSerializable
         if ($this->campaignId == null || $this->campaignId == 0) {
             $this->add();
             $this->loaded = true;
+
+            if ($options['audit']) {
+                $this->audit($this->campaignId, 'Added Campaign', [
+                    'campaignId' => $this->campaignId,
+                    'name' => $this->campaign,
+                ]);
+            }
         } else {
             $this->update();
+
+            if ($options['audit']) {
+                $this->audit($this->campaignId, 'Edited Campaign');
+            }
         }
 
         if ($options['saveTags']) {
@@ -576,7 +588,7 @@ class Campaign implements \JsonSerializable
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
-    public function delete()
+    public function delete(): void
     {
         $this->load();
 
@@ -591,7 +603,6 @@ class Campaign implements \JsonSerializable
 
         // Delete all permissions
         foreach ($this->permissions as $permission) {
-            /* @var Permission $permission */
             $permission->delete();
         }
 
@@ -604,7 +615,6 @@ class Campaign implements \JsonSerializable
 
         // Delete all events
         foreach ($this->events as $event) {
-            /* @var Schedule $event */
             $event->setDisplayNotifyService($this->displayNotifyService);
             $event->delete();
         }
@@ -616,7 +626,15 @@ class Campaign implements \JsonSerializable
         }
 
         // Delete the Actual Campaign
-        $this->getStore()->update('DELETE FROM `campaign` WHERE CampaignID = :campaignId', ['campaignId' => $this->campaignId]);
+        $this->getStore()->update('DELETE FROM `campaign` WHERE CampaignID = :campaignId', [
+            'campaignId' => $this->campaignId,
+        ]);
+
+        // Audit
+        $this->audit($this->campaignId, 'Deleted Campaign', [
+            'campaignId' => $this->campaignId,
+            'name' => $this->campaign,
+        ]);
     }
 
     /**
@@ -852,7 +870,7 @@ class Campaign implements \JsonSerializable
     /**
      * Manage the assignments
      */
-    private function manageAssignments()
+    private function manageAssignments(): void
     {
         if ($this->layoutAssignmentsChanged) {
             $this->getLog()->debug('Managing Assignments on ' . $this);

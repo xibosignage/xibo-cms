@@ -75,6 +75,7 @@ interface DataTableProps<TData, TValue> {
   columnVisibility?: VisibilityState;
   onColumnVisibilityChange?: OnChangeFn<VisibilityState>;
   noResultsCustom?: React.ReactNode;
+  tableLabel?: string;
 }
 
 const getCommonPinningStyles = <TData, TValue>(column: Column<TData, TValue>): CSSProperties => {
@@ -125,6 +126,7 @@ export function DataTable<TData, TValue>({
   columnVisibility,
   onColumnVisibilityChange,
   noResultsCustom,
+  tableLabel,
 }: DataTableProps<TData, TValue>) {
   const { t } = useTranslation();
 
@@ -245,9 +247,9 @@ export function DataTable<TData, TValue>({
       {!hideToolbar && (
         <div className="flex justify-between data-table-header flex-none mt-5">
           <div className="flex items-center gap-3">
-            {viewMode && (
+            {(viewMode || tableLabel) && (
               <div className="text-gray-500 font-sans text-sm font-semibold leading-normal tracking-tight uppercase">
-                {t('Table View')}
+                {tableLabel ? tableLabel : t('Table View')}
               </div>
             )}
             {selectedCount > 0 && bulkActions.length > 0 && (

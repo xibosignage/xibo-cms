@@ -72,13 +72,6 @@ export function useSessionActions({
       setRowSelection({});
       handleRefresh();
       closeModal();
-    } catch (error) {
-      console.error(error);
-      const message =
-        isAxiosError(error) && error.response?.data?.message
-          ? error.response.data.message
-          : t('Session could not be logged out.');
-      setLogoutError(message);
     } finally {
       setIsLoggingOut(false);
     }

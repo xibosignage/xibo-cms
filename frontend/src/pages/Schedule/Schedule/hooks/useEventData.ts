@@ -27,6 +27,7 @@ import type { EventFilterInput } from '../EventsConfig';
 
 import type { FetchEventRequest } from '@/services/eventApi';
 import { fetchEvent } from '@/services/eventApi';
+import { isValidRegex } from '@/utils/regex';
 
 export const eventQueryKeys = {
   all: ['event'] as const,
@@ -65,6 +66,8 @@ export const useEventData = ({
       const sortBy = sorting?.[0]?.id;
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
 
+      const { useRegexForName, logicalOperatorName } = advancedFilters;
+
       const request: FetchEventRequest = {
         start: startOffset,
         length: pagination.pageSize,
@@ -82,6 +85,10 @@ export const useEventData = ({
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
+        ...(useRegexForName && advancedFilters.name && isValidRegex(advancedFilters.name)
+          ? { useRegexForName: 1 }
+          : {}),
+        ...(logicalOperatorName ? { logicalOperatorName } : {}),
       };
 
       return fetchEvent(request);

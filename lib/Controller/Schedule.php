@@ -226,7 +226,7 @@ class Schedule extends Base
             // If this event is active, collect extra information and add to the events list
             if (count($scheduleEvents) > 0) {
                 // Add the link to the schedule
-                if (!$this->isApi($request)) {
+                if (!$this->isApi($request) && !$this->isJson($request)) {
                     $route = 'schedule.edit.form';
                     $schedule->setUnmatchedProperty(
                         'link',
@@ -262,7 +262,7 @@ class Schedule extends Base
                     );
 
                     // Add the link to the layout
-                    if (!$this->isApi($request)) {
+                    if (!$this->isApi($request) && !$this->isJson($request)) {
                         // do not link to Layout Designer for Full screen Media/Playlist Layout.
                         $link = (in_array($event['eventTypeId'], [7, 8]))
                             ? ''
@@ -1278,9 +1278,9 @@ class Schedule extends Base
         // Get the campaignId for media/playlist events
         if ($schedule->isFullScreenSchedule()) {
             $type = $schedule->eventTypeId === \Xibo\Entity\Schedule::$MEDIA_EVENT ? 'media' : 'playlist';
-            $id = ($type === 'media') ? $sanitizedParams->getInt('mediaId') : $sanitizedParams->getInt('playlistId');
+            $fsId = ($type === 'media') ? $sanitizedParams->getInt('mediaId') : $sanitizedParams->getInt('playlistId');
 
-            if (!$id) {
+            if (!$fsId) {
                 throw new InvalidArgumentException(
                     sprintf('%sId is required when scheduling %s events.', ucfirst($type), $type)
                 );
@@ -1289,7 +1289,7 @@ class Schedule extends Base
             // Create a full screen layout for this event
             $fsLayout = $this->layoutFactory->createFullScreenLayout(
                 $type,
-                $id,
+                $fsId,
                 $sanitizedParams->getInt('resolutionId'),
                 $sanitizedParams->getString('backgroundColor'),
                 $sanitizedParams->getInt('layoutDuration'),
@@ -1792,7 +1792,7 @@ class Schedule extends Base
         }
 
         $events = $this->scheduleFactory->query(
-            $this->gridRenderSort($params, $this->isJson($request)),
+            $this->gridRenderSort($params, $this->isJson($request), 'eventId'),
             $this->getScheduleFilters($params, $resolvedDisplayGroupIds)
         );
 

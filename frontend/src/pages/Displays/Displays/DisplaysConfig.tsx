@@ -63,6 +63,9 @@ import type { Tag } from '@/types/tag';
 import type { UIStatus } from '@/types/uiStatus';
 
 export interface DisplayFilterInput {
+  displayId?: number | null;
+  name?: string;
+  tags?: Tag[];
   mediaInventoryStatus: string | null;
   loggedIn: string | null;
   authorised: string | null;
@@ -108,9 +111,13 @@ export type ModalType =
   | 'bulkDefaultLayout'
   | 'bulkSendCommand'
   | 'bulkMoveCms'
+  | 'schedule'
   | null;
 
 export const INITIAL_FILTER_STATE: DisplayFilterInput = {
+  displayId: null,
+  name: '',
+  tags: [],
   mediaInventoryStatus: null,
   loggedIn: null,
   authorised: null,
@@ -185,9 +192,9 @@ const getInventoryStatusType = (status: number): UIStatus => {
     case 1:
       return 'success';
     case 2:
-      return 'warning';
-    case 3:
       return 'danger';
+    case 3:
+      return 'warning';
     default:
       return 'neutral';
   }
@@ -213,6 +220,7 @@ export const getClientTypeLabel = (t: TFunction, clientType: string | null): str
 };
 
 export const getClientTypeOptions = (t: TFunction): { label: string; value: string }[] => [
+  { label: t('All'), value: '' },
   { label: t('Android'), value: 'android' },
   { label: t('Windows'), value: 'windows' },
   { label: t('Linux'), value: 'linux' },
@@ -223,12 +231,31 @@ export const getClientTypeOptions = (t: TFunction): { label: string; value: stri
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayFilterInput>[] => [
   {
+    label: t('ID'),
+    placeholder: ' ',
+    name: 'displayId',
+    type: 'number',
+  },
+  {
+    label: t('Name'),
+    name: 'name',
+    type: 'text',
+    className: '',
+    placeholder: ' ',
+  },
+  {
+    label: t('Tags'),
+    name: 'tags',
+    type: 'tags',
+    placeholder: ' ',
+    className: '',
+  },
+  {
     label: t('Status'),
     name: 'mediaInventoryStatus',
     className: '',
-    shouldTranslateOptions: false,
-    showAllOption: true,
     options: [
+      { label: t('All'), value: '' },
       { label: t('Up to date'), value: '1' },
       { label: t('Downloading'), value: '2' },
       { label: t('Out of date'), value: '3' },
@@ -238,9 +265,8 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayFilterI
     label: t('Logged In'),
     name: 'loggedIn',
     className: '',
-    shouldTranslateOptions: false,
-    showAllOption: true,
     options: [
+      { label: t('All'), value: '' },
       { label: t('Yes'), value: '1' },
       { label: t('No'), value: '0' },
     ],
@@ -249,9 +275,8 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayFilterI
     label: t('Authorised'),
     name: 'authorised',
     className: '',
-    shouldTranslateOptions: false,
-    showAllOption: true,
     options: [
+      { label: t('All'), value: '' },
       { label: t('Yes'), value: '1' },
       { label: t('No'), value: '0' },
     ],
@@ -260,9 +285,8 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayFilterI
     label: t('XMR Registered'),
     name: 'xmrRegistered',
     className: '',
-    shouldTranslateOptions: false,
-    showAllOption: true,
     options: [
+      { label: t('All'), value: '' },
       { label: t('Yes'), value: '1' },
       { label: t('No'), value: '0' },
     ],
@@ -271,33 +295,28 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayFilterI
     label: t('Player Type'),
     name: 'clientType',
     className: '',
-    shouldTranslateOptions: false,
-    showAllOption: true,
     options: getClientTypeOptions(t),
   },
   {
     label: t('Display Group'),
     name: 'displayGroupId',
     className: '',
-    shouldTranslateOptions: false,
-    showAllOption: true,
+    placeholder: t('All'),
     options: [],
   },
   {
     label: t('Display Profile'),
     name: 'displayProfileId',
     className: '',
-    shouldTranslateOptions: false,
-    showAllOption: true,
+    placeholder: t('All'),
     options: [],
   },
   {
     label: t('Orientation'),
     name: 'orientation',
     className: '',
-    shouldTranslateOptions: false,
-    showAllOption: true,
     options: [
+      { label: t('All'), value: '' },
       { label: t('Landscape'), value: 'landscape' },
       { label: t('Portrait'), value: 'portrait' },
     ],
@@ -306,9 +325,8 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayFilterI
     label: t('Commercial Licence'),
     name: 'commercialLicence',
     className: '',
-    shouldTranslateOptions: false,
-    showAllOption: true,
     options: [
+      { label: t('All'), value: '' },
       { label: t('Licensed fully'), value: '1' },
       { label: t('Trial'), value: '2' },
       { label: t('Not licenced'), value: '0' },
@@ -319,9 +337,8 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayFilterI
     label: t('Player Supported'),
     name: 'isPlayerSupported',
     className: '',
-    shouldTranslateOptions: false,
-    showAllOption: true,
     options: [
+      { label: t('All'), value: '' },
       { label: t('Yes'), value: '1' },
       { label: t('No'), value: '0' },
     ],
@@ -357,9 +374,8 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayFilterI
   {
     label: t('Last Accessed'),
     name: 'lastAccessed',
-    type: 'text',
+    type: 'date',
     className: '',
-    placeholder: t('YYYY-MM-DD'),
   },
 ];
 
@@ -385,6 +401,7 @@ export interface DisplayActionsProps {
   onAssignFiles: (display: Display) => void;
   onSendCommand: (display: Display) => void;
   onJumpToScheduledLayouts?: (displayGroupId: number) => void;
+  onSchedule?: (display: Display) => void;
 }
 
 export const getDisplayItemActions = ({
@@ -409,6 +426,7 @@ export const getDisplayItemActions = ({
   onAssignFiles,
   onSendCommand,
   onJumpToScheduledLayouts,
+  onSchedule,
 }: DisplayActionsProps): ((display: Display) => ActionItem[]) => {
   return (display: Display) => {
     const actions: ActionItem[] = [];
@@ -455,11 +473,11 @@ export const getDisplayItemActions = ({
     actions.push({
       label: t('Schedule'),
       icon: CalendarDays,
-      onClick: () => console.log('Schedule', display.displayGroupId),
+      onClick: () => onSchedule && onSchedule(display),
     });
 
     actions.push({
-      label: t('Update Thumbnail'),
+      label: t('Request Screenshot'),
       icon: RotateCw,
       onClick: () => onRequestScreenShot(display),
     });

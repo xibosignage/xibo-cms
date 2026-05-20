@@ -24,8 +24,8 @@ import { useEffect, useState } from 'react';
 
 import { getBaseFilterKeys } from '../DisplayGroupConfig';
 
-import type { FilterOption } from '@/components/ui/SelectFilter';
 import { fetchDisplays } from '@/services/displaysApi';
+import type { FilterOption } from '@/types/filter';
 
 const PAGE_SIZE = 10;
 
@@ -34,21 +34,18 @@ function toOptions(rows: { displayId: number; display: string }[]): FilterOption
 }
 
 export function useDisplayGroupFilterOptions(t: TFunction) {
-  // Display dropdown state
   const [displayOptions, setDisplayOptions] = useState<FilterOption[]>([]);
   const [displayPage, setDisplayPage] = useState(0);
   const [hasMoreDisplays, setHasMoreDisplays] = useState(false);
   const [isLoadingDisplays, setIsLoadingDisplays] = useState(false);
   const [isLoadingMoreDisplays, setIsLoadingMoreDisplays] = useState(false);
 
-  // Nested Display dropdown state (same data source, independent pagination)
   const [nestedDisplayOptions, setNestedDisplayOptions] = useState<FilterOption[]>([]);
   const [nestedDisplayPage, setNestedDisplayPage] = useState(0);
   const [hasMoreNestedDisplays, setHasMoreNestedDisplays] = useState(false);
   const [isLoadingNestedDisplays, setIsLoadingNestedDisplays] = useState(false);
   const [isLoadingMoreNestedDisplays, setIsLoadingMoreNestedDisplays] = useState(false);
 
-  // Initial load
   useEffect(() => {
     setIsLoadingDisplays(true);
     fetchDisplays({ start: 0, length: PAGE_SIZE })
@@ -108,6 +105,10 @@ export function useDisplayGroupFilterOptions(t: TFunction) {
         hasMore: hasMoreDisplays,
         isLoadingMore: isLoadingMoreDisplays,
         isLoading: isLoadingDisplays,
+        resolveLabel: (value: string) =>
+          fetchDisplays({ start: 0, length: 1, displayId: Number(value) }).then(
+            (res) => res.rows[0]?.display ?? value,
+          ),
       };
     }
     if (item.name === 'nestedDisplayId') {
@@ -118,6 +119,10 @@ export function useDisplayGroupFilterOptions(t: TFunction) {
         hasMore: hasMoreNestedDisplays,
         isLoadingMore: isLoadingMoreNestedDisplays,
         isLoading: isLoadingNestedDisplays,
+        resolveLabel: (value: string) =>
+          fetchDisplays({ start: 0, length: 1, displayId: Number(value) }).then(
+            (res) => res.rows[0]?.display ?? value,
+          ),
       };
     }
     return item;
