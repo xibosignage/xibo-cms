@@ -274,14 +274,6 @@ $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
 })->addMiddleware(new SuperAdminAuth($app->getContainer()));
 
 //
-// Applications and connectors
-//
-$app->get('/application/authorize', ['\Xibo\Controller\Applications','authorizeRequest'])
-    ->setName('application.authorize.request');
-$app->post('/application/authorize', ['\Xibo\Controller\Applications','authorize'])
-    ->setName('application.authorize');
-
-//
 // module
 //
 $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
