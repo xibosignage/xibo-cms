@@ -21,7 +21,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Modal from '@/components/ui/modals/Modal';
@@ -46,6 +46,7 @@ export default function FontDetailsModal({
   const { t } = useTranslation();
   const [fontFaceFamily, setFontFaceFamily] = useState<string | null>(null);
   const [isFontLoading, setIsFontLoading] = useState(false);
+  const fontFaceRef = useRef<FontFace | null>(null);
 
   const { data: details, isLoading } = useQuery({
     queryKey: ['font', 'details', fontId],
@@ -68,6 +69,7 @@ export default function FontDetailsModal({
         return fontFace.load();
       })
       .then((loadedFace) => {
+        fontFaceRef.current = loadedFace;
         document.fonts.add(loadedFace);
         setFontFaceFamily(familyName);
       })
@@ -79,6 +81,10 @@ export default function FontDetailsModal({
       });
 
     return () => {
+      if (fontFaceRef.current) {
+        document.fonts.delete(fontFaceRef.current);
+        fontFaceRef.current = null;
+      }
       if (blobUrl) {
         URL.revokeObjectURL(blobUrl);
       }

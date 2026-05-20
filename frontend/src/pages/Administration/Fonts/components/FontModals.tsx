@@ -19,6 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import type { ModalType } from '../FontsConfig';
+
 import DeleteFontModal from './DeleteFontModal';
 import FontDetailsModal from './FontDetailsModal';
 import UploadFontModal from './UploadFontModal';
@@ -27,7 +29,7 @@ import type { Font } from '@/types/font';
 
 interface FontModalsProps {
   actions: {
-    activeModal: string | null;
+    activeModal: ModalType | null;
     closeModal: () => void;
     handleRefresh: () => void;
     deleteError: string | null;
