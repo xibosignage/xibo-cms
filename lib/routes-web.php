@@ -276,15 +276,13 @@ $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
 //
 // Applications and connectors
 //
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/application/view', ['\Xibo\Controller\Applications','displayPage'])->setName('application.view');
-    $group->get('/application/data/activity', ['\Xibo\Controller\Applications','viewActivity'])->setName('application.view.activity');
-    $group->get('/application/form/add', ['\Xibo\Controller\Applications','addForm'])->setName('application.add.form');
-    $group->get('/application/form/edit/{id}', ['\Xibo\Controller\Applications','editForm'])->setName('application.edit.form');
-    $group->get('/application/form/delete/{id}', ['\Xibo\Controller\Applications','deleteForm'])->setName('application.delete.form');
-    $group->put('/application/{id}', ['\Xibo\Controller\Applications','edit'])->setName('application.edit');
-    $group->delete('/application/{id}', ['\Xibo\Controller\Applications','delete'])->setName('application.delete');
+$app->get('/application/authorize', ['\Xibo\Controller\Applications','authorizeRequest'])
+    ->setName('application.authorize.request');
+$app->post('/application/authorize', ['\Xibo\Controller\Applications','authorize'])
+    ->setName('application.authorize');
 
+
+$app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
     // We can only view/edit these through the web app
     $group->get('/connectors', ['\Xibo\Controller\Connector','grid'])->setName('connector.search');
     $group->get('/connectors/form/edit/{id}', ['\Xibo\Controller\Connector','editForm'])
@@ -296,9 +294,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     )->setName('connector.edit.form.proxy');
     $group->put('/connectors/{id}', ['\Xibo\Controller\Connector','edit'])->setName('connector.edit');
 })->addMiddleware(new SuperAdminAuth($app->getContainer()));
-
-$app->get('/application/authorize', ['\Xibo\Controller\Applications','authorizeRequest'])->setName('application.authorize.request');
-$app->post('/application/authorize', ['\Xibo\Controller\Applications','authorize'])->setName('application.authorize');
 
 //
 // module
@@ -455,12 +450,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/report/data/{name}', ['\Xibo\Controller\Report','getReportData'])->setName('report.data');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['report.view']));
 
-// Player Software
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/playersoftware/view', ['\Xibo\Controller\PlayerSoftware','displayPage'])->setName('playersoftware.view');
-    $group->get('/playersoftware/form/edit/{id}', ['\Xibo\Controller\PlayerSoftware','editForm'])->setName('playersoftware.edit.form');
-    $group->get('/playersoftware/form/delete/{id}', ['\Xibo\Controller\PlayerSoftware','deleteForm'])->setName('playersoftware.delete.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['playersoftware.view']));
 
 // Tags
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
@@ -477,12 +466,6 @@ $app->group('', function (RouteCollectorProxy $group) {
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['folder.modify']));
 
 $app->get('/fonts/fontcss', ['\Xibo\Controller\Font','fontCss'])->setName('library.font.css');
-
-$app->group('', function (RouteCollectorProxy $group) {
-    $group->get('/fonts/view', ['\Xibo\Controller\Font', 'displayPage'])->setName('font.view');
-    $group->get('/fonts/{id}/form/delete', ['\Xibo\Controller\Font', 'deleteForm'])->setName('font.form.delete');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['font.view']));
-
 
 $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/schedule/form/sync', ['\Xibo\Controller\Schedule', 'syncForm'])->setName('schedule.add.sync.form');

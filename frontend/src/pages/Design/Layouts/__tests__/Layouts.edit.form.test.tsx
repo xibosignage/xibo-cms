@@ -190,6 +190,7 @@ describe('Layouts page - edit form fields', () => {
       name: mockLayout.layout,
       description: null,
       tags: '',
+      code: '',
       retired: 0,
       enableStat: 1,
       folderId: mockLayout.folderId,

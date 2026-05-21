@@ -37,8 +37,7 @@ import type { TabNavItem } from '@/components/ui/TabNav';
 import type { User } from '@/types/user';
 import { filterRoutesByUser } from '@/utils/permissions';
 
-// TODO: Hardcoded for now, change to default page later
-export const DEFAULT_INTERNAL_ROUTE = '/library/media';
+export const DEFAULT_INTERNAL_ROUTE = 'dashboard';
 
 enum UserType {
   SuperAdmin = 1,
@@ -288,15 +287,21 @@ export const APP_ROUTES: AppRoute[] = [
         feature: 'displayprofile.view',
       },
       {
-        path: 'playersoftware',
+        path: 'player-versions',
         labelKey: 'Player Versions',
-        externalURL: '/playersoftware/view',
+        lazy: () =>
+          import('@/pages/Displays/PlayerVersions/PlayerVersions').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'playersoftware.view',
       },
       {
         path: 'commands',
         labelKey: 'Commands',
-        externalURL: '/command/view',
+        lazy: () =>
+          import('@/pages/Displays/Commands/Commands').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'command.view',
       },
     ],
@@ -327,7 +332,10 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'applications',
         labelKey: 'Applications',
-        externalURL: '/application/view',
+        lazy: () =>
+          import('@/pages/Administration/Applications/Applications').then((m) => ({
+            Component: m.default,
+          })),
         validator: isSuperAdmin,
       },
       {
@@ -363,7 +371,8 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'fonts',
         labelKey: 'Fonts',
-        externalURL: '/fonts/view',
+        lazy: () =>
+          import('@/pages/Administration/Fonts/Fonts').then((m) => ({ Component: m.default })),
         feature: 'font.view',
       },
     ],

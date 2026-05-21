@@ -54,7 +54,6 @@ class Controllers
                     $c->get('applicationScopeFactory'),
                     $c->get('userFactory'),
                     $c->get('pool'),
-                    $c->get('connectorFactory')
                 );
 
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
@@ -380,9 +379,9 @@ class Controllers
                     $c->get('pool'),
                     $c->get('playerVersionFactory'),
                     $c->get('displayProfileFactory'),
-                    $c->get('displayFactory')
+                    $c->get('displayFactory'),
+                    $c->get('mediaService')
                 );
-                $controller->useMediaService($c->get('mediaService'));
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },

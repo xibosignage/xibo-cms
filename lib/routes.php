@@ -597,11 +597,22 @@ $app->group('', function (RouteCollectorProxy $group) {
 //
 // Applications
 //
-$app->get('/application', ['\Xibo\Controller\Applications','grid'])->setName('application.search');
 
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->get('/application', ['\Xibo\Controller\Applications', 'grid'])
+        ->setName('application.search');
+    $group->get('/application/scope', ['\Xibo\Controller\Applications', 'scopeSearch'])
+        ->setName('application.scope.search');
+    $group->get('/application/{id}', ['\Xibo\Controller\Applications', 'getById'])
+        ->setName('application.search.id');
+})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['application.view']));
 $app->group('', function (RouteCollectorProxy $group) {
     $group->post('/application', ['\Xibo\Controller\Applications','add'])->setName('application.add');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['application.add']));
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->put('/application/{id}', ['\Xibo\Controller\Applications','edit'])->setName('application.edit');
+    $group->delete('/application/{id}', ['\Xibo\Controller\Applications','delete'])->setName('application.delete');
+})->addMiddleware(new SuperAdminAuth($app->getContainer()));
 $app->delete('/application/revoke/{id}/{userId}', ['\Xibo\Controller\Applications', 'revokeAccess'])
     ->setName('application.revoke');
 
@@ -733,13 +744,21 @@ $app->delete('/report/savedreport/{id}', ['\Xibo\Controller\SavedReport','savedR
 /**
  * Player Versions
  */
-$app->get('/playersoftware', ['\Xibo\Controller\PlayerSoftware','grid'])->setName('playersoftware.search');
-
+$app->get('/playersoftware', ['\Xibo\Controller\PlayerSoftware','grid'])
+    ->setName('playersoftware.search');
 $app->group('', function (RouteCollectorProxy $group) {
-    $group->get('/playersoftware/download/{id}', ['\Xibo\Controller\PlayerSoftware', 'download'])->setName('playersoftware.download');
-    $group->post('/playersoftware', ['\Xibo\Controller\PlayerSoftware','add'])->setName('playersoftware.add');
-    $group->put('/playersoftware/{id}', ['\Xibo\Controller\PlayerSoftware','edit'])->setName('playersoftware.edit');
-    $group->delete('/playersoftware/{id}', ['\Xibo\Controller\PlayerSoftware','delete'])->setName('playersoftware.delete');
+    $group->get('/playersoftware/meta', ['\Xibo\Controller\PlayerSoftware', 'metaData'])
+        ->setName('playersoftware.meta');
+    $group->get('/playersoftware/download/{id}', ['\Xibo\Controller\PlayerSoftware', 'download'])
+        ->setName('playersoftware.download');
+    $group->get('/playersoftware/{id}', ['\Xibo\Controller\PlayerSoftware', 'searchById'])
+        ->setName('playersoftware.search.id');
+    $group->post('/playersoftware', ['\Xibo\Controller\PlayerSoftware','add'])
+        ->setName('playersoftware.add');
+    $group->put('/playersoftware/{id}', ['\Xibo\Controller\PlayerSoftware','edit'])
+        ->setName('playersoftware.edit');
+    $group->delete('/playersoftware/{id}', ['\Xibo\Controller\PlayerSoftware','delete'])
+        ->setName('playersoftware.delete');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['playersoftware.view']));
 
 // Install
@@ -814,7 +833,12 @@ $app->group('', function (RouteCollectorProxy $group) {
 
 $app->get('/menuboard/{id}', ['\Xibo\Controller\MenuBoard', 'searchById'])->setName('menuBoard.search.id');
 
+/**
+ * Fonts
+ */
 $app->get('/fonts', ['\Xibo\Controller\Font', 'grid'])->setName('font.search');
+$app->get('/fonts/{id}', ['\Xibo\Controller\Font', 'searchById'])->setName('font.search.id');
+
 $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/fonts/details/{id}', ['\Xibo\Controller\Font', 'getFontLibDetails'])->setName('font.details');
     $group->get('/fonts/download/{id}', ['\Xibo\Controller\Font', 'download'])->setName('font.download');

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -38,7 +38,7 @@ class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInte
      * Create Empty
      * @return ApplicationScope
      */
-    public function create()
+    public function create(): ApplicationScope
     {
         return new ApplicationScope($this->getStore(), $this->getLog(), $this->getDispatcher());
     }
@@ -49,7 +49,7 @@ class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInte
      * @return ApplicationScope
      * @throws NotFoundException
      */
-    public function getById($id)
+    public function getById($id): ApplicationScope
     {
         $scope = $this->query(null, ['id' => $id]);
 
@@ -65,18 +65,60 @@ class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInte
      * @param $clientId
      * @return ApplicationScope[]
      */
-    public function getByClientId($clientId)
+    public function getByClientId($clientId): array
     {
         return $this->query(null, ['clientId' => $clientId]);
     }
 
     /**
+     * Get scopes for multiple client IDs in a single query.
+     * @param string[] $clientIds
+     * @return array<string, ApplicationScope[]>
+     */
+    public function getByClientIds(array $clientIds): array
+    {
+        if (empty($clientIds)) {
+            return [];
+        }
+
+        $params = [];
+        $inList = '';
+        $i = 0;
+
+        foreach ($clientIds as $clientId) {
+            $i++;
+            $inList .= ',:clientId' . $i;
+            $params['clientId' . $i] = $clientId;
+        }
+
+        $sql = '
+            SELECT `oauth_scopes`.id,
+                   `oauth_scopes`.description,
+                   `oauth_client_scopes`.clientId
+              FROM `oauth_scopes`
+             INNER JOIN `oauth_client_scopes`
+                     ON `oauth_client_scopes`.scopeId = `oauth_scopes`.id
+             WHERE `oauth_client_scopes`.clientId IN (\'0\'' . $inList . ')
+        ';
+
+        $result = [];
+
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $clientId = $row['clientId'];
+            unset($row['clientId']);
+            $result[$clientId][] = $this->create()->hydrate($row, ['stringProperties' => ['id']]);
+        }
+
+        return $result;
+    }
+
+    /**
      * Query
-     * @param null $sortOrder
+     * @param ?array $sortOrder
      * @param array $filterBy
      * @return ApplicationScope[]
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query(?array $sortOrder = null, array $filterBy = []): array
     {
         $sanitizedFilter = $this->getSanitizer($filterBy);
         $entries = [];

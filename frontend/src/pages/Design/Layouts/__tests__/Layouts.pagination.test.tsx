@@ -163,11 +163,9 @@ describe('Layouts page - pagination', () => {
     const retiredLabel = screen.getByText('Retired');
     const retiredContainer = retiredLabel.closest('div')!;
     await act(async () => {
-      fireEvent.click(within(retiredContainer).getByRole('button'));
+      fireEvent.click(within(retiredContainer).getByRole('combobox'));
     });
-    await act(async () => {
-      fireEvent.click(within(retiredContainer).getByText('Yes'));
-    });
+    fireEvent.click(await screen.findByRole('option', { name: 'Yes' }));
 
     await waitFor(() => {
       expect(useLayoutData).toHaveBeenLastCalledWith(
