@@ -79,7 +79,9 @@ describe('DeleteDatasetModal', () => {
     renderWithProviders(
       <DeleteDatasetModal itemCount={1} onClose={mockOnClose} onDelete={mockOnDelete} />,
     );
-    expect(screen.getByRole('checkbox', { name: /Delete any associated data\?/i })).not.toBeChecked();
+    expect(
+      screen.getByRole('checkbox', { name: /Delete any associated data\?/i }),
+    ).not.toBeChecked();
   });
 
   it('passes { deleteData: false } to onDelete when checkbox is unchecked', async () => {

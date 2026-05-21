@@ -23,11 +23,11 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import type { DatasetColumn } from '@/types/datasetColumn';
-
 import { AddAndEditDatasetColumnModal } from '../subPages/Columns/components/AddAndEditDatasetColumnModal';
 
 import { renderWithProviders } from './DatasetSetup';
+
+import type { DatasetColumn } from '@/types/datasetColumn';
 
 // -- Module mocks --
 
@@ -308,11 +308,7 @@ describe('AddAndEditDatasetColumnModal', () => {
       await user.click(screen.getByRole('button', { name: 'Save' }));
 
       await waitFor(() => {
-        expect(mockUpdateDatasetColumn).toHaveBeenCalledWith(
-          '1',
-          5,
-          expect.any(Object),
-        );
+        expect(mockUpdateDatasetColumn).toHaveBeenCalledWith('1', 5, expect.any(Object));
       });
     });
   });

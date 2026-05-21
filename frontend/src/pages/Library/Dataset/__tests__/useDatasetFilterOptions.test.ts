@@ -87,7 +87,11 @@ describe('useDatasetFilterOptions', () => {
 
   it('isLoading is true initially and false after fetch completes', async () => {
     let resolveUsers!: (v: unknown) => void;
-    mockFetchUsers.mockReturnValue(new Promise((resolve) => { resolveUsers = resolve; }));
+    mockFetchUsers.mockReturnValue(
+      new Promise((resolve) => {
+        resolveUsers = resolve;
+      }),
+    );
 
     const { result } = renderHook(() => useDatasetFilterOptions(mockT));
 

@@ -23,11 +23,11 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import type { DatasetColumn } from '@/types/datasetColumn';
-
 import { AddAndEditDataModal } from '../subPages/Data/components/AddAndEditDatasetDataModal';
 
 import { renderWithProviders } from './DatasetSetup';
+
+import type { DatasetColumn } from '@/types/datasetColumn';
 
 // -- Module mocks --
 
@@ -55,13 +55,7 @@ vi.mock('@/services/datasetApi', () => ({
 vi.mock('@/components/ui/modals/Modal');
 
 vi.mock('@/components/ui/forms/DatePickerInput', () => ({
-  default: ({
-    label,
-    onChange,
-  }: {
-    label: string;
-    onChange: (v: string) => void;
-  }) => (
+  default: ({ label, onChange }: { label: string; onChange: (v: string) => void }) => (
     <div>
       <label>{label}</label>
       <input aria-label={label} type="date" onChange={(e) => onChange(e.target.value)} />

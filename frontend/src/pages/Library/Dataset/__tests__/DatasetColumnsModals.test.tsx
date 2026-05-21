@@ -33,9 +33,7 @@ vi.mock('../subPages/Columns/components/CopyDatasetColumnModal', () => ({
   default: () => <div data-testid="copy-column-modal">Copy Column Modal</div>,
 }));
 vi.mock('../subPages/Columns/components/DeleteDatasetColumnModal', () => ({
-  DeleteDatasetColumnModal: () => (
-    <div data-testid="delete-column-modal">Delete Column Modal</div>
-  ),
+  DeleteDatasetColumnModal: () => <div data-testid="delete-column-modal">Delete Column Modal</div>,
 }));
 
 describe('DatasetColumnModals', () => {

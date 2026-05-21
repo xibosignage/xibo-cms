@@ -214,9 +214,7 @@ describe('ImportDatasetCsvModal', () => {
 
       act(() => capturedOnDrop?.([makeFile()]));
 
-      await waitFor(() =>
-        expect(screen.getByRole('button', { name: 'Done' })).not.toBeDisabled(),
-      );
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Done' })).not.toBeDisabled());
 
       await user.click(screen.getByRole('button', { name: 'Done' }));
 
@@ -232,9 +230,7 @@ describe('ImportDatasetCsvModal', () => {
 
       act(() => capturedOnDrop?.([makeFile()]));
 
-      await waitFor(() =>
-        expect(screen.getByRole('button', { name: 'Done' })).not.toBeDisabled(),
-      );
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Done' })).not.toBeDisabled());
 
       await user.click(screen.getByRole('button', { name: 'Done' }));
 
@@ -263,9 +259,7 @@ describe('ImportDatasetCsvModal', () => {
 
       act(() => capturedOnDrop?.([makeFile()]));
 
-      await waitFor(() =>
-        expect(screen.getByRole('button', { name: 'Done' })).not.toBeDisabled(),
-      );
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Done' })).not.toBeDisabled());
 
       await user.click(screen.getByRole('button', { name: 'Done' }));
 

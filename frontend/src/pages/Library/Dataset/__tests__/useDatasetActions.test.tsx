@@ -250,9 +250,7 @@ describe('useDatasetActions', () => {
         );
       });
 
-      expect(mockCloneDataset).toHaveBeenCalledWith(
-        expect.objectContaining({ copyRows: true }),
-      );
+      expect(mockCloneDataset).toHaveBeenCalledWith(expect.objectContaining({ copyRows: true }));
     });
   });
 

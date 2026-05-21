@@ -170,7 +170,11 @@ describe('AddAndEditDatasetModal', () => {
     it('Save button shows "Saving…" while pending', async () => {
       const user = userEvent.setup();
       let resolveCreate!: (value: unknown) => void;
-      mockCreateDataset.mockReturnValue(new Promise((resolve) => { resolveCreate = resolve; }));
+      mockCreateDataset.mockReturnValue(
+        new Promise((resolve) => {
+          resolveCreate = resolve;
+        }),
+      );
       renderAddModal();
 
       await user.type(screen.getByLabelText('Name'), 'My Dataset');

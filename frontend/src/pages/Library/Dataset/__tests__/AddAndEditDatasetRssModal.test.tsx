@@ -23,11 +23,11 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import type { DatasetRss } from '@/types/datasetRss';
-
 import { AddAndEditDatasetRssModal } from '../subPages/Rss/components/AddAndEditDatasetRssModal';
 
 import { renderWithProviders } from './DatasetSetup';
+
+import type { DatasetRss } from '@/types/datasetRss';
 
 // -- Module mocks --
 
@@ -95,12 +95,7 @@ describe('AddAndEditDatasetRssModal', () => {
   describe('Add mode', () => {
     it('renders "Add RSS" dialog title', () => {
       renderWithProviders(
-        <AddAndEditDatasetRssModal
-          type="add"
-          datasetId="1"
-          onClose={vi.fn()}
-          onSave={vi.fn()}
-        />,
+        <AddAndEditDatasetRssModal type="add" datasetId="1" onClose={vi.fn()} onSave={vi.fn()} />,
       );
 
       expect(screen.getByRole('dialog', { name: 'Add RSS' })).toBeInTheDocument();
@@ -108,12 +103,7 @@ describe('AddAndEditDatasetRssModal', () => {
 
     it('shows General, Order, and Filter tab buttons', () => {
       renderWithProviders(
-        <AddAndEditDatasetRssModal
-          type="add"
-          datasetId="1"
-          onClose={vi.fn()}
-          onSave={vi.fn()}
-        />,
+        <AddAndEditDatasetRssModal type="add" datasetId="1" onClose={vi.fn()} onSave={vi.fn()} />,
       );
 
       expect(screen.getByRole('button', { name: 'General' })).toBeInTheDocument();
@@ -123,12 +113,7 @@ describe('AddAndEditDatasetRssModal', () => {
 
     it('Title and Author inputs are visible on General tab', () => {
       renderWithProviders(
-        <AddAndEditDatasetRssModal
-          type="add"
-          datasetId="1"
-          onClose={vi.fn()}
-          onSave={vi.fn()}
-        />,
+        <AddAndEditDatasetRssModal type="add" datasetId="1" onClose={vi.fn()} onSave={vi.fn()} />,
       );
 
       expect(screen.getByLabelText('Title')).toBeInTheDocument();
@@ -138,12 +123,7 @@ describe('AddAndEditDatasetRssModal', () => {
     it('shows title error when title is empty on save', async () => {
       const user = userEvent.setup();
       renderWithProviders(
-        <AddAndEditDatasetRssModal
-          type="add"
-          datasetId="1"
-          onClose={vi.fn()}
-          onSave={vi.fn()}
-        />,
+        <AddAndEditDatasetRssModal type="add" datasetId="1" onClose={vi.fn()} onSave={vi.fn()} />,
       );
 
       await user.type(screen.getByLabelText('Author'), 'SomeAuthor');
@@ -156,12 +136,7 @@ describe('AddAndEditDatasetRssModal', () => {
     it('shows author error when author is empty on save', async () => {
       const user = userEvent.setup();
       renderWithProviders(
-        <AddAndEditDatasetRssModal
-          type="add"
-          datasetId="1"
-          onClose={vi.fn()}
-          onSave={vi.fn()}
-        />,
+        <AddAndEditDatasetRssModal type="add" datasetId="1" onClose={vi.fn()} onSave={vi.fn()} />,
       );
 
       await user.type(screen.getByLabelText('Title'), 'Some Title');
@@ -174,12 +149,7 @@ describe('AddAndEditDatasetRssModal', () => {
     it('calls createDatasetRss on valid submit', async () => {
       const user = userEvent.setup();
       renderWithProviders(
-        <AddAndEditDatasetRssModal
-          type="add"
-          datasetId="1"
-          onClose={vi.fn()}
-          onSave={vi.fn()}
-        />,
+        <AddAndEditDatasetRssModal type="add" datasetId="1" onClose={vi.fn()} onSave={vi.fn()} />,
       );
 
       await user.type(screen.getByLabelText('Title'), 'My Feed');
@@ -239,12 +209,7 @@ describe('AddAndEditDatasetRssModal', () => {
       const user = userEvent.setup();
       mockCreateDatasetRss.mockRejectedValue(new Error('Server error'));
       renderWithProviders(
-        <AddAndEditDatasetRssModal
-          type="add"
-          datasetId="1"
-          onClose={vi.fn()}
-          onSave={vi.fn()}
-        />,
+        <AddAndEditDatasetRssModal type="add" datasetId="1" onClose={vi.fn()} onSave={vi.fn()} />,
       );
 
       await user.type(screen.getByLabelText('Title'), 'My Feed');
@@ -303,12 +268,7 @@ describe('AddAndEditDatasetRssModal', () => {
 
     it('does NOT show regeneratePsk checkbox in add mode', () => {
       renderWithProviders(
-        <AddAndEditDatasetRssModal
-          type="add"
-          datasetId="1"
-          onClose={vi.fn()}
-          onSave={vi.fn()}
-        />,
+        <AddAndEditDatasetRssModal type="add" datasetId="1" onClose={vi.fn()} onSave={vi.fn()} />,
       );
 
       expect(screen.queryByRole('checkbox', { name: /Security/i })).not.toBeInTheDocument();
@@ -338,12 +298,7 @@ describe('AddAndEditDatasetRssModal', () => {
     it('clicking Order tab shows order-related content', async () => {
       const user = userEvent.setup();
       renderWithProviders(
-        <AddAndEditDatasetRssModal
-          type="add"
-          datasetId="1"
-          onClose={vi.fn()}
-          onSave={vi.fn()}
-        />,
+        <AddAndEditDatasetRssModal type="add" datasetId="1" onClose={vi.fn()} onSave={vi.fn()} />,
       );
 
       await user.click(screen.getByRole('button', { name: 'Order' }));
@@ -354,12 +309,7 @@ describe('AddAndEditDatasetRssModal', () => {
     it('clicking Filter tab shows filter-related content', async () => {
       const user = userEvent.setup();
       renderWithProviders(
-        <AddAndEditDatasetRssModal
-          type="add"
-          datasetId="1"
-          onClose={vi.fn()}
-          onSave={vi.fn()}
-        />,
+        <AddAndEditDatasetRssModal type="add" datasetId="1" onClose={vi.fn()} onSave={vi.fn()} />,
       );
 
       await user.click(screen.getByRole('button', { name: 'Filter' }));
@@ -370,12 +320,7 @@ describe('AddAndEditDatasetRssModal', () => {
     it('Order tab shows SQL input when Advanced Order Clause is checked', async () => {
       const user = userEvent.setup();
       renderWithProviders(
-        <AddAndEditDatasetRssModal
-          type="add"
-          datasetId="1"
-          onClose={vi.fn()}
-          onSave={vi.fn()}
-        />,
+        <AddAndEditDatasetRssModal type="add" datasetId="1" onClose={vi.fn()} onSave={vi.fn()} />,
       );
 
       await user.click(screen.getByRole('button', { name: 'Order' }));
@@ -387,12 +332,7 @@ describe('AddAndEditDatasetRssModal', () => {
     it('Filter tab shows SQL input when Advanced Filter Clause is checked', async () => {
       const user = userEvent.setup();
       renderWithProviders(
-        <AddAndEditDatasetRssModal
-          type="add"
-          datasetId="1"
-          onClose={vi.fn()}
-          onSave={vi.fn()}
-        />,
+        <AddAndEditDatasetRssModal type="add" datasetId="1" onClose={vi.fn()} onSave={vi.fn()} />,
       );
 
       await user.click(screen.getByRole('button', { name: 'Filter' }));

@@ -22,11 +22,7 @@
 import type { TFunction } from 'i18next';
 import { describe, it, expect } from 'vitest';
 
-import {
-  getDatasetColumnSchema,
-  getDatasetRssSchema,
-  getDatasetSchema,
-} from '@/schema/dataset';
+import { getDatasetColumnSchema, getDatasetRssSchema, getDatasetSchema } from '@/schema/dataset';
 
 const t = ((s: string) => s) as unknown as TFunction;
 
