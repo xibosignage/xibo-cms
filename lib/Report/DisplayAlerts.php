@@ -43,13 +43,10 @@ class DisplayAlerts implements ReportInterface
 {
     use ReportDefaultTrait, DataTablesDotNetTrait;
 
-    /** @var DisplayFactory */
-    private $displayFactory;
-    /** @var DisplayGroupFactory */
-    private $displayGroupFactory;
-    /** @var DisplayEventFactory */
-    private $displayEventFactory;
-    
+    private readonly DisplayFactory $displayFactory;
+    private readonly DisplayGroupFactory $displayGroupFactory;
+    private readonly DisplayEventFactory $displayEventFactory;
+
     public function setFactories(ContainerInterface $container)
     {
         $this->displayFactory = $container->get('displayFactory');
@@ -59,17 +56,21 @@ class DisplayAlerts implements ReportInterface
         return $this;
     }
 
-    public function getReportEmailTemplate()
+    public function getReportEmailTemplate(): string
     {
         return 'displayalerts-email-template.twig';
     }
 
-    public function getSavedReportTemplate()
+    public function getSavedReportTemplate(): string
     {
         return 'displayalerts-report-preview';
     }
 
-    public function getReportForm()
+    /**
+     * @inheritdoc
+     * Legacy Twig form — kept to satisfy ReportInterface; remove alongside the interface cleanup PR.
+     */
+    public function getReportForm(): ReportForm
     {
         return new ReportForm(
             'displayalerts-report-form',
@@ -82,7 +83,7 @@ class DisplayAlerts implements ReportInterface
         );
     }
 
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
+    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams): array
     {
         $data = [];
         $data['reportName'] = 'displayalerts';
@@ -93,7 +94,7 @@ class DisplayAlerts implements ReportInterface
         ];
     }
 
-    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams)
+    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams): array
     {
         $filter = $sanitizedParams->getString('filter');
         $displayId = $sanitizedParams->getInt('displayId');
@@ -131,17 +132,17 @@ class DisplayAlerts implements ReportInterface
         ];
     }
 
-    public function generateSavedReportName(SanitizerInterface $sanitizedParams)
+    public function generateSavedReportName(SanitizerInterface $sanitizedParams): string
     {
         return sprintf(__('%s report for Display'), ucfirst($sanitizedParams->getString('filter')));
     }
 
-    public function restructureSavedReportOldJson($json)
+    public function restructureSavedReportOldJson($json): array
     {
         return $json;
     }
 
-    public function getSavedReportResults($json, $savedReport)
+    public function getSavedReportResults($json, $savedReport): ReportResult
     {
         $metadata = [
             'periodStart' => $json['metadata']['periodStart'],
@@ -159,7 +160,7 @@ class DisplayAlerts implements ReportInterface
         );
     }
 
-    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false)
+    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false): ReportResult
     {
         $displayIds = $this->getDisplayIdFilter($sanitizedParams);
         $onlyLoggedIn = $sanitizedParams->getCheckbox('onlyLoggedIn') == 1;
@@ -208,10 +209,8 @@ class DisplayAlerts implements ReportInterface
         }
 
         $metadata = [
-            'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))
-                ->format(DateFormatHelper::getSystemFormat()),
-            'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))
-                ->format(DateFormatHelper::getSystemFormat()),
+            'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
+            'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
         ];
 
         $params = [

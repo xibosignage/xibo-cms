@@ -45,25 +45,9 @@ class TimeDisconnectedSummary implements ReportInterface
 {
     use ReportDefaultTrait, DataTablesDotNetTrait;
 
-    /**
-     * @var DisplayFactory
-     */
-    private $displayFactory;
-
-    /**
-     * @var DisplayGroupFactory
-     */
-    private $displayGroupFactory;
-
-    /**
-     * @var SanitizerService
-     */
-    private $sanitizer;
-
-    /**
-     * @var ApplicationState
-     */
-    private $state;
+    private readonly DisplayFactory $displayFactory;
+    private readonly DisplayGroupFactory $displayGroupFactory;
+    private readonly SanitizerService $sanitizer;
 
     /** @inheritdoc */
     public function setFactories(ContainerInterface $container)
@@ -71,31 +55,33 @@ class TimeDisconnectedSummary implements ReportInterface
         $this->displayFactory = $container->get('displayFactory');
         $this->displayGroupFactory = $container->get('displayGroupFactory');
         $this->sanitizer = $container->get('sanitizerService');
-        $this->state = $container->get('state');
 
         return $this;
     }
 
     /** @inheritdoc */
-    public function getReportChartScript($results)
+    public function getReportChartScript($results): bool|string
     {
         return json_encode($results->chart);
     }
 
     /** @inheritdoc */
-    public function getReportEmailTemplate()
+    public function getReportEmailTemplate(): string
     {
         return 'timedisconnectedsummary-email-template.twig';
     }
 
     /** @inheritdoc */
-    public function getSavedReportTemplate()
+    public function getSavedReportTemplate(): string
     {
         return 'timedisconnectedsummary-report-preview';
     }
 
-    /** @inheritdoc */
-    public function getReportForm()
+    /**
+     * @inheritdoc
+     * Legacy Twig form — kept to satisfy ReportInterface; remove alongside the interface cleanup PR.
+     */
+    public function getReportForm(): ReportForm
     {
         return new ReportForm(
             'timedisconnectedsummary-report-form',
@@ -109,7 +95,7 @@ class TimeDisconnectedSummary implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
+    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams): array
     {
         $data = [];
         $data['reportName'] = 'timedisconnectedsummary';
@@ -121,7 +107,7 @@ class TimeDisconnectedSummary implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams)
+    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams): array
     {
         $filter = $sanitizedParams->getString('filter');
         $displayId = $sanitizedParams->getInt('displayId');
@@ -159,19 +145,19 @@ class TimeDisconnectedSummary implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function generateSavedReportName(SanitizerInterface $sanitizedParams)
+    public function generateSavedReportName(SanitizerInterface $sanitizedParams): string
     {
         return sprintf(__('%s time disconnected summary report', ucfirst($sanitizedParams->getString('filter'))));
     }
 
     /** @inheritdoc */
-    public function restructureSavedReportOldJson($result)
+    public function restructureSavedReportOldJson($json): array
     {
-        return $result;
+        return $json;
     }
 
     /** @inheritdoc */
-    public function getSavedReportResults($json, $savedReport)
+    public function getSavedReportResults($json, $savedReport): ReportResult
     {
         $metadata = [
             'periodStart' => $json['metadata']['periodStart'],
@@ -191,7 +177,7 @@ class TimeDisconnectedSummary implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false)
+    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false): ReportResult
     {
         // Filter by displayId?
         $displayIds = $this->getDisplayIdFilter($sanitizedParams);
@@ -517,8 +503,8 @@ class TimeDisconnectedSummary implements ReportInterface
         ];
 
         $metadata = [
-            'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
-            'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+            'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
+            'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
         ];
 
         // ----

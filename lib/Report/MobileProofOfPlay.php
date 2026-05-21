@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -49,40 +49,12 @@ class MobileProofOfPlay implements ReportInterface
 {
     use ReportDefaultTrait, DataTablesDotNetTrait;
 
-    /**
-     * @var CampaignFactory
-     */
-    private $campaignFactory;
-
-    /**
-     * @var DisplayFactory
-     */
-    private $displayFactory;
-
-    /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
-
-    /**
-     * @var ReportScheduleFactory
-     */
-    private $reportScheduleFactory;
-
-    /**
-     * @var SanitizerService
-     */
-    private $sanitizer;
-
-    /**
-     * @var EventDispatcher
-     */
-    private $dispatcher;
-
-    /**
-     * @var ApplicationState
-     */
-    private $state;
+    private readonly CampaignFactory $campaignFactory;
+    private readonly DisplayFactory $displayFactory;
+    private readonly LayoutFactory $layoutFactory;
+    private readonly ReportScheduleFactory $reportScheduleFactory;
+    private readonly SanitizerService $sanitizer;
+    private readonly EventDispatcher $dispatcher;
 
     /** @inheritdoc */
     public function setFactories(ContainerInterface $container)
@@ -97,19 +69,22 @@ class MobileProofOfPlay implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportEmailTemplate()
+    public function getReportEmailTemplate(): string
     {
         return 'mobile-proofofplay-email-template.twig';
     }
 
     /** @inheritdoc */
-    public function getSavedReportTemplate()
+    public function getSavedReportTemplate(): string
     {
         return 'mobile-proofofplay-report-preview';
     }
 
-    /** @inheritdoc */
-    public function getReportForm()
+    /**
+     * @inheritdoc
+     * Legacy Twig form — kept to satisfy ReportInterface; remove alongside the interface cleanup PR.
+     */
+    public function getReportForm(): ReportForm
     {
         return new ReportForm(
             'mobile-proofofplay-report-form',
@@ -124,7 +99,7 @@ class MobileProofOfPlay implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
+    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams): array
     {
         $data = [];
 
@@ -138,7 +113,7 @@ class MobileProofOfPlay implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams)
+    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams): array
     {
         $filter = $sanitizedParams->getString('filter');
         $filterCriteria = [
@@ -173,7 +148,7 @@ class MobileProofOfPlay implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function generateSavedReportName(SanitizerInterface $sanitizedParams)
+    public function generateSavedReportName(SanitizerInterface $sanitizedParams): string
     {
         $saveAs = sprintf(__('%s report for ', ucfirst($sanitizedParams->getString('filter'))));
 
@@ -192,17 +167,17 @@ class MobileProofOfPlay implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function restructureSavedReportOldJson($result)
+    public function restructureSavedReportOldJson($json): array
     {
         return [
-            'periodStart' => $result['periodStart'],
-            'periodEnd' => $result['periodEnd'],
-            'table' => $result['result'],
+            'periodStart' => $json['periodStart'],
+            'periodEnd' => $json['periodEnd'],
+            'table' => $json['result'],
         ];
     }
 
     /** @inheritdoc */
-    public function getSavedReportResults($json, $savedReport)
+    public function getSavedReportResults($json, $savedReport): ReportResult
     {
         // Get filter criteria
         $rs = $this->reportScheduleFactory->getById($savedReport->reportScheduleId, 1)->filterCriteria;
@@ -227,7 +202,7 @@ class MobileProofOfPlay implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false)
+    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false): ReportResult
     {
         $parentCampaignId = $sanitizedParams->getInt('parentCampaignId');
         $layoutId = $sanitizedParams->getInt('layoutId');

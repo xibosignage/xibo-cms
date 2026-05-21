@@ -51,49 +51,17 @@ class ProofOfPlay implements ReportInterface
 {
     use ReportDefaultTrait, DataTablesDotNetTrait;
 
-    /**
-     * @var DisplayFactory
-     */
-    private $displayFactory;
+    private readonly DisplayFactory $displayFactory;
+    private readonly MediaFactory $mediaFactory;
+    private readonly LayoutFactory $layoutFactory;
+    private readonly ReportScheduleFactory $reportScheduleFactory;
+    private readonly DisplayGroupFactory $displayGroupFactory;
+    private readonly TagFactory $tagFactory;
+    private readonly SanitizerService $sanitizer;
 
-    /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
+    private string $table = 'stat';
 
-    /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
-
-    /**
-     * @var ReportScheduleFactory
-     */
-    private $reportScheduleFactory;
-
-    /**
-     * @var DisplayGroupFactory
-     */
-    private $displayGroupFactory;
-
-    /**
-     * @var TagFactory
-     */
-    private $tagFactory;
-
-    /**
-     * @var SanitizerService
-     */
-    private $sanitizer;
-
-    /**
-     * @var ApplicationState
-     */
-    private $state;
-
-    private $table = 'stat';
-
-    private $tagsType = [
+    private array $tagsType = [
         'dg' => 'Display group',
         'media' => 'Media',
         'layout' => 'Layout'
@@ -114,19 +82,22 @@ class ProofOfPlay implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportEmailTemplate()
+    public function getReportEmailTemplate(): string
     {
         return 'proofofplay-email-template.twig';
     }
 
     /** @inheritdoc */
-    public function getSavedReportTemplate()
+    public function getSavedReportTemplate(): string
     {
         return 'proofofplay-report-preview';
     }
 
-    /** @inheritdoc */
-    public function getReportForm()
+    /**
+     * @inheritdoc
+     * Legacy Twig form — kept to satisfy ReportInterface; remove alongside the interface cleanup PR.
+     */
+    public function getReportForm(): ReportForm
     {
         return new ReportForm(
             'proofofplay-report-form',
@@ -141,7 +112,7 @@ class ProofOfPlay implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
+    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams): array
     {
         $data = [];
         $data['type'] = $sanitizedParams->getString('type');
@@ -163,7 +134,7 @@ class ProofOfPlay implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams)
+    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams): array
     {
         $filter = $sanitizedParams->getString('filter');
         $filterCriteria = [
@@ -205,7 +176,7 @@ class ProofOfPlay implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function generateSavedReportName(SanitizerInterface $sanitizedParams)
+    public function generateSavedReportName(SanitizerInterface $sanitizedParams): string
     {
         $saveAs = sprintf(__('%s report for ', ucfirst($sanitizedParams->getString('filter'))));
 
@@ -286,17 +257,17 @@ class ProofOfPlay implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function restructureSavedReportOldJson($result) // TODO
+    public function restructureSavedReportOldJson($json): array // TODO
     {
         return [
-            'periodStart' => $result['periodStart'],
-            'periodEnd' => $result['periodEnd'],
-            'table' => $result['result'],
+            'periodStart' => $json['periodStart'],
+            'periodEnd' => $json['periodEnd'],
+            'table' => $json['result'],
         ];
     }
 
     /** @inheritdoc */
-    public function getSavedReportResults($json, $savedReport)
+    public function getSavedReportResults($json, $savedReport): ReportResult
     {
         // Get filter criteria
         $rs = $this->reportScheduleFactory->getById($savedReport->reportScheduleId, 1)->filterCriteria;
@@ -328,7 +299,7 @@ class ProofOfPlay implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false)
+    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false): ReportResult
     {
         $layoutIds = $sanitizedParams->getIntArray('layoutId', ['default' => []]);
         $mediaIds = $sanitizedParams->getIntArray('mediaId', ['default' => []]);
@@ -620,9 +591,9 @@ class ProofOfPlay implements ReportInterface
         // We get the ID and name - either by display, display group or tag
         if ($groupBy === 'display') {
             $select .= ', display.Display, stat.displayId ';
-        } else if ($groupBy === 'displayGroup') {
+        } elseif ($groupBy === 'displayGroup') {
             $select .= ', displaydg.displayGroup, displaydg.displayGroupId ';
-        } else if ($groupBy === 'tag') {
+        } elseif ($groupBy === 'tag') {
             if ($tagsType === 'dg' || $tagsType === 'media') {
                 $select .= ', taglink.value, taglink.tagId ';
             } else {
@@ -671,7 +642,7 @@ class ProofOfPlay implements ReportInterface
                      INNER JOIN `displaygroup` AS displaydg
                         ON displaydg.displaygroupId = linkdg.displaygroupId
                          AND `displaydg`.isDisplaySpecific = 0 ';
-        } else if ($groupBy === 'tag') {
+        } elseif ($groupBy === 'tag') {
             $body .= $this->groupByTagType($tagsType);
         }
 
@@ -882,9 +853,9 @@ class ProofOfPlay implements ReportInterface
         // Then add the optional groupings
         if ($groupBy === 'display') {
             $body .= ', display.Display, stat.displayId';
-        } else if ($groupBy === 'displayGroup') {
+        } elseif ($groupBy === 'displayGroup') {
             $body .= ', displaydg.displayGroupId, displaydg.displayGroup';
-        } else if ($groupBy === 'tag') {
+        } elseif ($groupBy === 'tag') {
             $body .= ', value, taglink.tagId';
         }
 
@@ -939,14 +910,14 @@ class ProofOfPlay implements ReportInterface
                             INNER JOIN `lktagdisplaygroup`
                             ON `lktagdisplaygroup`.tagId = tag.tagId
                 ';
-        } else if ($tagsType === 'media') {
+        } elseif ($tagsType === 'media') {
             return ' AND `media`.mediaId '. ($exclude ? 'NOT' : '') . ' IN (
                         SELECT `lktagmedia`.mediaId
                           FROM tag
                             INNER JOIN `lktagmedia`
                             ON `lktagmedia`.tagId = tag.tagId
                 ';
-        } else if ($tagsType === 'layout') {
+        } elseif ($tagsType === 'layout') {
             return ' AND `stat`.campaignId ' . ($exclude ? 'NOT' : '') . ' IN (
                         SELECT 
                             `layouthistory`.campaignId
@@ -1235,7 +1206,7 @@ class ProofOfPlay implements ReportInterface
 
         if ($groupBy === 'tag') {
             $rows = $this->groupByTagMongoDb($rows, $tagsType);
-        } else if ($groupBy === 'displayGroup') {
+        } elseif ($groupBy === 'displayGroup') {
             $rows = $this->groupByDisplayGroupMongoDb($rows, $displayGroupIds);
         }
 

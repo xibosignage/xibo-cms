@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -48,39 +48,15 @@ class SummaryReport implements ReportInterface
     use ReportDefaultTrait;
     use SummaryDistributionCommonTrait;
 
-    /**
-     * @var DisplayFactory
-     */
-    private $displayFactory;
+    private readonly DisplayFactory $displayFactory;
+    private readonly MediaFactory $mediaFactory;
+    private readonly LayoutFactory $layoutFactory;
+    private readonly ReportServiceInterface $reportService;
+    private readonly SanitizerService $sanitizer;
 
-    /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
+    private string $table = 'stat';
 
-    /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
-
-    /**
-     * @var SavedReportFactory
-     */
-    private $savedReportFactory;
-
-    /**
-     * @var ReportServiceInterface
-     */
-    private $reportService;
-
-    /**
-     * @var SanitizerService
-     */
-    private $sanitizer;
-
-    private $table = 'stat';
-
-    private $periodTable = 'period';
+    private string $periodTable = 'period';
 
     /** @inheritDoc */
     public function setFactories(ContainerInterface $container)
@@ -95,25 +71,28 @@ class SummaryReport implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportChartScript($results)
+    public function getReportChartScript($results): bool|string
     {
         return json_encode($results->chart);
     }
 
     /** @inheritdoc */
-    public function getReportEmailTemplate()
+    public function getReportEmailTemplate(): string
     {
         return 'summary-email-template.twig';
     }
 
     /** @inheritdoc */
-    public function getSavedReportTemplate()
+    public function getSavedReportTemplate(): string
     {
         return 'summary-report-preview';
     }
 
-    /** @inheritdoc */
-    public function getReportForm()
+    /**
+     * @inheritdoc
+     * Legacy Twig form — kept to satisfy ReportInterface; remove alongside the interface cleanup PR.
+     */
+    public function getReportForm(): ReportForm
     {
         return new ReportForm(
             'summary-report-form',
@@ -128,7 +107,7 @@ class SummaryReport implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
+    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams): array
     {
         $type = $sanitizedParams->getString('type');
         $formParams = $this->getReportScheduleFormTitle($sanitizedParams);
@@ -156,7 +135,7 @@ class SummaryReport implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams)
+    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams): array
     {
         $filter = $sanitizedParams->getString('filter');
         $displayId = $sanitizedParams->getInt('displayId');
@@ -212,7 +191,7 @@ class SummaryReport implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function generateSavedReportName(SanitizerInterface $sanitizedParams)
+    public function generateSavedReportName(SanitizerInterface $sanitizedParams): string
     {
         $type = $sanitizedParams->getString('type');
         $filter = $sanitizedParams->getString('filter');
@@ -243,7 +222,7 @@ class SummaryReport implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getSavedReportResults($json, $savedReport)
+    public function getSavedReportResults($json, $savedReport): ReportResult
     {
         $metadata = [
             'periodStart' => $json['metadata']['periodStart'],
@@ -263,7 +242,7 @@ class SummaryReport implements ReportInterface
     }
 
     /** @inheritDoc */
-    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false)
+    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false): ReportResult
     {
         $type = strtolower($sanitizedParams->getString('type'));
         $layoutId = $sanitizedParams->getInt('layoutId');
