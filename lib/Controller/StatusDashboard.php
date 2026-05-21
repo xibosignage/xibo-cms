@@ -27,11 +27,11 @@ use Exception;
 use GuzzleHttp\Client;
 use PicoFeed\PicoFeedException;
 use PicoFeed\Reader\Reader;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\ByteFormatter;
@@ -45,90 +45,28 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class StatusDashboard extends Base
 {
-    /**
-     * @var StorageServiceInterface
-     */
-    private $store;
-
-    /**
-     * @var PoolInterface
-     */
-    private $pool;
-
-    /**
-     * @var UserFactory
-     */
-    private $userFactory;
-
-    /**
-     * @var DisplayFactory
-     */
-    private $displayFactory;
-
-    /**
-     * @var DisplayGroupFactory
-     */
-    private $displayGroupFactory;
-
-    /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
-
-    /**
-     * Set common dependencies.
-     * @param StorageServiceInterface $store
-     * @param PoolInterface $pool
-     * @param UserFactory $userFactory
-     * @param DisplayFactory $displayFactory
-     * @param DisplayGroupFactory $displayGroupFactory
-     * @param MediaFactory $mediaFactory
-     */
-    public function __construct($store, $pool, $userFactory, $displayFactory, $displayGroupFactory, $mediaFactory)
-    {
-        $this->store = $store;
-        $this->pool = $pool;
-        $this->userFactory = $userFactory;
-        $this->displayFactory = $displayFactory;
-        $this->displayGroupFactory = $displayGroupFactory;
-        $this->mediaFactory = $mediaFactory;
-    }
-
-    /**
-     * Displays
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function displays(Request $request, Response $response)
-    {
-        $parsedRequestParams = $this->getSanitizer($request->getParams());
-        // Get a list of displays
-        $displays = $this->displayFactory->query($this->gridRenderSort($parsedRequestParams), $this->gridRenderFilter([], $parsedRequestParams));
-
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->displayFactory->countLast();
-        $this->getState()->setData($displays);
-
-        return $this->render($request, $response);
+    public function __construct(
+        private readonly StorageServiceInterface $store,
+        private readonly PoolInterface           $pool,
+        private readonly UserFactory             $userFactory,
+        private readonly DisplayFactory          $displayFactory,
+        private readonly MediaFactory            $mediaFactory,
+    ) {
     }
 
     /**
      * View
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function displayPage(Request $request, Response $response)
+    public function displayPage(Request $request, Response $response): Response|ResponseInterface
     {
         $data = [];
         // Set up some suffixes
-        $suffixes = array('B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB');
+        $suffixes = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB'];
 
         try {
             // Get some data for a bandwidth chart
@@ -152,7 +90,12 @@ class StatusDashboard extends Base
             ';
 
             // Permissions
-            $this->displayFactory->viewPermissionSql('Xibo\Entity\DisplayGroup', $sql, $params, '`lkdisplaydg`.displayGroupId');
+            $this->displayFactory->viewPermissionSql(
+                'Xibo\Entity\DisplayGroup',
+                $sql,
+                $params,
+                '`lkdisplaydg`.displayGroupId'
+            );
 
             $sql .= ' GROUP BY MONTH(FROM_UNIXTIME(month)) ';
 
@@ -252,7 +195,15 @@ class StatusDashboard extends Base
             // Library Size in Bytes
             $params = [];
             $sql = 'SELECT IFNULL(SUM(FileSize), 0) AS SumSize, type FROM `media` WHERE 1 = 1 ';
-            $this->mediaFactory->viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId', [], 'media.permissionsFolderId');
+            $this->mediaFactory->viewPermissionSql(
+                'Xibo\Entity\Media',
+                $sql,
+                $params,
+                '`media`.mediaId',
+                '`media`.userId',
+                [],
+                'media.permissionsFolderId'
+            );
             $sql .= ' GROUP BY type ';
 
             $sth = $dbh->prepare($sql);
@@ -331,7 +282,12 @@ class StatusDashboard extends Base
                    WHERE 1 = 1
             ';
 
-            $this->displayFactory->viewPermissionSql('Xibo\Entity\DisplayGroup', $sql, $params, '`lkscheduledisplaygroup`.displayGroupId');
+            $this->displayFactory->viewPermissionSql(
+                'Xibo\Entity\DisplayGroup',
+                $sql,
+                $params,
+                '`lkscheduledisplaygroup`.displayGroupId'
+            );
 
             $sql .= ' ) ';
 
@@ -384,7 +340,7 @@ class StatusDashboard extends Base
                                 $content = strip_tags($item->getContent());
                             } else {
                                 // use description
-                                $content = strip_tags($desc[0] ?? $item->getContent());
+                                $content = ($desc[0] ?? strip_tags($item->getContent()));
                             }
 
                             $latestNews[] = [
@@ -407,10 +363,22 @@ class StatusDashboard extends Base
                     $this->getLog()->error('Unable to get feed: %s', $e->getMessage());
                     $this->getLog()->debug($e->getTraceAsString());
 
-                    $data['latestNews'] = array(array('title' => __('Latest news not available.'), 'description' => '', 'link' => ''));
+                    $data['latestNews'] = [
+                        [
+                            'title' => __('Latest news not available.'),
+                            'description' => '',
+                            'link' => ''
+                        ]
+                    ];
                 }
             } else {
-                $data['latestNews'] = array(array('title' => __('Latest news not enabled.'), 'description' => '', 'link' => ''));
+                $data['latestNews'] = [
+                    [
+                        'title' => __('Latest news not enabled.'),
+                        'description' => '',
+                        'link' => ''
+                    ]
+                ];
             }
 
             // Display Status and Media Inventory data - Level one
@@ -456,21 +424,19 @@ class StatusDashboard extends Base
         // Do we have an embedded widget?
         $data['embeddedWidget'] = html_entity_decode($this->getConfig()->getSetting('EMBEDDED_STATUS_WIDGET'));
 
-        // Render the Theme and output
-        $this->getState()->template = 'dashboard-status-page';
-        $this->getState()->setData($data);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson($data);
     }
 
     /**
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function displayGroups(Request $request, Response $response)
+    public function displayGroups(Request $request, Response $response): Response|ResponseInterface
     {
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
         $status = null;
@@ -524,7 +490,15 @@ class StatusDashboard extends Base
                 }
             }
 
-            $this->displayFactory->viewPermissionSql('Xibo\Entity\DisplayGroup', $sql, $params, '`lkdisplaydg`.displayGroupId', null, [], 'permissionsFolderId');
+            $this->displayFactory->viewPermissionSql(
+                'Xibo\Entity\DisplayGroup',
+                $sql,
+                $params,
+                '`lkdisplaydg`.displayGroupId',
+                null,
+                [],
+                'permissionsFolderId'
+            );
 
             $sql .= ' ORDER BY displaygroup.DisplayGroup ';
 
@@ -533,7 +507,13 @@ class StatusDashboard extends Base
             foreach ($results as $row) {
                 $displayGroupNames[] = $row['displayGroup'];
                 $displayGroupIds[] = $row['DisplayGroupID'];
-                $displaysAssigned[] = count($this->displayFactory->query(['displayGroup'], ['displayGroupId' => $row['DisplayGroupID'], 'mediaInventoryStatus' => $inventoryStatus, 'loggedIn' => $status]));
+                $displaysAssigned[] = count(
+                    $this->displayFactory->query(['displayGroup'], [
+                        'displayGroupId' => $row['DisplayGroupID'],
+                        'mediaInventoryStatus' => $inventoryStatus,
+                        'loggedIn' => $status
+                    ])
+                );
             }
 
             $data['displayGroupNames'] = json_encode($displayGroupNames);
@@ -545,6 +525,9 @@ class StatusDashboard extends Base
             $this->getLog()->error($e->getMessage());
             $this->getLog()->debug($e->getTraceAsString());
         }
-        return $this->render($request, $response);
+
+        return $response
+            ->withStatus(200)
+            ->withJson($data);
     }
 }

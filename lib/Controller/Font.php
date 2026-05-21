@@ -22,8 +22,10 @@
 
 namespace Xibo\Controller;
 
+use FontLib\Exception\FontNotFoundException;
 use GuzzleHttp\Psr7\Stream;
 use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Invalidation;
@@ -37,6 +39,8 @@ use Xibo\Service\MediaServiceInterface;
 use Xibo\Service\UploadService;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -72,27 +76,6 @@ class Font extends Base
         return $this->fontFactory;
     }
 
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function displayPage(Request $request, Response $response)
-    {
-        if (!$this->getUser()->featureEnabled('font.view')) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'fonts-page';
-        $this->getState()->setData([
-            'validExt' => implode('|', $this->getValidExtensions())
-        ]);
-
-        return $this->render($request, $response);
-    }
-
     #[OA\Get(
         path: '/fonts',
         operationId: 'fontSearch',
@@ -114,9 +97,48 @@ class Font extends Base
         required: false,
         schema: new OA\Schema(type: 'string')
     )]
+    #[OA\Parameter(
+        name: 'keyword',
+        description: 'Filter by Font name or ID',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: [
+                'id',
+                'name',
+                'fileName',
+                'createdAt',
+                'modifiedAt',
+                'modifiedBy',
+                'size',
+            ]
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
     #[OA\Response(
         response: 200,
         description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: '#/components/schemas/Font')
@@ -127,71 +149,76 @@ class Font extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
 
+        $fontSortQuery = $this->gridRenderSort(
+            $parsedQueryParams,
+            $this->isJson($request),
+        );
+        $fontFilterQuery = $this->getFontFilterQuery($parsedQueryParams);
+
         // Construct the SQL
-        $fonts = $this->fontFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter([
-            'id' => $parsedQueryParams->getInt('id'),
-            'name' => $parsedQueryParams->getString('name'),
-        ], $parsedQueryParams));
+        $fonts = $this->fontFactory->query($fontSortQuery, $fontFilterQuery);
 
         foreach ($fonts as $font) {
             $font->setUnmatchedProperty('fileSizeFormatted', ByteFormatter::format($font->size));
-            $font->buttons = [];
-            if ($this->isApi($request)) {
-                break;
-            }
-
-            // download the font file
-            $font->buttons[] = [
-                'id' => 'content_button_download',
-                'linkType' => '_self', 'external' => true,
-                'url' => $this->urlFor($request, 'font.download', ['id' => $font->id]),
-                'text' => __('Download')
-            ];
-
-            // font details from fontLib and preview text
-            $font->buttons[] = [
-                'id' => 'font_button_details',
-                'url' => $this->urlFor($request, 'font.details', ['id' => $font->id]),
-                'text' => __('Details')
-            ];
-
-            $font->buttons[] = ['divider' => true];
-
-            if ($this->getUser()->featureEnabled('font.delete')) {
-                // Delete Button
-                $font->buttons[] = [
-                    'id' => 'content_button_delete',
-                    'url' => $this->urlFor($request, 'font.form.delete', ['id' => $font->id]),
-                    'text' => __('Delete'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor($request, 'font.delete', ['id' => $font->id])
-                        ],
-                        ['name' => 'commit-method', 'value' => 'delete'],
-                        ['name' => 'id', 'value' => 'content_button_delete'],
-                        ['name' => 'text', 'value' => __('Delete')],
-                        ['name' => 'sort-group', 'value' => 1],
-                        ['name' => 'rowtitle', 'value' => $font->name]
-                    ]
-                ];
-            }
         }
 
+        $recordsTotal = $this->fontFactory->countLast();
+
+        if ($this->isApi($request) || $this->isJson($request)) {
+            return $response
+                ->withStatus(200)
+                ->withHeader('X-Total-Count', $recordsTotal)
+                ->withJson($fonts);
+        }
+
+        // TODO: Remove this once the layout editor is ready
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->fontFactory->countLast();
+        $this->getState()->recordsTotal = $recordsTotal;
         $this->getState()->setData($fonts);
 
         return $this->render($request, $response);
+    }
+
+    #[OA\Get(
+        path: '/fonts/{fontId}',
+        operationId: 'fontSearchById',
+        description: 'Get the Font object specified by the provided fontId',
+        summary: 'Font Search by ID',
+        tags: ['font']
+    )]
+    #[OA\Parameter(
+        name: 'fontId',
+        description: 'Numeric ID of the Font to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Font')
+    )]
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param int $id
+     * @return Response|ResponseInterface
+     * @throws NotFoundException
+     */
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
+    {
+        $font = $this->fontFactory->getById($id);
+
+        return $response
+            ->withStatus(200)
+            ->withJson($font);
     }
 
     #[OA\Get(
@@ -215,13 +242,13 @@ class Font extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \FontLib\Exception\FontNotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws FontNotFoundException
+     * @throws ControllerNotImplemented
      */
-    public function getFontLibDetails(Request $request, Response $response, $id)
+    public function getFontLibDetails(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $font = $this->fontFactory->getById($id);
         $fontLib = \FontLib\Font::load($font->getFilePath());
@@ -238,13 +265,12 @@ class Font extends Base
             'Font Copyright' => $fontLib->getFontCopyright(),
         ];
 
-        $this->getState()->template = 'fonts-fontlib-details';
-        $this->getState()->setData([
-            'details' => $fontDetails,
-            'fontId' => $font->id
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson([
+                'font' => $font,
+                'details' => $fontDetails
+            ]);
     }
 
     #[OA\Get(
@@ -264,10 +290,6 @@ class Font extends Base
     #[OA\Response(
         response: 200,
         description: 'successful operation',
-        content: new OA\MediaType(
-            mediaType: 'application/octet-stream',
-            schema: new OA\Schema(format: 'binary', type: 'string')
-        ),
         headers: [
             new OA\Header(
                 header: 'X-Sendfile',
@@ -279,16 +301,20 @@ class Font extends Base
                 description: 'nginx send file header - if enabled.',
                 schema: new OA\Schema(type: 'string')
             )
-        ]
+        ],
+        content: new OA\MediaType(
+            mediaType: 'application/octet-stream',
+            schema: new OA\Schema(type: 'string', format: 'binary')
+        )
     )]
     /**
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @return ResponseInterface|Response
+     * @throws GeneralException
      */
-    public function download(Request $request, Response $response, $id)
+    public function download(Request $request, Response $response, $id): Response|ResponseInterface
     {
         if (is_numeric($id)) {
             $font = $this->fontFactory->getById($id);
@@ -310,9 +336,10 @@ class Font extends Base
     }
 
     /**
+     * Get the list of valid extensions
      * @return string[]
      */
-    private function getValidExtensions()
+    private function getValidExtensions(): array
     {
         return ['otf', 'ttf', 'eot', 'svg', 'woff'];
     }
@@ -325,22 +352,22 @@ class Font extends Base
         tags: ['font']
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'multipart/form-data',
             schema: new OA\Schema(
+                required: ['files'],
                 properties: [
                     new OA\Property(
                         property: 'files',
                         description: 'The Uploaded File',
-                        format: 'binary',
-                        type: 'string'
+                        type: 'string',
+                        format: 'binary'
                     ),
                     new OA\Property(property: 'name', description: 'Optional Font Name', type: 'string')
-                ],
-                required: ['files']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(response: 200, description: 'successful operation')]
     /**
@@ -348,16 +375,16 @@ class Font extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws ConfigurationException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws ControllerNotImplemented
+     * @throws DuplicateEntityException
      */
-    public function add(Request $request, Response $response)
+    public function add(Request $request, Response $response): Response|ResponseInterface
     {
         if (!$this->getUser()->featureEnabled('font.add')) {
             throw new AccessDeniedException();
@@ -434,37 +461,6 @@ class Font extends Base
         return $this->render($request, $response);
     }
 
-    /**
-     * Font Delete Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function deleteForm(Request $request, Response $response, $id)
-    {
-        if (!$this->getUser()->featureEnabled('font.delete')) {
-            throw new AccessDeniedException();
-        }
-
-        if (is_numeric($id)) {
-            $font = $this->fontFactory->getById($id);
-        } else {
-            $font = $this->fontFactory->getByName($id)[0];
-        }
-
-        $this->getState()->template = 'font-form-delete';
-        $this->getState()->setData([
-            'font' => $font
-        ]);
-
-        return $this->render($request, $response);
-    }
-
     #[OA\Delete(
         path: '/fonts/{id}/delete',
         operationId: 'fontDelete',
@@ -486,16 +482,16 @@ class Font extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws ConfigurationException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws ControllerNotImplemented
+     * @throws DuplicateEntityException
      */
-    public function delete(Request $request, Response $response, $id)
+    public function delete(Request $request, Response $response, $id): Response|ResponseInterface
     {
         if (!$this->getUser()->featureEnabled('font.delete')) {
             throw new AccessDeniedException();
@@ -520,15 +516,12 @@ class Font extends Base
      * Return the CMS flavored font css
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface
+     * @return Response|ResponseInterface
      * @throws ConfigurationException
+     * @throws ControllerNotImplemented
      * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
-    public function fontCss(Request $request, Response $response)
+    public function fontCss(Request $request, Response $response): Response|ResponseInterface
     {
         $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'fonts/local_fontcss';
 
@@ -544,12 +537,16 @@ class Font extends Base
             foreach ($this->fontFactory->query() as $font) {
                 // Go through all installed fonts each time and regenerate.
                 $fontTemplate = '@font-face {
-    font-family: \'[family]\';
-    src: url(\'[url]\');
-}';
+                    font-family: \'[family]\';
+                    src: url(\'[url]\');
+                }';
                 // Css for the local CMS contains the full download path to the font
                 $url = $this->urlFor($request, 'font.download', ['id' => $font->id]);
-                $localCss .= str_replace('[url]', $url, str_replace('[family]', $font->familyName, $fontTemplate));
+                $localCss .= str_replace(
+                    '[url]',
+                    $url,
+                    str_replace('[family]', $font->familyName, $fontTemplate)
+                );
             }
 
             // cache
@@ -587,9 +584,11 @@ class Font extends Base
 
         // Return the CSS to the browser as a file
         $out = fopen($tempFileName, 'w');
+
         if (!$out) {
             throw new ConfigurationException(__('Unable to write to the library'));
         }
+
         fputs($out, $localCss);
         fclose($out);
 
@@ -602,5 +601,19 @@ class Font extends Base
             ->withBody(new Stream(fopen($tempFileName, 'r')));
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Get the font filter query
+     * @param $parsedQueryParams
+     * @return array
+     */
+    private function getFontFilterQuery($parsedQueryParams): array
+    {
+        return $this->gridRenderFilter([
+            'id' => $parsedQueryParams->getInt('id'),
+            'name' => $parsedQueryParams->getString('name'),
+            'keyword' => $parsedQueryParams->getString('keyword'),
+        ], $parsedQueryParams);
     }
 }

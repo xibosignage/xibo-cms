@@ -298,6 +298,7 @@ export default function ManageMembersModal({
 
   return (
     <Modal
+      variant="tabbed"
       isOpen={isOpen}
       title={t('Manage Membership for {{name}}', { name: displayGroup?.displayGroup })}
       onClose={onClose}
@@ -314,8 +315,8 @@ export default function ManageMembersModal({
       ]}
     >
       {/* Tab bar */}
-      <div className="flex flex-col h-full overflow-y-hidden overflow-x-visible px-6">
-        <nav className="flex overflow-x-auto border-b border-gray-200" aria-label="Tabs">
+      <div className="flex flex-col shrink-0 overflow-x-visible px-6">
+        <nav className="flex overflow-x-auto" aria-label="Tabs">
           {tabs.map((tab) => (
             <button
               key={tab.key}

@@ -640,6 +640,7 @@ class Template extends Base
             'layout' => $sanitizedQueryParams->getString('template'),
             'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
             'folderId' => $sanitizedQueryParams->getInt('folderId'),
+            'exactTags' => $sanitizedQueryParams->getCheckbox('exactTags'),
             'logicalOperator' => $sanitizedQueryParams->getString('logicalOperator'),
             'logicalOperatorName' => $sanitizedQueryParams->getString('logicalOperatorName'),
         ], $sanitizedQueryParams);

@@ -46,6 +46,7 @@ import TriggerWebhookModal from './TriggerWebhookModal';
 
 import Modal from '@/components/ui/modals/Modal';
 import MoveModal from '@/components/ui/modals/MoveModal';
+import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
 import type { MoveCmsData } from '@/services/displaysApi';
 import type { Display, DisplayCommandTarget } from '@/types/display';
@@ -651,6 +652,18 @@ export function DisplayModals({ actions, selection, handlers }: DisplayModalsPro
           display={display}
           onClose={actions.closeModal}
           onSave={actions.handleRefresh}
+        />
+      )}
+
+      {isModalOpen('schedule') && display && (
+        <ScheduleEventModal
+          isOpen
+          onClose={() => {
+            actions.closeModal();
+            actions.handleRefresh();
+          }}
+          mode="add"
+          displaySpecificGroupIds={[display.displayGroupId]}
         />
       )}
     </>

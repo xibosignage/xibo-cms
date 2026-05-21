@@ -27,8 +27,10 @@ import DeleteTemplateModal from './DeleteTemplateModal';
 
 import FolderActionModals from '@/components/ui/FolderActionModals';
 import MoveModal from '@/components/ui/modals/MoveModal';
+import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
 import type { useFolderActions } from '@/hooks/useFolderActions';
+import { EventTypeId } from '@/types/event';
 import type { Template } from '@/types/templates';
 
 interface TemplatesModalsProps {
@@ -43,6 +45,7 @@ interface TemplatesModalsProps {
   selection: {
     selectedTemplate: Template | null;
     selectedTemplateId: number | null;
+    defaultFolderId?: number;
     itemsToDelete: Template[];
     existingNames: string[];
     itemsToMove: Template[];
@@ -72,6 +75,7 @@ export function TemplateModals({
       {isModalOpen('edit') && (
         <AddAndEditTemplateModal
           type={selection.selectedTemplateId ? 'edit' : 'add'}
+          defaultFolderId={selection.defaultFolderId}
           onClose={() => {
             actions.closeModal();
           }}
@@ -123,6 +127,19 @@ export function TemplateModals({
           onConfirm={handlers?.handleConfirmMove}
           items={selection.itemsToMove}
           entityLabel={t('Templates')}
+        />
+      )}
+      {isModalOpen('schedule') && selection.selectedTemplate && (
+        <ScheduleEventModal
+          isOpen
+          onClose={() => {
+            actions.closeModal();
+            actions.handleRefresh();
+          }}
+          mode="schedule"
+          eventTypeId={EventTypeId.Layout}
+          contentId={selection.selectedTemplate.campaignId}
+          contentName={selection.selectedTemplate.layout}
         />
       )}
     </>

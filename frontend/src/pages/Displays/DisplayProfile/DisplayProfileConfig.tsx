@@ -31,13 +31,19 @@ import type { DisplayProfile } from '@/types/displayProfile';
 import type { ActionItem, BaseModalType } from '@/types/table';
 
 export interface DisplayProfileFilterInput {
+  displayProfile: string;
   type: string | null;
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: boolean;
 }
 
 export type ModalType = BaseModalType | 'add' | 'copy' | null;
 
 export const INITIAL_FILTER_STATE: DisplayProfileFilterInput = {
+  displayProfile: '',
   type: null,
+  logicalOperatorName: 'OR',
+  useRegexForName: false,
 };
 
 export const getTypeOptions = (t: TFunction): { label: string; value: string }[] => [
@@ -51,11 +57,20 @@ export const getTypeOptions = (t: TFunction): { label: string; value: string }[]
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayProfileFilterInput>[] => [
   {
+    label: t('Name'),
+    name: 'displayProfile',
+    type: 'text',
+    className: '',
+    placeholder: ' ',
+    showAndOr: true,
+    andOrKey: 'logicalOperatorName',
+    showRegex: true,
+    regexKey: 'useRegexForName',
+  },
+  {
     label: t('Type'),
     name: 'type',
     className: '',
-    shouldTranslateOptions: false,
-    showAllOption: true,
     options: getTypeOptions(t),
   },
 ];

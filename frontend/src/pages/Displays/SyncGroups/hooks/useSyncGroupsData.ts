@@ -26,6 +26,7 @@ import type { AxiosError } from 'axios';
 import type { SyncGroupsFilterInput } from '../SyncGroupsConfig';
 
 import { fetchSyncGroups } from '@/services/syncGroupApi';
+import { isValidRegex } from '@/utils/regex';
 
 export const syncGroupQueryKeys = {
   all: ['syncGroups'] as const,
@@ -36,6 +37,7 @@ interface UseSyncGroupParams {
   pagination: PaginationState;
   sorting: SortingState;
   filter: string;
+  folderId: number | null;
   advancedFilters: SyncGroupsFilterInput;
   enabled?: boolean;
 }
@@ -44,6 +46,7 @@ export const useSyncGroupData = ({
   pagination,
   sorting,
   filter,
+  folderId,
   advancedFilters,
   enabled = true,
 }: UseSyncGroupParams) => {
@@ -52,6 +55,7 @@ export const useSyncGroupData = ({
     pageSize: pagination.pageSize,
     sorting,
     filter,
+    folderId,
     ...advancedFilters,
   };
 
@@ -60,12 +64,25 @@ export const useSyncGroupData = ({
 
     queryFn: async ({ signal }) => {
       const startOffset = pagination.pageIndex * pagination.pageSize;
+      const sortBy = sorting?.[0]?.id;
+      const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
+
+      const { useRegexForName, logicalOperatorName } = advancedFilters;
 
       return fetchSyncGroups({
         start: startOffset,
         length: pagination.pageSize,
         keyword: filter || undefined,
+        sortBy,
+        sortDir: sorting.length ? sortDir : undefined,
+        ...(typeof folderId === 'number' ? { folderId } : {}),
+        ...(advancedFilters.syncGroupId ? { syncGroupId: advancedFilters.syncGroupId } : {}),
+        ...(advancedFilters.name ? { name: advancedFilters.name } : {}),
         ...(advancedFilters.leadDisplayId ? { leadDisplayId: advancedFilters.leadDisplayId } : {}),
+        ...(useRegexForName && advancedFilters.name && isValidRegex(advancedFilters.name)
+          ? { useRegexForName: 1 }
+          : {}),
+        ...(logicalOperatorName ? { logicalOperatorName } : {}),
         signal,
       });
     },

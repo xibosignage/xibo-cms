@@ -34,14 +34,21 @@ vi.mock('@/services/datasetApi', () => ({
   cloneDataset: (...args: unknown[]) => mockCloneDataset(...args),
 }));
 
+const mockSelectFolder = vi.fn();
+vi.mock('@/services/folderApi', () => ({
+  selectFolder: (...args: unknown[]) => mockSelectFolder(...args),
+}));
+
 const mockNotifySuccess = vi.fn();
 const mockNotifyError = vi.fn();
+const mockNotifyWarning = vi.fn();
+const mockNotifyInfo = vi.fn();
 vi.mock('@/components/ui/Notification', () => ({
   notify: {
     success: (...args: unknown[]) => mockNotifySuccess(...args),
     error: (...args: unknown[]) => mockNotifyError(...args),
-    info: vi.fn(),
-    warning: vi.fn(),
+    info: (...args: unknown[]) => mockNotifyInfo(...args),
+    warning: (...args: unknown[]) => mockNotifyWarning(...args),
   },
 }));
 
@@ -53,16 +60,8 @@ describe('useDatasetActions', () => {
   const mockSetRowSelection = vi.fn();
   const mockSetItemsToMove = vi.fn();
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockDeleteDataset.mockReset();
-    mockCloneDataset.mockReset();
-    mockNotifySuccess.mockReset();
-    mockNotifyError.mockReset();
-  });
-
-  it('initializes with default states', () => {
-    const { result } = renderHook(() =>
+  const renderActions = () =>
+    renderHook(() =>
       useDatasetActions({
         t: mockT,
         handleRefresh: mockHandleRefresh,
@@ -71,6 +70,13 @@ describe('useDatasetActions', () => {
         setItemsToMove: mockSetItemsToMove,
       }),
     );
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it('initializes with default states', () => {
+    const { result } = renderActions();
 
     expect(result.current.isDeleting).toBe(false);
     expect(result.current.isCloning).toBe(false);
@@ -81,15 +87,7 @@ describe('useDatasetActions', () => {
     it('successfully deletes items and triggers callbacks', async () => {
       mockDeleteDataset.mockResolvedValue({});
 
-      const { result } = renderHook(() =>
-        useDatasetActions({
-          t: mockT,
-          handleRefresh: mockHandleRefresh,
-          closeModal: mockCloseModal,
-          setRowSelection: mockSetRowSelection,
-          setItemsToMove: mockSetItemsToMove,
-        }),
-      );
+      const { result } = renderActions();
 
       const itemsToDelete = [mockDataset({ dataSetId: 1 }), mockDataset({ dataSetId: 2 })];
 
@@ -108,15 +106,7 @@ describe('useDatasetActions', () => {
     it('handles deletion rejection and sets deleteError', async () => {
       mockDeleteDataset.mockResolvedValueOnce({}).mockRejectedValueOnce(new Error('Network Error'));
 
-      const { result } = renderHook(() =>
-        useDatasetActions({
-          t: mockT,
-          handleRefresh: mockHandleRefresh,
-          closeModal: mockCloseModal,
-          setRowSelection: mockSetRowSelection,
-          setItemsToMove: mockSetItemsToMove,
-        }),
-      );
+      const { result } = renderActions();
 
       await act(async () => {
         await result.current.confirmDelete(
@@ -129,21 +119,49 @@ describe('useDatasetActions', () => {
       expect(mockHandleRefresh).toHaveBeenCalled();
       expect(mockCloseModal).not.toHaveBeenCalled();
     });
+
+    it('resets isDeleting to false after completion', async () => {
+      mockDeleteDataset.mockResolvedValue({});
+
+      const { result } = renderActions();
+
+      await act(async () => {
+        await result.current.confirmDelete([mockDataset({ dataSetId: 1 })], { deleteData: false });
+      });
+
+      expect(result.current.isDeleting).toBe(false);
+    });
+
+    it('does not call closeModal when some items fail to delete', async () => {
+      mockDeleteDataset.mockRejectedValue(new Error('Failed'));
+
+      const { result } = renderActions();
+
+      await act(async () => {
+        await result.current.confirmDelete([mockDataset({ dataSetId: 1 })], { deleteData: false });
+      });
+
+      expect(mockCloseModal).not.toHaveBeenCalled();
+    });
+
+    it('still calls handleRefresh when some deletions fail', async () => {
+      mockDeleteDataset.mockRejectedValue(new Error('Failed'));
+
+      const { result } = renderActions();
+
+      await act(async () => {
+        await result.current.confirmDelete([mockDataset({ dataSetId: 1 })], { deleteData: false });
+      });
+
+      expect(mockHandleRefresh).toHaveBeenCalled();
+    });
   });
 
   describe('handleConfirmClone', () => {
     it('successfully clones and triggers notifications', async () => {
       mockCloneDataset.mockResolvedValue({});
 
-      const { result } = renderHook(() =>
-        useDatasetActions({
-          t: mockT,
-          handleRefresh: mockHandleRefresh,
-          closeModal: mockCloseModal,
-          setRowSelection: mockSetRowSelection,
-          setItemsToMove: mockSetItemsToMove,
-        }),
-      );
+      const { result } = renderActions();
 
       await act(async () => {
         await result.current.handleConfirmClone(
@@ -166,6 +184,150 @@ describe('useDatasetActions', () => {
       expect(mockNotifySuccess).toHaveBeenCalledWith('Dataset copied successfully');
       expect(mockNotifyError).not.toHaveBeenCalled();
       expect(mockCloseModal).toHaveBeenCalled();
+    });
+
+    it('shows error notification when clone fails', async () => {
+      mockCloneDataset.mockRejectedValue(new Error('Network Error'));
+
+      const { result } = renderActions();
+
+      await act(async () => {
+        await result.current.handleConfirmClone(
+          mockDataset({ dataSetId: 99 }),
+          'New Name',
+          'Desc',
+          'CODE',
+          false,
+        );
+      });
+
+      expect(mockNotifyError).toHaveBeenCalledWith('Failed to copy dataset');
+      expect(mockNotifySuccess).not.toHaveBeenCalled();
+      expect(mockCloseModal).not.toHaveBeenCalled();
+      expect(result.current.isCloning).toBe(false);
+    });
+
+    it('does nothing when selectedDataset is null', async () => {
+      const { result } = renderActions();
+
+      await act(async () => {
+        await result.current.handleConfirmClone(null, 'New Name', 'Desc', 'CODE', false);
+      });
+
+      expect(mockCloneDataset).not.toHaveBeenCalled();
+    });
+
+    it('resets isCloning to false after completion', async () => {
+      mockCloneDataset.mockResolvedValue({});
+
+      const { result } = renderActions();
+
+      await act(async () => {
+        await result.current.handleConfirmClone(
+          mockDataset({ dataSetId: 1 }),
+          'Clone',
+          '',
+          '',
+          false,
+        );
+      });
+
+      expect(result.current.isCloning).toBe(false);
+    });
+
+    it('passes copyRows: true to cloneDataset when flag is set', async () => {
+      mockCloneDataset.mockResolvedValue({});
+
+      const { result } = renderActions();
+
+      await act(async () => {
+        await result.current.handleConfirmClone(
+          mockDataset({ dataSetId: 5 }),
+          'CopyWithRows',
+          '',
+          '',
+          true,
+        );
+      });
+
+      expect(mockCloneDataset).toHaveBeenCalledWith(expect.objectContaining({ copyRows: true }));
+    });
+  });
+
+  describe('handleConfirmMove', () => {
+    it('successfully moves items and triggers success notification', async () => {
+      mockSelectFolder.mockResolvedValue({ success: true });
+
+      const { result } = renderActions();
+
+      const itemsToMove = [mockDataset({ dataSetId: 1 }), mockDataset({ dataSetId: 2 })];
+
+      await act(async () => {
+        await result.current.handleConfirmMove(itemsToMove, 10);
+      });
+
+      expect(mockSelectFolder).toHaveBeenCalledTimes(2);
+      expect(mockSelectFolder).toHaveBeenCalledWith({
+        folderId: 10,
+        targetId: 1,
+        targetType: 'dataset',
+      });
+      expect(mockNotifySuccess).not.toHaveBeenCalled();
+      expect(mockHandleRefresh).toHaveBeenCalled();
+      expect(mockCloseModal).toHaveBeenCalled();
+    });
+
+    it('shows error notification when all moves fail', async () => {
+      mockSelectFolder.mockResolvedValue({ success: false });
+
+      const { result } = renderActions();
+
+      await act(async () => {
+        await result.current.handleConfirmMove([mockDataset({ dataSetId: 1 })], 10);
+      });
+
+      expect(mockNotifyError).toHaveBeenCalledWith('Failed to move items.');
+    });
+
+    it('shows partial warning when some moves fail', async () => {
+      mockSelectFolder
+        .mockResolvedValueOnce({ success: true })
+        .mockResolvedValueOnce({ success: false });
+
+      const { result } = renderActions();
+
+      await act(async () => {
+        await result.current.handleConfirmMove(
+          [mockDataset({ dataSetId: 1 }), mockDataset({ dataSetId: 2 })],
+          10,
+        );
+      });
+
+      expect(mockNotifyWarning).toHaveBeenCalled();
+    });
+
+    it('does nothing when itemsToMove is empty', async () => {
+      const { result } = renderActions();
+
+      await act(async () => {
+        await result.current.handleConfirmMove([], 10);
+      });
+
+      expect(mockSelectFolder).not.toHaveBeenCalled();
+    });
+
+    it('calls selectFolder with targetType: "dataset"', async () => {
+      mockSelectFolder.mockResolvedValue({ success: true });
+
+      const { result } = renderActions();
+
+      await act(async () => {
+        await result.current.handleConfirmMove([mockDataset({ dataSetId: 7 })], 3);
+      });
+
+      expect(mockSelectFolder).toHaveBeenCalledWith(
+        expect.objectContaining({ targetType: 'dataset' }),
+      );
     });
   });
 });

@@ -32,7 +32,7 @@ import {
   FloatingPortal,
 } from '@floating-ui/react';
 import { ChevronDown, Search } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useId, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
@@ -47,6 +47,8 @@ interface SelectDropdownProps {
   label?: string;
   value?: string;
   placeholder?: string;
+  initialLabel?: string;
+  resolveLabel?: (value: string) => Promise<string>;
   options: SelectOption[];
   searchable?: boolean;
   searchPlaceholder?: string;
@@ -64,12 +66,15 @@ interface SelectDropdownProps {
   hasMore?: boolean;
   isLoadingMore?: boolean;
   clearable?: boolean;
+  optional?: boolean;
 }
 
 export default function SelectDropdown({
   label,
   value,
   placeholder = 'Select',
+  initialLabel,
+  resolveLabel,
   options,
   searchable,
   searchPlaceholder,
@@ -87,19 +92,50 @@ export default function SelectDropdown({
   hasMore,
   isLoadingMore,
   clearable,
+  optional = false,
 }: SelectDropdownProps) {
   const { t } = useTranslation();
+  const id = useId();
 
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const sentinelRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const labelCache = useRef<Map<string, string>>(new Map());
+  const isLoadingMoreRef = useRef(isLoadingMore);
+  isLoadingMoreRef.current = isLoadingMore;
+  const resolvingRef = useRef<string | undefined>(undefined);
+  const [, setResolveVersion] = useState(0);
+
+  useEffect(() => {
+    if (!value || !resolveLabel) {
+      return;
+    }
+    if (labelCache.current.has(value)) {
+      return;
+    }
+    if (resolvingRef.current === value) {
+      return;
+    }
+
+    resolvingRef.current = value;
+    resolveLabel(value)
+      .then((label) => {
+        labelCache.current.set(value, label);
+        setResolveVersion((v) => v + 1);
+      })
+      .catch(() => {})
+      .finally(() => {
+        resolvingRef.current = undefined;
+      });
+  }, [value, resolveLabel]);
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
-    if (!open) {
-      setSearchTerm('');
+    if (open) {
       onSearch?.('');
+    } else {
+      setSearchTerm('');
     }
   };
 
@@ -116,7 +152,7 @@ export default function SelectDropdown({
     const el = sentinelRef.current;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting && !isLoadingMore) {
+        if (entries[0]?.isIntersecting && !isLoadingMoreRef.current) {
           onLoadMore();
         }
       },
@@ -125,9 +161,14 @@ export default function SelectDropdown({
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [isOpen, hasMore, onLoadMore, isLoadingMore]);
+  }, [isOpen, hasMore, onLoadMore]);
 
-  const selectedLabel = options.find((o) => o.value === value)?.label ?? '';
+  for (const o of options) {
+    labelCache.current.set(o.value, o.label);
+  }
+  const selectedLabel =
+    options.find((o) => o.value === value)?.label ??
+    (value ? (labelCache.current.get(value) ?? initialLabel ?? '') : '');
 
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
@@ -155,12 +196,24 @@ export default function SelectDropdown({
   return (
     <div className={twMerge('relative overflow-visible', className)}>
       {label && (
-        <label className="text-sm font-semibold text-gray-500 leading-5">{label && t(label)}</label>
+        <label
+          id={`${id}-label`}
+          className="flex items-center justify-between text-sm font-semibold text-gray-500 leading-5"
+        >
+          <span>{t(label)}</span>
+          {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
+        </label>
       )}
 
       <div
         ref={refs.setReference}
         {...getReferenceProps()}
+        role="combobox"
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        aria-labelledby={label ? `${id}-label` : undefined}
+        aria-controls={`${id}-listbox`}
+        tabIndex={0}
         className="w-full border bg-white border-gray-200 rounded-lg flex items-center cursor-pointer h-11.25 hover:border-gray-400 focus-within:border-xibo-blue-600 focus-within:ring-1 focus-within:ring-xibo-blue-600/25 focus:outline-none transition-colors"
       >
         {addLeftLabel && leftLabelContent && (
@@ -171,7 +224,7 @@ export default function SelectDropdown({
         <span
           className={twMerge(
             'py-2 px-3 flex-1 text-sm truncate min-w-0',
-            isLoading ? 'text-gray-400 italic' : 'text-gray-800',
+            isLoading ? 'text-gray-400 italic' : selectedLabel ? 'text-gray-800' : 'text-gray-500',
           )}
         >
           {isLoading ? t('Loading...') : selectedLabel || t(placeholder)}
@@ -200,13 +253,13 @@ export default function SelectDropdown({
               </span>
             )}
             {searchable && (
-              <div className="p-2 border-b border-gray-100 flex items-center gap-2">
-                <Search size={14} className="text-gray-400 shrink-0" />
+              <div className="m-2 p-3 border border-gray-200 rounded-lg flex items-center gap-2 focus-within:border-xibo-blue-600 focus-within:ring-1 focus-within:ring-xibo-blue-600/25">
+                <Search size={14} className="text-gray-500 shrink-0" />
                 <input
                   autoFocus
                   type="text"
-                  className="flex-1 w-full text-sm outline-none border-none bg-transparent"
-                  placeholder={searchPlaceholder ?? t('Search…')}
+                  className="flex-1 w-full p-0 text-sm outline-none border-none bg-transparent hover:border-none focus:ring-0 focus:shadow-none"
+                  placeholder={searchPlaceholder ?? t('Search')}
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value);
@@ -217,6 +270,8 @@ export default function SelectDropdown({
               </div>
             )}
             <div
+              id={`${id}-listbox`}
+              role="listbox"
               ref={scrollContainerRef}
               className="flex flex-col p-2 text-sm overflow-y-auto max-h-75"
             >
@@ -242,6 +297,8 @@ export default function SelectDropdown({
                 <button
                   key={option.value}
                   type="button"
+                  role="option"
+                  aria-selected={option.value === value}
                   disabled={option.disabled}
                   className={twMerge(
                     'text-left p-2 rounded-lg font-medium flex gap-2 items-center min-w-0',
@@ -259,7 +316,7 @@ export default function SelectDropdown({
                   }}
                 >
                   {addOptionAvatar && (
-                    <div className="bg-xibo-blue-100 h-6.5 w-6.5 text-[12px] center rounded-full text-xibo-blue-800 font-semibold flex items-center justify-center">
+                    <div className="bg-xibo-blue-100 h-6.5 w-6.5 text-xs center rounded-full text-xibo-blue-800 font-semibold flex items-center justify-center">
                       {option.label.slice(0, 1)}
                     </div>
                   )}

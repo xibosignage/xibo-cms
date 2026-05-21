@@ -36,7 +36,7 @@ interface MediaPreviewerProps {
   fileName?: string | undefined;
   onMove?: () => void;
   onShare?: (id: number) => void;
-  onDownload: () => void;
+  onDownload?: () => void;
   onClose: () => void;
   mediaData?: Media | null;
   folderName?: string;
@@ -58,6 +58,7 @@ export default function MediaPreviewer({
   const [showInfoPanel, setShowInfoPanel] = useState(false);
   const activeUrlRef = useRef<string | null>(null);
   const [url, setUrl] = useState<string | null>(null);
+  const [resolvedType, setResolvedType] = useState<string | undefined>(mediaType ?? undefined);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -76,6 +77,7 @@ export default function MediaPreviewer({
   useEffect(() => {
     if (!mediaId) {
       revokeUrl();
+      setResolvedType(undefined);
       setShowInfoPanel(false);
       return;
     }
@@ -90,13 +92,28 @@ export default function MediaPreviewer({
       try {
         const rawBlob = await fetchMediaBlob(mediaId);
 
-        if (!isMounted) return;
+        if (!isMounted) {
+          return;
+        }
+
+        const detected =
+          mediaType ??
+          (rawBlob.type.startsWith('video/')
+            ? 'video'
+            : rawBlob.type.startsWith('audio/')
+              ? 'audio'
+              : rawBlob.type === 'application/pdf'
+                ? 'pdf'
+                : rawBlob.type.startsWith('image/')
+                  ? 'image'
+                  : undefined);
+        setResolvedType(detected);
 
         let mimeType = rawBlob.type;
 
-        if (mediaType === 'pdf') {
+        if (detected === 'pdf') {
           mimeType = 'application/pdf';
-        } else if (mediaType === 'video') {
+        } else if (detected === 'video') {
           mimeType = 'video/mp4';
         }
         const finalBlob = new Blob([rawBlob], { type: mimeType });
@@ -159,20 +176,24 @@ export default function MediaPreviewer({
               <UserPlus2 className="p-1" />
             </button>
           )}
-          <button
-            onClick={onDownload}
-            className="flex justify-center items-center cursor-pointer rounded-lg hover:bg-white/10"
-            title={t('Download')}
-          >
-            <Download className="p-1" />
-          </button>
-          <button
-            onClick={() => setShowInfoPanel((prev) => !prev)}
-            className="flex justify-center items-center cursor-pointer rounded-lg hover:bg-white/10"
-            title={t('Details')}
-          >
-            <Info className="p-1" />
-          </button>
+          {onDownload && (
+            <button
+              onClick={onDownload}
+              className="flex justify-center items-center cursor-pointer rounded-lg hover:bg-white/10"
+              title={t('Download')}
+            >
+              <Download className="p-1" />
+            </button>
+          )}
+          {mediaData && (
+            <button
+              onClick={() => setShowInfoPanel((prev) => !prev)}
+              className="flex justify-center items-center cursor-pointer rounded-lg hover:bg-white/10"
+              title={t('Details')}
+            >
+              <Info className="p-1" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -187,19 +208,19 @@ export default function MediaPreviewer({
             <div className="text-red-500 bg-red-50 p-4 rounded">{error}</div>
           ) : url ? (
             <>
-              {mediaType === 'video' ? (
+              {resolvedType === 'video' ? (
                 <video src={url} controls className="max-h-full max-w-full shadow-md" autoPlay />
-              ) : mediaType === 'image' ? (
+              ) : resolvedType === 'image' ? (
                 <img
                   src={url}
                   alt={fileName}
                   className="max-w-full max-h-full object-contain shadow-md"
                 />
-              ) : mediaType === 'audio' ? (
+              ) : resolvedType === 'audio' ? (
                 <div className="flex items-center align-middle justify-center w-2/3 max-w-xl h-full flex-col gap-4">
                   <audio src={url} controls autoPlay className="w-full" />
                 </div>
-              ) : mediaType === 'pdf' ? (
+              ) : resolvedType === 'pdf' ? (
                 <iframe
                   src={url}
                   title={fileName}

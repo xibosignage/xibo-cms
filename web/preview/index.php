@@ -87,7 +87,6 @@ $app->add(new \Xibo\Middleware\Csp($app->getContainer(), false));
 $app->add(TwigMiddleware::createFromContainer($app));
 $app->addRoutingMiddleware();
 $app->add(new \Xibo\Middleware\TrailingSlashMiddleware($app));
-$app->add(new \Xibo\Middleware\CorsPreviewMiddleware());
 
 // Add Error Middleware
 $errorMiddleware = $app->addErrorMiddleware(
@@ -96,6 +95,9 @@ $errorMiddleware = $app->addErrorMiddleware(
     true
 );
 $errorMiddleware->setDefaultErrorHandler(\Xibo\Middleware\Handlers::webErrorHandler($container, true));
+
+// CORS must be outermost so it wraps the error handler — error responses also need CORS headers
+$app->add(new \Xibo\Middleware\CorsPreviewMiddleware());
 
 // Application routes
 // ------------------

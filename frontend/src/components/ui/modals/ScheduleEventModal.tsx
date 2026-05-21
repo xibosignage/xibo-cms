@@ -48,12 +48,12 @@ import {
   type OptionalTab,
   type ScheduleFormErrors,
   type SelectOption,
-  EVENT_TYPE_OPTIONS,
-  CONDITION_OPTIONS,
-  CRITERIA_TYPE_OPTIONS,
-  RECURRENCE_TYPE_OPTIONS,
-  REMINDER_TYPE_OPTIONS,
-  REMINDER_OPTION_OPTIONS,
+  getEventTypeOptions,
+  getConditionOptions,
+  getCriteriaTypeOptions,
+  getRecurrenceTypeOptions,
+  getReminderTypeOptions,
+  getReminderOptionOptions,
   WEEKDAYS,
   EMPTY_CRITERION,
   EMPTY_REMINDER,
@@ -96,6 +96,8 @@ interface ScheduleEventModalProps {
   contentId?: number;
   contentName?: string;
   event?: Event;
+  displaySpecificGroupIds?: number[];
+  displayGroupIds?: number[];
 }
 
 export default function ScheduleEventModal({
@@ -107,6 +109,8 @@ export default function ScheduleEventModal({
   contentId,
   contentName,
   event,
+  displaySpecificGroupIds,
+  displayGroupIds,
 }: ScheduleEventModalProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
@@ -130,7 +134,14 @@ export default function ScheduleEventModal({
     setMaxReachedStep((prev) => Math.max(prev, step));
   };
   const [draft, setDraft] = useState<ScheduleEventDraft>(() =>
-    isEditMode ? createDraftFromEvent(event) : createInitialDraft(prefilledEventTypeId, contentId),
+    isEditMode
+      ? createDraftFromEvent(event)
+      : createInitialDraft(
+          prefilledEventTypeId,
+          contentId,
+          displaySpecificGroupIds,
+          displayGroupIds,
+        ),
   );
   const [optionalTab, setOptionalTab] = useState<OptionalTab>('general');
 
@@ -828,7 +839,12 @@ export default function ScheduleEventModal({
     setDraft(
       isEditMode
         ? createDraftFromEvent(event)
-        : createInitialDraft(prefilledEventTypeId, contentId),
+        : createInitialDraft(
+            prefilledEventTypeId,
+            contentId,
+            displaySpecificGroupIds,
+            displayGroupIds,
+          ),
     );
     setOptionalTab('general');
     setShowDisplayBanner(false);
@@ -936,6 +952,7 @@ export default function ScheduleEventModal({
 
   return (
     <Modal
+      variant="tabbed"
       isOpen={isOpen}
       onClose={handleClose}
       title={isEditMode ? t('Edit Event') : t('Schedule Event')}
@@ -944,7 +961,6 @@ export default function ScheduleEventModal({
       actions={actions}
       isPending={isPending}
       error={apiError}
-      className="min-h-[90vh]"
     >
       <div className="flex flex-col flex-1 min-h-0 max-h-full">
         {/* Stepper */}
@@ -987,7 +1003,7 @@ export default function ScheduleEventModal({
               <SelectDropdown
                 label={t('Event Type')}
                 value={draft.eventTypeId ? String(draft.eventTypeId) : ''}
-                options={EVENT_TYPE_OPTIONS}
+                options={getEventTypeOptions(t)}
                 onSelect={(value) => {
                   const newType = Number(value) as EventTypeId;
                   setDraft((prev) => ({
@@ -1521,7 +1537,7 @@ export default function ScheduleEventModal({
                   <SelectDropdown
                     label={t('Repeats')}
                     value={draft.recurrenceType}
-                    options={RECURRENCE_TYPE_OPTIONS}
+                    options={getRecurrenceTypeOptions(t)}
                     onSelect={(value) => updateDraft('recurrenceType', value)}
                     placeholder={t('None')}
                     helpText={t('Select the type of Repeat required for this Event.')}
@@ -1624,12 +1640,12 @@ export default function ScheduleEventModal({
                       />
                       <SelectDropdown
                         value={String(reminder.type)}
-                        options={REMINDER_TYPE_OPTIONS}
+                        options={getReminderTypeOptions(t)}
                         onSelect={(value) => updateReminder(index, 'type', Number(value))}
                       />
                       <SelectDropdown
                         value={String(reminder.option)}
-                        options={REMINDER_OPTION_OPTIONS}
+                        options={getReminderOptionOptions(t)}
                         onSelect={(value) => updateReminder(index, 'option', Number(value))}
                       />
                       <Checkbox
@@ -1714,12 +1730,13 @@ export default function ScheduleEventModal({
                     {/* Criteria rows */}
                     {draft.criteria.map((criterion, index) => {
                       const isCustomType = criterion.type === 'custom' || !criterion.type;
-                      const metricOptions = getCriteriaMetricOptions(criterion.type);
+                      const metricOptions = getCriteriaMetricOptions(criterion.type, t);
                       const metricConfig = getCriteriaMetricConfig(
                         criterion.type,
                         criterion.metric,
+                        t,
                       );
-                      const conditionOptions = metricConfig?.conditions ?? CONDITION_OPTIONS;
+                      const conditionOptions = metricConfig?.conditions ?? getConditionOptions(t);
                       const valueOptions = metricConfig?.values;
                       const valueInputType = metricConfig?.inputType ?? 'text';
 
@@ -1730,16 +1747,16 @@ export default function ScheduleEventModal({
                         >
                           <SelectDropdown
                             value={criterion.type}
-                            options={CRITERIA_TYPE_OPTIONS}
+                            options={getCriteriaTypeOptions(t)}
                             onSelect={(value) => {
                               setDraft((prev) => {
                                 const isCustom = value === 'custom';
                                 const firstMetricId = isCustom
                                   ? ''
-                                  : (getCriteriaMetricOptions(value)[0]?.value ?? '');
+                                  : (getCriteriaMetricOptions(value, t)[0]?.value ?? '');
                                 const firstMetric = isCustom
                                   ? null
-                                  : getCriteriaMetricConfig(value, firstMetricId);
+                                  : getCriteriaMetricConfig(value, firstMetricId, t);
                                 const criteria = prev.criteria.map((c, i) =>
                                   i === index
                                     ? {
@@ -1774,6 +1791,7 @@ export default function ScheduleEventModal({
                                   const newMetricConfig = getCriteriaMetricConfig(
                                     criterion.type,
                                     value,
+                                    t,
                                   );
                                   const criteria = prev.criteria.map((c, i) =>
                                     i === index

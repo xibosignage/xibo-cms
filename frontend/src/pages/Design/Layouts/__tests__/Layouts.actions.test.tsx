@@ -35,7 +35,7 @@ import {
   renderLayoutsPage,
 } from './layoutTestUtils';
 
-import { saveLayoutAsTemplate, updateLayout } from '@/services/layoutsApi';
+import { retireLayout, saveLayoutAsTemplate, updateLayout } from '@/services/layoutsApi';
 import { testQueryClient } from '@/setupTests';
 
 // =============================================================================
@@ -464,7 +464,7 @@ describe('Layouts page - row actions', () => {
   // Retire
   // Available for all layouts. The Retire button is gated behind a checkbox so
   // the user must explicitly confirm before the API call is made.
-  // RetireLayoutModal calls updateLayout directly (not via useLayoutActions).
+  // RetireLayoutModal calls the dedicated retireLayout endpoint.
   // ---------------------------------------------------------------------------
   describe('Retire', () => {
     // Modal has a proper title that can be used to scope assertions.
@@ -489,9 +489,9 @@ describe('Layouts page - row actions', () => {
       expect(retireBtn).toBeEnabled();
     });
 
-    // After confirming, updateLayout is called with the retired flag and the modal closes.
-    test('confirming calls updateLayout with { retired: 1 } and closes modal', async () => {
-      vi.mocked(updateLayout).mockResolvedValueOnce(mockLayout);
+    // After confirming, retireLayout is called with the layoutId and the modal closes.
+    test('confirming calls retireLayout with the layoutId and closes modal', async () => {
+      vi.mocked(retireLayout).mockResolvedValueOnce(mockLayout);
 
       renderLayoutsPage();
       await openDropdownAction('Retire');
@@ -500,13 +500,11 @@ describe('Layouts page - row actions', () => {
       fireEvent.click(within(dialog).getByRole('checkbox', { name: 'Retire Layout' }));
       fireEvent.click(within(dialog).getByRole('button', { name: 'Retire' }));
 
-      await waitFor(() =>
-        expect(updateLayout).toHaveBeenCalledWith(mockLayout.layoutId, { retired: 1 }),
-      );
+      await waitFor(() => expect(retireLayout).toHaveBeenCalledWith(mockLayout.layoutId));
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     });
 
-    // Cancelling must close the modal without calling updateLayout.
+    // Cancelling must close the modal without calling retireLayout.
     test('Cancel closes the modal', async () => {
       renderLayoutsPage();
       await openDropdownAction('Retire');

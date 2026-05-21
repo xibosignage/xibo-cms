@@ -47,6 +47,7 @@ interface DatePickerInputProps {
   disablePastDates?: boolean;
   disableFutureDates?: boolean;
   showTimePicker?: boolean;
+  optional?: boolean;
 }
 
 export default function DatePickerInput({
@@ -58,6 +59,7 @@ export default function DatePickerInput({
   disablePastDates = false,
   disableFutureDates = false,
   showTimePicker = true,
+  optional = false,
 }: DatePickerInputProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
@@ -85,7 +87,10 @@ export default function DatePickerInput({
 
   return (
     <div className="flex flex-col gap-1.5 relative">
-      <label className="text-sm font-semibold text-gray-500">{label}</label>
+      <label className="flex items-center justify-between text-sm font-semibold text-gray-500">
+        <span>{label}</span>
+        {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
+      </label>
 
       <div
         ref={refs.setReference}

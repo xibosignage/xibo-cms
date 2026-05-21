@@ -19,8 +19,10 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import type { DateTime } from 'luxon';
 import type { Dispatch, SetStateAction } from 'react';
 
+import { AgendaModal } from './AgendaModal';
 import CopyEventModal from './CopyEventModal';
 import DeleteEventModal from './DeleteEventModal';
 
@@ -35,6 +37,8 @@ interface EventModalsProps {
     deleteError: string | null;
     isDeleting: boolean;
     isCloning: boolean;
+    agendaDate: DateTime | null;
+    displayGroups: { id: number; name: string }[];
   };
   selection: {
     selectedEvent: Event | null;
@@ -102,6 +106,14 @@ export function EventModals({ actions, selection, handlers }: EventModalsProps) 
           onSaved={actions.handleRefresh}
           mode="edit"
           event={selection.selectedEvent}
+        />
+      )}
+
+      {isModalOpen('agenda') && actions.agendaDate && (
+        <AgendaModal
+          date={actions.agendaDate}
+          displayGroups={actions.displayGroups}
+          onClose={actions.closeModal}
         />
       )}
     </>
