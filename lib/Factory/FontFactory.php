@@ -112,33 +112,19 @@ class FontFactory extends BaseFactory
     /**
      * @param $name
      * @return Font[]
-     * @throws NotFoundException
      */
     public function getByName($name): array
     {
-        $fonts = $this->query(null, ['name' => $name]);
-
-        if (count($fonts) <= 0) {
-            throw new NotFoundException('Font with name ' . $name . ' not found');
-        }
-
-        return $fonts;
+        return $this->query(null, ['name' => $name]);
     }
 
     /**
      * @param $fileName
      * @return Font[]
-     * @throws NotFoundException
      */
     public function getByFileName($fileName): array
     {
-        $fonts = $this->query(null, ['fileName' => $fileName]);
-
-        if (count($fonts) <= 0) {
-            throw new NotFoundException('Font with filename ' . $fileName . ' not found');
-        }
-
-        return $fonts;
+        return $this->query(null, ['fileName' => $fileName]);
     }
 
     /**
