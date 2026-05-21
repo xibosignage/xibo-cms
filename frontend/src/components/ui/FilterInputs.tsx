@@ -455,33 +455,41 @@ export default function FilterInputs<T>({
           const raw = values[filter.name];
           const currentStr = raw != null && raw !== '' ? String(raw) : '';
 
-          return (
-            <SelectDropdown
-              key={filter.name}
-              label={filter.label}
-              value={currentStr}
-              initialLabel={filter.initialLabel}
-              resolveLabel={filter.resolveLabel}
-              options={selectOptions}
-              searchable
-              clearable
-              placeholder={placeholder}
-              onSelect={(val) => {
-                if (!val) {
-                  onChange(filter.name, null);
-                } else {
-                  const orig = realOpts.find((o) => String(o.value) === val);
-                  onChange(filter.name, orig !== undefined ? orig.value : val);
-                }
-              }}
-              onSearch={filter.onSearch}
-              onLoadMore={filter.onLoadMore}
-              hasMore={filter.hasMore}
-              isLoadingMore={filter.isLoadingMore}
-              isLoading={filter.isLoading}
-              className={`w-full md:w-auto md:flex-1 min-w-0 ${filter.className ?? ''}`}
-            />
-          );
+          const sharedProps = {
+            label: filter.label,
+            value: currentStr,
+            initialLabel: filter.initialLabel,
+            resolveLabel: filter.resolveLabel,
+            options: selectOptions,
+            searchable: true as const,
+            clearable: true as const,
+            placeholder,
+            onSelect: (val: string) => {
+              if (!val) {
+                onChange(filter.name, null);
+              } else {
+                const orig = realOpts.find((o) => String(o.value) === val);
+                onChange(filter.name, orig !== undefined ? orig.value : val);
+              }
+            },
+            isLoading: filter.isLoading,
+            className: `w-full md:w-auto md:flex-1 min-w-0 ${filter.className ?? ''}`,
+          };
+
+          if (filter.onLoadMore && filter.onSearch) {
+            return (
+              <SelectDropdown
+                key={filter.name}
+                {...sharedProps}
+                onLoadMore={filter.onLoadMore}
+                hasMore={filter.hasMore ?? false}
+                isLoadingMore={filter.isLoadingMore ?? false}
+                onSearch={filter.onSearch}
+              />
+            );
+          }
+
+          return <SelectDropdown key={filter.name} {...sharedProps} onSearch={filter.onSearch} />;
         })}
       </div>
     </div>

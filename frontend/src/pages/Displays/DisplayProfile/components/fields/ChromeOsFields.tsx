@@ -41,10 +41,12 @@ export interface ChromeOsFieldProps {
   daypartsHasMore?: boolean;
   onLoadMoreDayparts?: () => void;
   isLoadingMoreDayparts?: boolean;
+  onSearchDayparts?: (term: string) => void;
   playerVersions: PlayerSoftware[];
   playerVersionsHasMore?: boolean;
   onLoadMorePlayerVersions?: () => void;
   isLoadingMorePlayerVersions?: boolean;
+  onSearchPlayerVersions?: (term: string) => void;
 }
 
 export function ChromeOsFields({
@@ -60,10 +62,12 @@ export function ChromeOsFields({
   daypartsHasMore,
   onLoadMoreDayparts,
   isLoadingMoreDayparts,
+  onSearchDayparts,
   playerVersions,
   playerVersionsHasMore,
   onLoadMorePlayerVersions,
   isLoadingMorePlayerVersions,
+  onSearchPlayerVersions,
 }: ChromeOsFieldProps) {
   const metaMap = getFieldMetaForType('chromeOS', t);
   const fieldsForTab = Object.entries(metaMap).filter(([, meta]) => meta.tab === tab);
@@ -99,10 +103,12 @@ export function ChromeOsFields({
     daypartsHasMore,
     onLoadMoreDayparts,
     isLoadingMoreDayparts,
+    onSearchDayparts,
     playerVersions,
     playerVersionsHasMore,
     onLoadMorePlayerVersions,
     isLoadingMorePlayerVersions,
+    onSearchPlayerVersions,
   };
 
   return (

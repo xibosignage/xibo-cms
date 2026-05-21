@@ -136,6 +136,20 @@ export default function EditDisplayProfileModal({
   const playerVersionsPageRef = useRef(0);
   const playerVersionTypeRef = useRef<string | null>(null);
 
+  const [daypartSearch, setDaypartSearch] = useState('');
+  const daypartSearchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const handleDaypartSearch = (term: string) => {
+    clearTimeout(daypartSearchTimerRef.current);
+    daypartSearchTimerRef.current = setTimeout(() => setDaypartSearch(term), 300);
+  };
+
+  const [playerVersionSearch, setPlayerVersionSearch] = useState('');
+  const playerVersionSearchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const handlePlayerVersionSearch = (term: string) => {
+    clearTimeout(playerVersionSearchTimerRef.current);
+    playerVersionSearchTimerRef.current = setTimeout(() => setPlayerVersionSearch(term), 300);
+  };
+
   useEffect(() => {
     if (!isOpen || !data) {
       return;
@@ -145,13 +159,9 @@ export default function EditDisplayProfileModal({
     setApiError(undefined);
     setNameError(undefined);
     setIsLoading(true);
+    setDaypartSearch('');
+    setPlayerVersionSearch('');
 
-    setDayparts([]);
-    setDaypartsTotalCount(0);
-    daypartsPageRef.current = 0;
-    setPlayerVersions([]);
-    setPlayerVersionsTotalCount(0);
-    playerVersionsPageRef.current = 0;
     setTimerRows([{ id: 0, day: '', on: '', off: '' }]);
     setPictureOptionRows([{ id: 0, property: '', value: 0 }]);
     setLockOptionsState({
@@ -240,39 +250,79 @@ export default function EditDisplayProfileModal({
       }
     });
 
-    const daypartPromise = fetchDaypart({ start: 0, length: PAGE_SIZE, isAlways: 0, isCustom: 0 })
+    profilePromise
+      .catch((err: unknown) => {
+        setApiError(getApiErrorMessage(err, t('Failed to load profile settings.')));
+      })
+      .finally(() => setIsLoading(false));
+  }, [isOpen, data, t]);
+
+  useEffect(() => {
+    if (!isOpen || !data) {
+      return;
+    }
+    let cancelled = false;
+    setDayparts([]);
+    daypartsPageRef.current = 0;
+    setDaypartsTotalCount(0);
+    fetchDaypart({
+      start: 0,
+      length: PAGE_SIZE,
+      isAlways: 0,
+      isCustom: 0,
+      name: daypartSearch || undefined,
+    })
       .then((res) => {
+        if (cancelled) {
+          return;
+        }
         setDayparts(res.rows);
         setDaypartsTotalCount(res.totalCount);
         daypartsPageRef.current = 1;
       })
-      .catch(() => setDayparts([]));
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, data?.displayProfileId, daypartSearch]);
 
+  useEffect(() => {
+    if (!isOpen || !data) {
+      return;
+    }
     const playerVersionType =
       data.type === 'chromeOS'
         ? 'chromeOS'
         : data.type === 'android' || data.type === 'lg' || data.type === 'sssp'
           ? data.type
           : null;
-
+    if (!playerVersionType) {
+      return;
+    }
     playerVersionTypeRef.current = playerVersionType;
-
-    const playerVersionPromise = playerVersionType
-      ? fetchPlayerSoftware({ playerType: playerVersionType, start: 0, length: PAGE_SIZE })
-          .then((res) => {
-            setPlayerVersions(res.rows);
-            setPlayerVersionsTotalCount(res.totalCount);
-            playerVersionsPageRef.current = 1;
-          })
-          .catch(() => setPlayerVersions([]))
-      : Promise.resolve();
-
-    Promise.all([profilePromise, daypartPromise, playerVersionPromise])
-      .catch((err: unknown) => {
-        setApiError(getApiErrorMessage(err, t('Failed to load profile settings.')));
+    let cancelled = false;
+    setPlayerVersions([]);
+    setPlayerVersionsTotalCount(0);
+    playerVersionsPageRef.current = 0;
+    fetchPlayerSoftware({
+      playerType: playerVersionType,
+      start: 0,
+      length: PAGE_SIZE,
+      keyword: playerVersionSearch || undefined,
+    })
+      .then((res) => {
+        if (cancelled) {
+          return;
+        }
+        setPlayerVersions(res.rows);
+        setPlayerVersionsTotalCount(res.totalCount);
+        playerVersionsPageRef.current = 1;
       })
-      .finally(() => setIsLoading(false));
-  }, [isOpen, data, t]);
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, data?.displayProfileId, playerVersionSearch]);
 
   const handleLoadMoreDayparts = () => {
     if (isLoadingMoreDayparts || dayparts.length >= daypartsTotalCount) {
@@ -284,6 +334,7 @@ export default function EditDisplayProfileModal({
       length: PAGE_SIZE,
       isAlways: 0,
       isCustom: 0,
+      name: daypartSearch || undefined,
     })
       .then((res) => {
         setDayparts((prev) => [...prev, ...res.rows]);
@@ -308,6 +359,7 @@ export default function EditDisplayProfileModal({
       playerType: playerVersionType,
       start: playerVersionsPageRef.current * PAGE_SIZE,
       length: PAGE_SIZE,
+      keyword: playerVersionSearch || undefined,
     })
       .then((res) => {
         setPlayerVersions((prev) => [...prev, ...res.rows]);
@@ -437,10 +489,12 @@ export default function EditDisplayProfileModal({
     daypartsHasMore: dayparts.length < daypartsTotalCount,
     onLoadMoreDayparts: handleLoadMoreDayparts,
     isLoadingMoreDayparts,
+    onSearchDayparts: handleDaypartSearch,
     playerVersions,
     playerVersionsHasMore: playerVersions.length < playerVersionsTotalCount,
     onLoadMorePlayerVersions: handleLoadMorePlayerVersions,
     isLoadingMorePlayerVersions,
+    onSearchPlayerVersions: handlePlayerVersionSearch,
     timerRows,
     onTimerRowsChange: setTimerRows,
     pictureOptionRows,

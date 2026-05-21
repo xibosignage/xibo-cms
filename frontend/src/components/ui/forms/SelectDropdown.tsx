@@ -43,7 +43,7 @@ export type SelectOption = {
   disabled?: boolean;
 };
 
-interface SelectDropdownProps {
+interface BaseSelectDropdownProps {
   label?: string;
   value?: string;
   placeholder?: string;
@@ -53,7 +53,6 @@ interface SelectDropdownProps {
   searchable?: boolean;
   searchPlaceholder?: string;
   onSelect: (value: string) => void;
-  onSearch?: (term: string) => void;
   helpText?: string;
   addLeftLabel?: boolean;
   leftLabelContent?: ReactNode;
@@ -62,12 +61,27 @@ interface SelectDropdownProps {
   className?: string;
   error?: string;
   isLoading?: boolean;
-  onLoadMore?: () => void;
-  hasMore?: boolean;
-  isLoadingMore?: boolean;
   clearable?: boolean;
   optional?: boolean;
 }
+
+/** Static list: search is optional and runs client-side. */
+interface StaticSelectDropdownProps extends BaseSelectDropdownProps {
+  onLoadMore?: never;
+  hasMore?: never;
+  isLoadingMore?: never;
+  onSearch?: (term: string) => void;
+}
+
+/** Paginated list: `onSearch` is required; client-side search only covers the loaded page. */
+interface PaginatedSelectDropdownProps extends BaseSelectDropdownProps {
+  onLoadMore: () => void;
+  hasMore: boolean;
+  isLoadingMore: boolean;
+  onSearch: (term: string) => void;
+}
+
+type SelectDropdownProps = StaticSelectDropdownProps | PaginatedSelectDropdownProps;
 
 export default function SelectDropdown({
   label,
@@ -104,6 +118,8 @@ export default function SelectDropdown({
   const labelCache = useRef<Map<string, string>>(new Map());
   const isLoadingMoreRef = useRef(isLoadingMore);
   isLoadingMoreRef.current = isLoadingMore;
+  const onLoadMoreRef = useRef(onLoadMore);
+  onLoadMoreRef.current = onLoadMore;
   const resolvingRef = useRef<string | undefined>(undefined);
   const [, setResolveVersion] = useState(0);
 
@@ -139,13 +155,21 @@ export default function SelectDropdown({
     }
   };
 
+  const effectiveSearchable = searchable && (!onLoadMore || !!onSearch);
+
   const visibleOptions =
-    !onSearch && searchable && searchTerm
+    !onSearch && effectiveSearchable && searchTerm
       ? options.filter((o) => o.label.toLowerCase().includes(searchTerm.toLowerCase()))
       : options;
 
   useEffect(() => {
-    if (!isOpen || !hasMore || !onLoadMore || !sentinelRef.current || !scrollContainerRef.current) {
+    if (
+      !isOpen ||
+      !hasMore ||
+      !onLoadMoreRef.current ||
+      !sentinelRef.current ||
+      !scrollContainerRef.current
+    ) {
       return;
     }
 
@@ -153,7 +177,7 @@ export default function SelectDropdown({
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting && !isLoadingMoreRef.current) {
-          onLoadMore();
+          onLoadMoreRef.current?.();
         }
       },
       { threshold: 0.1, root: scrollContainerRef.current },
@@ -161,7 +185,7 @@ export default function SelectDropdown({
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [isOpen, hasMore, onLoadMore]);
+  }, [isOpen, hasMore]);
 
   for (const o of options) {
     labelCache.current.set(o.value, o.label);
@@ -252,7 +276,7 @@ export default function SelectDropdown({
                 {t(optionLabel)}
               </span>
             )}
-            {searchable && (
+            {effectiveSearchable && (
               <div className="m-2 p-3 border border-gray-200 rounded-lg flex items-center gap-2 focus-within:border-xibo-blue-600 focus-within:ring-1 focus-within:ring-xibo-blue-600/25">
                 <Search size={14} className="text-gray-500 shrink-0" />
                 <input

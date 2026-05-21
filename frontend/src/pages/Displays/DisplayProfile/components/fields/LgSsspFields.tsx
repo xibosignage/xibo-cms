@@ -374,11 +374,13 @@ export interface LgSsspFieldProps {
   daypartsHasMore?: boolean;
   onLoadMoreDayparts?: () => void;
   isLoadingMoreDayparts?: boolean;
+  onSearchDayparts?: (term: string) => void;
   playerType?: string;
   playerVersions: PlayerSoftware[];
   playerVersionsHasMore?: boolean;
   onLoadMorePlayerVersions?: () => void;
   isLoadingMorePlayerVersions?: boolean;
+  onSearchPlayerVersions?: (term: string) => void;
   timerRows?: TimerRow[];
   onTimerRowsChange?: (rows: TimerRow[]) => void;
   pictureOptionRows?: PictureOptionRow[];
@@ -400,11 +402,13 @@ export function LgSsspFields({
   daypartsHasMore,
   onLoadMoreDayparts,
   isLoadingMoreDayparts,
+  onSearchDayparts,
   playerType,
   playerVersions,
   playerVersionsHasMore,
   onLoadMorePlayerVersions,
   isLoadingMorePlayerVersions,
+  onSearchPlayerVersions,
   timerRows = [{ id: 0, day: '', on: '', off: '' }],
   onTimerRowsChange,
   pictureOptionRows = [{ id: 0, property: '', value: 0 }],
@@ -487,10 +491,12 @@ export function LgSsspFields({
     daypartsHasMore,
     onLoadMoreDayparts,
     isLoadingMoreDayparts,
+    onSearchDayparts,
     playerVersions,
     playerVersionsHasMore,
     onLoadMorePlayerVersions,
     isLoadingMorePlayerVersions,
+    onSearchPlayerVersions,
   };
 
   return (
