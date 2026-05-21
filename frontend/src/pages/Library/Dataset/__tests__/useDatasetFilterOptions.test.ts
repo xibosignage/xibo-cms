@@ -158,7 +158,7 @@ describe('useDatasetFilterOptions', () => {
 
     await waitFor(() => {
       const userIdFilter = result.current.filterOptions.find((f) => f.name === 'userId');
-      expect(userIdFilter?.options.length).toBe(PAGE_SIZE + 1);
+      expect(userIdFilter?.options?.length).toBe(PAGE_SIZE + 1);
     });
   });
 
@@ -189,7 +189,7 @@ describe('useDatasetFilterOptions', () => {
     const { result } = renderHook(() => useDatasetFilterOptions(mockT));
 
     await waitFor(() => {
-      const tagFilter = result.current.filterOptions.find((f) => f.name === 'tag');
+      const tagFilter = result.current.filterOptions.find((f) => (f.name as string) === 'tag');
       expect(tagFilter).toEqual({ name: 'tag', label: 'Tag' });
     });
   });
