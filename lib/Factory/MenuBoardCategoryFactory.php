@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -28,23 +28,12 @@ use Xibo\Support\Exception\NotFoundException;
 
 class MenuBoardCategoryFactory extends BaseFactory
 {
-    /** @var MenuBoardProductOptionFactory */
-    private $menuBoardProductOptionFactory;
-
-    /**
-     * Construct a factory
-     * @param MenuBoardProductOptionFactory $menuBoardProductOptionFactory
-     */
-    public function __construct($menuBoardProductOptionFactory)
-    {
-        $this->menuBoardProductOptionFactory = $menuBoardProductOptionFactory;
+    public function __construct(
+        private readonly MenuBoardProductOptionFactory $menuBoardProductOptionFactory,
+    ) {
     }
 
-    /**
-     * Create Empty
-     * @return MenuBoardCategory
-     */
-    public function createEmpty()
+    public function createEmpty(): MenuBoardCategory
     {
         return new MenuBoardCategory(
             $this->getStore(),
@@ -54,11 +43,7 @@ class MenuBoardCategoryFactory extends BaseFactory
         );
     }
 
-    /**
-     * Create Empty
-     * @return MenuBoardProduct
-     */
-    public function createEmptyProduct()
+    public function createEmptyProduct(): MenuBoardProduct
     {
         return new MenuBoardProduct(
             $this->getStore(),
@@ -68,16 +53,13 @@ class MenuBoardCategoryFactory extends BaseFactory
         );
     }
 
-    /**
-     * Create a new Category
-     * @param int $menuId
-     * @param string $name
-     * @param int $mediaId
-     * @param string $code
-     * @return MenuBoardCategory
-     */
-    public function create($menuId, $name, $mediaId, $code, $description)
-    {
+    public function create(
+        int $menuId,
+        string $name,
+        ?int $mediaId,
+        ?string $code,
+        ?string $description
+    ): MenuBoardCategory {
         $menuBoardCategory = $this->createEmpty();
         $menuBoardCategory->menuId = $menuId;
         $menuBoardCategory->name = $name;
@@ -87,33 +69,19 @@ class MenuBoardCategoryFactory extends BaseFactory
         return $menuBoardCategory;
     }
 
-    /**
-     * Create a new Product
-     * @param int $menuId
-     * @param int $menuCategoryId
-     * @param string $name
-     * @param float $price
-     * @param string $description
-     * @param string $allergyInfo
-     * @param int $calories
-     * @param int $availability
-     * @param int $mediaId
-     * @param string $code
-     * @return MenuBoardProduct
-     */
     public function createProduct(
-        $menuId,
-        $menuCategoryId,
-        $name,
-        $price,
-        $description,
-        $allergyInfo,
-        $calories,
-        $displayOrder,
-        $availability,
-        $mediaId,
-        $code
-    ) {
+        int $menuId,
+        int $menuCategoryId,
+        string $name,
+        ?float $price,
+        ?string $description,
+        ?string $allergyInfo,
+        ?int $calories,
+        int $displayOrder,
+        int $availability,
+        ?int $mediaId,
+        ?string $code
+    ): MenuBoardProduct {
         $menuBoardProduct = $this->createEmptyProduct();
         $menuBoardProduct->menuId = $menuId;
         $menuBoardProduct->menuCategoryId = $menuCategoryId;
@@ -130,11 +98,9 @@ class MenuBoardCategoryFactory extends BaseFactory
     }
 
     /**
-     * @param int $menuCategoryId
-     * @return MenuBoardCategory
      * @throws NotFoundException
      */
-    public function getById(int $menuCategoryId)
+    public function getById(int $menuCategoryId): MenuBoardCategory
     {
         $this->getLog()->debug('MenuBoardCategoryFactory getById ' . $menuCategoryId);
 
@@ -149,11 +115,9 @@ class MenuBoardCategoryFactory extends BaseFactory
     }
 
     /**
-     * @param int $menuId
      * @return MenuBoardCategory[]
-     * @throws NotFoundException
      */
-    public function getByMenuId(int $menuId)
+    public function getByMenuId(int $menuId): array
     {
         $this->getLog()->debug('MenuBoardCategoryFactory getById ' . $menuId);
 
@@ -167,11 +131,9 @@ class MenuBoardCategoryFactory extends BaseFactory
     }
 
     /**
-     * @param int $menuProductId
-     * @return MenuBoardProduct
      * @throws NotFoundException
      */
-    public function getByProductId(int $menuProductId)
+    public function getByProductId(int $menuProductId): MenuBoardProduct
     {
         $this->getLog()->debug('MenuBoardCategoryFactory getByProductId ' . $menuProductId);
 
@@ -186,16 +148,10 @@ class MenuBoardCategoryFactory extends BaseFactory
     }
 
     /**
-     * @param null $sortOrder
-     * @param array $filterBy
      * @return MenuBoardCategory[]
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query(?array $sortOrder = null, array $filterBy = []): array
     {
-        if ($sortOrder === null) {
-            $sortOrder = ['menuCategoryId DESC'];
-        }
-
         $sanitizedFilter = $this->getSanitizer($filterBy);
 
         $params = [];
@@ -229,7 +185,14 @@ class MenuBoardCategoryFactory extends BaseFactory
 
         if ($sanitizedFilter->getString('name') != '') {
             $terms = explode(',', $sanitizedFilter->getString('name'));
-            $this->nameFilter('menu_category', 'name', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
+            $this->nameFilter(
+                'menu_category',
+                'name',
+                $terms,
+                $body,
+                $params,
+                ($sanitizedFilter->getCheckbox('useRegexForName') == 1)
+            );
         }
 
         if ($sanitizedFilter->getString('code') != '') {
@@ -237,32 +200,37 @@ class MenuBoardCategoryFactory extends BaseFactory
             $params['code'] = '%' . $sanitizedFilter->getString('code') . '%';
         }
 
+        if ($sanitizedFilter->getString('keyword') != null) {
+            $body .= $this->buildSearchQuery(
+                $sanitizedFilter->getString('keyword'),
+                $params,
+                ['menu_category.name'],
+                ['menu_category.menuCategoryId']
+            );
+        }
+
         if ($sanitizedFilter->getInt('mediaId') !== null) {
             $body .= ' AND `menu_category`.mediaId = :mediaId ';
             $params['mediaId'] = $sanitizedFilter->getInt('mediaId');
         }
 
-        // Sorting?
-        $order = '';
-
-        if (is_array($sortOrder)) {
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
-        }
+        $allowedColumns = ['menuCategoryId', 'name', 'code'];
+        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, [], ['name ASC']);
+        $order = empty($sortOrder) ? '' : ' ORDER BY ' . implode(', ', $sortOrder);
 
         $limit = '';
-        // Paging
-        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null
+            && $sanitizedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0])
+                . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $menuCategory = $this->createEmpty()->hydrate($row);
-            $entries[] = $menuCategory;
+            $entries[] = $this->createEmpty()->hydrate($row);
         }
 
-        // Paging
         if ($limit != '' && count($entries) > 0) {
             $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
@@ -285,23 +253,17 @@ class MenuBoardCategoryFactory extends BaseFactory
     }
 
     /**
-     * @param null $sortOrder
-     * @param array $filterBy
      * @return MenuBoardProduct[]
      */
-    public function getProductData($sortOrder = null, $filterBy = [])
+    public function getProductData(?array $sortOrder = null, array $filterBy = []): array
     {
-        if ($sortOrder === null) {
-            $sortOrder = ['`displayOrder`, `availability` DESC, `menuProductId`'];
-        }
-
         $sanitizedFilter = $this->getSanitizer($filterBy);
 
         $params = [];
         $entries = [];
 
         $select = '
-            SELECT 
+            SELECT
                `menu_product`.`menuProductId`,
                `menu_product`.`menuId`,
                `menu_product`.`menuCategoryId`,
@@ -335,7 +297,14 @@ class MenuBoardCategoryFactory extends BaseFactory
 
         if ($sanitizedFilter->getString('name') != '') {
             $terms = explode(',', $sanitizedFilter->getString('name'));
-            $this->nameFilter('menu_product', 'name', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
+            $this->nameFilter(
+                'menu_product',
+                'name',
+                $terms,
+                $body,
+                $params,
+                ($sanitizedFilter->getCheckbox('useRegexForName') == 1)
+            );
         }
 
         if ($sanitizedFilter->getInt('availability') !== null) {
@@ -344,7 +313,16 @@ class MenuBoardCategoryFactory extends BaseFactory
         }
 
         if ($sanitizedFilter->getString('categories') != null) {
-            $categories = implode('","', array_map('intval', explode(',', $sanitizedFilter->getString('categories'))));
+            $categories = implode(
+                '","',
+                array_map(
+                    'intval',
+                    explode(
+                        ',',
+                        $sanitizedFilter->getString('categories')
+                    )
+                )
+            );
             $body .= ' AND `menu_product`.`menuCategoryId` IN ("' . $categories . '") ';
         }
 
@@ -358,24 +336,37 @@ class MenuBoardCategoryFactory extends BaseFactory
             $params['code'] = '%' . $sanitizedFilter->getString('code') . '%';
         }
 
-        // Sorting?
-        $order = '';
-
-        if (is_array($sortOrder)) {
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        if ($sanitizedFilter->getString('keyword') != null) {
+            $body .= $this->buildSearchQuery(
+                $sanitizedFilter->getString('keyword'),
+                $params,
+                ['menu_product.name'],
+                ['menu_product.menuProductId']
+            );
         }
 
+        $allowedColumns = ['menuProductId', 'name', 'price', 'displayOrder', 'availability'];
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            [],
+            ['displayOrder ASC', 'availability DESC', 'menuProductId ASC']
+        );
+        $order = empty($sortOrder) ? '' : ' ORDER BY ' . implode(', ', $sortOrder);
+
         $limit = '';
-        // Paging
-        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null &&
+            $sanitizedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', '
+                . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $menuProduct = $this->createEmptyProduct()->hydrate($row, [
+            $entries[] = $this->createEmptyProduct()->hydrate($row, [
                 'intProperties' => [
+                    'mediaId',
                     'availability',
                     'calories',
                     'displayOrder',
@@ -384,10 +375,8 @@ class MenuBoardCategoryFactory extends BaseFactory
                     'price',
                 ]
             ]);
-            $entries[] = $menuProduct;
         }
 
-        // Paging
         if ($limit != '' && count($entries) > 0) {
             $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);

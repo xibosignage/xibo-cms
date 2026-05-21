@@ -292,7 +292,7 @@ describe('Media page — file upload', () => {
     renderMediaPage();
     await openAddMediaModal();
 
-    const urlInput = await screen.findByPlaceholderText('https://www.exampleurl.com/funnycat4364');
+    const urlInput = await screen.findByPlaceholderText('https://www.example.com/example');
     fireEvent.change(urlInput, { target: { value: 'https://example.com/video.mp4' } });
     fireEvent.click(screen.getByRole('button', { name: 'Upload' }));
 

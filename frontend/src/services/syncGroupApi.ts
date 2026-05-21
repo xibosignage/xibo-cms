@@ -20,25 +20,23 @@
  */
 
 import http from '@/lib/api';
+import type { SyncGroup, SyncGroupDisplay } from '@/types/syncGroup';
 
-export interface SyncGroup {
-  syncGroupId: number;
-  name: string;
-}
-
-export interface SyncGroupDisplay {
-  displayId: number;
-  display: string;
-  syncGroupId: number;
-  leadDisplayId: number;
-  displayGroupId: number;
-  layoutId?: number | null;
-}
+export type { SyncGroup, SyncGroupDisplay };
 
 export interface FetchSyncGroupsRequest {
   start: number;
   length: number;
+  keyword?: string;
+  syncGroupId?: number | null;
+  name?: string;
+  leadDisplayId?: number | null;
+  folderId?: number | null;
+  sortBy?: string;
+  sortDir?: string;
   signal?: AbortSignal;
+  useRegexForName?: number;
+  logicalOperatorName?: 'OR' | 'AND';
 }
 
 export interface FetchSyncGroupsResponse {
@@ -75,5 +73,75 @@ export async function fetchSyncGroupDisplays(
     params: eventId ? { eventId } : undefined,
   });
 
-  return response.data;
+  return response.data?.data?.displays ?? response.data?.displays ?? response.data;
+}
+
+export interface CreateSyncGroupRequest {
+  name: string;
+  syncPublisherPort?: number;
+  syncSwitchDelay?: number;
+  syncVideoPauseDelay?: number;
+  folderId?: number;
+}
+
+export async function createSyncGroup(payload: CreateSyncGroupRequest): Promise<SyncGroup> {
+  const params = new URLSearchParams();
+
+  Object.entries(payload).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      params.append(key, String(value));
+    }
+  });
+
+  const { data } = await http.post('/syncgroup/add', params, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+
+  return data;
+}
+
+export interface UpdateSyncGroupRequest {
+  name: string;
+  syncPublisherPort?: number;
+  syncSwitchDelay?: number;
+  syncVideoPauseDelay?: number;
+  leadDisplayId?: number;
+  folderId?: number;
+}
+
+export async function updateSyncGroup(
+  syncGroupId: number,
+  payload: UpdateSyncGroupRequest,
+): Promise<SyncGroup> {
+  const params = new URLSearchParams();
+
+  Object.entries(payload).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      params.append(key, String(value));
+    }
+  });
+
+  const { data } = await http.put(`/syncgroup/${syncGroupId}/edit`, params, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+
+  return data;
+}
+
+export async function deleteSyncGroup(syncGroupId: number): Promise<void> {
+  await http.delete(`/syncgroup/${syncGroupId}/delete`);
+}
+
+export async function assignSyncGroupMembers(
+  syncGroupId: number,
+  displayIds: number[],
+  unassignDisplayIds: number[] = [],
+): Promise<void> {
+  const params = new URLSearchParams();
+  displayIds.forEach((id) => params.append('displayId[]', String(id)));
+  unassignDisplayIds.forEach((id) => params.append('unassignDisplayId[]', String(id)));
+
+  await http.post(`/syncgroup/${syncGroupId}/members`, params.toString(), {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
 }

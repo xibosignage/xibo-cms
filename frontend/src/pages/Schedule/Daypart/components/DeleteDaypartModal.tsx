@@ -46,6 +46,7 @@ export default function DeleteDaypartModal({
   const { t } = useTranslation();
   return (
     <Modal
+      variant="confirmation"
       isOpen={isOpen}
       isPending={isLoading}
       onClose={onClose}

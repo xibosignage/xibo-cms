@@ -71,8 +71,6 @@ vi.mock('../hooks/useLayoutFilterOptions', () => ({
           { label: 'No', value: 0 },
           { label: 'Yes', value: 1 },
         ],
-        shouldTranslateOptions: false,
-        showAllOption: false,
       },
     ],
     isLoading: false,
@@ -165,11 +163,9 @@ describe('Layouts page - pagination', () => {
     const retiredLabel = screen.getByText('Retired');
     const retiredContainer = retiredLabel.closest('div')!;
     await act(async () => {
-      fireEvent.click(within(retiredContainer).getByRole('button'));
+      fireEvent.click(within(retiredContainer).getByRole('combobox'));
     });
-    await act(async () => {
-      fireEvent.click(within(retiredContainer).getByText('Yes'));
-    });
+    fireEvent.click(await screen.findByRole('option', { name: 'Yes' }));
 
     await waitFor(() => {
       expect(useLayoutData).toHaveBeenLastCalledWith(

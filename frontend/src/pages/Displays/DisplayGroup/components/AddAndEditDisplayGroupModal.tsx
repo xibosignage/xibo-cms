@@ -21,6 +21,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import type { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table';
+import { isAxiosError } from 'axios';
 import { useEffect, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -169,7 +170,7 @@ export default function AddAndEditDisplayGroupModal({
       const result = schema.safeParse(draft);
 
       if (!result.success) {
-        setApiError(undefined);
+        setApiError(t('Please fix the highlighted errors before saving.'));
         const fieldErrors = result.error.flatten().fieldErrors;
         const mappedErrors: DisplayGroupFormErrors = {};
 
@@ -233,9 +234,8 @@ export default function AddAndEditDisplayGroupModal({
         }
         onClose();
       } catch (err: unknown) {
-        const apiErr = err as { response?: { data?: { message?: string } } };
-        if (apiErr.response?.data?.message) {
-          setApiError(apiErr.response.data.message);
+        if (isAxiosError(err) && err.response?.data?.message) {
+          setApiError(err.response.data.message);
         } else if (err instanceof Error) {
           setApiError(err.message);
         } else {
@@ -304,6 +304,7 @@ export default function AddAndEditDisplayGroupModal({
 
   return (
     <Modal
+      variant="tabbed"
       isOpen={isOpen}
       title={type === 'edit' ? t('Edit Display Group') : t('Add Display Group')}
       onClose={onClose}
@@ -314,8 +315,8 @@ export default function AddAndEditDisplayGroupModal({
       actions={actions}
     >
       {/* Tab bar */}
-      <div className="flex flex-col h-full overflow-y-hidden overflow-x-visible px-6">
-        <nav className="flex overflow-x-auto border-b border-gray-200" aria-label="Tabs">
+      <div className="flex flex-col shrink-0 overflow-x-visible px-6">
+        <nav className="flex overflow-x-auto" aria-label="Tabs">
           {(['general', 'reference'] as const).map((tab) => (
             <button
               key={tab}

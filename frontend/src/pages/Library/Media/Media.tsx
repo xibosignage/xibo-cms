@@ -59,12 +59,14 @@ import { useTableState } from '@/hooks/useTableState';
 import { useMediaFilterOptions } from '@/pages/Library/Media/hooks/useMediaFilterOptions';
 import { downloadMedia, downloadMediaAsZip } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
+import { hasFeature } from '@/utils/permissions';
 
 export default function Media() {
   const { t } = useTranslation();
   const { user } = useUserContext();
   const queryClient = useQueryClient();
   const canViewFolders = usePermissions()?.canViewFolders;
+  const canSchedule = hasFeature(user, 'schedule.add');
   const homeFolderId = user?.homeFolderId ?? 1;
   const location = useLocation();
   const layoutId = location.state?.layoutId;
@@ -143,6 +145,7 @@ export default function Media() {
 
   const targetUploadFolderId = canViewFolders ? (selectedFolderId ?? homeFolderId) : homeFolderId;
   const canAddToFolder = targetUploadFolderId !== null;
+  const targetUploadFolderName = selectedFolderId === null ? t('Root Folder') : selectedFolderName;
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['media'] });
@@ -328,7 +331,7 @@ export default function Media() {
     },
     copyMedia: openCopyModal,
     openReplaceModal: openReplaceFileModal,
-    openScheduleModal,
+    openScheduleModal: canSchedule ? openScheduleModal : undefined,
   });
 
   const getAllSelectedItems = (): Media[] => {
@@ -462,7 +465,7 @@ export default function Media() {
     },
     copyMedia: openCopyModal,
     openReplaceModal: openReplaceFileModal,
-    openScheduleModal,
+    openScheduleModal: canSchedule ? openScheduleModal : undefined,
   } as MediaActionsProps);
 
   const { filterOptions } = useMediaFilterOptions(t);
@@ -501,7 +504,7 @@ export default function Media() {
                     <div className="size-6.5 flex justify-center items-center">
                       <Folder className="size-4" />
                     </div>
-                    {canViewFolders ? `"${selectedFolderName}"` : t('Home Folder')}
+                    {canViewFolders ? `"${targetUploadFolderName}"` : t('Home Folder')}
                   </span>
                 </div>
               </>

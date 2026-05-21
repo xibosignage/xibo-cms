@@ -125,7 +125,7 @@
                 title: '{% trans "Existing Content" %}',
                 text: 'Do you already have an image or video content ready to be shown? Upload your media and schedule to be shown full screen on Displays in a few easy steps.',
                 firstLink: '{{ theme.rootUri() }}prototype/library/media',
-                secondLink: '{{ url_for("schedule.view")}}',
+                secondLink: '{{ theme.rootUri() }}prototype/schedule/events',
                 otherLink: '{{ helpService.getLandingPage }}getting_started_showing_an_image',
                 imageUrl: '{{ theme.rootUri() }}theme/default/img/onboarding/existing-content.png',
                 videoLinks: [
@@ -144,7 +144,7 @@
             {
                 title: '{% trans "Playlists" %}',
                 text: 'Create a ‘slideshow’ of content to be shown in sequence to schedule and show on your Displays.',
-                firstLink: '{{ url_for("playlist.view") }}',
+                firstLink: '{{ theme.rootUri() }}prototype/library/playlists',
                 secondLink: '{{ helpService.getLandingPage }}getting_started_showing_a_playlist',
                 imageUrl: '{{ theme.rootUri() }}theme/default/img/onboarding/playlists.png',
                 videoLinks: {
@@ -170,7 +170,7 @@
             {
                 title: '{% trans "Schedule" %}',
                 text: 'Once you have your content ready to be shown, use the Scheduling tools to ensure that your content is shown at the right place at the right time.',
-                firstLink: '{{ url_for("schedule.view") }}',
+                firstLink: '{{ theme.rootUri() }}prototype/schedule/events',
                 secondLink: '{{ helpService.getLandingPage }}simple_scheduling',
                 imageUrl: '{{ theme.rootUri() }}theme/default/img/onboarding/schedule.png',
                 videoLinks: {

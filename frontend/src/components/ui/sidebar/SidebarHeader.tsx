@@ -47,9 +47,6 @@ export function SidebarHeader({ isCollapsed, toggleSidebar, closeMobileDrawer }:
         {!isCollapsed && (
           <div className="flex gap-2 items-end">
             <img src={logo} alt="Xibo Logo" className="w-[77.287px] h-auto" />
-            <span className="border text-[10px] border-xibo-white/20 px-1 py-0.5 rounded-full text-white">
-              V5.0
-            </span>
           </div>
         )}
 

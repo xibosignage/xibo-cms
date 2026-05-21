@@ -37,6 +37,7 @@ const flattenRoutes = (routes: AppRoute[], base = ''): RouteObject[] => {
     if (route.lazy) {
       acc.push({
         path: fullPath,
+        handle: { title: route.labelKey },
         element: <ProtectedRoute route={route} />,
         children: [
           {

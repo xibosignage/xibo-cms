@@ -22,6 +22,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { Filter, FilterX, Plus } from 'lucide-react';
+import type { DateTime } from 'luxon';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -152,6 +153,8 @@ export default function Events() {
   const [calendarDate, setCalendarDate] = useState<Date>(() => new Date());
 
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
+  const [agendaDate, setAgendaDate] = useState<DateTime | null>(null);
+  const [agendaDayEvents, setAgendaDayEvents] = useState<Event[]>([]);
 
   const [itemsToDelete, setItemsToDelete] = useState<Event[]>([]);
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
@@ -303,6 +306,28 @@ export default function Events() {
 
   const libraryTabs = useFilteredTabs('schedule');
 
+  const agendaDisplayGroups: { id: number; name: string }[] = (() => {
+    const selectedIds = new Set([
+      ...(filterInputs.displaySpecificGroupIds ?? []),
+      ...(filterInputs.displayGroupIds ?? []),
+    ]);
+    const seen = new Map<number, { id: number; name: string }>();
+    for (const ev of agendaDayEvents) {
+      for (const dg of ev.displayGroups ?? []) {
+        if (selectedIds.size > 0 && !selectedIds.has(dg.displayGroupId)) {
+          continue;
+        }
+        if (!seen.has(dg.displayGroupId)) {
+          seen.set(dg.displayGroupId, {
+            id: dg.displayGroupId,
+            name: dg.displayGroup,
+          });
+        }
+      }
+    }
+    return Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name));
+  })();
+
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
@@ -411,6 +436,11 @@ export default function Events() {
                 isLoading={isCalendarFetching}
                 onEditEvent={openAddEditModal}
                 onDeleteEvent={handleDeleteFromCalendar}
+                onAgenda={(day, events) => {
+                  setAgendaDate(day);
+                  setAgendaDayEvents(events);
+                  openModal('agenda');
+                }}
               />
             </DataCalendar>
           ) : (
@@ -449,6 +479,8 @@ export default function Events() {
           deleteError,
           isDeleting,
           isCloning,
+          agendaDate,
+          displayGroups: agendaDisplayGroups,
         }}
         selection={{
           selectedEvent,

@@ -116,6 +116,7 @@ export default function ApplicationsModal({ isOpen = true, onClose }: Applicatio
 
   return (
     <Modal
+      variant="tabbed"
       isOpen={isOpen}
       onClose={onClose}
       size="lg"

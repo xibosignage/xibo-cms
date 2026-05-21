@@ -133,12 +133,12 @@ describe('SidebarMenu — Permissions', () => {
       }
     });
 
-    // schedule.view grants Event but not Dayparting (no daypart.view)
-    test('GroupAdmin sees only Event under Schedule', () => {
+    // schedule.view grants Events but not Dayparting (no daypart.view)
+    test('GroupAdmin sees only Events under Schedule', () => {
       renderSidebar({ user: groupAdminUser });
       fireEvent.click(getChevronButton('Schedule'));
 
-      const eventVisible = getVisibleByText('Event');
+      const eventVisible = getVisibleByText('Events');
       expect(eventVisible.length).toBeGreaterThanOrEqual(1);
 
       const daypartVisible = getVisibleByText('Dayparting');
@@ -177,12 +177,12 @@ describe('SidebarMenu — Permissions', () => {
       }
     });
 
-    // schedule.view grants access to "Event", but daypart.view is needed for "Dayparting"
-    test('Regular user sees only Event under Schedule (not Dayparting)', () => {
+    // schedule.view grants access to "Events", but daypart.view is needed for "Dayparting"
+    test('Regular user sees only Events under Schedule (not Dayparting)', () => {
       renderSidebar({ user: regularUser });
       fireEvent.click(getChevronButton('Schedule'));
 
-      const eventVisible = getVisibleByText('Event');
+      const eventVisible = getVisibleByText('Events');
       expect(eventVisible.length).toBeGreaterThanOrEqual(1);
 
       const daypartVisible = getVisibleByText('Dayparting');
@@ -275,12 +275,12 @@ describe('SidebarMenu — Permissions', () => {
       }
     });
 
-    // schedule.view grants Event but not Dayparting (requires daypart.view)
-    test('Display Manager sees only Event under Schedule', () => {
+    // schedule.view grants Events but not Dayparting (requires daypart.view)
+    test('Display Manager sees only Events under Schedule', () => {
       renderSidebar({ user: displayManagerUser });
       fireEvent.click(getChevronButton('Schedule'));
 
-      const eventVisible = getVisibleByText('Event');
+      const eventVisible = getVisibleByText('Events');
       expect(eventVisible.length).toBeGreaterThanOrEqual(1);
 
       const daypartVisible = getVisibleByText('Dayparting');
@@ -673,11 +673,11 @@ describe('SidebarMenu — Permissions', () => {
       }
     });
 
-    test('Schedule Manager sees both Event and Dayparting under Schedule', () => {
+    test('Schedule Manager sees both Events and Dayparting under Schedule', () => {
       renderSidebar({ user: scheduleManagerUser });
       fireEvent.click(getChevronButton('Schedule'));
 
-      for (const label of ['Event', 'Dayparting']) {
+      for (const label of ['Events', 'Dayparting']) {
         const visible = getVisibleByText(label);
         expect(visible.length).toBeGreaterThanOrEqual(1);
       }

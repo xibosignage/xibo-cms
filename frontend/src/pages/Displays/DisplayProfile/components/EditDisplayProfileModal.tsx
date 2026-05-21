@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { isAxiosError } from 'axios';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -47,8 +48,10 @@ type ConfigValue = string | number | null;
 type FlatConfig = Record<string, ConfigValue>;
 
 function getApiErrorMessage(err: unknown, fallback: string): string {
-  const e = err as { response?: { data?: { message?: string } } };
-  return e.response?.data?.message ?? (err instanceof Error ? err.message : fallback);
+  return (
+    (isAxiosError(err) && err.response?.data?.message) ||
+    (err instanceof Error ? err.message : fallback)
+  );
 }
 
 interface EditDraft {
@@ -340,7 +343,7 @@ export default function EditDisplayProfileModal({
       const result = schema.safeParse({ name: draft.name, isDefault: draft.isDefault });
 
       if (!result.success) {
-        setApiError(undefined);
+        setApiError(t('Please fix the highlighted errors before saving.'));
         setNameError(result.error.flatten().fieldErrors.name?.[0]);
         return;
       }
@@ -468,6 +471,7 @@ export default function EditDisplayProfileModal({
 
   return (
     <Modal
+      variant="tabbed"
       title={title}
       onClose={onClose}
       isOpen={isOpen}
