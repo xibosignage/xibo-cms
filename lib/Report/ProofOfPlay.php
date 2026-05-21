@@ -496,8 +496,10 @@ class ProofOfPlay implements ReportInterface
             $entry['tag'] = $sanitizedRow->getString('tag');
             $entry['numberPlays'] = $sanitizedRow->getInt('numberPlays');
             $entry['duration'] = $sanitizedRow->getInt('duration');
-            $entry['minStart'] = Carbon::createFromTimestamp($row['minStart'])->format(DateFormatHelper::getSystemFormat());
-            $entry['maxEnd'] =  Carbon::createFromTimestamp($row['maxEnd'])->format(DateFormatHelper::getSystemFormat());
+            $entry['minStart'] = Carbon::createFromTimestamp($row['minStart'])
+                ->format(DateFormatHelper::getSystemFormat());
+            $entry['maxEnd'] = Carbon::createFromTimestamp($row['maxEnd'])
+                ->format(DateFormatHelper::getSystemFormat());
             $entry['mediaId'] = $sanitizedRow->getInt('mediaId');
             $entry['displayGroup'] = $sanitizedRow->getString('displayGroup');
             $entry['displayGroupId'] = $sanitizedRow->getInt('displayGroupId');

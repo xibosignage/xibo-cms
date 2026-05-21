@@ -1220,7 +1220,10 @@ class DistributionReport implements ReportInterface
                 }
             }
 
-            $this->getLog()->debug('Period start: ' . $fromDt->format(DateFormatHelper::getSystemFormat()) . ' Period end: ' . $toDt->format(DateFormatHelper::getSystemFormat()));
+            $this->getLog()->debug(
+                'Period start: ' . $fromDt->format(DateFormatHelper::getSystemFormat()) .
+                ' Period end: ' . $toDt->format(DateFormatHelper::getSystemFormat())
+            );
 
             return [
                 'result' => $resultArray,

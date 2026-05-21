@@ -574,7 +574,10 @@ class Layout extends Base
 
         // if it was not a template, and user added template tag, throw an error.
         if (!$isTemplate && $layout->hasTag('template')) {
-            throw new InvalidArgumentException(__('Cannot assign a Template tag to a Layout, to create a template use the Save Template button instead.'), 'tags');
+            throw new InvalidArgumentException(
+                __('Cannot assign a Template tag to a Layout, to create a template use the Save Template button instead.'),
+                'tags'
+            );
         }
 
         $layout->retired = $sanitizedParams->getCheckbox('retired');
@@ -1792,27 +1795,27 @@ class Layout extends Base
             $copiedMediaIds = [];
             foreach ($layout->getAllWidgets() as $widget) {
                 // Copy the media
-                    if ( $widget->type === 'image' || $widget->type === 'video' || $widget->type === 'pdf' || $widget->type === 'powerpoint' || $widget->type === 'audio' ) {
-                        $oldMedia = $this->mediaFactory->getById($widget->getPrimaryMediaId());
+                if ($widget->type === 'image' || $widget->type === 'video' || $widget->type === 'pdf' || $widget->type === 'powerpoint' || $widget->type === 'audio') {
+                    $oldMedia = $this->mediaFactory->getById($widget->getPrimaryMediaId());
 
-                        // check if we already cloned this media, if not, do it and add it the array
-                        if (!array_key_exists($oldMedia->mediaId, $copiedMediaIds)) {
-                            $media = clone $oldMedia;
-                            $media->setOwner($this->getUser()->userId);
-                            $media->save();
-                            $copiedMediaIds[$oldMedia->mediaId] = $media->mediaId;
-                        } else {
-                            // if we already cloned that media, look it up and assign to Widget.
-                            $mediaId = $copiedMediaIds[$oldMedia->mediaId];
-                            $media = $this->mediaFactory->getById($mediaId);
-                        }
-
-                        $widget->unassignMedia($oldMedia->mediaId);
-                        $widget->assignMedia($media->mediaId);
-
-                        // Update the widget option with the new ID
-                        $widget->setOptionValue('uri', 'attrib', $media->storedAs);
+                    // check if we already cloned this media, if not, do it and add it the array
+                    if (!array_key_exists($oldMedia->mediaId, $copiedMediaIds)) {
+                        $media = clone $oldMedia;
+                        $media->setOwner($this->getUser()->userId);
+                        $media->save();
+                        $copiedMediaIds[$oldMedia->mediaId] = $media->mediaId;
+                    } else {
+                        // if we already cloned that media, look it up and assign to Widget.
+                        $mediaId = $copiedMediaIds[$oldMedia->mediaId];
+                        $media = $this->mediaFactory->getById($mediaId);
                     }
+
+                    $widget->unassignMedia($oldMedia->mediaId);
+                    $widget->assignMedia($media->mediaId);
+
+                    // Update the widget option with the new ID
+                    $widget->setOptionValue('uri', 'attrib', $media->storedAs);
+                }
             }
 
             // Also handle the background image, if there is one
@@ -2669,7 +2672,9 @@ class Layout extends Base
         $lockUserId = $lock->get()->userId;
 
         if ($this->getUser()->userId !== $lockUserId) {
-            throw new InvalidArgumentException(__('This function is available only to User who originally locked this Layout.'));
+            throw new InvalidArgumentException(
+                __('This function is available only to User who originally locked this Layout.')
+            );
         }
 
         $lock->set([]);
