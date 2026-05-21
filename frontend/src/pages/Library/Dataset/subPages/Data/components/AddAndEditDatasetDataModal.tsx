@@ -164,7 +164,7 @@ export function AddAndEditDataModal({
           .sort((a, b) => (a.columnOrder || 0) - (b.columnOrder || 0))
           .map((col) => {
             const isRequired = Boolean(col.isRequired);
-            const label = `${col.heading} ${isRequired ? '*' : ''}`;
+            const label = isRequired ? `${col.heading} *` : col.heading;
             const currentValue = draft[String(col.dataSetColumnId)];
 
             // Date Picker (dataTypeId === 3)
