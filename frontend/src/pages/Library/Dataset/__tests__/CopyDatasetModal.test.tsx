@@ -155,4 +155,71 @@ describe('CopyDatasetModal', () => {
     expect(screen.getByRole('button', { name: 'Saving…' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
   });
+
+  it('"Copy rows?" checkbox is unchecked by default', () => {
+    renderWithProviders(
+      <CopyDatasetModal
+        isOpen={true}
+        onClose={mockOnClose}
+        onConfirm={mockOnConfirm}
+        dataset={null}
+        existingNames={existingNames}
+      />,
+    );
+    expect(screen.getByRole('checkbox', { name: /Copy rows\?/i })).not.toBeChecked();
+  });
+
+  it('passes copyRows: true when the "Copy rows?" checkbox is checked before submit', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(
+      <CopyDatasetModal
+        isOpen={true}
+        onClose={mockOnClose}
+        onConfirm={mockOnConfirm}
+        dataset={null}
+        existingNames={existingNames}
+      />,
+    );
+
+    await user.type(screen.getByLabelText('Name'), 'BrandNewDataset');
+    await user.click(screen.getByRole('checkbox', { name: /Copy rows\?/i }));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(mockOnConfirm).toHaveBeenCalledWith('BrandNewDataset', '', '', true);
+  });
+
+  it('calls onClose and does not call onConfirm when Cancel is clicked', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(
+      <CopyDatasetModal
+        isOpen={true}
+        onClose={mockOnClose}
+        onConfirm={mockOnConfirm}
+        dataset={null}
+        existingNames={existingNames}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(mockOnClose).toHaveBeenCalled();
+    expect(mockOnConfirm).not.toHaveBeenCalled();
+  });
+
+  it('passes copyRows: false when the checkbox is left unchecked', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(
+      <CopyDatasetModal
+        isOpen={true}
+        onClose={mockOnClose}
+        onConfirm={mockOnConfirm}
+        dataset={null}
+        existingNames={existingNames}
+      />,
+    );
+
+    await user.type(screen.getByLabelText('Name'), 'AnotherDataset');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(mockOnConfirm).toHaveBeenCalledWith('AnotherDataset', '', '', false);
+  });
 });
