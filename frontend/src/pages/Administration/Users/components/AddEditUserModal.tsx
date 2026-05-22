@@ -513,7 +513,13 @@ export default function AddEditUserModal({
           disabled: isPending,
         },
         {
-          label: isPending ? t('Saving...') : t('Save'),
+          label: isPending
+            ? isEdit
+              ? t('Saving...')
+              : t('Creating...')
+            : isEdit
+              ? t('Save')
+              : t('Create User'),
           onClick: handleSave,
           disabled: isPending || isLoading,
         },
