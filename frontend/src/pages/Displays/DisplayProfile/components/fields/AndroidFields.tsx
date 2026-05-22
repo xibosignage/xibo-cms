@@ -42,10 +42,12 @@ export interface AndroidFieldProps {
   daypartsHasMore?: boolean;
   onLoadMoreDayparts?: () => void;
   isLoadingMoreDayparts?: boolean;
+  onSearchDayparts?: (term: string) => void;
   playerVersions: PlayerSoftware[];
   playerVersionsHasMore?: boolean;
   onLoadMorePlayerVersions?: () => void;
   isLoadingMorePlayerVersions?: boolean;
+  onSearchPlayerVersions?: (term: string) => void;
 }
 
 export function AndroidFields({
@@ -61,10 +63,12 @@ export function AndroidFields({
   daypartsHasMore,
   onLoadMoreDayparts,
   isLoadingMoreDayparts,
+  onSearchDayparts,
   playerVersions,
   playerVersionsHasMore,
   onLoadMorePlayerVersions,
   isLoadingMorePlayerVersions,
+  onSearchPlayerVersions,
 }: AndroidFieldProps) {
   // Fetch the schema mapping for Android profiles
   const metaMap = getFieldMetaForType('android', t);
@@ -106,10 +110,12 @@ export function AndroidFields({
     daypartsHasMore,
     onLoadMoreDayparts,
     isLoadingMoreDayparts,
+    onSearchDayparts,
     playerVersions,
     playerVersionsHasMore,
     onLoadMorePlayerVersions,
     isLoadingMorePlayerVersions,
+    onSearchPlayerVersions,
   };
 
   return (

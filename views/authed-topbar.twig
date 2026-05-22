@@ -254,7 +254,7 @@
                 {% if countViewable == 0 %}
                 <li class="nav-item">
                 {% endif %}
-                    <a class="{{ groupElementClass }}" href="{{ url_for("font.view") }}">{% trans "Fonts" %}</a>
+                    <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/administration/fonts">{% trans "Fonts" %}</a>
                 {% if countViewable == 0 %}
                 </li>
                 {% endif %}

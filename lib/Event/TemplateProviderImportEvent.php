@@ -28,10 +28,6 @@ namespace Xibo\Event;
 class TemplateProviderImportEvent extends Event
 {
     protected static $NAME = 'connector.provider.template.import';
-    /**
-     * @var string
-     */
-    private $downloadUrl;
     /** @var string */
     private $libraryLocation;
     /**
@@ -42,18 +38,11 @@ class TemplateProviderImportEvent extends Event
     private $tempFile;
 
     public function __construct(
-        string $uri,
         string $fileName,
         string $libraryLocation
     ) {
-        $this->downloadUrl = $uri;
         $this->fileName = $fileName;
         $this->libraryLocation = $libraryLocation;
-    }
-
-    public function getDownloadUrl(): string
-    {
-        return $this->downloadUrl;
     }
 
     public function getFileName(): string

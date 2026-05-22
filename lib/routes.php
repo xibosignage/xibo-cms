@@ -841,7 +841,12 @@ $app->group('', function (RouteCollectorProxy $group) {
 
 $app->get('/menuboard/{id}', ['\Xibo\Controller\MenuBoard', 'searchById'])->setName('menuBoard.search.id');
 
+/**
+ * Fonts
+ */
 $app->get('/fonts', ['\Xibo\Controller\Font', 'grid'])->setName('font.search');
+$app->get('/fonts/{id}', ['\Xibo\Controller\Font', 'searchById'])->setName('font.search.id');
+
 $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/fonts/details/{id}', ['\Xibo\Controller\Font', 'getFontLibDetails'])->setName('font.details');
     $group->get('/fonts/download/{id}', ['\Xibo\Controller\Font', 'download'])->setName('font.download');

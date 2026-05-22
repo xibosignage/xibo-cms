@@ -24,6 +24,7 @@ import { useEffect, useState } from 'react';
 
 import { getBaseFilterKeys } from '../DisplayGroupConfig';
 
+import { useDebounce } from '@/hooks/useDebounce';
 import { fetchDisplays } from '@/services/displaysApi';
 import type { FilterOption } from '@/types/filter';
 
@@ -39,40 +40,80 @@ export function useDisplayGroupFilterOptions(t: TFunction) {
   const [hasMoreDisplays, setHasMoreDisplays] = useState(false);
   const [isLoadingDisplays, setIsLoadingDisplays] = useState(false);
   const [isLoadingMoreDisplays, setIsLoadingMoreDisplays] = useState(false);
+  const [displaySearch, setDisplaySearch] = useState('');
+  const debouncedDisplaySearch = useDebounce(displaySearch, 300);
 
   const [nestedDisplayOptions, setNestedDisplayOptions] = useState<FilterOption[]>([]);
   const [nestedDisplayPage, setNestedDisplayPage] = useState(0);
   const [hasMoreNestedDisplays, setHasMoreNestedDisplays] = useState(false);
   const [isLoadingNestedDisplays, setIsLoadingNestedDisplays] = useState(false);
   const [isLoadingMoreNestedDisplays, setIsLoadingMoreNestedDisplays] = useState(false);
+  const [nestedDisplaySearch, setNestedDisplaySearch] = useState('');
+  const debouncedNestedDisplaySearch = useDebounce(nestedDisplaySearch, 300);
 
   useEffect(() => {
+    let ignore = false;
     setIsLoadingDisplays(true);
-    fetchDisplays({ start: 0, length: PAGE_SIZE })
+    setDisplayOptions([]);
+    setDisplayPage(0);
+    setHasMoreDisplays(false);
+    fetchDisplays({ start: 0, length: PAGE_SIZE, display: debouncedDisplaySearch || undefined })
       .then((res) => {
+        if (ignore) {
+          return;
+        }
         setDisplayOptions(toOptions(res.rows));
-        setDisplayPage(0);
         setHasMoreDisplays(res.rows.length === PAGE_SIZE);
       })
       .catch(() => {})
-      .finally(() => setIsLoadingDisplays(false));
+      .finally(() => {
+        if (!ignore) {
+          setIsLoadingDisplays(false);
+        }
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [debouncedDisplaySearch]);
 
+  useEffect(() => {
+    let ignore = false;
     setIsLoadingNestedDisplays(true);
-    fetchDisplays({ start: 0, length: PAGE_SIZE })
+    setNestedDisplayOptions([]);
+    setNestedDisplayPage(0);
+    setHasMoreNestedDisplays(false);
+    fetchDisplays({
+      start: 0,
+      length: PAGE_SIZE,
+      display: debouncedNestedDisplaySearch || undefined,
+    })
       .then((res) => {
+        if (ignore) {
+          return;
+        }
         setNestedDisplayOptions(toOptions(res.rows));
-        setNestedDisplayPage(0);
         setHasMoreNestedDisplays(res.rows.length === PAGE_SIZE);
       })
       .catch(() => {})
-      .finally(() => setIsLoadingNestedDisplays(false));
-  }, []);
+      .finally(() => {
+        if (!ignore) {
+          setIsLoadingNestedDisplays(false);
+        }
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [debouncedNestedDisplaySearch]);
 
   const handleLoadMoreDisplays = () => {
     if (isLoadingMoreDisplays || !hasMoreDisplays) return;
     const nextPage = displayPage + 1;
     setIsLoadingMoreDisplays(true);
-    fetchDisplays({ start: nextPage * PAGE_SIZE, length: PAGE_SIZE })
+    fetchDisplays({
+      start: nextPage * PAGE_SIZE,
+      length: PAGE_SIZE,
+      display: debouncedDisplaySearch || undefined,
+    })
       .then((res) => {
         setDisplayOptions((prev) => [...prev, ...toOptions(res.rows)]);
         setDisplayPage(nextPage);
@@ -86,7 +127,11 @@ export function useDisplayGroupFilterOptions(t: TFunction) {
     if (isLoadingMoreNestedDisplays || !hasMoreNestedDisplays) return;
     const nextPage = nestedDisplayPage + 1;
     setIsLoadingMoreNestedDisplays(true);
-    fetchDisplays({ start: nextPage * PAGE_SIZE, length: PAGE_SIZE })
+    fetchDisplays({
+      start: nextPage * PAGE_SIZE,
+      length: PAGE_SIZE,
+      display: debouncedNestedDisplaySearch || undefined,
+    })
       .then((res) => {
         setNestedDisplayOptions((prev) => [...prev, ...toOptions(res.rows)]);
         setNestedDisplayPage(nextPage);
@@ -105,6 +150,7 @@ export function useDisplayGroupFilterOptions(t: TFunction) {
         hasMore: hasMoreDisplays,
         isLoadingMore: isLoadingMoreDisplays,
         isLoading: isLoadingDisplays,
+        onSearch: (term: string) => setDisplaySearch(term),
         resolveLabel: (value: string) =>
           fetchDisplays({ start: 0, length: 1, displayId: Number(value) }).then(
             (res) => res.rows[0]?.display ?? value,
@@ -119,6 +165,7 @@ export function useDisplayGroupFilterOptions(t: TFunction) {
         hasMore: hasMoreNestedDisplays,
         isLoadingMore: isLoadingMoreNestedDisplays,
         isLoading: isLoadingNestedDisplays,
+        onSearch: (term: string) => setNestedDisplaySearch(term),
         resolveLabel: (value: string) =>
           fetchDisplays({ start: 0, length: 1, displayId: Number(value) }).then(
             (res) => res.rows[0]?.display ?? value,

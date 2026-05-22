@@ -126,7 +126,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("font.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("font.view") }}">{% trans "Fonts" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/administration/fonts">{% trans "Fonts" %}</a></li>
             {% endif %}
         {% endif %}
 

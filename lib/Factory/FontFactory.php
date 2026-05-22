@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -113,7 +113,7 @@ class FontFactory extends BaseFactory
      * @param $name
      * @return Font[]
      */
-    public function getByName($name)
+    public function getByName($name): array
     {
         return $this->query(null, ['name' => $name]);
     }
@@ -122,7 +122,7 @@ class FontFactory extends BaseFactory
      * @param $fileName
      * @return Font[]
      */
-    public function getByFileName($fileName)
+    public function getByFileName($fileName): array
     {
         return $this->query(null, ['fileName' => $fileName]);
     }
@@ -131,7 +131,7 @@ class FontFactory extends BaseFactory
      * Get the number of fonts and their total size
      * @return mixed
      */
-    public function getFontsSizeAndCount()
+    public function getFontsSizeAndCount(): mixed
     {
         return $this->getStore()->select('
             SELECT IFNULL(SUM(size), 0) AS SumSize, COUNT(*) AS totalCount FROM `fonts`
@@ -139,11 +139,11 @@ class FontFactory extends BaseFactory
     }
 
     /**
-     * @param $sortOrder
-     * @param $filterBy
+     * @param array|null $sortOrder
+     * @param array $filterBy
      * @return Font[]
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query(?array $sortOrder = null, array $filterBy = []): array
     {
         $entries = [];
         $params = [];
@@ -194,15 +194,43 @@ class FontFactory extends BaseFactory
             $params['md5'] = $sanitizedFilter->getString('md5');
         }
 
-        // Sorting?
-        $order = '';
-        if (is_array($sortOrder)) {
-            $order .= ' ORDER BY ' . implode(',', $sortOrder);
+        if ($sanitizedFilter->getString('keyword') != null) {
+            // Fulltext search
+            $body .= $this->buildSearchQuery(
+                $sanitizedFilter->getString('keyword'),
+                $params,
+                ['fonts.name', 'fonts.fileName'],
+                ['fonts.id'],
+            );
         }
 
+        // Sorting
+        $allowedColumns = [
+            'id',
+            'name',
+            'fileName',
+            'createdAt',
+            'modifiedAt',
+            'modifiedBy',
+            'size',
+        ];
+
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['name ASC']
+        );
+
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
+
         $limit = '';
-        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit .= ' LIMIT ' . intval($sanitizedFilter->getInt('start')) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+
+        if ($filterBy !== null &&
+            $sanitizedFilter->getInt('start') !== null &&
+            $sanitizedFilter->getInt('length') !== null
+        ) {
+            $limit .= ' LIMIT ' . intval($sanitizedFilter->getInt('start')) . ', ' .
+                $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

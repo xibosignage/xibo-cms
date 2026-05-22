@@ -51,10 +51,12 @@ export interface DynamicSettingFieldProps {
     daypartsHasMore?: boolean;
     onLoadMoreDayparts?: () => void;
     isLoadingMoreDayparts?: boolean;
+    onSearchDayparts?: (term: string) => void;
     playerVersions?: PlayerSoftware[];
     playerVersionsHasMore?: boolean;
     onLoadMorePlayerVersions?: () => void;
     isLoadingMorePlayerVersions?: boolean;
+    onSearchPlayerVersions?: (term: string) => void;
     playerType?: string;
   };
 }
@@ -204,41 +206,69 @@ export function DynamicSettingField({
     );
   }
   if (meta.inputType === 'daypart') {
+    const daypartOptions =
+      contextData.dayparts?.map((d) => ({ value: String(d.dayPartId), label: d.name })) ?? [];
+    if (contextData.onLoadMoreDayparts && contextData.onSearchDayparts) {
+      return (
+        <SelectDropdown
+          label={meta.label}
+          helpText={meta.helpText}
+          value={value ? String(value) : ''}
+          options={daypartOptions}
+          placeholder=" "
+          searchable
+          onSelect={onChange}
+          onLoadMore={contextData.onLoadMoreDayparts}
+          hasMore={contextData.daypartsHasMore ?? false}
+          isLoadingMore={contextData.isLoadingMoreDayparts ?? false}
+          onSearch={contextData.onSearchDayparts}
+        />
+      );
+    }
     return (
       <SelectDropdown
         label={meta.label}
         helpText={meta.helpText}
         value={value ? String(value) : ''}
-        options={
-          contextData.dayparts?.map((d) => ({ value: String(d.dayPartId), label: d.name })) || []
-        }
+        options={daypartOptions}
         placeholder=" "
         searchable
         onSelect={onChange}
-        hasMore={contextData.daypartsHasMore}
-        onLoadMore={contextData.onLoadMoreDayparts}
-        isLoadingMore={contextData.isLoadingMoreDayparts}
       />
     );
   }
   if (meta.inputType === 'player-version') {
+    const playerVersionOptions =
+      contextData.playerVersions?.map((v) => ({
+        value: String(v.versionId),
+        label: v.playerShowVersion,
+      })) ?? [];
+    if (contextData.onLoadMorePlayerVersions && contextData.onSearchPlayerVersions) {
+      return (
+        <SelectDropdown
+          label={meta.label}
+          helpText={meta.helpText}
+          value={value ? String(value) : ''}
+          options={playerVersionOptions}
+          placeholder=" "
+          searchable
+          onSelect={onChange}
+          onLoadMore={contextData.onLoadMorePlayerVersions}
+          hasMore={contextData.playerVersionsHasMore ?? false}
+          isLoadingMore={contextData.isLoadingMorePlayerVersions ?? false}
+          onSearch={contextData.onSearchPlayerVersions}
+        />
+      );
+    }
     return (
       <SelectDropdown
         label={meta.label}
         helpText={meta.helpText}
         value={value ? String(value) : ''}
-        options={
-          contextData.playerVersions?.map((v) => ({
-            value: String(v.versionId),
-            label: v.playerShowVersion,
-          })) || []
-        }
+        options={playerVersionOptions}
         placeholder=" "
         searchable
         onSelect={onChange}
-        hasMore={contextData.playerVersionsHasMore}
-        onLoadMore={contextData.onLoadMorePlayerVersions}
-        isLoadingMore={contextData.isLoadingMorePlayerVersions}
       />
     );
   }

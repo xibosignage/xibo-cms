@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,7 +23,7 @@
 namespace Xibo\Connector;
 
 use Carbon\Carbon;
-use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Str;
 use Parsedown;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -31,6 +31,7 @@ use Xibo\Entity\SearchResult;
 use Xibo\Event\TemplateProviderEvent;
 use Xibo\Event\TemplateProviderImportEvent;
 use Xibo\Event\TemplateProviderListEvent;
+use Xibo\Helper\Guzzle\SafeClient;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
@@ -85,45 +86,55 @@ class XiboExchangeConnector implements ConnectorInterface
         return $settings;
     }
 
-    /**
-     * Get layouts available in Layout exchange and add them to the results
-     * This is triggered in Template Controller search function
-     * @param TemplateProviderEvent $event
-     */
-    public function onTemplateProvider(TemplateProviderEvent $event)
-    {
-        $this->getLogger()->debug('XiboExchangeConnector: onTemplateProvider');
 
-        // Get a cache of the layouts.json file, or request one from download.
+    /**
+     * Fetch the Xibo Exchange template list, using a 24-hour cache.
+     * @return array
+     * @throws GuzzleException
+     */
+    private function getTemplateList(): array
+    {
         $uri = 'https://download.xibosignage.com/layouts_v4_1.json';
-        $key = md5($uri);
-        $cache = $this->getPool()->getItem($key);
+        $cache = $this->getPool()->getItem(md5($uri));
         $body = $cache->get();
 
         if ($cache->isMiss()) {
-            $this->getLogger()->debug('onTemplateProvider: cache miss, generating.');
+            $this->getLogger()->debug('getTemplateList: cache miss, fetching.');
 
-            // Make the request
             $request = $this->getClient()->request('GET', $uri);
-
             $body = $request->getBody()->getContents();
             if (empty($body)) {
-                $this->getLogger()->debug('onTemplateProvider: Empty body');
-                return;
+                return [];
             }
 
             $body = json_decode($body);
             if ($body === null || $body === false) {
-                $this->getLogger()->debug('onTemplateProvider: non-json body or empty body returned.');
-                return;
+                return [];
             }
 
-            // Cache for next time
             $cache->set($body);
             $cache->expiresAt(Carbon::now()->addHours(24));
             $this->getPool()->saveDeferred($cache);
         } else {
-            $this->getLogger()->debug('onTemplateProvider: serving from cache.');
+            $this->getLogger()->debug('getTemplateList: serving from cache.');
+        }
+
+        return (array)$body;
+    }
+
+    /**
+     * Get layouts available in Layout exchange and add them to the results
+     * This is triggered in Template Controller search function
+     * @param TemplateProviderEvent $event
+     * @throws GuzzleException
+     */
+    public function onTemplateProvider(TemplateProviderEvent $event): void
+    {
+        $this->getLogger()->debug('XiboExchangeConnector: onTemplateProvider');
+
+        $body = $this->getTemplateList();
+        if (empty($body)) {
+            return;
         }
 
         // We have the whole file locally, so handle paging
@@ -199,12 +210,40 @@ class XiboExchangeConnector implements ConnectorInterface
      * we need to get the zip file from specified url and import it to the CMS
      * imported Layout object is set on the Event and retrieved later in Layout controller
      * @param TemplateProviderImportEvent $event
+     * @throws GuzzleException
      */
-    public function onTemplateProviderImport(TemplateProviderImportEvent $event)
+    public function onTemplateProviderImport(TemplateProviderImportEvent $event): void
     {
-        $downloadUrl = $event->getDownloadUrl();
-        $client = new Client();
-        $tempFile = $event->getLibraryLocation() . 'temp/' . $event->getFileName();
+        // Resolve the download URL server-side from the cached template list.
+        // The client supplies only the templateId (fileName).
+        $downloadUrl = null;
+        foreach ($this->getTemplateList() as $template) {
+            if (($template->fileName ?? null) === $event->getFileName()) {
+                $downloadUrl = $template->downloadUrl ?? null;
+                break;
+            }
+        }
+
+        if (empty($downloadUrl)) {
+            throw new \InvalidArgumentException('Template not found in Xibo Exchange: ' . $event->getFileName());
+        }
+
+        // Sanitize the filename and enforce a .zip extension.
+        $safeFileName = basename($event->getFileName());
+        if (!str_ends_with(strtolower($safeFileName), '.zip')) {
+            $safeFileName .= '.zip';
+        }
+
+        $tempDir = rtrim($event->getLibraryLocation(), '/\\') . DIRECTORY_SEPARATOR . 'temp' . DIRECTORY_SEPARATOR;
+        $tempFile = $tempDir . $safeFileName;
+
+        // Belt-and-suspenders: confirm the resolved path is still inside the temp directory.
+        $realTempDir = realpath($tempDir);
+        if ($realTempDir === false || !str_starts_with($tempFile, $realTempDir . DIRECTORY_SEPARATOR)) {
+            throw new \InvalidArgumentException('Template file path escapes the allowed temporary directory');
+        }
+
+        $client = SafeClient::getSafeClient();
         $client->request('GET', $downloadUrl, ['sink' => $tempFile]);
         $event->setFilePath($tempFile);
     }

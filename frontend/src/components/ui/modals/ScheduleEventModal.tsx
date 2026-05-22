@@ -21,7 +21,7 @@
 
 import type { ColumnDef } from '@tanstack/react-table';
 import { ArrowLeft, ArrowRight, CalendarClock, Minus, Plus, Tablet } from 'lucide-react';
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Button from '../Button';
@@ -172,6 +172,36 @@ export default function ScheduleEventModal({
   const [apiError, setApiError] = useState<string | undefined>();
   const [formErrors, setFormErrors] = useState<ScheduleFormErrors>({});
 
+  const [contentDebouncedSearch, setContentDebouncedSearch] = useState('');
+  const contentSearchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const handleContentSearch = (term: string) => {
+    clearTimeout(contentSearchTimerRef.current);
+    contentSearchTimerRef.current = setTimeout(() => {
+      setContentDebouncedSearch(term);
+    }, 300);
+  };
+
+  const [commandDebouncedSearch, setCommandDebouncedSearch] = useState('');
+  const commandSearchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const handleCommandSearch = (term: string) => {
+    clearTimeout(commandSearchTimerRef.current);
+    commandSearchTimerRef.current = setTimeout(() => {
+      setCommandDebouncedSearch(term);
+    }, 300);
+  };
+
+  const [daypartDebouncedSearch, setDaypartDebouncedSearch] = useState('');
+  const daypartSearchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const handleDaypartSearch = (term: string) => {
+    clearTimeout(daypartSearchTimerRef.current);
+    daypartSearchTimerRef.current = setTimeout(() => {
+      setDaypartDebouncedSearch(term);
+    }, 300);
+  };
+
   const isMediaType = draft.eventTypeId === EventTypeId.Media;
   const isPlaylistType = draft.eventTypeId === EventTypeId.Playlist;
   const isCommandType = draft.eventTypeId === EventTypeId.Command;
@@ -244,34 +274,59 @@ export default function ScheduleEventModal({
           : true;
 
   useEffect(() => {
-    if (!isOpen) return;
-
-    setPagination((prev) => ({ ...prev, daypart: { ...prev.daypart, isLoading: true } }));
-    fetchDaypart({ start: 0, length: DROPDOWN_PAGE_SIZE })
-      .then(({ rows, totalCount }) => {
-        setDaypartOptions(rows.map((dp) => ({ value: String(dp.dayPartId), label: dp.name })));
-        setPagination((prev) => ({ ...prev, daypart: { ...prev.daypart, totalCount } }));
-
-        const always = rows.find((dp) => dp.isAlways === 1);
-        const custom = rows.find((dp) => dp.isCustom === 1);
-        if (always) {
-          setAlwaysDayPartId(String(always.dayPartId));
-          setDraft((prev) =>
-            prev.dayPartId === '' ? { ...prev, dayPartId: String(always.dayPartId) } : prev,
-          );
-        }
-        if (custom) setCustomDayPartId(String(custom.dayPartId));
-      })
-      .finally(() => {
-        setPagination((prev) => ({ ...prev, daypart: { ...prev.daypart, isLoading: false } }));
-      });
-
+    if (!isOpen) {
+      return;
+    }
     fetchResolution({ start: 0, length: 100 }).then(({ rows }) => {
       setResolutionOptions(
         rows.map((r) => ({ value: String(r.resolutionId), label: r.resolution })),
       );
     });
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let cancelled = false;
+    setPagination((prev) => ({ ...prev, daypart: { ...prev.daypart, isLoading: true } }));
+    setDaypartOptions([]);
+
+    fetchDaypart({
+      start: 0,
+      length: DROPDOWN_PAGE_SIZE,
+      name: daypartDebouncedSearch || undefined,
+    })
+      .then(({ rows, totalCount }) => {
+        if (cancelled) {
+          return;
+        }
+        setDaypartOptions(rows.map((dp) => ({ value: String(dp.dayPartId), label: dp.name })));
+        setPagination((prev) => ({ ...prev, daypart: { ...prev.daypart, totalCount } }));
+
+        if (!daypartDebouncedSearch) {
+          const always = rows.find((dp) => dp.isAlways === 1);
+          const custom = rows.find((dp) => dp.isCustom === 1);
+          if (always) {
+            setAlwaysDayPartId(String(always.dayPartId));
+            setDraft((prev) =>
+              prev.dayPartId === '' ? { ...prev, dayPartId: String(always.dayPartId) } : prev,
+            );
+          }
+          if (custom) {
+            setCustomDayPartId(String(custom.dayPartId));
+          }
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setPagination((prev) => ({ ...prev, daypart: { ...prev.daypart, isLoading: false } }));
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, daypartDebouncedSearch]);
 
   // Fetch enriched event details in edit mode — the grid row doesn't carry geoLocation,
   // mediaId, playlistId, or other fields only returned by GET /schedule/{id}.
@@ -312,19 +367,28 @@ export default function ScheduleEventModal({
   const fetchContentPage = async (
     eventType: EventTypeId,
     start: number,
+    search?: string,
   ): Promise<{ options: SelectOption[]; totalCount: number }> => {
     switch (eventType) {
       case EventTypeId.Layout:
       case EventTypeId.Overlay:
       case EventTypeId.Interrupt: {
-        const { rows, totalCount } = await fetchLayouts({ start, length: DROPDOWN_PAGE_SIZE });
+        const { rows, totalCount } = await fetchLayouts({
+          start,
+          length: DROPDOWN_PAGE_SIZE,
+          ...(search ? { layout: search } : {}),
+        });
         return {
           options: rows.map((l) => ({ value: String(l.campaignId), label: l.layout })),
           totalCount,
         };
       }
       case EventTypeId.Command: {
-        const { rows, totalCount } = await fetchCommands({ start, length: DROPDOWN_PAGE_SIZE });
+        const { rows, totalCount } = await fetchCommands({
+          start,
+          length: DROPDOWN_PAGE_SIZE,
+          ...(search ? { command: search } : {}),
+        });
         return {
           options: rows.map((c) => ({ value: String(c.commandId), label: c.command })),
           totalCount,
@@ -334,6 +398,7 @@ export default function ScheduleEventModal({
         const { rows, totalCount } = await fetchCampaigns({
           start,
           length: DROPDOWN_PAGE_SIZE,
+          ...(search ? { name: search } : {}),
         });
         return {
           options: rows.map((c) => ({ value: String(c.campaignId), label: c.campaign })),
@@ -341,7 +406,11 @@ export default function ScheduleEventModal({
         };
       }
       case EventTypeId.Media: {
-        const { rows, totalCount } = await fetchMedia({ start, length: DROPDOWN_PAGE_SIZE });
+        const { rows, totalCount } = await fetchMedia({
+          start,
+          length: DROPDOWN_PAGE_SIZE,
+          ...(search ? { media: search } : {}),
+        });
         return {
           options: rows
             .filter((m) => m.released === 1)
@@ -350,14 +419,22 @@ export default function ScheduleEventModal({
         };
       }
       case EventTypeId.Playlist: {
-        const { rows, totalCount } = await fetchPlaylist({ start, length: DROPDOWN_PAGE_SIZE });
+        const { rows, totalCount } = await fetchPlaylist({
+          start,
+          length: DROPDOWN_PAGE_SIZE,
+          ...(search ? { name: search } : {}),
+        });
         return {
           options: rows.map((p) => ({ value: String(p.playlistId), label: p.name })),
           totalCount,
         };
       }
       case EventTypeId.Sync: {
-        const { rows, totalCount } = await fetchSyncGroups({ start, length: DROPDOWN_PAGE_SIZE });
+        const { rows, totalCount } = await fetchSyncGroups({
+          start,
+          length: DROPDOWN_PAGE_SIZE,
+          ...(search ? { name: search } : {}),
+        });
         return {
           options: rows.map((sg) => ({ value: String(sg.syncGroupId), label: sg.name })),
           totalCount,
@@ -368,6 +445,7 @@ export default function ScheduleEventModal({
           start,
           length: DROPDOWN_PAGE_SIZE,
           isRealTime: 1,
+          ...(search ? { dataSet: search } : {}),
         });
         return {
           options: rows.map((ds) => ({ value: String(ds.dataSetId), label: ds.dataSet })),
@@ -392,13 +470,13 @@ export default function ScheduleEventModal({
 
     let cancelled = false;
     setIsLoadingContent(true);
-    setContentOptions([]);
+    // Keep stale options visible during refetch to avoid a blank-state flicker.
     setPagination((prev) => ({
       ...prev,
       content: { totalCount: 0, isLoading: false, isLoadingMore: false },
     }));
 
-    fetchContentPage(draft.eventTypeId, 0)
+    fetchContentPage(draft.eventTypeId, 0, contentDebouncedSearch || undefined)
       .then(({ options, totalCount }) => {
         if (!cancelled) {
           setContentOptions(options);
@@ -414,7 +492,7 @@ export default function ScheduleEventModal({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, draft.eventTypeId]);
+  }, [isOpen, draft.eventTypeId, contentDebouncedSearch]);
 
   type PaginationKey = keyof typeof pagination;
 
@@ -439,11 +517,15 @@ export default function ScheduleEventModal({
   const hasMoreCommands = commandOptions.length < pagination.command.totalCount;
 
   const loadMoreContent = () => {
-    if (!draft.eventTypeId) return;
+    if (!draft.eventTypeId || isLoadingContent) return;
     loadMore(
       'content',
       () =>
-        fetchContentPage(draft.eventTypeId!, contentOptions.length).then(({ options }) => options),
+        fetchContentPage(
+          draft.eventTypeId!,
+          contentOptions.length,
+          contentDebouncedSearch || undefined,
+        ).then(({ options }) => options),
       setContentOptions,
     );
   };
@@ -452,9 +534,11 @@ export default function ScheduleEventModal({
     loadMore(
       'daypart',
       () =>
-        fetchDaypart({ start: daypartOptions.length, length: DROPDOWN_PAGE_SIZE }).then(
-          ({ rows }) => rows.map((dp) => ({ value: String(dp.dayPartId), label: dp.name })),
-        ),
+        fetchDaypart({
+          start: daypartOptions.length,
+          length: DROPDOWN_PAGE_SIZE,
+          name: daypartDebouncedSearch || undefined,
+        }).then(({ rows }) => rows.map((dp) => ({ value: String(dp.dayPartId), label: dp.name }))),
       setDaypartOptions,
     );
   };
@@ -463,9 +547,11 @@ export default function ScheduleEventModal({
     loadMore(
       'command',
       () =>
-        fetchCommands({ start: commandOptions.length, length: DROPDOWN_PAGE_SIZE }).then(
-          ({ rows }) => rows.map((c) => ({ value: String(c.commandId), label: c.command })),
-        ),
+        fetchCommands({
+          start: commandOptions.length,
+          length: DROPDOWN_PAGE_SIZE,
+          command: commandDebouncedSearch || undefined,
+        }).then(({ rows }) => rows.map((c) => ({ value: String(c.commandId), label: c.command }))),
       setCommandOptions,
     );
   };
@@ -480,7 +566,6 @@ export default function ScheduleEventModal({
     setPagination((prev) => ({
       ...prev,
       layoutCode: { ...prev.layoutCode, isLoading: true },
-      command: { ...prev.command, isLoading: true },
     }));
 
     fetchLayoutCodes()
@@ -502,19 +587,44 @@ export default function ScheduleEventModal({
           layoutCode: { ...prev.layoutCode, isLoading: false },
         }));
       });
+  }, [isOpen, draft.eventTypeId]);
 
-    fetchCommands({ start: 0, length: DROPDOWN_PAGE_SIZE })
+  useEffect(() => {
+    if (!isOpen || draft.eventTypeId !== EventTypeId.Action) {
+      return;
+    }
+
+    let cancelled = false;
+    setPagination((prev) => ({ ...prev, command: { ...prev.command, isLoading: true } }));
+    setCommandOptions([]);
+
+    fetchCommands({
+      start: 0,
+      length: DROPDOWN_PAGE_SIZE,
+      command: commandDebouncedSearch || undefined,
+    })
       .then(({ rows: commands, totalCount }) => {
+        if (cancelled) {
+          return;
+        }
         setCommandOptions(commands.map((c) => ({ value: String(c.commandId), label: c.command })));
         setPagination((prev) => ({ ...prev, command: { ...prev.command, totalCount } }));
       })
       .catch(() => {
-        notify.error(t('Failed to load commands.'));
+        if (!cancelled) {
+          notify.error(t('Failed to load commands.'));
+        }
       })
       .finally(() => {
-        setPagination((prev) => ({ ...prev, command: { ...prev.command, isLoading: false } }));
+        if (!cancelled) {
+          setPagination((prev) => ({ ...prev, command: { ...prev.command, isLoading: false } }));
+        }
       });
-  }, [isOpen, draft.eventTypeId]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, draft.eventTypeId, commandDebouncedSearch]);
 
   // Fetch displays for the selected sync group
   useEffect(() => {
@@ -1022,6 +1132,8 @@ export default function ScheduleEventModal({
                     actionLayoutCode: '',
                     shareOfVoice: 0,
                   }));
+                  clearTimeout(contentSearchTimerRef.current);
+                  setContentDebouncedSearch('');
                   setContentOptions([]);
                 }}
                 placeholder={t('Select Event Type')}
@@ -1033,6 +1145,7 @@ export default function ScheduleEventModal({
                   label={contentField.label}
                   value={getContentValue(draft)}
                   options={mergedContentOptions}
+                  onSearch={handleContentSearch}
                   onSelect={(value) => {
                     const typeId = draft.eventTypeId;
                     if (typeId === EventTypeId.Media) updateDraft('mediaId', Number(value));
@@ -1170,6 +1283,7 @@ export default function ScheduleEventModal({
                       onSelect={(value) => updateDraft('commandId', Number(value))}
                       placeholder={t('Select Command')}
                       searchable
+                      onSearch={handleCommandSearch}
                       isLoading={pagination.command.isLoading}
                       onLoadMore={loadMoreCommands}
                       hasMore={hasMoreCommands}
@@ -1228,6 +1342,8 @@ export default function ScheduleEventModal({
                   helpText={t(
                     'Select how this event recurs. Choose Always for continuous playback or Custom to define specific times.',
                   )}
+                  searchable
+                  onSearch={handleDaypartSearch}
                   isLoading={pagination.daypart.isLoading}
                   onLoadMore={loadMoreDayparts}
                   hasMore={hasMoreDayparts}
