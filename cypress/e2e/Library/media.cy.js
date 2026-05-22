@@ -31,24 +31,31 @@ describe('Media Admin', function() {
   
     it('should add a media via url', function() {
       cy.visit('/library/view');
-  
-      // Click on the Add Playlist button
+
+      cy.intercept('POST', '/library/uploadUrl').as('uploadMedia');
+
+      // Click on the Add Media button
       cy.contains('Add media (URL)').click();
-  
+
       cy.get('#url')
         .type('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
-      
+
       cy.get('#optionalName')
         .type('Cypress Test Media ' + testRun);
-  
+
       cy.get('.modal .save-button').click();
-      cy.wait(24000);
-  
-      // Filter for the created playlist
+
+      // Wait for the server to download the remote file and respond (can take a while)
+      cy.wait('@uploadMedia', {timeout: 120000});
+
+      // Ensure the modal has fully closed before interacting with the page
+      cy.get('.modal.show').should('not.exist');
+
+      // Filter for the created media
       cy.get('#media')
         .type('Cypress Test Media ' + testRun);
   
-      // Should have the added playlist
+      // Should have the added media
       cy.get('#libraryItems tbody tr').should('have.length', 1);
       cy.get('#libraryItems tbody tr:nth-child(1) td:nth-child(2)').contains('Cypress Test Media ' + testRun);
     });

@@ -30,18 +30,22 @@ describe('Dayparts', function() {
   });
 
   it('should add a daypart', function() {
+    cy.intercept('GET', '/daypart/form/add').as('addDaypartForm');
+
     cy.visit('/daypart/view');
 
     // Click on the Add Daypart button
     cy.contains('Add Daypart').click();
 
+    // Wait for the add daypart form modal to fully load before interacting with time pickers
+    cy.wait('@addDaypartForm');
+
     cy.get('.modal input#name')
       .type('Cypress Test Daypart ' + testRun + '_1');
 
-    cy.get(':nth-child(3) > .col-sm-10 > .input-group > .flatpickr-wrapper > .datePickerHelper').click();
-    // cy.get('.open > .flatpickr-time > :nth-child(1) > .arrowUp').click();
+    cy.get('#startTime').closest('.input-group').find('.datePickerHelper').click();
     cy.get('.open > .flatpickr-time > :nth-child(1) > .numInput').type('8');
-    cy.get(':nth-child(4) > .col-sm-10 > .input-group > .flatpickr-wrapper > .datePickerHelper').click();
+    cy.get('#endTime').closest('.input-group').find('.datePickerHelper').click();
     cy.get('.open > .flatpickr-time > :nth-child(1) > .numInput').type('17');
 
     // Add first by clicking next

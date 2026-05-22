@@ -33,12 +33,17 @@ describe('Proof of Play', function() {
       query: {display: display1},
     }).as('loadDisplayAfterSearch');
 
+    cy.intercept('GET', '/stats/form/export').as('exportFormLoad');
+
     cy.visit('/report/view');
     cy.contains('Export').click();
 
-    cy.get(':nth-child(1) > .col-sm-10 > .input-group > .flatpickr-wrapper > .datePickerHelper').click();
+    // Wait for the export form modal to fully load before interacting with date pickers
+    cy.wait('@exportFormLoad');
+
+    cy.get('#fromDt').closest('.input-group').find('.datePickerHelper').click();
     cy.get('.open > .flatpickr-innerContainer > .flatpickr-rContainer > .flatpickr-days > .dayContainer > .today').click();
-    cy.get(':nth-child(2) > .col-sm-10 > .input-group > .flatpickr-wrapper > .datePickerHelper').click();
+    cy.get('#toDt').closest('.input-group').find('.datePickerHelper').click();
     cy.get('.open > .flatpickr-innerContainer > .flatpickr-rContainer > .flatpickr-days > .dayContainer > .today').next().click();
 
     // Click on the select2 selection

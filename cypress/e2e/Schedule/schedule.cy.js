@@ -287,6 +287,9 @@ describe('Schedule Events', function() {
     cy.contains('Clear Filters').should('be.visible').click();
     cy.contains('Add Event').click();
 
+    // Wait for the schedule form to fully load before interacting
+    cy.wait('@scheduleAddForm');
+
     cy.get('.bootbox.modal')
       .should('be.visible') // essential: Ensure the modal is visible
       .then(() => {
@@ -303,7 +306,7 @@ describe('Schedule Events', function() {
         // Click Next and check toast message
         cy.get('.modal .modal-footer').contains('Next').click();
 
-        cy.get('.starttime-control > .col-sm-10 > .input-group > .flatpickr-wrapper > .datePickerHelper').click();
+        cy.get('#fromDt').closest('.input-group').find('.datePickerHelper').click();
         cy.get('.open > .flatpickr-innerContainer > .flatpickr-rContainer > .flatpickr-days > .dayContainer > .today').click();
         cy.get('.open > .flatpickr-time > :nth-child(3) > .arrowUp').click();
 
@@ -332,6 +335,9 @@ describe('Schedule Events', function() {
     cy.contains('Clear Filters').should('be.visible').click();
     cy.contains('Add Event').click();
 
+    // Wait for the schedule form to fully load before interacting
+    cy.wait('@scheduleAddForm');
+
     cy.get('.bootbox.modal')
       .should('be.visible') // essential: Ensure the modal is visible
       .then(() => {
@@ -351,8 +357,7 @@ describe('Schedule Events', function() {
         // Select daypart - custom
         cy.get('#dayPartId').select('Custom');
 
-
-        cy.get('.starttime-control > .col-sm-10 > .input-group > .flatpickr-wrapper > .datePickerHelper')
+        cy.get('#fromDt').closest('.input-group').find('.datePickerHelper')
           .click() // Open the picker
           .then(() => {
             // Select today's date
@@ -367,7 +372,7 @@ describe('Schedule Events', function() {
             cy.get('body').click(0, 0);
           });
 
-        cy.get('.endtime-control > .col-sm-10 > .input-group > .flatpickr-wrapper > .datePickerHelper')
+        cy.get('#toDt').closest('.input-group').find('.datePickerHelper')
           .click() // Open the picker
           .then(() => {
             // Select today's date
