@@ -33,13 +33,13 @@ describe('Proof of Play', function() {
       query: {display: display1},
     }).as('loadDisplayAfterSearch');
 
-    cy.intercept('GET', '/stats/form/export').as('exportFormLoad');
-
     cy.visit('/report/view');
-    cy.contains('Export').click();
 
-    // Wait for the export form modal to fully load before interacting with date pickers
-    cy.wait('@exportFormLoad');
+    // Target the XiboFormButton specifically — the page also has DataTable CSV export buttons
+    cy.get('a.XiboFormButton').contains('Export').click();
+
+    // Wait for modal to be visible — XiboInitialise runs synchronously before this resolves
+    cy.get('.bootbox.modal').should('be.visible');
 
     cy.get('#fromDt').closest('.input-group').find('.datePickerHelper').click();
     cy.get('.open > .flatpickr-innerContainer > .flatpickr-rContainer > .flatpickr-days > .dayContainer > .today').click();

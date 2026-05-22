@@ -78,11 +78,14 @@ Cypress.Commands.add('clearToolbarPrefs', function() {
 Cypress.Commands.add('openToolbarMenu', (menuIdx, load = true) => {
   cy.intercept('GET', '/user/pref?preference=toolbar').as('toolbarPrefsLoad');
   cy.intercept('GET', '/user/pref?preference=editor').as('editorPrefsLoad');
-  cy.intercept('POST', '/user/pref?preference=toolbar').as('toolbarPrefsSave');
+  // preference is sent as a body field, not a query param — match the correct URL
+  cy.intercept('POST', '/user/pref').as('toolbarPrefsSave');
 
   if (load) {
     cy.wait('@toolbarPrefsLoad');
     cy.wait('@editorPrefsLoad');
+    // Wait for the toolbar POST (saves prefs after init) to ensure the final re-render is done
+    cy.wait('@toolbarPrefsSave');
   }
 
   cy.get('.editor-side-bar').then(($toolbar) => {
@@ -96,8 +99,7 @@ Cypress.Commands.add('openToolbarMenu', (menuIdx, load = true) => {
         .click();
     } else if (!$menuButton.hasClass('active')) {
       cy.log('Open menu!');
-      cy.get('#btn-menu-' + menuIdx).should('be.visible');
-      cy.get('#btn-menu-' + menuIdx).click();
+      cy.get('#btn-menu-' + menuIdx).should('be.visible').click();
     } else {
       cy.log('Do nothing!');
     }

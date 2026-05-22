@@ -309,7 +309,7 @@ describe('Schedule Events', function() {
         // Wait for step 3 to be fully visible so flatpickr calendar opens at correct position
         cy.get('.starttime-control').should('be.visible');
 
-        cy.get('#fromDt').closest('.input-group').find('.datePickerHelper').click();
+        cy.get('#fromDt').closest('.input-group').find('.datePickerHelper').scrollIntoView().click();
         cy.get('.open > .flatpickr-innerContainer > .flatpickr-rContainer > .flatpickr-days > .dayContainer > .today').click();
         cy.get('.open > .flatpickr-time > :nth-child(3) > .arrowUp').click();
 
@@ -364,7 +364,7 @@ describe('Schedule Events', function() {
         cy.get('.starttime-control').should('be.visible');
 
         cy.get('#fromDt').closest('.input-group').find('.datePickerHelper')
-          .click() // Open the picker
+          .scrollIntoView().click() // Scroll into view first — step was hidden during flatpickr init
           .then(() => {
             // Select today's date
             cy.get('.flatpickr-calendar.open .flatpickr-days .dayContainer .today')
@@ -379,7 +379,7 @@ describe('Schedule Events', function() {
           });
 
         cy.get('#toDt').closest('.input-group').find('.datePickerHelper')
-          .click() // Open the picker
+          .scrollIntoView().click() // Scroll into view first — step was hidden during flatpickr init
           .then(() => {
             // Select today's date
             cy.get('.flatpickr-calendar.open .flatpickr-days .dayContainer .today')

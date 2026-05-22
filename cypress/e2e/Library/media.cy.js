@@ -33,7 +33,6 @@ describe('Media Admin', function() {
       cy.visit('/library/view');
 
       cy.intercept('POST', '/library/uploadUrl').as('uploadMedia');
-      cy.intercept('/library?draw=*').as('gridReload');
 
       // Click on the Add Media button
       cy.contains('Add media (URL)').click();
@@ -44,13 +43,18 @@ describe('Media Admin', function() {
       cy.get('#optionalName')
         .type('Cypress Test Media ' + testRun);
 
+      // Set up gridReload intercept just before clicking save to avoid capturing spurious reloads
+      cy.intercept('/library?draw=*').as('gridReload');
       cy.get('.modal .save-button').click();
 
       // Wait for the server to download the remote file and respond (can take a while)
       cy.wait('@uploadMedia', {timeout: 120000});
 
-      // Wait for the grid to reload — only fires after a successful upload and modal close
+      // Wait for the grid to reload (only fires on successful upload after bootbox.hideAll())
       cy.wait('@gridReload');
+
+      // Wait for the Bootstrap fade animation to fully complete (display:none set after transition)
+      cy.get('.bootbox.modal:visible').should('not.exist');
 
       // Filter for the created media
       cy.get('#media')
