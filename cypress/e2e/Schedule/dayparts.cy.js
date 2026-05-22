@@ -30,15 +30,14 @@ describe('Dayparts', function() {
   });
 
   it('should add a daypart', function() {
-    cy.intercept('GET', '/daypart/form/add').as('addDaypartForm');
-
     cy.visit('/daypart/view');
 
     // Click on the Add Daypart button
     cy.contains('Add Daypart').click();
 
-    // Wait for the add daypart form modal to fully load before interacting with time pickers
-    cy.wait('@addDaypartForm');
+    // Wait for the modal to be visible — XiboInitialise runs synchronously before this resolves,
+    // so flatpickr is already initialised on both time fields by the time we interact
+    cy.get('.bootbox.modal').should('be.visible');
 
     cy.get('.modal input#name')
       .type('Cypress Test Daypart ' + testRun + '_1');

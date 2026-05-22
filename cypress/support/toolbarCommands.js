@@ -96,7 +96,8 @@ Cypress.Commands.add('openToolbarMenu', (menuIdx, load = true) => {
         .click();
     } else if (!$menuButton.hasClass('active')) {
       cy.log('Open menu!');
-      cy.get('#btn-menu-' + menuIdx).should('be.visible').click();
+      cy.get('#btn-menu-' + menuIdx).should('be.visible');
+      cy.get('#btn-menu-' + menuIdx).click();
     } else {
       cy.log('Do nothing!');
     }

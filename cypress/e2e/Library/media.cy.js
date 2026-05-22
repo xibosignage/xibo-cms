@@ -33,6 +33,7 @@ describe('Media Admin', function() {
       cy.visit('/library/view');
 
       cy.intercept('POST', '/library/uploadUrl').as('uploadMedia');
+      cy.intercept('/library?draw=*').as('gridReload');
 
       // Click on the Add Media button
       cy.contains('Add media (URL)').click();
@@ -48,8 +49,8 @@ describe('Media Admin', function() {
       // Wait for the server to download the remote file and respond (can take a while)
       cy.wait('@uploadMedia', {timeout: 120000});
 
-      // Ensure the modal has fully closed before interacting with the page
-      cy.get('.modal.show').should('not.exist');
+      // Wait for the grid to reload — only fires after a successful upload and modal close
+      cy.wait('@gridReload');
 
       // Filter for the created media
       cy.get('#media')
