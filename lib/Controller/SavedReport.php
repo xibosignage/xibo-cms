@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -304,16 +304,10 @@ class SavedReport extends Base
             throw new AccessDeniedException(__('You do not have permissions to open the report.'));
         }
 
-        // Retrieve the saved report result in array
         /* @var ReportResult $results */
         $results = $this->reportService->getSavedReportResults($id, $name);
 
-        // Set Template
-        $this->getState()->template = $this->reportService->getSavedReportTemplate($name);
-
-        $this->getState()->setData($results->jsonSerialize());
-
-        return $this->render($request, $response);
+        return $response->withJson($results->jsonSerialize());
     }
 
     /**

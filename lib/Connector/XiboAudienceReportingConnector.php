@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -28,9 +28,7 @@ use GuzzleHttp\Exception\ServerException;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\User;
-use Xibo\Event\ConnectorReportEvent;
 use Xibo\Event\MaintenanceRegularEvent;
-use Xibo\Event\ReportDataEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Helper\DateFormatHelper;
@@ -84,8 +82,6 @@ class XiboAudienceReportingConnector implements ConnectorInterface
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): ConnectorInterface
     {
         $dispatcher->addListener(MaintenanceRegularEvent::$NAME, [$this, 'onRegularMaintenance']);
-        $dispatcher->addListener(ReportDataEvent::$NAME, [$this, 'onRequestReportData']);
-        $dispatcher->addListener(ConnectorReportEvent::$NAME, [$this, 'onListReports']);
 
         return $this;
     }
@@ -494,207 +490,6 @@ class XiboAudienceReportingConnector implements ConnectorInterface
             $this->getLogger()->error('Campaign total: e = ' . $requestException->getMessage());
 
             throw new GeneralException(__('Failed to update campaign totals.'));
-        }
-    }
-
-    /**
-     * Request Report results from the audience report service
-     */
-    public function onRequestReportData(ReportDataEvent $event)
-    {
-        $this->getLogger()->debug('onRequestReportData');
-
-        $type = $event->getReportType();
-
-        $typeUrl = [
-            'campaignProofofplay' => $this->getServiceUrl() . '/audience/campaign/proofofplay',
-            'mobileProofofplay' => $this->getServiceUrl() . '/audience/campaign/proofofplay/mobile',
-            'displayAdPlay' => $this->getServiceUrl() . '/audience/display/adplays',
-            'displayPercentage' => $this->getServiceUrl() . '/audience/display/percentage'
-        ];
-
-        if (array_key_exists($type, $typeUrl)) {
-            $json = [];
-            switch ($type) {
-                case 'campaignProofofplay':
-                    // Get campaign proofofplay result
-                    try {
-                        $response = $this->getClient()->get($typeUrl[$type], [
-                            'headers' => [
-                                'X-API-KEY' => $this->getSetting('apiKey')
-                            ],
-                            'query' => $event->getParams()
-                        ]);
-
-                        $body = $response->getBody()->getContents();
-                        $json = json_decode($body, true);
-                    } catch (RequestException $requestException) {
-                        $this->getLogger()->error('Get '. $type.': failed. e = ' . $requestException->getMessage());
-                        $error = 'Failed to get campaign proofofplay result: '.$requestException->getMessage();
-                    }
-                    break;
-
-                case 'mobileProofofplay':
-                    // Get mobile proofofplay result
-                    try {
-                        $response = $this->getClient()->get($typeUrl[$type], [
-                            'headers' => [
-                                'X-API-KEY' => $this->getSetting('apiKey')
-                            ],
-                            'query' => $event->getParams()
-                        ]);
-
-                        $body = $response->getBody()->getContents();
-                        $json = json_decode($body, true);
-                    } catch (RequestException $requestException) {
-                        $this->getLogger()->error('Get '. $type.': failed. e = ' . $requestException->getMessage());
-                        $error = 'Failed to get mobile proofofplay result: '.$requestException->getMessage();
-                    }
-                    break;
-
-                case 'displayAdPlay':
-                    // Get display adplays result
-                    try {
-                        $response = $this->getClient()->get($typeUrl[$type], [
-                            'headers' => [
-                                'X-API-KEY' => $this->getSetting('apiKey')
-                            ],
-                            'query' => $event->getParams()
-                        ]);
-
-                        $body = $response->getBody()->getContents();
-                        $json = json_decode($body, true);
-                    } catch (RequestException $requestException) {
-                        $this->getLogger()->error('Get '. $type.': failed. e = ' . $requestException->getMessage());
-                        $error = 'Failed to get display adplays result: '.$requestException->getMessage();
-                    }
-                    break;
-
-                case 'displayPercentage':
-                    // Get display played percentage result
-                    try {
-                        $response = $this->getClient()->get($typeUrl[$type], [
-                            'headers' => [
-                                'X-API-KEY' => $this->getSetting('apiKey')
-                            ],
-                            'query' => $event->getParams()
-                        ]);
-
-                        $body = $response->getBody()->getContents();
-                        $json = json_decode($body, true);
-                    } catch (RequestException $requestException) {
-                        $this->getLogger()->error('Get '. $type.': failed. e = ' . $requestException->getMessage());
-                        $error = 'Failed to get display played percentage result: '.$requestException->getMessage();
-                    }
-                    break;
-
-                default:
-                    $this->getLogger()->error('Connector Report not found ');
-            }
-
-            $event->setResults([
-                'json' => $json,
-                'error' => $error ?? null
-            ]);
-        }
-    }
-
-    /**
-     * Get this connector reports
-     * @param ConnectorReportEvent $event
-     * @return void
-     */
-    public function onListReports(ConnectorReportEvent $event)
-    {
-        $this->getLogger()->debug('onListReports');
-
-        $connectorReports = [
-            [
-                'name'=> 'campaignProofOfPlay',
-                'description'=> 'Campaign Proof of Play',
-                'class'=> '\\Xibo\\Report\\CampaignProofOfPlay',
-                'type'=> 'Report',
-                'output_type'=> 'table',
-                'color'=> 'gray',
-                'fa_icon'=> 'fa-th',
-                'category'=> 'Connector Reports',
-                'feature'=> 'campaign-proof-of-play',
-                'adminOnly'=> 0,
-                'sort_order' => 1
-            ],
-            [
-                'name'=> 'mobileProofOfPlay',
-                'description'=> 'Mobile Proof of Play',
-                'class'=> '\\Xibo\\Report\\MobileProofOfPlay',
-                'type'=> 'Report',
-                'output_type'=> 'table',
-                'color'=> 'green',
-                'fa_icon'=> 'fa-th',
-                'category'=> 'Connector Reports',
-                'feature'=> 'mobile-proof-of-play',
-                'adminOnly'=> 0,
-                'sort_order' => 2
-            ],
-            [
-                'name'=> 'displayPercentage',
-                'description'=> 'Display Played Percentage',
-                'class'=> '\\Xibo\\Report\\DisplayPercentage',
-                'type'=> 'Chart',
-                'output_type'=> 'both',
-                'color'=> 'blue',
-                'fa_icon'=> 'fa-pie-chart',
-                'category'=> 'Connector Reports',
-                'feature'=> 'display-report',
-                'adminOnly'=> 0,
-                'sort_order' => 3
-            ],
-//            [
-//                'name'=> 'revenueByDisplayReport',
-//                'description'=> 'Revenue by Display',
-//                'class'=> '\\Xibo\\Report\\RevenueByDisplay',
-//                'type'=> 'Report',
-//                'output_type'=> 'table',
-//                'color'=> 'green',
-//                'fa_icon'=> 'fa-th',
-//                'category'=> 'Connector Reports',
-//                'feature'=> 'display-report',
-//                'adminOnly'=> 0,
-//                'sort_order' => 4
-//            ],
-            [
-                'name'=> 'displayAdPlay',
-                'description'=> 'Display Ad Plays',
-                'class'=> '\\Xibo\\Report\\DisplayAdPlay',
-                'type'=> 'Chart',
-                'output_type'=> 'both',
-                'color'=> 'red',
-                'fa_icon'=> 'fa-bar-chart',
-                'category'=> 'Connector Reports',
-                'feature'=> 'display-report',
-                'adminOnly'=> 0,
-                'sort_order' => 5
-            ],
-        ];
-
-        $reports = [];
-        foreach ($connectorReports as $connectorReport) {
-            // Compatibility check
-            if (!isset($connectorReport['feature']) || !isset($connectorReport['category'])) {
-                continue;
-            }
-
-            // Check if only allowed for admin
-            if ($this->user->userTypeId != 1) {
-                if (isset($connectorReport['adminOnly']) && !empty($connectorReport['adminOnly'])) {
-                    continue;
-                }
-            }
-
-            $reports[$connectorReport['category']][] = (object) $connectorReport;
-        }
-
-        if (count($reports) > 0) {
-            $event->addReports($reports);
         }
     }
 
