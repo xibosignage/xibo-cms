@@ -73,7 +73,7 @@ class XiboExchangeConnector implements ConnectorInterface
 
     public function getThumbnail(): string
     {
-        return 'theme/default/img/connectors/xibo-exchange.png';
+        return 'theme/default/img/connectors/xibo-exchange.svg';
     }
 
     public function getSettingsFormTwig(): string

@@ -189,7 +189,11 @@ class ConnectorFactory extends BaseFactory
 
         // Any system connectors are installed by default, so we're only concerned here with custom connectors
         // which we would expect to me in the custom folder.
-        foreach (glob(PROJECT_ROOT . '/custom/*.connector') as $file) {
+        $connectorFiles = array_merge(
+            glob(PROJECT_ROOT . '/custom/*.connector') ?: [],
+            glob(PROJECT_ROOT . '/custom/*/*.connector') ?: [],
+        );
+        foreach ($connectorFiles as $file) {
             $config = json_decode(file_get_contents($file), true);
             if (!is_array($config)) {
                 $this->getLog()->error('Problem with connector config: '

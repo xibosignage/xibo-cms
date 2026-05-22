@@ -63,6 +63,8 @@ $app->group('', function (RouteCollectorProxy $group) {
 $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
     // We can only view/edit these through the web app
     $group->get('/connectors', ['\Xibo\Controller\Connector','grid'])->setName('connector.search');
+    $group->get('/connectors/{id}/fields', ['\Xibo\Controller\Connector','editFormFields'])
+        ->setName('connector.edit.form.fields');
     // TODO remove editForm once converted.
     $group->get('/connectors/form/edit/{id}', ['\Xibo\Controller\Connector','editForm'])
         ->setName('connector.edit.form');

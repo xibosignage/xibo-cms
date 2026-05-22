@@ -55,14 +55,7 @@ class Connector extends Base
      */
     public function grid(Request $request, Response $response): Response|ResponseInterface
     {
-        $params = $this->getSanitizer($request->getParams());
-
         $connectors = $this->connectorFactory->query($request->getParams());
-
-        // Should we show uninstalled connectors?
-        if ($params->getCheckbox('showUninstalled')) {
-            $connectors = array_merge($connectors, $this->connectorFactory->getUninstalled());
-        }
 
         foreach ($connectors as $connector) {
             // Instantiate and decorate the entity
@@ -101,6 +94,37 @@ class Connector extends Base
                 'connector' => $connector,
                 'providerSettings' => $interface->getProviderSettings(),
             ]);
+    }
+
+    /**
+     * Get connector settings field definitions as JSON (used by the React UI)
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     */
+    public function editFormFields(Request $request, Response $response, $id)
+    {
+        if (is_numeric($id)) {
+            $connector = $this->connectorFactory->getById($id);
+        } else {
+            $connector = $this->connectorFactory->getUninstalledById($id);
+        }
+        $interface = $this->connectorFactory->create($connector);
+
+        return $response->withJson([
+            'fields'              => $interface->getSettingsFields(),
+            'settings'            => $connector->settings ?? [],
+            'formSubtitle'        => $interface->getFormSubtitle(),
+            'formDescriptionHtml' => $interface->getFormDescriptionHtml(),
+            'formAlerts'          => $interface->getFormAlerts(),
+            'enabledLabel'        => $interface->getEnabledLabel(),
+            'enabledDescription'  => $interface->getEnabledDescription(),
+            'enabledMessage'      => $interface->getEnabledMessage(),
+        ]);
     }
 
     /**
@@ -156,7 +180,11 @@ class Connector extends Base
         $interface = $this->connectorFactory->create($connector);
 
         if (method_exists($interface, $method)) {
-            return $response->withJson($interface->{$method}($this->getSanitizer($request->getParams())));
+            $ref = new \ReflectionMethod($interface, $method);
+            $result = $ref->getNumberOfRequiredParameters() > 0
+                ? $interface->{$method}($this->getSanitizer($request->getParams()))
+                : $interface->{$method}();
+            return $response->withJson($result);
         } else {
             throw new HttpMethodNotAllowedException($request);
         }

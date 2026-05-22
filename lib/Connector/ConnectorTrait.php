@@ -180,7 +180,47 @@ trait ConnectorTrait
         return $this;
     }
 
+    public function getSettingsFormTwig(): string
+    {
+        return '';
+    }
+
     public function getSettingsFormJavaScript(): string
+    {
+        return '';
+    }
+
+    public function getSettingsFields(): array
+    {
+        return [];
+    }
+
+    public function getFormSubtitle(): string
+    {
+        return '';
+    }
+
+    public function getFormDescriptionHtml(): string
+    {
+        return '';
+    }
+
+    public function getFormAlerts(): array
+    {
+        return [];
+    }
+
+    public function getEnabledLabel(): string
+    {
+        return __('Enabled');
+    }
+
+    public function getEnabledDescription(): string
+    {
+        return __('When enabled, this Connector will start providing the services it lists in its description.');
+    }
+
+    public function getEnabledMessage(): string
     {
         return '';
     }
