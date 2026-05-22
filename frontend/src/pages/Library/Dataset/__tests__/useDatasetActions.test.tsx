@@ -42,11 +42,12 @@ vi.mock('@/services/folderApi', () => ({
 const mockNotifySuccess = vi.fn();
 const mockNotifyError = vi.fn();
 const mockNotifyWarning = vi.fn();
+const mockNotifyInfo = vi.fn();
 vi.mock('@/components/ui/Notification', () => ({
   notify: {
     success: (...args: unknown[]) => mockNotifySuccess(...args),
     error: (...args: unknown[]) => mockNotifyError(...args),
-    info: vi.fn(),
+    info: (...args: unknown[]) => mockNotifyInfo(...args),
     warning: (...args: unknown[]) => mockNotifyWarning(...args),
   },
 }));
@@ -118,6 +119,42 @@ describe('useDatasetActions', () => {
       expect(mockHandleRefresh).toHaveBeenCalled();
       expect(mockCloseModal).not.toHaveBeenCalled();
     });
+
+    it('resets isDeleting to false after completion', async () => {
+      mockDeleteDataset.mockResolvedValue({});
+
+      const { result } = renderActions();
+
+      await act(async () => {
+        await result.current.confirmDelete([mockDataset({ dataSetId: 1 })], { deleteData: false });
+      });
+
+      expect(result.current.isDeleting).toBe(false);
+    });
+
+    it('does not call closeModal when some items fail to delete', async () => {
+      mockDeleteDataset.mockRejectedValue(new Error('Failed'));
+
+      const { result } = renderActions();
+
+      await act(async () => {
+        await result.current.confirmDelete([mockDataset({ dataSetId: 1 })], { deleteData: false });
+      });
+
+      expect(mockCloseModal).not.toHaveBeenCalled();
+    });
+
+    it('still calls handleRefresh when some deletions fail', async () => {
+      mockDeleteDataset.mockRejectedValue(new Error('Failed'));
+
+      const { result } = renderActions();
+
+      await act(async () => {
+        await result.current.confirmDelete([mockDataset({ dataSetId: 1 })], { deleteData: false });
+      });
+
+      expect(mockHandleRefresh).toHaveBeenCalled();
+    });
   });
 
   describe('handleConfirmClone', () => {
@@ -178,6 +215,42 @@ describe('useDatasetActions', () => {
       });
 
       expect(mockCloneDataset).not.toHaveBeenCalled();
+    });
+
+    it('resets isCloning to false after completion', async () => {
+      mockCloneDataset.mockResolvedValue({});
+
+      const { result } = renderActions();
+
+      await act(async () => {
+        await result.current.handleConfirmClone(
+          mockDataset({ dataSetId: 1 }),
+          'Clone',
+          '',
+          '',
+          false,
+        );
+      });
+
+      expect(result.current.isCloning).toBe(false);
+    });
+
+    it('passes copyRows: true to cloneDataset when flag is set', async () => {
+      mockCloneDataset.mockResolvedValue({});
+
+      const { result } = renderActions();
+
+      await act(async () => {
+        await result.current.handleConfirmClone(
+          mockDataset({ dataSetId: 5 }),
+          'CopyWithRows',
+          '',
+          '',
+          true,
+        );
+      });
+
+      expect(mockCloneDataset).toHaveBeenCalledWith(expect.objectContaining({ copyRows: true }));
     });
   });
 
@@ -241,6 +314,20 @@ describe('useDatasetActions', () => {
       });
 
       expect(mockSelectFolder).not.toHaveBeenCalled();
+    });
+
+    it('calls selectFolder with targetType: "dataset"', async () => {
+      mockSelectFolder.mockResolvedValue({ success: true });
+
+      const { result } = renderActions();
+
+      await act(async () => {
+        await result.current.handleConfirmMove([mockDataset({ dataSetId: 7 })], 3);
+      });
+
+      expect(mockSelectFolder).toHaveBeenCalledWith(
+        expect.objectContaining({ targetType: 'dataset' }),
+      );
     });
   });
 });

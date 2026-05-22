@@ -846,7 +846,6 @@ class Layout extends Base
         if ($source === 'remote') {
             // Hand off to the connector
             $event = new TemplateProviderImportEvent(
-                $sanitizedParams->getString('download'),
                 $sanitizedParams->getString('templateId'),
                 $this->getConfig()->getSetting('LIBRARY_LOCATION')
             );

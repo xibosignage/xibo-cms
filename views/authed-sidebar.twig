@@ -74,7 +74,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("command.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("command.view") }}">{% trans "Commands" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/displays/commands">{% trans "Commands" %}</a></li>
             {% endif %}
         {% endif %}
 
@@ -126,7 +126,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("font.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("font.view") }}">{% trans "Fonts" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/administration/fonts">{% trans "Fonts" %}</a></li>
             {% endif %}
         {% endif %}
 

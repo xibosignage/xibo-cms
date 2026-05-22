@@ -214,7 +214,7 @@ export function AddAndEditDatasetRssModal({
         setFilterRows([{ operator: 'AND', column: '', criteria: 'starts-with', value: '' }]);
       }
     }
-  }, [isOpen, type, rss, t]);
+  }, [isOpen, type, rss]);
 
   const updateDraft = <K extends keyof DatasetRssPayload>(
     field: K,

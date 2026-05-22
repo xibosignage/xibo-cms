@@ -39,7 +39,9 @@ import { applicationQueryKeys, useApplicationData } from './hooks/useApplication
 
 import Button from '@/components/ui/Button';
 import FilterInputs from '@/components/ui/FilterInputs';
+import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import type { Application } from '@/types/application';
 
@@ -176,12 +178,13 @@ export default function Applications() {
   });
 
   const filterOptions = getBaseFilterKeys(t);
+  const adminTabs = useFilteredTabs('administration');
 
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
         <div className="flex flex-row justify-between py-4 items-center gap-4">
-          <h1 className="text-lg font-semibold text-gray-900">{t('Applications')}</h1>
+          <TabNav activeTab="Applications" navigation={adminTabs} />
           <div className="flex items-center gap-2">
             <Button
               variant="primary"

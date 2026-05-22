@@ -298,7 +298,10 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'commands',
         labelKey: 'Commands',
-        externalURL: '/command/view',
+        lazy: () =>
+          import('@/pages/Displays/Commands/Commands').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'command.view',
       },
     ],
@@ -368,7 +371,8 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'fonts',
         labelKey: 'Fonts',
-        externalURL: '/fonts/view',
+        lazy: () =>
+          import('@/pages/Administration/Fonts/Fonts').then((m) => ({ Component: m.default })),
         feature: 'font.view',
       },
     ],

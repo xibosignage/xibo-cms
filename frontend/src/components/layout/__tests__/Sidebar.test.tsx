@@ -140,7 +140,7 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
       { group: 'Schedule', name: 'Dayparting', href: '/schedule/dayparting' }, // React Router
       { group: 'Design', name: 'Layouts', href: '/design/layout' }, // React Router
       { group: 'Library', name: 'Media', href: '/library/media' }, // React Router
-      { group: 'Displays', name: 'Commands', href: '/command/view' }, // external
+      { group: 'Displays', name: 'Commands', href: '/displays/commands' }, // React Router
       { group: 'Administration', name: 'Tags', href: '/tag/view' }, // external
       { group: 'Reporting', name: 'All Reports', href: '/report/view' }, // external
       { group: 'Advanced', name: 'Sessions', href: '/advanced/sessions' }, // React Router

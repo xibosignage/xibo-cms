@@ -155,11 +155,9 @@ describe('Playlists page - pagination', () => {
     const lastModLabel = screen.getByText('Last Modified');
     const lastModContainer = lastModLabel.closest('div')!;
     await act(async () => {
-      fireEvent.click(within(lastModContainer).getByRole('button'));
+      fireEvent.click(within(lastModContainer).getByRole('combobox'));
     });
-    await act(async () => {
-      fireEvent.click(within(lastModContainer).getByText('Today'));
-    });
+    fireEvent.click(await screen.findByRole('option', { name: 'Today' }));
 
     await waitFor(() => {
       expect(usePlaylistData).toHaveBeenLastCalledWith(

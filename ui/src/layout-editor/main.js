@@ -2789,7 +2789,6 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           data: {
             templateId: draggableData?.templateId,
             source: draggableData?.source,
-            download: draggableData?.download,
           },
           success: function(response) {
             // Hide loading screen

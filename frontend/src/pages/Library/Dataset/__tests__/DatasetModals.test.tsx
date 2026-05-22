@@ -127,4 +127,15 @@ describe('DatasetModals', () => {
 
     expect(screen.queryByTestId('import-modal')).not.toBeInTheDocument();
   });
+
+  it('renders MoveModal when activeModal is "move"', () => {
+    const props = { ...defaultProps, actions: { ...defaultProps.actions, activeModal: 'move' } };
+    renderWithProviders(<DatasetModals {...props} />);
+    expect(screen.getByTestId('move-modal')).toBeInTheDocument();
+  });
+
+  it('renders FolderActionModals regardless of activeModal', () => {
+    renderWithProviders(<DatasetModals {...defaultProps} />);
+    expect(screen.getByTestId('folder-action-modals')).toBeInTheDocument();
+  });
 });
