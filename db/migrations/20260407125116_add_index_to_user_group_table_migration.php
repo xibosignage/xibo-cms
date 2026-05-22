@@ -31,7 +31,7 @@ class AddIndexToUserGroupTableMigration extends AbstractMigration
     public function change(): void
     {
         $this->execute(
-            'ALTER TABLE group ADD FULLTEXT idx_usergroup_search(`group`, `description`) WITH PARSER ngram'
+            'ALTER TABLE `group` ADD FULLTEXT idx_usergroup_search(`group`, `description`) WITH PARSER ngram'
         );
     }
 }
