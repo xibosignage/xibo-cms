@@ -95,7 +95,8 @@ jobs:
 
   lint:
     name: Run ESLint
-    if: github.event.issue.pull_request && contains(github.event.comment.body, 'TEST:')
+    needs: check-base-branch
+    if: needs.check-base-branch.outputs.base_ref == 'develop'
     runs-on: ubuntu-latest
 
     steps:
