@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -97,7 +97,7 @@ class TransitionFactory extends BaseFactory
      * @param array $filterBy
      * @return array[Transition]
      */
-    public function query(array $sortOrder = null, array $filterBy = []): array
+    public function query(?array $sortOrder = null, array $filterBy = []): array
     {
         $entries = [];
         $params = [];
@@ -140,6 +140,7 @@ class TransitionFactory extends BaseFactory
         $allowedColumns = [
             'transitionId',
             'transition',
+            'code',
             'hasDuration',
             'hasDirection',
             'availableAsIn',

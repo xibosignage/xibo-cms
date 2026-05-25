@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -19,6 +19,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 namespace Xibo\Controller;
 
 use Psr\Http\Message\ResponseInterface;
@@ -28,6 +29,7 @@ use Xibo\Factory\TransitionFactory;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -39,13 +41,13 @@ class Transition extends Base
     /**
      * @var TransitionFactory
      */
-    private $transitionFactory;
+    private TransitionFactory $transitionFactory;
 
     /**
      * Set common dependencies.
      * @param TransitionFactory $transitionFactory
      */
-    public function __construct($transitionFactory)
+    public function __construct(TransitionFactory $transitionFactory)
     {
         $this->transitionFactory = $transitionFactory;
     }
@@ -86,7 +88,7 @@ class Transition extends Base
      * @param int $id
      * @return Response|ResponseInterface
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
