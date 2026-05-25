@@ -20,7 +20,7 @@
  */
 
 import { X } from 'lucide-react';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
@@ -37,6 +37,7 @@ interface TagInputProps {
   prefix?: React.ReactNode;
   suffix?: React.ReactNode;
   error?: string;
+  optional?: boolean;
 }
 
 function TagInput({
@@ -50,8 +51,10 @@ function TagInput({
   prefix,
   suffix,
   error,
+  optional = false,
 }: TagInputProps) {
   const { t } = useTranslation();
+  const inputId = useId();
   const [input, setInput] = useState('');
   const tags = Array.isArray(value) ? value : [];
 
@@ -96,8 +99,12 @@ function TagInput({
 
   return (
     <div className={twMerge('flex flex-col gap-1 relative w-full', className)}>
-      <label className="text-sm font-semibold text-gray-500 leading-5">
-        {!label ? t('Tags') : label}
+      <label
+        htmlFor={inputId}
+        className="flex items-center justify-between text-sm font-semibold text-gray-500 leading-5"
+      >
+        <span>{!label ? t('Tags') : label}</span>
+        {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
       </label>
 
       <div
@@ -129,7 +136,8 @@ function TagInput({
             </span>
           ))}
           <input
-            className="flex-1 min-w-30 text-sm p-1 bg-transparent border-none outline-none focus:outline-none focus:ring-0"
+            id={inputId}
+            className="flex-1 min-w-10 text-sm p-1 bg-transparent border-none outline-none focus:outline-none focus:ring-0"
             value={input}
             disabled={disabled}
             onChange={(e) => setInput(e.target.value)}
@@ -144,6 +152,7 @@ function TagInput({
                 }
               }
             }}
+            onBlur={() => addTag(input)}
             placeholder={tags.length === 0 ? placeholder || t('Add tags') : ''}
           />
         </div>

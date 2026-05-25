@@ -28,6 +28,12 @@ import type { FilterConfigItem } from '../FilterInputs';
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
 }));
+// FilterInputs imports t directly from i18next (not via useTranslation). Mock it so
+// the Reset button renders with accessible text instead of an empty string.
+vi.mock('i18next', () => {
+  const t = (key: string) => key;
+  return { default: { t, language: 'en', isInitialized: true }, t };
+});
 
 type Filters = { name: string; status: string };
 
@@ -92,12 +98,11 @@ describe('FilterInputs', () => {
         label: 'Status',
         name: 'status',
         options: [{ label: 'Active', value: 'active' }],
-        showAllOption: false,
       },
     ];
     renderFilters({ options });
 
-    expect(screen.getByRole('button')).toBeInTheDocument();
+    expect(screen.getByRole('combobox')).toBeInTheDocument();
   });
 
   // If the user already typed "hello" in the Name filter and then opens the
@@ -114,6 +119,7 @@ describe('FilterInputs', () => {
   // When the user types in a filter box, the page needs to know two things:
   // which filter changed (e.g. "name") and what the new value is (e.g. "xibo")
   test('typing in a filter tells the page which filter changed and what was typed', () => {
+    vi.useFakeTimers();
     const onChange = vi.fn();
     const options: FilterConfigItem<Filters>[] = [
       { label: 'Name', name: 'name', type: 'text', placeholder: 'Search' },
@@ -121,7 +127,9 @@ describe('FilterInputs', () => {
     renderFilters({ options, onChange });
 
     fireEvent.change(screen.getByPlaceholderText('Search'), { target: { value: 'xibo' } });
+    vi.runAllTimers();
 
     expect(onChange).toHaveBeenCalledWith('name', 'xibo');
+    vi.useRealTimers();
   });
 });

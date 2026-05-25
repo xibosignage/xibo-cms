@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -124,16 +124,28 @@ class WidgetSyncTask implements TaskInterface
                         $widgetInterface = $module->getWidgetProviderOrNull();
 
                         // Is the cache key display specific?
-                        $cacheKey = $widgetInterface?->getDataCacheKey($module->createDataProvider($widget));
+                        $dataProvider = $module->createDataProvider($widget);
+                        $cacheKey = $widgetInterface?->getDataCacheKey($dataProvider);
+
                         if ($cacheKey === null) {
                             $cacheKey = $module->dataCacheKey;
                         }
 
                         // Refresh the cache if needed.
-                        $isDisplaySpecific = str_contains($cacheKey, '%displayId%')
-                            || str_contains($cacheKey, '%useDisplayLocation%');
+                        $isDisplaySpecific = false;
 
-                        // We're either assigning all media to all displays, or we're assigning then one by one
+                        if (str_contains($cacheKey, '%displayId%')) {
+                            $isDisplaySpecific = true;
+                        } else if (str_contains($cacheKey, '%useDisplayLocation%')) {
+                            // Decorate the module
+                            $module->decorateProperties($widget, true);
+
+                            if ($dataProvider->getProperty('useDisplayLocation') == 1) {
+                                $isDisplaySpecific = true;
+                            }
+                        }
+
+                        // We're either assigning all media to all displays, or we're assigning them one by one
                         if ($isDisplaySpecific) {
                             $this->getLogger()->debug('widgetSyncTask: cache is display specific');
 

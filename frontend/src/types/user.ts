@@ -49,6 +49,7 @@ export interface User {
   phone?: string;
 
   homeFolderId?: number;
+  homePageId?: string;
 
   features: UserFeatures;
   settings: UserSettings;

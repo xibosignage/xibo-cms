@@ -25,6 +25,7 @@ import type { UserGroup } from '@/types/userGroup';
 export interface FetchUserGroupsRequest {
   start: number;
   length: number;
+  userGroupId?: number;
   userGroup?: string;
   isUser?: number;
   signal?: AbortSignal;
@@ -36,7 +37,7 @@ export interface FetchUserGroupsResponse {
 }
 
 export async function fetchUserGroups(
-  { start = 0, length = 10, userGroup, isUser, signal }: FetchUserGroupsRequest = {
+  { start = 0, length = 10, userGroupId, userGroup, isUser, signal }: FetchUserGroupsRequest = {
     start: 0,
     length: 10,
   },
@@ -45,6 +46,10 @@ export async function fetchUserGroups(
     start,
     length,
   };
+
+  if (userGroupId !== undefined) {
+    params.userGroupId = userGroupId;
+  }
 
   if (userGroup) {
     params.userGroup = userGroup;

@@ -74,11 +74,22 @@ class Fault extends Base
         $url = $request->getUri() . $request->getUri()->getPath();
 
         $config = $this->getConfig();
+
+        $binLogError = false;
+        $binLogCheckError = null;
+        try {
+            $binLogError = ($config->checkBinLogEnabled() && !$config->checkBinLogFormat());
+        } catch (\PDOException $e) {
+            $this->getLog()->warning('Could not check MySQL bin log configuration: ' . $e->getMessage());
+            $binLogCheckError = $e->getMessage();
+        }
+
         $data = [
             'environmentCheck' => $config->checkEnvironment(),
             'environmentFault' => $config->envFault,
             'environmentWarning' => $config->envWarning,
-            'binLogError' => ($config->checkBinLogEnabled() && !$config->checkBinLogFormat()),
+            'binLogError' => $binLogError,
+            'binLogCheckError' => $binLogCheckError,
             'urlError' => !Environment::checkUrl($url)
         ];
 

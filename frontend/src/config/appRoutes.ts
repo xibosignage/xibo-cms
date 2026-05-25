@@ -37,8 +37,7 @@ import type { TabNavItem } from '@/components/ui/TabNav';
 import type { User } from '@/types/user';
 import { filterRoutesByUser } from '@/utils/permissions';
 
-// TODO: Hardcoded for now, change to default page later
-export const DEFAULT_INTERNAL_ROUTE = '/library/media';
+export const DEFAULT_INTERNAL_ROUTE = 'dashboard';
 
 enum UserType {
   SuperAdmin = 1,
@@ -92,7 +91,7 @@ export const APP_ROUTES: AppRoute[] = [
     path: 'dashboard',
     labelKey: 'Dashboard',
     icon: LayoutDashboard,
-    externalURL: '/statusdashboard',
+    lazy: () => import('@/pages/Dashboard/DashboardRouter').then((m) => ({ Component: m.default })),
   },
   {
     path: 'schedule',
@@ -100,9 +99,10 @@ export const APP_ROUTES: AppRoute[] = [
     icon: CalendarDays,
     subLinks: [
       {
-        path: 'event',
-        labelKey: 'Event',
-        externalURL: '/schedule/view',
+        path: 'events',
+        labelKey: 'Events',
+        lazy: () =>
+          import('@/pages/Schedule/Schedule/Events').then((m) => ({ Component: m.default })),
         feature: 'schedule.view',
       },
       {
@@ -205,9 +205,42 @@ export const APP_ROUTES: AppRoute[] = [
         feature: 'dataset.view',
       },
       {
+        path: 'datasets/:datasetId/dataconnector',
+        labelKey: 'Dataset Data Connector',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Library/Dataset/subPages/DataConnector/DatasetDataConnector').then(
+            (m) => ({
+              Component: m.default,
+            }),
+          ),
+        feature: 'dataset.view',
+      },
+      {
         path: 'menu-boards',
         labelKey: 'Menu Boards',
-        externalURL: '/menuboard/view',
+        lazy: () =>
+          import('@/pages/Library/MenuBoard/MenuBoards').then((m) => ({ Component: m.default })),
+        feature: 'menuBoard.view',
+      },
+      {
+        path: 'menu-boards/:menuId/categories',
+        labelKey: 'Menu Board Categories',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Library/MenuBoard/subPages/Categories/MenuBoardCategories').then((m) => ({
+            Component: m.default,
+          })),
+        feature: 'menuBoard.view',
+      },
+      {
+        path: 'menu-boards/:menuId/categories/:categoryId/products',
+        labelKey: 'Menu Board Products',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Library/MenuBoard/subPages/Products/MenuBoardProducts').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'menuBoard.view',
       },
     ],
@@ -218,39 +251,57 @@ export const APP_ROUTES: AppRoute[] = [
     icon: Monitor,
     subLinks: [
       {
-        path: 'add-displays',
-        labelKey: 'Add Displays',
-        externalURL: '/display/view',
+        path: 'displays',
+        labelKey: 'Displays',
+        lazy: () =>
+          import('@/pages/Displays/Displays/Displays').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'displays.view',
       },
       {
         path: 'display-groups',
         labelKey: 'Display Groups',
-        externalURL: '/displaygroup/view',
+        lazy: () =>
+          import('@/pages/Displays/DisplayGroup/DisplayGroup').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'displaygroup.view',
       },
       {
         path: 'sync-groups',
         labelKey: 'Sync Groups',
-        externalURL: '/syncgroup/view',
+        lazy: () =>
+          import('@/pages/Displays/SyncGroups/SyncGroups').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'display.syncView',
       },
       {
         path: 'settings',
-        labelKey: 'Settings',
-        externalURL: '/displayprofile/view',
+        labelKey: 'Display Settings',
+        lazy: () =>
+          import('@/pages/Displays/DisplayProfile/DisplayProfile').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'displayprofile.view',
       },
       {
-        path: 'playersoftware',
+        path: 'player-versions',
         labelKey: 'Player Versions',
-        externalURL: '/playersoftware/view',
+        lazy: () =>
+          import('@/pages/Displays/PlayerVersions/PlayerVersions').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'playersoftware.view',
       },
       {
         path: 'commands',
         labelKey: 'Commands',
-        externalURL: '/command/view',
+        lazy: () =>
+          import('@/pages/Displays/Commands/Commands').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'command.view',
       },
     ],
@@ -281,7 +332,10 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'applications',
         labelKey: 'Applications',
-        externalURL: '/application/view',
+        lazy: () =>
+          import('@/pages/Administration/Applications/Applications').then((m) => ({
+            Component: m.default,
+          })),
         validator: isSuperAdmin,
       },
       {
@@ -317,7 +371,8 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'fonts',
         labelKey: 'Fonts',
-        externalURL: '/fonts/view',
+        lazy: () =>
+          import('@/pages/Administration/Fonts/Fonts').then((m) => ({ Component: m.default })),
         feature: 'font.view',
       },
     ],

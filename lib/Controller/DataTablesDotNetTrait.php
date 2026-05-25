@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -38,7 +38,7 @@ trait DataTablesDotNetTrait
      * @param SanitizerInterface|null $sanitizedRequestParams
      * @return array
      */
-    protected function gridRenderFilter(array $extraFilter, $sanitizedRequestParams = null)
+    protected function gridRenderFilter(array $extraFilter, ?SanitizerInterface $sanitizedRequestParams = null): array
     {
         if ($sanitizedRequestParams === null) {
             return $extraFilter;
@@ -59,9 +59,7 @@ trait DataTablesDotNetTrait
         }
 
         // Merge with any extra filter items that have been provided
-        $filter = array_merge($extraFilter, $filter);
-
-        return $filter;
+        return array_merge($extraFilter, $filter);
     }
 
     /**
@@ -69,10 +67,15 @@ trait DataTablesDotNetTrait
      * @param SanitizerInterface|array $sanitizedRequestParams
      * @param bool $isJson
      * @param string $defaultSortBy
-     * @return array
+     * @param string $defaultSortDir
+     * @return ?array
      */
-    protected function gridRenderSort($sanitizedRequestParams, bool $isJson = false, string $defaultSortBy = 'name')
-    {
+    protected function gridRenderSort(
+        SanitizerInterface|array $sanitizedRequestParams,
+        bool $isJson = false,
+        string $defaultSortBy = 'name',
+        string $defaultSortDir = 'asc'
+    ): ?array {
         if ($sanitizedRequestParams instanceof SanitizerInterface) {
             $columns = $sanitizedRequestParams->getArray('columns');
             $order = $sanitizedRequestParams->getArray('order');
@@ -90,7 +93,7 @@ trait DataTablesDotNetTrait
 
             $sortDirList = array_map(
                 'trim',
-                explode(',', $sanitizedRequestParams->getString('sortDir') ?? 'asc')
+                explode(',', $sanitizedRequestParams->getString('sortDir') ?? $defaultSortDir)
             );
 
             $columns = [];

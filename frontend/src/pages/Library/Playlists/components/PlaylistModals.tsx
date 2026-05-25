@@ -27,8 +27,10 @@ import DeletePlaylistModal from './DeletePlaylistModal';
 
 import FolderActionModals from '@/components/ui/FolderActionModals';
 import MoveModal from '@/components/ui/modals/MoveModal';
+import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
 import type { useFolderActions } from '@/hooks/useFolderActions';
+import { EventTypeId } from '@/types/event';
 import type { Playlist } from '@/types/playlist';
 
 interface PlaylistModalsProps {
@@ -43,6 +45,7 @@ interface PlaylistModalsProps {
   selection: {
     selectedPlaylist: Playlist | null;
     selectedPlaylistId: number | null;
+    defaultFolderId?: number;
     itemsToDelete: Playlist[];
     itemsToMove: Playlist[];
     existingNames: string[];
@@ -71,6 +74,7 @@ export function PlaylistModals({
       {isModalOpen('edit') && (
         <AddAndEditPlaylistModal
           type={selection.selectedPlaylistId ? 'edit' : 'add'}
+          defaultFolderId={selection.defaultFolderId}
           onClose={() => {
             actions.closeModal();
           }}
@@ -125,6 +129,20 @@ export function PlaylistModals({
           onConfirm={handlers.handleConfirmMove}
           items={selection.itemsToMove}
           entityLabel={t('Playlist')}
+        />
+      )}
+
+      {isModalOpen('schedule') && selection.selectedPlaylist && (
+        <ScheduleEventModal
+          isOpen
+          onClose={() => {
+            actions.closeModal();
+            actions.handleRefresh();
+          }}
+          mode="schedule"
+          eventTypeId={EventTypeId.Playlist}
+          contentId={selection.selectedPlaylist.playlistId}
+          contentName={selection.selectedPlaylist.name}
         />
       )}
     </>

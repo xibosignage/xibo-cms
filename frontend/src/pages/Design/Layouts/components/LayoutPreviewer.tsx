@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { X, FolderInput, UserPlus2, Info } from 'lucide-react';
+import { FolderInput, Info, UserPlus2, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -102,7 +102,8 @@ export default function LayoutPreviewer({
       <div className="flex flex-1 min-h-0">
         <div className="flex-1 w-full p-4 flex justify-center items-center overflow-hidden min-h-0">
           <iframe
-            src={`/layout/preview/${layoutId}`}
+            sandbox="allow-scripts"
+            src={layoutData?.previewUrl ?? `/layout/preview/${layoutId}`}
             title={`Layout ${layoutId}`}
             className="w-full h-full min-h-125 rounded shadow-md border-0"
           />

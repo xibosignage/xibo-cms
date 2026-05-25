@@ -46,6 +46,9 @@ vi.mock('@/components/ui/modals/MoveModal', () => ({
 vi.mock('@/components/ui/FolderActionModals', () => ({
   default: () => <div data-testid="folder-action-modals">Folder Actions</div>,
 }));
+vi.mock('../components/ImportDatasetCsvModal', () => ({
+  default: () => <div data-testid="import-modal">Import CSV Modal</div>,
+}));
 
 describe('DatasetModals', () => {
   const defaultProps = {
@@ -59,7 +62,7 @@ describe('DatasetModals', () => {
     },
     selection: {
       selectedDataset: null,
-      selectedDatasetId: null,
+      selectedDatasetId: 5,
       itemsToDelete: [],
       itemsToMove: [],
       existingNames: [],
@@ -105,5 +108,34 @@ describe('DatasetModals', () => {
     renderWithProviders(<DatasetModals {...props} />);
 
     expect(screen.getByTestId('share-modal')).toBeInTheDocument();
+  });
+
+  it('renders ImportDatasetCsvModal when activeModal is "import"', () => {
+    const props = { ...defaultProps, actions: { ...defaultProps.actions, activeModal: 'import' } };
+    renderWithProviders(<DatasetModals {...props} />);
+
+    expect(screen.getByTestId('import-modal')).toBeInTheDocument();
+  });
+
+  it('does not render ImportDatasetCsvModal when selectedDatasetId is null', () => {
+    const props = {
+      ...defaultProps,
+      actions: { ...defaultProps.actions, activeModal: 'import' },
+      selection: { ...defaultProps.selection, selectedDatasetId: null },
+    };
+    renderWithProviders(<DatasetModals {...props} />);
+
+    expect(screen.queryByTestId('import-modal')).not.toBeInTheDocument();
+  });
+
+  it('renders MoveModal when activeModal is "move"', () => {
+    const props = { ...defaultProps, actions: { ...defaultProps.actions, activeModal: 'move' } };
+    renderWithProviders(<DatasetModals {...props} />);
+    expect(screen.getByTestId('move-modal')).toBeInTheDocument();
+  });
+
+  it('renders FolderActionModals regardless of activeModal', () => {
+    renderWithProviders(<DatasetModals {...defaultProps} />);
+    expect(screen.getByTestId('folder-action-modals')).toBeInTheDocument();
   });
 });

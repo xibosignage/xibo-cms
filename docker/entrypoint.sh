@@ -318,8 +318,11 @@ then
     # this must not be done in DEV mode, as it modifies the .htaccess file, which might then be committed by accident
     if [ ! "$CMS_ALIAS" == "none" ]
     then
+        # Replace the web alias without changing the chromeos alias
         echo "Setting up CMS alias"
-        /bin/sed -i "s|.*Alias.*$|Alias $CMS_ALIAS /var/www/cms/web|" /etc/apache2/sites-enabled/000-default.conf
+        /bin/sed -i \
+          "/Alias.*\/chromeos/! s|.*Alias.*$|Alias $CMS_ALIAS /var/www/cms/web|" \
+          /etc/apache2/sites-enabled/000-default.conf
 
         echo "Settings up htaccess"
         /bin/cp /tmp/.htaccess /var/www/cms/web/.htaccess

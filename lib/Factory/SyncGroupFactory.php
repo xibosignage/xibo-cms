@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -68,15 +68,19 @@ class SyncGroupFactory extends BaseFactory
 
     /**
      * @param int $id
+     * @param bool $disableUserCheck
      * @return SyncGroup
      * @throws NotFoundException
      */
-    public function getById(int $id): SyncGroup
+    public function getById(int $id, bool $disableUserCheck = true): SyncGroup
     {
-        $syncGroups = $this->query(null, ['syncGroupId' => $id]);
+        $syncGroups = $this->query(null, [
+            'disableUserCheck' => $disableUserCheck ? 1 : 0,
+            'syncGroupId' => $id,
+        ]);
 
         if (count($syncGroups) <= 0) {
-            Throw new NotFoundException(__('Sync Group not found'));
+            throw new NotFoundException(__('Sync Group not found'));
         }
 
         return $syncGroups[0];
@@ -114,14 +118,11 @@ class SyncGroupFactory extends BaseFactory
      * @param array|null $sortOrder
      * @param array $filterBy
      * @return SyncGroup[]
+     * @throws NotFoundException
      */
-    public function query($sortOrder = null, $filterBy = []): array
+    public function query(?array $sortOrder = null, array $filterBy = []): array
     {
         $parsedBody = $this->getSanitizer($filterBy);
-
-        if ($sortOrder == null) {
-            $sortOrder = ['name'];
-        }
 
         $entries = [];
         $params = [];
@@ -141,6 +142,7 @@ class SyncGroupFactory extends BaseFactory
                 `syncgroup`.permissionsFolderId,
                 `user`.userName as owner,
                 modifiedBy.userName AS modifiedByName,
+                `folder`.folderName,
                 (
                     SELECT GROUP_CONCAT(DISTINCT `group`.group)
                         FROM `permission`
@@ -162,6 +164,8 @@ class SyncGroupFactory extends BaseFactory
               ON `user`.userId = `syncgroup`.ownerId
               LEFT OUTER JOIN `user` modifiedBy
               ON modifiedBy.userId = `syncgroup`.modifiedBy 
+              LEFT OUTER JOIN `folder`
+              ON `syncgroup`.folderId = `folder`.folderId
               WHERE 1 = 1
         ';
 
@@ -200,6 +204,15 @@ class SyncGroupFactory extends BaseFactory
             $params['leadDisplayId'] = $parsedBody->getInt('leadDisplayId');
         }
 
+        if ($parsedBody->getString('keyword') != null) {
+            $body .= $this->buildSearchQuery(
+                $parsedBody->getString('keyword'),
+                $params,
+                ['syncgroup.name'],
+                ['syncgroup.syncGroupId']
+            );
+        }
+
         // View Permissions
         $this->viewPermissionSql(
             'Xibo\Entity\SyncGroup',
@@ -211,12 +224,10 @@ class SyncGroupFactory extends BaseFactory
             '`syncgroup`.permissionsFolderId'
         );
 
-        // Sorting?
-        $order = '';
-
-        if (is_array($sortOrder)) {
-            $order .= ' ORDER BY ' . implode(',', $sortOrder);
-        }
+        // Sorting
+        $allowedColumns = ['syncGroupId', 'name', 'createdDt', 'modifiedDt', 'owner', 'modifiedByName'];
+        $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, [], ['name ASC']);
+        $order = empty($sortOrder) ? '' : ' ORDER BY ' . implode(', ', $sortOrder);
 
         $limit = '';
         // Paging

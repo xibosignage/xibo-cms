@@ -45,11 +45,10 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<ResolutionFilt
     label: t('Enabled?'),
     name: 'enabled',
     className: '',
-    shouldTranslateOptions: true,
-    showAllOption: true,
     options: [
-      { label: 'Yes', value: 1 },
-      { label: 'No', value: 0 },
+      { label: t('All'), value: '' },
+      { label: t('Yes'), value: 1 },
+      { label: t('No'), value: 0 },
     ],
   },
 ];

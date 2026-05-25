@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -90,9 +90,18 @@ class Handlers
      * @param \Psr\Container\ContainerInterface $container
      * @return \Closure
      */
-    public static function webErrorHandler($container)
+    public static function webErrorHandler($container, bool $isAllowCors)
     {
-        return function (Request $request, \Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails) use ($container) {
+        return function (
+            Request $request,
+            \Throwable $exception,
+            bool $displayErrorDetails,
+            bool $logErrors,
+            bool $logErrorDetails,
+        ) use (
+            $container,
+            $isAllowCors,
+        ) {
             self::rollbackAndCloseStore($container);
             self::writeLog($request, $logErrors, $logErrorDetails, $exception, $container);
 
@@ -119,11 +128,35 @@ class Handlers
             // Do we need to issue STS?
             $response = HttpsDetect::decorateWithStsIfNecessary($configService, $request, $response);
 
+            // Is CORS required?
+            $origin = $request->getHeaderLine('Origin');
+            $host = $request->getUri()->getHost();
+            if ($isAllowCors && (
+                $request->getHeaderLine('Sec-Fetch-Site') === 'cross-site'
+                || $request->getHeaderLine('Sec-Fetch-Mode') === 'cors'
+                || $origin === 'null'
+                || ($origin !== '' && !str_contains($origin, $host))
+            )) {
+                // Handle CORS headers
+                $response = $response
+                    ->withHeader('Access-Control-Allow-Origin', '*')
+                    ->withHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
+                    ->withHeader(
+                        'Access-Control-Allow-Headers',
+                        'Content-Type, X-Requested-With, Accept, Origin, X-PREVIEW-JWT'
+                    );
+            }
+
             // Prepend our theme files to the view path
             // Does this theme provide an alternative view path?
             if ($configService->getThemeConfig('view_path') != '') {
-                $twig->getLoader()->prependPath(Str::replaceFirst('..', PROJECT_ROOT,
-                    $configService->getThemeConfig('view_path')));
+                $twig->getLoader()->prependPath(
+                    Str::replaceFirst(
+                        '..',
+                        PROJECT_ROOT,
+                        $configService->getThemeConfig('view_path')
+                    )
+                );
             }
 
             // We have translated error/not-found
@@ -146,7 +179,12 @@ class Handlers
                         'message' => __('Sorry we could not find that page.')
                     ], 404);
                 } else {
-                    return $twig->render($response, 'not-found.twig', $viewParams)->withStatus(404);
+                    try {
+                        return $twig->render($response, 'not-found.twig', $viewParams)->withStatus(404);
+                    } catch (\Exception) {
+                        $response->getBody()->write('Not found');
+                        return $response->withStatus(404);
+                    }
                 }
             } else {
                 // Make a friendly message

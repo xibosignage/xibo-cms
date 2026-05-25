@@ -88,6 +88,13 @@ class Session implements \SessionHandlerInterface
     public function __construct(LogServiceInterface $log)
     {
         $this->log = $log;
+
+        session_set_save_handler($this, true);
+
+        // Start the session
+        session_cache_limiter(false);
+
+        session_start();
     }
 
     /**

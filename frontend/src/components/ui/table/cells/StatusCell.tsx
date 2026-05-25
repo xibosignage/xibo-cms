@@ -26,11 +26,12 @@ import { type UIStatus } from '@/types/uiStatus';
 interface StatusProps {
   label: string;
   type?: UIStatus;
+  variation?: 'soft' | 'outline';
 }
 
-export function StatusCell({ label, type = 'neutral' }: StatusProps) {
+export function StatusCell({ label, type = 'neutral', variation = 'soft' }: StatusProps) {
   return (
-    <Badge type={type} variation="soft">
+    <Badge type={type} variation={variation}>
       {label}
     </Badge>
   );

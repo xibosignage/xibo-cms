@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -109,12 +109,16 @@ class NotificationFactory extends BaseFactory
      * @return Notification
      * @throws NotFoundException
      */
-    public function getById($notificationId)
+    public function getById(int $notificationId): Notification
     {
-        $notifications = $this->query(null, ['notificationId' => $notificationId]);
+        $notifications = $this->query(null, [
+            'notificationId' => $notificationId,
+            'disableUserCheck' => 1,
+        ]);
 
-        if (count($notifications) <= 0)
+        if (count($notifications) <= 0) {
             throw new NotFoundException();
+        }
 
         return $notifications[0];
     }
@@ -126,12 +130,22 @@ class NotificationFactory extends BaseFactory
      * @return Notification[]
      * @throws NotFoundException
      */
-    public function getBySubjectAndDate($subject, $fromDt, $toDt)
+    public function getBySubjectAndDate(string $subject, int $fromDt, int $toDt): array
     {
-        return $this->query(null, ['subject' => $subject, 'createFromDt' => $fromDt, 'createToDt' => $toDt]);
+        return $this->query(null, [
+            'subject' => $subject,
+            'createFromDt' => $fromDt,
+            'createToDt' => $toDt,
+            'disableUserCheck' => 1,
+        ]);
     }
 
-    public function getByOwnerId($ownerId)
+    /**
+     * @param int $ownerId
+     * @return \Xibo\Entity\Notification[]
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getByOwnerId(int $ownerId): array
     {
         return $this->query(null, ['ownerId' => $ownerId, 'disableUserCheck' => 1]);
     }
@@ -142,7 +156,7 @@ class NotificationFactory extends BaseFactory
      * @return Notification[]
      * @throws NotFoundException
      */
-    public function query($sortOrder = null, array $filterBy = [])
+    public function query($sortOrder = null, array $filterBy = []): array
     {
         $entries = [];
         $sanitizedFilter = $this->getSanitizer($filterBy);
@@ -168,6 +182,16 @@ class NotificationFactory extends BaseFactory
         $body = ' FROM `notification` ';
 
         $body .= ' WHERE 1 = 1 ';
+
+        if ($sanitizedFilter->getCheckbox('disableUserCheck') == 0) {
+            // Owned by me, or where I am the audience
+            $body .= ' AND (`notification`.`userId` = :currentUserId OR `notification`.`notificationId` IN (
+              SELECT `notificationId` 
+                FROM `lknotificationuser`
+               WHERE `userId` = :currentUserId 
+            )) ';
+            $params = ['currentUserId' => $this->getUser()->userId];
+        }
 
         if ($sanitizedFilter->getInt('notificationId') !== null) {
             $body .= ' AND `notification`.notificationId = :notificationId ';

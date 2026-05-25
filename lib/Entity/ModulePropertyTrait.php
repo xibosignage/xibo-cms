@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -60,6 +60,16 @@ trait ModulePropertyTrait
             }
         }
         return $this;
+    }
+
+    /**
+     * @return void
+     */
+    public function undecorateProperties(): void
+    {
+        foreach ($this->properties as $property) {
+            $property->value = null;
+        }
     }
 
     /**

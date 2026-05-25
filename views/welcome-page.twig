@@ -111,7 +111,7 @@
             {
                 title: '{% trans "Displays" %}',
                 text: 'Displays are managed from the CMS and control when and how content is shown. Get started by installing one of our Player App’s to start scheduling content to show on Displays.',
-                firstLink: '{{ url_for("display.view")}}',
+                firstLink: '{{ theme.rootUri() }}prototype/displays/displays',
                 secondLink: '{{ helpService.getLandingPage}}displays',
                 imageUrl: '{{ theme.rootUri() }}theme/default/img/onboarding/displays.png',
                 videoLinks: {
@@ -125,15 +125,15 @@
                 title: '{% trans "Existing Content" %}',
                 text: 'Do you already have an image or video content ready to be shown? Upload your media and schedule to be shown full screen on Displays in a few easy steps.',
                 firstLink: '{{ theme.rootUri() }}prototype/library/media',
-                secondLink: '{{ url_for("schedule.view")}}',
+                secondLink: '{{ theme.rootUri() }}prototype/schedule/events',
                 otherLink: '{{ helpService.getLandingPage }}getting_started_showing_an_image',
                 imageUrl: '{{ theme.rootUri() }}theme/default/img/onboarding/existing-content.png',
                 videoLinks: [
                     {
-                        link: 'yYv0B0B9MIc',
+                        link: 'zVjruJtnbys',
                         title: 'How to show an Image created outside of the CMS on Displays',
                     }, {
-                        link: '1zZKaL-iUZo',
+                        link: 'U6tQKfhDOp0',
                         title: 'How to show a single video on Displays',
                     }
                 ],
@@ -144,11 +144,11 @@
             {
                 title: '{% trans "Playlists" %}',
                 text: 'Create a ‘slideshow’ of content to be shown in sequence to schedule and show on your Displays.',
-                firstLink: '{{ url_for("playlist.view") }}',
+                firstLink: '{{ theme.rootUri() }}prototype/library/playlists',
                 secondLink: '{{ helpService.getLandingPage }}getting_started_showing_a_playlist',
                 imageUrl: '{{ theme.rootUri() }}theme/default/img/onboarding/playlists.png',
                 videoLinks: {
-                    link: 'Cch392voYic',
+                    link: 'IHCaSsKwKq4',
                     title: 'How to create a Playlist and show on Displays',
                 },
                 serviceId: 'playlists',
@@ -170,11 +170,11 @@
             {
                 title: '{% trans "Schedule" %}',
                 text: 'Once you have your content ready to be shown, use the Scheduling tools to ensure that your content is shown at the right place at the right time.',
-                firstLink: '{{ url_for("schedule.view") }}',
+                firstLink: '{{ theme.rootUri() }}prototype/schedule/events',
                 secondLink: '{{ helpService.getLandingPage }}simple_scheduling',
                 imageUrl: '{{ theme.rootUri() }}theme/default/img/onboarding/schedule.png',
                 videoLinks: {
-                    link: 'QmAfUsSEOAk',
+                    link: 'mHIzltOMUcI',
                     title: 'Creating simple schedules to show content on Displays',
                 },
                 serviceId: 'schedule',

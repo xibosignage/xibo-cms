@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -168,14 +168,43 @@ class DisplayAlerts implements ReportInterface
         // From and To Date Selection
         // --------------------------
         // The report uses a custom range filter that automatically calculates the from/to dates
-        // depending on the date range selected.
-        $fromDt = $sanitizedParams->getDate('fromDt');
-        $toDt = $sanitizedParams->getDate('toDt');
-        $currentDate = Carbon::now()->startOfDay();
+        // depending on the date range selected. When run as a scheduled report, only reportFilter
+        // is present in filterCriteria — convert it to actual Carbon dates here.
+        $reportFilter = $sanitizedParams->getString('reportFilter');
+        $now = Carbon::now();
 
-        // If toDt is current date then make it current datetime
-        if ($toDt->format('Y-m-d') == $currentDate->format('Y-m-d')) {
-            $toDt = Carbon::now();
+        switch ($reportFilter) {
+            case 'yesterday':
+                $fromDt = $now->copy()->startOfDay()->subDay();
+                $toDt = $now->copy()->startOfDay();
+                break;
+
+            case 'lastweek':
+                $fromDt = $now->copy()->locale(Translate::GetLocale())->startOfWeek()->subWeek();
+                $toDt = $fromDt->copy()->addWeek();
+                break;
+
+            case 'lastmonth':
+                $fromDt = $now->copy()->startOfMonth()->subMonth();
+                $toDt = $fromDt->copy()->addMonth();
+                break;
+
+            case 'lastyear':
+                $fromDt = $now->copy()->startOfYear()->subYear();
+                $toDt = $fromDt->copy()->addYear();
+                break;
+
+            case '':
+            default:
+                $fromDt = $sanitizedParams->getDate('fromDt') ?? $now->copy()->startOfMonth();
+                $toDt = $sanitizedParams->getDate('toDt') ?? $now;
+
+                // If toDt is current date then make it current datetime
+                $currentDate = $now->copy()->startOfDay();
+                if ($toDt->format('Y-m-d') == $currentDate->format('Y-m-d')) {
+                    $toDt = Carbon::now();
+                }
+                break;
         }
 
         $metadata = [

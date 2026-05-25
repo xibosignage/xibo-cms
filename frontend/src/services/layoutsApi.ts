@@ -27,6 +27,7 @@ export interface FetchLayoutRequest {
   start: number;
   length: number;
   keyword?: string;
+  layout?: string;
   retired?: number | string;
   sortBy?: string;
   sortDir?: string;
@@ -36,8 +37,21 @@ export interface FetchLayoutRequest {
 
   userId?: string;
   ownerUserGroupId?: string;
+  tags?: string;
+  codeLike?: string;
+  orientation?: string;
+  layoutStatusId?: number;
+  showDescriptionId?: number;
+  mediaLike?: string;
+  layoutId?: number;
   lastModified?: string;
   activeDisplayGroupId?: number;
+  displayGroupId?: number;
+
+  useRegexForName?: number;
+  logicalOperatorName?: 'OR' | 'AND';
+  exactTags?: number;
+  logicalOperator?: 'OR' | 'AND';
 }
 
 export interface FetchLayoutResponse {
@@ -202,6 +216,11 @@ export async function publishLayout(
   return data;
 }
 
+export async function retireLayout(layoutId: number | string): Promise<Layout> {
+  const { data } = await http.put(`/layout/retire/${layoutId}`);
+  return data;
+}
+
 export async function checkoutLayout(layoutId: number | string): Promise<Layout> {
   const { data } = await http.put(`/layout/checkout/${layoutId}`);
   return data;
@@ -291,4 +310,17 @@ export async function saveLayoutAsTemplate(
   }
 
   return result;
+}
+
+export interface LayoutCode {
+  code: string;
+  layout: string;
+}
+
+export async function fetchLayoutCodes(code?: string): Promise<LayoutCode[]> {
+  const response = await http.get('/layout/codes', {
+    params: code ? { code } : undefined,
+  });
+
+  return response.data;
 }

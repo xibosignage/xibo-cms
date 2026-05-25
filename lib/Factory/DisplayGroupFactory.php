@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -57,8 +57,9 @@ class DisplayGroupFactory extends BaseFactory
      * @param int|null $userId
      * @param int $bandwidthLimit
      * @return DisplayGroup
+     * @throws NotFoundException
      */
-    public function create($userId = null, $bandwidthLimit = 0)
+    public function create(?int $userId = null, int $bandwidthLimit = 0): DisplayGroup
     {
         $displayGroup = $this->createEmpty();
 
@@ -76,7 +77,7 @@ class DisplayGroupFactory extends BaseFactory
      * Create Empty
      * @return DisplayGroup
      */
-    public function createEmpty()
+    public function createEmpty(): DisplayGroup
     {
         return new DisplayGroup(
             $this->getStore(),
@@ -89,12 +90,17 @@ class DisplayGroupFactory extends BaseFactory
 
     /**
      * @param int $displayGroupId
+     * @param bool $disableUserCheck
      * @return DisplayGroup
      * @throws NotFoundException
      */
-    public function getById($displayGroupId)
+    public function getById(int $displayGroupId, bool $disableUserCheck = true): DisplayGroup
     {
-        $groups = $this->query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId, 'isDisplaySpecific' => -1]);
+        $groups = $this->query(null, [
+            'disableUserCheck' => $disableUserCheck ? 1 : 0,
+            'displayGroupId' => $displayGroupId,
+            'isDisplaySpecific' => -1
+        ]);
 
         if (count($groups) <= 0)
             throw new NotFoundException();
@@ -123,7 +129,7 @@ class DisplayGroupFactory extends BaseFactory
      * @return DisplayGroup[]
      * @throws NotFoundException
      */
-    public function getByDisplayId($displayId)
+    public function getByDisplayId(int $displayId): array
     {
         return $this->query(null, ['disableUserCheck' => 1, 'displayId' => $displayId, 'isDisplaySpecific' => -1]);
     }
@@ -134,7 +140,7 @@ class DisplayGroupFactory extends BaseFactory
      * @return DisplayGroup[]
      * @throws NotFoundException
      */
-    public function getByMediaId($mediaId)
+    public function getByMediaId(int $mediaId): array
     {
         return $this->query(null, ['disableUserCheck' => 1, 'mediaId' => $mediaId, 'isDisplaySpecific' => -1]);
     }
@@ -145,7 +151,7 @@ class DisplayGroupFactory extends BaseFactory
      * @return DisplayGroup[]
      * @throws NotFoundException
      */
-    public function getByEventId($eventId)
+    public function getByEventId(int $eventId): array
     {
         return $this->query(null, ['disableUserCheck' => 1, 'eventId' => $eventId, 'isDisplaySpecific' => -1]);
     }
@@ -156,7 +162,7 @@ class DisplayGroupFactory extends BaseFactory
      * @return DisplayGroup[]
      * @throws NotFoundException
      */
-    public function getByIsDynamic($isDynamic)
+    public function getByIsDynamic(int $isDynamic): array
     {
         return $this->query(null, ['disableUserCheck' => 1, 'isDynamic' => $isDynamic]);
     }
@@ -167,7 +173,7 @@ class DisplayGroupFactory extends BaseFactory
      * @return DisplayGroup[]
      * @throws NotFoundException
      */
-    public function getByParentId($parentId)
+    public function getByParentId(int $parentId): array
     {
         return $this->query(null, ['disableUserCheck' => 1, 'parentId' => $parentId]);
     }
@@ -177,9 +183,14 @@ class DisplayGroupFactory extends BaseFactory
      * @return DisplayGroup[]
      * @throws NotFoundException
      */
-    public function getByTag($tag)
+    public function getByTag(string $tag): array
     {
-        return $this->query(null, ['disableUserCheck' => 1, 'tags' => $tag, 'exactTags' => 1, 'isDisplaySpecific' => 1]);
+        return $this->query(null, [
+            'disableUserCheck' => 1,
+            'tags' => $tag,
+            'exactTags' => 1,
+            'isDisplaySpecific' => 1
+        ]);
     }
 
     /**
@@ -187,7 +198,7 @@ class DisplayGroupFactory extends BaseFactory
      * @param $displayGroupId
      * @return DisplayGroup[]
      */
-    public function getRelationShipTree($displayGroupId)
+    public function getRelationShipTree($displayGroupId): array
     {
         $tree = [];
 
@@ -202,7 +213,9 @@ class DisplayGroupFactory extends BaseFactory
               FROM `lkdgdg`
                 INNER JOIN `displaygroup`
                 ON `lkdgdg`.parentId = `displaygroup`.displayGroupId
-             WHERE `lkdgdg`.childId = :displayGroupId AND `lkdgdg`.parentId <> :displayGroupId AND displaygroup.isDynamic = 0
+             WHERE `lkdgdg`.childId = :displayGroupId 
+               AND `lkdgdg`.parentId <> :displayGroupId 
+               AND displaygroup.isDynamic = 0
             ORDER BY level, depth, displayGroup
         ', [
             'displayGroupId' => $displayGroupId
@@ -222,9 +235,13 @@ class DisplayGroupFactory extends BaseFactory
      * @return array[DisplayGroup]
      * @throws NotFoundException
      */
-    public function getByNotificationId($notificationId)
+    public function getByNotificationId(int $notificationId): array
     {
-        return $this->query(null, ['disableUserCheck' => 1, 'notificationId' => $notificationId, 'isDisplaySpecific' => -1]);
+        return $this->query(null, [
+            'disableUserCheck' => 1,
+            'notificationId' => $notificationId,
+            'isDisplaySpecific' => -1
+        ]);
     }
 
     /**
@@ -234,17 +251,18 @@ class DisplayGroupFactory extends BaseFactory
      * @return DisplayGroup[]
      * @throws NotFoundException
      */
-    public function getByOwnerId($ownerId, $isDisplaySpecific = 0)
+    public function getByOwnerId(int $ownerId, int $isDisplaySpecific = 0): array
     {
         return $this->query(null, ['userId' => $ownerId, 'isDisplaySpecific' => $isDisplaySpecific]);
     }
 
     /**
      * @param $folderId
+     * @param int $isDisplaySpecific
      * @return DisplayGroup[]
      * @throws NotFoundException
      */
-    public function getByFolderId($folderId, $isDisplaySpecific = -1)
+    public function getByFolderId($folderId, int $isDisplaySpecific = -1): array
     {
         return $this->query(null, [
             'disableUserCheck' => 1,
@@ -256,11 +274,10 @@ class DisplayGroupFactory extends BaseFactory
     /**
      * Set Bandwidth limit
      * @param int $bandwidthLimit
-     * @param array $displayIds
+     * @param array $displayGroupIds
      * @return DisplayGroup[]
-     * @throws NotFoundException
      */
-    public function setBandwidth($bandwidthLimit, $displayGroupIds)
+    public function setBandwidth(int $bandwidthLimit, array $displayGroupIds): array
     {
         $sql = 'UPDATE `displaygroup` SET bandwidthLimit = :bandwidthLimit WHERE displayGroupId IN (0';
         $params['bandwidthLimit'] = $bandwidthLimit;
@@ -277,16 +294,14 @@ class DisplayGroupFactory extends BaseFactory
     }
 
     /**
-     * @param array $sortOrder
+     * @param array|null $sortOrder
      * @param array $filterBy
      * @return array[DisplayGroup]
      * @throws NotFoundException
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query(?array $sortOrder = null, array $filterBy = []): array
     {
         $parsedBody = $this->getSanitizer($filterBy);
-        if ($sortOrder == null)
-            $sortOrder = ['displayGroup'];
 
         $entries = [];
         $params = [];
@@ -323,13 +338,16 @@ class DisplayGroupFactory extends BaseFactory
                         WHERE entity = :entity
                             AND objectId = `displaygroup`.displayGroupId
                             AND view = 1
-                ) AS groupsWithPermissions
+                ) AS groupsWithPermissions,
+                `folder`.folderName
         ';
 
         $params['entity'] = 'Xibo\\Entity\\DisplayGroup';
 
         $body = '
-              FROM `displaygroup`
+            FROM `displaygroup`
+                INNER JOIN `folder`
+                ON `displaygroup`.folderId = `folder`.folderId
         ';
 
         if ($parsedBody->getInt('mediaId') !== null) {
@@ -369,7 +387,8 @@ class DisplayGroupFactory extends BaseFactory
         }
 
         if ($parsedBody->getInt('parentId') !== null) {
-            $body .= ' AND `displaygroup`.displayGroupId IN (SELECT `childId` FROM `lkdgdg` WHERE `parentId` = :parentId AND `depth` = 1) ';
+            $body .= ' AND `displaygroup`.displayGroupId IN 
+                (SELECT `childId` FROM `lkdgdg` WHERE `parentId` = :parentId AND `depth` = 1) ';
             $params['parentId'] = $parsedBody->getInt('parentId');
         }
 
@@ -393,7 +412,8 @@ class DisplayGroupFactory extends BaseFactory
         }
 
         if ($parsedBody->getInt('displayId') !== null) {
-            $body .= ' AND displaygroup.displayGroupId IN (SELECT displayGroupId FROM lkdisplaydg WHERE displayId = :displayId) ';
+            $body .= ' AND displaygroup.displayGroupId IN 
+                (SELECT displayGroupId FROM lkdisplaydg WHERE displayId = :displayId) ';
             $params['displayId'] = $parsedBody->getInt('displayId');
         }
 
@@ -411,7 +431,8 @@ class DisplayGroupFactory extends BaseFactory
         }
 
         if ($parsedBody->getInt('notificationId') !== null) {
-            $body .= ' AND displaygroup.displayGroupId IN (SELECT displayGroupId FROM `lknotificationdg` WHERE notificationId = :notificationId) ';
+            $body .= ' AND displaygroup.displayGroupId IN 
+                (SELECT displayGroupId FROM `lknotificationdg` WHERE notificationId = :notificationId) ';
             $params['notificationId'] = $parsedBody->getInt('notificationId');
         }
 
@@ -501,42 +522,19 @@ class DisplayGroupFactory extends BaseFactory
             }
         }
 
-        if ($parsedBody->getInt('displayGroupIdMembers') !== null) {
-            $members = [];
-            foreach ($this->getStore()->select($select . $body, $params) as $row) {
-                $displayGroupId = $this->getSanitizer($row)->getInt('displayGroupId');
-                $parentId = $parsedBody->getInt('displayGroupIdMembers');
-
-                if ($this->getStore()->exists('SELECT `childId` FROM `lkdgdg` WHERE `parentId` = :parentId AND `childId` = :childId AND `depth` = 1',
-                    [
-                        'parentId' => $parentId,
-                        'childId' => $displayGroupId
-                    ]
-                )) {
-                    $members[] = $displayGroupId;
-                }
-            }
-        } else if ($parsedBody->getInt('displayIdMember') !== null) {
-            $members = [];
-
-            foreach ($this->getStore()->select($select . $body, $params) as $row) {
-                $displayGroupId = $this->getSanitizer($row)->getInt('displayGroupId');
-                $displayId = $parsedBody->getInt('displayIdMember');
-
-                if ($this->getStore()->exists('SELECT `displayGroupId` FROM `lkdisplaydg` WHERE `displayId` = :displayId AND `displayGroupId` = :displayGroupId ',
-                    [
-                        'displayId' => $displayId,
-                        'displayGroupId' => $displayGroupId
-                    ]
-                )) {
-                    $members[] = $displayGroupId;
-                }
-            }
-        }
-
         if ($parsedBody->getInt('folderId') !== null) {
             $body .= ' AND `displaygroup`.folderId = :folderId ';
             $params['folderId'] = $parsedBody->getInt('folderId');
+        }
+
+        if ($parsedBody->getString('keyword') != null) {
+            // Fulltext search
+            $body .= $this->buildSearchQuery(
+                $parsedBody->getString('keyword'),
+                $params,
+                ['displaygroup.displayGroup', 'displaygroup.dynamicCriteria', 'displaygroup.dynamicCriteriaTags'],
+                ['displaygroup.displayGroupId']
+            );
         }
 
         // View Permissions
@@ -552,27 +550,72 @@ class DisplayGroupFactory extends BaseFactory
         );
 
         // Sorting?
-        $order = '';
+        $allowedColumns = [
+            'displayGroupId',
+            'displayGroup',
+            'description',
+            'isDynamic',
+            'dynamicCriteria',
+            'dynamicCriteriaTags',
+            'ref1',
+            'ref2',
+            'ref3',
+            'ref4',
+            'ref5',
+            'createdDt',
+            'modifiedDt',
+        ];
 
-        if (isset($members) && $members != []) {
-            $sqlOrderMembers = 'ORDER BY FIELD(displaygroup.displayGroupId,' . implode(',', $members) . ')';
+        // Capture member sort direction before buildSortQuery strips the virtual column
+        $memberSortDir = null;
 
-            foreach ($sortOrder as $sort) {
-                if ($sort == '`member`') {
-                    $order .= $sqlOrderMembers;
-                    continue;
+        if (is_array($sortOrder)) {
+            foreach ($sortOrder as $s) {
+                $sort = strtolower(trim($s));
+                if ($sort === 'member' || $sort === 'member asc') {
+                    $memberSortDir = 'ASC';
+                } else if ($sort === 'member desc') {
+                    $memberSortDir = 'DESC';
                 }
+            }
 
-                if ($sort == '`member` DESC') {
-                    $order .= $sqlOrderMembers . ' DESC';
-                    continue;
-                }
+            // remove member sort options from sortOrder.
+            $sortOrder = array_values(array_filter(
+                $sortOrder,
+                fn($s) => !in_array(strtolower(trim($s)), ['member', 'member asc', 'member desc'])
+            ));
+        }
+
+        // Resolve member display group IDs, only when member sort was requested
+        $members = [];
+
+        if ($memberSortDir !== null) {
+            if ($parsedBody->getInt('displayGroupIdMembers') !== null) {
+                $members = $this->resolveMemberDisplayGroupIds($parsedBody->getInt('displayGroupIdMembers'), null);
+            } else if ($parsedBody->getInt('displayIdMember') !== null) {
+                $members = $this->resolveMemberDisplayGroupIds(null, $parsedBody->getInt('displayIdMember'));
             }
         }
 
-        if (is_array($sortOrder) && (!in_array('`member`', $sortOrder) && !in_array('`member` DESC', $sortOrder))) {
-            $order .= ' ORDER BY ' . implode(',', $sortOrder);
+        // default sort order
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['displayGroupId ASC']
+        );
+
+        $orderParts = [];
+
+        if (!empty($members)) {
+            $fieldExpr = 'FIELD(displaygroup.displayGroupId,' . implode(',', $members) . ')';
+            $orderParts[] = $fieldExpr . ($memberSortDir === 'DESC' ? ' DESC' : ' ASC');
         }
+
+        if (!empty($sortOrder)) {
+            array_push($orderParts, ...$sortOrder);
+        }
+
+        $order = !empty($orderParts) ? ' ORDER BY ' . implode(', ', $orderParts) : '';
 
         $limit = '';
         // Paging
@@ -608,5 +651,32 @@ class DisplayGroupFactory extends BaseFactory
         }
 
         return $entries;
+    }
+
+    /**
+     * Returns displayGroupIds that are members of the given parent group or display.
+     * Used to build a FIELD()-based ORDER BY clause for member sorting.
+     */
+    private function resolveMemberDisplayGroupIds(?int $parentDisplayGroupId, ?int $displayId): array
+    {
+        if ($parentDisplayGroupId !== null) {
+            $rows = $this->getStore()->select(
+                'SELECT `childId` FROM `lkdgdg` WHERE `parentId` = :parentId AND `depth` = 1',
+                ['parentId' => $parentDisplayGroupId]
+            );
+
+            return array_column($rows, 'childId');
+        }
+
+        if ($displayId !== null) {
+            $rows = $this->getStore()->select(
+                'SELECT `displayGroupId` FROM `lkdisplaydg` WHERE `displayId` = :displayId',
+                ['displayId' => $displayId]
+            );
+
+            return array_column($rows, 'displayGroupId');
+        }
+
+        return [];
     }
 }

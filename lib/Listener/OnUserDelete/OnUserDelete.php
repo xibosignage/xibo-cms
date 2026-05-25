@@ -56,6 +56,8 @@ class OnUserDelete
     private function deleteChildren($user)
     {
         // Delete oAuth clients
+        $this->store->update('DELETE FROM `oauth_lkclientuser` WHERE userId = :userId', ['userId' => $user->userId]);
+
         $this->store->update('DELETE FROM `oauth_clients` WHERE userId = :userId', ['userId' => $user->userId]);
 
         $this->store->update('DELETE FROM `session` WHERE userId = :userId', ['userId' => $user->userId]);

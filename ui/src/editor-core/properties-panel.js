@@ -127,7 +127,7 @@ PropertiesPanel.prototype.save = function(
       target = app.getObjectByTypeAndId(
         'widget',
         'widget_' + app.layout.drawer.regionId +
-          '_' + app.actionManager.editing.widgetId,
+        '_' + app.actionManager.editing.widgetId,
         'drawer',
       );
     } else {
@@ -304,11 +304,21 @@ PropertiesPanel.prototype.save = function(
             },
           );
         } else if (target.type === 'layout') {
+          const hadBackground = !!app.layout.backgroundImage;
+
           // Update layout
           app.layout.updateData(data.data);
 
           // Update resolution id
           app.layout.resolutionId = resolutionId;
+
+          // If background was just added, shift regions that are
+          // at or below the background layer up so they remain above it
+          if (!hadBackground && !!app.layout.backgroundImage) {
+            app.viewer.layerManager.adjustLayersForBackground(
+              app.layout.backgroundzIndex,
+            );
+          }
 
           // Render top bar to update layout changes
           app.topbar.render();

@@ -40,6 +40,8 @@ use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\HttpsDetect;
+use Xibo\Service\JwtServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -123,7 +125,8 @@ class Playlist extends Base
         DisplayFactory $displayFactory,
         ScheduleFactory $scheduleFactory,
         FolderFactory $folderFactory,
-        RegionFactory $regionFactory
+        RegionFactory $regionFactory,
+        private readonly JwtServiceInterface $jwtService,
     ) {
         $this->playlistFactory = $playlistFactory;
         $this->mediaFactory = $mediaFactory;
@@ -922,6 +925,29 @@ class Playlist extends Base
         return $this->render($request, $response);
     }
 
+    public function displayDesigner(Request $request, Response $response, $id): Response|ResponseInterface
+    {
+        $playlist = $this->playlistFactory->getById($id);
+
+        if (!$this->getUser()->checkEditable($playlist)) {
+            throw new AccessDeniedException();
+        }
+
+        $timeZones = [];
+        foreach (DateFormatHelper::timezoneList() as $key => $value) {
+            $timeZones[] = ['id' => $key, 'value' => $value];
+        }
+
+        $this->getState()->template = 'playlist-designer-page';
+        $this->getState()->setData([
+            'playlist'  => $playlist,
+            'timeZones' => $timeZones,
+            'modules'   => $this->moduleFactory->getAssignableModules(),
+        ]);
+
+        return $this->render($request, $response);
+    }
+
     #[OA\Post(
         path: '/playlist/library/assign/{playlistId}',
         operationId: 'playlistLibraryAssign',
@@ -1306,7 +1332,7 @@ class Playlist extends Base
                     }
 
                     $displays[] = $display;
-                    $displayIds = $display->displayId;
+                    $displayIds[] = $display->displayId;
                 }
             }
         }
@@ -1370,6 +1396,26 @@ class Playlist extends Base
         }
 
         $layouts = $this->layoutFactory->query(null, ['playlistId' => $id]);
+
+        // We need to generate preview URLs, base URL doesn't chagen between layouts
+        $baseUrl = (new HttpsDetect())->getBaseUrl($request);
+
+        foreach ($layouts as $layout) {
+            // Preview
+            // generate a JWT
+            $jwt = $this->jwtService->generateJwt(
+                'Preview',
+                'layout',
+                $layout->layoutId,
+                '/preview/layout/preview/' . $layout->layoutId,
+                3600,
+            )->toString();
+
+            $layout->setUnmatchedProperty(
+                'previewUrl',
+                $baseUrl . '/preview/layout/preview/' . $layout->layoutId . '?jwt=' . $jwt,
+            );
+        }
 
         if ($this->isApi($request) && $layouts == []) {
             $layouts = [

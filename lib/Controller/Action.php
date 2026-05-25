@@ -30,6 +30,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -338,15 +339,19 @@ class Action  extends Base
 
         $layout = $this->layoutFactory->getById($layoutId);
 
+        if (!$this->getUser()->checkEditable($layout)) {
+            throw new AccessDeniedException();
+        }
+
         // Make sure the Layout is checked out to begin with
         if (!$layout->isEditable()) {
             throw new InvalidArgumentException(__('Layout is not checked out'), 'statusId');
         }
 
         // restrict to one touch Action per source
-        if (
-            (!empty($source) && $sourceId !== null && !empty($triggerType))
-            && $this->actionFactory->checkIfActionExist($source, $sourceId, $triggerType)
+        if ($triggerType === 'touch' &&
+            (!empty($source) && $sourceId !== null && !empty($triggerType)) &&
+            $this->actionFactory->checkIfActionExist($source, $sourceId, $triggerType)
         ) {
             throw new InvalidArgumentException(__('Action with specified Trigger Type already exists'), 'triggerType');
         }
@@ -476,6 +481,10 @@ class Action  extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $layout = $this->layoutFactory->getById($action->layoutId);
 
+        if (!$this->getUser()->checkEditable($layout)) {
+            throw new AccessDeniedException();
+        }
+
         // Make sure the Layout is checked out to begin with
         if (!$layout->isEditable()) {
             throw new InvalidArgumentException(__('Layout is not checked out'), 'statusId');
@@ -491,8 +500,16 @@ class Action  extends Base
         $action->widgetId = $sanitizedParams->getInt('widgetId');
         $action->layoutCode = $sanitizedParams->getString('layoutCode');
         $action->validate();
+
         // restrict to one touch Action per source
-        if ($this->actionFactory->checkIfActionExist($action->source, $action->sourceId, $action->triggerType, $action->actionId)) {
+        if ($action->triggerType === 'touch' &&
+            $this->actionFactory->checkIfActionExist(
+                $action->source,
+                $action->sourceId,
+                $action->triggerType,
+                $action->actionId
+            )
+        ) {
             throw new InvalidArgumentException(__('Action with specified Trigger Type already exists'), 'triggerType');
         }
 
@@ -535,6 +552,10 @@ class Action  extends Base
     {
         $action = $this->actionFactory->getById($id);
         $layout = $this->layoutFactory->getById($action->layoutId);
+
+        if (!$this->getUser()->checkEditable($layout)) {
+            throw new AccessDeniedException();
+        }
 
         // Make sure the Layout is checked out to begin with
         if (!$layout->isEditable()) {

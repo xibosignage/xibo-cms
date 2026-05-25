@@ -36,7 +36,6 @@
         {# Import JS bundle from dist #}
         <script src="{{ theme.rootUri() }}dist/preview.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
         <script type="text/javascript" nonce="{{ cspNonce }}">
-
             var previewTranslations = {};
             // Translations we want always available
             {% autoescape "js" %}
@@ -53,14 +52,27 @@
             {% endautoescape %}
 
             {% set layoutObj = [{layoutId: layout.layoutId }] %}
-            {% set xlrOptions = previewOptions|merge({inPreview: true}) %}
+            {% set xlrOptions = previewOptions|merge({inPreview: true, previewJwt: previewJwt, platform: "CMS"}) %}
             (function($){
                 $(document).ready(function(){
-                    var xiboLayoutRenderer = new XiboLayoutRenderer({{ layoutObj|json_encode()|raw }}, {{ xlrOptions|json_encode()|raw }});
+                    var xiboLayoutRenderer = new XiboLayoutRenderer({{ layoutObj|json_encode()|raw }}, [], {{ xlrOptions|json_encode()|raw }});
     
-                    xiboLayoutRenderer.init().then(function(xlr) {
-                      xlr.playSchedules(xlr);
+                    xiboLayoutRenderer.init().then(async function(xlr) {
+                      await xlr.playSchedules(xlr);
                     });
+
+                    window.xlr = xiboLayoutRenderer;
+
+                  // Listen to post messages from the host document.
+                  // BroadcastChannel cannot cross distinct opaque origins in sandboxed iframes,
+                  // so we forward xiboDC messages to child widget iframes via postMessage instead.
+                  window.onmessage = function(e) {
+                    if (e.data.method === 'xiboDC') {
+                      document.querySelectorAll('iframe').forEach(function(iframe) {
+                        iframe.contentWindow.postMessage(e.data.options.data, '*');
+                      });
+                    }
+                  };
                 });
             }(window.jQuery));
         </script>

@@ -31,6 +31,7 @@ export default function MockModal({
   children,
   actions,
   onClose,
+  error,
 }: ModalProps) {
   useEffect(() => {
     if (!isOpen) return;
@@ -45,6 +46,7 @@ export default function MockModal({
   return (
     <div role="dialog" aria-label={title}>
       <h1>{title}</h1>
+      {error && <p role="alert">{error}</p>}
       {children}
       <div>
         {actions?.map((action, i) => (

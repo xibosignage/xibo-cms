@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { isAxiosError } from 'axios';
 import { useEffect, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -40,6 +41,7 @@ interface AddAndEditTemplateModalProps {
   type: 'add' | 'edit';
   isOpen?: boolean;
   data?: Template | null;
+  defaultFolderId?: number;
   onClose: () => void;
   onSave: (updated: Template) => void;
 }
@@ -69,6 +71,7 @@ export default function AddAndEditTemplateModal({
   isOpen = true,
   onClose,
   data,
+  defaultFolderId,
   onSave,
 }: AddAndEditTemplateModalProps) {
   const { t } = useTranslation();
@@ -89,7 +92,7 @@ export default function AddAndEditTemplateModal({
         resolutionId: null,
       };
     }
-    return DEFAULT_DRAFT;
+    return { ...DEFAULT_DRAFT, folderId: defaultFolderId ?? null };
   });
 
   useEffect(() => {
@@ -125,9 +128,9 @@ export default function AddAndEditTemplateModal({
         resolutionId: data.resolutionId,
       });
     } else {
-      setDraft(DEFAULT_DRAFT);
+      setDraft({ ...DEFAULT_DRAFT, folderId: defaultFolderId ?? null });
     }
-  }, [data, type]);
+  }, [data, type, defaultFolderId]);
 
   const resolutionOptions = resolutions.map((r) => ({
     label: r.resolution,
@@ -140,7 +143,7 @@ export default function AddAndEditTemplateModal({
       const result = schema.safeParse(draft);
 
       if (!result.success) {
-        setApiError(undefined);
+        setApiError(t('Please fix the highlighted errors before saving.'));
         const fieldErrors = result.error.flatten().fieldErrors;
         const mappedErrors: TemplateFormErrors = {};
 
@@ -189,10 +192,8 @@ export default function AddAndEditTemplateModal({
       } catch (err: unknown) {
         console.error('Failed to save playlist:', err);
 
-        const apiError = err as { response?: { data?: { message?: string } } };
-
-        if (apiError.response?.data?.message) {
-          setApiError(apiError.response.data.message);
+        if (isAxiosError(err) && err.response?.data?.message) {
+          setApiError(err.response.data.message);
         } else if (err instanceof Error) {
           setApiError(err.message);
         } else {

@@ -19,4 +19,4 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export type ViewMode = 'table' | 'grid' | 'map';
+export type ViewMode = 'table' | 'grid' | 'map' | 'calendar';

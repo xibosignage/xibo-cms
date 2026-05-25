@@ -29,6 +29,8 @@ use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TagFactory;
+use Xibo\Helper\HttpsDetect;
+use Xibo\Service\JwtServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
@@ -69,8 +71,14 @@ class Campaign extends Base
      * @param TagFactory $tagFactory
      * @param FolderFactory $folderFactory
      */
-    public function __construct($campaignFactory, $layoutFactory, $tagFactory, $folderFactory, $displayGroupFactory)
-    {
+    public function __construct(
+        $campaignFactory,
+        $layoutFactory,
+        $tagFactory,
+        $folderFactory,
+        $displayGroupFactory,
+        private readonly JwtServiceInterface $jwtService
+    ) {
         $this->campaignFactory = $campaignFactory;
         $this->layoutFactory = $layoutFactory;
         $this->tagFactory = $tagFactory;
@@ -529,7 +537,7 @@ class Campaign extends Base
         }
 
         // All done, save.
-        $campaign->save();
+        $campaign->save(['audit' => true]);
 
         // Return
         $this->getState()->hydrate([
@@ -794,7 +802,7 @@ class Campaign extends Base
         }
 
         // Save the campaign.
-        $campaign->save();
+        $campaign->save(['audit' => true]);
 
         // Return
         $this->getState()->hydrate([
@@ -964,6 +972,17 @@ class Campaign extends Base
         );
         $campaign->save(['validate' => false, 'saveTags' => false]);
 
+        // Audit
+        $this->getLog()->audit(
+            'Campaign',
+            $campaign->campaignId,
+            'Assigned Layout',
+            [
+                'layoutId' => $layout->layoutId,
+                'name' => $layout->layout,
+            ],
+        );
+
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
@@ -1072,6 +1091,16 @@ class Campaign extends Base
         $campaign->unassignLayout($layoutId, $displayOrder);
         $campaign->save(['validate' => false]);
 
+        // Audit
+        $this->getLog()->audit(
+            'Campaign',
+            $campaign->campaignId,
+            'Unassigned Layout',
+            [
+                'layoutId' => $layoutId,
+            ],
+        );
+
         return $this->render($request, $response);
     }
 
@@ -1088,23 +1117,29 @@ class Campaign extends Base
     public function preview(Request $request, Response $response, $id)
     {
         $campaign = $this->campaignFactory->getById($id);
+
+        if (!$this->getUser()->checkViewable($campaign)) {
+            throw new AccessDeniedException(__('You do not have permissions to preview the campaign.'));
+        }
+
         $layouts = $this->layoutFactory->getByCampaignId($id);
         $duration = 0 ;
         $extendedLayouts = [];
+        $baseUrl = (new HttpsDetect())->getBaseUrl($request);
 
-        foreach ($layouts as $layout)
-        {
+        foreach ($layouts as $layout) {
             $duration += $layout->duration;
             $extendedLayouts[] = [
                 'layout' => $layout,
                 'duration' => $layout->duration,
-                'previewOptions' => [
-                    'getXlfUrl' => $this->urlFor($request,'layout.getXlf', ['id' => $layout->layoutId]),
-                    'getResourceUrl' => $this->urlFor($request,'module.getResource', ['regionId' => ':regionId', 'id' => ':id']),
-                    'libraryDownloadUrl' => $this->urlFor($request,'library.download', ['id' => ':id']),
-                    'layoutBackgroundDownloadUrl' => $this->urlFor($request,'layout.download.background', ['id' => ':id']),
-                    'loaderUrl' => $this->getConfig()->uri('img/loader.gif')
-                ]
+                'previewUrl' => $baseUrl . '/preview/layout/preview/' . $layout->layoutId,
+                'previewJwt' => $this->jwtService->generateJwt(
+                    'Preview',
+                    'layout',
+                    $layout->layoutId,
+                    '/preview/layout/preview/' . $layout->layoutId,
+                    3600,
+                )->toString(),
             ];
         }
         $this->getState()->template = 'campaign-preview';

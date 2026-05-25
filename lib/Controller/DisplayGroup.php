@@ -43,6 +43,7 @@ use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\XMR\ChangeLayoutAction;
+use Xibo\XMR\ClearStatsAndLogsAction;
 use Xibo\XMR\CollectNowAction;
 use Xibo\XMR\CommandAction;
 use Xibo\XMR\OverlayLayoutAction;
@@ -142,21 +143,6 @@ class DisplayGroup extends Base
         $this->folderFactory = $folderFactory;
     }
 
-    /**
-     * Display Group Page Render
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function displayPage(Request $request, Response $response)
-    {
-        $this->getState()->template = 'displaygroup-page';
-
-        return $this->render($request, $response);
-    }
-
     #[OA\Get(
         path: '/displaygroup',
         operationId: 'displayGroupSearch',
@@ -240,439 +226,152 @@ class DisplayGroup extends Base
         required: false,
         schema: new OA\Schema(type: 'integer')
     )]
+    #[OA\Parameter(
+        name: 'keyword',
+        description: 'Filter by Display Group name or ID',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: [
+                'displayGroupId',
+                'displayGroup',
+                'description',
+                'isDynamic',
+                'dynamicCriteria',
+                'dynamicCriteriaTags',
+                'ref1',
+                'ref2',
+                'ref3',
+                'ref4',
+                'ref5',
+                'createdDt',
+                'modifiedDt',
+            ]
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
     #[OA\Response(
         response: 200,
         description: 'a successful response',
-        content: new OA\JsonContent(
-            type: 'array',
-            items: new OA\Items(ref: '#/components/schemas/DisplayGroup')
-        ),
         headers: [
             new OA\Header(
                 header: 'X-Total-Count',
                 description: 'The total number of records',
                 schema: new OA\Schema(type: 'integer')
             )
-        ]
+        ],
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/DisplayGroup')
+        )
     )]
     /**
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
-
-        $filter = [
-            'displayGroupId' => $parsedQueryParams->getInt('displayGroupId'),
-            'displayGroupIds' => $parsedQueryParams->getIntArray('displayGroupIds'),
-            'displayGroup' => $parsedQueryParams->getString('displayGroup'),
-            'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
-            'displayId' => $parsedQueryParams->getInt('displayId'),
-            'nestedDisplayId' => $parsedQueryParams->getInt('nestedDisplayId'),
-            'dynamicCriteria' => $parsedQueryParams->getString('dynamicCriteria'),
-            'tags' => $parsedQueryParams->getString('tags'),
-            'exactTags' => $parsedQueryParams->getCheckbox('exactTags'),
-            'isDisplaySpecific' => $parsedQueryParams->getInt('isDisplaySpecific'),
-            'displayGroupIdMembers' => $parsedQueryParams->getInt('displayGroupIdMembers'),
-            'userId' => $parsedQueryParams->getInt('userId'),
-            'isDynamic' => $parsedQueryParams->getInt('isDynamic'),
-            'folderId' => $parsedQueryParams->getInt('folderId'),
-            'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
-            'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
-            'displayIdMember' => $parsedQueryParams->getInt('displayIdMember'),
-        ];
-
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
 
+        $displayGroupsSortQuery = $this->gridRenderSort(
+            $parsedQueryParams,
+            $this->isJson($request),
+            'displayGroup'
+        );
+        $displayGroupsFilterQuery = $this->getDisplayGroupsFilterQuery($parsedQueryParams);
+
         $displayGroups = $this->displayGroupFactory->query(
-            $this->gridRenderSort($parsedQueryParams),
-            $this->gridRenderFilter($filter, $parsedQueryParams)
+            $displayGroupsSortQuery,
+            $displayGroupsFilterQuery
         );
 
         foreach ($displayGroups as $group) {
-            /* @var \Xibo\Entity\DisplayGroup $group */
-
             // Check to see if we're getting this data for a Schedule attempt, or for a general list
-            if ($parsedQueryParams->getCheckbox('forSchedule') == 1) {
-                // Can't schedule with view, but no edit permissions
-                if (!$scheduleWithView && !$this->getUser()->checkEditable($group)) {
-                    continue;
-                }
-            }
-
-            if ($this->isApi($request)) {
+            // Can't schedule with view, but no edit permissions
+            if (
+                $parsedQueryParams->getCheckbox('forSchedule') == 1 &&
+                !$scheduleWithView &&
+                !$this->getUser()->checkEditable($group)
+            ) {
                 continue;
             }
 
-            $group->includeProperty('buttons');
-
-            if ($this->getUser()->featureEnabled('displaygroup.modify')
-                && $this->getUser()->checkEditable($group)
-            ) {
-                // Show the edit button, members button
-                if ($group->isDynamic == 0) {
-                    // Group Members
-                    $group->buttons[] = [
-                        'id' => 'displaygroup_button_group_members',
-                        'url' => $this->urlFor(
-                            $request,
-                            'displayGroup.members.form',
-                            ['id' => $group->displayGroupId]
-                        ),
-                        'text' => __('Members')
-                    ];
-
-                    $group->buttons[] = ['divider' => true];
-                }
-
-                // Edit
-                $group->buttons[] = [
-                    'id' => 'displaygroup_button_edit',
-                    'url' => $this->urlFor($request, 'displayGroup.edit.form', ['id' => $group->displayGroupId]),
-                    'text' => __('Edit')
-                ];
-
-                $group->buttons[] = [
-                    'id' => 'displaygroup_button_copy',
-                    'url' => $this->urlFor($request, 'displayGroup.copy.form', ['id' => $group->displayGroupId]),
-                    'text' => __('Copy')
-                ];
-
-                if ($this->getUser()->featureEnabled('folder.view')) {
-                    // Select Folder
-                    $group->buttons[] = [
-                        'id' => 'displaygroup_button_selectfolder',
-                        'url' => $this->urlFor(
-                            $request,
-                            'displayGroup.selectfolder.form',
-                            ['id' => $group->displayGroupId]
-                        ),
-                        'text' => __('Select Folder'),
-                        'multi-select' => true,
-                        'dataAttributes' => [
-                            [
-                                'name' => 'commit-url',
-                                'value' => $this->urlFor(
-                                    $request,
-                                    'displayGroup.selectfolder',
-                                    ['id' => $group->displayGroupId]
-                                )
-                            ],
-                            ['name' => 'commit-method', 'value' => 'put'],
-                            ['name' => 'id', 'value' => 'displaygroup_button_selectfolder'],
-                            ['name' => 'text', 'value' => __('Move to Folder')],
-                            ['name' => 'rowtitle', 'value' => $group->displayGroup],
-                            ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
-                        ]
-                    ];
-                }
-            }
-
-            if ($this->getUser()->featureEnabled('displaygroup.modify')
-                && $this->getUser()->checkDeleteable($group)
-            ) {
-                // Show the delete button
-                $group->buttons[] = [
-                    'id' => 'displaygroup_button_delete',
-                    'url' => $this->urlFor($request, 'displayGroup.delete.form', ['id' => $group->displayGroupId]),
-                    'text' => __('Delete'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'displayGroup.delete',
-                                ['id' => $group->displayGroupId]
-                            )
-                        ],
-                        ['name' => 'commit-method', 'value' => 'delete'],
-                        ['name' => 'id', 'value' => 'displaygroup_button_delete'],
-                        ['name' => 'text', 'value' => __('Delete')],
-                        ['name' => 'sort-group', 'value' => 1],
-                        ['name' => 'rowtitle', 'value' => $group->displayGroup],
-                        ['name' => 'form-callback', 'value' => 'setDeleteMultiSelectFormOpen'],
-                        ['name' => 'form-confirm', 'value' => true]
-                    ]
-                ];
-            }
-
-            // Schedule
-            if ($this->getUser()->featureEnabled('schedule.add')
-                && ($this->getUser()->checkEditable($group)
-                    || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1)
-            ) {
-                $group->buttons[] = ['divider' => true];
-
-                $group->buttons[] = array(
-                    'id' => 'displaygroup_button_schedule',
-                    'url' => $this->urlFor(
-                        $request,
-                        'schedule.add.form',
-                        ['id' => $group->displayGroupId, 'from' => 'DisplayGroup']
-                    ),
-                    'text' => __('Schedule')
-                );
-            }
-
-            if ($this->getUser()->featureEnabled('displaygroup.modify')
-                && $this->getUser()->checkEditable($group)
-            ) {
-                $group->buttons[] = ['divider' => true];
-
-                // File Associations
-                $group->buttons[] = [
-                    'id' => 'displaygroup_button_fileassociations',
-                    'url' => $this->urlFor($request, 'displayGroup.media.form', ['id' => $group->displayGroupId]),
-                    'text' => __('Assign Files')
-                ];
-
-                // Layout Assignments
-                $group->buttons[] = [
-                    'id' => 'displaygroup_button_layout_associations',
-                    'url' => $this->urlFor($request, 'displayGroup.layout.form', ['id' => $group->displayGroupId]),
-                    'text' => __('Assign Layouts')
-                ];
-            }
-
-            if ($this->getUser()->featureEnabled('displaygroup.modify')
-                && $this->getUser()->checkPermissionsModifyable($group)
-            ) {
-                // Show the modify permissions button
-                $group->buttons[] = [
-                    'id' => 'displaygroup_button_permissions',
-                    'url' => $this->urlFor(
-                        $request,
-                        'user.permissions.form',
-                        ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId]
-                    ),
-                    'text' => __('Share'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'user.permissions.multi',
-                                ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId]
-                            )
-                        ],
-                        ['name' => 'commit-method', 'value' => 'post'],
-                        ['name' => 'id', 'value' => 'displaygroup_button_permissions'],
-                        ['name' => 'text', 'value' => __('Share')],
-                        ['name' => 'rowtitle', 'value' => $group->displayGroup],
-                        ['name' => 'sort-group', 'value' => 2],
-                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        [
-                            'name' => 'custom-handler-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'user.permissions.multi.form',
-                                ['entity' => 'DisplayGroup']
-                            )
-                        ],
-                        ['name' => 'content-id-name', 'value' => 'displayGroupId']
-                    ]
-                ];
-            }
-
-            // Check if limited view access is allowed
-            if (($this->getUser()->featureEnabled('displaygroup.modify') && $this->getUser()->checkEditable($group))
-                || $this->getUser()->featureEnabled('displaygroup.limitedView')
-            ) {
-
-                if ($this->getUser()->checkEditable($group)) {
-                    $group->buttons[] = ['divider' => true];
-                }
-
-                // Send command
-                $group->buttons[] = [
-                    'id' => 'displaygroup_button_command',
-                    'url' => $this->urlFor($request, 'displayGroup.command.form', ['id' => $group->displayGroupId]),
-                    'text' => __('Send Command'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'displayGroup.action.command',
-                                ['id' => $group->displayGroupId]
-                            )
-                        ],
-                        ['name' => 'commit-method', 'value' => 'post'],
-                        ['name' => 'id', 'value' => 'displaygroup_button_command'],
-                        ['name' => 'text', 'value' => __('Send Command')],
-                        ['name' => 'sort-group', 'value' => 3],
-                        ['name' => 'rowtitle', 'value' => $group->displayGroup],
-                        ['name' => 'form-callback', 'value' => 'sendCommandMultiSelectFormOpen']
-                    ]
-                ];
-
-                // Collect Now
-                $group->buttons[] = [
-                    'id' => 'displaygroup_button_collectNow',
-                    'url' => $this->urlFor($request, 'displayGroup.collectNow.form', ['id' => $group->displayGroupId]),
-                    'text' => __('Collect Now'),
-                    'dataAttributes' => [
-                        ['name' => 'auto-submit', 'value' => true],
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'displayGroup.action.collectNow',
-                                ['id' => $group->displayGroupId]
-                            )
-                        ],
-                    ]
-                ];
-
-                if ($this->getUser()->checkEditable($group)) {
-                    // Trigger webhook
-                    $group->buttons[] = [
-                        'id' => 'displaygroup_button_trigger_webhook',
-                        'url' => $this->urlFor(
-                            $request,
-                            'displayGroup.trigger.webhook.form',
-                            ['id' => $group->displayGroupId]
-                        ),
-                        'text' => __('Trigger a web hook'),
-                        'multi-select' => true,
-                        'dataAttributes' => [
-                            [
-                                'name' => 'commit-url',
-                                'value' => $this->urlFor(
-                                    $request,
-                                    'displayGroup.action.trigger.webhook',
-                                    ['id' => $group->displayGroupId]
-                                )
-                            ],
-                            ['name' => 'commit-method', 'value' => 'post'],
-                            ['name' => 'id', 'value' => 'displaygroup_button_trigger_webhook'],
-                            ['name' => 'text', 'value' => __('Trigger a web hook')],
-                            ['name' => 'rowtitle', 'value' => $group->displayGroup],
-                            ['name' => 'form-callback', 'value' => 'triggerWebhookMultiSelectFormOpen']
-                        ]
-                    ];
-                }
-            }
+            $group->setUnmatchedProperty(
+                'userPermissions',
+                $this->getUser()->getPermission($group)
+            );
         }
 
+        $recordsTotal = $this->displayGroupFactory->countLast();
+
+        if ($this->isApi($request) || $this->isJson($request)) {
+            return $response
+                ->withStatus(200)
+                ->withHeader('X-Total-Count', $recordsTotal)
+                ->withJson($displayGroups);
+        }
+
+        // TODO: Remove this once the display group page is complete
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->displayGroupFactory->countLast();
+        $this->getState()->recordsTotal = $recordsTotal;
         $this->getState()->setData($displayGroups);
 
         return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/displaygroup/{id}',
+        operationId: 'displayGroupSearchById',
+        description: 'Get the Display Group object specified by the provided displayGroupId',
+        summary: 'Display Group Search by ID',
+        tags: ['displayGroup']
+    )]
+    #[OA\Parameter(
+        name: 'displayGroupId',
+        description: 'Numeric ID of the Display Group to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/DisplayGroup')
+    )]
     /**
-     * Shows an add form for a display group
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function addForm(Request $request, Response $response)
-    {
-        $this->getState()->template = 'displaygroup-form-add';
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Shows an edit form for a display group
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
+     * @param int $id
+     * @return Response|ResponseInterface
+     * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function editForm(Request $request, Response $response, $id)
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
-        $displayGroup = $this->displayGroupFactory->getById($id);
+        $displayGroup = $this->displayGroupFactory->getById($id, false);
 
-        if (!$this->getUser()->checkEditable($displayGroup)) {
-            throw new AccessDeniedException();
-        }
+        $displayGroup->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($displayGroup));
 
-        $this->getState()->template = 'displaygroup-form-edit';
-        $this->getState()->setData([
-            'displayGroup' => $displayGroup,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Shows the Delete Group Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function deleteForm(Request $request, Response $response, $id)
-    {
-        $displayGroup = $this->displayGroupFactory->getById($id);
-
-        if (!$this->getUser()->checkDeleteable($displayGroup)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'displaygroup-form-delete';
-        $this->getState()->setData([
-            'displayGroup' => $displayGroup,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Display Group Members form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function membersForm(Request $request, Response $response, $id)
-    {
-        $displayGroup = $this->displayGroupFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($displayGroup)) {
-            throw new AccessDeniedException();
-        }
-
-        // Displays in Group
-        $displaysAssigned = $this->displayFactory->getByDisplayGroupId($displayGroup->displayGroupId);
-        // Get all the DisplayGroups assigned to this Group directly
-        $groupsAssigned = $this->displayGroupFactory->getByParentId($displayGroup->displayGroupId);
-
-        $this->getState()->template = 'displaygroup-form-members';
-        $this->getState()->setData([
-            'displayGroup' => $displayGroup,
-            'extra' => [
-                'displaysAssigned' => $displaysAssigned,
-                'displayGroupsAssigned' => $groupsAssigned
-            ],
-            'tree' => $this->displayGroupFactory->getRelationShipTree($id),
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(200)->withJson($displayGroup);
     }
 
     #[OA\Post(
@@ -683,9 +382,11 @@ class DisplayGroup extends Base
         tags: ['displayGroup']
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['displayGroup', 'isDynamic'],
                 properties: [
                     new OA\Property(property: 'displayGroup', description: 'The Display Group Name', type: 'string'),
                     new OA\Property(
@@ -733,33 +434,31 @@ class DisplayGroup extends Base
                         description: 'Folder ID to which this object should be assigned to',
                         type: 'integer'
                     )
-                ],
-                required: ['displayGroup', 'isDynamic']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(
         response: 201,
         description: 'successful operation',
-        content: new OA\JsonContent(ref: '#/components/schemas/DisplayGroup'),
         headers: [
             new OA\Header(
                 header: 'Location',
                 description: 'Location of the new DisplayGroup',
                 schema: new OA\Schema(type: 'string')
             )
-        ]
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/DisplayGroup')
     )]
     /**
      * Adds a Display Group
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function add(Request $request, Response $response)
+    public function add(Request $request, Response $response): Response|ResponseInterface
     {
         $displayGroup = $this->displayGroupFactory->createEmpty();
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -837,9 +536,11 @@ class DisplayGroup extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['displayGroup', 'isDynamic'],
                 properties: [
                     new OA\Property(property: 'displayGroup', description: 'The Display Group Name', type: 'string'),
                     new OA\Property(
@@ -892,11 +593,9 @@ class DisplayGroup extends Base
                     new OA\Property(property: 'ref3', description: 'Reference 3', type: 'string'),
                     new OA\Property(property: 'ref4', description: 'Reference 4', type: 'string'),
                     new OA\Property(property: 'ref5', description: 'Reference 5', type: 'string')
-                ],
-                required: ['displayGroup', 'isDynamic']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(
         response: 200,
@@ -908,13 +607,13 @@ class DisplayGroup extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function edit(Request $request,Response $response, $id)
+    public function edit(Request $request,Response $response, $id): Response|ResponseInterface
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
         $parsedRequestParams = $this->getSanitizer($request->getParams());
@@ -1026,13 +725,13 @@ class DisplayGroup extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    function delete(Request $request, Response $response, $id)
+    public function delete(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
         $displayGroup->load();
@@ -1072,27 +771,27 @@ class DisplayGroup extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['displayId'],
                 properties: [
                     new OA\Property(
                         property: 'displayId',
                         description: 'The Display Ids to assign',
-                        items: new OA\Items(type: 'integer'),
-                        type: 'array'
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
                     ),
                     new OA\Property(
                         property: 'unassignDisplayId',
                         description: 'An optional array of Display IDs to unassign',
-                        items: new OA\Items(type: 'integer'),
-                        type: 'array'
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
                     )
-                ],
-                required: ['displayId']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
@@ -1100,14 +799,14 @@ class DisplayGroup extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function assignDisplay(Request $request, Response $response, $id)
+    public function assignDisplay(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -1218,21 +917,21 @@ class DisplayGroup extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['displayId'],
                 properties: [
                     new OA\Property(
                         property: 'displayId',
                         description: 'The Display Ids to unassign',
-                        items: new OA\Items(type: 'integer'),
-                        type: 'array'
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
                     )
-                ],
-                required: ['displayId']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
@@ -1240,14 +939,14 @@ class DisplayGroup extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function unassignDisplay(Request $request, Response $response, $id)
+    public function unassignDisplay(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -1314,27 +1013,27 @@ class DisplayGroup extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['displayGroupId'],
                 properties: [
                     new OA\Property(
                         property: 'displayGroupId',
                         description: 'The displayGroup Ids to assign',
-                        items: new OA\Items(type: 'integer'),
-                        type: 'array'
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
                     ),
                     new OA\Property(
                         property: 'unassignDisplayGroupId',
                         description: 'An optional array of displayGroup IDs to unassign',
-                        items: new OA\Items(type: 'integer'),
-                        type: 'array'
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
                     )
-                ],
-                required: ['displayGroupId']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
@@ -1342,14 +1041,14 @@ class DisplayGroup extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function assignDisplayGroup(Request $request, Response $response, $id)
+    public function assignDisplayGroup(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -1428,21 +1127,21 @@ class DisplayGroup extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['displayGroupId'],
                 properties: [
                     new OA\Property(
                         property: 'displayGroupId',
                         description: 'The DisplayGroup Ids to unassign',
-                        items: new OA\Items(type: 'integer'),
-                        type: 'array'
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
                     )
-                ],
-                required: ['displayGroupId']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
@@ -1450,14 +1149,14 @@ class DisplayGroup extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function unassignDisplayGroup(Request $request, Response $response, $id)
+    public function unassignDisplayGroup(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -1501,39 +1200,6 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
-    /**
-     * Media Form (media linked to displays)
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function mediaForm(Request $request, Response $response, $id)
-    {
-        $displayGroup = $this->displayGroupFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($displayGroup)) {
-            throw new AccessDeniedException();
-        }
-
-        // Load the groups details
-        $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
-        $displayGroup->load();
-
-        $this->getState()->template = 'displaygroup-form-media';
-        $this->getState()->setData([
-            'displayGroup' => $displayGroup,
-            'modules' => $this->moduleFactory->getLibraryModules(),
-            'media' => $displayGroup->media,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
     #[OA\Post(
         path: '/displaygroup/{displayGroupId}/media/assign',
         operationId: 'displayGroupMediaAssign',
@@ -1549,27 +1215,27 @@ class DisplayGroup extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['mediaId'],
                 properties: [
                     new OA\Property(
                         property: 'mediaId',
                         description: 'The Media Ids to assign',
-                        items: new OA\Items(type: 'integer'),
-                        type: 'array'
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
                     ),
                     new OA\Property(
                         property: 'unassignMediaId',
                         description: 'Optional array of Media Id to unassign',
-                        items: new OA\Items(type: 'integer'),
-                        type: 'array'
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
                     )
-                ],
-                required: ['mediaId']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
@@ -1577,13 +1243,13 @@ class DisplayGroup extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function assignMedia(Request $request, Response $response, $id)
+    public function assignMedia(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -1604,7 +1270,8 @@ class DisplayGroup extends Base
             $media = $this->mediaFactory->getById($mediaId);
 
             if (!$this->getUser()->checkViewable($media)) {
-                throw new AccessDeniedException(__('You have selected media that you no longer have permission to use. Please reload the form.'));
+                throw new AccessDeniedException(__('You have selected media that you no longer have 
+                    permission to use. Please reload the form.'));
             }
 
             $displayGroup->assignMedia($media);
@@ -1618,7 +1285,8 @@ class DisplayGroup extends Base
             $media = $this->mediaFactory->getById($mediaId);
 
             if (!$this->getUser()->checkViewable($media)) {
-                throw new AccessDeniedException(__('You have selected media that you no longer have permission to use. Please reload the form.'));
+                throw new AccessDeniedException(__('You have selected media that you no longer have 
+                    permission to use. Please reload the form.'));
             }
 
             $displayGroup->unassignMedia($media);
@@ -1652,21 +1320,21 @@ class DisplayGroup extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['mediaId'],
                 properties: [
                     new OA\Property(
                         property: 'mediaId',
                         description: 'The Media Ids to unassign',
-                        items: new OA\Items(type: 'integer'),
-                        type: 'array'
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
                     )
-                ],
-                required: ['mediaId']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
@@ -1674,13 +1342,13 @@ class DisplayGroup extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function unassignMedia(Request $request, Response $response, $id)
+    public function unassignMedia(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -1713,38 +1381,6 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
-    /**
-     * Layouts Form (layouts linked to displays)
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function LayoutsForm(Request $request, Response $response, $id)
-    {
-        $displayGroup = $this->displayGroupFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($displayGroup)) {
-            throw new AccessDeniedException();
-        }
-
-        // Load the groups details
-        $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
-        $displayGroup->load();
-
-        $this->getState()->template = 'displaygroup-form-layouts';
-        $this->getState()->setData([
-            'displayGroup' => $displayGroup,
-            'layouts' => $this->layoutFactory->getByDisplayGroupId($displayGroup->displayGroupId),
-        ]);
-
-        return $this->render($request, $response);
-    }
-
     #[OA\Post(
         path: '/displaygroup/{displayGroupId}/layout/assign',
         operationId: 'displayGroupLayoutsAssign',
@@ -1760,27 +1396,27 @@ class DisplayGroup extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['layoutId'],
                 properties: [
                     new OA\Property(
                         property: 'layoutId',
                         description: 'The Layouts Ids to assign',
-                        items: new OA\Items(type: 'integer'),
-                        type: 'array'
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
                     ),
                     new OA\Property(
                         property: 'unassignLayoutId',
                         description: 'Optional array of Layouts Id to unassign',
-                        items: new OA\Items(type: 'integer'),
-                        type: 'array'
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
                     )
-                ],
-                required: ['layoutId']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
@@ -1788,13 +1424,13 @@ class DisplayGroup extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function assignLayouts(Request $request, Response $response, $id)
+    public function assignLayouts(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -1815,7 +1451,8 @@ class DisplayGroup extends Base
             $layout = $this->layoutFactory->getById($layoutId);
 
             if (!$this->getUser()->checkViewable($layout)) {
-                throw new AccessDeniedException(__('You have selected a layout that you no longer have permission to use. Please reload the form.'));
+                throw new AccessDeniedException(__('You have selected a layout that you no longer 
+                    have permission to use. Please reload the form.'));
             }
 
             $displayGroup->assignLayout($layout);
@@ -1827,7 +1464,8 @@ class DisplayGroup extends Base
             $layout = $this->layoutFactory->getById($layoutId);
 
             if (!$this->getUser()->checkViewable($layout)) {
-                throw new AccessDeniedException(__('You have selected a layout that you no longer have permission to use. Please reload the form.'));
+                throw new AccessDeniedException(__('You have selected a layout that you no longer 
+                    have permission to use. Please reload the form.'));
             }
 
             $displayGroup->unassignLayout($layout);
@@ -1861,21 +1499,21 @@ class DisplayGroup extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['layoutId'],
                 properties: [
                     new OA\Property(
                         property: 'layoutId',
                         description: 'The Layout Ids to unassign',
-                        items: new OA\Items(type: 'integer'),
-                        type: 'array'
+                        type: 'array',
+                        items: new OA\Items(type: 'integer')
                     )
-                ],
-                required: ['layoutId']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
@@ -1883,13 +1521,13 @@ class DisplayGroup extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function unassignLayouts(Request $request, Response $response, $id)
+    public function unassignLayouts(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -1923,38 +1561,6 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function collectNowForm(Request $request, Response $response, $id)
-    {
-        $displayGroup = $this->displayGroupFactory->getById($id);
-
-        // Non-destructive edit-only feature; allow limited view access
-        if (
-            !$this->getUser()->checkEditable($displayGroup)
-            && !$this->getUser()->featureEnabled('displays.limitedView')
-            && !$this->getUser()->featureEnabled('displaygroup.limitedView')
-        ) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'displaygroup-form-collect-now';
-        $this->getState()->autoSubmit = $this->getAutoSubmit('displayGroupCollectNow');
-        $this->getState()->setData([
-            'displayGroup' => $displayGroup
-        ]);
-
-        return $this->render($request, $response);
-    }
-
     #[OA\Post(
         path: '/displaygroup/{displayGroupId}/action/collectNow',
         operationId: 'displayGroupActionCollectNow',
@@ -1975,19 +1581,18 @@ class DisplayGroup extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function collectNow(Request $request, Response $response, $id)
+    public function collectNow(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
 
         // Non-destructive edit-only feature; allow limited view access
-        if (
-            !$this->getUser()->checkEditable($displayGroup)
+        if (!$this->getUser()->checkEditable($displayGroup)
             && !$this->getUser()->featureEnabled('displays.limitedView')
             && !$this->getUser()->featureEnabled('displaygroup.limitedView')
         ) {
@@ -2026,13 +1631,13 @@ class DisplayGroup extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function clearStatsAndLogs(Request $request, Response $response, $id)
+    public function clearStatsAndLogs(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
 
@@ -2040,7 +1645,7 @@ class DisplayGroup extends Base
             throw new AccessDeniedException();
         }
 
-        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($id), new CollectNowAction());
+        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($id), new ClearStatsAndLogsAction());
 
         // Return
         $this->getState()->hydrate([
@@ -2067,9 +1672,11 @@ class DisplayGroup extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['changeMode'],
                 properties: [
                     new OA\Property(
                         property: 'layoutId',
@@ -2096,11 +1703,9 @@ class DisplayGroup extends Base
                         description: 'Whether to queue or replace with this action. Queuing will keep the current change layout action and switch after it is finished. If no active change layout action is present, both options are actioned immediately', // phpcs:ignore
                         type: 'string'
                     )
-                ],
-                required: ['changeMode']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
@@ -2108,14 +1713,14 @@ class DisplayGroup extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function changeLayout(Request $request, Response $response, $id)
+    public function changeLayout(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -2159,7 +1764,11 @@ class DisplayGroup extends Base
         }
 
         // Check to see if this layout is assigned to this display group.
-        if (count($this->layoutFactory->query(null, ['disableUserCheck' => 1, 'layoutId' => $layout->layoutId, 'displayGroupId' => $id])) <= 0) {
+        if (count($this->layoutFactory->query(null, [
+            'disableUserCheck' => 1,
+            'layoutId' => $layout->layoutId,
+            'displayGroupId' => $id])) <= 0
+        ) {
             // Assign
             $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
             $displayGroup->load();
@@ -2188,12 +1797,15 @@ class DisplayGroup extends Base
         }
 
         // Create and send the player action
-        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($id), (new ChangeLayoutAction())->setLayoutDetails(
-            $layout->layoutId,
-            $sanitizedParams->getInt('duration'),
-            $downloadRequired,
-            $sanitizedParams->getString('changeMode', ['default' => 'queue'])
-        ));
+        $this->playerAction->sendAction(
+            $this->displayFactory->getByDisplayGroupId($id),
+            (new ChangeLayoutAction())->setLayoutDetails(
+                $layout->layoutId,
+                $sanitizedParams->getInt('duration'),
+                $downloadRequired,
+                $sanitizedParams->getString('changeMode', ['default' => 'queue'])
+            )
+        );
 
         // Return
         $this->getState()->hydrate([
@@ -2225,13 +1837,13 @@ class DisplayGroup extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function revertToSchedule(Request $request, Response $response, $id)
+    public function revertToSchedule(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
 
@@ -2266,9 +1878,11 @@ class DisplayGroup extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['layoutId'],
                 properties: [
                     new OA\Property(
                         property: 'layoutId',
@@ -2290,11 +1904,9 @@ class DisplayGroup extends Base
                         description: 'Whether to queue or replace with this action. Queuing will keep the current change layout action and switch after it is finished. If no active change layout action is present, both options are actioned immediately', // phpcs:ignore
                         type: 'integer'
                     )
-                ],
-                required: ['layoutId']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
@@ -2302,14 +1914,14 @@ class DisplayGroup extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function overlayLayout(Request $request, Response $response, $id)
+    public function overlayLayout(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -2353,7 +1965,11 @@ class DisplayGroup extends Base
         }
 
         // Check to see if this layout is assigned to this display group.
-        if (count($this->layoutFactory->query(null, ['disableUserCheck' => 1, 'layoutId' => $layout->layoutId, 'displayGroupId' => $id])) <= 0) {
+        if (count($this->layoutFactory->query(null, [
+            'disableUserCheck' => 1,
+            'layoutId' => $layout->layoutId,
+            'displayGroupId' => $id])) <= 0
+        ) {
             // Assign
             $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
             $displayGroup->load();
@@ -2378,58 +1994,20 @@ class DisplayGroup extends Base
             }
         }
 
-        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($id), (new OverlayLayoutAction())->setLayoutDetails(
-            $layout->layoutId,
-            $sanitizedParams->getInt('duration'),
-            $downloadRequired
-        ));
+        $this->playerAction->sendAction(
+            $this->displayFactory->getByDisplayGroupId($id),
+            (new OverlayLayoutAction())->setLayoutDetails(
+                $layout->layoutId,
+                $sanitizedParams->getInt('duration'),
+                $downloadRequired
+            )
+        );
 
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => sprintf(__('Command Sent to %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Command Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function commandForm(Request $request, Response $response, $id)
-    {
-        $displayGroup = $this->displayGroupFactory->getById($id);
-
-        // Non-destructive edit-only feature; allow limited view access
-        if (
-            !$this->getUser()->checkEditable($displayGroup)
-            && !$this->getUser()->featureEnabled('displaygroup.limitedView')
-            && !$this->getUser()->featureEnabled('displays.limitedView')
-        ) {
-            throw new AccessDeniedException();
-        }
-
-        // Are we a Display Specific Group? If so, then we should restrict the List of commands to those available.
-        if ($displayGroup->isDisplaySpecific == 1) {
-            $display = $this->displayFactory->getByDisplayGroupId($displayGroup->displayGroupId);
-            $commands = $this->commandFactory->query(null, ['type' => $display[0]->clientType]);
-        } else {
-            $commands = $this->commandFactory->query();
-        }
-
-        $this->getState()->template = 'displaygroup-form-command';
-        $this->getState()->setData([
-            'displayGroup' => $displayGroup,
-            'commands' => $commands
         ]);
 
         return $this->render($request, $response);
@@ -2450,36 +2028,35 @@ class DisplayGroup extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['commandId'],
                 properties: [
                     new OA\Property(property: 'commandId', description: 'The Command Id', type: 'integer')
-                ],
-                required: ['commandId']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function command(Request $request, Response $response, $id)
+    public function command(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Non-destructive edit-only feature; allow limited view access
-        if (
-            !$this->getUser()->checkEditable($displayGroup)
+        if (!$this->getUser()->checkEditable($displayGroup)
             && !$this->getUser()->featureEnabled('displaygroup.limitedView')
             && !$this->getUser()->featureEnabled('displays.limitedView')
         ) {
@@ -2493,7 +2070,6 @@ class DisplayGroup extends Base
 
         // Update the flag
         foreach ($displays as $display) {
-            /* @var \Xibo\Entity\Display $display */
             $display->lastCommandSuccess = 0;
             $display->save(['validate' => false, 'audit' => false]);
         }
@@ -2503,33 +2079,6 @@ class DisplayGroup extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Command Sent to %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function copyForm(Request $request, Response $response, $id)
-    {
-        // Create a form out of the config object.
-        $displayGroup = $this->displayGroupFactory->getById($id);
-
-        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayGroup->userId) {
-            throw new AccessDeniedException(__('You do not have permission to delete this profile'));
-        }
-
-        $this->getState()->template = 'displaygroup-form-copy';
-        $this->getState()->setData([
-            'displayGroup' => $displayGroup
         ]);
 
         return $this->render($request, $response);
@@ -2550,9 +2099,11 @@ class DisplayGroup extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['displayGroup'],
                 properties: [
                     new OA\Property(property: 'displayGroup', description: 'The name for the copy', type: 'string'),
                     new OA\Property(
@@ -2575,36 +2126,34 @@ class DisplayGroup extends Base
                         description: 'Flag indicating whether to copy all tags',
                         type: 'integer'
                     )
-                ],
-                required: ['displayGroup']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(
         response: 201,
         description: 'successful operation',
-        content: new OA\JsonContent(ref: '#/components/schemas/DisplayGroup'),
         headers: [
             new OA\Header(
                 header: 'Location',
                 description: 'Location of the new record',
                 schema: new OA\Schema(type: 'string')
             )
-        ]
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/DisplayGroup')
     )]
     /**
      * Copy Display Group
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function copy(Request $request, Response $response, $id)
+    public function copy(Request $request, Response $response, $id): Response|ResponseInterface
     {
         // get display group object
         $displayGroup = $this->displayGroupFactory->getById($id);
@@ -2671,37 +2220,6 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
-    /**
-     * Select Folder Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function selectFolderForm(Request $request, Response $response, $id)
-    {
-        // Get the Display Group
-        $displayGroup = $this->displayGroupFactory->getById($id);
-
-        // Check Permissions
-        if (!$this->getUser()->checkEditable($displayGroup)) {
-            throw new AccessDeniedException();
-        }
-
-        $data = [
-            'displayGroup' => $displayGroup
-        ];
-
-        $this->getState()->template = 'displaygroup-form-selectfolder';
-        $this->getState()->setData($data);
-
-        return $this->render($request, $response);
-    }
-
     #[OA\Put(
         path: '/displaygroup/{id}/selectfolder',
         operationId: 'displayGroupSelectFolder',
@@ -2717,6 +2235,7 @@ class DisplayGroup extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
@@ -2728,8 +2247,7 @@ class DisplayGroup extends Base
                     )
                 ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(
         response: 200,
@@ -2741,14 +2259,14 @@ class DisplayGroup extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function selectFolder(Request $request, Response $response, $id)
+    public function selectFolder(Request $request, Response $response, $id): Response|ResponseInterface
     {
         // Get the Display Group
         $displayGroup = $this->displayGroupFactory->getById($id);
@@ -2788,32 +2306,6 @@ class DisplayGroup extends Base
         return $this->render($request, $response);
     }
 
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function triggerWebhookForm(Request $request, Response $response, $id)
-    {
-        $displayGroup = $this->displayGroupFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($displayGroup)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'displaygroup-form-trigger-webhook';
-        $this->getState()->setData([
-            'displayGroup' => $displayGroup
-        ]);
-
-        return $this->render($request, $response);
-    }
-
     #[OA\Post(
         path: '/displaygroup/{displayGroupId}/action/triggerWebhook',
         operationId: 'displayGroupActionTriggerWebhook',
@@ -2829,20 +2321,20 @@ class DisplayGroup extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['triggerCode'],
                 properties: [
                     new OA\Property(
                         property: 'triggerCode',
                         description: 'The trigger code that should be sent to the Player',
                         type: 'string'
                     )
-                ],
-                required: ['triggerCode']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
@@ -2851,13 +2343,13 @@ class DisplayGroup extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function triggerWebhook(Request $request, Response $response, $id)
+    public function triggerWebhook(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $displayGroup = $this->displayGroupFactory->getById($id);
@@ -2889,7 +2381,7 @@ class DisplayGroup extends Base
     #[OA\Post(
         path: '/displaygroup/criteria[/{displayGroupId}]',
         operationId: 'ScheduleCriteriaUpdate',
-        description: 'Send criteria updates to the specified DisplayGroup or to all displays if displayGroupId is not                  provided.', // phpcs:ignore
+        description: 'Send criteria updates to the specified DisplayGroup or to all displays if displayGroupId is not provided.', // phpcs:ignore
         summary: 'Action: Push Criteria Update',
         tags: ['displayGroup']
     )]
@@ -2901,6 +2393,7 @@ class DisplayGroup extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(
@@ -2911,8 +2404,7 @@ class DisplayGroup extends Base
                 ],
                 type: 'object'
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(response: 204, description: 'Successful operation')]
     #[OA\Response(response: 400, description: 'Invalid criteria format')]
@@ -2926,8 +2418,17 @@ class DisplayGroup extends Base
      * @throws NotFoundException
      * @throws PlayerActionException
      */
-    public function pushCriteriaUpdate(Request $request, Response $response, int $displayGroupId): Response|ResponseInterface
-    {
+    public function pushCriteriaUpdate(
+        Request $request,
+        Response $response,
+        int $displayGroupId
+    ): Response|ResponseInterface {
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup)) {
+            throw new AccessDeniedException();
+        }
+
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Get criteria updates
@@ -2980,5 +2481,164 @@ class DisplayGroup extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Get the display group commands
+     * @param Request $request
+     * @param Response $response
+     * @param int $id
+     * @return Response|ResponseInterface
+     * @throws AccessDeniedException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function getDisplayGroupCommands(Request $request, Response $response, int $id): Response|ResponseInterface
+    {
+        $displayGroup = $this->displayGroupFactory->getById($id);
+
+        // Non-destructive edit-only feature; allow limited view access
+        if (
+            !$this->getUser()->checkEditable($displayGroup)
+            && !$this->getUser()->featureEnabled('displaygroup.limitedView')
+            && !$this->getUser()->featureEnabled('displays.limitedView')
+        ) {
+            throw new AccessDeniedException();
+        }
+
+        // Are we a Display Specific Group? If so, restrict commands to those available for that display type.
+        if ($displayGroup->isDisplaySpecific == 1) {
+            $display = $this->displayFactory->getByDisplayGroupId($displayGroup->displayGroupId);
+            $commands = $this->commandFactory->query(null, ['type' => $display[0]->clientType]);
+        } else {
+            $commands = $this->commandFactory->query();
+        }
+
+        return $response->withStatus(200)->withJson($commands);
+    }
+
+    /**
+     * Get the displays assigned in the display group
+     * @param Request $request
+     * @param Response $response
+     * @param int $id
+     * @return Response|ResponseInterface
+     * @throws AccessDeniedException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function getDisplaysAssigned(Request $request, Response $response, int $id): Response|ResponseInterface
+    {
+        $displayGroup = $this->displayGroupFactory->getById($id);
+
+        if (!$this->getUser()->checkEditable($displayGroup)) {
+            throw new AccessDeniedException();
+        }
+
+        $displaysAssigned = $this->displayFactory->getByDisplayGroupId($displayGroup->displayGroupId);
+
+        return $response->withStatus(200)->withJson($displaysAssigned);
+    }
+
+    /**
+     * Get the groups assigned in the display group
+     * @param Request $request
+     * @param Response $response
+     * @param int $id
+     * @return Response|ResponseInterface
+     * @throws AccessDeniedException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function getDisplayGroupAssigned(Request $request, Response $response, int $id): Response|ResponseInterface
+    {
+        $displayGroup = $this->displayGroupFactory->getById($id);
+
+        if (!$this->getUser()->checkEditable($displayGroup)) {
+            throw new AccessDeniedException();
+        }
+
+        $groupsAssigned = $this->displayGroupFactory->getByParentId($displayGroup->displayGroupId);
+
+        return $response->withStatus(200)->withJson($groupsAssigned);
+    }
+
+    /**
+     * Get the display group relationship tree
+     * @param Request $request
+     * @param Response $response
+     * @param int $id
+     * @return Response|ResponseInterface
+     * @throws AccessDeniedException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function getDisplayGroupRelationShipTree(Request $request, Response $response, int $id): Response|ResponseInterface
+    {
+        $displayGroup = $this->displayGroupFactory->getById($id);
+
+        if (!$this->getUser()->checkEditable($displayGroup)) {
+            throw new AccessDeniedException();
+        }
+
+        $tree = $this->displayGroupFactory->getRelationShipTree($id);
+
+        return $response->withStatus(200)->withJson($tree);
+    }
+
+    /**
+     * Get the display group layouts
+     * @param Request $request
+     * @param Response $response
+     * @param int $id
+     * @return Response|ResponseInterface
+     * @throws AccessDeniedException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function getDisplayGroupLayout(Request $request, Response $response, int $id): Response|ResponseInterface
+    {
+        $displayGroup = $this->displayGroupFactory->getById($id);
+
+        if (!$this->getUser()->checkEditable($displayGroup)) {
+            throw new AccessDeniedException();
+        }
+
+        // Load the groups details
+        $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
+        $displayGroup->load();
+
+        $layouts = $this->layoutFactory->getByDisplayGroupId($displayGroup->displayGroupId);
+
+        return $response->withStatus(200)->withJson($layouts);
+    }
+
+    /**
+     * Get the display group filter query
+     * @param $parsedQueryParams
+     * @return array
+     */
+    private function getDisplayGroupsFilterQuery($parsedQueryParams): array
+    {
+        return $this->gridRenderFilter([
+            'displayGroupId' => $parsedQueryParams->getInt('displayGroupId'),
+            'displayGroupIds' => $parsedQueryParams->getIntArray('displayGroupIds'),
+            'displayGroup' => $parsedQueryParams->getString('displayGroup'),
+            'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
+            'displayId' => $parsedQueryParams->getInt('displayId'),
+            'nestedDisplayId' => $parsedQueryParams->getInt('nestedDisplayId'),
+            'dynamicCriteria' => $parsedQueryParams->getString('dynamicCriteria'),
+            'tags' => $parsedQueryParams->getString('tags'),
+            'exactTags' => $parsedQueryParams->getCheckbox('exactTags'),
+            'isDisplaySpecific' => $parsedQueryParams->getInt('isDisplaySpecific'),
+            'displayGroupIdMembers' => $parsedQueryParams->getInt('displayGroupIdMembers'),
+            'userId' => $parsedQueryParams->getInt('userId'),
+            'isDynamic' => $parsedQueryParams->getInt('isDynamic'),
+            'folderId' => $parsedQueryParams->getInt('folderId'),
+            'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
+            'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
+            'displayIdMember' => $parsedQueryParams->getInt('displayIdMember'),
+            'keyword' => $parsedQueryParams->getString('keyword'),
+        ], $parsedQueryParams);
     }
 }
