@@ -19,7 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import { isAxiosError } from 'axios';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AndroidFields } from './fields/AndroidFields';
@@ -47,8 +48,10 @@ type ConfigValue = string | number | null;
 type FlatConfig = Record<string, ConfigValue>;
 
 function getApiErrorMessage(err: unknown, fallback: string): string {
-  const e = err as { response?: { data?: { message?: string } } };
-  return e.response?.data?.message ?? (err instanceof Error ? err.message : fallback);
+  return (
+    (isAxiosError(err) && err.response?.data?.message) ||
+    (err instanceof Error ? err.message : fallback)
+  );
 }
 
 interface EditDraft {
@@ -133,6 +136,20 @@ export default function EditDisplayProfileModal({
   const playerVersionsPageRef = useRef(0);
   const playerVersionTypeRef = useRef<string | null>(null);
 
+  const [daypartSearch, setDaypartSearch] = useState('');
+  const daypartSearchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const handleDaypartSearch = (term: string) => {
+    clearTimeout(daypartSearchTimerRef.current);
+    daypartSearchTimerRef.current = setTimeout(() => setDaypartSearch(term), 300);
+  };
+
+  const [playerVersionSearch, setPlayerVersionSearch] = useState('');
+  const playerVersionSearchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const handlePlayerVersionSearch = (term: string) => {
+    clearTimeout(playerVersionSearchTimerRef.current);
+    playerVersionSearchTimerRef.current = setTimeout(() => setPlayerVersionSearch(term), 300);
+  };
+
   useEffect(() => {
     if (!isOpen || !data) {
       return;
@@ -142,13 +159,9 @@ export default function EditDisplayProfileModal({
     setApiError(undefined);
     setNameError(undefined);
     setIsLoading(true);
+    setDaypartSearch('');
+    setPlayerVersionSearch('');
 
-    setDayparts([]);
-    setDaypartsTotalCount(0);
-    daypartsPageRef.current = 0;
-    setPlayerVersions([]);
-    setPlayerVersionsTotalCount(0);
-    playerVersionsPageRef.current = 0;
     setTimerRows([{ id: 0, day: '', on: '', off: '' }]);
     setPictureOptionRows([{ id: 0, property: '', value: 0 }]);
     setLockOptionsState({
@@ -237,41 +250,81 @@ export default function EditDisplayProfileModal({
       }
     });
 
-    const daypartPromise = fetchDaypart({ start: 0, length: PAGE_SIZE, isAlways: 0, isCustom: 0 })
-      .then((res) => {
-        setDayparts(res.rows);
-        setDaypartsTotalCount(res.totalCount);
-        daypartsPageRef.current = 1;
-      })
-      .catch(() => setDayparts([]));
-
-    const playerVersionType =
-      data.type === 'chromeOS'
-        ? 'chromeOS'
-        : data.type === 'android' || data.type === 'lg' || data.type === 'sssp'
-          ? data.type
-          : null;
-
-    playerVersionTypeRef.current = playerVersionType;
-
-    const playerVersionPromise = playerVersionType
-      ? fetchPlayerSoftware({ playerType: playerVersionType, start: 0, length: PAGE_SIZE })
-          .then((res) => {
-            setPlayerVersions(res.rows);
-            setPlayerVersionsTotalCount(res.totalCount);
-            playerVersionsPageRef.current = 1;
-          })
-          .catch(() => setPlayerVersions([]))
-      : Promise.resolve();
-
-    Promise.all([profilePromise, daypartPromise, playerVersionPromise])
+    profilePromise
       .catch((err: unknown) => {
         setApiError(getApiErrorMessage(err, t('Failed to load profile settings.')));
       })
       .finally(() => setIsLoading(false));
   }, [isOpen, data, t]);
 
-  const handleLoadMoreDayparts = useCallback(() => {
+  useEffect(() => {
+    if (!isOpen || !data) {
+      return;
+    }
+    let cancelled = false;
+    setDayparts([]);
+    daypartsPageRef.current = 0;
+    setDaypartsTotalCount(0);
+    fetchDaypart({
+      start: 0,
+      length: PAGE_SIZE,
+      isAlways: 0,
+      isCustom: 0,
+      name: daypartSearch || undefined,
+    })
+      .then((res) => {
+        if (cancelled) {
+          return;
+        }
+        setDayparts(res.rows);
+        setDaypartsTotalCount(res.totalCount);
+        daypartsPageRef.current = 1;
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, data?.displayProfileId, daypartSearch]);
+
+  useEffect(() => {
+    if (!isOpen || !data) {
+      return;
+    }
+    const playerVersionType =
+      data.type === 'chromeOS'
+        ? 'chromeOS'
+        : data.type === 'android' || data.type === 'lg' || data.type === 'sssp'
+          ? data.type
+          : null;
+    if (!playerVersionType) {
+      return;
+    }
+    playerVersionTypeRef.current = playerVersionType;
+    let cancelled = false;
+    setPlayerVersions([]);
+    setPlayerVersionsTotalCount(0);
+    playerVersionsPageRef.current = 0;
+    fetchPlayerSoftware({
+      playerType: playerVersionType,
+      start: 0,
+      length: PAGE_SIZE,
+      keyword: playerVersionSearch || undefined,
+    })
+      .then((res) => {
+        if (cancelled) {
+          return;
+        }
+        setPlayerVersions(res.rows);
+        setPlayerVersionsTotalCount(res.totalCount);
+        playerVersionsPageRef.current = 1;
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, data?.displayProfileId, playerVersionSearch]);
+
+  const handleLoadMoreDayparts = () => {
     if (isLoadingMoreDayparts || dayparts.length >= daypartsTotalCount) {
       return;
     }
@@ -281,6 +334,7 @@ export default function EditDisplayProfileModal({
       length: PAGE_SIZE,
       isAlways: 0,
       isCustom: 0,
+      name: daypartSearch || undefined,
     })
       .then((res) => {
         setDayparts((prev) => [...prev, ...res.rows]);
@@ -289,9 +343,9 @@ export default function EditDisplayProfileModal({
       })
       .catch(() => {})
       .finally(() => setIsLoadingMoreDayparts(false));
-  }, [isLoadingMoreDayparts, dayparts.length, daypartsTotalCount]);
+  };
 
-  const handleLoadMorePlayerVersions = useCallback(() => {
+  const handleLoadMorePlayerVersions = () => {
     const playerVersionType = playerVersionTypeRef.current;
     if (
       !playerVersionType ||
@@ -305,6 +359,7 @@ export default function EditDisplayProfileModal({
       playerType: playerVersionType,
       start: playerVersionsPageRef.current * PAGE_SIZE,
       length: PAGE_SIZE,
+      keyword: playerVersionSearch || undefined,
     })
       .then((res) => {
         setPlayerVersions((prev) => [...prev, ...res.rows]);
@@ -313,7 +368,7 @@ export default function EditDisplayProfileModal({
       })
       .catch(() => {})
       .finally(() => setIsLoadingMorePlayerVersions(false));
-  }, [isLoadingMorePlayerVersions, playerVersions.length, playerVersionsTotalCount]);
+  };
 
   const str = (key: string): string => String(draft.config[key] ?? configDefaults[key] ?? '');
   const num = (key: string): number => Number(draft.config[key] ?? configDefaults[key] ?? 0);
@@ -340,7 +395,7 @@ export default function EditDisplayProfileModal({
       const result = schema.safeParse({ name: draft.name, isDefault: draft.isDefault });
 
       if (!result.success) {
-        setApiError(undefined);
+        setApiError(t('Please fix the highlighted errors before saving.'));
         setNameError(result.error.flatten().fieldErrors.name?.[0]);
         return;
       }
@@ -434,10 +489,12 @@ export default function EditDisplayProfileModal({
     daypartsHasMore: dayparts.length < daypartsTotalCount,
     onLoadMoreDayparts: handleLoadMoreDayparts,
     isLoadingMoreDayparts,
+    onSearchDayparts: handleDaypartSearch,
     playerVersions,
     playerVersionsHasMore: playerVersions.length < playerVersionsTotalCount,
     onLoadMorePlayerVersions: handleLoadMorePlayerVersions,
     isLoadingMorePlayerVersions,
+    onSearchPlayerVersions: handlePlayerVersionSearch,
     timerRows,
     onTimerRowsChange: setTimerRows,
     pictureOptionRows,
@@ -468,6 +525,7 @@ export default function EditDisplayProfileModal({
 
   return (
     <Modal
+      variant="tabbed"
       title={title}
       onClose={onClose}
       isOpen={isOpen}

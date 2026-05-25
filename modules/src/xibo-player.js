@@ -35,86 +35,82 @@ const XiboPlayer = function() {
     // is realtime data.
     console.debug('getWidgetData: ' + currentWidget.widgetId);
 
-    let localData;
+    const dataSetId = currentWidget.properties?.dataSetId;
 
-    // wait for dataset fetch (resolve when its "done" or "error" fires)
-    let chain = Promise.resolve();
-    if (currentWidget.properties?.dataSetId) {
-      chain = new Promise(function(resolve) {
-        xiboIC.getData(currentWidget.properties?.dataSetId, {
-          done: (status, data) => {
-            localData = data ? JSON.parse(data) : null;
-            resolve();
-          },
-          error: () => {
-            resolve();
-          },
-        });
+    // Fetch real-time IC data and AJAX data in parallel.
+    // Real-time data takes priority over JSON file data when both resolve.
+    const icPromise = dataSetId
+        ? new Promise(function(resolve) {
+          xiboIC.getData(dataSetId, {
+            done: (status, data) => resolve(data ? JSON.parse(data) : null),
+            error: () => resolve(null),
+          });
+        })
+        : Promise.resolve(null);
+
+    if (String(currentWidget.url) !== 'null') {
+      const ajaxOptions = {
+        method: 'GET',
+        url: currentWidget.url,
+      };
+
+      // We include dataType for ChromeOS player consumer
+      if (window.location && window.location.pathname === '/pwa/') {
+        ajaxOptions.dataType = 'json';
+      }
+
+      const ajaxPromise = new Promise(function(resolve, reject) {
+        $.ajax(ajaxOptions)
+            .done(resolve)
+            .fail(function(jqXHR, textStatus, errorThrown) {
+              console.error(jqXHR, textStatus, errorThrown);
+              reject(jqXHR);
+            });
       });
-    }
 
-    return chain.then(function() {
-      return new Promise(function(resolve) {
-        // if we have data on the widget (for older players),
-        // or if we are not in preview and have empty data on Widget (like text)
-        // do not run ajax use that data instead
-        if (String(currentWidget.url) !== 'null') {
-          const ajaxOptions = {
-            method: 'GET',
-            url: currentWidget.url,
-          };
+      return Promise.all([icPromise, ajaxPromise]).then(
+          function([realTimeData, data]) {
+            console.debug('[XiboPlayer::getWidetData] - Promise.all', {
+                realTimeData,
+                cmsData: data,
+            });
 
-          // We include dataType for ChromeOS player consumer
-          if (window.location && window.location.pathname === '/pwa/') {
-            ajaxOptions.dataType = 'json';
-          }
-
-          // else get data from widget.url,
-          // this will be either getData for preview
-          // or new json file for v4 players
-          $.ajax(ajaxOptions).done(function(data) {
-            // The contents of the JSON file will be
-            // an object with data and meta
-            // add in local data.
-            if (localData) {
-              data.data = localData;
+            if (realTimeData) {
+              console.debug('[XiboPlayer::getWidgetData] - Promise.all > Serving real-time data');
+              data.data = realTimeData;
             }
 
             let widgetData = data;
-
+            console.debug('[XiboPlayer::getWidgetData] - Promise.all > widgetData', {
+                widgetData,
+            });
             if (typeof widgetData === 'string') {
               widgetData = JSON.parse(data);
             }
 
-            resolve({
-              ...widgetData,
-              isDataReady: true,
-            });
-          }).fail(function(jqXHR, textStatus, errorThrown) {
-            console.error(jqXHR, textStatus, errorThrown);
-            resolve({
+            return {...widgetData, isDataReady: true};
+          },
+          function(jqXHR) {
+            return {
               isDataReady: false,
               error: jqXHR.status,
               success: false,
               data: jqXHR.responseJSON,
-            });
-          });
-        } else if (currentWidget.data?.data !== undefined) {
-          // This happens for v3 players where the data is already
-          // added to the HTML
-          if (localData) {
-            currentWidget.data.data = localData;
-          }
-          resolve({
-            ...currentWidget.data,
-            isDataReady: true,
-          });
-        } else {
-          // This should be impossible.
-          resolve(null);
+            };
+          },
+      );
+    } else if (currentWidget.data?.data !== undefined) {
+      // v3 players: data is already embedded in the HTML
+      return icPromise.then(function(realTimeData) {
+        if (realTimeData) {
+          currentWidget.data.data = realTimeData;
         }
+        return {...currentWidget.data, isDataReady: true};
       });
-    });
+    } else {
+      // This should be impossible.
+      return Promise.resolve(null);
+    }
   };
 
   /**
@@ -803,17 +799,17 @@ XiboPlayer.prototype.init = function() {
             self.runLayoutScaler(currentWidget);
             calledXiboScaler = true;
           }
-        });
 
-        // Handle real-time data/dataset
-        if (inputWidget.properties?.dataSetId) {
-          xiboIC.registerNotifyDataListener((dataKey) => {
-            // Loose match.
-            if (dataKey == inputWidget.properties?.dataSetId) {
-              inputWidget.render();
-            }
-          });
-        }
+          // Handle real-time data/dataset
+          if (inputWidget.properties?.dataSetId) {
+            xiboIC.registerNotifyDataListener((dataKey) => {
+              // Loose match.
+              if (dataKey == inputWidget.properties?.dataSetId) {
+                inputWidget.render();
+              }
+            });
+          }
+        });
       } else if (self.isModule(inputWidget)) { // It's a module
         console.debug('Non-data Widget::Module');
         const currentWidget = self.playerWidget(

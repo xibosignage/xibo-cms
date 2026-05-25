@@ -95,13 +95,6 @@ export function useDisplaysActions({
       setRowSelection({});
       handleRefresh();
       closeModal();
-    } catch (error) {
-      console.error(error);
-      const message =
-        isAxiosError(error) && error.response?.data?.message
-          ? error.response.data.message
-          : t('Some selected items cannot be deleted.');
-      setDeleteError(message);
     } finally {
       setIsDeleting(false);
     }
@@ -206,13 +199,6 @@ export function useDisplaysActions({
         handleRefresh();
         closeModal();
       }
-    } catch (error) {
-      console.error(error);
-      const message =
-        isAxiosError(error) && error.response?.data?.message
-          ? error.response.data.message
-          : errorMessage;
-      setActionError(message);
     } finally {
       setIsActionPending(false);
     }

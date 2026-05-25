@@ -1,5 +1,6 @@
-<iframe scrolling="no" 
-        src="{{ url_for("module.getResource", {regionId: regionId, id: widgetId}) }}?preview=1" 
+<iframe scrolling="no"
+        sandbox="allow-scripts"
+        src="{{ previewIframeSrc }}"
         width="{{ width }}px"
         height="{{ height }}px" 
         style="border:0;"

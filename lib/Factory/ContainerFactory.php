@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -95,6 +95,7 @@ class ContainerFactory
                 $basePath = str_replace('/api', '', $basePath);
                 $basePath = str_replace('/maintenance', '', $basePath);
                 $basePath = str_replace('/install', '', $basePath);
+                $basePath = str_replace('/preview', '', $basePath);
 
                 // Handle an empty (we always have our root with reference to `/`
                 if ($basePath == null) {

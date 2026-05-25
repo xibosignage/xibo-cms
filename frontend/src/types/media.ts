@@ -41,6 +41,7 @@ export interface Media {
   width?: number;
   height?: number;
   valid: boolean;
+  released: number;
   fileName: string;
   fileSizeFormatted: string;
   orientation: 'portrait' | 'landscape';

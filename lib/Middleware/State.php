@@ -202,18 +202,10 @@ class State implements Middleware
 
         $container->set('session', function (ContainerInterface $container) use ($app) {
             if ($container->get('name') == 'web'
-                || $container->get('name') == 'json'
                 || $container->get('name') == 'auth'
+                || $container->get('name') == 'json'
             ) {
-                $sessionHandler = new Session($container->get('logService'));
-
-                session_set_save_handler($sessionHandler, true);
-                register_shutdown_function('session_write_close');
-
-                // Start the session
-                session_cache_limiter(false);
-                session_start();
-                return $sessionHandler;
+                return new Session($container->get('logService'));
             } else {
                 return new NullSession();
             }

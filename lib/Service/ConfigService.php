@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -82,6 +82,7 @@ class ConfigService implements ConfigServiceInterface
     public $cacheNamespace = 'Xibo';
     private $apiKeyPaths = null;
     private $connectorSettings = null;
+    private $allowLocalNetworkRequests = false;
 
     /**
      * Theme Specific Config
@@ -259,6 +260,11 @@ class ConfigService implements ConfigServiceInterface
         // Connector settings
         if (isset($connectorSettings)) {
             $config->connectorSettings = $connectorSettings;
+        }
+
+        // Local network access
+        if (isset($allowLocalNetworkRequests)) {
+            $config->allowLocalNetworkRequests = $allowLocalNetworkRequests;
         }
 
         // Set this as the global config
@@ -555,11 +561,10 @@ class ConfigService implements ConfigServiceInterface
      * @param array $httpOptions
      * @return array
      */
-    public function getGuzzleProxy($httpOptions = [])
+    public function getGuzzleProxy($httpOptions = []): array
     {
         // Proxy support
         if ($this->getSetting('PROXY_HOST') != '') {
-
             $proxy = $this->getSetting('PROXY_HOST') . ':' . $this->getSetting('PROXY_PORT');
 
             if ($this->getSetting('PROXY_AUTH') != '') {
@@ -589,6 +594,9 @@ class ConfigService implements ConfigServiceInterface
         if (!array_key_exists('connect_timeout', $httpOptions)) {
             $httpOptions['connect_timeout'] = 5;
         }
+
+        // Xibo specific options
+        $httpOptions['xibo'] = ['allow_local_network' => $this->allowLocalNetworkRequests];
 
         return $httpOptions;
     }

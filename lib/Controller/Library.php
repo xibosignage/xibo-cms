@@ -57,8 +57,9 @@ use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\LibraryDescription;
-use Xibo\Helper\LinkSigner;
 use Xibo\Helper\XiboUploadHandler;
+use Xibo\Middleware\TokenAuthMiddleware;
+use Xibo\Service\JwtServiceInterface;
 use Xibo\Service\MediaService;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -163,7 +164,8 @@ class Library extends Base
         $userGroupFactory,
         $displayFactory,
         $scheduleFactory,
-        $folderFactory
+        $folderFactory,
+        private readonly JwtServiceInterface $jwtService,
     ) {
         $this->moduleFactory = $moduleFactory;
         $this->mediaFactory = $mediaFactory;
@@ -512,6 +514,9 @@ class Library extends Base
     public function grid(Request $request, Response $response)
     {
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
+
+        // Variables used for link signing
+        $isReturnPublicUrls = $parsedQueryParams->getCheckbox('isReturnPublicUrls') == 1;
 
         // Construct the SQL
         $mediaSortQuery = $this->gridRenderSort($parsedQueryParams, $this->isJson($request));
@@ -1309,7 +1314,7 @@ class Library extends Base
             $this->getLog()->debug('download: preview mode, seeing if we can output an image/video');
 
             // Output a 1px image if we're not allowed to see the media.
-            if (!$this->getUser()->checkViewable($media)) {
+            if (!$this->getUser()->checkViewable($media) && $request->getAttribute('authedViaToken') !== true) {
                 echo Img::make($this->getConfig()->uri('img/1x1.png', true))->encode();
                 return $this->render($request, $response->withHeader('Content-Type', 'image/png'));
             }
@@ -1320,7 +1325,7 @@ class Library extends Base
                     $params,
                     $media->storedAs,
                     $response,
-                    $this->getConfig()->uri('img/1x1.png', true),
+                    $this->getConfig()->uri('img/error.png', true),
                 );
             } else if ($module->type === 'video') {
                 $response = $downloader->imagePreview(
@@ -1336,7 +1341,7 @@ class Library extends Base
             $this->getLog()->debug('download: not preview mode, expect a full download');
 
             // We are not a preview, and therefore we ought to check sharing before we download
-            if (!$this->getUser()->checkViewable($media)) {
+            if (!$this->getUser()->checkViewable($media) && $request->getAttribute('authedViaToken') !== true) {
                 throw new AccessDeniedException();
             }
 
@@ -1391,7 +1396,7 @@ class Library extends Base
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function thumbnail(Request $request, Response $response, $id, bool $isForceGrantAccess = false)
+    public function thumbnail(Request $request, Response $response, $id)
     {
         $this->setNoOutput();
 
@@ -1406,7 +1411,7 @@ class Library extends Base
             . '. Media is a ' . $media->mediaType);
 
         // Permissions.
-        if (!$this->getUser()->checkViewable($media) && !$isForceGrantAccess) {
+        if (!$this->getUser()->checkViewable($media) && $request->getAttribute('authedViaToken') !== true) {
             // Output a 1px image if we're not allowed to see the media.
             echo Img::make($this->getConfig()->uri('img/1x1.png', true))->encode();
             return $this->render($request, $response);
@@ -1427,52 +1432,6 @@ class Library extends Base
         );
 
         return $this->render($request, $response);
-    }
-
-    /**
-     * Public Thumbnail
-     *  this is an unauthenticated route (publicRoutes)
-     *  we need to authenticate using the S3 link signing
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Slim\Http\Response
-     * @throws \Xibo\Support\Exception\AccessDeniedException
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function thumbnailPublic(Request $request, Response $response, $id): Response
-    {
-        // Authenticate.
-        $params = $this->getSanitizer($request->getParams());
-
-        // Has the URL expired
-        if (time() > $params->getInt('X-Amz-Expires')) {
-            throw new AccessDeniedException(__('Expired'));
-        }
-
-        // Validate the URL.
-        $encryptionKey = $this->getConfig()->getApiKeyDetails()['encryptionKey'];
-        $signature = $params->getString('X-Amz-Signature');
-
-        $calculatedSignature = \Xibo\Helper\LinkSigner::getSignature(
-            (new HttpsDetect())->getUrl(),
-            $request->getUri()->getPath(),
-            $params->getInt('X-Amz-Expires'),
-            $encryptionKey,
-            $params->getString('X-Amz-Date'),
-            true,
-        );
-
-        if ($signature !== $calculatedSignature) {
-            throw new AccessDeniedException(__('Invalid URL'));
-        }
-
-        $this->getLog()->debug('thumbnailPublic: authorised for ' . $id);
-
-        $res = $this->thumbnail($request, $response, $id, true);
-
-        // Pass to the thumbnail route
-        return $res->withHeader('Access-Control-Allow-Origin', '*');
     }
 
     /**
@@ -1825,6 +1784,9 @@ class Library extends Base
         );
 
         if (!$this->isApi($request)) {
+            // We need to generate preview URLs, base URL doesn't chagen between layouts
+            $baseUrl = (new HttpsDetect())->getBaseUrl($request);
+
             foreach ($layouts as $layout) {
                 $layout->includeProperty('buttons');
 
@@ -1834,20 +1796,30 @@ class Library extends Base
                     $layout->buttons[] = array(
                         'id' => 'layout_button_design',
                         'linkType' => '_self', 'external' => true,
-                        'url' => $this->urlFor($request,'layout.designer', ['id' => $layout->layoutId]),
+                        'url' => $this->urlFor($request, 'layout.designer', ['id' => $layout->layoutId]),
                         'text' => __('Design')
                     );
                 }
 
                 // Preview
-                $layout->buttons[] = array(
+                // generate a JWT
+                $jwt = $this->jwtService->generateJwt(
+                    'Preview',
+                    'layout',
+                    $layout->layoutId,
+                    '/preview/layout/preview/' . $layout->layoutId,
+                    3600,
+                )->toString();
+
+                // Add it as a button
+                $layout->buttons[] = [
                     'id' => 'layout_button_preview',
                     'external' => true,
                     'url' => '#',
                     'onclick' => 'createMiniLayoutPreview',
-                    'onclickParam' => $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]),
-                    'text' => __('Preview Layout')
-                );
+                    'onclickParam' => $baseUrl . '/preview/layout/preview/' . $layout->layoutId . '?jwt=' . $jwt,
+                    'text' => __('Preview Layout'),
+                ];
             }
         }
 
@@ -2581,8 +2553,6 @@ class Library extends Base
         // Variables used for link signing/thumbnail generation
         $isReturnPublicUrls = $parsedQueryParams->getCheckbox('isReturnPublicUrls') == 1;
         $thumbnailRouteName = $isReturnPublicUrls ? 'library.public.thumbnail' : 'library.thumbnail';
-        $encryptionKey = $this->getConfig()->getApiKeyDetails()['encryptionKey'];
-        $rootUrl = (new HttpsDetect())->getUrl();
 
         $thumbnailUrl = '';
 
@@ -2604,11 +2574,11 @@ class Library extends Base
 
                     if ($isReturnPublicUrls) {
                         // Sign the link.
-                        $thumbnailUrl = $rootUrl . $thumbnailUrl . '?' . LinkSigner::getSignature(
-                            $rootUrl,
-                            $thumbnailUrl,
+                        $thumbnailUrl = TokenAuthMiddleware::sign(
+                            $request,
+                            '/preview/library/thumbnail/' . $media->mediaId,
                             time() + 3600,
-                            $encryptionKey,
+                            $this->getConfig()->getApiKeyDetails()['encryptionKey'],
                         );
                     }
                 }

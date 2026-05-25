@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -123,7 +123,7 @@ $app->addErrorMiddleware(
     true,
     true
 )
-    ->setDefaultErrorHandler(\Xibo\Middleware\Handlers::webErrorHandler($container));
+    ->setDefaultErrorHandler(\Xibo\Middleware\Handlers::webErrorHandler($container, false));
 
 // All application routes
 require PROJECT_ROOT . '/lib/routes-web.php';

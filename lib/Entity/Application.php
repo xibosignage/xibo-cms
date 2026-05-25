@@ -25,6 +25,7 @@ namespace Xibo\Entity;
 
 use League\OAuth2\Server\Entities\ClientEntityInterface;
 use OpenApi\Attributes as OA;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Factory\ApplicationRedirectUriFactory;
 use Xibo\Factory\ApplicationScopeFactory;
 use Xibo\Helper\Random;
@@ -41,117 +42,49 @@ class Application implements \JsonSerializable, ClientEntityInterface
 {
     use EntityTrait;
 
-    /**
-     * @var string
-     */
     #[OA\Property(description: 'Application Key')]
-    public $key;
-
-    /**
-     * @var string
-     */
+    public string $key = '';
     #[OA\Property(description: 'Private Secret Key')]
-    public $secret;
-
-    /**
-     * @var string
-     */
+    public string $secret;
     #[OA\Property(description: 'Application Name')]
-    public $name;
-    
-    /**
-     * @var string
-     */
+    public string $name;
     #[OA\Property(description: 'Application Owner')]
-    public $owner;
-
-    /**
-     * @var int
-     */
+    public string $owner;
     #[OA\Property(description: 'Application Session Expiry')]
-    public $expires;
-
-    /**
-     * @var int
-     */
+    public int $expires;
     #[OA\Property(description: 'The Owner of this Application')]
-    public $userId;
-
-    /**
-     * @var int
-     */
+    public int $userId;
     #[OA\Property(description: 'Flag indicating whether to allow the authorizationCode Grant Type')]
-    public $authCode = 0;
-
-    /**
-     * @var int
-     */
+    public int $authCode = 0;
     #[OA\Property(description: 'Flag indicating whether to allow the clientCredentials Grant Type')]
-    public $clientCredentials = 0;
-
-    /**
-     * @var int
-     */
-    #[OA\Property(description: 'Flag indicating whether this Application will be confidential or not (can it keep a secret?)')]
-    public $isConfidential = 1;
-
-    /** * @var ApplicationRedirectUri[] */
-    public $redirectUris = [];
-
-    /** * @var ApplicationScope[] */
-    public $scopes = [];
-
-    /**
-     * @var string
-     */
+    public int $clientCredentials = 0;
+    #[OA\Property(
+        description: 'Flag indicating whether this Application will be confidential or not (can it keep a secret?)'
+    )]
+    public int $isConfidential = 1;
+    public array $redirectUris = [];
+    public array $scopes = [];
     #[OA\Property(description: 'Application description')]
-    public $description;
-    /**
-     * @var string
-     */
+    public ?string $description = '';
     #[OA\Property(description: 'Path to Application logo')]
-    public $logo;
-    /**
-     * @var string
-     */
+    public ?string $logo = '';
     #[OA\Property(description: 'Path to Application Cover Image')]
-    public $coverImage;
-    /**
-     * @var string
-     */
+    public ?string $coverImage = '';
     #[OA\Property(description: 'Company name associated with this Application')]
-    public $companyName;
-    /**
-     * @var string
-     */
+    public ?string $companyName = '';
     #[OA\Property(description: 'URL to Application terms')]
-    public $termsUrl;
-    /**
-     * @var string
-     */
+    public ?string $termsUrl = '';
     #[OA\Property(description: 'URL to Application privacy policy')]
-    public $privacyUrl;
+    public ?string $privacyUrl = '';
 
-    /** @var ApplicationRedirectUriFactory */
-    private $applicationRedirectUriFactory;
-
-    /** @var  ApplicationScopeFactory */
-    private $applicationScopeFactory;
-
-    /**
-     * Entity constructor.
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
-     * @param ApplicationRedirectUriFactory $applicationRedirectUriFactory
-     * @param ApplicationScopeFactory $applicationScopeFactory
-     */
-    public function __construct($store, $log, $dispatcher, $applicationRedirectUriFactory, $applicationScopeFactory)
-    {
+    public function __construct(
+        StorageServiceInterface $store,
+        LogServiceInterface $log,
+        EventDispatcherInterface $dispatcher,
+        private readonly ApplicationRedirectUriFactory $applicationRedirectUriFactory,
+        private readonly ApplicationScopeFactory $applicationScopeFactory,
+    ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
-
-        $this->applicationRedirectUriFactory = $applicationRedirectUriFactory;
-        $this->applicationScopeFactory = $applicationScopeFactory;
     }
 
     public function __serialize(): array
@@ -169,7 +102,7 @@ class Application implements \JsonSerializable, ClientEntityInterface
     /**
      * @param ApplicationRedirectUri $redirectUri
      */
-    public function assignRedirectUri($redirectUri)
+    public function assignRedirectUri(ApplicationRedirectUri $redirectUri): void
     {
         $this->load();
 
@@ -185,11 +118,11 @@ class Application implements \JsonSerializable, ClientEntityInterface
      * Unassign RedirectUri
      * @param ApplicationRedirectUri $redirectUri
      */
-    public function unassignRedirectUri($redirectUri)
+    public function unassignRedirectUri(ApplicationRedirectUri $redirectUri): void
     {
         $this->load();
 
-        $this->redirectUris = array_udiff($this->redirectUris, [$redirectUri], function($a, $b) {
+        $this->redirectUris = array_udiff($this->redirectUris, [$redirectUri], function ($a, $b) {
             /**
              * @var ApplicationRedirectUri $a
              * @var ApplicationRedirectUri $b
@@ -201,7 +134,7 @@ class Application implements \JsonSerializable, ClientEntityInterface
     /**
      * @param ApplicationScope $scope
      */
-    public function assignScope($scope)
+    public function assignScope(ApplicationScope $scope): static
     {
         if (!in_array($scope, $this->scopes)) {
             $this->scopes[] = $scope;
@@ -213,7 +146,7 @@ class Application implements \JsonSerializable, ClientEntityInterface
     /**
      * @param ApplicationScope $scope
      */
-    public function unassignScope($scope)
+    public function unassignScope(ApplicationScope $scope): void
     {
         $this->scopes = array_udiff($this->scopes, [$scope], function ($a, $b) {
             /**
@@ -228,7 +161,7 @@ class Application implements \JsonSerializable, ClientEntityInterface
      * Get the hash for password verify
      * @return string
      */
-    public function getHash()
+    public function getHash(): string
     {
         return password_hash($this->secret, PASSWORD_DEFAULT);
     }
@@ -237,7 +170,7 @@ class Application implements \JsonSerializable, ClientEntityInterface
      * Load
      * @return $this
      */
-    public function load()
+    public function load(): static
     {
         if ($this->loaded || empty($this->key)) {
             return $this;
@@ -256,7 +189,7 @@ class Application implements \JsonSerializable, ClientEntityInterface
     /**
      * @return $this
      */
-    public function save()
+    public function save(): static
     {
         if ($this->key == null || $this->key == '') {
             // Make a new secret.
@@ -283,7 +216,7 @@ class Application implements \JsonSerializable, ClientEntityInterface
     /**
      * Delete
      */
-    public function delete()
+    public function delete(): void
     {
         $this->load();
 
@@ -302,12 +235,12 @@ class Application implements \JsonSerializable, ClientEntityInterface
     /**
      * Reset Secret
      */
-    public function resetSecret()
+    public function resetSecret(): void
     {
         $this->secret = Random::generateString(254);
     }
 
-    private function add()
+    private function add(): void
     {
         // Make an ID
         $this->key = Random::generateString(40);
@@ -333,7 +266,7 @@ class Application implements \JsonSerializable, ClientEntityInterface
         ]);
     }
 
-    private function edit()
+    private function edit(): void
     {
         $this->getStore()->update('
             UPDATE `oauth_clients` SET
@@ -371,7 +304,7 @@ class Application implements \JsonSerializable, ClientEntityInterface
     /**
      * Compare the original assignments with the current assignments and delete any that are missing, add any new ones
      */
-    private function manageScopeAssignments()
+    private function manageScopeAssignments(): void
     {
         $i = 0;
         $params = ['clientId' => $this->key];
@@ -391,19 +324,22 @@ class Application implements \JsonSerializable, ClientEntityInterface
         }
 
         // Unlink any NOT in the collection
-        $sql = 'DELETE FROM `oauth_client_scopes` WHERE clientId = :clientId AND scopeId NOT IN (\'0\'' . $unassignIn . ')';
+        $sql = 'DELETE FROM `oauth_client_scopes`
+                    WHERE clientId = :clientId 
+                      AND scopeId NOT IN (\'0\'' . $unassignIn . ')
+        ';
 
         $this->getStore()->update($sql, $params);
     }
 
     /** @inheritDoc */
-    public function getIdentifier()
+    public function getIdentifier(): string
     {
         return $this->key;
     }
 
     /** @inheritDoc */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
@@ -418,7 +354,7 @@ class Application implements \JsonSerializable, ClientEntityInterface
         } else if (count($this->redirectUris) == 1) {
             return $this->redirectUris[0]->redirectUri;
         } else {
-            return array_map(function($el) {
+            return array_map(function ($el) {
                 return $el->redirectUri;
             }, $this->redirectUris);
         }
@@ -427,7 +363,7 @@ class Application implements \JsonSerializable, ClientEntityInterface
     /**
      * @return \League\OAuth2\Server\Entities\ScopeEntityInterface[]
      */
-    public function getScopes()
+    public function getScopes(): array
     {
         $scopes = [];
         foreach ($this->scopes as $applicationScope) {
@@ -439,7 +375,7 @@ class Application implements \JsonSerializable, ClientEntityInterface
     }
 
     /** @inheritDoc */
-    public function isConfidential()
+    public function isConfidential(): bool
     {
         return $this->isConfidential === 1;
     }

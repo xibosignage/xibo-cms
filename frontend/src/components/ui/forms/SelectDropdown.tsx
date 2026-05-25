@@ -32,7 +32,7 @@ import {
   FloatingPortal,
 } from '@floating-ui/react';
 import { ChevronDown, Search } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useId, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
@@ -43,10 +43,12 @@ export type SelectOption = {
   disabled?: boolean;
 };
 
-interface SelectDropdownProps {
+interface BaseSelectDropdownProps {
   label?: string;
   value?: string;
   placeholder?: string;
+  initialLabel?: string;
+  resolveLabel?: (value: string) => Promise<string>;
   options: SelectOption[];
   searchable?: boolean;
   searchPlaceholder?: string;
@@ -59,20 +61,39 @@ interface SelectDropdownProps {
   className?: string;
   error?: string;
   isLoading?: boolean;
-  onLoadMore?: () => void;
-  hasMore?: boolean;
-  isLoadingMore?: boolean;
   clearable?: boolean;
+  optional?: boolean;
 }
+
+/** Static list: search is optional and runs client-side. */
+interface StaticSelectDropdownProps extends BaseSelectDropdownProps {
+  onLoadMore?: never;
+  hasMore?: never;
+  isLoadingMore?: never;
+  onSearch?: (term: string) => void;
+}
+
+/** Paginated list: `onSearch` is required; client-side search only covers the loaded page. */
+interface PaginatedSelectDropdownProps extends BaseSelectDropdownProps {
+  onLoadMore: () => void;
+  hasMore: boolean;
+  isLoadingMore: boolean;
+  onSearch: (term: string) => void;
+}
+
+type SelectDropdownProps = StaticSelectDropdownProps | PaginatedSelectDropdownProps;
 
 export default function SelectDropdown({
   label,
   value,
   placeholder = 'Select',
+  initialLabel,
+  resolveLabel,
   options,
   searchable,
   searchPlaceholder,
   onSelect,
+  onSearch,
   helpText,
   addLeftLabel,
   leftLabelContent,
@@ -85,36 +106,78 @@ export default function SelectDropdown({
   hasMore,
   isLoadingMore,
   clearable,
+  optional = false,
 }: SelectDropdownProps) {
   const { t } = useTranslation();
+  const id = useId();
 
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const sentinelRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const labelCache = useRef<Map<string, string>>(new Map());
+  const isLoadingMoreRef = useRef(isLoadingMore);
+  isLoadingMoreRef.current = isLoadingMore;
+  const onLoadMoreRef = useRef(onLoadMore);
+  onLoadMoreRef.current = onLoadMore;
+  const resolvingRef = useRef<string | undefined>(undefined);
+  const [, setResolveVersion] = useState(0);
+
+  useEffect(() => {
+    if (!value || !resolveLabel) {
+      return;
+    }
+    if (labelCache.current.has(value)) {
+      return;
+    }
+    if (resolvingRef.current === value) {
+      return;
+    }
+
+    resolvingRef.current = value;
+    resolveLabel(value)
+      .then((label) => {
+        labelCache.current.set(value, label);
+        setResolveVersion((v) => v + 1);
+      })
+      .catch(() => {})
+      .finally(() => {
+        resolvingRef.current = undefined;
+      });
+  }, [value, resolveLabel]);
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
-    if (!open) {
+    if (open) {
+      onSearch?.('');
+    } else {
       setSearchTerm('');
     }
   };
 
+  const effectiveSearchable = searchable && (!onLoadMore || !!onSearch);
+
   const visibleOptions =
-    searchable && searchTerm
+    !onSearch && effectiveSearchable && searchTerm
       ? options.filter((o) => o.label.toLowerCase().includes(searchTerm.toLowerCase()))
       : options;
 
   useEffect(() => {
-    if (!isOpen || !hasMore || !onLoadMore || !sentinelRef.current || !scrollContainerRef.current) {
+    if (
+      !isOpen ||
+      !hasMore ||
+      !onLoadMoreRef.current ||
+      !sentinelRef.current ||
+      !scrollContainerRef.current
+    ) {
       return;
     }
 
     const el = sentinelRef.current;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting && !isLoadingMore) {
-          onLoadMore();
+        if (entries[0]?.isIntersecting && !isLoadingMoreRef.current) {
+          onLoadMoreRef.current?.();
         }
       },
       { threshold: 0.1, root: scrollContainerRef.current },
@@ -122,9 +185,14 @@ export default function SelectDropdown({
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [isOpen, hasMore, onLoadMore, isLoadingMore]);
+  }, [isOpen, hasMore]);
 
-  const selectedLabel = options.find((o) => o.value === value)?.label ?? '';
+  for (const o of options) {
+    labelCache.current.set(o.value, o.label);
+  }
+  const selectedLabel =
+    options.find((o) => o.value === value)?.label ??
+    (value ? (labelCache.current.get(value) ?? initialLabel ?? '') : '');
 
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
@@ -152,12 +220,24 @@ export default function SelectDropdown({
   return (
     <div className={twMerge('relative overflow-visible', className)}>
       {label && (
-        <label className="text-sm font-semibold text-gray-500 leading-5">{label && t(label)}</label>
+        <label
+          id={`${id}-label`}
+          className="flex items-center justify-between text-sm font-semibold text-gray-500 leading-5"
+        >
+          <span>{t(label)}</span>
+          {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
+        </label>
       )}
 
       <div
         ref={refs.setReference}
         {...getReferenceProps()}
+        role="combobox"
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        aria-labelledby={label ? `${id}-label` : undefined}
+        aria-controls={`${id}-listbox`}
+        tabIndex={0}
         className="w-full border bg-white border-gray-200 rounded-lg flex items-center cursor-pointer h-11.25 hover:border-gray-400 focus-within:border-xibo-blue-600 focus-within:ring-1 focus-within:ring-xibo-blue-600/25 focus:outline-none transition-colors"
       >
         {addLeftLabel && leftLabelContent && (
@@ -168,10 +248,10 @@ export default function SelectDropdown({
         <span
           className={twMerge(
             'py-2 px-3 flex-1 text-sm truncate min-w-0',
-            isLoading ? 'text-gray-400 italic' : 'text-gray-800 capitalize',
+            isLoading ? 'text-gray-400 italic' : selectedLabel ? 'text-gray-800' : 'text-gray-500',
           )}
         >
-          {selectedLabel || t(placeholder)}
+          {isLoading ? t('Loading...') : selectedLabel || t(placeholder)}
         </span>
         <span
           className={twMerge(
@@ -196,21 +276,26 @@ export default function SelectDropdown({
                 {t(optionLabel)}
               </span>
             )}
-            {searchable && (
-              <div className="p-2 border-b border-gray-100 flex items-center gap-2">
-                <Search size={14} className="text-gray-400 shrink-0" />
+            {effectiveSearchable && (
+              <div className="m-2 p-3 border border-gray-200 rounded-lg flex items-center gap-2 focus-within:border-xibo-blue-600 focus-within:ring-1 focus-within:ring-xibo-blue-600/25">
+                <Search size={14} className="text-gray-500 shrink-0" />
                 <input
                   autoFocus
                   type="text"
-                  className="flex-1 w-full text-sm outline-none border-none bg-transparent"
-                  placeholder={searchPlaceholder ?? t('Search…')}
+                  className="flex-1 w-full p-0 text-sm outline-none border-none bg-transparent hover:border-none focus:ring-0 focus:shadow-none"
+                  placeholder={searchPlaceholder ?? t('Search')}
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    onSearch?.(e.target.value);
+                  }}
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
             )}
             <div
+              id={`${id}-listbox`}
+              role="listbox"
               ref={scrollContainerRef}
               className="flex flex-col p-2 text-sm overflow-y-auto max-h-75"
             >
@@ -226,13 +311,18 @@ export default function SelectDropdown({
                   {t(placeholder)}
                 </button>
               )}
-              {visibleOptions.length === 0 && !isLoadingMore && (
+              {visibleOptions.length === 0 && !isLoadingMore && !isLoading && (
                 <p className="text-sm text-gray-400 text-center py-2">{t('No results')}</p>
+              )}
+              {isLoading && visibleOptions.length === 0 && (
+                <p className="text-sm text-gray-400 text-center py-2">{t('Loading...')}</p>
               )}
               {visibleOptions.map((option) => (
                 <button
                   key={option.value}
                   type="button"
+                  role="option"
+                  aria-selected={option.value === value}
                   disabled={option.disabled}
                   className={twMerge(
                     'text-left p-2 rounded-lg font-medium flex gap-2 items-center min-w-0',
@@ -250,7 +340,7 @@ export default function SelectDropdown({
                   }}
                 >
                   {addOptionAvatar && (
-                    <div className="bg-xibo-blue-100 h-6.5 w-6.5 text-[12px] center rounded-full text-xibo-blue-800 font-semibold flex items-center justify-center">
+                    <div className="bg-xibo-blue-100 h-6.5 w-6.5 text-xs center rounded-full text-xibo-blue-800 font-semibold flex items-center justify-center">
                       {option.label.slice(0, 1)}
                     </div>
                   )}

@@ -189,12 +189,12 @@ describe('Edit Media — modal lifecycle', () => {
     expect(within(dialog).getByText('nature')).toBeInTheDocument();
 
     // mockEditMedia.retired = false, so the checkbox should be unchecked
-    expect(
-      within(dialog).getByRole('checkbox', { name: /Retired media remains/i }),
-    ).not.toBeChecked();
+    expect(within(dialog).getByRole('checkbox', { name: /Retire this media/i })).not.toBeChecked();
 
     // mockEditMedia.updateInLayouts = false, so the checkbox should be unchecked
-    expect(within(dialog).getByRole('checkbox', { name: /only be updated/i })).not.toBeChecked();
+    expect(
+      within(dialog).getByRole('checkbox', { name: /all layouts it is assigned to/i }),
+    ).not.toBeChecked();
   });
 });
 

@@ -28,6 +28,7 @@ import type { LayoutFilterInput } from '../LayoutConfig';
 import type { FetchLayoutRequest } from '@/services/layoutsApi';
 import { fetchLayouts } from '@/services/layoutsApi';
 import { resolveLastModified } from '@/utils/date';
+import { isValidRegex } from '@/utils/regex';
 
 export const layoutQueryKeys = {
   all: ['layout'] as const,
@@ -69,7 +70,29 @@ export const useLayoutData = ({
       const sortBy = sorting?.[0]?.id;
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
 
-      const { lastModified, ...restFilters } = advancedFilters;
+      const {
+        campaignId,
+        name,
+        tags,
+        code,
+        ownerId,
+        ownerUserGroupId,
+        orientation,
+        retired,
+        layoutStatusId,
+        showDescriptionId,
+        mediaLike,
+        layoutId,
+        lastModified,
+        activeDisplayGroupId,
+        useRegexForName,
+        logicalOperatorName,
+        exactTags,
+        logicalOperator,
+      } = advancedFilters;
+
+      const normalizedTags =
+        tags && tags.length > 0 ? tags.map((tag) => tag.tag).join(',') : undefined;
 
       const request: FetchLayoutRequest = {
         start: startOffset,
@@ -78,8 +101,24 @@ export const useLayoutData = ({
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
-        ...restFilters,
+        ...(campaignId != null ? { campaignId } : {}),
+        ...(name ? { layout: name } : {}),
+        ...(normalizedTags ? { tags: normalizedTags } : {}),
+        ...(code ? { codeLike: code } : {}),
+        ...(ownerId ? { userId: ownerId } : {}),
+        ...(ownerUserGroupId ? { ownerUserGroupId } : {}),
+        ...(orientation ? { orientation } : {}),
+        ...(retired !== '' && retired != null ? { retired } : {}),
+        ...(layoutStatusId != null ? { layoutStatusId } : {}),
+        ...(showDescriptionId != null ? { showDescriptionId } : {}),
+        ...(mediaLike ? { mediaLike } : {}),
+        ...(layoutId != null ? { layoutId } : {}),
+        ...(activeDisplayGroupId != null ? { activeDisplayGroupId } : {}),
         ...resolveLastModified(lastModified),
+        ...(useRegexForName && name && isValidRegex(name) ? { useRegexForName: 1 } : {}),
+        ...(logicalOperatorName ? { logicalOperatorName } : {}),
+        ...(exactTags !== undefined ? { exactTags: exactTags ? 1 : 0 } : {}),
+        ...(logicalOperator ? { logicalOperator } : {}),
       };
 
       if (typeof folderId === 'number') {

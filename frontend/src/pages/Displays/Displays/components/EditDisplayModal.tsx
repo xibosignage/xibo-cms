@@ -29,6 +29,7 @@ import {
   useFloating,
   useInteractions,
 } from '@floating-ui/react';
+import { isAxiosError } from 'axios';
 import type { TFunction } from 'i18next';
 import { useEffect, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -42,10 +43,12 @@ import NumberInput from '@/components/ui/forms/NumberInput';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import type { SelectOption } from '@/components/ui/forms/SelectDropdown';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
+import Switch from '@/components/ui/forms/Switch';
 import TagInput from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import TimezoneSelect from '@/components/ui/forms/TimezoneSelect';
 import Modal from '@/components/ui/modals/Modal';
+import { useDebounce } from '@/hooks/useDebounce';
 import { DynamicSettingField } from '@/pages/Displays/DisplayProfile/components/fields/DynamicSettingField';
 import { PICTURE_PROPERTY_DEFS } from '@/pages/Displays/DisplayProfile/components/fields/LgSsspFields';
 import type { FieldMeta } from '@/pages/Displays/DisplayProfile/components/fields/fieldMetadata';
@@ -93,8 +96,10 @@ function formatSettingName(name: string): string {
 }
 
 function getApiErrorMessage(err: unknown, fallback: string): string {
-  const e = err as { response?: { data?: { message?: string } } };
-  return e.response?.data?.message ?? (err instanceof Error ? err.message : fallback);
+  return (
+    (isAxiosError(err) && err.response?.data?.message) ||
+    (err instanceof Error ? err.message : fallback)
+  );
 }
 
 function configArrayToFlat(
@@ -427,7 +432,7 @@ export default function EditDisplayModal({
   ];
   const [activeTab, setActiveTab] = useState<ActiveTab>('general');
   const [apiError, setApiError] = useState<string | undefined>();
-  const [nameError, setNameError] = useState<string | undefined>();
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({});
 
   const [draft, setDraft] = useState<EditDraft>({
     display: '',
@@ -488,6 +493,8 @@ export default function EditDisplayModal({
   const [hasMoreLayouts, setHasMoreLayouts] = useState(false);
   const [isLoadingLayouts, setIsLoadingLayouts] = useState(false);
   const [isLoadingMoreLayouts, setIsLoadingMoreLayouts] = useState(false);
+  const [layoutSearch, setLayoutSearch] = useState('');
+  const debouncedLayoutSearch = useDebounce(layoutSearch, 300);
 
   const [venues, setVenues] = useState<DisplayVenue[]>([]);
   const [localeLanguages, setLocaleLanguages] = useState<{ value: string; label: string }[]>([]);
@@ -505,7 +512,7 @@ export default function EditDisplayModal({
 
     setActiveTab('general');
     setApiError(undefined);
-    setNameError(undefined);
+    setFieldErrors({});
     setActiveProfile(null);
     setProfileFlat({});
     setProfileDefaults({});
@@ -520,8 +527,8 @@ export default function EditDisplayModal({
       tags: data.tags ?? [],
       licensed: data.licensed ?? 0,
       defaultLayoutId: data.defaultLayoutId ?? null,
-      latitude: data.latitude ?? null,
-      longitude: data.longitude ?? null,
+      latitude: data.latitude != null ? Number(data.latitude) : null,
+      longitude: data.longitude != null ? Number(data.longitude) : null,
       timeZone: data.timeZone ?? '',
       languages: data.languages
         ? data.languages
@@ -535,8 +542,8 @@ export default function EditDisplayModal({
       screenSize: data.screenSize ?? null,
       isMobile: data.isMobile ?? 0,
       isOutdoor: data.isOutdoor ?? 0,
-      costPerPlay: data.costPerPlay ?? null,
-      impressionsPerPlay: data.impressionsPerPlay ?? null,
+      costPerPlay: data.costPerPlay != null ? Number(data.costPerPlay) : null,
+      impressionsPerPlay: data.impressionsPerPlay != null ? Number(data.impressionsPerPlay) : null,
       ref1: data.ref1 ?? '',
       ref2: data.ref2 ?? '',
       ref3: data.ref3 ?? '',
@@ -624,9 +631,22 @@ export default function EditDisplayModal({
       .then((v) => setVenues(v))
       .catch(() => setVenues([]));
 
+    setLayoutSearch('');
+  }, [isOpen, data]);
+
+  useEffect(() => {
+    if (!isOpen || !data) {
+      return;
+    }
     setIsLoadingLayouts(true);
+    setLayouts([]);
     setLayoutPage(0);
-    fetchLayouts({ start: 0, length: LAYOUT_PAGE_SIZE, retired: 0 })
+    fetchLayouts({
+      start: 0,
+      length: LAYOUT_PAGE_SIZE,
+      retired: 0,
+      layout: debouncedLayoutSearch || undefined,
+    })
       .then((res) => {
         setLayouts(res.rows);
         setHasMoreLayouts(res.rows.length === LAYOUT_PAGE_SIZE);
@@ -636,7 +656,7 @@ export default function EditDisplayModal({
         setHasMoreLayouts(false);
       })
       .finally(() => setIsLoadingLayouts(false));
-  }, [isOpen, data]);
+  }, [isOpen, data, debouncedLayoutSearch]);
 
   useEffect(() => {
     setIsLoadingProfile(true);
@@ -673,7 +693,12 @@ export default function EditDisplayModal({
     }
     const nextPage = layoutPage + 1;
     setIsLoadingMoreLayouts(true);
-    fetchLayouts({ start: nextPage * LAYOUT_PAGE_SIZE, length: LAYOUT_PAGE_SIZE, retired: 0 })
+    fetchLayouts({
+      start: nextPage * LAYOUT_PAGE_SIZE,
+      length: LAYOUT_PAGE_SIZE,
+      retired: 0,
+      layout: debouncedLayoutSearch || undefined,
+    })
       .then((res) => {
         setLayouts((prev) => [...prev, ...res.rows]);
         setLayoutPage(nextPage);
@@ -701,12 +726,14 @@ export default function EditDisplayModal({
       });
 
       if (!result.success) {
-        setApiError(undefined);
-        setNameError(result.error.flatten().fieldErrors.display?.[0]);
+        const flat = result.error.flatten().fieldErrors;
+        setFieldErrors(Object.fromEntries(Object.entries(flat).map(([k, v]) => [k, v?.[0]])));
+        setApiError(t('Please fix the highlighted errors before saving.'));
         return;
       }
 
-      setNameError(undefined);
+      setFieldErrors({});
+      setApiError(undefined);
 
       const tagString =
         draft.tags.length > 0
@@ -805,11 +832,15 @@ export default function EditDisplayModal({
   };
 
   const layoutOptions: SelectOption[] = [
-    { value: '', label: t('Global default') },
+    ...(layoutSearch ? [] : [{ value: '', label: t('Global default') }]),
     ...layouts.map((l) => ({ value: String(l.layoutId), label: l.layout })),
   ];
 
-  if (draft.defaultLayoutId && !layouts.some((l) => l.layoutId === draft.defaultLayoutId)) {
+  if (
+    !layoutSearch &&
+    draft.defaultLayoutId &&
+    !layouts.some((l) => l.layoutId === draft.defaultLayoutId)
+  ) {
     layoutOptions.push({
       value: String(draft.defaultLayoutId),
       label: data?.defaultLayout ?? String(draft.defaultLayoutId),
@@ -823,6 +854,7 @@ export default function EditDisplayModal({
 
   return (
     <Modal
+      variant="tabbed"
       title={title}
       onClose={onClose}
       isOpen={isOpen}
@@ -839,54 +871,108 @@ export default function EditDisplayModal({
         },
       ]}
     >
-      <div className="flex flex-col h-full overflow-y-hidden overflow-x-visible px-4">
-        <nav
-          className="flex px-4 overflow-x-auto shrink-0 border-b border-gray-200"
-          aria-label="Tabs"
+      <div className="flex flex-col flex-1 min-h-0 overflow-hidden px-4">
+        <div
+          role="tablist"
+          aria-label={t('Display settings tabs')}
+          className="flex px-4 overflow-x-auto shrink-0"
         >
-          <button type="button" className={tab('general')} onClick={() => setActiveTab('general')}>
+          <button
+            role="tab"
+            type="button"
+            id="tab-general"
+            aria-selected={activeTab === 'general'}
+            aria-controls="tabpanel-display"
+            className={tab('general')}
+            onClick={() => setActiveTab('general')}
+          >
             {t('General')}
           </button>
-          <button type="button" className={tab('details')} onClick={() => setActiveTab('details')}>
+          <button
+            role="tab"
+            type="button"
+            id="tab-details"
+            aria-selected={activeTab === 'details'}
+            aria-controls="tabpanel-display"
+            className={tab('details')}
+            onClick={() => setActiveTab('details')}
+          >
             {t('Details')}
           </button>
           <button
+            role="tab"
             type="button"
+            id="tab-reference"
+            aria-selected={activeTab === 'reference'}
+            aria-controls="tabpanel-display"
             className={tab('reference')}
             onClick={() => setActiveTab('reference')}
           >
             {t('Reference')}
           </button>
           <button
+            role="tab"
             type="button"
+            id="tab-maintenance"
+            aria-selected={activeTab === 'maintenance'}
+            aria-controls="tabpanel-display"
             className={tab('maintenance')}
             onClick={() => setActiveTab('maintenance')}
           >
             {t('Maintenance')}
           </button>
-          <button type="button" className={tab('wol')} onClick={() => setActiveTab('wol')}>
+          <button
+            role="tab"
+            type="button"
+            id="tab-wol"
+            aria-selected={activeTab === 'wol'}
+            aria-controls="tabpanel-display"
+            className={tab('wol')}
+            onClick={() => setActiveTab('wol')}
+          >
             {t('Wake on LAN')}
           </button>
           <button
+            role="tab"
             type="button"
+            id="tab-settings"
+            aria-selected={activeTab === 'settings'}
+            aria-controls="tabpanel-display"
             className={tab('settings')}
             onClick={() => setActiveTab('settings')}
           >
             {t('Settings')}
           </button>
-          <button type="button" className={tab('remote')} onClick={() => setActiveTab('remote')}>
+          <button
+            role="tab"
+            type="button"
+            id="tab-remote"
+            aria-selected={activeTab === 'remote'}
+            aria-controls="tabpanel-display"
+            className={tab('remote')}
+            onClick={() => setActiveTab('remote')}
+          >
             {t('Remote')}
           </button>
           <button
+            role="tab"
             type="button"
+            id="tab-advanced"
+            aria-selected={activeTab === 'advanced'}
+            aria-controls="tabpanel-display"
             className={tab('advanced')}
             onClick={() => setActiveTab('advanced')}
           >
             {t('Advanced')}
           </button>
-        </nav>
+        </div>
 
-        <div className="flex-1 overflow-y-auto py-4 px-8 space-y-4">
+        <div
+          role="tabpanel"
+          id="tabpanel-display"
+          aria-labelledby={`tab-${activeTab}`}
+          className="flex-1 overflow-y-auto py-4 px-8 space-y-4"
+        >
           {activeTab === 'general' && (
             <>
               <div className="relative z-20">
@@ -902,7 +988,7 @@ export default function EditDisplayModal({
                 placeholder={t('Enter name')}
                 value={draft.display}
                 onChange={(v) => set('display', v)}
-                error={nameError}
+                error={fieldErrors.display}
               />
               <TextInput
                 name="license"
@@ -930,22 +1016,13 @@ export default function EditDisplayModal({
                 onChange={(tags) => set('tags', tags)}
               />
               <SelectDropdown
-                label={t('Authorise display?')}
-                helpText={t('Use one of the available slots for this display?')}
-                value={String(draft.licensed)}
-                options={[
-                  { value: '0', label: t('No') },
-                  { value: '1', label: t('Yes') },
-                ]}
-                onSelect={(v) => set('licensed', Number(v))}
-              />
-              <SelectDropdown
                 label={t('Default Layout')}
                 helpText={t(
                   'Set the Default Layout to use when no other content is scheduled to this Display. This will override the global Default Layout as set in CMS Administrator Settings. If left blank a global Default Layout will be automatically set for this Display.',
                 )}
                 value={draft.defaultLayoutId ? String(draft.defaultLayoutId) : ''}
                 placeholder={t('Global default')}
+                initialLabel={data?.defaultLayout ?? undefined}
                 options={layoutOptions}
                 onSelect={(v) => set('defaultLayoutId', v ? Number(v) : null)}
                 isLoading={isLoadingLayouts}
@@ -954,6 +1031,13 @@ export default function EditDisplayModal({
                 isLoadingMore={isLoadingMoreLayouts}
                 searchable
                 searchPlaceholder={t('Search layouts...')}
+                onSearch={(v) => setLayoutSearch(v)}
+              />
+              <Switch
+                label={t('Authorise display?')}
+                helpText={t('Use one of the available slots for this display?')}
+                checked={draft.licensed === 1}
+                onChange={(v) => set('licensed', v ? 1 : 0)}
               />
             </>
           )}
@@ -967,6 +1051,7 @@ export default function EditDisplayModal({
                 placeholder=" "
                 value={draft.latitude ?? undefined}
                 onChange={(v) => set('latitude', v || null)}
+                error={fieldErrors.latitude}
               />
               <NumberInput
                 name="longitude"
@@ -975,6 +1060,7 @@ export default function EditDisplayModal({
                 placeholder=" "
                 value={draft.longitude ?? undefined}
                 onChange={(v) => set('longitude', v || null)}
+                error={fieldErrors.longitude}
               />
               <TimezoneSelect
                 value={draft.timeZone}
@@ -1056,6 +1142,7 @@ export default function EditDisplayModal({
                 placeholder=" "
                 value={draft.costPerPlay ?? undefined}
                 onChange={(v) => set('costPerPlay', v || null)}
+                error={fieldErrors.costPerPlay}
               />
               <NumberInput
                 name="impressionsPerPlay"
@@ -1064,6 +1151,7 @@ export default function EditDisplayModal({
                 placeholder=" "
                 value={draft.impressionsPerPlay ?? undefined}
                 onChange={(v) => set('impressionsPerPlay', v || null)}
+                error={fieldErrors.impressionsPerPlay}
               />
             </>
           )}
@@ -1178,6 +1266,7 @@ export default function EditDisplayModal({
                 )}
                 value={draft.displayProfileId ? String(draft.displayProfileId) : ''}
                 placeholder={t('None (use default)')}
+                searchable
                 clearable
                 options={profiles.map((p) => ({
                   value: String(p.displayProfileId),

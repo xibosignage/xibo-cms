@@ -161,6 +161,7 @@ describe('DisplayProfile - edit form fields', () => {
   // ---------------------------------------------------------------------------
   test('Failed save keeps the modal open and shows the error', async () => {
     vi.mocked(updateDisplayProfile).mockRejectedValueOnce({
+      isAxiosError: true,
       response: { data: { message: 'Display profile name already exists' } },
     });
 

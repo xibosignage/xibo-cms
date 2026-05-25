@@ -78,7 +78,7 @@
     "mpdf/mpdf": "v8.1.*",
     "nesbot/carbon": "^2.73.0",
     "nyholm/psr7": "^1.8",
-    "onelogin/php-saml": "4.1.*",
+    "onelogin/php-saml": "4.3.*",
     "phenx/php-font-lib": "^0.5.0",
     "php-di/php-di": "7.0.*",
     "php-di/slim-bridge": "3.4.*",
@@ -102,7 +102,7 @@
     "symfony/html-sanitizer": "v6.4.*",
     "symfony/yaml": "5.4.*",
     "tedivm/stash": "v1.2.*",
-    "twig/twig": "3.11.*",
+    "twig/twig": "3.26.*",
     "xibosignage/support": "dev-php8"
   },
   "require-dev": {

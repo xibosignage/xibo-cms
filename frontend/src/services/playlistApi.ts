@@ -31,9 +31,18 @@ export interface FetchPlaylistRequest {
   signal?: AbortSignal;
   folderId?: number;
 
+  name?: string;
+  playlistId?: number;
+  layoutId?: number;
+  tags?: string;
   userId?: string;
   ownerUserGroupId?: string;
   lastModified?: string;
+
+  useRegexForName?: number;
+  logicalOperatorName?: 'OR' | 'AND';
+  exactTags?: number;
+  logicalOperator?: 'OR' | 'AND';
 }
 
 export interface FetchPlaylistResponse {

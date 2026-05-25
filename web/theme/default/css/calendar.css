@@ -18,15 +18,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-#calendar-progress {
-    font-size: 1.5rem;
+#calendar-progress, #calendar-progress-table {
+    font-size: 2rem;
     opacity: 0;
     transform: scale(0.8);
     transition: transform 0.3s ease 0.1s, opacity 0.3s ease 0.1s;
     display: inline-block;
 }
 
-#calendar-progress.show {
+#calendar-progress.show, #calendar-progress-table.show {
     opacity: 1;
     transform: scale(1);
 }
@@ -105,7 +105,8 @@
 }
 
 .agenda-panel .nav-tabs>li.active>a, .nav-tabs>li.active>a:hover, .nav-tabs>li.active>a:focus {
-    background-color: #ddd;
+    background-color: #428bca;
+    color: white;
 }
 
 .agenda-panel .text-danger {

@@ -27,6 +27,7 @@ import { DynamicSettingField } from './DynamicSettingField';
 import { getFieldMetaForType } from './fieldMetadata';
 
 import Button from '@/components/ui/Button';
+import Checkbox from '@/components/ui/forms/Checkbox';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import Slider from '@/components/ui/forms/Slider';
 import TimePickerInput from '@/components/ui/forms/TimePickerInput';
@@ -373,11 +374,13 @@ export interface LgSsspFieldProps {
   daypartsHasMore?: boolean;
   onLoadMoreDayparts?: () => void;
   isLoadingMoreDayparts?: boolean;
+  onSearchDayparts?: (term: string) => void;
   playerType?: string;
   playerVersions: PlayerSoftware[];
   playerVersionsHasMore?: boolean;
   onLoadMorePlayerVersions?: () => void;
   isLoadingMorePlayerVersions?: boolean;
+  onSearchPlayerVersions?: (term: string) => void;
   timerRows?: TimerRow[];
   onTimerRowsChange?: (rows: TimerRow[]) => void;
   pictureOptionRows?: PictureOptionRow[];
@@ -399,11 +402,13 @@ export function LgSsspFields({
   daypartsHasMore,
   onLoadMoreDayparts,
   isLoadingMoreDayparts,
+  onSearchDayparts,
   playerType,
   playerVersions,
   playerVersionsHasMore,
   onLoadMorePlayerVersions,
   isLoadingMorePlayerVersions,
+  onSearchPlayerVersions,
   timerRows = [{ id: 0, day: '', on: '', off: '' }],
   onTimerRowsChange,
   pictureOptionRows = [{ id: 0, property: '', value: 0 }],
@@ -412,7 +417,20 @@ export function LgSsspFields({
   onLockOptionsStateChange,
 }: LgSsspFieldProps) {
   if (tab === 'timers' && onTimerRowsChange) {
-    return <TimersInput timerRows={timerRows} onChange={onTimerRowsChange} t={t} />;
+    return (
+      <div className="flex flex-col gap-4">
+        <Checkbox
+          id="disableTimerManagement"
+          title={t('Disable managing on/off timers')}
+          label={t(
+            'When disabled on/off timers can be controlled on the screen and will not be modified by the CMS',
+          )}
+          checked={bool('disableTimerManagement')}
+          onChange={setBool('disableTimerManagement')}
+        />
+        <TimersInput timerRows={timerRows} onChange={onTimerRowsChange} t={t} />
+      </div>
+    );
   }
 
   if (tab === 'pictureOptions' && onPictureOptionRowsChange) {
@@ -473,10 +491,12 @@ export function LgSsspFields({
     daypartsHasMore,
     onLoadMoreDayparts,
     isLoadingMoreDayparts,
+    onSearchDayparts,
     playerVersions,
     playerVersionsHasMore,
     onLoadMorePlayerVersions,
     isLoadingMorePlayerVersions,
+    onSearchPlayerVersions,
   };
 
   return (

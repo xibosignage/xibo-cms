@@ -190,6 +190,7 @@ describe('Layouts page - edit form fields', () => {
       name: mockLayout.layout,
       description: null,
       tags: '',
+      code: '',
       retired: 0,
       enableStat: 1,
       folderId: mockLayout.folderId,
@@ -202,6 +203,7 @@ describe('Layouts page - edit form fields', () => {
   // ---------------------------------------------------------------------------
   test('Failed save keeps the modal open', async () => {
     vi.mocked(updateLayout).mockRejectedValueOnce({
+      isAxiosError: true,
       response: { data: { message: 'Layout name already exists' } },
     });
 

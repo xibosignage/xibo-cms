@@ -25,6 +25,7 @@ import type { User } from '@/types/user';
 export interface FetchUsersRequest {
   start: number;
   length: number;
+  userId?: number;
   userName?: string;
   userType?: string;
   signal?: AbortSignal;

@@ -56,56 +56,77 @@ export type ModalType =
   | null;
 
 export interface DisplayGroupFilterInput {
-  displayId: number | null;
+  displayGroup: string;
+  displayGroupId: number | null;
   displayIdDropdown: number | null;
   nestedDisplayId: number | null;
   dynamicCriteria: string;
   tags: Tag[];
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: boolean;
+  logicalOperator?: 'OR' | 'AND';
+  exactTags?: boolean;
 }
 
 export const INITIAL_FILTER_STATE: DisplayGroupFilterInput = {
-  displayId: null,
+  displayGroup: '',
+  displayGroupId: null,
   displayIdDropdown: null,
   nestedDisplayId: null,
   dynamicCriteria: '',
   tags: [],
+  logicalOperatorName: 'OR',
+  useRegexForName: false,
+  logicalOperator: 'OR',
+  exactTags: false,
 };
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayGroupFilterInput>[] => [
   {
-    label: t('Display ID'),
-    name: 'displayId',
+    label: t('ID'),
+    name: 'displayGroupId',
     type: 'number',
-    placeholder: t('Enter display ID...'),
+    placeholder: ' ',
+  },
+  {
+    label: t('Name'),
+    name: 'displayGroup',
+    type: 'text',
+    className: '',
+    placeholder: ' ',
+    showAndOr: true,
+    andOrKey: 'logicalOperatorName',
+    showRegex: true,
+    regexKey: 'useRegexForName',
   },
   {
     label: t('Display'),
     name: 'displayIdDropdown',
-    type: 'paged-select',
     placeholder: t('All'),
     options: [],
-    shouldTranslateOptions: false,
   },
   {
     label: t('Nested Display'),
     name: 'nestedDisplayId',
-    type: 'paged-select',
     placeholder: t('All'),
     options: [],
-    shouldTranslateOptions: false,
   },
   {
     label: t('Dynamic Criteria'),
     name: 'dynamicCriteria',
     type: 'text',
-    placeholder: t('Filter by criteria...'),
+    placeholder: ' ',
   },
   {
     label: t('Tags'),
     name: 'tags',
     type: 'tags',
-    className: 'max-w-auto md:max-w-80',
-    shouldTranslateOptions: false,
+    placeholder: ' ',
+    className: '',
+    showAndOr: true,
+    andOrKey: 'logicalOperator',
+    showExactTags: true,
+    exactTagsKey: 'exactTags',
   },
 ];
 
@@ -116,7 +137,7 @@ export interface DisplayGroupActionsProps {
   openCopyModal: (displayGroup: DisplayGroup) => void;
   openMembersModal: (displayGroup: DisplayGroup) => void;
   openMoveModal?: (displayGroup: DisplayGroup) => void;
-  openScheduleModal: (displayGroup: DisplayGroup) => void;
+  openScheduleModal?: (displayGroup: DisplayGroup) => void;
   openAssignFilesModal: (displayGroup: DisplayGroup) => void;
   openAssignLayoutsModal: (displayGroup: DisplayGroup) => void;
   openShareModal: (displayGroup: DisplayGroup) => void;
@@ -185,12 +206,16 @@ export const getDisplayGroupItemActions = ({
       icon: UserPlus2,
       onClick: () => openShareModal(displayGroup),
     },
-    { isSeparator: true },
-    {
-      label: t('Schedule'),
-      icon: Calendar,
-      onClick: () => openScheduleModal(displayGroup),
-    },
+    ...(openScheduleModal
+      ? [
+          { isSeparator: true as const },
+          {
+            label: t('Schedule'),
+            icon: Calendar,
+            onClick: () => openScheduleModal(displayGroup),
+          },
+        ]
+      : []),
     { isSeparator: true },
     {
       label: t('Assign Files'),

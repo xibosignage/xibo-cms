@@ -40,6 +40,7 @@ export interface WindowsFieldProps {
   daypartsHasMore?: boolean;
   onLoadMoreDayparts?: () => void;
   isLoadingMoreDayparts?: boolean;
+  onSearchDayparts?: (term: string) => void;
 }
 
 export function WindowsFields({
@@ -55,6 +56,7 @@ export function WindowsFields({
   daypartsHasMore,
   onLoadMoreDayparts,
   isLoadingMoreDayparts,
+  onSearchDayparts,
 }: WindowsFieldProps) {
   const metaMap = getFieldMetaForType('windows', t);
   const fieldsForTab = Object.entries(metaMap).filter(([, meta]) => meta.tab === tab);
@@ -90,6 +92,7 @@ export function WindowsFields({
     daypartsHasMore,
     onLoadMoreDayparts,
     isLoadingMoreDayparts,
+    onSearchDayparts,
   };
 
   return (

@@ -20,6 +20,7 @@
  */
 
 export * from './ActionsCell';
+export * from './DescriptionCell';
 export * from './CheckboxCell';
 export * from './CheckMarkCell';
 export * from './MediaCell';
