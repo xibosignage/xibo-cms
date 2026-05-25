@@ -34,6 +34,7 @@ interface UsersModalsProps {
   closeModal: () => void;
   handleRefresh: () => void;
   selectedUser: User | null;
+  itemsToSetHomeFolder: User[];
   deleteError: string | null;
   isDeleting: boolean;
   confirmDelete: (
@@ -47,6 +48,7 @@ export function UsersModals({
   closeModal,
   handleRefresh,
   selectedUser,
+  itemsToSetHomeFolder,
   deleteError,
   isDeleting,
   confirmDelete,
@@ -79,8 +81,12 @@ export function UsersModals({
         />
       )}
 
-      {activeModal === 'setHomeFolder' && selectedUser && (
-        <SetHomeFolderModal user={selectedUser} onClose={closeModal} onSuccess={handleRefresh} />
+      {activeModal === 'setHomeFolder' && (itemsToSetHomeFolder.length > 0 || selectedUser) && (
+        <SetHomeFolderModal
+          users={itemsToSetHomeFolder.length > 0 ? itemsToSetHomeFolder : [selectedUser!]}
+          onClose={closeModal}
+          onSuccess={handleRefresh}
+        />
       )}
 
       {activeModal === 'userGroups' && selectedUser && (

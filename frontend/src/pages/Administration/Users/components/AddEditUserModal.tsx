@@ -204,17 +204,22 @@ export default function AddEditUserModal({
   // Load user groups on mount
   useEffect(() => {
     if (!isOpen) return;
-    fetchUserGroups({ start: 0, length: 1000, isUser: 0 }).then((res) => {
-      setGroupData(
-        res.rows
-          .filter((g) => g.isUserSpecific !== 1)
-          .map((g) => ({
-            groupId: g.groupId,
-            name: g.group,
-            features: g.features ?? [],
-          })),
-      );
-    });
+    const controller = new AbortController();
+    fetchUserGroups({ start: 0, length: 1000, isUser: 0, signal: controller.signal })
+      .then((res) => {
+        if (controller.signal.aborted) return;
+        setGroupData(
+          res.rows
+            .filter((g) => g.isUserSpecific !== 1)
+            .map((g) => ({
+              groupId: g.groupId,
+              name: g.group,
+              features: g.features ?? [],
+            })),
+        );
+      })
+      .catch(() => {});
+    return () => controller.abort();
   }, [isOpen]);
 
   // Load data for edit mode
@@ -259,14 +264,17 @@ export default function AddEditUserModal({
   // Load folder tree + permissions
   useEffect(() => {
     if (!isOpen || !canViewFolders) return;
+    const controller = new AbortController();
     setIsLoadingFolders(true);
-    fetchFolderTree()
+    fetchFolderTree(controller.signal)
       .then(async (tree) => {
+        if (controller.signal.aborted) return;
         setFolderTreeData(tree);
         if (isEdit && user?.groupId) {
           const allIds = flattenFolderIds(tree);
           if (allIds.length > 0) {
             const perms = await fetchGroupFolderPermissions(allIds, user.groupId);
+            if (controller.signal.aborted) return;
             const mapped = new Map<number, PermissionLevel>();
             perms.forEach((perm, folderId) => {
               const level = permissionLevelFromApi(perm);
@@ -277,7 +285,10 @@ export default function AddEditUserModal({
           }
         }
       })
-      .finally(() => setIsLoadingFolders(false));
+      .finally(() => {
+        if (!controller.signal.aborted) setIsLoadingFolders(false);
+      });
+    return () => controller.abort();
   }, [isOpen, canViewFolders, isEdit, user?.groupId]);
 
   // Reset on close

@@ -29,33 +29,39 @@ import { setUserHomeFolder } from '@/services/userApi';
 import type { User } from '@/types/user';
 
 export interface SetHomeFolderModalProps {
-  user: User;
+  users: User[];
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export default function SetHomeFolderModal({ user, onClose, onSuccess }: SetHomeFolderModalProps) {
+export default function SetHomeFolderModal({ users, onClose, onSuccess }: SetHomeFolderModalProps) {
   const { t } = useTranslation();
   const [isPending, startTransition] = useTransition();
-  const [selectedFolderId, setSelectedFolderId] = useState<number>(user.homeFolderId ?? 1);
+  const [selectedFolderId, setSelectedFolderId] = useState<number>(users[0]?.homeFolderId ?? 1);
   const [selectedFolderText, setSelectedFolderText] = useState<string | null>(null);
   const [apiError, setApiError] = useState<string | undefined>();
 
   const handleSave = () => {
     startTransition(async () => {
-      try {
-        await setUserHomeFolder(user.userId, selectedFolderId);
+      const results = await Promise.allSettled(
+        users.map((u) => setUserHomeFolder(u.userId, selectedFolderId)),
+      );
+
+      const failed = results.filter((r) => r.status === 'rejected');
+      if (failed.length > 0) {
+        const firstRejected = failed[0] as PromiseRejectedResult;
+        const reason = firstRejected.reason;
+        const message =
+          isAxiosError(reason) && reason.response?.data?.message
+            ? reason.response.data.message
+            : t('{{count}} user(s) could not be updated.', { count: failed.length });
+        setApiError(message);
         onSuccess();
-        onClose();
-      } catch (err: unknown) {
-        if (isAxiosError(err) && err.response?.data?.message) {
-          setApiError(err.response.data.message);
-        } else if (err instanceof Error) {
-          setApiError(err.message);
-        } else {
-          setApiError(t('An unexpected error occurred.'));
-        }
+        return;
       }
+
+      onSuccess();
+      onClose();
     });
   };
 
@@ -63,7 +69,11 @@ export default function SetHomeFolderModal({ user, onClose, onSuccess }: SetHome
     <Modal
       isOpen
       onClose={onClose}
-      title={t('Set Home Folder for {{name}}', { name: user.userName })}
+      title={
+        users.length > 1
+          ? t('Set Home Folder for {{count}} users', { count: users.length })
+          : t('Set Home Folder for {{name}}', { name: users[0]?.userName })
+      }
       size="md"
       isPending={isPending}
       error={apiError}
@@ -83,9 +93,13 @@ export default function SetHomeFolderModal({ user, onClose, onSuccess }: SetHome
     >
       <div className="p-5 flex flex-col gap-2">
         <p className="text-sm text-gray-500">
-          {t(
-            'Select the home folder for this user. Content created by this user will be placed in this folder by default.',
-          )}
+          {users.length > 1
+            ? t(
+                'Select the home folder for the selected users. Content created by these users will be placed in this folder by default.',
+              )
+            : t(
+                'Select the home folder for this user. Content created by this user will be placed in this folder by default.',
+              )}
         </p>
         <SelectFolder
           selectedId={selectedFolderId}

@@ -63,7 +63,7 @@ export default function OptionsTab({ draft, setDraft, isEdit, isSuperAdmin }: Op
           onChange={(val) => setDraft((prev) => ({ ...prev, disableTwoFactor: val ? 1 : 0 }))}
         />
       )}
-      <InfoBanner type="info" hideInfoIcon={true} className="text-[12px] font-medium">
+      <InfoBanner type="info" hideInfoIcon={true} className="text-xs font-medium">
         {t(
           'We recommend enabling "Force Password Change" for new users to ensure they set a password only they know, especially if you generated a temporary password for them.',
         )}

@@ -92,9 +92,11 @@ export default function Users() {
   });
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [selectionCache, setSelectionCache] = useState<Record<string, User>>({});
   const [openFilter, setOpenFilter] = useState(false);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [itemsToSetHomeFolder, setItemsToSetHomeFolder] = useState<User[]>([]);
 
   const openModal = (modal: ModalType, user?: User) => {
     setSelectedUser(user ?? null);
@@ -104,6 +106,7 @@ export default function Users() {
   const closeModal = () => {
     setActiveModal(null);
     setSelectedUser(null);
+    setItemsToSetHomeFolder([]);
   };
 
   const handleRefresh = () => {
@@ -129,6 +132,31 @@ export default function Users() {
 
   const getRowId = (row: User) => row.userId.toString();
 
+  const handleRowSelectionChange = (
+    updaterOrValue: RowSelectionState | ((prev: RowSelectionState) => RowSelectionState),
+  ) => {
+    const newSelection =
+      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
+    setRowSelection(newSelection);
+
+    setSelectionCache((prev) => {
+      const next = { ...prev };
+      userList.forEach((item) => {
+        const id = getRowId(item);
+        if (newSelection[id]) {
+          next[id] = item;
+        }
+      });
+      return next;
+    });
+  };
+
+  const getAllSelectedItems = (): User[] => {
+    return Object.keys(rowSelection)
+      .map((id) => selectionCache[id])
+      .filter((item): item is User => !!item);
+  };
+
   const { isDeleting, deleteError, confirmDelete } = useUsersActions({
     t,
     handleRefresh,
@@ -152,6 +180,8 @@ export default function Users() {
   const bulkActions = getBulkActions({
     t,
     onSetHomeFolder: () => {
+      const allItems = getAllSelectedItems();
+      setItemsToSetHomeFolder(allItems);
       openModal('setHomeFolder');
     },
   });
@@ -243,7 +273,7 @@ export default function Users() {
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetching}
               rowSelection={rowSelection}
-              onRowSelectionChange={setRowSelection}
+              onRowSelectionChange={handleRowSelectionChange}
               onRefresh={handleRefresh}
               enableSelection
               columnPinning={{ left: ['tableSelection'], right: ['tableActions'] }}
@@ -262,6 +292,7 @@ export default function Users() {
         closeModal={closeModal}
         handleRefresh={handleRefresh}
         selectedUser={selectedUser}
+        itemsToSetHomeFolder={itemsToSetHomeFolder}
         deleteError={deleteError}
         isDeleting={isDeleting}
         confirmDelete={confirmDelete}

@@ -60,13 +60,15 @@ export default function DeleteUserModal({
       return;
     }
 
-    fetchUsers({ start: 0, length: 1000 }).then((res) => {
-      setUserOptions(
-        res.rows
-          .filter((u) => u.userId !== userId)
-          .map((u) => ({ label: u.userName, value: String(u.userId) })),
-      );
-    });
+    fetchUsers({ start: 0, length: 1000 })
+      .then((res) => {
+        setUserOptions(
+          res.rows
+            .filter((u) => u.userId !== userId)
+            .map((u) => ({ label: u.userName, value: String(u.userId) })),
+        );
+      })
+      .catch(() => setUserOptions([]));
   }, [isOpen, userId]);
 
   return (

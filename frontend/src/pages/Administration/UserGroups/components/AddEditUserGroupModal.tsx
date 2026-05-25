@@ -232,8 +232,12 @@ export default function AddEditUserGroupModal({
         },
         {
           label: isPending
-            ? isEdit ? t('Saving...') : t('Creating...')
-            : isEdit ? t('Save') : t('Create Group'),
+            ? isEdit
+              ? t('Saving...')
+              : t('Creating...')
+            : isEdit
+              ? t('Save')
+              : t('Create Group'),
           onClick: handleSave,
           disabled: isPending,
         },

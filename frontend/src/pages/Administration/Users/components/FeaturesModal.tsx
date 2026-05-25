@@ -112,7 +112,7 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
     });
   };
 
-  const toggleGroup = (groupKey: string, features: FeatureDefinition[]) => {
+  const toggleGroup = (features: FeatureDefinition[]) => {
     const allEnabled = features.every((f) => enabledFeatures.has(f.feature));
     setEnabledFeatures((prev) => {
       const next = new Set(prev);
@@ -276,7 +276,7 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
                           ref={(el) => {
                             if (el) el.indeterminate = someEnabled;
                           }}
-                          onChange={() => toggleGroup(groupKey, features)}
+                          onChange={() => toggleGroup(features)}
                           className="h-4 w-4 border-gray-300 rounded cursor-pointer text-blue-600 focus:ring-blue-500"
                         />
                       </div>
