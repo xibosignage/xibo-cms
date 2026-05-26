@@ -1469,6 +1469,21 @@ class LayoutFactory extends BaseFactory
                 continue;
             }
 
+            // Determine type before extension validation so we use the right whitelist.
+            $isFont = (isset($file['font']) && $file['font'] == 1);
+
+            // Validate extension against the appropriate whitelist.
+            // Font files and media files each have their own allowed set.
+            // This prevents dangerous extensions (e.g. .php) regardless of the font flag.
+            $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+            $validExtensions = $isFont
+                ? $this->fontFactory->getValidExtensions()
+                : $this->moduleFactory->getValidExtensions();
+            if (empty($ext) || !in_array($ext, $validExtensions)) {
+                $this->getLog()->error('Skipping file on import due to disallowed extension: ' . $fileName);
+                continue;
+            }
+
             $temporaryFileName = $libraryLocationTemp . $fileName;
 
             // Get the file from the ZIP
@@ -1499,9 +1514,6 @@ class LayoutFactory extends BaseFactory
 
             fclose($fileStream);
             fclose($temporaryFileStream);
-
-            // Check if it's a font file
-            $isFont = (isset($file['font']) && $file['font'] == 1);
 
             if ($isFont) {
                 try {
@@ -1543,10 +1555,18 @@ class LayoutFactory extends BaseFactory
                     // Create it instead
                     $this->getLog()->debug('Media does not exist in Library, add it ' . $fileName);
 
+                    // Sanitize the media type to prevent arbitrary string injection into the database.
+                    $mediaType = preg_replace('/[^a-zA-Z0-9_-]/', '', $file['type'] ?? '');
+                    if (empty($mediaType)) {
+                        $this->getLog()->error('Skipping file on import due to invalid media type: '
+                            . ($file['type'] ?? ''));
+                        continue;
+                    }
+
                     $media = $this->mediaFactory->create(
                         $intendedMediaName,
                         $fileName,
-                        $file['type'],
+                        $mediaType,
                         $userId,
                         $file['duration']
                     );
