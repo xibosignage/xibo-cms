@@ -364,10 +364,17 @@ class SAMLAuthentication extends AuthenticationBase
                     }
                 }
 
-                // Redirect back to the originally-requested url, if provided
-                // it is not clear why basename is used here, it seems to be something to do with a logout loop
-                $params =  $request->getParams();
+                // Redirect back to the originally-requested url, if provided.
+                // Sanitize RelayState to prevent open redirect: extract only the path,
+                // discarding any scheme or host that could redirect the user off-site.
+                $params     = $request->getParams();
                 $relayState = $params['RelayState'] ?? null;
+                if (!empty($relayState)) {
+                    $parsed     = parse_url($relayState);
+                    $relayState = ($parsed !== false) ? ($parsed['path'] ?? '') : '';
+                }
+
+                // basename === 'login' guard prevents a logout loop when RelayState is /saml/login
                 $redirect = empty($relayState) || basename($relayState) === 'login'
                     ? $this->getRouteParser()->urlFor('home')
                     : $relayState;
