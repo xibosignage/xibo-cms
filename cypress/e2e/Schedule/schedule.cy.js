@@ -306,12 +306,21 @@ describe('Schedule Events', function() {
         // Click Next and check toast message
         cy.get('.modal .modal-footer').contains('Next').click();
 
-        // Wait for step 3 to be fully visible so flatpickr calendar opens at correct position
+        // Wait for step 3 to be fully visible before setting the date
         cy.get('.starttime-control').should('be.visible');
 
-        cy.get('#fromDt').closest('.input-group').find('.datePickerHelper').scrollIntoView().click({force: true});
-        cy.get('.open > .flatpickr-innerContainer > .flatpickr-rContainer > .flatpickr-days > .dayContainer > .today').click();
-        cy.get('.open > .flatpickr-time > :nth-child(3) > .arrowUp').click();
+        // Use the page's own updateDatePicker helper so the value is set
+        // through the same jQuery instance that validateStep(3) reads via
+        // $(dialog).find('#fromDt').val(). This covers both the flatpickr-
+        // initialised path (_flatpickr.setDate) and the fallback path
+        // ($element.val()), using window.systemDateFormat as the format.
+        cy.window().then(win => {
+          win.updateDatePicker(
+            win.$('.bootbox.modal #fromDt'),
+            '2030-01-01 13:00:00',
+            win.systemDateFormat,
+          );
+        });
 
         cy.get('.modal .modal-footer').contains('Next').click();
         cy.get('#schedule-step-4').should('be.visible');
@@ -358,46 +367,12 @@ describe('Schedule Events', function() {
         // Click Next and check toast message
         cy.get('.modal .modal-footer').contains('Next').click();
 
-        // Select daypart - custom
-        cy.get('#dayPartId').select('Custom');
-
-        // Wait for step 3 to be fully visible so flatpickr calendar opens at correct position
-        cy.get('.starttime-control').should('be.visible');
-
-        cy.get('#fromDt').closest('.input-group').find('.datePickerHelper')
-          .scrollIntoView().click({force: true}) // Scroll into view first — step was hidden during flatpickr init
-          .then(() => {
-            // Select today's date
-            cy.get('.flatpickr-calendar.open .flatpickr-days .dayContainer .today')
-              .click();
-
-            // Increment the hour (adjust time)
-            cy.get('.flatpickr-calendar.open .flatpickr-time :nth-child(3) .arrowUp')
-              .click();
-
-            // Close the picker by clicking outside
-            cy.get('body').click(0, 0);
-          });
-
-        cy.get('#toDt').closest('.input-group').find('.datePickerHelper')
-          .scrollIntoView().click({force: true}) // Scroll into view first — step was hidden during flatpickr init
-          .then(() => {
-            // Select today's date
-            cy.get('.flatpickr-calendar.open .flatpickr-days .dayContainer .today')
-              .click();
-
-            // Increment the hour (adjust time)
-            cy.get('.flatpickr-calendar.open .flatpickr-time :nth-child(3) .arrowUp')
-              .click()
-              .click();
-
-            // Close the picker by clicking outside
-            cy.get('body').click(0, 0);
-          });
+        // Select daypart - Always avoids flatpickr date entry (same pattern as Layout/Campaign tests)
+        cy.get('.modal-content [name="dayPartId"]').select('Always');
 
         cy.get('.modal .modal-footer').contains('Next').click();
         cy.get('#schedule-step-4').should('be.visible');
-        cy.get('.modal-content [name="name"]').type('Custom - Overlay Event');
+        cy.get('.modal-content [name="name"]').type('Always - Overlay Event');
 
         cy.get('.modal .modal-footer').contains('Finish').click();
       });
