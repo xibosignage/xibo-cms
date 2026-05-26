@@ -72,10 +72,6 @@ class Transition extends Base
 
         $transitions = $this->transitionFactory->query($transitionSortQuery, $transitionFilterQuery);
 
-        foreach ($transitions as $transition) {
-            $transition->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($transition));
-        }
-
         return $response
             ->withStatus(200)
             ->withHeader('X-Total-Count', $this->transitionFactory->countLast())
@@ -88,13 +84,10 @@ class Transition extends Base
      * @param int $id
      * @return Response|ResponseInterface
      * @throws NotFoundException
-     * @throws InvalidArgumentException
      */
     public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $transition = $this->transitionFactory->getById($id);
-
-        $transition->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($transition));
 
         return $response->withStatus(200)->withJson($transition);
     }
