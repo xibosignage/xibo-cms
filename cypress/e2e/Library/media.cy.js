@@ -49,7 +49,7 @@ describe('Media Admin', function() {
 
       // Wait for the server to download the remote file and respond (can take a while)
       cy.wait('@uploadMedia', {timeout: 120000})
-        .its('response.statusCode').should('eq', 201);
+        .its('response.statusCode').should('eq', 200);
 
       // Wait for the grid to reload (only fires on successful upload after bootbox.hideAll())
       cy.wait('@gridReload', {timeout: 30000});

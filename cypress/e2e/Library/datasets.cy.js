@@ -269,7 +269,10 @@ describe('Datasets', function() {
   it('selects multiple datasets and delete them', function() {
     // Create a new dataset and then search for it and delete it
     cy.createDataset('Cypress Test Dataset ' + testRun).then((res) => {
-      cy.intercept('GET', '/dataset?draw=2&*').as('datasetGridLoad');
+      cy.intercept({
+        url: '/dataset?*',
+        query: {dataSet: 'Cypress Test Dataset'},
+      }).as('datasetGridLoad');
 
       // Delete all test datasets
       cy.visit('/dataset/view');
@@ -282,7 +285,9 @@ describe('Datasets', function() {
       // Wait for the grid reload
       cy.wait('@datasetGridLoad');
 
-      // Select all
+      // Select all — split into two cy.get() so the click uses a fresh reference
+      // after DataTables finishes its drawCallback re-render
+      cy.get('button[data-toggle="selectAll"]').should('be.visible');
       cy.get('button[data-toggle="selectAll"]').click();
 
       // Delete all

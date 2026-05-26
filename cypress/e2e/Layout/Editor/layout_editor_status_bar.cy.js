@@ -29,9 +29,11 @@ describe('Layout Editor Status Bar', function() {
 
   beforeEach(function() {
     cy.login();
+    cy.intercept('GET', '/layout/status/*').as('layoutStatusLoad');
     cy.visit('/layout/view');
     cy.get('button.layout-add-button').click();
     cy.get('#layout-viewer').should('be.visible');
+    cy.wait('@layoutStatusLoad');
   });
 
   it('should display the correct Layout status icon and tooltip', function() {
@@ -39,6 +41,8 @@ describe('Layout Editor Status Bar', function() {
       .should('be.visible')
       .and('have.class', 'badge-danger');
 
+    // Re-query to get a fresh reference after the status API re-renders the topbar
+    cy.get(layoutStatusSelector).should('have.class', 'badge-danger');
     cy.get(layoutStatusSelector)
       .trigger('mouseover');
 

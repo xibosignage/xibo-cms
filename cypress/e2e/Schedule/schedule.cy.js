@@ -314,6 +314,7 @@ describe('Schedule Events', function() {
         cy.get('.open > .flatpickr-time > :nth-child(3) > .arrowUp').click();
 
         cy.get('.modal .modal-footer').contains('Next').click();
+        cy.get('#schedule-step-4').should('be.visible');
         cy.get('.modal-content [name="name"]').type('Custom - Command Event');
 
         cy.get('.modal .modal-footer').contains('Finish').click();
@@ -395,6 +396,7 @@ describe('Schedule Events', function() {
           });
 
         cy.get('.modal .modal-footer').contains('Next').click();
+        cy.get('#schedule-step-4').should('be.visible');
         cy.get('.modal-content [name="name"]').type('Custom - Overlay Event');
 
         cy.get('.modal .modal-footer').contains('Finish').click();

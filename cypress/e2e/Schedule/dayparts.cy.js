@@ -207,7 +207,9 @@ describe('Dayparts', function() {
       // Wait for the grid reload
       cy.wait('@loadGridAfterSearch');
 
-      // Select all
+      // Select all — split into two cy.get() so the click uses a fresh reference
+      // after DataTables finishes its drawCallback re-render
+      cy.get('button[data-toggle="selectAll"]').should('be.visible');
       cy.get('button[data-toggle="selectAll"]').click();
 
       // Delete all
