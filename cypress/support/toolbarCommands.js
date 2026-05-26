@@ -78,14 +78,13 @@ Cypress.Commands.add('clearToolbarPrefs', function() {
 Cypress.Commands.add('openToolbarMenu', (menuIdx, load = true) => {
   cy.intercept('GET', '/user/pref?preference=toolbar').as('toolbarPrefsLoad');
   cy.intercept('GET', '/user/pref?preference=editor').as('editorPrefsLoad');
-  // preference is sent as a body field, not a query param — match the correct URL
-  cy.intercept('POST', '/user/pref').as('toolbarPrefsSave');
 
   if (load) {
     cy.wait('@toolbarPrefsLoad');
     cy.wait('@editorPrefsLoad');
-    // Wait for the toolbar POST (saves prefs after init) to ensure the final re-render is done
-    cy.wait('@toolbarPrefsSave');
+    // POST /user/pref fires before these intercepts are registered (captured by the test's
+    // own @userPref alias), so waiting on it here always times out. Use a DOM check instead.
+    cy.get('.editor-side-bar #btn-menu-' + menuIdx).should('exist');
   }
 
   cy.get('.editor-side-bar').then(($toolbar) => {

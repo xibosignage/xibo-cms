@@ -48,10 +48,11 @@ describe('Media Admin', function() {
       cy.get('.modal .save-button').click();
 
       // Wait for the server to download the remote file and respond (can take a while)
-      cy.wait('@uploadMedia', {timeout: 120000});
+      cy.wait('@uploadMedia', {timeout: 120000})
+        .its('response.statusCode').should('eq', 201);
 
       // Wait for the grid to reload (only fires on successful upload after bootbox.hideAll())
-      cy.wait('@gridReload');
+      cy.wait('@gridReload', {timeout: 30000});
 
       // Wait for the Bootstrap fade animation to fully complete (display:none set after transition)
       cy.get('.bootbox.modal:visible').should('not.exist');

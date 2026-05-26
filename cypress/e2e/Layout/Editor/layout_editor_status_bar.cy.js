@@ -37,7 +37,9 @@ describe('Layout Editor Status Bar', function() {
   it('should display the correct Layout status icon and tooltip', function() {
     cy.get(layoutStatusSelector)
       .should('be.visible')
-      .and('have.class', 'badge-danger')
+      .and('have.class', 'badge-danger');
+
+    cy.get(layoutStatusSelector)
       .trigger('mouseover');
 
     cy.get(tooltipSelector)
