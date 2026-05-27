@@ -287,6 +287,7 @@ describe('Datasets', function() {
       cy.get('#datasets tbody tr').should('have.length.greaterThan', 0);
 
       // Select all
+      cy.get('button[data-toggle="selectAll"]').should('be.visible');
       cy.get('button[data-toggle="selectAll"]').click();
 
       // Delete all

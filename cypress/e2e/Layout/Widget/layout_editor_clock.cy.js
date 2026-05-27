@@ -29,15 +29,15 @@ describe('Clock Analogue Widget', function() {
   it('should create a new layout and be redirected to the layout designer, add/delete analogue clock', function() {
     cy.intercept('/playlist/widget/*').as('saveWidget');
     cy.intercept('DELETE', '**/region/**').as('deleteWidget');
-    cy.intercept('POST', '/user/pref').as('userPref');
+    cy.intercept('GET', '/user/pref?preference=toolbar').as('toolbarPrefsInit');
 
     cy.visit('/layout/view');
     cy.get('button[href="/layout"]').click();
-    cy.wait('@userPref');
+    cy.wait('@toolbarPrefsInit');
+    cy.get('.editor-side-bar #btn-menu-0').should('be.visible');
 
     // Open widget menu
     cy.openToolbarMenu(0, false);
-    cy.wait('@userPref');
 
     cy.get('[data-sub-type="clock"]').should('be.visible');
     cy.get('[data-sub-type="clock"]').click();

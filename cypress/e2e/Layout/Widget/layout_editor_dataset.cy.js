@@ -29,15 +29,15 @@ describe('Dataset', function() {
   it('should create a new layout, add/delete dataset widget', function() {
     cy.intercept('/dataset?start=*').as('loadDatasets');
     cy.intercept('DELETE', '**/region/**').as('deleteWidget');
-    cy.intercept('POST', '/user/pref').as('userPref');
+    cy.intercept('GET', '/user/pref?preference=toolbar').as('toolbarPrefsInit');
 
     cy.visit('/layout/view');
     cy.get('button[href="/layout"]').click();
-    cy.wait('@userPref');
+    cy.wait('@toolbarPrefsInit');
+    cy.get('.editor-side-bar #btn-menu-0').should('be.visible');
 
     // Open widget menu and add dataset widget
     cy.openToolbarMenu(0, false);
-    cy.wait('@userPref');
 
     cy.get('[data-sub-type="dataset"]').should('be.visible');
     cy.get('[data-sub-type="dataset"]').click();
