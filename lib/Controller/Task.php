@@ -101,6 +101,7 @@ class Task extends Base
         );
 
         foreach ($tasks as $task) {
+            $task->setClassAndOptions();
             $this->decorateTaskProperties($task);
         }
 
@@ -122,6 +123,7 @@ class Task extends Base
     public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $task = $this->taskFactory->getById($id);
+        $task->setClassAndOptions();
 
         $this->decorateTaskProperties($task);
 
@@ -537,8 +539,6 @@ class Task extends Base
     private function decorateTaskProperties($task): void
     {
         $task->setUnmatchedProperty('nextRunDt', $task->nextRunDate());
-
-        $task->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($task));
 
         $task->setUnmatchedProperty('isConfigLocked', (
             $this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') == 1 ||

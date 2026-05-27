@@ -353,7 +353,10 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'tasks',
         labelKey: 'Tasks',
-        externalURL: '/task/view',
+        lazy: () =>
+          import('@/pages/Administration/Tasks/Tasks').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'task.view',
       },
       {
