@@ -38,7 +38,7 @@ describe('Media Admin', function() {
       cy.contains('Add media (URL)').click();
 
       cy.get('#url')
-        .type('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
+        .type('https://xibo-assets.fra1.digitaloceanspaces.com/xibo-logo.png');
 
       cy.get('#optionalName')
         .type('Cypress Test Media ' + testRun);
@@ -48,8 +48,10 @@ describe('Media Admin', function() {
       cy.get('.modal .save-button').click();
 
       // Wait for the server to download the remote file and respond (can take a while)
-      cy.wait('@uploadMedia', {timeout: 120000})
-        .its('response.statusCode').should('eq', 200);
+      cy.wait('@uploadMedia', {timeout: 30000}).then((interception) => {
+        expect(interception.response.statusCode, 'upload status code').to.equal(200);
+        expect(interception.response.body.success, 'upload success flag').to.be.true;
+      });
 
       // Wait for the grid to reload (only fires on successful upload after bootbox.hideAll())
       cy.wait('@gridReload', {timeout: 30000});
