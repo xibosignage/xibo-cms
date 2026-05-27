@@ -355,41 +355,42 @@ class UserFactory extends BaseFactory
             $params['homeFolderId'] = $parsedFilter->getInt('homeFolderId');
         }
 
-        // Sorting?
-        $order = '';
-
-        if ($parsedFilter->getInt('userGroupIdMembers') !== null && !empty($sortOrder)) {
-            $order = $this->orderByMembersAssignment($parsedFilter->getInt('userGroupIdMembers'), $sortOrder);
+        if ($parsedFilter->getInt('userGroupIdMembers') !== null) {
+            $body .= '
+                AND user.userId IN (
+                    SELECT userId FROM `lkusergroup`
+                     WHERE groupId = :userGroupIdMembers
+                )
+            ';
+            $params['userGroupIdMembers'] = $parsedFilter->getInt('userGroupIdMembers');
         }
 
-        if (empty($order)) {
-            // table sorting
-            $allowedColumns = [
-                'userId',
-                'userName',
-                'firstName',
-                'lastName',
-                'email',
-                'homeFolder',
-                'libraryQuota',
-                'lastAccessed',
-                'retired',
-                'twoFactorTypeId',
-                'phone',
-                'ref1',
-                'ref2',
-                'ref3',
-                'ref4',
-                'ref5',
-            ];
-            $sortOrder = $this->buildSortQuery(
-                $sortOrder,
-                $allowedColumns,
-                defaultSort: ['userId ASC']
-            );
+        // Sorting
+        $allowedColumns = [
+            'userId',
+            'userName',
+            'firstName',
+            'lastName',
+            'email',
+            'homeFolder',
+            'libraryQuota',
+            'lastAccessed',
+            'retired',
+            'twoFactorTypeId',
+            'phone',
+            'ref1',
+            'ref2',
+            'ref3',
+            'ref4',
+            'ref5',
+        ];
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['userId ASC']
+        );
 
-            $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
-        }
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         $limit = '';
         // Paging
@@ -467,34 +468,5 @@ class UserFactory extends BaseFactory
         // Run the query
         $results = $this->getStore()->select($sql, $params);
         return intval($results[0]['countOf'] ?? 0);
-    }
-
-
-    /**
-     * @param int $userGroupId
-     * @param array $sortOrder
-     * @return string
-     */
-    public function orderByMembersAssignment(int $userGroupId, array $sortOrder): string
-    {
-        $order = '';
-
-        if (in_array('`member`', $sortOrder) || in_array('`member` DESC', $sortOrder)) {
-            // User members of provided User Group
-            $members = array_column(
-                $this->getStore()->select(
-                    'SELECT `userId` FROM `lkusergroup` WHERE groupId = :groupId',
-                    ['groupId' => $userGroupId]
-                ),
-                'userId'
-            );
-
-            if (!empty($members)) {
-                $dir = in_array('`member` DESC', $sortOrder) ? ' DESC' : '';
-                $order = 'ORDER BY FIELD(`user`.userId,' . implode(',', $members) . ')' . $dir;
-            }
-        }
-
-        return $order;
     }
 }

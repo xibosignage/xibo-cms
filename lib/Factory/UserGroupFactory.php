@@ -387,38 +387,34 @@ class UserGroupFactory extends BaseFactory
             $params['displayGroupId'] = $parsedFilter->getInt('displayGroupId');
         }
 
-        // Sorting?
-        $order = '';
-
-        if ($parsedFilter->getInt('userIdMember') !== null && !empty($sortOrder)) {
-            $order = $this->orderByMembersAssignment($parsedFilter->getInt('userIdMember'), $sortOrder);
+        if ($parsedFilter->getInt('userIdMember') !== null) {
+            $body .= ' AND `group`.groupId IN (SELECT groupId FROM `lkusergroup` WHERE userId = :userIdMember) ';
+            $params['userIdMember'] = $parsedFilter->getInt('userIdMember');
         }
 
-        if (empty($order)) {
-            // table sorting
-            $allowedColumns = [
-                'groupId',
-                'group',
-                'description',
-                'libraryQuota',
-                'isSystemNotification',
-                'isDisplayNotification',
-                'isDataSetNotification',
-                'isLayoutNotification',
-                'isLibraryNotification',
-                'isReportNotification',
-                'isScheduleNotification',
-                'isCustomNotification',
-                'isShownForAddUser',
-            ];
-            $sortOrder = $this->buildSortQuery(
-                $sortOrder,
-                $allowedColumns,
-                defaultSort: ['groupId ASC']
-            );
+        // Sorting
+        $allowedColumns = [
+            'groupId',
+            'group',
+            'description',
+            'libraryQuota',
+            'isSystemNotification',
+            'isDisplayNotification',
+            'isDataSetNotification',
+            'isLayoutNotification',
+            'isLibraryNotification',
+            'isReportNotification',
+            'isScheduleNotification',
+            'isCustomNotification',
+            'isShownForAddUser',
+        ];
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['groupId ASC']
+        );
 
-            $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
-        }
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         $limit = '';
         // Paging
@@ -1092,33 +1088,5 @@ class UserGroupFactory extends BaseFactory
             );
         }
         return $this;
-    }
-
-    /**
-     * @param int $userIdMember
-     * @param array $sortOrder
-     * @return string
-     */
-    public function orderByMembersAssignment(int $userIdMember, array $sortOrder): string
-    {
-        $order = '';
-
-        if (in_array('`member`', $sortOrder) || in_array('`member` DESC', $sortOrder)) {
-            // UserGroup members with provided User ID
-            $members = array_column(
-                $this->getStore()->select(
-                    'SELECT `groupId` FROM `lkusergroup` WHERE userId = :userId',
-                    ['userId' => $userIdMember]
-                ),
-                'groupId'
-            );
-
-            if (!empty($members)) {
-                $dir = in_array('`member` DESC', $sortOrder) ? ' DESC' : '';
-                $order = 'ORDER BY FIELD(`group`.groupId,' . implode(',', $members) . ')' . $dir;
-            }
-        }
-
-        return $order;
     }
 }

@@ -31,6 +31,7 @@ export interface FetchUserGroupsRequest {
   keyword?: string;
   isUser?: number;
   isShownForAddUser?: number;
+  userIdMember?: number;
   sortBy?: string;
   sortDir?: string;
   logicalOperatorName?: string;

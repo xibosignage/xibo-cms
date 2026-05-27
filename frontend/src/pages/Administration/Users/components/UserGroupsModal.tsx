@@ -57,16 +57,15 @@ export default function UserGroupsModal({ user, onClose, onSuccess }: UserGroups
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 5 });
   const [sorting, setSorting] = useState<SortingState>([]);
 
-  // Load assigned groups from the user's groups
+  // Load currently assigned groups fresh from the API
   useEffect(() => {
     setIsLoadingAssigned(true);
-    // Fetch groups where this user is a member
-    if (user.groups && user.groups.length > 0) {
-      setAssignedGroups(user.groups.filter((g) => g.isUserSpecific !== 1));
-    } else {
-      setAssignedGroups([]);
-    }
-    setIsLoadingAssigned(false);
+    setToAdd([]);
+    setToRemove([]);
+    fetchUserGroups({ start: 0, length: 1000, userIdMember: user.userId })
+      .then((res) => setAssignedGroups(res.rows.filter((g) => g.isUserSpecific !== 1)))
+      .catch(() => setAssignedGroups([]))
+      .finally(() => setIsLoadingAssigned(false));
   }, [user]);
 
   // Search available groups
