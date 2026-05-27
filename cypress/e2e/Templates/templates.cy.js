@@ -116,6 +116,7 @@ describe('Template Test Suite', function () {
   it('should delete multiple templates', function () {
     createTemplate(templateName);
 
+    cy.get('#templates tbody tr').should('have.length.greaterThan', 0);
     cy.get('button[data-toggle="selectAll"]').click();
     cy.get('.dataTables_info button[data-toggle="dropdown"]').click();
     cy.get('a[data-button-id="layout_button_delete"]').click();

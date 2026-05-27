@@ -23,6 +23,7 @@
 describe('Dataset', function() {
   beforeEach(function() {
     cy.login();
+    cy.clearToolbarPrefs();
   });
 
   it('should create a new layout, add/delete dataset widget', function() {
@@ -32,19 +33,17 @@ describe('Dataset', function() {
 
     cy.visit('/layout/view');
     cy.get('button[href="/layout"]').click();
+    cy.wait('@userPref');
 
     // Open widget menu and add dataset widget
-    cy.openToolbarMenu(0);
-
-    cy.get('[data-sub-type="dataset"]')
-      .should('be.visible')
-      .click();
+    cy.openToolbarMenu(0, false);
     cy.wait('@userPref');
 
-    cy.get('[data-template-id="dataset_table_1"]')
-      .should('be.visible')
-      .click();
-    cy.wait('@userPref');
+    cy.get('[data-sub-type="dataset"]').should('be.visible');
+    cy.get('[data-sub-type="dataset"]').click();
+
+    cy.get('[data-template-id="dataset_table_1"]').should('be.visible');
+    cy.get('[data-template-id="dataset_table_1"]').click();
 
     cy.get('.viewer-object.layout.ui-droppable-active')
       .should('be.visible')

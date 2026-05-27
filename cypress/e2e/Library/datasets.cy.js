@@ -284,10 +284,9 @@ describe('Datasets', function() {
 
       // Wait for the grid reload
       cy.wait('@datasetGridLoad');
+      cy.get('#datasets tbody tr').should('have.length.greaterThan', 0);
 
-      // Select all — split into two cy.get() so the click uses a fresh reference
-      // after DataTables finishes its drawCallback re-render
-      cy.get('button[data-toggle="selectAll"]').should('be.visible');
+      // Select all
       cy.get('button[data-toggle="selectAll"]').click();
 
       // Delete all

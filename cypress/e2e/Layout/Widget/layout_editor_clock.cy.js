@@ -23,6 +23,7 @@
 describe('Clock Analogue Widget', function() {
   beforeEach(function() {
     cy.login();
+    cy.clearToolbarPrefs();
   });
 
   it('should create a new layout and be redirected to the layout designer, add/delete analogue clock', function() {
@@ -32,19 +33,17 @@ describe('Clock Analogue Widget', function() {
 
     cy.visit('/layout/view');
     cy.get('button[href="/layout"]').click();
+    cy.wait('@userPref');
 
     // Open widget menu
-    cy.openToolbarMenu(0);
-
-    cy.get('[data-sub-type="clock"]')
-      .should('be.visible')
-      .click();
+    cy.openToolbarMenu(0, false);
     cy.wait('@userPref');
 
-    cy.get('[data-sub-type="clock-analogue"] > .toolbar-card-thumb')
-      .should('be.visible')
-      .click();
-    cy.wait('@userPref');
+    cy.get('[data-sub-type="clock"]').should('be.visible');
+    cy.get('[data-sub-type="clock"]').click();
+
+    cy.get('[data-sub-type="clock-analogue"] > .toolbar-card-thumb').should('be.visible');
+    cy.get('[data-sub-type="clock-analogue"] > .toolbar-card-thumb').click();
 
     cy.get('.viewer-object.layout.ui-droppable-active')
       .should('be.visible')
