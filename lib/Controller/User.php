@@ -131,7 +131,7 @@ class User extends Base
     {
         // Should we show this user the welcome page?
         if ($this->getUser()->newUserWizard == 0) {
-            return $response->withRedirect($this->urlFor($request, 'welcome.view'));
+            return $response->withRedirect('/prototype/welcome');
         }
 
         // User wizard seen, go to the React dashboard

@@ -149,13 +149,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 //
 // user
 //
-$app->get('/user/view', ['\Xibo\Controller\User', 'displayPage'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['users.view']))
-    ->setName('user.view');
-
-$app->post('/user/welcome', ['\Xibo\Controller\User','userWelcomeSetUnseen'])->setName('welcome.wizard.unseen');
-$app->put('/user/welcome', ['\Xibo\Controller\User','userWelcomeSetSeen'])->setName('welcome.wizard.seen');
-
 $app->get('/user/apps', ['\Xibo\Controller\User','myApplications'])->setName('user.applications');
 
 $app->get('/user/form/profile', ['\Xibo\Controller\User','editProfileForm'])->setName('user.edit.profile.form');
