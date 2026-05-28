@@ -580,14 +580,28 @@ class Notification extends Base
 
         // Displays and Users to link
         foreach ($sanitizedParams->getIntArray('displayGroupIds', ['default' => [] ]) as $displayGroupId) {
-            $notification->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
+            $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+            // Verify the caller can view the display group they're assigning the notification to.
+            if (!$this->getUser()->checkViewable($displayGroup)) {
+                throw new AccessDeniedException(__('Access to one or more display groups denied'));
+            }
+
+            $notification->assignDisplayGroup($displayGroup);
 
             // Notify (don't collect)
             $this->displayNotifyService->collectLater()->notifyByDisplayGroupId($displayGroupId);
         }
 
         foreach ($sanitizedParams->getIntArray('userGroupIds', ['default' => [] ]) as $userGroupId) {
-            $notification->assignUserGroup($this->userGroupFactory->getById($userGroupId));
+            $userGroup = $this->userGroupFactory->getById($userGroupId);
+
+            // Verify the caller can view the user group they're assigning the notification to.
+            if (!$this->getUser()->checkViewable($userGroup)) {
+                throw new AccessDeniedException(__('Access to one or more user groups denied'));
+            }
+
+            $notification->assignUserGroup($userGroup);
         }
 
         $notification->save();
@@ -728,14 +742,28 @@ class Notification extends Base
 
         // Displays and Users to link
         foreach ($sanitizedParams->getIntArray('displayGroupIds', ['default' => []]) as $displayGroupId) {
-            $notification->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
+            $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+            // Verify the caller can view the display group they're assigning the notification to.
+            if (!$this->getUser()->checkViewable($displayGroup)) {
+                throw new AccessDeniedException(__('Access to one or more display groups denied'));
+            }
+
+            $notification->assignDisplayGroup($displayGroup);
 
             // Notify (don't collect)
             $this->displayNotifyService->collectLater()->notifyByDisplayGroupId($displayGroupId);
         }
 
         foreach ($sanitizedParams->getIntArray('userGroupIds', ['default' => []]) as $userGroupId) {
-            $notification->assignUserGroup($this->userGroupFactory->getById($userGroupId));
+            $userGroup = $this->userGroupFactory->getById($userGroupId);
+
+            // Verify the caller can view the user group they're assigning the notification to.
+            if (!$this->getUser()->checkViewable($userGroup)) {
+                throw new AccessDeniedException(__('Access to one or more user groups denied'));
+            }
+
+            $notification->assignUserGroup($userGroup);
         }
 
         $notification->save();
