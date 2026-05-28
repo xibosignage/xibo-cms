@@ -278,7 +278,7 @@ class Applications extends Base
 
         $server->enableGrantType(
             new AuthCodeGrant(
-                new AuthCodeRepository(),
+                new AuthCodeRepository($this->pool),
                 new RefreshTokenRepository($this->getLog(), $this->pool),
                 new \DateInterval('PT10M')
             ),
