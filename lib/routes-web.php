@@ -396,16 +396,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['auditlog.view']));
 
 //
-// Commands
-//
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/command/view', ['\Xibo\Controller\Command','displayPage'])->setName('command.view');
-    $group->get('/command/form/add', ['\Xibo\Controller\Command','addForm'])->setName('command.add.form');
-    $group->get('/command/form/edit/{id}', ['\Xibo\Controller\Command','editForm'])->setName('command.edit.form');
-    $group->get('/command/form/delete/{id}', ['\Xibo\Controller\Command','deleteForm'])->setName('command.delete.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['command.view']));
-
-//
 // Tasks
 //
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
