@@ -280,6 +280,7 @@ describe('Display Groups', function() {
 
       // Wait for the grid reload
       cy.wait('@displaygroupGridLoad');
+      cy.get('#displaygroups tbody tr').should('have.length.greaterThan', 0);
 
       // Select all
       cy.get('button[data-toggle="selectAll"]').click();

@@ -56,7 +56,8 @@ describe('Playlist Editor (Populated/Unchanged)', function() {
         cy.populateLibraryWithMedia();
 
         // Open audio tool tab
-        cy.get('a[id="btn-menu-3"]').should('be.visible').click();
+        cy.get('a[id="btn-menu-3"]').should('be.visible');
+        cy.get('a[id="btn-menu-3"]').click();
 
         // cy.wait('@mediaLoad');
 
@@ -73,7 +74,8 @@ describe('Playlist Editor (Populated/Unchanged)', function() {
         // cy.intercept('/library/search?*').as('mediaLoad');
 
         // Open library search tab
-        cy.get('a[id="btn-menu-0"]').should('be.visible').click();
+        cy.get('a[id="btn-menu-0"]').should('be.visible');
+        cy.get('a[id="btn-menu-0"]').click();
 
         // cy.wait('@mediaLoad');
         cy.wait(1000);

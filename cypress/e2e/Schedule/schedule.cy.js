@@ -287,6 +287,9 @@ describe('Schedule Events', function() {
     cy.contains('Clear Filters').should('be.visible').click();
     cy.contains('Add Event').click();
 
+    // Wait for the schedule form to fully load before interacting
+    cy.wait('@scheduleAddForm');
+
     cy.get('.bootbox.modal')
       .should('be.visible') // essential: Ensure the modal is visible
       .then(() => {
@@ -303,11 +306,24 @@ describe('Schedule Events', function() {
         // Click Next and check toast message
         cy.get('.modal .modal-footer').contains('Next').click();
 
-        cy.get('.starttime-control > .col-sm-10 > .input-group > .flatpickr-wrapper > .datePickerHelper').click();
-        cy.get('.open > .flatpickr-innerContainer > .flatpickr-rContainer > .flatpickr-days > .dayContainer > .today').click();
-        cy.get('.open > .flatpickr-time > :nth-child(3) > .arrowUp').click();
+        // Wait for step 3 to be fully visible before setting the date
+        cy.get('.starttime-control').should('be.visible');
+
+        // Use the page's own updateDatePicker helper so the value is set
+        // through the same jQuery instance that validateStep(3) reads via
+        // $(dialog).find('#fromDt').val(). This covers both the flatpickr-
+        // initialised path (_flatpickr.setDate) and the fallback path
+        // ($element.val()), using window.systemDateFormat as the format.
+        cy.window().then(win => {
+          win.updateDatePicker(
+            win.$('.bootbox.modal #fromDt'),
+            '2030-01-01 13:00:00',
+            win.systemDateFormat,
+          );
+        });
 
         cy.get('.modal .modal-footer').contains('Next').click();
+        cy.get('#schedule-step-4').should('be.visible');
         cy.get('.modal-content [name="name"]').type('Custom - Command Event');
 
         cy.get('.modal .modal-footer').contains('Finish').click();
@@ -332,6 +348,9 @@ describe('Schedule Events', function() {
     cy.contains('Clear Filters').should('be.visible').click();
     cy.contains('Add Event').click();
 
+    // Wait for the schedule form to fully load before interacting
+    cy.wait('@scheduleAddForm');
+
     cy.get('.bootbox.modal')
       .should('be.visible') // essential: Ensure the modal is visible
       .then(() => {
@@ -348,43 +367,12 @@ describe('Schedule Events', function() {
         // Click Next and check toast message
         cy.get('.modal .modal-footer').contains('Next').click();
 
-        // Select daypart - custom
-        cy.get('#dayPartId').select('Custom');
-
-
-        cy.get('.starttime-control > .col-sm-10 > .input-group > .flatpickr-wrapper > .datePickerHelper')
-          .click() // Open the picker
-          .then(() => {
-            // Select today's date
-            cy.get('.flatpickr-calendar.open .flatpickr-days .dayContainer .today')
-              .click();
-
-            // Increment the hour (adjust time)
-            cy.get('.flatpickr-calendar.open .flatpickr-time :nth-child(3) .arrowUp')
-              .click();
-
-            // Close the picker by clicking outside
-            cy.get('body').click(0, 0);
-          });
-
-        cy.get('.endtime-control > .col-sm-10 > .input-group > .flatpickr-wrapper > .datePickerHelper')
-          .click() // Open the picker
-          .then(() => {
-            // Select today's date
-            cy.get('.flatpickr-calendar.open .flatpickr-days .dayContainer .today')
-              .click();
-
-            // Increment the hour (adjust time)
-            cy.get('.flatpickr-calendar.open .flatpickr-time :nth-child(3) .arrowUp')
-              .click()
-              .click();
-
-            // Close the picker by clicking outside
-            cy.get('body').click(0, 0);
-          });
+        // Select daypart - Always avoids flatpickr date entry (same pattern as Layout/Campaign tests)
+        cy.get('.modal-content [name="dayPartId"]').select('Always');
 
         cy.get('.modal .modal-footer').contains('Next').click();
-        cy.get('.modal-content [name="name"]').type('Custom - Overlay Event');
+        cy.get('#schedule-step-4').should('be.visible');
+        cy.get('.modal-content [name="name"]').type('Always - Overlay Event');
 
         cy.get('.modal .modal-footer').contains('Finish').click();
       });

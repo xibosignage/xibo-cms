@@ -62,8 +62,8 @@ describe('Display Settings', function() {
       // assertion on the "tag" value
       expect(responseData.name).to.eq('Cypress Test Display Setting ' + testRun);
 
-      cy.get('.modal input#name').clear()
-        .type('Cypress Test Display Setting Edited ' + testRun);
+      cy.get('.modal input#name').clear();
+      cy.get('.modal input#name').type('Cypress Test Display Setting Edited ' + testRun);
 
       // Select the option with the value "10 minutes"
       cy.get('.modal #collectInterval').select('600');
@@ -111,8 +111,8 @@ describe('Display Settings', function() {
       cy.get('#displayProfiles tr:first-child .dropdown-toggle').click({force: true});
       cy.get('#displayProfiles tr:first-child .displayprofile_button_edit').click({force: true});
 
-      cy.get('.modal input#name').clear()
-        .type('Cypress Test Display Setting Edited ' + testRun);
+      cy.get('.modal input#name').clear();
+      cy.get('.modal input#name').type('Cypress Test Display Setting Edited ' + testRun);
 
       // edit test tag
       cy.get('.bootbox .save-button').click();

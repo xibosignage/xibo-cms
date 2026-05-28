@@ -116,19 +116,27 @@ describe('Layout Editor Toolbar (Back button, Interactive Mode, Layout jump list
     // Tooltip
     cy.get('.layout-info-name')
       .should('be.visible')
-      .trigger('mouseover');
+      .then(($el) => {
+        $el[0].dispatchEvent(new MouseEvent('mouseover', {bubbles: true, cancelable: true}));
+      });
     cy.get('.tooltip').should('be.visible');
     cy.get('.layout-info-name')
       .should('be.visible')
-      .trigger('mouseout');
+      .then(($el) => {
+        $el[0].dispatchEvent(new MouseEvent('mouseout', {bubbles: true, cancelable: true}));
+      });
 
     // Popover
     cy.get('#layout-info-status')
       .should('be.visible')
-      .trigger('mouseover');
+      .then(($el) => {
+        $el[0].dispatchEvent(new MouseEvent('mouseover', {bubbles: true, cancelable: true}));
+      });
     cy.get('.popover').should('be.visible');
     cy.get('#layout-info-status')
       .should('be.visible')
-      .trigger('mouseout');
+      .then(($el) => {
+        $el[0].dispatchEvent(new MouseEvent('mouseout', {bubbles: true, cancelable: true}));
+      });
   });
 });

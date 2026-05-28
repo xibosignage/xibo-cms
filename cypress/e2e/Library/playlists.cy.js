@@ -90,6 +90,7 @@ describe('Playlists Admin', function() {
 
       // Wait for 2nd playlist grid reload
       cy.wait('@playlistGridLoad');
+      cy.get('#playlists tbody tr').should('have.length.greaterThan', 0);
 
       // Select all
       cy.get('button[data-toggle="selectAll"]').click();
