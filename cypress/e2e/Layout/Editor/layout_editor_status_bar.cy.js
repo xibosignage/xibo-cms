@@ -30,10 +30,16 @@ describe('Layout Editor Status Bar', function() {
   beforeEach(function() {
     cy.login();
     cy.intercept('GET', '/layout/status/*').as('layoutStatusLoad');
+    // The toolbar pref response triggers renderBars() → topbar.render() → reloadTooltips()
+    // → clearTooltips() which removes ALL .popover elements from the body.
+    // Waiting for this here ensures every clearTooltips() call from initialisation has
+    // already fired before the popover test starts, eliminating the race condition.
+    cy.intercept('GET', '/user/pref?preference=toolbar').as('toolbarPref');
     cy.visit('/layout/view');
     cy.get('button.layout-add-button').click();
     cy.get('#layout-viewer').should('be.visible');
     cy.wait('@layoutStatusLoad');
+    cy.wait('@toolbarPref');
   });
 
   it('should display the correct Layout status icon and tooltip', function() {
@@ -41,26 +47,21 @@ describe('Layout Editor Status Bar', function() {
       .should('be.visible')
       .and('have.class', 'badge-danger');
 
-    // Dispatch a native DOM event inside .then() to avoid two failure modes:
-    // 1. cy.trigger() is async-queued — element can detach between cy.get() and trigger
-    // 2. jQuery $el.trigger() uses Cypress's jQuery instance, which doesn't reach Bootstrap's
-    //    handlers (registered on the app's jQuery instance); native dispatchEvent is instance-agnostic
-    cy.get(layoutStatusSelector)
-      .should('be.visible')
-      .and('have.class', 'badge-danger')
-      .then(($el) => {
-        $el[0].dispatchEvent(new MouseEvent('mouseover', {bubbles: true, cancelable: true}));
-      });
+    // Use the app's jQuery instance (win.$) to call Bootstrap's popover API directly.
+    // cy.trigger() and native dispatchEvent both fail here: cy.trigger() uses Cypress's jQuery
+    // instance which doesn't share Bootstrap's event bindings, and native MouseEvent dispatch
+    // is swallowed by Bootstrap's internal hover-state guard in headless mode.
+    cy.window().then((win) => {
+      win.$(layoutStatusSelector).popover('show');
+    });
 
     cy.get(tooltipSelector)
       .should('be.visible')
       .and('contain', 'This Layout is invalid');
 
-    cy.get(layoutStatusSelector)
-      .should('be.visible')
-      .then(($el) => {
-        $el[0].dispatchEvent(new MouseEvent('mouseout', {bubbles: true, cancelable: true}));
-      });
+    cy.window().then((win) => {
+      win.$(layoutStatusSelector).popover('hide');
+    });
   });
 
   it('should display the correct Layout name', () => {
