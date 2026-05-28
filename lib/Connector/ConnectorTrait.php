@@ -26,6 +26,7 @@ use GuzzleHttp\Client;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Stash\Interfaces\PoolInterface;
+use Xibo\Helper\Guzzle\SafeClient;
 use Xibo\Service\JwtServiceInterface;
 use Xibo\Service\PlayerActionServiceInterface;
 
@@ -186,7 +187,7 @@ trait ConnectorTrait
      */
     public function getClient(): Client
     {
-        return new Client($this->httpOptions);
+        return SafeClient::getSafeClient($this->httpOptions);
     }
 
     /**
