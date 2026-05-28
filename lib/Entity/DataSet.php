@@ -612,7 +612,15 @@ class DataSet implements \JsonSerializable
         $keyword = $filterBy['keyword'] ?? '';
 
         if ($keyword !== '') {
-            $keyword = str_ireplace(Sql::DISALLOWED_KEYWORDS, '', $keyword);
+            $keywordCount = 0;
+            $keyword = Sql::cleanup($keyword, $keywordCount);
+
+            if ($keywordCount > 0) {
+                throw new InvalidArgumentException(
+                    __('Keyword contains disallowed keywords'),
+                    'keyword'
+                );
+            }
 
             $body .= ' AND ' . $keyword;
         }
