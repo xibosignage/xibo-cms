@@ -612,7 +612,12 @@ class Notification extends Base
 
         $notification->save();
 
-        $attachedFilename = $sanitizedParams->getString('attachedFilename', ['defaultOnEmptyString' => true]);
+        // basename() strips any path components — defence-in-depth against a caller submitting
+        // attachedFilename values with traversal sequences (`../`, absolute paths) that could
+        // be interpreted by the filesystem when concatenated below.
+        $attachedFilename = basename(
+            $sanitizedParams->getString('attachedFilename', ['defaultOnEmptyString' => true]) ?? ''
+        );
         $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
         if (!empty($attachedFilename)) {
