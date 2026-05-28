@@ -41,13 +41,16 @@ describe('Layout Editor Status Bar', function() {
       .should('be.visible')
       .and('have.class', 'badge-danger');
 
-    // Use jQuery .trigger() inside .then() to avoid detached-from-DOM race:
-    // cy.trigger() is async-queued and can fire after a status-API re-render replaces
-    // the element; $el.trigger() in .then() fires synchronously right after the assertion.
+    // Dispatch a native DOM event inside .then() to avoid two failure modes:
+    // 1. cy.trigger() is async-queued — element can detach between cy.get() and trigger
+    // 2. jQuery $el.trigger() uses Cypress's jQuery instance, which doesn't reach Bootstrap's
+    //    handlers (registered on the app's jQuery instance); native dispatchEvent is instance-agnostic
     cy.get(layoutStatusSelector)
       .should('be.visible')
       .and('have.class', 'badge-danger')
-      .then(($el) => $el.trigger('mouseover'));
+      .then(($el) => {
+        $el[0].dispatchEvent(new MouseEvent('mouseover', {bubbles: true, cancelable: true}));
+      });
 
     cy.get(tooltipSelector)
       .should('be.visible')
@@ -55,7 +58,9 @@ describe('Layout Editor Status Bar', function() {
 
     cy.get(layoutStatusSelector)
       .should('be.visible')
-      .then(($el) => $el.trigger('mouseout'));
+      .then(($el) => {
+        $el[0].dispatchEvent(new MouseEvent('mouseout', {bubbles: true, cancelable: true}));
+      });
   });
 
   it('should display the correct Layout name', () => {

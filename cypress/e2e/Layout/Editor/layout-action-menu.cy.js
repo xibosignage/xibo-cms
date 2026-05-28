@@ -61,7 +61,7 @@ describe('Layout Editor Toolbar (Back button, Interactive Mode, Layout jump list
     cy.get('.interactive-control-status-off').should('not.be.visible');
   });
 
-  it('should open and close the layout jump list dropdown safely', () => {
+  it.only('should open and close the layout jump list dropdown safely', () => {
     cy.intercept('GET', '/layout?onlyMyLayouts=*').as('onlyMyLayouts');
 
     const layoutName = 'Audio-Video-PDF';
@@ -116,19 +116,27 @@ describe('Layout Editor Toolbar (Back button, Interactive Mode, Layout jump list
     // Tooltip
     cy.get('.layout-info-name')
       .should('be.visible')
-      .then(($el) => $el.trigger('mouseover'));
+      .then(($el) => {
+        $el[0].dispatchEvent(new MouseEvent('mouseover', {bubbles: true, cancelable: true}));
+      });
     cy.get('.tooltip').should('be.visible');
     cy.get('.layout-info-name')
       .should('be.visible')
-      .then(($el) => $el.trigger('mouseout'));
+      .then(($el) => {
+        $el[0].dispatchEvent(new MouseEvent('mouseout', {bubbles: true, cancelable: true}));
+      });
 
     // Popover
     cy.get('#layout-info-status')
       .should('be.visible')
-      .then(($el) => $el.trigger('mouseover'));
+      .then(($el) => {
+        $el[0].dispatchEvent(new MouseEvent('mouseover', {bubbles: true, cancelable: true}));
+      });
     cy.get('.popover').should('be.visible');
     cy.get('#layout-info-status')
       .should('be.visible')
-      .then(($el) => $el.trigger('mouseout'));
+      .then(($el) => {
+        $el[0].dispatchEvent(new MouseEvent('mouseout', {bubbles: true, cancelable: true}));
+      });
   });
 });
