@@ -35,13 +35,16 @@ describe('Dayparts', function() {
     // Click on the Add Daypart button
     cy.contains('Add Daypart').click();
 
+    // Wait for the modal to be visible — XiboInitialise runs synchronously before this resolves,
+    // so flatpickr is already initialised on both time fields by the time we interact
+    cy.get('.bootbox.modal').should('be.visible');
+
     cy.get('.modal input#name')
       .type('Cypress Test Daypart ' + testRun + '_1');
 
-    cy.get(':nth-child(3) > .col-sm-10 > .input-group > .flatpickr-wrapper > .datePickerHelper').click();
-    // cy.get('.open > .flatpickr-time > :nth-child(1) > .arrowUp').click();
+    cy.get('#startTime').closest('.input-group').find('.datePickerHelper').click();
     cy.get('.open > .flatpickr-time > :nth-child(1) > .numInput').type('8');
-    cy.get(':nth-child(4) > .col-sm-10 > .input-group > .flatpickr-wrapper > .datePickerHelper').click();
+    cy.get('#endTime').closest('.input-group').find('.datePickerHelper').click();
     cy.get('.open > .flatpickr-time > :nth-child(1) > .numInput').type('17');
 
     // Add first by clicking next
@@ -203,6 +206,7 @@ describe('Dayparts', function() {
 
       // Wait for the grid reload
       cy.wait('@loadGridAfterSearch');
+      cy.get('#dayparts tbody tr').should('have.length.greaterThan', 0);
 
       // Select all
       cy.get('button[data-toggle="selectAll"]').click();

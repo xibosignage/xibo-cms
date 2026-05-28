@@ -31,24 +31,39 @@ describe('Media Admin', function() {
   
     it('should add a media via url', function() {
       cy.visit('/library/view');
-  
-      // Click on the Add Playlist button
+
+      cy.intercept('POST', '/library/uploadUrl').as('uploadMedia');
+
+      // Click on the Add Media button
       cy.contains('Add media (URL)').click();
-  
+
       cy.get('#url')
-        .type('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
-      
+        .type('https://xibo-assets.fra1.digitaloceanspaces.com/xibo-logo.png');
+
       cy.get('#optionalName')
         .type('Cypress Test Media ' + testRun);
-  
+
+      // Set up gridReload intercept just before clicking save to avoid capturing spurious reloads
+      cy.intercept('/library?draw=*').as('gridReload');
       cy.get('.modal .save-button').click();
-      cy.wait(24000);
-  
-      // Filter for the created playlist
+
+      // Wait for the server to download the remote file and respond (can take a while)
+      cy.wait('@uploadMedia', {timeout: 30000}).then((interception) => {
+        expect(interception.response.statusCode, 'upload status code').to.equal(200);
+        expect(interception.response.body.success, 'upload success flag').to.be.true;
+      });
+
+      // Wait for the grid to reload (only fires on successful upload after bootbox.hideAll())
+      cy.wait('@gridReload', {timeout: 30000});
+
+      // Wait for the Bootstrap fade animation to fully complete (display:none set after transition)
+      cy.get('.bootbox.modal:visible').should('not.exist');
+
+      // Filter for the created media
       cy.get('#media')
         .type('Cypress Test Media ' + testRun);
   
-      // Should have the added playlist
+      // Should have the added media
       cy.get('#libraryItems tbody tr').should('have.length', 1);
       cy.get('#libraryItems tbody tr:nth-child(1) td:nth-child(2)').contains('Cypress Test Media ' + testRun);
     });

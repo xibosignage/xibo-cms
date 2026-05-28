@@ -156,7 +156,8 @@ describe('Playlist Editor (Populated)', function() {
 
         // Right click to open the context menu and select add audio
         cy.get('#timeline-container [data-type="widget"]').first().should('be.visible').rightclick();
-        cy.get('.context-menu-btn[data-property="Audio"]').should('be.visible').click();
+        cy.get('.context-menu-btn[data-property="Audio"]').should('be.visible');
+        cy.get('.context-menu-btn[data-property="Audio"]').click();
 
         // Select the 1st option
         cy.get('[data-test="widgetPropertiesForm"] #mediaId > option').eq(1).then(($el) => {
@@ -181,7 +182,8 @@ describe('Playlist Editor (Populated)', function() {
         
         // Right click to open the context menu and select add audio
         cy.get('#timeline-container [data-type="widget"]').first().should('be.visible').rightclick();
-        cy.get('.context-menu-btn[data-property="Expiry"]').should('be.visible').click();
+        cy.get('.context-menu-btn[data-property="Expiry"]').should('be.visible');
+        cy.get('.context-menu-btn[data-property="Expiry"]').click();
 
         // Add dates
         cy.get('[data-test="widgetPropertiesForm"] .starttime-control .date-clear-button').click();

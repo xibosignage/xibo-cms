@@ -140,6 +140,7 @@ describe('Tags', function() {
 
       // Wait for the grid reload
       cy.wait('@loadGridAfterSearch');
+      cy.get('#tags tbody tr').should('have.length.greaterThan', 0);
 
       // Select all
       cy.get('button[data-toggle="selectAll"]').click();

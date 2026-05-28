@@ -191,7 +191,7 @@ describe('Displays', function() {
     cy.get('.select2-search__field').type('disp4_default_layout');
 
     cy.wait('@loadLayoutAfterSearch');
-    cy.get('.select2-results__option').contains('disp4_default_layout').click();
+    cy.selectOption('disp4_default_layout');
 
     // edit test display
     cy.get('.bootbox .save-button').click();

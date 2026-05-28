@@ -34,11 +34,16 @@ describe('Proof of Play', function() {
     }).as('loadDisplayAfterSearch');
 
     cy.visit('/report/view');
-    cy.contains('Export').click();
 
-    cy.get(':nth-child(1) > .col-sm-10 > .input-group > .flatpickr-wrapper > .datePickerHelper').click();
+    // Target the XiboFormButton specifically — the page also has DataTable CSV export buttons
+    cy.get('a.XiboFormButton').contains('Export').click();
+
+    // Wait for modal to be visible — XiboInitialise runs synchronously before this resolves
+    cy.get('.bootbox.modal').should('be.visible');
+
+    cy.get('#fromDt').closest('.input-group').find('.datePickerHelper').click();
     cy.get('.open > .flatpickr-innerContainer > .flatpickr-rContainer > .flatpickr-days > .dayContainer > .today').click();
-    cy.get(':nth-child(2) > .col-sm-10 > .input-group > .flatpickr-wrapper > .datePickerHelper').click();
+    cy.get('#toDt').closest('.input-group').find('.datePickerHelper').click();
     cy.get('.open > .flatpickr-innerContainer > .flatpickr-rContainer > .flatpickr-days > .dayContainer > .today').next().click();
 
     // Click on the select2 selection
