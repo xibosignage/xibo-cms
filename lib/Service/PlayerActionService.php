@@ -24,6 +24,7 @@
 namespace Xibo\Service;
 
 use GuzzleHttp\Client;
+use Xibo\Helper\Guzzle\SafeClient;
 use GuzzleHttp\Exception\GuzzleException;
 use Xibo\Entity\Display;
 use Xibo\Support\Exception\ConfigurationException;
@@ -163,7 +164,7 @@ class PlayerActionService implements PlayerActionServiceInterface
             $this->xmrAddress = $this->getConfig()->getSetting('XMR_ADDRESS');
         }
 
-        $client = new Client($this->config->getGuzzleProxy([
+        $client = SafeClient::getSafeClient($this->config->getGuzzleProxy([
             'base_uri' => $this->getConfig()->getSetting('XMR_ADDRESS'),
         ]));
 

@@ -23,6 +23,7 @@ namespace Xibo\XTR;
 
 use Carbon\Carbon;
 use GuzzleHttp\Client;
+use Xibo\Helper\Guzzle\SafeClient;
 use GuzzleHttp\Exception\GuzzleException;
 use Xibo\Controller\Display;
 use Xibo\Event\DisplayGroupLoadEvent;
@@ -655,7 +656,7 @@ class MaintenanceRegularTask implements TaskInterface
         try {
             $key = $this->getConfig()->getSetting('XMR_CMS_KEY');
             if (!empty($key)) {
-                $client = new Client($this->config->getGuzzleProxy([
+                $client = SafeClient::getSafeClient($this->config->getGuzzleProxy([
                     'base_uri' => $this->getConfig()->getSetting('XMR_ADDRESS'),
                 ]));
 
