@@ -196,6 +196,10 @@ class Login extends Base
         $priorRoute = $parsedRequest->getString('priorRoute');
 
         try {
+            // Per-IP rate limit: 5 failed login attempts per 15 minutes.
+            // Checked before the user lookup so attackers cannot enumerate usernames freely.
+            $this->enforceRateLimit($request, 'login', 5, 900);
+
             // Get our username and password
             $username = $parsedRequest->getString('username');
             $password = $parsedRequest->getString('password');
@@ -216,6 +220,9 @@ class Login extends Base
                 // Check password
                 $user->checkPassword($password);
 
+                // Successful auth — drop the failure counter for this IP.
+                $this->resetRateLimit($request, 'login');
+
                 // check if 2FA is enabled
                 if ($user->twoFactorTypeId != 0) {
                     $_SESSION['tfaUsername'] = $user->userName;
@@ -231,6 +238,9 @@ class Login extends Base
 
             $redirect = $this->getRedirect($request, $priorRoute);
         } catch (AccessDeniedException $e) {
+            // Record one failure against the rate-limit counter so brute-forcers progress
+            // toward lockout. Doesn't apply to ExpiredException (legitimate session expiry).
+            $this->recordRateLimitHit($request, 'login', 900);
             $this->getLog()->warning($e->getMessage());
             $this->getFlash()->addMessage('login_message', __('Username or Password incorrect'));
             $this->getFlash()->addMessage('priorRoute', $priorRoute);
@@ -266,6 +276,24 @@ class Login extends Base
             throw new ConfigurationException(__('This feature has been disabled by your administrator'));
         }
 
+        // Per-IP rate limit: 3 password-reset requests per hour. Independent of whether the
+        // requested username exists, so an attacker cannot use this endpoint for unbounded
+        // enumeration even with timing-based username inference.
+        try {
+            $this->enforceRateLimit($request, 'pwreset', 3, 3600);
+        } catch (AccessDeniedException) {
+            // Constant-time pad on the throttle path so attackers can't distinguish
+            // "rate-limited" from "user not found" via response timing.
+            usleep(random_int(200000, 400000));
+            $this->getFlash()->addMessage(
+                'login_message',
+                __('A reminder email will been sent to this user if they exist'),
+            );
+            $this->setNoOutput(true);
+            return $response->withRedirect($routeParser->urlFor('login'));
+        }
+        $this->recordRateLimitHit($request, 'pwreset', 3600);
+
         // Get our username
         $username = $parsedRequest->getString('username');
 
@@ -284,7 +312,9 @@ class Login extends Base
             }
 
             // Nonce parts (nonce isn't ever stored, only the hash of it is stored, it only exists in the email)
-            $action = 'user-reset-password-' . Random::generateString(10);
+            // Both halves are 20 hex chars (80 bits each) — the action half is the cache lookup
+            // key, the nonce half is the secret that's bcrypt-hashed and compared.
+            $action = 'user-reset-password-' . Random::generateString(20);
             $nonce = Random::generateString(20);
 
             // Create a nonce for this user and store it somewhere
@@ -360,6 +390,11 @@ class Login extends Base
                 'UserAgent' => $request->getHeader('User-Agent')
             ]);
         } catch (GeneralException) {
+            // Constant-time pad: the success path sends mail (PHPMailer SMTP round trip,
+            // typically a few hundred ms). The failure path returns immediately. Without
+            // padding here, the response-time delta lets an attacker enumerate which
+            // usernames exist despite the identical flash message. Pad to 200-400ms.
+            usleep(random_int(200000, 400000));
             $this->getFlash()->addMessage(
                 'login_message',
                 __('A reminder email will been sent to this user if they exist'),
@@ -471,6 +506,63 @@ class Login extends Base
             'config' => $this->getConfig(),
             'subject' => $subject, 'body' => $body
         ]);
+    }
+
+    /**
+     * Enforce a per-IP rate limit using the Stash cache.
+     * Throws AccessDeniedException when the configured threshold is exceeded inside the window.
+     *
+     * @param Request $request
+     * @param string $bucket cache-key namespace, e.g. 'login' or 'pwreset'
+     * @param int $maxAttempts threshold
+     * @param int $windowSeconds sliding window length
+     * @throws AccessDeniedException
+     */
+    private function enforceRateLimit(Request $request, string $bucket, int $maxAttempts, int $windowSeconds): void
+    {
+        $ip = $request->getAttribute('ip_address') ?? 'unknown';
+        $item = $this->pool->getItem('throttle/' . $bucket . '/' . $ip);
+        $count = (int)($item->get() ?? 0);
+        if ($count >= $maxAttempts) {
+            $this->getLog()->warning(sprintf(
+                'Rate limit hit: bucket=%s ip=%s count=%d',
+                $bucket,
+                $ip,
+                $count
+            ));
+            throw new AccessDeniedException(__('Too many attempts. Please wait and try again.'));
+        }
+    }
+
+    /**
+     * Increment the per-IP rate-limit counter for the given bucket.
+     * Called after the protected action to count one attempt against the window.
+     *
+     * @param Request $request
+     * @param string $bucket cache-key namespace
+     * @param int $windowSeconds sliding window length
+     */
+    private function recordRateLimitHit(Request $request, string $bucket, int $windowSeconds): void
+    {
+        $ip = $request->getAttribute('ip_address') ?? 'unknown';
+        $item = $this->pool->getItem('throttle/' . $bucket . '/' . $ip);
+        $count = (int)($item->get() ?? 0);
+        $item->set($count + 1);
+        $item->expiresAfter($windowSeconds);
+        $this->pool->save($item);
+    }
+
+    /**
+     * Reset the per-IP counter for a bucket — used after a successful login so
+     * the user isn't penalised for prior failures on the same IP.
+     *
+     * @param Request $request
+     * @param string $bucket cache-key namespace
+     */
+    private function resetRateLimit(Request $request, string $bucket): void
+    {
+        $ip = $request->getAttribute('ip_address') ?? 'unknown';
+        $this->pool->deleteItem('throttle/' . $bucket . '/' . $ip);
     }
 
     /**
