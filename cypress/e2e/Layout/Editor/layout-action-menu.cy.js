@@ -61,7 +61,7 @@ describe('Layout Editor Toolbar (Back button, Interactive Mode, Layout jump list
     cy.get('.interactive-control-status-off').should('not.be.visible');
   });
 
-  it.only('should open and close the layout jump list dropdown safely', () => {
+  it('should open and close the layout jump list dropdown safely', () => {
     cy.intercept('GET', '/layout?onlyMyLayouts=*').as('onlyMyLayouts');
 
     const layoutName = 'Audio-Video-PDF';
@@ -116,19 +116,19 @@ describe('Layout Editor Toolbar (Back button, Interactive Mode, Layout jump list
     // Tooltip
     cy.get('.layout-info-name')
       .should('be.visible')
-      .trigger('mouseover');
+      .then(($el) => $el.trigger('mouseover'));
     cy.get('.tooltip').should('be.visible');
     cy.get('.layout-info-name')
       .should('be.visible')
-      .trigger('mouseout');
+      .then(($el) => $el.trigger('mouseout'));
 
     // Popover
     cy.get('#layout-info-status')
       .should('be.visible')
-      .trigger('mouseover');
+      .then(($el) => $el.trigger('mouseover'));
     cy.get('.popover').should('be.visible');
     cy.get('#layout-info-status')
       .should('be.visible')
-      .trigger('mouseout');
+      .then(($el) => $el.trigger('mouseout'));
   });
 });

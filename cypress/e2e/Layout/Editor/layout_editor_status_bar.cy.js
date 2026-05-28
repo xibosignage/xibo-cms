@@ -41,16 +41,21 @@ describe('Layout Editor Status Bar', function() {
       .should('be.visible')
       .and('have.class', 'badge-danger');
 
-    // Re-query to get a fresh reference after the status API re-renders the topbar
-    cy.get(layoutStatusSelector).should('have.class', 'badge-danger');
+    // Use jQuery .trigger() inside .then() to avoid detached-from-DOM race:
+    // cy.trigger() is async-queued and can fire after a status-API re-render replaces
+    // the element; $el.trigger() in .then() fires synchronously right after the assertion.
     cy.get(layoutStatusSelector)
-      .trigger('mouseover');
+      .should('be.visible')
+      .and('have.class', 'badge-danger')
+      .then(($el) => $el.trigger('mouseover'));
 
     cy.get(tooltipSelector)
       .should('be.visible')
       .and('contain', 'This Layout is invalid');
 
-    cy.get(layoutStatusSelector).trigger('mouseout');
+    cy.get(layoutStatusSelector)
+      .should('be.visible')
+      .then(($el) => $el.trigger('mouseout'));
   });
 
   it('should display the correct Layout name', () => {
