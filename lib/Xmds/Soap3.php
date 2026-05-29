@@ -24,6 +24,7 @@ namespace Xibo\Xmds;
 use Carbon\Carbon;
 use Xibo\Entity\Bandwidth;
 use Xibo\Event\XmdsDependencyRequestEvent;
+use Xibo\Helper\LibraryFile;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -220,7 +221,7 @@ class Soap3 extends Soap
                     );
 
                     // Return the Chunk size specified
-                    $f = fopen($libraryLocation . $filePath, 'r');
+                    $f = fopen(LibraryFile::resolve($libraryLocation, $filePath), 'r');
                 } else {
                     // Non-numeric, so assume we're a dependency
                     $this->getLog()->debug('Assumed dependency with path: ' . $filePath);
@@ -239,7 +240,7 @@ class Soap3 extends Soap
                         throw new NotFoundException(__('File not found'));
                     }
 
-                    $path = $libraryLocation . $path;
+                    $path = LibraryFile::resolve($libraryLocation, $path);
 
                     $f = fopen($path, 'r');
                 }

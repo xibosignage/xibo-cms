@@ -32,6 +32,7 @@ use Xibo\Entity\Display;
 use Xibo\Entity\Region;
 use Xibo\Entity\RequiredFile;
 use Xibo\Entity\Schedule;
+use Xibo\Helper\LibraryFile;
 use Xibo\Event\DataConnectorScriptRequestEvent;
 use Xibo\Event\XmdsDependencyListEvent;
 use Xibo\Factory\BandwidthFactory;
@@ -738,8 +739,9 @@ class Soap
                 // Do we need to calculate a new MD5?
                 // If they are empty calculate them and save them back to the media.
                 if ($md5 == '' || $fileSize == 0) {
-                    $md5 = md5_file($libraryLocation . $path);
-                    $fileSize = filesize($libraryLocation . $path);
+                    $mediaPath = LibraryFile::resolve($libraryLocation, $path);
+                    $md5 = md5_file($mediaPath);
+                    $fileSize = filesize($mediaPath);
 
                     // Update the media record with this information
                     $mediaSth->execute(['md5' => $md5, 'size' => $fileSize, 'mediaid' => $id]);
