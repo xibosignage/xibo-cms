@@ -28,6 +28,7 @@ import DiscardLayoutModal from './DiscardLayoutModal';
 import EditLayout from './EditLayout';
 import { EnableStatsLayoutModal } from './EnableStatsLayoutModal';
 import ExportLayoutModal from './ExportLayoutModal';
+import ImportLayoutModal from './ImportLayoutModal';
 import { LayoutInfoPanel } from './LayoutInfoPannel';
 import { RetireLayoutModal } from './RetireLayoutModal';
 import SaveAsTemplateModal from './SaveAsTemplateModal';
@@ -203,6 +204,16 @@ export function LayoutModals({
           isLoading={actions.isExporting}
         />
       )}
+      {isModalOpen('import') && (
+        <ImportLayoutModal
+          onClose={actions.closeModal}
+          onSuccess={() => {
+            actions.closeModal();
+            actions.handleRefresh();
+          }}
+        />
+      )}
+
       {isModalOpen('template') && selection.selectedLayout && (
         <SaveAsTemplateModal onClose={actions.closeModal} layout={selection.selectedLayout} />
       )}
