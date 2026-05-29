@@ -420,6 +420,47 @@ Currently, only **XMDS API tests** are active in `phpunit.xml`. Integration and 
 - **Entity Validation**: Use `Respect\Validation` library (see `lib/Validation/`)
 - **Error Handling**: Throw appropriate exceptions from `lib/Support/Exception/`
 - **Testing**: Update or add tests in `tests/Xmds/` (other test suites commented out pending refactoring)
+- **Semgrep**: Run `semgrep --config .semgrep/rules.yml lib/ web/` locally before committing changes that touch HTTP egress or filesystem code. The rules are designed to be zero-false-positive on `develop`.
+
+## Security-sensitive patterns
+
+These are the architectural defences the May 2026 security sweep established, plus the choke-points future contributors need to respect when extending the relevant subsystems. Each defence works **at a boundary**, not at every callsite — per-callsite escaping is unnecessary by design.
+
+### HTTP egress — must go through SafeClient
+
+All outbound HTTP **must** be made through `Xibo\Helper\Guzzle\SafeClient::getSafeClient()`. Never call `new GuzzleHttp\Client(...)` directly — it bypasses `SsrfProtectionMiddleware` (scheme allow-list, IP blocklist, DNS-rebind pinning via `CURLOPT_RESOLVE`, redirect cap).
+
+`SafeClient` is safe for every call site: literal URLs, admin-settable URLs, DB-sourced URLs, connector responses. The safety checks are no-ops on safe URLs. The Semgrep rule `xibo-raw-guzzle-client` in `.semgrep/rules.yml` enforces this — a PR adding raw `new Client()` will fail the lint.
+
+The `allow_local_network` config flag (default `false`, set only via `web/settings.php` / `web/settings-custom.php` — not via any admin UI) opens SafeClient to RFC-1918 destinations. Production deployments should leave it at the default.
+
+### DataSet SQL — boundary sanitizer at `DataSet::getData()`
+
+The DataSet pipeline assembles WHERE-clause fragments from multiple sources (clause-builder in `DataSetDataProviderListener::buildFilterClause`, raw filter on the `DataSet` entity, RSS feed clause-builder in `DataSetRss::getFeed`). **All paths converge at `DataSet::getData()`** in `lib/Entity/DataSet.php`, which calls `Sql::sanitizeFragment()` on the assembled filter and keyword fragments before they're concatenated into the final SQL.
+
+Per-callsite escaping in the assembly code is unnecessary and would hide the choke-point pattern. When extending the DataSet pipeline:
+
+- **For SQL fragments** (filter, keyword, formula strings that become part of WHERE/SELECT): use `Xibo\Widget\Definition\Sql::sanitizeFragment($input, $context)` (throws on disallowed keywords). The formula path is the only callsite that uses the bare `Sql::cleanup()` because it intentionally silently skips offending columns rather than failing the query.
+- **For SQL identifiers** (table names, column names that have to be concatenated because PDO can't bind them): use `Sql::validateIdentifier($id, $context)` — a regex check against `^[A-Za-z_][A-Za-z0-9_]*$` that throws on non-conforming input. Required for any trait or factory method that accepts table/column names as parameters.
+
+### Widget HTML — sandbox model, not output-escape
+
+Widget options of type `code`, `richText`, and the `embedded` widget's `embedHtml`/`embedScript`/`embedStyle`/`embedJavaScript` fields are **intentionally** raw — the `embedded` widget exists specifically to allow users to embed arbitrary HTML/CSS/JS. The defence is **iframe sandbox isolation**, not output escaping.
+
+Every widget-render context wraps the rendered output in `<iframe sandbox="allow-scripts">` (without `allow-same-origin`), giving the content a null opaque origin. Scripts inside cannot reach the parent CMS's cookies, localStorage, or DOM. Verified consistent across `views/notification-form-show.twig`, `views/module-html-preview.twig`, `views/dataset-data-connector-page.twig`, `views/campaign-preview.twig`, `views/notification-interrupt.twig`, `ui/src/core/xibo-cms.js`, `ui/src/templates/viewer-layout-preview.hbs`.
+
+When extending widget rendering:
+
+- **Do not** try to escape widget HTML options — that would break the legitimate use case.
+- **Do** ensure new render contexts apply `sandbox="allow-scripts"` (no `allow-same-origin`).
+- **Do not** add `allow-same-origin` to any existing sandbox attribute.
+- **Do not** render widget HTML directly into the parent CMS DOM — always inside a sandboxed iframe.
+
+### Library file paths — must go through LibraryFile::resolve
+
+XMDS file-read/write sinks (`web/xmds.php`, `lib/Xmds/Soap*.php`) route every `$libraryLocation . $relativePath` concatenation through `Xibo\Helper\LibraryFile::resolve()`. The helper does a string-level traversal check and a realpath-prefix verification for existing files. Defended today by upstream sanitizers; the boundary check at the sink catches future regressions.
+
+When adding new library-file callsites: always use `LibraryFile::resolve($libraryLocation, $relativePath)` rather than concatenating directly.
 
 ## Deployment
 
