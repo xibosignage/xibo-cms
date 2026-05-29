@@ -232,6 +232,26 @@ class PlayerVersion implements \JsonSerializable
             }
             mkdir($folder);
 
+            // Defense in depth against Zip-Slip: PHP's ZipArchive::extractTo() does not
+            // normalise entry names, so an archive containing `../foo` (or absolute paths,
+            // or backslash-separated paths interpreted on Windows) would write outside
+            // $folder. Reject any entry whose name contains traversal/absolute/backslash
+            // segments before extraction. This is a super-admin-only path today, but the
+            // hardening protects against shared-credential and later-regression scenarios.
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $entryName = $zip->getNameIndex($i);
+                if ($entryName === false
+                    || str_contains($entryName, '..')
+                    || str_contains($entryName, '\\')
+                    || str_starts_with($entryName, '/')
+                ) {
+                    $zip->close();
+                    throw new InvalidArgumentException(
+                        sprintf(__('Software package contains an unsafe entry: %s'), $entryName ?: '(unknown)')
+                    );
+                }
+            }
+
             // Extract to that folder
             $zip->extractTo($folder);
             $zip->close();
