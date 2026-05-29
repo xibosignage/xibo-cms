@@ -10,12 +10,6 @@
     <input name="{{ name }}" type="hidden" id="{{ name }}" value="{{ value }}" />
 {% endmacro %}
 
-{% macro raw(text, groupClass) %}
-    <div class="{{ groupClass }}">
-        {{ text|raw }}
-    </div>
-{% endmacro %}
-
 {% macro message(message, groupClass, messageStyleClass) %}
     <div class="{% if messageStyleClass %}{{messageStyleClass}}{% endif %} mr-1 {{ groupClass }}">
         <span>{{ message }}</span>
