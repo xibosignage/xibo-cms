@@ -67,6 +67,40 @@ class Sql
     ];
 
     /**
+     * Validate that a string is safe to use as an unquoted SQL identifier
+     * (table name, column name, etc.).
+     *
+     * Identifiers cannot be bound as PDO parameters, so they have to be
+     * concatenated into SQL strings. The traits in lib/Entity/, lib/Report/, and
+     * lib/Factory/ that accept table/column-name parameters (TagLinkTrait,
+     * EntityTrait, ReportDefaultTrait, TagTrait) route those parameters through
+     * this helper so a future caller that ever passes user-influenced input
+     * fails loudly at the trait boundary rather than producing SQL-identifier
+     * injection at the sink.
+     *
+     * The pattern `^[A-Za-z_][A-Za-z0-9_]*$` matches the standard SQL
+     * identifier syntax (alphanumeric + underscore, starting with a letter or
+     * underscore). It rejects backticks, quotes, whitespace, dots, hyphens,
+     * and every other character that could escape an identifier context.
+     *
+     * @param string $id The identifier to validate.
+     * @param string $context Field name for the error message (e.g. 'table',
+     *                        'column').
+     * @return string The identifier (unchanged) when valid.
+     * @throws InvalidArgumentException If the identifier fails the regex.
+     */
+    public static function validateIdentifier(string $id, string $context): string
+    {
+        if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $id)) {
+            throw new InvalidArgumentException(
+                sprintf(__('Invalid SQL identifier for %s: %s'), $context, $id),
+                $context
+            );
+        }
+        return $id;
+    }
+
+    /**
      * Throw-on-detection wrapper around cleanup(). Production callers SHOULD use
      * this rather than cleanup() directly — silently dropping disallowed keywords
      * masks the attack signal and produces broken SQL fragments downstream.
