@@ -770,8 +770,21 @@ class Schedule extends Base
             ['default' => 0]
         );
 
+        // Verify the caller has the appropriate permission on each display group they're
+        // assigning. Mirrors isEventEditable() semantics: view is sufficient when
+        // SCHEDULE_WITH_VIEW_PERMISSION is enabled, otherwise edit is required.
+        $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
         foreach ($sanitizedParams->getIntArray('displayGroupIds', ['default' => []]) as $displayGroupId) {
-            $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
+            $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+            if ($scheduleWithView && !$this->getUser()->checkViewable($displayGroup)) {
+                throw new AccessDeniedException(__('Access to one or more display groups denied'));
+            }
+            if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup)) {
+                throw new AccessDeniedException(__('Access to one or more display groups denied'));
+            }
+
+            $schedule->assignDisplayGroup($displayGroup);
         }
 
         if (!$schedule->isAlwaysDayPart()) {
@@ -1322,8 +1335,21 @@ class Schedule extends Base
             $schedule->dayPartId = $this->dayPartFactory->getCustomDayPart()->dayPartId;
         }
 
+        // Verify the caller has the appropriate permission on each display group they're
+        // assigning. Mirrors isEventEditable() semantics: view is sufficient when
+        // SCHEDULE_WITH_VIEW_PERMISSION is enabled, otherwise edit is required.
+        $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
         foreach ($sanitizedParams->getIntArray('displayGroupIds', ['default' => []]) as $displayGroupId) {
-            $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
+            $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+            if ($scheduleWithView && !$this->getUser()->checkViewable($displayGroup)) {
+                throw new AccessDeniedException(__('Access to one or more display groups denied'));
+            }
+            if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup)) {
+                throw new AccessDeniedException(__('Access to one or more display groups denied'));
+            }
+
+            $schedule->assignDisplayGroup($displayGroup);
         }
 
         if (!$schedule->isAlwaysDayPart()) {
