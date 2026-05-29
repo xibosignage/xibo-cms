@@ -22,8 +22,22 @@
 
 namespace Xibo\Widget\Definition;
 
+use Xibo\Support\Exception\InvalidArgumentException;
+
 /**
- * SQL definitions
+ * SQL definitions and boundary-sanitizer for DataSet filter/formula fragments.
+ *
+ * The Xibo DataSet pipeline assembles WHERE-clause fragments from multiple
+ * sources (clause-builder in DataSetDataProviderListener, raw filter on
+ * DataSet entity, RSS feed clause-builder in DataSetRss). Every assembly
+ * path converges at DataSet::getData(), which calls Sql::sanitizeFragment()
+ * — the SINGLE point of sanitization. Per-callsite escaping is unnecessary
+ * and would hide the choke-point pattern.
+ *
+ * cleanup() is the low-level strip-only primitive (recursive keyword
+ * removal, string-literal preservation, comment / hex / binary stripping).
+ * sanitizeFragment() is the throw-on-detection wrapper that production
+ * callers should use.
  */
 class Sql
 {
@@ -53,7 +67,41 @@ class Sql
     ];
 
     /**
+     * Throw-on-detection wrapper around cleanup(). Production callers SHOULD use
+     * this rather than cleanup() directly — silently dropping disallowed keywords
+     * masks the attack signal and produces broken SQL fragments downstream.
+     *
+     * @param string $sql The SQL fragment to sanitize.
+     * @param string $context Field name (e.g. 'filter', 'keyword') used in the
+     *                        thrown exception so the caller can identify the
+     *                        offending parameter.
+     * @return string The sanitized fragment (unchanged if no disallowed keywords
+     *                were present).
+     * @throws InvalidArgumentException If the fragment contained any
+     *         DISALLOWED_KEYWORDS, hex/binary literals, or stripped comments.
+     */
+    public static function sanitizeFragment(string $sql, string $context): string
+    {
+        $count = 0;
+        $cleaned = self::cleanup($sql, $count);
+        if ($count > 0) {
+            throw new InvalidArgumentException(
+                sprintf(__('%s contains disallowed keywords'), ucfirst($context)),
+                $context
+            );
+        }
+        return $cleaned;
+    }
+
+    /**
      * Cleanup SQL (Maximum Paranoia for Legacy Code)
+     *
+     * Low-level strip-only primitive. Prefer sanitizeFragment() — its throw-on-
+     * detection semantics surface attack attempts instead of silently rewriting
+     * to a broken fragment. cleanup() remains public because the DataSet formula
+     * path (DataSet.php:560) intentionally tolerates disallowed keywords by
+     * silently skipping the affected column rather than failing the whole query.
+     *
      * @param string $sql the SQL to clean
      * @param int $total the total number of replacements
      * @return string
