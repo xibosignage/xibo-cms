@@ -110,7 +110,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("transition.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("transition.view") }}">{% trans "Transitions" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/administration/transitions">{% trans "Transitions" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("task.view") %}

@@ -360,7 +360,10 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'transitions',
         labelKey: 'Transitions',
-        externalURL: '/transition/view',
+        lazy: () =>
+          import('@/pages/Administration/Transitions/Transitions').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'transition.view',
       },
       {

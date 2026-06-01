@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -46,12 +46,13 @@ class TransitionFactory extends BaseFactory
      * @return Transition
      * @throws NotFoundException
      */
-    public function getById($transitionId)
+    public function getById(int $transitionId): Transition
     {
         $transitions = $this->query(null, ['transitionId' => $transitionId]);
 
-        if (count($transitions) <= 0)
+        if (count($transitions) <= 0) {
             throw new NotFoundException();
+        }
 
         return $transitions[0];
     }
@@ -62,12 +63,13 @@ class TransitionFactory extends BaseFactory
      * @return Transition
      * @throws NotFoundException
      */
-    public function getByCode($code)
+    public function getByCode(string $code): Transition
     {
         $transitions = $this->query(null, ['code' => $code]);
 
-        if (count($transitions) <= 0)
+        if (count($transitions) <= 0) {
             throw new NotFoundException();
+        }
 
         return $transitions[0];
     }
@@ -77,7 +79,7 @@ class TransitionFactory extends BaseFactory
      * @param string $type
      * @return array[Transition]
      */
-    public function getEnabledByType($type)
+    public function getEnabledByType(string $type): array
     {
         $filter = [];
 
@@ -91,11 +93,11 @@ class TransitionFactory extends BaseFactory
     }
 
     /**
-     * @param array $sortOrder
+     * @param array|null $sortOrder
      * @param array $filterBy
      * @return array[Transition]
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query(?array $sortOrder = null, array $filterBy = []): array
     {
         $entries = [];
         $params = [];
@@ -135,10 +137,23 @@ class TransitionFactory extends BaseFactory
         }
 
         // Sorting?
-        if (is_array($sortOrder)) {
-            $sql .= 'ORDER BY ' . implode(',', $sortOrder);
-        }
+        $allowedColumns = [
+            'transitionId',
+            'transition',
+            'code',
+            'hasDuration',
+            'hasDirection',
+            'availableAsIn',
+            'availableAsOut'
+        ];
 
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['transition ASC']
+        );
+
+        $sql .= !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row);

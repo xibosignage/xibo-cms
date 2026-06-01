@@ -119,8 +119,9 @@ $app->group('', function (RouteCollectorProxy $group) {
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify']))
     ->addMiddleware(new LayoutLock($app));
 
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/layout/thumbnail/{id}', ['\Xibo\Controller\Layout', 'downloadThumbnail'])->setName('layout.download.thumbnail');
+$app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
+    $group->get('/layout/thumbnail/{id}', ['\Xibo\Controller\Layout', 'downloadThumbnail'])
+        ->setName('layout.download.thumbnail');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.view', 'template.view']));
 
 $app->group('', function (RouteCollectorProxy $group) {
@@ -453,16 +454,20 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/dataset/export/csv/{id}', ['\Xibo\Controller\DataSet', 'exportToCsv'])->setName('dataSet.export.csv');
 
     // Columns
-    $group->get('/dataset/column/types', ['\Xibo\Controller\DataSetColumn','getDataSetColumnTypes'])->setName('dataSet.column.types');
-    $group->get('/dataset/column/datatypes', ['\Xibo\Controller\DataSetColumn','getDataTypes'])->setName('dataSet.column.datatypes');
-    $group->get('/dataset/column/{colId}', ['\Xibo\Controller\DataSetColumn','searchById'])->setName('dataSet.column.search.id');
+    $group->get('/dataset/column/types', ['\Xibo\Controller\DataSetColumn','getDataSetColumnTypes'])
+        ->setName('dataSet.column.types');
+    $group->get('/dataset/column/datatypes', ['\Xibo\Controller\DataSetColumn','getDataTypes'])
+        ->setName('dataSet.column.datatypes');
+    $group->get('/dataset/column/{colId}', ['\Xibo\Controller\DataSetColumn','searchById'])
+        ->setName('dataSet.column.search.id');
     $group->get('/dataset/{id}/column', ['\Xibo\Controller\DataSetColumn','grid'])->setName('dataSet.column.search');
     $group->post('/dataset/{id}/column', ['\Xibo\Controller\DataSetColumn','add'])->setName('dataSet.column.add');
     $group->put('/dataset/{id}/column/{colId}', ['\Xibo\Controller\DataSetColumn','edit'])->setName('dataSet.column.edit');
     $group->delete('/dataset/{id}/column/{colId}', ['\Xibo\Controller\DataSetColumn','delete'])->setName('dataSet.column.delete');
 
     // RSS
-    $group->get('/dataset/{id}/rss/{rssId}', ['\Xibo\Controller\DataSetRss','searchById'])->setName('dataSet.rss.search.id');
+    $group->get('/dataset/{id}/rss/{rssId}', ['\Xibo\Controller\DataSetRss','searchById'])
+        ->setName('dataSet.rss.search.id');
     $group->get('/dataset/{id}/rss', ['\Xibo\Controller\DataSetRss','grid'])->setName('dataSet.rss.search');
     $group->post('/dataset/{id}/rss', ['\Xibo\Controller\DataSetRss','add'])->setName('dataSet.rss.add');
     $group->put('/dataset/{id}/rss/{rssId}', ['\Xibo\Controller\DataSetRss','edit'])
@@ -613,6 +618,7 @@ $app->group('', function (RouteCollectorProxy $group) {
 // Transition
 //
 $app->get('/transition', ['\Xibo\Controller\Transition','grid'])->setName('transition.search');
+$app->get('/transition/{id}', ['\Xibo\Controller\Transition','searchById'])->setName('transition.search.id');
 $app->put('/transition/{id}', ['\Xibo\Controller\Transition','edit'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['transition.view']))
     ->setName('transition.edit');

@@ -295,7 +295,6 @@ $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
 // transition
 //
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/transition/view', ['\Xibo\Controller\Transition','displayPage'])->setName('transition.view');
     $group->get('/transition/form/edit/{id}', ['\Xibo\Controller\Transition','editForm'])->setName('transition.edit.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['transition.view']));
 
