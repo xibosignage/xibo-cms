@@ -107,7 +107,7 @@ const openDropdownTimeline = async () => {
   fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
   await screen.findByRole('button', { name: 'Make a Copy' });
   const timelineButtons = screen.getAllByRole('button', { name: 'Timeline' });
-  fireEvent.click(timelineButtons[timelineButtons.length - 1]);
+  fireEvent.click(timelineButtons[timelineButtons.length - 1]!);
 };
 
 // =============================================================================
