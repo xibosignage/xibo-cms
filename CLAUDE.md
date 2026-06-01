@@ -432,7 +432,9 @@ All outbound HTTP **must** be made through `Xibo\Helper\Guzzle\SafeClient::getSa
 
 `SafeClient` is safe for every call site: literal URLs, admin-settable URLs, DB-sourced URLs, connector responses. The safety checks are no-ops on safe URLs. The Semgrep rule `xibo-raw-guzzle-client` in `.semgrep/rules.yml` enforces this — a PR adding raw `new Client()` will fail the lint.
 
-The `allow_local_network` config flag (default `false`, set only via `web/settings.php` / `web/settings-custom.php` — not via any admin UI) opens SafeClient to RFC-1918 destinations. Production deployments should leave it at the default.
+**Internal services on the local network (XMR, on-premise data sources, etc.)** need `SafeClient::getSafeClientForInternal()` instead of `getSafeClient()`. The default `getSafeClient()` rejects RFC-1918 / IPv6 ULA destinations (because `allow_local_network` defaults to `false`) — calls to a Docker-network or LAN address will throw. The `*ForInternal` variant force-enables `allow_local_network` for the SsrfProtectionMiddleware config while keeping the always-block list (loopback `127/8`, AWS metadata `169.254/16`, `0.0.0.0/8`, IPv6 loopback, AWS IPv6 metadata) and the other defences active. Use it for fixed-purpose internal connections only — never for user/admin-settable URLs. Custom connectors under `custom/` that talk to on-premise data sources should override `ConnectorTrait::getClient()` to use `getSafeClientForInternal()`, or call it directly at the egress site.
+
+The `allow_local_network` config flag (default `false`, set only via `web/settings.php` / `web/settings-custom.php` — not via any admin UI) opens *all* `SafeClient::getSafeClient()` calls to RFC-1918 destinations globally. Production deployments should leave it at the default and use `getSafeClientForInternal()` per-call where needed.
 
 ### DataSet SQL — boundary sanitizer at `DataSet::getData()`
 
