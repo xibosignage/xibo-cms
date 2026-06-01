@@ -597,6 +597,7 @@ $app->delete('/application/revoke/{id}/{userId}', ['\Xibo\Controller\Application
  * Modules
  */
 $app->get('/module', ['\Xibo\Controller\Module','grid'])->setName('module.search');
+$app->get('/module/{id}', ['\Xibo\Controller\Module','searchById'])->setName('module.search.id');
 $app->get('/module/library', ['\Xibo\Controller\Module','getLibraryModules'])->setName('module.library.list');
 
 $app->get('/module/templates/{dataType}', [

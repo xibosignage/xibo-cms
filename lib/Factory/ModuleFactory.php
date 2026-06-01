@@ -49,7 +49,7 @@ class ModuleFactory extends BaseFactory
 {
     use ModuleXmlTrait;
 
-    public static $systemDataTypes = [
+    public static array $systemDataTypes = [
         'Article',
         'Event',
         'Forecast',
@@ -59,30 +59,24 @@ class ModuleFactory extends BaseFactory
         'dataset'
     ];
 
-    /** @var Module[] all modules */
-    private $modules = null;
+    private ?array $modules = null;
 
-    /** @var \Xibo\Widget\Definition\DataType[] */
-    private $dataTypes = null;
+    private ?array $dataTypes = null;
 
-    /** @var \Stash\Interfaces\PoolInterface */
-    private $pool;
+    private PoolInterface $pool;
 
-    /** @var string */
-    private $cachePath;
+    private string $cachePath;
 
-    /** @var \Slim\Views\Twig */
-    private $twig;
+    private Twig $twig;
 
-    /** @var \Xibo\Service\ConfigServiceInterface */
-    private $config;
+    private ConfigServiceInterface $config;
 
     /**
      * Construct a factory
      * @param string $cachePath
      * @param PoolInterface $pool
-     * @param \Slim\Views\Twig $twig
-     * @param \Xibo\Service\ConfigServiceInterface $config
+     * @param Twig $twig
+     * @param ConfigServiceInterface $config
      */
     public function __construct(string $cachePath, PoolInterface $pool, Twig $twig, ConfigServiceInterface $config)
     {
@@ -93,9 +87,9 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
-     * @param \Xibo\Entity\Module $module
-     * @param \Xibo\Entity\Widget $widget
-     * @return \Xibo\Widget\Provider\DataProviderInterface
+     * @param Module $module
+     * @param Widget $widget
+     * @return DataProviderInterface
      */
     public function createDataProvider(Module $module, Widget $widget): DataProviderInterface
     {
@@ -120,7 +114,7 @@ class ModuleFactory extends BaseFactory
 
     /**
      * Create a widget renderer
-     * @return \Xibo\Widget\Render\WidgetHtmlRenderer
+     * @return WidgetHtmlRenderer
      */
     public function createWidgetHtmlRenderer(): WidgetHtmlRenderer
     {
@@ -139,11 +133,11 @@ class ModuleFactory extends BaseFactory
 
     /**
      * Determine the cache key
-     * @param \Xibo\Entity\Module $module
-     * @param \Xibo\Entity\Widget $widget
+     * @param Module $module
+     * @param Widget $widget
      * @param int $displayId the displayId (0 for preview)
-     * @param \Xibo\Widget\Provider\DataProviderInterface $dataProvider
-     * @param \Xibo\Widget\Provider\WidgetProviderInterface|null $widgetInterface
+     * @param DataProviderInterface $dataProvider
+     * @param WidgetProviderInterface|null $widgetInterface
      * @return string
      */
     public function determineCacheKey(
@@ -157,7 +151,7 @@ class ModuleFactory extends BaseFactory
         $cacheKey = $widgetInterface?->getDataCacheKey($dataProvider);
 
         if ($cacheKey === null) {
-            // Determinthe cache key from the setting in XML.
+            // Determine the cache key from the setting in XML.
             if (empty($module->dataCacheKey)) {
                 // Best we can do here is a cache per widget, but we should log this as an error.
                 $this->getLog()->debug('determineCacheKey: module without dataCacheKey: ' . $module->moduleId);
@@ -228,7 +222,7 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
-     * @return \Xibo\Entity\Module[]
+     * @return Module[]
      */
     public function getKeyedArrayOfModules(): array
     {
@@ -261,7 +255,9 @@ class ModuleFactory extends BaseFactory
     public function getLibraryModules(): array
     {
         $this->getLog()->debug('ModuleFactory: getLibraryModules');
+
         $modules = [];
+
         foreach ($this->load() as $module) {
             if ($module->enabled == 1 && $module->regionSpecific === 0) {
                 $modules[] = $module;
@@ -271,16 +267,17 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
-     * Get module by Id
+     * Get module by ID
      * @param string $moduleId
      * @return Module
      * @throws NotFoundException
      */
-    public function getById($moduleId): Module
+    public function getById(string $moduleId): Module
     {
         $this->getLog()->debug('ModuleFactory: getById');
+
         foreach ($this->load() as $module) {
-            if ($module->moduleId === $moduleId) {
+            if ($module->moduleId == $moduleId) {
                 return $module;
             }
         }
@@ -295,32 +292,49 @@ class ModuleFactory extends BaseFactory
     public function getAll(): array
     {
         $this->getLog()->debug('ModuleFactory: getAll');
+
         return $this->load();
     }
 
     /**
      * Get an array of all modules except canvas
      * @param array $filter
+     * @param array|null $sortOrder sort order from gridRenderSort
      * @return Module[]
      */
-    public function getAllExceptCanvas(array $filter = []): array
+    public function getAllExceptCanvas(array $filter = [], ?array $sortOrder = null): array
     {
         $sanitizedFilter = $this->getSanitizer($filter);
-        $this->getLog()->debug('ModuleFactory: getAllButCanvas');
+        $name = $sanitizedFilter->getString('name');
+        $keyword = $sanitizedFilter->getString('keyword');
         $modules = [];
+
+        $this->getLog()->debug('ModuleFactory: getAllButCanvas');
+
         foreach ($this->load() as $module) {
             // Hide the canvas module from the module list
-            if ($module->moduleId != 'core-canvas') {
-                // do we have a name filter?
-                if (!empty($sanitizedFilter->getString('name'))) {
-                    if (str_contains(strtolower($module->name), strtolower($sanitizedFilter->getString('name')))) {
-                        $modules[] = $module;
-                    }
-                } else {
-                    $modules[] = $module;
-                }
+            if ($module->moduleId == 'core-canvas') {
+                continue;
             }
+
+            // If we have a name filter, and it does not match, skip it
+            if (!empty($name) && !str_contains(strtolower($module->name), strtolower($name))) {
+                continue;
+            }
+
+            // If we have a keyword filter, and it does not match, skip it
+            if (!empty($keyword) &&
+                !str_contains(strtolower($module->name), strtolower($keyword)) &&
+                !str_contains(strtolower($module->moduleId), strtolower($keyword))
+            ) {
+                continue;
+            }
+
+            $modules[] = $module;
         }
+
+        $this->applySortQuery($modules, $sortOrder);
+
         return $modules;
     }
 
@@ -331,7 +345,9 @@ class ModuleFactory extends BaseFactory
     public function getEnabled(): array
     {
         $this->getLog()->debug('ModuleFactory: getEnabled');
+
         $modules = [];
+
         foreach ($this->load() as $module) {
             if ($module->enabled == 1) {
                 $modules[] = $module;
@@ -346,15 +362,15 @@ class ModuleFactory extends BaseFactory
      * @param string $type
      * @param array $conditions Conditions that are created based on the widget's option and value, e.g, templateId==worldclock1
      * @return Module
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws NotFoundException
      */
     public function getByType(string $type, array $conditions = []): Module
     {
         $this->getLog()->debug('ModuleFactory: getByType ' . $type);
+
         $modules = $this->load();
+
         usort($modules, function ($a, $b) {
-            /** @var Module $a */
-            /** @var Module $b */
             return $a->enabled - $b->enabled;
         });
 
@@ -403,8 +419,10 @@ class ModuleFactory extends BaseFactory
     public function getByExtension(string $extension): Module
     {
         $this->getLog()->debug('ModuleFactory: getByExtension');
+
         foreach ($this->load() as $module) {
             $validExtensions = $module->getSetting('validExtensions');
+
             if (!empty($validExtensions) && Str::contains($validExtensions, $extension)) {
                 return $module;
             }
@@ -418,7 +436,7 @@ class ModuleFactory extends BaseFactory
      * @param array $filterBy
      * @return string[]
      */
-    public function getValidExtensions($filterBy = []): array
+    public function getValidExtensions(array $filterBy = []): array
     {
         $this->getLog()->debug('ModuleFactory: getValidExtensions');
         $filterBy = $this->getSanitizer($filterBy);
@@ -452,16 +470,18 @@ class ModuleFactory extends BaseFactory
 
     /**
      * @param string $dataTypeId
-     * @return \Xibo\Widget\Definition\DataType
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @return DataType
+     * @throws NotFoundException
      */
     public function getDataTypeById(string $dataTypeId): DataType
     {
         // Rely on a class if we have one.
         $className = ucfirst(str_replace('-', '', ucwords($dataTypeId, '-')));
         $className = '\\Xibo\\Widget\\DataType\\' . $className;
+
         if (class_exists($className)) {
             $class = new $className();
+
             if ($class instanceof DataTypeInterface) {
                 return ($class->getDefinition());
             }
@@ -480,15 +500,17 @@ class ModuleFactory extends BaseFactory
     /**
      * @return DataType[]
      */
-    public function getAllDataTypes()
+    public function getAllDataTypes(): array
     {
         $dataTypes = [];
 
         // get system data types
         foreach (self::$systemDataTypes as $dataTypeId) {
             $className = '\\Xibo\\Widget\\DataType\\' . ucfirst($dataTypeId);
+
             if (class_exists($className)) {
                 $class = new $className();
+
                 if ($class instanceof DataTypeInterface) {
                     $dataTypes[] = $class->getDefinition();
                 }
@@ -519,17 +541,19 @@ class ModuleFactory extends BaseFactory
         }
 
         sort($dataTypes);
+
         return $dataTypes;
     }
 
     /**
      * @param string $assetId
-     * @return \Xibo\Widget\Definition\Asset
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @return Asset
+     * @throws NotFoundException
      */
     public function getAssetById(string $assetId): Asset
     {
         $this->getLog()->debug('getAssetById: ' . $assetId);
+
         foreach ($this->getEnabled() as $module) {
             foreach ($module->getAssets() as $asset) {
                 if ($asset->id === $assetId) {
@@ -543,12 +567,13 @@ class ModuleFactory extends BaseFactory
 
     /**
      * @param string $alias
-     * @return \Xibo\Widget\Definition\Asset
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @return Asset
+     * @throws NotFoundException
      */
     public function getAssetByAlias(string $alias): Asset
     {
         $this->getLog()->debug('getAssetByAlias: ' . $alias);
+
         foreach ($this->getEnabled() as $module) {
             foreach ($module->getAssets() as $asset) {
                 if ($asset->alias === $alias) {
@@ -567,6 +592,7 @@ class ModuleFactory extends BaseFactory
     public function getAssetsFromTemplates(array $templates): array
     {
         $assets = [];
+
         foreach ($this->getEnabled() as $module) {
             foreach ($module->getAssets() as $asset) {
                 $assets[$asset->id] = $asset;
@@ -589,11 +615,13 @@ class ModuleFactory extends BaseFactory
     public function getAllAssets(): array
     {
         $assets = [];
+
         foreach ($this->getEnabled() as $module) {
             foreach ($module->getAssets() as $asset) {
                 $assets[$asset->id] = $asset;
             }
         }
+
         return $assets;
     }
 
@@ -611,6 +639,7 @@ class ModuleFactory extends BaseFactory
         bool $isAlias = false,
     ): Asset {
         $asset = null;
+
         try {
             $asset = $isAlias
                 ? $this->getAssetByAlias($assetId)
@@ -630,14 +659,14 @@ class ModuleFactory extends BaseFactory
 
         if ($asset !== null) {
             return $asset;
-        } else {
-            throw new NotFoundException(__('Asset not found'));
         }
+
+        throw new NotFoundException(__('Asset not found'));
     }
 
     /**
      * Load all modules into an array for use throughout this request
-     * @return \Xibo\Entity\Module[]
+     * @return Module[]
      */
     private function load(): array
     {
@@ -719,7 +748,7 @@ class ModuleFactory extends BaseFactory
 
     /**
      * Load all data types into an array for use throughout this request
-     * @return \Xibo\Widget\Definition\DataType[]
+     * @return DataType[]
      */
     private function loadDataTypes(): array
     {
@@ -741,7 +770,7 @@ class ModuleFactory extends BaseFactory
      * Create a module from its XML definition
      * @param string $file the path to the module definition
      * @param array $modulesWithSettings
-     * @return \Xibo\Entity\Module
+     * @return Module
      */
     private function createFromXml(string $file, array $modulesWithSettings): Module
     {
@@ -819,7 +848,8 @@ class ModuleFactory extends BaseFactory
             $module->legacyTypes = $this->parseLegacyTypes($xml->getElementsByTagName('legacyType'));
         } catch (\Exception $e) {
             $module->errors[] = __('Invalid legacyType');
-            $this->getLog()->error('Module ' . $module->moduleId . ' has invalid legacyType. e: ' .  $e->getMessage());
+            $this->getLog()->error('Module ' . $module->moduleId . ' has invalid legacyType. e: '
+                .  $e->getMessage());
         }
 
         // Group for non datatype modules
@@ -854,7 +884,8 @@ class ModuleFactory extends BaseFactory
             $module->settings = $this->parseProperties($xml->getElementsByTagName('settings'));
         } catch (\Exception $e) {
             $module->errors[] = __('Invalid settings');
-            $this->getLog()->error('Module ' . $module->moduleId . ' has invalid settings. e: ' .  $e->getMessage());
+            $this->getLog()->error('Module ' . $module->moduleId . ' has invalid settings. e: '
+                . $e->getMessage());
         }
 
         // Add in any settings we already have
@@ -898,7 +929,8 @@ class ModuleFactory extends BaseFactory
             $module->properties = $this->parseProperties($xml->getElementsByTagName('properties'), $module);
         } catch (\Exception $e) {
             $module->errors[] = __('Invalid properties');
-            $this->getLog()->error('Module ' . $module->moduleId . ' has invalid properties. e: ' .  $e->getMessage());
+            $this->getLog()->error('Module ' . $module->moduleId . ' has invalid properties. e: '
+                .  $e->getMessage());
         }
 
         // Parse group property definitions.
@@ -931,7 +963,7 @@ class ModuleFactory extends BaseFactory
     /**
      * Create DataType from XML
      * @param string $file
-     * @return \Xibo\Widget\Definition\DataType
+     * @return DataType
      */
     private function createDataTypeFromXml(string $file): DataType
     {
@@ -955,5 +987,55 @@ class ModuleFactory extends BaseFactory
         }
 
         return $dataType;
+    }
+
+    /**
+     * Sorting logic
+     * @param array $modules
+     * @param $sortOrder
+     * @return void
+     */
+    private function applySortQuery(array &$modules, $sortOrder): void
+    {
+        $allowedColumns = [
+            'name',
+            'description',
+            'regionSpecific',
+            'defaultDuration',
+            'previewEnabled',
+            'assignable',
+            'enabled',
+            'isError'
+        ];
+
+        $resolvedSort = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['name ASC']
+        );
+
+        if (empty($resolvedSort)) {
+            $resolvedSort = ['`name` ASC'];
+        }
+
+        usort($modules, function (Module $a, Module $b) use ($resolvedSort) {
+            foreach ($resolvedSort as $sortPart) {
+                if (!preg_match('/`([^`]+)`\s+(ASC|DESC)/i', $sortPart, $m)) {
+                    continue;
+                }
+
+                $col = $m[1];
+                $dir = strtoupper($m[2]);
+                $valA = $a->$col ?? '';
+                $valB = $b->$col ?? '';
+                $cmp = is_string($valA) ? strcasecmp($valA, $valB) : ($valA <=> $valB);
+
+                if ($cmp !== 0) {
+                    return $dir === 'DESC' ? -$cmp : $cmp;
+                }
+            }
+
+            return 0;
+        });
     }
 }

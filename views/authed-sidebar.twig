@@ -85,7 +85,7 @@
         {% endif %}
 
         {% set countViewable = currentUser.featureEnabledCount(["usergroup.view", "module.view", "transition.view", "task.view", "tag.view", "font.view"]) %}
-        
+
         {% if countViewable > 0 or userMenuViewable %}
             <li class="sidebar-title"><a>{% trans "Administration" %}</a></li>
 
@@ -106,7 +106,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("module.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("module.view") }}">{% trans "Modules" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/administration/modules">{% trans "Modules" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("transition.view") %}

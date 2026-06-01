@@ -237,17 +237,8 @@ $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
 })->addMiddleware(new SuperAdminAuth($app->getContainer()));
 
 //
-// module
+// Module
 //
-$app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/module/view', ['\Xibo\Controller\Module','displayPage'])->setName('module.view');
-    $group->get('/module/form/clear-cache/{id}', ['\Xibo\Controller\Module','clearCacheForm'])
-        ->setName('module.clear.cache.form');
-
-    $group->get('/module/form/settings/{id}', ['\Xibo\Controller\Module','settingsForm'])
-        ->setName('module.settings.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['module.view']));
-
 $app->get('/module/asset/{assetId}', ['\Xibo\Controller\Module', 'assetDownload'])
     ->setName('module.asset.download');
 

@@ -59,27 +59,117 @@ class Module extends Base
         $this->moduleTemplateFactory = $moduleTemplateFactory;
     }
 
-    /**
-     * Display the module page
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function displayPage(Request $request, Response $response)
-    {
-        $this->getState()->template = 'module-page';
-
-        return $this->render($request, $response);
-    }
-
     #[OA\Get(
         path: '/module',
         operationId: 'moduleSearch',
         description: 'Get a list of all modules available to this CMS',
         summary: 'Module Search',
         tags: ['module']
+    )]
+    #[OA\Parameter(
+        name: 'moduleId',
+        description: 'Filter by module ID',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'name',
+        description: 'Filter by module name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'keyword',
+        description: 'Filter by module name or ID',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: [
+                'name',
+                'description',
+                'regionSpecific',
+                'defaultDuration',
+                'previewEnabled',
+                'assignable',
+                'enabled',
+                'isError'
+            ]
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/Module')
+    )]
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return ResponseInterface|Response
+     * @throws GeneralException
+     */
+    public function grid(Request $request, Response $response): Response|ResponseInterface
+    {
+        $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
+
+        $sortOrder = $this->gridRenderSort(
+            $parsedQueryParams,
+            $this->isJson($request)
+        );
+
+        $modules = $this->moduleFactory->getAllExceptCanvas([
+            'name' => $parsedQueryParams->getString('name'),
+            'extension' => $parsedQueryParams->getString('extension'),
+            'moduleId' => $parsedQueryParams->getInt('moduleId'),
+            'keyword' => $parsedQueryParams->getString('keyword'),
+        ], $sortOrder);
+
+        foreach ($modules as $module) {
+            $module->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($module));
+        }
+
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', count($modules))
+            ->withJson($modules);
+    }
+
+    #[OA\Get(
+        path: '/module/{moduleId}',
+        operationId: 'ModuleSearchById',
+        description: 'Get the Module object specified by the provided moduleId',
+        summary: 'Module Search By ID',
+        tags: ['module']
+    )]
+    #[OA\Parameter(
+        name: 'moduleId',
+        description: 'Numeric ID of the Module to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Response(
         response: 200,
@@ -89,62 +179,21 @@ class Module extends Base
     /**
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
+     * @param int $id
+     * @return Response|ResponseInterface
+     * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function grid(Request $request, Response $response)
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
-        $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
 
-        $filter = [
-            'name' => $parsedQueryParams->getString('name'),
-            'extension' => $parsedQueryParams->getString('extension'),
-            'moduleId' => $parsedQueryParams->getInt('moduleId')
-        ];
+        $module = $this->moduleFactory->getById($id);
 
-        $modules = $this->moduleFactory->getAllExceptCanvas($filter);
+        $module->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($module));
 
-        foreach ($modules as $module) {
-            /* @var \Xibo\Entity\Module $module */
-
-            if ($this->isApi($request)) {
-                break;
-            }
-
-            $module->includeProperty('buttons');
-
-            // Edit button
-            $module->buttons[] = [
-                'id' => 'module_button_edit',
-                'url' => $this->urlFor($request, 'module.settings.form', ['id' => $module->moduleId]),
-                'text' => __('Configure')
-            ];
-
-            // Clear cache
-            if ($module->regionSpecific == 1) {
-                $module->buttons[] = [
-                    'id' => 'module_button_clear_cache',
-                    'url' => $this->urlFor($request, 'module.clear.cache.form', ['id' => $module->moduleId]),
-                    'text' => __('Clear Cache'),
-                    'dataAttributes' => [
-                        ['name' => 'auto-submit', 'value' => true],
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor($request, 'module.clear.cache', ['id' => $module->moduleId])
-                        ],
-                        ['name' => 'commit-method', 'value' => 'PUT']
-                    ]
-                ];
-            }
-        }
-
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = 0;
-        $this->getState()->setData($modules);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson($module);
     }
 
     // phpcs:disable
@@ -171,17 +220,18 @@ class Module extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
     // phpcs:enable
-    public function getProperties(Request $request, Response $response, $id)
+    public function getProperties(Request $request, Response $response, $id): Response|ResponseInterface
     {
         // Get properties, but return a key->value object for easy parsing.
         $props = [];
+
         foreach ($this->moduleFactory->getById($id)->properties as $property) {
             $props[$property->id] = [
                 'type' => $property->type,
@@ -192,35 +242,6 @@ class Module extends Base
         }
 
         $this->getState()->setData($props);
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Settings Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function settingsForm(Request $request, Response $response, $id)
-    {
-        // Can we edit?
-        if (!$this->getUser()->userTypeId == 1) {
-            throw new AccessDeniedException();
-        }
-
-        $module = $this->moduleFactory->getById($id);
-
-        // Pass to view
-        $this->getState()->template = 'module-form-settings';
-        $this->getState()->setData([
-            'moduleId' => $id,
-            'module' => $module,
-        ]);
 
         return $this->render($request, $response);
     }
@@ -230,13 +251,13 @@ class Module extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function settings(Request $request, Response $response, $id)
+    public function settings(Request $request, Response $response, $id): Response|ResponseInterface
     {
         if (!$this->getUser()->isSuperAdmin()) {
             throw new AccessDeniedException();
@@ -276,39 +297,16 @@ class Module extends Base
     }
 
     /**
-     * Clear Cache Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function clearCacheForm(Request $request, Response $response, $id)
-    {
-        $module = $this->moduleFactory->getById($id);
-
-        $this->getState()->template = 'module-form-clear-cache';
-        $this->getState()->autoSubmit = $this->getAutoSubmit('clearCache');
-        $this->getState()->setData([
-            'module' => $module,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
      * Clear Cache
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function clearCache(Request $request, Response $response, $id)
+    public function clearCache(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $module = $this->moduleFactory->getById($id);
         if ($module->isDataProviderExpected()) {
@@ -349,11 +347,11 @@ class Module extends Base
         content: new OA\JsonContent(ref: '#/components/schemas/ModuleTemplate')
     )]
     /**
-     * @param \Slim\Http\ServerRequest $request
-     * @param \Slim\Http\Response $response
+     * @param Request $request
+     * @param Response $response
      * @param string $dataType
-     * @return \Slim\Http\Response
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @return Response
+     * @throws GeneralException
      */
     public function templateGrid(Request $request, Response $response, string $dataType): Response
     {
@@ -371,6 +369,7 @@ class Module extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = 0;
         $this->getState()->setData($templates);
+
         return $this->render($request, $response);
     }
 
@@ -414,11 +413,16 @@ class Module extends Base
      * @throws NotFoundException
      * @throws ControllerNotImplemented
      */
-    // phpcs:enable
-    public function getTemplateProperties(Request $request, Response $response, string $dataType, string $id)
-    {
+        // phpcs:enable
+    public function getTemplateProperties(
+        Request $request,
+        Response $response,
+        string $dataType,
+        string $id
+    ): Response|ResponseInterface {
         // Get properties, but return a key->value object for easy parsing.
         $props = [];
+
         foreach ($this->moduleTemplateFactory->getByDataTypeAndId($dataType, $id)->properties as $property) {
             $props[$property->id] = [
                 'id' => $property->id,
@@ -430,20 +434,21 @@ class Module extends Base
         }
 
         $this->getState()->setData($props);
+
         return $this->render($request, $response);
     }
 
     /**
      * Serve an asset
-     * @param \Slim\Http\ServerRequest $request
-     * @param \Slim\Http\Response $response
+     * @param Request $request
+     * @param Response $response
      * @param string $assetId the ID of the asset to serve
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @return ResponseInterface
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
-    public function assetDownload(Request $request, Response $response, string $assetId): Response
+    public function assetDownload(Request $request, Response $response, string $assetId): ResponseInterface
     {
         if (empty($assetId)) {
             throw new InvalidArgumentException(__('Please provide an assetId'), 'assetId');
