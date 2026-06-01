@@ -1884,6 +1884,16 @@ class Schedule extends Base
             'recurrenceMonthlyRepeatsOn',
             ['default' => 0]
         );
+        // Capture the assignment IDs the schedule already had before we clear them.
+        // The per-iteration permission check below only needs to gate NEW assignments —
+        // a user with edit access to the schedule should be able to re-save the existing
+        // groups even if they were originally added by someone who shared the schedule
+        // but not the groups. Mirrors the Campaign::edit() $originalLayoutAssignments
+        // pattern (lines ~766-788).
+        $originalDisplayGroupIds = array_map(
+            fn ($dg) => $dg->displayGroupId,
+            $schedule->displayGroups ?? []
+        );
         $schedule->displayGroups = [];
         $schedule->isGeoAware = $sanitizedParams->getCheckbox('isGeoAware');
         $schedule->maxPlaysPerHour = $sanitizedParams->getInt('maxPlaysPerHour', ['default' => 0]);
