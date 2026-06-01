@@ -82,7 +82,7 @@ class Module extends Base
     )]
     #[OA\Parameter(
         name: 'keyword',
-        description: 'Filter by module name or ID',
+        description: 'Filter by module name, ID, or description',
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'string')
@@ -113,6 +113,20 @@ class Module extends Base
         required: false,
         schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
     )]
+    #[OA\Parameter(
+        name: 'start',
+        description: 'The offset to start results from (for pagination)',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'length',
+        description: 'The number of records to return (page size)',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(
         response: 200,
         description: 'successful operation',
@@ -129,7 +143,6 @@ class Module extends Base
      * @param Request $request
      * @param Response $response
      * @return ResponseInterface|Response
-     * @throws GeneralException
      */
     public function grid(Request $request, Response $response): Response|ResponseInterface
     {
@@ -140,20 +153,21 @@ class Module extends Base
             $this->isJson($request)
         );
 
-        $modules = $this->moduleFactory->getAllExceptCanvas([
+        $filter = [
             'name' => $parsedQueryParams->getString('name'),
             'extension' => $parsedQueryParams->getString('extension'),
             'moduleId' => $parsedQueryParams->getInt('moduleId'),
             'keyword' => $parsedQueryParams->getString('keyword'),
-        ], $sortOrder);
+            'start' => $parsedQueryParams->getInt('start'),
+            'length' => $parsedQueryParams->getInt('length'),
+        ];
 
-        foreach ($modules as $module) {
-            $module->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($module));
-        }
+        $totalCount = 0;
+        $modules = $this->moduleFactory->getAllExceptCanvas($filter, $sortOrder, $totalCount);
 
         return $response
             ->withStatus(200)
-            ->withHeader('X-Total-Count', count($modules))
+            ->withHeader('X-Total-Count', $totalCount)
             ->withJson($modules);
     }
 
@@ -181,15 +195,12 @@ class Module extends Base
      * @param Response $response
      * @param int $id
      * @return Response|ResponseInterface
-     * @throws InvalidArgumentException
      * @throws NotFoundException
      */
     public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
 
         $module = $this->moduleFactory->getById($id);
-
-        $module->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($module));
 
         return $response
             ->withStatus(200)

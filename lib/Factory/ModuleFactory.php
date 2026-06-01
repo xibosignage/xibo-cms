@@ -43,6 +43,7 @@ use Xibo\Widget\Render\WidgetHtmlRenderer;
 
 /**
  * Class ModuleFactory
+ *
  * @package Xibo\Factory
  */
 class ModuleFactory extends BaseFactory
@@ -73,9 +74,10 @@ class ModuleFactory extends BaseFactory
 
     /**
      * Construct a factory
-     * @param string $cachePath
-     * @param PoolInterface $pool
-     * @param Twig $twig
+     *
+     * @param string                 $cachePath
+     * @param PoolInterface          $pool
+     * @param Twig                   $twig
      * @param ConfigServiceInterface $config
      */
     public function __construct(string $cachePath, PoolInterface $pool, Twig $twig, ConfigServiceInterface $config)
@@ -87,8 +89,8 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
-     * @param Module $module
-     * @param Widget $widget
+     * @param  Module $module
+     * @param  Widget $widget
      * @return DataProviderInterface
      */
     public function createDataProvider(Module $module, Widget $widget): DataProviderInterface
@@ -103,8 +105,8 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
-     * @param Module $module
-     * @param Widget $widget
+     * @param  Module $module
+     * @param  Widget $widget
      * @return DurationProviderInterface
      */
     public function createDurationProvider(Module $module, Widget $widget): DurationProviderInterface
@@ -114,6 +116,7 @@ class ModuleFactory extends BaseFactory
 
     /**
      * Create a widget renderer
+     *
      * @return WidgetHtmlRenderer
      */
     public function createWidgetHtmlRenderer(): WidgetHtmlRenderer
@@ -133,11 +136,12 @@ class ModuleFactory extends BaseFactory
 
     /**
      * Determine the cache key
-     * @param Module $module
-     * @param Widget $widget
-     * @param int $displayId the displayId (0 for preview)
-     * @param DataProviderInterface $dataProvider
-     * @param WidgetProviderInterface|null $widgetInterface
+     *
+     * @param  Module                       $module
+     * @param  Widget                       $widget
+     * @param  int                          $displayId       the displayId (0 for preview)
+     * @param  DataProviderInterface        $dataProvider
+     * @param  WidgetProviderInterface|null $widgetInterface
      * @return string
      */
     public function determineCacheKey(
@@ -211,7 +215,7 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
-     * @param string $dataType
+     * @param  string $dataType
      * @return void
      */
     public function clearCacheForDataType(string $dataType): void
@@ -268,7 +272,8 @@ class ModuleFactory extends BaseFactory
 
     /**
      * Get module by ID
-     * @param string $moduleId
+     *
+     * @param  string $moduleId
      * @return Module
      * @throws NotFoundException
      */
@@ -287,6 +292,7 @@ class ModuleFactory extends BaseFactory
 
     /**
      * Get an array of all modules
+     *
      * @return Module[]
      */
     public function getAll(): array
@@ -298,11 +304,13 @@ class ModuleFactory extends BaseFactory
 
     /**
      * Get an array of all modules except canvas
-     * @param array $filter
-     * @param array|null $sortOrder sort order from gridRenderSort
+     *
+     * @param  array      $filter     filter criteria
+     * @param  array|null $sortOrder  sort order from gridRenderSort
+     * @param  int        $totalCount populated with total count before pagination
      * @return Module[]
      */
-    public function getAllExceptCanvas(array $filter = [], ?array $sortOrder = null): array
+    public function getAllExceptCanvas(array $filter = [], ?array $sortOrder = null, int &$totalCount = 0): array
     {
         $sanitizedFilter = $this->getSanitizer($filter);
         $name = $sanitizedFilter->getString('name');
@@ -323,9 +331,10 @@ class ModuleFactory extends BaseFactory
             }
 
             // If we have a keyword filter, and it does not match, skip it
-            if (!empty($keyword) &&
-                !str_contains(strtolower($module->name), strtolower($keyword)) &&
-                !str_contains(strtolower($module->moduleId), strtolower($keyword))
+            if (!empty($keyword)
+                && !str_contains(strtolower($module->name), strtolower($keyword))
+                && !str_contains(strtolower($module->moduleId), strtolower($keyword))
+                && !str_contains(strtolower($module->description ?? ''), strtolower($keyword))
             ) {
                 continue;
             }
@@ -335,11 +344,21 @@ class ModuleFactory extends BaseFactory
 
         $this->applySortQuery($modules, $sortOrder);
 
+        $totalCount = count($modules);
+
+        $start = $sanitizedFilter->getInt('start', ['default' => 0]);
+        $length = $sanitizedFilter->getInt('length');
+
+        if ($length !== null && $length > 0) {
+            $modules = array_slice($modules, $start, $length);
+        }
+
         return $modules;
     }
 
     /**
      * Get an array of all enabled modules
+     *
      * @return Module[]
      */
     public function getEnabled(): array
@@ -359,8 +378,9 @@ class ModuleFactory extends BaseFactory
     /**
      * Get module by Type
      * this should return the first module enabled by the type specified.
-     * @param string $type
-     * @param array $conditions Conditions that are created based on the widget's option and value, e.g, templateId==worldclock1
+     *
+     * @param  string $type
+     * @param  array  $conditions Conditions that are created based on the widget's option and value, e.g, templateId==worldclock1
      * @return Module
      * @throws NotFoundException
      */
@@ -370,9 +390,11 @@ class ModuleFactory extends BaseFactory
 
         $modules = $this->load();
 
-        usort($modules, function ($a, $b) {
-            return $a->enabled - $b->enabled;
-        });
+        usort(
+            $modules, function ($a, $b) {
+                return $a->enabled - $b->enabled;
+            }
+        );
 
         foreach ($modules as $module) {
             if ($module->type === $type) {
@@ -412,7 +434,8 @@ class ModuleFactory extends BaseFactory
 
     /**
      * Get module by extension
-     * @param string $extension
+     *
+     * @param  string $extension
      * @return Module
      * @throws NotFoundException
      */
@@ -433,7 +456,8 @@ class ModuleFactory extends BaseFactory
 
     /**
      * Get Valid Extensions
-     * @param array $filterBy
+     *
+     * @param  array $filterBy
      * @return string[]
      */
     public function getValidExtensions(array $filterBy = []): array
@@ -469,7 +493,7 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
-     * @param string $dataTypeId
+     * @param  string $dataTypeId
      * @return DataType
      * @throws NotFoundException
      */
@@ -546,7 +570,7 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
-     * @param string $assetId
+     * @param  string $assetId
      * @return Asset
      * @throws NotFoundException
      */
@@ -566,7 +590,7 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
-     * @param string $alias
+     * @param  string $alias
      * @return Asset
      * @throws NotFoundException
      */
@@ -586,7 +610,7 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
-     * @param ModuleTemplate[] $templates
+     * @param  ModuleTemplate[] $templates
      * @return Asset[]
      */
     public function getAssetsFromTemplates(array $templates): array
@@ -610,6 +634,7 @@ class ModuleFactory extends BaseFactory
 
     /**
      * Get all assets
+     *
      * @return Asset[]
      */
     public function getAllAssets(): array
@@ -627,9 +652,10 @@ class ModuleFactory extends BaseFactory
 
     /**
      * Get an asset from anywhere by its ID
-     * @param string $assetId
-     * @param ModuleTemplateFactory $moduleTemplateFactory
-     * @param bool $isAlias
+     *
+     * @param  string                $assetId
+     * @param  ModuleTemplateFactory $moduleTemplateFactory
+     * @param  bool                  $isAlias
      * @return Asset
      * @throws NotFoundException
      */
@@ -666,6 +692,7 @@ class ModuleFactory extends BaseFactory
 
     /**
      * Load all modules into an array for use throughout this request
+     *
      * @return Module[]
      */
     private function load(): array
@@ -737,8 +764,10 @@ class ModuleFactory extends BaseFactory
                     // Register
                     $this->modules[] = $module;
                 } catch (\Exception $exception) {
-                    $this->getLog()->error('Unable to create module from '
-                        . basename($file) . ', skipping. e = ' . $exception->getMessage());
+                    $this->getLog()->error(
+                        'Unable to create module from '
+                        . basename($file) . ', skipping. e = ' . $exception->getMessage()
+                    );
                 }
             }
         }
@@ -748,6 +777,7 @@ class ModuleFactory extends BaseFactory
 
     /**
      * Load all data types into an array for use throughout this request
+     *
      * @return DataType[]
      */
     private function loadDataTypes(): array
@@ -768,8 +798,9 @@ class ModuleFactory extends BaseFactory
 
     /**
      * Create a module from its XML definition
-     * @param string $file the path to the module definition
-     * @param array $modulesWithSettings
+     *
+     * @param  string $file                the path to the module definition
+     * @param  array  $modulesWithSettings
      * @return Module
      */
     private function createFromXml(string $file, array $modulesWithSettings): Module
@@ -804,7 +835,9 @@ class ModuleFactory extends BaseFactory
 
         // Validator classes
         foreach ($xml->getElementsByTagName('validatorClass') as $node) {
-            /** @var \DOMNode $node */
+            /**
+ * @var \DOMNode $node 
+*/
             if ($node instanceof \DOMElement) {
                 $module->validatorClass[] = trim($node->textContent);
             }
@@ -848,8 +881,10 @@ class ModuleFactory extends BaseFactory
             $module->legacyTypes = $this->parseLegacyTypes($xml->getElementsByTagName('legacyType'));
         } catch (\Exception $e) {
             $module->errors[] = __('Invalid legacyType');
-            $this->getLog()->error('Module ' . $module->moduleId . ' has invalid legacyType. e: '
-                .  $e->getMessage());
+            $this->getLog()->error(
+                'Module ' . $module->moduleId . ' has invalid legacyType. e: '
+                .  $e->getMessage()
+            );
         }
 
         // Group for non datatype modules
@@ -868,8 +903,10 @@ class ModuleFactory extends BaseFactory
             $module->assets = $this->parseAssets($xml->getElementsByTagName('assets'));
         } catch (\Exception $e) {
             $module->errors[] = __('Invalid assets');
-            $this->getLog()->error('Module ' . $module->moduleId
-                . ' has invalid assets. e: ' .  $e->getMessage());
+            $this->getLog()->error(
+                'Module ' . $module->moduleId
+                . ' has invalid assets. e: ' .  $e->getMessage()
+            );
         }
 
         // Default values for remaining expected properties
@@ -884,8 +921,10 @@ class ModuleFactory extends BaseFactory
             $module->settings = $this->parseProperties($xml->getElementsByTagName('settings'));
         } catch (\Exception $e) {
             $module->errors[] = __('Invalid settings');
-            $this->getLog()->error('Module ' . $module->moduleId . ' has invalid settings. e: '
-                . $e->getMessage());
+            $this->getLog()->error(
+                'Module ' . $module->moduleId . ' has invalid settings. e: '
+                . $e->getMessage()
+            );
         }
 
         // Add in any settings we already have
@@ -929,8 +968,10 @@ class ModuleFactory extends BaseFactory
             $module->properties = $this->parseProperties($xml->getElementsByTagName('properties'), $module);
         } catch (\Exception $e) {
             $module->errors[] = __('Invalid properties');
-            $this->getLog()->error('Module ' . $module->moduleId . ' has invalid properties. e: '
-                .  $e->getMessage());
+            $this->getLog()->error(
+                'Module ' . $module->moduleId . ' has invalid properties. e: '
+                .  $e->getMessage()
+            );
         }
 
         // Parse group property definitions.
@@ -938,8 +979,10 @@ class ModuleFactory extends BaseFactory
             $module->propertyGroups = $this->parsePropertyGroups($xml->getElementsByTagName('propertyGroups'));
         } catch (\Exception $e) {
             $module->errors[] = __('Invalid property groups');
-            $this->getLog()->error('Module ' . $module->moduleId . ' has invalid property groups. e: '
-                .  $e->getMessage());
+            $this->getLog()->error(
+                'Module ' . $module->moduleId . ' has invalid property groups. e: '
+                .  $e->getMessage()
+            );
         }
 
         // Parse required elements.
@@ -962,7 +1005,8 @@ class ModuleFactory extends BaseFactory
 
     /**
      * Create DataType from XML
-     * @param string $file
+     *
+     * @param  string $file
      * @return DataType
      */
     private function createDataTypeFromXml(string $file): DataType
@@ -991,8 +1035,9 @@ class ModuleFactory extends BaseFactory
 
     /**
      * Sorting logic
-     * @param array $modules
-     * @param $sortOrder
+     *
+     * @param  array $modules
+     * @param  $sortOrder
      * @return void
      */
     private function applySortQuery(array &$modules, $sortOrder): void
@@ -1014,28 +1059,26 @@ class ModuleFactory extends BaseFactory
             defaultSort: ['name ASC']
         );
 
-        if (empty($resolvedSort)) {
-            $resolvedSort = ['`name` ASC'];
-        }
+        usort(
+            $modules, function (Module $a, Module $b) use ($resolvedSort) {
+                foreach ($resolvedSort as $sortPart) {
+                    if (!preg_match('/`([^`]+)`\s+(ASC|DESC)/i', $sortPart, $m)) {
+                        continue;
+                    }
 
-        usort($modules, function (Module $a, Module $b) use ($resolvedSort) {
-            foreach ($resolvedSort as $sortPart) {
-                if (!preg_match('/`([^`]+)`\s+(ASC|DESC)/i', $sortPart, $m)) {
-                    continue;
+                    $col = $m[1];
+                    $dir = strtoupper($m[2]);
+                    $valA = $a->$col ?? '';
+                    $valB = $b->$col ?? '';
+                    $cmp = is_string($valA) ? strcasecmp($valA, $valB) : ($valA <=> $valB);
+
+                    if ($cmp !== 0) {
+                        return $dir === 'DESC' ? -$cmp : $cmp;
+                    }
                 }
 
-                $col = $m[1];
-                $dir = strtoupper($m[2]);
-                $valA = $a->$col ?? '';
-                $valB = $b->$col ?? '';
-                $cmp = is_string($valA) ? strcasecmp($valA, $valB) : ($valA <=> $valB);
-
-                if ($cmp !== 0) {
-                    return $dir === 'DESC' ? -$cmp : $cmp;
-                }
+                return 0;
             }
-
-            return 0;
-        });
+        );
     }
 }
