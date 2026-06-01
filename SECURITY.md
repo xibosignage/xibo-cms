@@ -34,3 +34,31 @@ URL, XMR address, etc.) could pivot to.
 
 The setting is intentionally not exposed via any CMS admin UI — flipping it requires
 filesystem access to the CMS host. There is no DB-backed override.
+
+### `$whitelistHosts` — strongly recommended for production
+
+When the CMS sends URLs off-system (the password-reset email link, the
+`cmsAddress` registration call to the Xibo auth service, the PWA player manifest
+embedded in player software packages, etc.), it constructs those URLs from the
+incoming request's `Host` header. Without an allow-list, an attacker who can set
+that header — e.g. by sending a `POST /login/forgotten-password` with
+`Host: attacker.com` — can poison the URL that ends up in the victim's inbox,
+turning a password-reset email into a phishing vector that leaks the reset
+nonce to attacker-controlled infrastructure.
+
+Set `$whitelistHosts` in `web/settings.php` (or `web/settings-custom.php`) to a
+comma-separated list of canonical hostnames that the CMS is reachable under:
+
+```php
+$whitelistHosts = 'cms.example.com,cms-staging.example.com';
+```
+
+When set, `HttpsDetect::getHost()` rejects any `Host` header that isn't on the
+list and falls back to the first listed hostname instead. When unset (the
+default), the legacy behaviour is preserved for backward compatibility — but
+this leaves the off-system URL construction sites open to Host-header
+injection, so production deployments should treat this as a required setting.
+
+Like `$allowLocalNetworkRequests`, this setting is deployment-time only and is
+not exposed via any CMS admin UI — an attacker who compromises an admin account
+would otherwise simply whitelist their own host.
