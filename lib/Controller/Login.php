@@ -682,6 +682,11 @@ class Login extends Base
      */
     public function twoFactorAuthValidate(Request $request, Response $response): Response
     {
+        // Brute-force protection on the TOTP / recovery-code submission. Matches the
+        // bare-login bucket (5 / 15 min). Separate bucket so a failed 2FA attempt
+        // doesn't bleed over into the password path and vice versa.
+        $this->enforceRateLimit($request, 'twofactor', 5, 900);
+
         $user = $this->userFactory->getByName($_SESSION['tfaUsername']);
         $result = false;
         $updatedCodes = [];
@@ -725,6 +730,9 @@ class Login extends Base
         }
 
         if ($result) {
+            // Successful 2FA — drop the failure counter for this IP.
+            $this->resetRateLimit($request, 'twofactor');
+
             // We are logged in at this point
             $this->completeLoginFlow($user, $request);
 
@@ -735,6 +743,9 @@ class Login extends Base
 
             return $response->withRedirect($this->getRedirect($request, $sanitizedParams->getString('priorRoute')));
         } else {
+            // Record one failure against the bucket so brute-forcers progress toward the wall.
+            $this->recordRateLimitHit($request, 'twofactor', 900);
+
             $this->getLog()->error('Authentication code incorrect, redirecting to login page');
             $this->getFlash()->addMessage('login_message', __('Authentication code incorrect'));
             return $response->withRedirect($this->urlFor($request, 'login'));
