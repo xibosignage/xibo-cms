@@ -31,9 +31,10 @@ import {
   useInteractions,
 } from '@floating-ui/react';
 import { ChevronDown, Search, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useDebounce } from '@/hooks/useDebounce';
 import { fetchDisplayGroups } from '@/services/displayGroupApi';
 
 interface DisplayGroupSelectProps {
@@ -54,6 +55,7 @@ export default function DisplayGroupSelect({
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
   const [options, setOptions] = useState<{ id: number; label: string }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -97,18 +99,20 @@ export default function DisplayGroupSelect({
   }
 
   function handleOpenChange(open: boolean) {
-    if (open) {
-      void loadOptions('');
-    }
     setIsOpen(open);
     if (!open) {
       setSearch('');
     }
   }
 
+  useEffect(() => {
+    if (isOpen) {
+      void loadOptions(debouncedSearch);
+    }
+  }, [debouncedSearch, isOpen]);
+
   function handleSearchChange(term: string) {
     setSearch(term);
-    void loadOptions(term);
   }
 
   return (

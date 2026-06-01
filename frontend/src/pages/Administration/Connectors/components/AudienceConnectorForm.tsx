@@ -415,6 +415,7 @@ export default function AudienceConnectorForm({
     apiKey: String(settings.apiKey ?? ''),
   });
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [dmaModal, setDmaModal] = useState<DmaDraft | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [isDeleting, startDeleting] = useTransition();
@@ -460,11 +461,13 @@ export default function AudienceConnectorForm({
 
   function handleDeleteDma(id: string) {
     startDeleting(async () => {
+      setDeleteError(null);
       try {
         await fetchConnectorProxy(String(connector.connectorId!), 'dmaDelete', { _id: id });
         void queryClient.invalidateQueries({ queryKey: dmaQueryKey });
-      } finally {
         setDeleteConfirmId(null);
+      } catch {
+        setDeleteError(t('Failed to delete DMA. Please try again.'));
       }
     });
   }
@@ -676,7 +679,10 @@ export default function AudienceConnectorForm({
       {deleteConfirmId !== null && (
         <Modal
           isOpen
-          onClose={() => setDeleteConfirmId(null)}
+          onClose={() => {
+            setDeleteConfirmId(null);
+            setDeleteError(null);
+          }}
           title={t('Delete DMA')}
           size="sm"
           showCloseButton
@@ -685,8 +691,16 @@ export default function AudienceConnectorForm({
             <p className="text-sm text-gray-700">
               {t('Are you sure you want to delete this DMA?')}
             </p>
+            {deleteError && <InfoBanner type="danger">{deleteError}</InfoBanner>}
             <div className="flex justify-end gap-2 border-t border-gray-100 pt-4">
-              <Button type="button" variant="secondary" onClick={() => setDeleteConfirmId(null)}>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setDeleteConfirmId(null);
+                  setDeleteError(null);
+                }}
+              >
                 {t('No')}
               </Button>
               <Button
