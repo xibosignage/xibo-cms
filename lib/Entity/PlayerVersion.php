@@ -267,8 +267,10 @@ class PlayerVersion implements \JsonSerializable
                 $manifest['short_name'] = $this->config->getThemeConfig('app_name') . '-chromeos';
             }
 
-            // Start URL if we're running in a sub-folder.
-            $manifest['start_url'] = (new HttpsDetect())->getBaseUrl($request) . '/pwa';
+            // Start URL if we're running in a sub-folder. Pass config so
+            // WHITELIST_HOSTS (if set) defeats Host-header injection into the
+            // manifest URL persisted to the player-software package.
+            $manifest['start_url'] = (new HttpsDetect($this->config))->getBaseUrl($request) . '/pwa';
 
             // Update asset URLs
             for ($i = 0; $i < count($manifest['icons']); $i++) {

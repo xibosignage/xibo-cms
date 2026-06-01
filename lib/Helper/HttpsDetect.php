@@ -24,6 +24,7 @@
 namespace Xibo\Helper;
 
 use Psr\Http\Message\ServerRequestInterface;
+use Xibo\Service\ConfigServiceInterface;
 
 /**
  * Class HttpsDetect
@@ -31,6 +32,21 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class HttpsDetect
 {
+    private ?ConfigServiceInterface $config;
+
+    /**
+     * Pass a config service when the caller needs Host-header allow-list
+     * validation (the WHITELIST_HOSTS setting). Sites that build URLs ending
+     * up off-system (emailed links, registration messages, manifests) MUST
+     * pass it; purely internal sites (CORS, STS, request-bound redirects)
+     * may construct without it.
+     */
+    public function __construct(?ConfigServiceInterface $config = null)
+    {
+        $this->config = $config;
+    }
+
+
     /**
      * Get the root of the web server
      *  this should only be used if you're planning to append the path
@@ -105,22 +121,41 @@ class HttpsDetect
 
     /**
      * Get Host
+     *
+     * When the caller supplies a config service AND the operator has set
+     * WHITELIST_HOSTS, the request's Host header is validated against the
+     * allow-list and rejected hosts fall back to the first listed host.
+     * Without WHITELIST_HOSTS (or without a config) the legacy behaviour is
+     * preserved for backward compatibility.
+     *
      * @return string
      */
     public function getHost(): string
     {
-        if (isset($_SERVER['HTTP_HOST'])) {
-            $httpHost = htmlentities($_SERVER['HTTP_HOST'], ENT_QUOTES, 'UTF-8');
-            if (str_contains($httpHost, ':')) {
-                $hostParts = explode(':', $httpHost);
+        $rawHost = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
 
-                return $hostParts[0];
+        // Strip the optional port for the comparison/return value.
+        $hostNoPort = str_contains($rawHost, ':')
+            ? explode(':', $rawHost, 2)[0]
+            : $rawHost;
+
+        // Optional allow-list. The list is operator-set in web/settings.php
+        // (or settings-custom.php). Format: comma-separated hostnames.
+        if ($this->config !== null) {
+            $whitelist = (string)$this->config->getSetting('WHITELIST_HOSTS', '');
+            if ($whitelist !== '') {
+                $allowed = array_values(array_filter(array_map(
+                    fn ($h) => strtolower(trim($h)),
+                    explode(',', $whitelist)
+                )));
+                if (!empty($allowed) && !in_array(strtolower($hostNoPort), $allowed, true)) {
+                    // Canonical operator-trusted host; safe without htmlentities.
+                    return $allowed[0];
+                }
             }
-
-            return $httpHost;
         }
 
-        return $_SERVER['SERVER_NAME'];
+        return htmlentities($hostNoPort, ENT_QUOTES, 'UTF-8');
     }
 
     /**

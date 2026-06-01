@@ -330,8 +330,10 @@ class Login extends Base
             // Save cache
             $this->pool->save($cache);
 
-            // Make a link
-            $link = ((new HttpsDetect())->getRootUrl()) . $routeParser->urlFor('login') . '?nonce=' . $action . '::' . $nonce;
+            // Make a link. Pass config so WHITELIST_HOSTS (if set) defeats Host-header
+            // injection into the reset link sent off-system to the user's email.
+            $link = ((new HttpsDetect($this->getConfig()))->getRootUrl())
+                . $routeParser->urlFor('login') . '?nonce=' . $action . '::' . $nonce;
 
             // Uncomment this to get a debug message showing the link.
             //$this->getLog()->debug('Link is:' . $link);

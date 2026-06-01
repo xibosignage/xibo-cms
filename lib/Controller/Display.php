@@ -1832,7 +1832,9 @@ class Display extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         $user_code = $sanitizedParams->getString('user_code');
-        $cmsAddress = (new HttpsDetect())->getBaseUrl($request);
+        // Pass config so WHITELIST_HOSTS (if set) defeats Host-header injection
+        // into the cmsAddress posted to the external auth service.
+        $cmsAddress = (new HttpsDetect($this->getConfig()))->getBaseUrl($request);
         $cmsKey = $this->getConfig()->getSetting('SERVER_KEY');
 
         if ($user_code == '') {
