@@ -32,6 +32,37 @@ class SafeClient
 {
     public static function getSafeClient(array $config = []): Client
     {
+        return self::build($config, $config['xibo']['allow_local_network'] ?? false);
+    }
+
+    /**
+     * Get a Safe Guzzle client that permits RFC 1918 / IPv6 ULA destinations.
+     *
+     * Use this for connections to known-internal services that are by design
+     * on the same network as the CMS — XMR (the message router) is the canonical
+     * case: in Docker Compose deployments XMR resolves to a 172.x address, and
+     * even in bare-metal installs it's typically reached via localhost or an
+     * internal LAN IP. Using getSafeClient() for those calls would have
+     * SsrfProtectionMiddleware throw on every request once $allowLocalNetworkRequests
+     * is at the default (false).
+     *
+     * The other SSRF defences still apply: scheme allow-list (http/https only),
+     * the always-block list (loopback 127/8, AWS metadata 169.254/16, current
+     * network 0.0.0.0/8, IPv6 loopback ::1, AWS IPv6 metadata fd00:ec2::254),
+     * DNS-rebind pinning via CURLOPT_RESOLVE, redirect cap. Even with
+     * allow_local_network=true an attacker can't redirect a request to the
+     * cloud-metadata endpoint.
+     *
+     * Don't use this for arbitrary user/admin-settable URLs — only for
+     * fixed-purpose internal connections.
+     */
+    public static function getSafeClientForInternal(array $config = []): Client
+    {
+        return self::build($config, true);
+    }
+
+    private static function build(array $config, bool $allowLocalNetwork): Client
+    {
         // Must not allow the stack to be set
         if (isset($config['stack'])) {
             unset($config['stack']);
@@ -42,7 +73,7 @@ class SafeClient
 
         // Add Ssrf protection
         $stack->unshift(SsrfProtectionMiddleware::create([
-            'allow_local_network' => $config['xibo']['allow_local_network'] ?? false
+            'allow_local_network' => $allowLocalNetwork
         ]), 'ssrf_protection');
 
         // Sensible default config

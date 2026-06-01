@@ -164,7 +164,12 @@ class PlayerActionService implements PlayerActionServiceInterface
             $this->xmrAddress = $this->getConfig()->getSetting('XMR_ADDRESS');
         }
 
-        $client = SafeClient::getSafeClient($this->config->getGuzzleProxy([
+        // XMR is by-design on the local network (Docker-internal hostname /
+        // private LAN IP / localhost in self-hosted installs). Use the
+        // internal-services variant so the call isn't blocked by
+        // SsrfProtectionMiddleware's RFC 1918 rejection at the default
+        // allow_local_network=false posture.
+        $client = SafeClient::getSafeClientForInternal($this->config->getGuzzleProxy([
             'base_uri' => $this->getConfig()->getSetting('XMR_ADDRESS'),
         ]));
 

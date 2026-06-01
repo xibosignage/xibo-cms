@@ -326,7 +326,10 @@ class MaintenanceDailyTask implements TaskInterface
             $key = Random::generateString(20, 'xmr_');
 
             $this->getConfig()->changeSetting('XMR_CMS_KEY', $key);
-            $client = SafeClient::getSafeClient($this->config->getGuzzleProxy([
+            // XMR is by-design on the local network — see the note on
+            // PlayerActionService::processQueue. Use the internal-services
+            // SafeClient variant.
+            $client = SafeClient::getSafeClientForInternal($this->config->getGuzzleProxy([
                 'base_uri' => $this->getConfig()->getSetting('XMR_ADDRESS'),
             ]));
 
