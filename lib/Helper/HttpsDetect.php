@@ -36,10 +36,10 @@ class HttpsDetect
 
     /**
      * Pass a config service when the caller needs Host-header allow-list
-     * validation (the WHITELIST_HOSTS setting). Sites that build URLs ending
-     * up off-system (emailed links, registration messages, manifests) MUST
-     * pass it; purely internal sites (CORS, STS, request-bound redirects)
-     * may construct without it.
+     * validation (the operator-set $whitelistHosts in web/settings.php).
+     * Sites that build URLs ending up off-system (emailed links, registration
+     * messages, manifests) MUST pass it; purely internal sites (CORS, STS,
+     * request-bound redirects) may construct without it.
      */
     public function __construct(?ConfigServiceInterface $config = null)
     {
@@ -123,9 +123,9 @@ class HttpsDetect
      * Get Host
      *
      * When the caller supplies a config service AND the operator has set
-     * WHITELIST_HOSTS, the request's Host header is validated against the
+     * $whitelistHosts, the request's Host header is validated against the
      * allow-list and rejected hosts fall back to the first listed host.
-     * Without WHITELIST_HOSTS (or without a config) the legacy behaviour is
+     * Without $whitelistHosts (or without a config) the legacy behaviour is
      * preserved for backward compatibility.
      *
      * @return string
