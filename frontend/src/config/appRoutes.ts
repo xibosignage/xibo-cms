@@ -314,13 +314,17 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'users',
         labelKey: 'Users',
-        externalURL: '/user/view',
+        lazy: () =>
+          import('@/pages/Administration/Users/Users').then((m) => ({ Component: m.default })),
         validator: canViewUsers,
       },
       {
         path: 'user-groups',
         labelKey: 'User Groups',
-        externalURL: '/group/view',
+        lazy: () =>
+          import('@/pages/Administration/UserGroups/UserGroups').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'usergroup.view',
       },
       {

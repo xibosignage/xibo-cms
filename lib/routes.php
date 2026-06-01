@@ -528,8 +528,10 @@ $app->get('/user/pref', ['\Xibo\Controller\User' , 'pref'])->setName('user.pref'
 $app->post('/user/pref', ['\Xibo\Controller\User' ,'prefEdit']);
 $app->put('/user/pref', ['\Xibo\Controller\User' ,'prefEditFromForm']);
 $app->get('/user/me', ['\Xibo\Controller\User','myDetails'])->setName('user.me');
+$app->get('/user/types', ['\Xibo\Controller\User','getUserTypes'])->setName('user.types');
 $app->get('/user', ['\Xibo\Controller\User','grid'])->setName('user.search');
 $app->get('/user/{id}/applications', ['\Xibo\Controller\User', 'applicationsGrid'])->setName('user.applications');
+$app->get('/user/{id}', ['\Xibo\Controller\User','searchById'])->setName('user.search.id');
 $app->put('/user/profile/edit', ['\Xibo\Controller\User','editProfile'])->setName('user.edit.profile');
 $app->get('/user/profile/setup', ['\Xibo\Controller\User','tfaSetup'])->setName('user.setup.profile');
 $app->post('/user/profile/validate', ['\Xibo\Controller\User','tfaValidate'])->setName('user.validate.profile');
@@ -580,7 +582,7 @@ $app->group('', function (RouteCollectorProxy $group) {
  * User Group
  */
 $app->get('/group', ['\Xibo\Controller\UserGroup','grid'])->setName('group.search');
-
+$app->get('/group/{id}', ['\Xibo\Controller\UserGroup','searchById'])->setName('group.search.id');
 $app->post('/group', ['\Xibo\Controller\UserGroup','add'])->setName('group.add');
 
 $app->group('', function (RouteCollectorProxy $group) {
@@ -588,8 +590,14 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->delete('/group/{id}', ['\Xibo\Controller\UserGroup','delete'])->setName('group.delete');
     $group->post('/group/{id}/copy', ['\Xibo\Controller\UserGroup','copy'])->setName('group.copy');
 
-    $group->post('/group/members/assign/{id}', ['\Xibo\Controller\UserGroup','assignUser'])->setName('group.members.assign');
-    $group->post('/group/members/unassign/{id}', ['\Xibo\Controller\UserGroup','unassignUser'])->setName('group.members.unassign');
+    $group->post(
+        '/group/members/assign/{id}',
+        ['\Xibo\Controller\UserGroup','assignUser']
+    )->setName('group.members.assign');
+    $group->post(
+        '/group/members/unassign/{id}',
+        ['\Xibo\Controller\UserGroup','unassignUser']
+    )->setName('group.members.unassign');
 
     $group->post('/group/acl/{id}', ['\Xibo\Controller\UserGroup','acl'])->setName('group.acl');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['usergroup.modify']));

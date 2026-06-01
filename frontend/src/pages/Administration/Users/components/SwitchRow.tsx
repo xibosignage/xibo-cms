@@ -19,30 +19,25 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { User } from './user';
+import Switch from '@/components/ui/forms/Switch';
 
-export interface UserGroup {
-  groupId: number;
-  group: string;
-  isUserSpecific: number;
-  isEveryone: number;
+export interface SwitchRowProps {
+  title: string;
   description?: string;
-  defaultHomepageId?: string;
-  isShownForAddUser?: number;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}
 
-  libraryQuota?: number;
-  libraryQuotaFormatted?: string;
-
-  isSystemNotification?: number;
-  isDisplayNotification?: number;
-  isDataSetNotification?: number;
-  isLayoutNotification?: number;
-  isLibraryNotification?: number;
-  isReportNotification?: number;
-  isScheduleNotification?: number;
-  isCustomNotification?: number;
-
-  features?: string[];
-
-  users?: User[];
+export default function SwitchRow({ title, description, checked, onChange }: SwitchRowProps) {
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-4 flex items-center justify-between gap-4">
+      <div className="flex flex-col">
+        <h4 className="font-bold text-gray-800 text-base">{title}</h4>
+        {description && <p className="text-sm text-gray-500 mt-0.5">{description}</p>}
+      </div>
+      <div className="shrink-0">
+        <Switch size="sm" checked={checked} onChange={onChange} hideOnOff />
+      </div>
+    </div>
+  );
 }
