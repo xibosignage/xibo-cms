@@ -689,6 +689,7 @@ $app->group('', function (RouteCollectorProxy $group) {
  * Commands
  */
 $app->get('/command', ['\Xibo\Controller\Command','grid'])->setName('command.search');
+$app->get('/command/{id}', ['\Xibo\Controller\Command','searchById'])->setName('command.search.id');
 $app->post('/command', ['\Xibo\Controller\Command','add'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['command.add']))
     ->setName('command.add');
