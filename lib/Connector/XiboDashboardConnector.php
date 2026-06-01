@@ -84,12 +84,26 @@ class XiboDashboardConnector implements ConnectorInterface
 
     public function getThumbnail(): string
     {
-        return 'theme/default/img/connectors/xibo-dashboards.png';
+        return 'theme/default/img/connectors/magnifying-glass-chart.svg';
     }
 
     public function getSettingsFormTwig(): string
     {
         return 'xibo-dashboard-form-settings';
+    }
+
+    public function getFormSubtitle(): string
+    {
+        return __('Securely capture and show your data');
+    }
+
+    public function getFormDescriptionHtml(): string
+    {
+        return __(
+            'The Xibo dashboard service securely stores your credentials,'
+            . ' connects to your dashboard provider and records your dashboard.'
+            . ' It makes that dashboard available to your player via a secure link on a short lease.'
+        );
     }
 
     /**
@@ -101,9 +115,37 @@ class XiboDashboardConnector implements ConnectorInterface
         return $this->getSetting('serviceUrl', 'https://api.dashboards.xibosignage.com');
     }
 
+    public function getEnabledLabel(): string
+    {
+        return __('Enable/Disable');
+    }
+
+    public function getEnabledMessage(): string
+    {
+        return __(
+            'Disabling this connector will stop new dashboards being captured for any existing credentials.'
+            . ' If the connector is disabled for longer than 30 days,'
+            . ' you will need to enter your credentials again.'
+        );
+    }
+
     /**
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
+    public function getSettingsFields(): array
+    {
+        return [
+            [
+                'name'         => 'apiKey',
+                'type'         => 'text',
+                'label'        => __('API Key'),
+                'helpText'     => __('Enter your API Key from Xibo.'),
+                'required'     => false,
+                'providerOnly' => $this->isProviderSetting('apiKey'),
+            ],
+        ];
+    }
+
     public function processSettingsForm(SanitizerInterface $params, array $settings): array
     {
         // Remember the old service URL
@@ -250,6 +292,17 @@ class XiboDashboardConnector implements ConnectorInterface
         }
 
         return in_array($type, $this->cachedErrorTypes);
+    }
+
+    /**
+     * Returns an array of credential types currently in error state.
+     * Called via the connector proxy from the React frontend.
+     * @return string[]
+     */
+    public function getCredentialErrorStates(): array
+    {
+        $item = $this->getPool()->getItem($this->cacheKey);
+        return $item->isHit() ? $item->get() : [];
     }
 
     /**

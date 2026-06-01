@@ -157,22 +157,6 @@ $app->get('/user/permissions/form/{entity}/{id}', ['\Xibo\Controller\User','perm
 $app->get('/user/permissions/multiple/form/{entity}', ['\Xibo\Controller\User','permissionsMultiForm'])->setName('user.permissions.multi.form');
 $app->get('/user/page/password', ['\Xibo\Controller\User','forceChangePasswordPage'])->setName('user.force.change.password.page');
 
-$app->get('/user/form/add', ['\Xibo\Controller\User','addForm'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['users.add']))
-    ->setName('user.add.form');
-
-$app->get('/user/form/onboarding', ['\Xibo\Controller\User','onboardingForm'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['users.add']))
-    ->setName('user.onboarding.form');
-
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/user/form/edit/{id}', ['\Xibo\Controller\User', 'editForm'])->setName('user.edit.form');
-    $group->get('/user/form/delete/{id}', ['\Xibo\Controller\User', 'deleteForm'])->setName('user.delete.form');
-    $group->get('/user/form/membership/{id}', ['\Xibo\Controller\User', 'membershipForm'])->setName('user.membership.form');
-    $group->get('/user/form/setHomeFolder/{id}', ['\Xibo\Controller\User', 'setHomeFolderForm'])
-        ->addMiddleware(new FeatureAuth($group->getContainer(), ['folder.userHome']))
-        ->setName('user.homeFolder.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['users.modify']));
 
 $app->get('/user/form/homepages', ['\Xibo\Controller\User', 'homepages'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['users.add', 'users.modify']))
@@ -226,23 +210,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['dataset.modify']));
 
 //
-// group
-//
-$app->get('/group/view', ['\Xibo\Controller\UserGroup','displayPage'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['usergroup.view']))
-    ->setName('group.view');
-
-$app->get('/group/form/add', ['\Xibo\Controller\UserGroup','addForm'])->setName('group.add.form');
-
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/group/form/edit/{id}', ['\Xibo\Controller\UserGroup','editForm'])->setName('group.edit.form');
-    $group->get('/group/form/delete/{id}', ['\Xibo\Controller\UserGroup','deleteForm'])->setName('group.delete.form');
-    $group->get('/group/form/copy/{id}', ['\Xibo\Controller\UserGroup','copyForm'])->setName('group.copy.form');
-    $group->get('/group/form/acl/{id}/[{userId}]', ['\Xibo\Controller\UserGroup','aclForm'])->setName('group.acl.form');
-    $group->get('/group/form/members/{id}', ['\Xibo\Controller\UserGroup','membersForm'])->setName('group.members.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['usergroup.modify']));
-
-//
 // admin
 //
 $app->get('/admin/view', ['\Xibo\Controller\Settings','displayPage'])
@@ -264,28 +231,6 @@ $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/folders/form/add', ['\Xibo\Controller\Folder', 'addForm'])->setName('folders.add.form');
     $group->get('/folders/form/edit/{id}', ['\Xibo\Controller\Folder', 'editForm'])->setName('folders.edit.form');
     $group->get('/folders/form/delete/{id}', ['\Xibo\Controller\Folder', 'deleteForm'])->setName('folders.delete.form');
-})->addMiddleware(new SuperAdminAuth($app->getContainer()));
-
-//
-// Applications and connectors
-//
-$app->get('/application/authorize', ['\Xibo\Controller\Applications','authorizeRequest'])
-    ->setName('application.authorize.request');
-$app->post('/application/authorize', ['\Xibo\Controller\Applications','authorize'])
-    ->setName('application.authorize');
-
-
-$app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
-    // We can only view/edit these through the web app
-    $group->get('/connectors', ['\Xibo\Controller\Connector','grid'])->setName('connector.search');
-    $group->get('/connectors/form/edit/{id}', ['\Xibo\Controller\Connector','editForm'])
-        ->setName('connector.edit.form');
-    $group->map(
-        ['GET', 'POST'],
-        '/connectors/form/{id}/proxy/{method}',
-        ['\Xibo\Controller\Connector', 'editFormProxy']
-    )->setName('connector.edit.form.proxy');
-    $group->put('/connectors/{id}', ['\Xibo\Controller\Connector','edit'])->setName('connector.edit');
 })->addMiddleware(new SuperAdminAuth($app->getContainer()));
 
 //
@@ -387,16 +332,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/audit/view', ['\Xibo\Controller\AuditLog','displayPage'])->setName('auditlog.view');
     $group->get('/audit/form/export', ['\Xibo\Controller\AuditLog','exportForm'])->setName('auditLog.export.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['auditlog.view']));
-
-//
-// Commands
-//
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/command/view', ['\Xibo\Controller\Command','displayPage'])->setName('command.view');
-    $group->get('/command/form/add', ['\Xibo\Controller\Command','addForm'])->setName('command.add.form');
-    $group->get('/command/form/edit/{id}', ['\Xibo\Controller\Command','editForm'])->setName('command.edit.form');
-    $group->get('/command/form/delete/{id}', ['\Xibo\Controller\Command','deleteForm'])->setName('command.delete.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['command.view']));
 
 //
 // Tasks

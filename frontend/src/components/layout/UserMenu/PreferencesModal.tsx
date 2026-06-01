@@ -80,7 +80,7 @@ export default function PreferencesModal({ isOpen = true, onClose }: Preferences
       if (user) {
         updateUser({
           settings: {
-            ...user.settings,
+            ...(user.settings ?? {}),
             useLibraryDuration: useLibraryDuration ? 1 : 0,
             showThumbnailColumn: showThumbnailColumn ? 1 : 0,
             autoSubmitClearAll: autoSubmitClearAll ? 1 : 0,

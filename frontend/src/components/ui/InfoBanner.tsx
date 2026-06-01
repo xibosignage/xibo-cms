@@ -28,6 +28,7 @@ interface InfoBannerProps {
   type?: UIStatus;
   children: React.ReactNode;
   className?: string;
+  hideInfoIcon?: boolean;
 }
 
 const STYLE_VARIANTS: Record<UIStatus, string> = {
@@ -40,7 +41,12 @@ const STYLE_VARIANTS: Record<UIStatus, string> = {
   dark: 'bg-gray-800 border-gray-700 text-gray-100',
 };
 
-export default function InfoBanner({ type = 'info', children, className }: InfoBannerProps) {
+export default function InfoBanner({
+  type = 'info',
+  children,
+  className,
+  hideInfoIcon = false,
+}: InfoBannerProps) {
   return (
     <div
       className={twMerge(
@@ -50,7 +56,7 @@ export default function InfoBanner({ type = 'info', children, className }: InfoB
       )}
       role="status"
     >
-      <Info size={18} className="shrink-0 mt-0.5" />
+      {!hideInfoIcon && <Info size={18} className="shrink-0 mt-0.5" />}
       <div>{children}</div>
     </div>
   );

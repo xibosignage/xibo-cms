@@ -22,6 +22,7 @@
 
 namespace Xibo\Controller;
 
+use Psr\Http\Message\ResponseInterface;
 use Slim\Exception\HttpMethodNotAllowedException;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -39,69 +40,43 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class Connector extends Base
 {
-    /** @var \Xibo\Factory\ConnectorFactory */
-    private $connectorFactory;
-
-    /** @var WidgetFactory */
-    private $widgetFactory;
-
-    public function __construct(ConnectorFactory $connectorFactory, WidgetFactory $widgetFactory)
-    {
-        $this->connectorFactory = $connectorFactory;
-        $this->widgetFactory = $widgetFactory;
+    public function __construct(
+        private readonly ConnectorFactory $connectorFactory,
+        private readonly WidgetFactory $widgetFactory,
+    ) {
     }
 
     /**
      * @param \Slim\Http\ServerRequest $request
      * @param \Slim\Http\Response $response
-     * @return \Psr\Http\Message\ResponseInterface|\Slim\Http\Response
+     * @return ResponseInterface|\Slim\Http\Response
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
-        $params = $this->getSanitizer($request->getParams());
-
         $connectors = $this->connectorFactory->query($request->getParams());
-
-        // Should we show uninstalled connectors?
-        if ($params->getCheckbox('showUninstalled')) {
-            $connectors = array_merge($connectors, $this->connectorFactory->getUninstalled());
-        }
 
         foreach ($connectors as $connector) {
             // Instantiate and decorate the entity
-            try {
-                $connector->decorate($this->connectorFactory->create($connector));
-            } catch (NotFoundException) {
-                $this->getLog()->info('Connector installed which is not found in this CMS. ' . $connector->className);
-                $connector->setUnmatchedProperty('isHidden', 1);
-            } catch (\Exception $e) {
-                $this->getLog()->error('Incorrectly configured connector '
-                    . $connector->className . '. e=' . $e->getMessage());
-                $connector->setUnmatchedProperty('isHidden', 1);
-            }
+            $this->decorateConnectorProperties($connector);
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = count($connectors);
-        $this->getState()->setData($connectors);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', count($connectors))
+            ->withJson($connectors);
     }
 
     /**
-     * Edit Connector Form
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
+     * @param int|string $id
+     * @return Response|ResponseInterface
      * @throws GeneralException
      * @throws NotFoundException
      */
-    public function editForm(Request $request, Response $response, $id)
+    public function searchById(Request $request, Response $response, int|string $id): Response|ResponseInterface
     {
         // Is this an installed connector, or not.
         if (is_numeric($id)) {
@@ -109,15 +84,47 @@ class Connector extends Base
         } else {
             $connector = $this->connectorFactory->getUninstalledById($id);
         }
+
+        $this->decorateConnectorProperties($connector);
         $interface = $this->connectorFactory->create($connector);
 
-        $this->getState()->template = $interface->getSettingsFormTwig() ?: 'connector-form-edit';
-        $this->getState()->setData([
-            'connector' => $connector,
-            'interface' => $interface
-        ]);
+        return $response
+            ->withStatus(200)
+            ->withJson([
+                'connector' => $connector,
+                'providerSettings' => $interface->getProviderSettings(),
+            ]);
+    }
 
-        return $this->render($request, $response);
+    /**
+     * Get connector settings field definitions as JSON (used by the React UI)
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     */
+    public function editFormFields(Request $request, Response $response, $id): Response|ResponseInterface
+    {
+        if (is_numeric($id)) {
+            $connector = $this->connectorFactory->getById($id);
+        } else {
+            $connector = $this->connectorFactory->getUninstalledById($id);
+        }
+        $interface = $this->connectorFactory->create($connector);
+
+        return $response->withJson([
+            'fields'              => $interface->getSettingsFields(),
+            'settings'            => $connector->settings ?? [],
+            'formSubtitle'        => $interface->getFormSubtitle(),
+            'formDescriptionHtml' => $interface->getFormDescriptionHtml(),
+            'formAlerts'          => $interface->getFormAlerts(),
+            'enabledLabel'        => $interface->getEnabledLabel(),
+            'enabledDescription'  => $interface->getEnabledDescription(),
+            'enabledMessage'      => $interface->getEnabledMessage(),
+        ]);
     }
 
     /**
@@ -125,20 +132,28 @@ class Connector extends Base
      *  this is a magic method used to call a connector method which returns some JSON data
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @param $method
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @param int $id
+     * @param string $method
+     * @return ResponseInterface|Response
      * @throws \Slim\Exception\HttpMethodNotAllowedException
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function editFormProxy(Request $request, Response $response, $id, $method)
-    {
+    public function editFormProxy(
+        Request $request,
+        Response $response,
+        int $id,
+        string $method
+    ): Response|ResponseInterface {
         $connector = $this->connectorFactory->getById($id);
         $interface = $this->connectorFactory->create($connector);
 
         if (method_exists($interface, $method)) {
-            return $response->withJson($interface->{$method}($this->getSanitizer($request->getParams())));
+            $ref = new \ReflectionMethod($interface, $method);
+            $result = $ref->getNumberOfRequiredParameters() > 0
+                ? $interface->{$method}($this->getSanitizer($request->getParams()))
+                : $interface->{$method}();
+            return $response->withJson($result);
         } else {
             throw new HttpMethodNotAllowedException($request);
         }
@@ -149,13 +164,13 @@ class Connector extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws NotFoundException
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $params = $this->getSanitizer($request->getParams());
         if (is_numeric($id)) {
@@ -184,9 +199,7 @@ class Connector extends Base
             $connector->delete();
 
             // Successful
-            $this->getState()->hydrate([
-                'message' => sprintf(__('Uninstalled %s'), $interface->getTitle())
-            ]);
+            return $response->withStatus(204);
         } else {
             // Core properties
             $connector->isEnabled = $params->getCheckbox('isEnabled');
@@ -212,26 +225,20 @@ class Connector extends Base
             $connector->save();
 
             // Successful
-            $this->getState()->hydrate([
-                'message' => sprintf(__('Edited %s'), $interface->getTitle()),
-                'id' => $id,
-                'data' => $connector
-            ]);
+            return $response
+                ->withStatus(200)
+                ->withJson($connector);
         }
-
-        return $this->render($request, $response);
     }
 
     /**
-     * Connector preview
-     *  public access via /preview route, authenticated via token generated by the connector
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface
-     * @throws \Xibo\Support\Exception\AccessDeniedException
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @return ResponseInterface
+     * @throws AccessDeniedException
+     * @throws NotFoundException
      */
-    public function connectorPreview(Request $request, Response $response)
+    public function connectorPreview(Request $request, Response $response): ResponseInterface
     {
         $params = $this->getSanitizer($request->getParams());
         $token = $params->getString('token');
@@ -259,5 +266,23 @@ class Connector extends Base
 
         // What now?
         return $event->getResponse();
+    }
+
+    /**
+     * @param \Xibo\Entity\Connector $connector
+     * @return void
+     */
+    private function decorateConnectorProperties(\Xibo\Entity\Connector $connector): void
+    {
+        try {
+            $connector->decorate($this->connectorFactory->create($connector));
+        } catch (NotFoundException) {
+            $this->getLog()->info('Connector installed which is not found in this CMS. ' . $connector->className);
+            $connector->setUnmatchedProperty('isHidden', 1);
+        } catch (\Exception $e) {
+            $this->getLog()->error('Incorrectly configured connector '
+                . $connector->className . '. e=' . $e->getMessage());
+            $connector->setUnmatchedProperty('isHidden', 1);
+        }
     }
 }

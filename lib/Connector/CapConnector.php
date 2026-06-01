@@ -98,12 +98,7 @@ class CapConnector implements ConnectorInterface, EmergencyAlertInterface
 
     public function getThumbnail(): string
     {
-        return 'theme/default/img/connectors/xibo-cap.png';
-    }
-
-    public function getSettingsFormTwig(): string
-    {
-        return '';
+        return 'theme/default/img/connectors/triangle-exclamation.svg';
     }
 
     public function processSettingsForm(SanitizerInterface $params, array $settings): array

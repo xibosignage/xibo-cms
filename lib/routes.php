@@ -528,8 +528,10 @@ $app->get('/user/pref', ['\Xibo\Controller\User' , 'pref'])->setName('user.pref'
 $app->post('/user/pref', ['\Xibo\Controller\User' ,'prefEdit']);
 $app->put('/user/pref', ['\Xibo\Controller\User' ,'prefEditFromForm']);
 $app->get('/user/me', ['\Xibo\Controller\User','myDetails'])->setName('user.me');
+$app->get('/user/types', ['\Xibo\Controller\User','getUserTypes'])->setName('user.types');
 $app->get('/user', ['\Xibo\Controller\User','grid'])->setName('user.search');
 $app->get('/user/{id}/applications', ['\Xibo\Controller\User', 'applicationsGrid'])->setName('user.applications');
+$app->get('/user/{id}', ['\Xibo\Controller\User','searchById'])->setName('user.search.id');
 $app->put('/user/profile/edit', ['\Xibo\Controller\User','editProfile'])->setName('user.edit.profile');
 $app->get('/user/profile/setup', ['\Xibo\Controller\User','tfaSetup'])->setName('user.setup.profile');
 $app->post('/user/profile/validate', ['\Xibo\Controller\User','tfaValidate'])->setName('user.validate.profile');
@@ -560,31 +562,11 @@ $app->group('', function (RouteCollectorProxy $group) {
         ->setName('user.homeFolder');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['users.modify']));
 
-// Dashboards
-$app->get('/statusdashboard', ['\Xibo\Controller\StatusDashboard', 'displayPage'])
-    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.status']))
-    ->setName('statusdashboard.view');
-
-$app->get('/mediamanager', ['\Xibo\Controller\MediaManager', 'getLibraryUsage'])
-    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.media.manager']))
-    ->setName('mediamanager.view');
-
-$app->get('/playlistdashboard', ['\Xibo\Controller\PlaylistDashboard', 'displayPage'])
-    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.playlist']))
-    ->setName('playlistdashboard.view');
-
-$app->group('', function (RouteCollectorProxy $group) {
-    $group->get('/playlistdashboard/data', ['\Xibo\Controller\PlaylistDashboard', 'grid'])
-        ->setName('playlistdashboard.search');
-    $group->get('/playlistdashboard/{id}', ['\Xibo\Controller\PlaylistDashboard', 'show'])
-        ->setName('playlistdashboard.show');
-})->add(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.playlist']));
-
 /**
  * User Group
  */
 $app->get('/group', ['\Xibo\Controller\UserGroup','grid'])->setName('group.search');
-
+$app->get('/group/{id}', ['\Xibo\Controller\UserGroup','searchById'])->setName('group.search.id');
 $app->post('/group', ['\Xibo\Controller\UserGroup','add'])->setName('group.add');
 
 $app->group('', function (RouteCollectorProxy $group) {
@@ -592,8 +574,14 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->delete('/group/{id}', ['\Xibo\Controller\UserGroup','delete'])->setName('group.delete');
     $group->post('/group/{id}/copy', ['\Xibo\Controller\UserGroup','copy'])->setName('group.copy');
 
-    $group->post('/group/members/assign/{id}', ['\Xibo\Controller\UserGroup','assignUser'])->setName('group.members.assign');
-    $group->post('/group/members/unassign/{id}', ['\Xibo\Controller\UserGroup','unassignUser'])->setName('group.members.unassign');
+    $group->post(
+        '/group/members/assign/{id}',
+        ['\Xibo\Controller\UserGroup','assignUser']
+    )->setName('group.members.assign');
+    $group->post(
+        '/group/members/unassign/{id}',
+        ['\Xibo\Controller\UserGroup','unassignUser']
+    )->setName('group.members.unassign');
 
     $group->post('/group/acl/{id}', ['\Xibo\Controller\UserGroup','acl'])->setName('group.acl');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['usergroup.modify']));
@@ -601,25 +589,8 @@ $app->group('', function (RouteCollectorProxy $group) {
 //
 // Applications
 //
-
-$app->group('', function (RouteCollectorProxy $group) {
-    $group->get('/application', ['\Xibo\Controller\Applications', 'grid'])
-        ->setName('application.search');
-    $group->get('/application/scope', ['\Xibo\Controller\Applications', 'scopeSearch'])
-        ->setName('application.scope.search');
-    $group->get('/application/{id}', ['\Xibo\Controller\Applications', 'getById'])
-        ->setName('application.search.id');
-})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['application.view']));
-$app->group('', function (RouteCollectorProxy $group) {
-    $group->post('/application', ['\Xibo\Controller\Applications','add'])->setName('application.add');
-})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['application.add']));
-$app->group('', function (RouteCollectorProxy $group) {
-    $group->put('/application/{id}', ['\Xibo\Controller\Applications','edit'])->setName('application.edit');
-    $group->delete('/application/{id}', ['\Xibo\Controller\Applications','delete'])->setName('application.delete');
-})->addMiddleware(new SuperAdminAuth($app->getContainer()));
 $app->delete('/application/revoke/{id}/{userId}', ['\Xibo\Controller\Applications', 'revokeAccess'])
     ->setName('application.revoke');
-
 
 /**
  * Modules
@@ -693,6 +664,7 @@ $app->group('', function (RouteCollectorProxy $group) {
  * Commands
  */
 $app->get('/command', ['\Xibo\Controller\Command','grid'])->setName('command.search');
+$app->get('/command/{id}', ['\Xibo\Controller\Command','searchById'])->setName('command.search.id');
 $app->post('/command', ['\Xibo\Controller\Command','add'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['command.add']))
     ->setName('command.add');

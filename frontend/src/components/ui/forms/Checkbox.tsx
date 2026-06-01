@@ -27,6 +27,7 @@ interface CheckboxProps {
   label?: string;
   checked?: boolean;
   indeterminate?: boolean;
+  disabled?: boolean;
   className?: string;
   classNameLabel?: string;
   classNameInput?: string;
@@ -42,6 +43,7 @@ export default function Checkbox({
   classNameInput,
   checked,
   indeterminate,
+  disabled,
   onChange,
   title,
 }: CheckboxProps) {
@@ -54,12 +56,13 @@ export default function Checkbox({
   }, [indeterminate]);
 
   return (
-    <div className={twMerge('flex', className)}>
+    <div className={twMerge('flex', disabled && 'opacity-50 cursor-not-allowed', className)}>
       <input
         ref={checkboxRef}
         type="checkbox"
         id={id}
         checked={checked ?? false}
+        disabled={disabled}
         onChange={onChange}
         aria-label={title}
         className={twMerge(

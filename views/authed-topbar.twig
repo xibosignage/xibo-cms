@@ -138,7 +138,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("command.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("command.view") }}">{% trans "Commands" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/displays/commands">{% trans "Commands" %}</a>
             {% endif %}
         {% if countViewable > 1 %}
             </div>
@@ -164,7 +164,7 @@
                 {% if countViewable == 0 %}
                 <li class="nav-item">
                 {% endif %}
-                    <a class="{{ groupElementClass }}" href="{{ url_for("user.view") }}">{% trans "Users" %}</a>
+                    <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/administration/users">{% trans "Users" %}</a>
                 {% if countViewable == 0 %}
                 </li>
                 {% endif %}
@@ -174,7 +174,7 @@
                 {% if countViewable == 0 %}
                 <li class="nav-item">
                 {% endif %}
-                    <a class="{{ groupElementClass }}" href="{{ url_for("group.view") }}">{% trans "User Groups" %}</a>
+                    <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/administration/usergroups">{% trans "User Groups" %}</a>
                 {% if countViewable == 0 %}
                 </li>
                 {% endif %}

@@ -23,6 +23,7 @@
 namespace Xibo\Entity;
 
 use OpenApi\Attributes as OA;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Connector\ConnectorInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -52,14 +53,11 @@ class Connector implements \JsonSerializable
     public $description;
     public $thumbnail;
 
-    /**
-     * Entity constructor.
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
-     */
-    public function __construct($store, $log, $dispatcher)
-    {
+    public function __construct(
+        StorageServiceInterface $store,
+        LogServiceInterface $log,
+        EventDispatcherInterface $dispatcher,
+    ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
     }
 
@@ -78,16 +76,18 @@ class Connector implements \JsonSerializable
         return $this;
     }
 
-    public function save()
+    public function save(): void
     {
         if ($this->connectorId == null || $this->connectorId == 0) {
             $this->add();
+            $this->audit($this->connectorId, 'Added');
         } else {
             $this->edit();
+            $this->audit($this->connectorId, 'Saved');
         }
     }
 
-    private function add()
+    private function add(): void
     {
         $this->connectorId = $this->getStore()->insert('
           INSERT INTO `connectors` (`className`, `isEnabled`, `isVisible`, `settings`)
@@ -100,7 +100,7 @@ class Connector implements \JsonSerializable
         ]);
     }
 
-    private function edit()
+    private function edit(): void
     {
         $this->getStore()->update('
           UPDATE `connectors` SET
@@ -122,14 +122,19 @@ class Connector implements \JsonSerializable
      * @return void
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
-    public function delete()
+    public function delete(): void
     {
         if ($this->isSystem) {
-            throw new InvalidArgumentException(__('Sorry we cannot delete a system connector.'), 'isSystem');
+            throw new InvalidArgumentException(
+                __('Sorry we cannot delete a system connector.'),
+                'isSystem'
+            );
         }
 
         $this->getStore()->update('DELETE FROM `connectors` WHERE connectorId = :connectorId', [
             'connectorId' => $this->connectorId
         ]);
+
+        $this->audit($this->connectorId, 'Deleted');
     }
 }
