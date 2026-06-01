@@ -139,10 +139,11 @@ class HttpsDetect
             ? explode(':', $rawHost, 2)[0]
             : $rawHost;
 
-        // Optional allow-list. The list is operator-set in web/settings.php
-        // (or settings-custom.php). Format: comma-separated hostnames.
+        // Optional allow-list. The list is operator-set as $whitelistHosts in
+        // web/settings.php (or web/settings-custom.php) — deployment-time only,
+        // not DB-backed, not admin-UI-exposed. Format: comma-separated hostnames.
         if ($this->config !== null) {
-            $whitelist = (string)$this->config->getSetting('WHITELIST_HOSTS', '');
+            $whitelist = $this->config->getWhitelistHosts();
             if ($whitelist !== '') {
                 $allowed = array_values(array_filter(array_map(
                     fn ($h) => strtolower(trim($h)),
