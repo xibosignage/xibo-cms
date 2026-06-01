@@ -106,7 +106,7 @@ class Connector extends Base
      * @throws GeneralException
      * @throws NotFoundException
      */
-    public function editFormFields(Request $request, Response $response, $id)
+    public function editFormFields(Request $request, Response $response, $id): Response|ResponseInterface
     {
         if (is_numeric($id)) {
             $connector = $this->connectorFactory->getById($id);
@@ -125,37 +125,6 @@ class Connector extends Base
             'enabledDescription'  => $interface->getEnabledDescription(),
             'enabledMessage'      => $interface->getEnabledMessage(),
         ]);
-    }
-
-    /**
-     * Edit Connector Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
-     * @throws NotFoundException
-     */
-    public function editForm(Request $request, Response $response, $id): Response|ResponseInterface
-    {
-        // TODO remove once converted
-        // Is this an installed connector, or not.
-        if (is_numeric($id)) {
-            $connector = $this->connectorFactory->getById($id);
-        } else {
-            $connector = $this->connectorFactory->getUninstalledById($id);
-        }
-        $interface = $this->connectorFactory->create($connector);
-
-        $this->getState()->template = 'connector-form-edit';
-        $this->getState()->setData([
-            'connector' => $connector,
-            'interface' => $interface
-        ]);
-
-        return $this->render($request, $response);
     }
 
     /**

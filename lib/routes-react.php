@@ -65,9 +65,6 @@ $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/connectors', ['\Xibo\Controller\Connector','grid'])->setName('connector.search');
     $group->get('/connectors/{id}/fields', ['\Xibo\Controller\Connector','editFormFields'])
         ->setName('connector.edit.form.fields');
-    // TODO remove editForm once converted.
-    $group->get('/connectors/form/edit/{id}', ['\Xibo\Controller\Connector','editForm'])
-        ->setName('connector.edit.form');
     $group->get('/connectors/{id}', ['\Xibo\Controller\Connector','searchById'])
         ->setName('connector.search.id');
     $group->map(
