@@ -159,6 +159,7 @@ class User extends Base
             'jsShortLocale' => Translate::getRequestedJsLocale(['short' => true])
         ];
         $settings['accountId'] = defined('ACCOUNT_ID') ? constant('ACCOUNT_ID') : null;
+        $settings['app_name'] = $this->getConfig()->getThemeConfig('app_name', 'Xibo');
 
         // TODO: output some settings
         return $response->withJson(array_merge($this->getUser()->toArray(), [

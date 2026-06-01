@@ -343,6 +343,15 @@ export const APP_ROUTES: AppRoute[] = [
         validator: isSuperAdmin,
       },
       {
+        path: 'connectors',
+        labelKey: 'Connectors',
+        lazy: () =>
+          import('@/pages/Administration/Connectors/Connectors').then((m) => ({
+            Component: m.default,
+          })),
+        validator: isSuperAdmin,
+      },
+      {
         path: 'modules',
         labelKey: 'Modules',
         externalURL: '/module/view',

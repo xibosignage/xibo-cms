@@ -558,26 +558,6 @@ $app->group('', function (RouteCollectorProxy $group) {
         ->setName('user.homeFolder');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['users.modify']));
 
-// Dashboards
-$app->get('/statusdashboard', ['\Xibo\Controller\StatusDashboard', 'displayPage'])
-    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.status']))
-    ->setName('statusdashboard.view');
-
-$app->get('/mediamanager', ['\Xibo\Controller\MediaManager', 'getLibraryUsage'])
-    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.media.manager']))
-    ->setName('mediamanager.view');
-
-$app->get('/playlistdashboard', ['\Xibo\Controller\PlaylistDashboard', 'displayPage'])
-    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.playlist']))
-    ->setName('playlistdashboard.view');
-
-$app->group('', function (RouteCollectorProxy $group) {
-    $group->get('/playlistdashboard/data', ['\Xibo\Controller\PlaylistDashboard', 'grid'])
-        ->setName('playlistdashboard.search');
-    $group->get('/playlistdashboard/{id}', ['\Xibo\Controller\PlaylistDashboard', 'show'])
-        ->setName('playlistdashboard.show');
-})->add(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.playlist']));
-
 /**
  * User Group
  */
@@ -605,25 +585,8 @@ $app->group('', function (RouteCollectorProxy $group) {
 //
 // Applications
 //
-
-$app->group('', function (RouteCollectorProxy $group) {
-    $group->get('/application', ['\Xibo\Controller\Applications', 'grid'])
-        ->setName('application.search');
-    $group->get('/application/scope', ['\Xibo\Controller\Applications', 'scopeSearch'])
-        ->setName('application.scope.search');
-    $group->get('/application/{id}', ['\Xibo\Controller\Applications', 'getById'])
-        ->setName('application.search.id');
-})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['application.view']));
-$app->group('', function (RouteCollectorProxy $group) {
-    $group->post('/application', ['\Xibo\Controller\Applications','add'])->setName('application.add');
-})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['application.add']));
-$app->group('', function (RouteCollectorProxy $group) {
-    $group->put('/application/{id}', ['\Xibo\Controller\Applications','edit'])->setName('application.edit');
-    $group->delete('/application/{id}', ['\Xibo\Controller\Applications','delete'])->setName('application.delete');
-})->addMiddleware(new SuperAdminAuth($app->getContainer()));
 $app->delete('/application/revoke/{id}/{userId}', ['\Xibo\Controller\Applications', 'revokeAccess'])
     ->setName('application.revoke');
-
 
 /**
  * Modules

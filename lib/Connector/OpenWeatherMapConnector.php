@@ -80,7 +80,43 @@ class OpenWeatherMapConnector implements ConnectorInterface
 
     public function getThumbnail(): string
     {
-        return 'theme/default/img/connectors/owm.png';
+        return 'theme/default/img/connectors/location-dot.svg';
+    }
+
+    public function getFormDescriptionHtml(): string
+    {
+        return '<p>' . __('Weather forecasts, nowcasts and history in a fast and elegant way') . '</p>'
+            . '<p>' . __('Weather data provided by')
+            . ' <a href="https://openweathermap.org/" target="_blank" rel="noreferrer">' . __('OpenWeather') . '</a>'
+            . ' ' . __('is provided under')
+            . ' <a href="http://creativecommons.org/licenses/by-sa/4.0/"'
+            . ' target="_blank" rel="noreferrer">CC-BY-SA 4.0</a>'
+            . ' ' . __('and')
+            . ' <a href="http://opendatacommons.org/licenses/odbl/" target="_blank" rel="noreferrer">ODbl</a>.'
+            . '</p>';
+    }
+
+    public function getFormAlerts(): array
+    {
+        return [
+            [
+                'type' => 'info',
+                'text' => __(
+                    "OpenWeather Map has added a new 'One Call API 3.0' option to their suite of products."
+                    . ' New users must enter credit card details to use a free number of API calls'
+                    . ' (which resets each day) or opt for a paid subscription.'
+                    . ' Older API keys are not compatible with the new API.'
+                ),
+            ],
+            [
+                'type' => 'info',
+                'text' => __(
+                    'OpenWeather retired One Call API version 2.5 in June 2024.'
+                    . ' For continued weather data access, please migrate or subscribe to One Call API version 3.0,'
+                    . ' which is now the only supported version for free tier users.'
+                ),
+            ],
+        ];
     }
 
     public function getSettingsFormTwig(): string
@@ -97,6 +133,53 @@ class OpenWeatherMapConnector implements ConnectorInterface
             $settings['xmdsCachePeriod'] = $params->getInt('xmdsCachePeriod');
         }
         return $settings;
+    }
+
+    public function getSettingsFields(): array
+    {
+        $providerOnly = $this->isProviderSetting('owmApiKey');
+        return [
+            [
+                'name'         => 'owmApiKey',
+                'type'         => 'text',
+                'label'        => __('Open Weather Map API Key'),
+                'helpText'     => __('Enter your API Key from Open Weather Map.'),
+                'required'     => false,
+                'providerOnly' => $providerOnly,
+            ],
+            [
+                'name'         => 'owmIsPaidPlan',
+                'type'         => 'checkbox',
+                'label'        => __('Paid plan?'),
+                'helpText'     => __(
+                    'Is the above key on an Open Weather Map paid plan?'
+                    . ' Do NOT tick this if you have subscribed to One Call API 3.0.'
+                ),
+                'providerOnly' => $providerOnly,
+            ],
+            [
+                'name'         => 'cachePeriod',
+                'type'         => 'number',
+                'label'        => __('Cache Period'),
+                'helpText'     => __(
+                    'This module uses 3rd party data.'
+                    . ' Please enter the number of seconds you would like to cache results.'
+                ),
+                'default'      => 3600,
+                'providerOnly' => $providerOnly,
+            ],
+            [
+                'name'         => 'xmdsCachePeriod',
+                'type'         => 'number',
+                'label'        => __('Schedule Criteria Cache Period'),
+                'helpText'     => __(
+                    'If a player has weather based schedule criteria,'
+                    . ' how many hours should this connector cache that weather data for?'
+                ),
+                'default'      => 4,
+                'providerOnly' => $providerOnly,
+            ],
+        ];
     }
 
     /**
