@@ -88,6 +88,12 @@ export const generateTabNavigation = (parentRoute: AppRoute, user: User | null):
 
 export const APP_ROUTES: AppRoute[] = [
   {
+    path: 'welcome',
+    labelKey: 'Welcome',
+    hideFromMenu: true,
+    lazy: () => import('@/pages/Welcome/Welcome').then((m) => ({ Component: m.default })),
+  },
+  {
     path: 'dashboard',
     labelKey: 'Dashboard',
     icon: LayoutDashboard,

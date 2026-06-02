@@ -33,6 +33,7 @@ import {
 import { Settings, AppWindow, Lightbulb, Info, LogOut, PenLine } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 import AboutModal from './AboutModal';
 import ApplicationsModal from './ApplicationsModal';
@@ -55,6 +56,7 @@ function getInitials(user: { firstName?: string; lastName?: string; userName?: s
 export default function UserMenu() {
   const { t } = useTranslation();
   const { user, logout } = useUserContext();
+  const navigate = useNavigate();
 
   const [isOpen, setIsOpen] = useState(false);
   const [activeModal, setActiveModal] = useState<ActiveModal>(null);
@@ -83,7 +85,7 @@ export default function UserMenu() {
 
   const handleNavigateToWelcome = () => {
     setIsOpen(false);
-    window.location.href = '/welcome';
+    navigate('/welcome');
   };
 
   const initials = getInitials(user);
