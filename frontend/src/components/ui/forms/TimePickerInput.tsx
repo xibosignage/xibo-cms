@@ -47,6 +47,7 @@ interface TimePickerInputProps {
   error?: string;
   className?: string;
   timeFormat?: TimeFormat;
+  optional?: boolean;
 }
 
 function pad(n: number): string {
@@ -171,6 +172,7 @@ export default function TimePickerInput({
   error,
   className,
   timeFormat = 'HH:mm:ss',
+  optional = false,
 }: TimePickerInputProps) {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
@@ -189,7 +191,10 @@ export default function TimePickerInput({
 
   return (
     <div className={twMerge('flex flex-col gap-1.5 relative', className)}>
-      <label className="text-sm font-semibold text-gray-500">{label}</label>
+      <label className="flex items-center justify-between text-sm font-semibold text-gray-500">
+        <span>{label}</span>
+        {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
+      </label>
 
       <div
         ref={refs.setReference}

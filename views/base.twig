@@ -31,6 +31,8 @@
             var jsLocale = "{{ translate.jsLocale }}";
             var jsShortLocale = "{{ translate.jsShortLocale }}";
 
+            // Preview related event listeners.
+            // Messages from the preview
             window.addEventListener('message', function(e) {
               if (event.data?.type === 'xlr:navLayout') {
                 if (confirm("{{ "Navigate to layout with code [layoutTag]?"|trans }}"
@@ -38,6 +40,24 @@
                   window.open(event.data.url + '&jwt=' + previewJwt, '_blank');
                 }
               }
+            });
+
+            // Messages from data connector tabs, which we pass through
+            const channel = new BroadcastChannel('xiboPreview');
+            channel.addEventListener('message', (event) => {
+              // Find active preview iframes
+              document.querySelectorAll('iframe').forEach(function(iframe) {
+                iframe.contentWindow.postMessage({
+                  method: 'xiboDC',
+                  options: {
+                    data: {
+                      type: event.data.type,
+                      dataKey: event.data.dataKey,
+                      data: event.data.data,
+                    }
+                  },
+                }, '*');
+              });
             });
         </script>
 

@@ -46,6 +46,7 @@ export default function DeleteDisplayModal({
   const { t } = useTranslation();
   return (
     <Modal
+      variant="confirmation"
       isOpen={isOpen}
       isPending={isLoading}
       onClose={onClose}

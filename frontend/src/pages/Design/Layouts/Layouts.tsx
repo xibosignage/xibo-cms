@@ -48,12 +48,14 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import { fetchContextButtons } from '@/services/folderApi';
 import type { Layout } from '@/types/layout';
+import { hasFeature } from '@/utils/permissions';
 
 export default function Layouts() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { user } = useUserContext();
   const canViewFolders = usePermissions()?.canViewFolders;
+  const canSchedule = hasFeature(user, 'schedule.add');
   const homeFolderId = user?.homeFolderId ?? 1;
 
   const {
@@ -140,10 +142,10 @@ export default function Layouts() {
     enabled: isHydrated,
   });
 
+  const effectiveFolderId = selectedFolderId ?? homeFolderId;
   const { data: folderPerms } = useQuery({
-    queryKey: ['folderPermissions', selectedFolderId],
-    queryFn: () => fetchContextButtons(selectedFolderId as number),
-    enabled: selectedFolderId !== null,
+    queryKey: ['folderPermissions', effectiveFolderId],
+    queryFn: () => fetchContextButtons(effectiveFolderId),
     staleTime: 1000 * 60 * 5,
   });
 
@@ -340,7 +342,8 @@ export default function Layouts() {
     openTemplateModal,
     openRetireModal,
     openEnableStatsModal,
-    openScheduleModal,
+    openScheduleModal: canSchedule ? openScheduleModal : undefined,
+    showDescriptionId: filterInputs.showDescriptionId,
   });
 
   const getAllSelectedItems = (): Layout[] => {

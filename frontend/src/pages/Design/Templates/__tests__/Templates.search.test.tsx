@@ -67,8 +67,6 @@ vi.mock('../hooks/useTemplateFilterOptions', () => ({
           { label: 'Published', value: '1' },
           { label: 'Draft', value: '2' },
         ],
-        shouldTranslateOptions: false,
-        showAllOption: false,
       },
     ],
     isLoading: false,
@@ -208,11 +206,9 @@ describe('Templates page - search and pagination', () => {
     const statusLabel = screen.getByText('Published Status');
     const statusContainer = statusLabel.closest('div')!;
     await act(async () => {
-      fireEvent.click(within(statusContainer).getByRole('button'));
+      fireEvent.click(within(statusContainer).getByRole('combobox'));
     });
-    await act(async () => {
-      fireEvent.click(within(statusContainer).getByText('Published'));
-    });
+    fireEvent.click(await screen.findByRole('option', { name: 'Published' }));
 
     await waitFor(() => {
       expect(useTemplateData).toHaveBeenLastCalledWith(
@@ -238,11 +234,9 @@ describe('Templates page - search and pagination', () => {
     const statusLabel = screen.getByText('Published Status');
     const statusContainer = statusLabel.closest('div')!;
     await act(async () => {
-      fireEvent.click(within(statusContainer).getByRole('button'));
+      fireEvent.click(within(statusContainer).getByRole('combobox'));
     });
-    await act(async () => {
-      fireEvent.click(within(statusContainer).getByText('Published'));
-    });
+    fireEvent.click(await screen.findByRole('option', { name: 'Published' }));
 
     // Now reset - the filter values should return to the initial empty state.
     await act(async () => {
@@ -252,7 +246,7 @@ describe('Templates page - search and pagination', () => {
     await waitFor(() => {
       expect(useTemplateData).toHaveBeenLastCalledWith(
         expect.objectContaining({
-          advancedFilters: expect.objectContaining({ name: '', tags: [] }),
+          advancedFilters: expect.objectContaining({ template: '', tags: [] }),
         }),
       );
     });

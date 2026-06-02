@@ -24,14 +24,14 @@ import { useTranslation } from 'react-i18next';
 
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
-import type { DisplayProfile } from '@/types/displayProfile';
+import type { Display } from '@/types/display';
 import { incrementName } from '@/utils/stringUtils';
 
 interface CopyDisplayModalProps {
   isOpen?: boolean;
   onClose: () => void;
   onConfirm: (newName: string) => void;
-  displayProfile: DisplayProfile | null;
+  display: Display | null;
   isLoading?: boolean;
   existingNames: string[];
 }
@@ -40,7 +40,7 @@ export default function CopyDisplayModal({
   isOpen = true,
   onClose,
   onConfirm,
-  displayProfile,
+  display,
   isLoading,
   existingNames,
 }: CopyDisplayModalProps) {
@@ -49,12 +49,12 @@ export default function CopyDisplayModal({
   const [error, setError] = useState<string | undefined>();
 
   useEffect(() => {
-    if (displayProfile && isOpen) {
-      setNewName(incrementName(displayProfile.name));
+    if (display && isOpen) {
+      setNewName(incrementName(display.display));
     }
 
     setError(undefined);
-  }, [displayProfile, isOpen]);
+  }, [display, isOpen]);
 
   const handleSave = () => {
     const trimmed = newName.trim();
@@ -67,7 +67,7 @@ export default function CopyDisplayModal({
     const nameExists = existingNames.some((name) => name.toLowerCase() === trimmed.toLowerCase());
 
     if (nameExists) {
-      setError(t('A display profile with this name already exists'));
+      setError(t('A display with this name already exists'));
       return;
     }
 
@@ -82,7 +82,7 @@ export default function CopyDisplayModal({
   return (
     <Modal
       isOpen={isOpen}
-      title={t('Copy Display Profile')}
+      title={t('Copy Display')}
       onClose={onClose}
       size="sm"
       actions={[

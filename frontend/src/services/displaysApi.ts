@@ -31,12 +31,16 @@ export interface FetchDisplaysRequest {
   start: number;
   length: number;
   keyword?: string;
+  displayId?: number;
+  display?: string;
+  tags?: string;
   mediaInventoryStatus?: number | string;
   loggedIn?: number | string;
   authorised?: number | string;
   xmrRegistered?: number | string;
   clientType?: string;
   displayGroupId?: number | string;
+  displayGroupIds?: number[];
   displayProfileId?: number | string;
   orientation?: string;
   commercialLicence?: number | string;

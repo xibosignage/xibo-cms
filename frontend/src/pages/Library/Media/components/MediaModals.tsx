@@ -208,7 +208,7 @@ export function MediaModals({
           <div className="flex flex-col gap-3 p-8 pt-0">
             {upload.canViewFolders && (
               <SelectFolder
-                selectedId={upload.selectedFolderId}
+                selectedId={upload.selectedFolderId ?? upload.targetFolderId}
                 onSelect={(folder) => {
                   if (folder) {
                     upload.setSelectedFolderId(folder.id);

@@ -2418,8 +2418,17 @@ class DisplayGroup extends Base
      * @throws NotFoundException
      * @throws PlayerActionException
      */
-    public function pushCriteriaUpdate(Request $request, Response $response, int $displayGroupId): Response|ResponseInterface
-    {
+    public function pushCriteriaUpdate(
+        Request $request,
+        Response $response,
+        int $displayGroupId
+    ): Response|ResponseInterface {
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup)) {
+            throw new AccessDeniedException();
+        }
+
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Get criteria updates

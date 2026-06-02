@@ -28,6 +28,19 @@ export interface UserGroup {
   isEveryone: number;
   description?: string;
   defaultHomepageId?: string;
+  isShownForAddUser?: number;
+
+  libraryQuota?: number;
+  libraryQuotaFormatted?: string;
+
+  isSystemNotification?: number;
+  isDisplayNotification?: number;
+  isDataSetNotification?: number;
+  isLayoutNotification?: number;
+  isLibraryNotification?: number;
+  isReportNotification?: number;
+  isScheduleNotification?: number;
+  isCustomNotification?: number;
 
   features?: string[];
 

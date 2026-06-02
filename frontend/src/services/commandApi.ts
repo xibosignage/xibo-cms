@@ -20,21 +20,22 @@
  */
 
 import http from '@/lib/api';
-
-export interface Command {
-  commandId: number;
-  command: string;
-  code: string;
-  description: string | null;
-}
+import type { Command } from '@/types/command';
 
 export interface FetchCommandsRequest {
   start: number;
   length: number;
   keyword?: string;
   command?: string;
+  code?: string;
   type?: string;
+  sortBy?: string;
+  sortDir?: string;
   signal?: AbortSignal;
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: number;
+  logicalOperatorCode?: 'OR' | 'AND';
+  useRegexForCode?: number;
 }
 
 export interface FetchCommandsResponse {
@@ -57,4 +58,59 @@ export async function fetchCommands(
   const totalCount = totalCountHeader ? parseInt(totalCountHeader, 10) : 0;
 
   return { rows, totalCount };
+}
+
+export interface CreateCommandRequest {
+  command: string;
+  code: string;
+  description?: string;
+  commandString?: string;
+  validationString?: string;
+  availableOn?: string[];
+  createAlertOn?: string;
+}
+
+function serializeCommandPayload(payload: object): URLSearchParams {
+  const params = new URLSearchParams();
+  Object.entries(payload).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+    if (key === 'availableOn' && Array.isArray(value)) {
+      value.forEach((v) => params.append('availableOn[]', v));
+    } else {
+      params.append(key, String(value));
+    }
+  });
+  return params;
+}
+
+export async function createCommand(payload: CreateCommandRequest): Promise<Command> {
+  const { data } = await http.post('/command', serializeCommandPayload(payload), {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+
+  return data;
+}
+
+export interface UpdateCommandRequest {
+  command: string;
+  description?: string;
+  commandString?: string;
+  validationString?: string;
+  availableOn?: string[];
+  createAlertOn?: string;
+}
+
+export async function updateCommand(
+  commandId: number,
+  payload: UpdateCommandRequest,
+): Promise<Command> {
+  const { data } = await http.put(`/command/${commandId}`, serializeCommandPayload(payload), {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+
+  return data;
+}
+
+export async function deleteCommand(commandId: number): Promise<void> {
+  await http.delete(`/command/${commandId}`);
 }

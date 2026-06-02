@@ -66,7 +66,7 @@ export const getScheduleEventSchema = (t: TFunction) =>
       syncTimezone: z.boolean(),
 
       recurrenceType: z.string(),
-      recurrenceDetail: z.number().min(1),
+      recurrenceDetail: z.number().min(0),
       recurrenceRepeatsOn: z.array(z.string()),
       recurrenceMonthlyRepeatsOn: z.number(),
       recurrenceRange: z.string(),
@@ -195,6 +195,14 @@ export const getScheduleEventSchema = (t: TFunction) =>
           path: ['shareOfVoice'],
           code: z.ZodIssueCode.custom,
           message: t('Share of Voice must be between 1 and 3600'),
+        });
+      }
+
+      if (data.recurrenceType && data.recurrenceDetail < 1) {
+        ctx.addIssue({
+          path: ['recurrenceDetail'],
+          code: z.ZodIssueCode.custom,
+          message: t('Repeat every must be at least 1'),
         });
       }
 

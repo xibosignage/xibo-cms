@@ -26,11 +26,14 @@ export interface FetchDisplayProfileRequest {
   start: number;
   length: number;
   keyword?: string;
+  displayProfile?: string;
   type?: DisplayProfileType;
   embed?: string;
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;
+  useRegexForName?: number;
+  logicalOperatorName?: 'OR' | 'AND';
 }
 
 export interface FetchDisplayProfileResponse {

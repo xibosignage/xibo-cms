@@ -26,6 +26,7 @@ use Carbon\Carbon;
 use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Factory\MenuBoardCategoryFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Helper\SanitizerService;
@@ -45,169 +46,91 @@ class MenuBoard implements \JsonSerializable
 {
     use EntityTrait;
 
-    /**
-     * @var int
-     */
     #[OA\Property(description: 'The Menu Board Id')]
     public $menuId;
 
-    /**
-     * @var string
-     */
     #[OA\Property(description: 'The Menu Board name')]
     public $name;
 
-    /**
-     * @var string
-     */
     #[OA\Property(description: 'The Menu Board description')]
     public $description;
 
-    /**
-     * @var string
-     */
     #[OA\Property(description: 'The Menu Board code identifier')]
     public $code;
 
-    /**
-     * @var int
-     */
     #[OA\Property(description: 'The Menu Board owner Id')]
     public $userId;
     public $owner;
 
-    /**
-     * @var int
-     */
     #[OA\Property(description: 'The Menu Board last modified date')]
     public $modifiedDt;
 
-    /**
-     * @var string
-     */
     #[OA\Property(description: 'The Id of the Folder this Menu Board belongs to')]
     public $folderId;
 
-    /**
-     * @var int
-     */
     #[OA\Property(description: 'The id of the Folder responsible for providing permissions for this Menu Board')]
     public $permissionsFolderId;
 
-    /**
-     * @var string
-     */
     #[OA\Property(description: 'A comma separated list of Groups/Users that have permission to this menu Board')]
     public $groupsWithPermissions;
 
-    /** @var  SanitizerService */
-    private $sanitizerService;
-
-    /** @var PoolInterface */
-    private $pool;
-
-    /** @var  ConfigServiceInterface */
-    private $config;
-
-    /**
-     * @var Permission[]
-     */
-    private $permissions = [];
+    /** @var Permission[] */
+    private array $permissions = [];
     private $categories;
-
-    /** @var PermissionFactory */
-    private $permissionFactory;
-
-    /** @var MenuBoardCategoryFactory */
-    private $menuBoardCategoryFactory;
-
-    /** @var DisplayNotifyServiceInterface */
-    private $displayNotifyService;
 
     private $datesToFormat = ['modifiedDt'];
 
-    /**
-     * Entity constructor.
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
-     * @param SanitizerService $sanitizerService
-     * @param PoolInterface $pool
-     * @param ConfigServiceInterface $config
-     * @param PermissionFactory $permissionFactory
-     * @param MenuBoardCategoryFactory $menuBoardCategoryFactory
-     * @param DisplayNotifyServiceInterface $displayNotifyService
-     */
     public function __construct(
-        $store,
-        $log,
-        $dispatcher,
-        $sanitizerService,
-        $pool,
-        $config,
-        $permissionFactory,
-        $menuBoardCategoryFactory,
-        $displayNotifyService
+        StorageServiceInterface $store,
+        LogServiceInterface $log,
+        EventDispatcherInterface $dispatcher,
+        private readonly SanitizerService $sanitizerService,
+        private readonly PoolInterface $pool,
+        private readonly ConfigServiceInterface $config,
+        private readonly PermissionFactory $permissionFactory,
+        private readonly MenuBoardCategoryFactory $menuBoardCategoryFactory,
+        private readonly DisplayNotifyServiceInterface $displayNotifyService,
     ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
-        $this->sanitizerService = $sanitizerService;
-        $this->config = $config;
-        $this->pool = $pool;
-        $this->permissionFactory = $permissionFactory;
-        $this->menuBoardCategoryFactory = $menuBoardCategoryFactory;
-        $this->displayNotifyService = $displayNotifyService;
     }
 
-    /**
-     * @param $array
-     * @return \Xibo\Support\Sanitizer\SanitizerInterface
-     */
     protected function getSanitizer($array)
     {
         return $this->sanitizerService->getSanitizer($array);
     }
 
-    public function __clone()
+    public function __clone(): void
     {
         $this->menuId = null;
     }
 
-    /**
-     * @return string
-     */
-    public function __toString()
+    public function __toString(): string
     {
-        return sprintf('MenuId %d, Name %s, Description %s, Code %s', $this->menuId, $this->name, $this->description, $this->code);
+        return sprintf(
+            'MenuId %d, Name %s, Description %s, Code %s',
+            $this->menuId,
+            $this->name,
+            $this->description,
+            $this->code
+        );
     }
 
-    /**
-     * Get the Id
-     * @return int
-     */
-    public function getId()
+    public function getId(): int
     {
         return $this->menuId;
     }
 
-    public function getPermissionFolderId()
+    public function getPermissionFolderId(): int
     {
         return $this->permissionsFolderId;
     }
 
-    /**
-     * Get the OwnerId
-     * @return int
-     */
-    public function getOwnerId()
+    public function getOwnerId(): int
     {
         return $this->userId;
     }
 
-    /**
-     * Sets the Owner
-     * @param int $ownerId
-     */
-    public function setOwner($ownerId)
+    public function setOwner(int $ownerId): void
     {
         $this->userId = $ownerId;
     }
@@ -215,21 +138,18 @@ class MenuBoard implements \JsonSerializable
     /**
      * @param array $options
      * @return MenuBoard
-     * @throws NotFoundException
      */
-    public function load($options = [])
+    public function load(array $options = []): self
     {
         $options = array_merge([
             'loadPermissions' => true,
             'loadCategories' => false
         ], $options);
 
-        // If we are already loaded, then don't do it again
         if ($this->menuId == null || $this->loaded) {
             return $this;
         }
 
-        // Permissions
         if ($options['loadPermissions']) {
             $this->permissions = $this->permissionFactory->getByObjectId('MenuBoard', $this->menuId);
         }
@@ -246,7 +166,7 @@ class MenuBoard implements \JsonSerializable
     /**
      * @throws InvalidArgumentException
      */
-    public function validate()
+    public function validate(): void
     {
         if (!v::stringType()->notEmpty()->validate($this->name)) {
             throw new InvalidArgumentException(__('Name cannot be empty'), 'name');
@@ -254,11 +174,9 @@ class MenuBoard implements \JsonSerializable
     }
 
     /**
-     * Save this Menu Board
-     * @param array $options
      * @throws InvalidArgumentException
      */
-    public function save($options = [])
+    public function save(array $options = []): void
     {
         $options = array_merge([
             'validate' => true,
@@ -280,28 +198,33 @@ class MenuBoard implements \JsonSerializable
             $this->update();
         }
 
-        // We've been touched
         $this->setActive();
-
-        // Notify Displays?
         $this->notify();
     }
 
-    /**
-     * Is this MenuBoard active currently
-     * @return bool
-     */
-    public function isActive()
+    public function copyWithCascade(string $name, ?string $description, ?string $code, int $userId): self
+    {
+        $newBoard = clone $this;
+        $newBoard->name = $name;
+        $newBoard->description = $description;
+        $newBoard->code = $code;
+        $newBoard->userId = $userId;
+        $newBoard->save();
+
+        foreach ($this->menuBoardCategoryFactory->getByMenuId($this->menuId) as $category) {
+            $category->copyWithCascade($newBoard->menuId);
+        }
+
+        return $newBoard;
+    }
+
+    public function isActive(): bool
     {
         $cache = $this->pool->getItem('/menuboard/accessed/' . $this->menuId);
         return $cache->isHit();
     }
 
-    /**
-     * Indicate that this MenuBoard has been accessed recently
-     * @return $this
-     */
-    public function setActive()
+    public function setActive(): self
     {
         $this->getLog()->debug('Setting ' . $this->menuId . ' as active');
 
@@ -312,29 +235,22 @@ class MenuBoard implements \JsonSerializable
         return $this;
     }
 
-    /**
-     * Get the Display Notify Service
-     * @return DisplayNotifyServiceInterface
-     */
     public function getDisplayNotifyService(): DisplayNotifyServiceInterface
     {
         return $this->displayNotifyService->init();
     }
 
-    /**
-     * Notify displays of this campaign change
-     */
-    public function notify()
+    public function notify(): void
     {
         $this->getLog()->debug('MenuBoard ' . $this->menuId . ' wants to notify');
-
         $this->getDisplayNotifyService()->collectNow()->notifyByMenuBoardId($this->menuId);
     }
 
-    private function add()
+    private function add(): void
     {
         $this->menuId = $this->getStore()->insert(
-            'INSERT INTO `menu_board` (name, description, code, userId, modifiedDt, folderId, permissionsFolderId) VALUES (:name, :description, :code, :userId, :modifiedDt, :folderId, :permissionsFolderId)',
+            'INSERT INTO `menu_board` (name, description, code, userId, modifiedDt, folderId, permissionsFolderId) 
+                    VALUES (:name, :description, :code, :userId, :modifiedDt, :folderId, :permissionsFolderId)',
             [
                 'name' => $this->name,
                 'description' => $this->description,
@@ -347,10 +263,18 @@ class MenuBoard implements \JsonSerializable
         );
     }
 
-    private function update()
+    private function update(): void
     {
         $this->getStore()->update(
-            'UPDATE `menu_board` SET name = :name, description = :description, code = :code, userId = :userId, modifiedDt = :modifiedDt, folderId = :folderId, permissionsFolderId = :permissionsFolderId WHERE menuId = :menuId',
+            'UPDATE `menu_board` SET 
+                        name = :name,
+                        description = :description,
+                        code = :code,
+                        userId = :userId,
+                        modifiedDt = :modifiedDt,
+                        folderId = :folderId,
+                        permissionsFolderId = :permissionsFolderId
+                    WHERE menuId = :menuId',
             [
                 'menuId' => $this->menuId,
                 'name' => $this->name,
@@ -365,24 +289,18 @@ class MenuBoard implements \JsonSerializable
     }
 
     /**
-     * Delete Menu Board
-     * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
-    public function delete()
+    public function delete(): void
     {
         $this->load(['loadCategories' => true]);
 
-        // Delete all permissions
         foreach ($this->permissions as $permission) {
-            /* @var Permission $permission */
             $permission->delete();
         }
 
-        // Delete all
-        /** @var MenuBoardCategory $category */
         foreach ($this->categories as $category) {
+            /** @var MenuBoardCategory $category */
             $category->delete();
         }
 

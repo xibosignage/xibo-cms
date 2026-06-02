@@ -29,6 +29,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 /**
  * CORS middleware for preview.
+ *  OPTIONS requests are handled via a dedicated route in web/preview/index.php
  */
 class CorsPreviewMiddleware implements MiddlewareInterface
 {
@@ -41,18 +42,24 @@ class CorsPreviewMiddleware implements MiddlewareInterface
         $host = $request->getUri()->getHost();
 
         if ($request->getHeaderLine('Sec-Fetch-Site') === 'cross-site'
+            || $request->getHeaderLine('Sec-Fetch-Mode') === 'cors'
+            || $origin === 'null'
             || ($origin !== '' && !str_contains($origin, $host))
         ) {
-            // Handle CORS headers
-            $response = $response
-                ->withHeader('Access-Control-Allow-Origin', '*')
-                ->withHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
-                ->withHeader(
-                    'Access-Control-Allow-Headers',
-                    'Content-Type, X-Requested-With, Accept, Origin, X-PREVIEW-JWT'
-                );
+            return $this->addCorsHeaders($response);
         }
 
         return $response;
+    }
+
+    private function addCorsHeaders(ResponseInterface $response): ResponseInterface
+    {
+        return $response
+            ->withHeader('Access-Control-Allow-Origin', '*')
+            ->withHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
+            ->withHeader(
+                'Access-Control-Allow-Headers',
+                'Content-Type, X-Requested-With, Accept, Origin, X-PREVIEW-JWT'
+            );
     }
 }

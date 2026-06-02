@@ -34,7 +34,7 @@ export default function AboutModal({ isOpen = true, onClose }: AboutModalProps) 
 
   // TODO: Replace with current values
   const appConfig = {
-    version: '5.0.0',
+    version: '4.5.0',
     revision: 'a1b2c3d',
     sourceUrl: 'https://github.com/xibosignage/xibo-cms',
     appName: 'Xibo',
@@ -42,6 +42,7 @@ export default function AboutModal({ isOpen = true, onClose }: AboutModalProps) 
 
   return (
     <Modal
+      variant="confirmation"
       isOpen={isOpen}
       onClose={onClose}
       title={t('About')}

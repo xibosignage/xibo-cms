@@ -19,11 +19,27 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { Outlet } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Outlet, useMatches } from 'react-router-dom';
 
 import PageWrapper from '@/app/PageWrapper';
 
+const PRODUCT_NAME = 'Xibo Digital Signage';
+
 export default function WithPageWrapper() {
+  const matches = useMatches();
+
+  const title = matches
+    .slice()
+    .reverse()
+    .find((m) => (m.handle as { title?: string } | null)?.title)?.handle as
+    | { title?: string }
+    | undefined;
+
+  useEffect(() => {
+    document.title = title?.title ? `${title.title} | ${PRODUCT_NAME}` : PRODUCT_NAME;
+  }, [title]);
+
   return (
     <PageWrapper>
       <Outlet />

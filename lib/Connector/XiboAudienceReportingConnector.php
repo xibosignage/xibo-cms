@@ -116,7 +116,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
 
     public function getThumbnail(): string
     {
-        return 'theme/default/img/connectors/xibo-audience-reporting.png';
+        return 'theme/default/img/connectors/magnifying-glass-chart.svg';
     }
 
     public function getSettingsFormTwig(): string
@@ -127,6 +127,19 @@ class XiboAudienceReportingConnector implements ConnectorInterface
     public function getSettingsFormJavaScript(): string
     {
         return 'xibo-audience-connector-form-javascript';
+    }
+
+    public function getSettingsFields(): array
+    {
+        return [
+            [
+                'name'         => 'apiKey',
+                'type'         => 'text',
+                'label'        => __('API Key'),
+                'helpText'     => __('Enter your API Key from Xibo.'),
+                'providerOnly' => $this->isProviderSetting('apiKey'),
+            ],
+        ];
     }
 
     public function processSettingsForm(SanitizerInterface $params, array $settings): array

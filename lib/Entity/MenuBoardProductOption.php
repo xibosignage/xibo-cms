@@ -24,6 +24,7 @@ namespace Xibo\Entity;
 
 use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -37,40 +38,29 @@ class MenuBoardProductOption implements \JsonSerializable
 {
     use EntityTrait;
 
-    /**
-     * @var int
-     */
     #[OA\Property(description: 'The Menu Product ID that this Option belongs to')]
     public $menuProductId;
 
-    /**
-     * @var string
-     */
     #[OA\Property(description: 'The option name')]
     public $option;
 
-    /**
-     * @var string
-     */
     #[OA\Property(description: 'The option value')]
     public $value;
 
-    /**
-     * Entity constructor.
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     */
-    public function __construct($store, $log, $dispatcher)
-    {
+    public function __construct(
+        StorageServiceInterface $store,
+        LogServiceInterface $log,
+        EventDispatcherInterface $dispatcher,
+    ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
     }
 
-    public function __clone()
+    public function __clone(): void
     {
         $this->menuProductId = null;
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         return sprintf('ProductOption %s with value %s', $this->option, $this->value);
     }
@@ -78,7 +68,7 @@ class MenuBoardProductOption implements \JsonSerializable
     /**
      * @throws InvalidArgumentException
      */
-    public function validate()
+    public function validate(): void
     {
         if (!v::stringType()->notEmpty()->validate($this->option)
             && v::floatType()->notEmpty()->validate($this->value)
@@ -94,10 +84,9 @@ class MenuBoardProductOption implements \JsonSerializable
     }
 
     /**
-     * @param array $options
      * @throws InvalidArgumentException
      */
-    public function save($options = [])
+    public function save(array $options = []): void
     {
         $options = array_merge([
             'validate' => true,
@@ -112,15 +101,15 @@ class MenuBoardProductOption implements \JsonSerializable
         $this->getStore()->insert(
             'INSERT INTO `menu_product_options` (`menuProductId`, `option`, `value`) VALUES (:menuProductId, :option, :value) ON DUPLICATE KEY UPDATE `value` = :value2',
             [
-            'menuProductId' => $this->menuProductId,
-            'option' => $this->option,
-            'value' => $this->value,
-            'value2' => $this->value
+                'menuProductId' => $this->menuProductId,
+                'option' => $this->option,
+                'value' => $this->value,
+                'value2' => $this->value
             ]
         );
     }
 
-    public function delete()
+    public function delete(): void
     {
         $this->getStore()->update(
             'DELETE FROM `menu_product_options` WHERE `menuProductId` = :menuProductId AND `option` = :option',

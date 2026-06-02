@@ -25,8 +25,18 @@ import type { User } from '@/types/user';
 export interface FetchUsersRequest {
   start: number;
   length: number;
+  userId?: number;
+  keyword?: string;
   userName?: string;
-  userType?: string;
+  userTypeId?: number;
+  firstName?: string;
+  lastName?: string;
+  retired?: number;
+  useRegexForName?: number;
+  logicalOperatorName?: string;
+  userGroupIdMembers?: number;
+  sortBy?: string;
+  sortDir?: string;
   signal?: AbortSignal;
 }
 
@@ -38,8 +48,11 @@ export interface FetchUsersResponse {
 export async function fetchUsers(
   options: FetchUsersRequest = { start: 0, length: 10 },
 ): Promise<FetchUsersResponse> {
+  const { signal, ...queryParams } = options;
+
   const response = await http.get('/user', {
-    params: options,
+    params: queryParams,
+    signal,
   });
 
   return {
@@ -145,4 +158,155 @@ export async function fetchUserApplications(userId: number): Promise<UserApplica
 
 export async function revokeApplicationAccess(clientId: number, userId: number): Promise<void> {
   await http.delete(`/application/revoke/${clientId}/${userId}`);
+}
+
+// Create User
+export interface CreateUserPayload {
+  userName: string;
+  password: string;
+  email?: string;
+  userTypeId: number;
+  groupId: number;
+  homePageId?: string;
+  libraryQuota?: number;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  ref1?: string;
+  ref2?: string;
+  ref3?: string;
+  ref4?: string;
+  ref5?: string;
+  isPasswordChangeRequired?: number;
+  newUserWizard?: number;
+  hideNavigation?: number;
+}
+
+export async function createUser(payload: CreateUserPayload): Promise<User> {
+  const formData = new URLSearchParams();
+
+  Object.entries(payload).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      formData.append(key, String(value));
+    }
+  });
+
+  const response = await http.post('/user', formData, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
+
+  return response.data;
+}
+
+// Update User
+export interface UpdateUserPayload {
+  userName: string;
+  email?: string;
+  userTypeId?: number;
+  homePageId?: string;
+  libraryQuota?: number;
+  retired?: number;
+  homeFolderId?: number;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  ref1?: string;
+  ref2?: string;
+  ref3?: string;
+  ref4?: string;
+  ref5?: string;
+  newUserWizard?: number;
+  hideNavigation?: number;
+  isPasswordChangeRequired?: number;
+  newPassword?: string;
+  retypeNewPassword?: string;
+  disableTwoFactor?: number;
+  isSystemNotification?: number;
+  isDisplayNotification?: number;
+  isDataSetNotification?: number;
+  isCustomNotification?: number;
+  isLayoutNotification?: number;
+  isLibraryNotification?: number;
+  isReportNotification?: number;
+  isScheduleNotification?: number;
+}
+
+export async function updateUser(userId: number, payload: UpdateUserPayload): Promise<User> {
+  const formData = new URLSearchParams();
+
+  Object.entries(payload).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      formData.append(key, String(value));
+    }
+  });
+
+  const response = await http.put(`/user/${userId}`, formData, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
+
+  return response.data;
+}
+
+// Delete User
+export interface DeleteUserOptions {
+  deleteAllItems?: number;
+  reassignUserId?: number;
+}
+
+export async function deleteUser(userId: number, options?: DeleteUserOptions): Promise<void> {
+  const params: Record<string, string> = {};
+
+  if (options?.deleteAllItems !== undefined) {
+    params.deleteAllItems = String(options.deleteAllItems);
+  }
+
+  if (options?.reassignUserId !== undefined) {
+    params.reassignUserId = String(options.reassignUserId);
+  }
+
+  await http.delete(`/user/${userId}`, { params });
+}
+
+// Set Home Folder
+export async function setUserHomeFolder(userId: number, homeFolderId: number): Promise<void> {
+  const formData = new URLSearchParams();
+  formData.append('homeFolderId', String(homeFolderId));
+
+  await http.post(`/user/${userId}/setHomeFolder`, formData, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+}
+
+// Assign User Groups
+export async function assignUserGroups(
+  userId: number,
+  toAdd: number[],
+  toRemove: number[],
+): Promise<void> {
+  const formData = new URLSearchParams();
+  toAdd.forEach((id) => formData.append('userGroupId[]', String(id)));
+  toRemove.forEach((id) => formData.append('unassignUserGroupId[]', String(id)));
+
+  await http.post(`/user/${userId}/usergroup/assign`, formData, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+}
+
+// Homepages
+export interface Homepage {
+  name: string;
+  title: string;
+  feature?: string;
+}
+
+export async function fetchHomepages(params: {
+  userTypeId?: number;
+  groupId?: number;
+}): Promise<Homepage[]> {
+  const response = await http.get('/user/form/homepages', { params });
+  return response.data;
 }

@@ -47,6 +47,7 @@ vi.mock('@/services/playlistApi');
 vi.mock('@/services/userApi', () => ({
   fetchUserPreference: vi.fn().mockResolvedValue(null),
   saveUserPreference: vi.fn().mockResolvedValue(undefined),
+  fetchUsers: vi.fn().mockResolvedValue({ rows: [], totalCount: 0 }),
 }));
 
 vi.mock('@/components/ui/modals/Modal');

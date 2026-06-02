@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -21,10 +21,14 @@
  */
 namespace Xibo\Controller;
 
-use Psr\Container\ContainerInterface;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Event\SubPlaylistItemsEvent;
+use Xibo\Factory\MediaFactory;
+use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\PlaylistFactory;
+use Xibo\Helper\ByteFormatter;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
@@ -35,95 +39,39 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class PlaylistDashboard extends Base
 {
-    /** @var \Xibo\Factory\PlaylistFactory */
-    private $playlistFactory;
-
-    /** @var \Xibo\Factory\ModuleFactory */
-    private $moduleFactory;
-
-    /** @var \Xibo\Factory\WidgetFactory */
-    private $widgetFactory;
-
-    /** @var \Xibo\Factory\MediaFactory */
-    private $mediaFactory;
-
-    /** @var ContainerInterface */
-    private $container;
-
-    /**
-     * PlaylistDashboard constructor.
-     * @param $playlistFactory
-     * @param $moduleFactory
-     * @param $widgetFactory
-     * @param \Xibo\Factory\MediaFactory $mediaFactory
-     * @param ContainerInterface $container
-     */
-    public function __construct($playlistFactory, $moduleFactory, $widgetFactory, $mediaFactory, ContainerInterface $container)
-    {
-        $this->playlistFactory = $playlistFactory;
-        $this->moduleFactory = $moduleFactory;
-        $this->widgetFactory = $widgetFactory;
-        $this->mediaFactory = $mediaFactory;
-        $this->container = $container;
-    }
-
-    /**
-     * @param \Slim\Http\ServerRequest $request
-     * @param \Slim\Http\Response $response
-     * @return \Psr\Http\Message\ResponseInterface|\Slim\Http\Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function displayPage(Request $request, Response $response)
-    {
-        // Do we have a Playlist already in our User Preferences?
-        $playlist = null;
-        try {
-            $playlistId = $this->getUser()->getOption('playlistDashboardSelectedPlaylistId');
-            if ($playlistId->value != 0) {
-                $playlist = $this->playlistFactory->getById($playlistId->value);
-            }
-        } catch (NotFoundException $notFoundException) {
-            // this is fine, no need to throw errors here.
-            $this->getLog()->debug(
-                'Problem getting playlistDashboardSelectedPlaylistId user option. e = ' .
-                $notFoundException->getMessage()
-            );
-        }
-
-        $this->getState()->template = 'playlist-dashboard';
-        $this->getState()->setData([
-            'playlist' => $playlist,
-            'validExtensions' => implode('|', $this->moduleFactory->getValidExtensions())
-        ]);
-
-        return $this->render($request, $response);
+    public function __construct(
+        private readonly PlaylistFactory $playlistFactory,
+        private readonly ModuleFactory   $moduleFactory,
+        private readonly MediaFactory    $mediaFactory,
+    ) {
     }
 
     /**
      * Grid used for the Playlist drop down list
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Playlists
-        $playlists = $this->playlistFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter([
-            'name' => $this->getSanitizer($request->getParams())->getString('name'),
-            'regionSpecific' => 0
-        ], $sanitizedParams));
+        $playlists = $this->playlistFactory->query(
+            $this->gridRenderSort($sanitizedParams, $this->isJson($request)),
+            $this->gridRenderFilter([
+                'name' => $this->getSanitizer($request->getParams())->getString('name'),
+                'regionSpecific' => 0
+            ], $sanitizedParams)
+        );
 
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->playlistFactory->countLast();
-        $this->getState()->setData($playlists);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $this->playlistFactory->countLast())
+            ->withJson($playlists);
     }
 
     /**
@@ -131,21 +79,23 @@ class PlaylistDashboard extends Base
      *  the output from this is very much like a form.
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @param int $id
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function show(Request $request, Response $response, $id)
+    public function show(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         // Record this Playlist as the one we have currently selected.
         try {
             $this->getUser()->setOptionValue('playlistDashboardSelectedPlaylistId', $id);
             $this->getUser()->save();
         } catch (GeneralException $exception) {
-            $this->getLog()->error('Problem setting playlistDashboardSelectedPlaylistId user option. e = ' . $exception->getMessage());
+            $this->getLog()->error(
+                'Problem setting playlistDashboardSelectedPlaylistId user option. e = ' . $exception->getMessage()
+            );
         }
 
         // Spots
@@ -173,14 +123,18 @@ class PlaylistDashboard extends Base
 
             foreach ($parent->widgets as $parentWidget) {
                 if ($parentWidget->type === 'subplaylist') {
-                    $this->getLog()->debug('show: matched against a sub playlist widget ' . $parentWidget->widgetId . '.');
+                    $this->getLog()->debug(
+                        'show: matched against a sub playlist widget ' . $parentWidget->widgetId . '.'
+                    );
 
                     // Get the sub-playlist widgets
                     $event = new SubPlaylistItemsEvent($parentWidget);
                     $this->getDispatcher()->dispatch($event, SubPlaylistItemsEvent::$NAME);
 
                     foreach ($event->getItems() as $subPlaylistItem) {
-                        $this->getLog()->debug('show: Assessing playlist ' . $subPlaylistItem->playlistId . ' on ' . $playlist->name);
+                        $this->getLog()->debug(
+                            'show: Assessing playlist ' . $subPlaylistItem->playlistId . ' on ' . $playlist->name
+                        );
                         if ($subPlaylistItem->playlistId == $playlist->playlistId) {
                             // Take the highest number of Spots we can find out of all the assignments.
                             $spotsFound = max($subPlaylistItem->spots ?? 0, $spotsFound);
@@ -208,54 +162,52 @@ class PlaylistDashboard extends Base
                 $widget->setUnmatchedProperty('regionSpecific', $module->regionSpecific);
                 $widget->setUnmatchedProperty('moduleIcon', $module->icon);
 
+                // Build mediaFiles from all mediaIds, caching objects to avoid double-fetch below
+                $mediaMap = [];
+                $mediaFiles = [];
+                foreach ($widget->mediaIds as $mediaId) {
+                    try {
+                        $media = $this->mediaFactory->getById($mediaId);
+                        $mediaMap[$mediaId] = $media;
+                        $mediaFiles[] = [
+                            'widgetId' => $widget->widgetId,
+                            'mediaId' => $mediaId,
+                            'fileName' => $media->fileName,
+                            'fileSize' => ByteFormatter::format($media->fileSize),
+                        ];
+                    } catch (NotFoundException $e) {
+                        $this->getLog()->error(
+                            sprintf(
+                                'MediaId %d assigned to widgetId %d, missing' ,
+                                $mediaId,
+                                $widget->widgetId
+                            )
+                        );
+                        // media record missing — skip
+                    }
+                }
+                $widget->setUnmatchedProperty('mediaFiles', $mediaFiles);
+
                 // Check my permissions
                 if ($module->regionSpecific == 0) {
-                    $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
-                    $widget->setUnmatchedProperty('viewble', $user->checkViewable($media));
+                    $media = $mediaMap[$widget->getPrimaryMediaId()]
+                        ?? $this->mediaFactory->getById($widget->getPrimaryMediaId());
+                    $widget->setUnmatchedProperty('viewable', $user->checkViewable($media));
                     $widget->setUnmatchedProperty('editable', $user->checkEditable($media));
                     $widget->setUnmatchedProperty('deletable', $user->checkDeleteable($media));
                 } else {
-                    $widget->setUnmatchedProperty('viewble', $user->checkViewable($widget));
+                    $widget->setUnmatchedProperty('viewable', $user->checkViewable($widget));
                     $widget->setUnmatchedProperty('editable', $user->checkEditable($widget));
                     $widget->setUnmatchedProperty('deletable', $user->checkDeleteable($widget));
                 }
             }
         }
 
-        $this->getState()->template = 'playlist-dashboard-spots';
-        $this->getState()->setData([
-            'playlist' => $playlist,
-            'spotsFound' => $spotsFound
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Delete Playlist Widget Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function deletePlaylistWidgetForm(Request $request, Response $response, $id)
-    {
-        $widget = $this->widgetFactory->loadByWidgetId($id);
-
-        if (!$this->getUser()->checkDeleteable($widget)) {
-            throw new AccessDeniedException();
-        }
-
-        // Pass to view
-        $this->getState()->template = 'playlist-module-form-delete';
-        $this->getState()->setData([
-            'widget' => $widget,
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson([
+                'playlist' => $playlist,
+                'spotsFound' => $spotsFound,
+            ]);
     }
 }

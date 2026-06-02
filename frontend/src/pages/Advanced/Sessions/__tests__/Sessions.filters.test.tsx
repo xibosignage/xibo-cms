@@ -11,6 +11,10 @@ import { useTableState } from '@/hooks/useTableState';
 // the Reset button renders with accessible text instead of an empty string.
 vi.mock('i18next', () => ({ t: (key: string) => key }));
 
+vi.mock('@/context/UserContext', () => ({
+  useUserContext: vi.fn(() => ({ user: null })),
+}));
+
 // 1. Mock Table State
 vi.mock('@/hooks/useTableState', () => ({
   useTableState: vi.fn(),

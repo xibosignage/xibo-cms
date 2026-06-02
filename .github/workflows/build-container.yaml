@@ -35,6 +35,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          pull: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: ghcr.io/xibosignage/xibo-cms:latest
@@ -48,6 +49,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          pull: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: ghcr.io/xibosignage/xibo-cms:${{ github.ref_name }}

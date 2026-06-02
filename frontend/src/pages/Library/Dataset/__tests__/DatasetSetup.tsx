@@ -26,11 +26,18 @@ import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
 
+import type { DatasetDataConnectorSource } from '@/services/datasetApi';
 import type { Dataset } from '@/types/dataset';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (str: string) => str,
+    t: (str: string, opts?: Record<string, unknown>) => {
+      if (!opts) return str;
+      return Object.entries(opts).reduce(
+        (acc, [k, v]) => acc.replace(new RegExp(`{{${k}}}`, 'g'), String(v)),
+        str,
+      );
+    },
     i18n: { changeLanguage: () => new Promise(() => {}) },
   }),
 }));
@@ -71,6 +78,23 @@ export const mockDataset = (overrides = {}): Dataset =>
     code: 'TEST_01',
     isRemote: 0,
     isRealTime: 0,
+    dataConnectorSource: '',
     folderId: null,
     ...overrides,
   }) as unknown as Dataset;
+
+export const mockRealTimeDataset = (overrides = {}): Dataset =>
+  mockDataset({
+    dataSetId: 2,
+    dataSet: 'Real-Time Dataset',
+    description: 'A real-time dataset',
+    code: 'RT_01',
+    isRealTime: 1,
+    dataConnectorSource: 'connector-source-1',
+    ...overrides,
+  });
+
+export const mockDataConnectorSources: DatasetDataConnectorSource[] = [
+  { id: 'connector-source-1', name: 'Connector Source 1' },
+  { id: 'connector-source-2', name: 'Connector Source 2' },
+];
