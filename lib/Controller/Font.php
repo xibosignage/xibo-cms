@@ -318,14 +318,6 @@ class Font extends Base
     }
 
     /**
-     * @return string[]
-     */
-    private function getValidExtensions()
-    {
-        return ['otf', 'ttf', 'eot', 'svg', 'woff'];
-    }
-
-    /**
      * Font Upload
      *
      * @SWG\Post(
@@ -375,7 +367,7 @@ class Font extends Base
 
         // Make sure the library exists
         MediaService::ensureLibraryExists($libraryFolder);
-        $validExt = $this->getValidExtensions();
+        $validExt = $this->fontFactory->getValidExtensions();
 
         // Make sure there is room in the library
         $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;

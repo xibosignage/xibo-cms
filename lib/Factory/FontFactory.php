@@ -53,6 +53,11 @@ class FontFactory extends BaseFactory
         );
     }
 
+    public function getValidExtensions(): array
+    {
+        return ['otf', 'ttf', 'eot', 'svg', 'woff'];
+    }
+
     /**
      * @throws InvalidArgumentException
      * @throws FontNotFoundException

@@ -790,17 +790,28 @@ class Media implements \JsonSerializable
             }
 
             if ($this->isRemote) {
-                $this->getLog()->debug('Moving temporary file: ' . $libraryFolder . 'temp/' . $this->name);
+                $this->getLog()->debug(
+                    'Moving temporary file: ' . $libraryFolder . 'temp/' . basename($this->name)
+                );
 
                 // Move the file into the library
-                if (!$this->moveFile($libraryFolder . 'temp/' . $this->name, $libraryFolder . $this->storedAs)) {
-                    throw new ConfigurationException(__('Problem moving downloaded file into the Library Folder'));
+                if (!$this->moveFile($libraryFolder . 'temp/' . basename($this->name), $libraryFolder . $this->storedAs)
+                ) {
+                    throw new ConfigurationException(
+                        __('Problem moving downloaded file into the Library Folder')
+                    );
                 }
             } else {
                 $this->getLog()->debug('Copying specified file: ' . $this->fileName);
 
                 if (!@copy($this->fileName, $libraryFolder . $this->storedAs)) {
-                    $this->getLog()->error(sprintf('Cannot copy %s to %s', $this->fileName, $libraryFolder . $this->storedAs));
+                    $this->getLog()->error(
+                        sprintf(
+                            'Cannot copy %s to %s',
+                            $this->fileName,
+                            $libraryFolder . $this->storedAs
+                        )
+                    );
                     throw new ConfigurationException(__('This media has expired and cannot be replaced.'));
                 }
             }
@@ -985,7 +996,7 @@ class Media implements \JsonSerializable
     {
         return $this->config->getSetting('LIBRARY_LOCATION')
             . ($temp ? 'temp' . DIRECTORY_SEPARATOR : '')
-            . $this->name;
+            . basename($this->name);
     }
 
     /**
