@@ -59,8 +59,6 @@ export interface User {
 
   groups?: UserGroup[];
 
-  newUserWizard?: 0 | 1;
-
   retired?: number;
   loggedIn?: number;
   lastAccessed?: string;
