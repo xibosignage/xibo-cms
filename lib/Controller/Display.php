@@ -26,6 +26,7 @@ use GeoJson\Feature\Feature;
 use GeoJson\Feature\FeatureCollection;
 use GeoJson\Geometry\Point;
 use GuzzleHttp\Client;
+use Xibo\Helper\Guzzle\SafeClient;
 use Intervention\Image\ImageManagerStatic as Img;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
@@ -1831,14 +1832,16 @@ class Display extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         $user_code = $sanitizedParams->getString('user_code');
-        $cmsAddress = (new HttpsDetect())->getBaseUrl($request);
+        // Pass config so WHITELIST_HOSTS (if set) defeats Host-header injection
+        // into the cmsAddress posted to the external auth service.
+        $cmsAddress = (new HttpsDetect($this->getConfig()))->getBaseUrl($request);
         $cmsKey = $this->getConfig()->getSetting('SERVER_KEY');
 
         if ($user_code == '') {
             throw new InvalidArgumentException(__('Code cannot be empty'), 'code');
         }
 
-        $guzzle = new Client();
+        $guzzle = SafeClient::getSafeClient();
 
         try {
             // When the valid code is submitted, it will be sent along with CMS Address and Key to Authentication Service maintained by Xibo Signage Ltd.

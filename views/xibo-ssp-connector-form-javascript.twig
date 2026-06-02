@@ -287,10 +287,14 @@
         footerCallback: function(row, data, start, end, display) {
           var json = this.api().ajax.json();
           if (json && json.stats) {
-            $(this.api().column(0).footer()).html(json.stats.scheduled || 0);
-            $(this.api().column(3).footer()).html(json.stats.played || 0);
-            $(this.api().column(4).footer()).html(json.stats.errored || 0);
-            $(this.api().column(5).footer()).html(json.stats.actualImpressions || 0);
+            // Use .text() not .html() for numeric footer aggregates. The SSP analytics
+            // endpoint is super-admin-configurable; injection here would be super-admin
+            // self-pwn under the project's threat model, but .text() future-proofs
+            // against connector-data poisoning and matches the field-type contract.
+            $(this.api().column(0).footer()).text(json.stats.scheduled || 0);
+            $(this.api().column(3).footer()).text(json.stats.played || 0);
+            $(this.api().column(4).footer()).text(json.stats.errored || 0);
+            $(this.api().column(5).footer()).text(json.stats.actualImpressions || 0);
           }
         },
 
@@ -340,11 +344,11 @@
         footerCallback: function(row, data, start, end, display) {
             var json = filteredData.stats;
             if (filteredData) {
-                $(this.api().column(3).footer()).html(json.totalPlayCount || 0);
-                $(this.api().column(4).footer()).html(json.totalErrorCount || 0);
-                $(this.api().column(5).footer()).html(json.totalMissCount || 0);
-                $(this.api().column(6).footer()).html(json.totalImpressions || 0);
-                $(this.api().column(7).footer()).html(json.impressionActual || 0);
+                $(this.api().column(3).footer()).text(json.totalPlayCount || 0);
+                $(this.api().column(4).footer()).text(json.totalErrorCount || 0);
+                $(this.api().column(5).footer()).text(json.totalMissCount || 0);
+                $(this.api().column(6).footer()).text(json.totalImpressions || 0);
+                $(this.api().column(7).footer()).text(json.impressionActual || 0);
             }
         },
       });

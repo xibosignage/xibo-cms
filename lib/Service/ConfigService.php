@@ -83,6 +83,7 @@ class ConfigService implements ConfigServiceInterface
     private $apiKeyPaths = null;
     private $connectorSettings = null;
     private $allowLocalNetworkRequests = false;
+    private string $whitelistHosts = '';
 
     /**
      * Theme Specific Config
@@ -194,6 +195,14 @@ class ConfigService implements ConfigServiceInterface
     }
 
     /**
+     * @inheritDoc
+     */
+    public function getWhitelistHosts(): string
+    {
+        return $this->whitelistHosts;
+    }
+
+    /**
      * Loads the settings from file.
      *  DO NOT CALL ANY STORE() METHODS IN HERE
      * @param \Psr\Container\ContainerInterface $container DI container which may be used in settings.php
@@ -265,6 +274,11 @@ class ConfigService implements ConfigServiceInterface
         // Local network access
         if (isset($allowLocalNetworkRequests)) {
             $config->allowLocalNetworkRequests = $allowLocalNetworkRequests;
+        }
+
+        // Host-header allow-list (comma-separated). Operator-set; deployment-time only.
+        if (isset($whitelistHosts)) {
+            $config->whitelistHosts = (string)$whitelistHosts;
         }
 
         // Set this as the global config

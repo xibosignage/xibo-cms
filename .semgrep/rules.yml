@@ -1,0 +1,63 @@
+# Xibo CMS — Semgrep security rules.
+#
+# Run locally with:
+#   semgrep --config .semgrep/rules.yml lib/ web/
+#
+# Rules are deliberately conservative: they should never produce false
+# positives in current code on the develop branch. If a rule starts
+# flagging legitimate code, fix the rule (don't disable it).
+
+rules:
+  # -----------------------------------------------------------------------
+  # No raw Guzzle Client construction
+  # -----------------------------------------------------------------------
+  # Background:
+  # SSRF protection is provided by lib/Helper/Guzzle/SafeClient.php, which
+  # registers SsrfProtectionMiddleware (scheme allow-list, IP blocklist,
+  # DNS-rebind pinning via CURLOPT_RESOLVE, redirect limits). Constructing
+  # a raw GuzzleHttp\Client bypasses every one of those defences.
+  #
+  # The May 2026 security sweep found 11 SSRF findings (F-001 through
+  # F-011), all of which were raw `new Client(...)` constructions for
+  # admin-settable or DB-sourced URLs. This rule would have caught every
+  # one of them at PR time.
+  #
+  # MongoDB's `MongoDB\Client` is allowed — it's a database driver, not
+  # an HTTP client. The file-level exclude below permits its single use.
+  #
+  - id: xibo-raw-guzzle-client
+    languages: [php]
+    severity: ERROR
+    message: |
+      Direct construction of GuzzleHttp\Client is forbidden — it bypasses
+      SsrfProtectionMiddleware. Use:
+
+          use Xibo\Helper\Guzzle\SafeClient;
+          $client = SafeClient::getSafeClient($options);
+
+      See lib/Helper/Guzzle/SafeClient.php and lib/Helper/Guzzle/SsrfProtectionMiddleware.php.
+      If you have a legitimate need to bypass SafeClient (e.g. a fixed-endpoint
+      internal request to a service that doesn't tolerate the safe-client
+      timeouts), discuss in code review before adding an exclude entry below.
+    pattern-either:
+      # Fully-qualified Guzzle construction — unambiguous.
+      - pattern: new \GuzzleHttp\Client(...)
+      # Bare `new Client(...)` — only flagged in files that import
+      # GuzzleHttp\Client (and not MongoDB\Client or some other Client).
+      # We can't express "import-aware" perfectly in Semgrep without
+      # taint mode, so we rely on the path-exclude below for the one
+      # known non-Guzzle Client import (MongoDB).
+      - pattern: new Client(...)
+    paths:
+      exclude:
+        # The wrapper itself — this is the ONE place a raw Client may be
+        # constructed.
+        - "lib/Helper/Guzzle/SafeClient.php"
+        # MongoDB driver, not an HTTP client.
+        - "lib/Storage/MongoDbTimeSeriesStore.php"
+        # Third-party code.
+        - "vendor/"
+        - "node_modules/"
+        # Tests may legitimately construct raw clients to exercise the
+        # SafeClient wrapper itself.
+        - "tests/"

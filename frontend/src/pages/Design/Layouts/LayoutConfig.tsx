@@ -271,7 +271,6 @@ export const getLayoutItemActions = ({
   return (layout: Layout) => {
     const actions: ActionItem[] = [];
 
-    // TODO: Set all true for now. Add userPermission to layout data
     const canEdit = layout.userPermissions?.edit ?? 1;
     const canDelete = layout.userPermissions?.delete ?? 1;
     const canShare = layout.userPermissions?.modifyPermissions ?? 1;

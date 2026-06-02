@@ -61,7 +61,7 @@ export interface PlaylistFilterInput {
   exactTags?: boolean;
 }
 
-export type ModalType = BaseModalType | 'schedule' | null;
+export type ModalType = BaseModalType | 'schedule' | 'enableStats' | 'usageReport' | null;
 
 export const INITIAL_FILTER_STATE: PlaylistFilterInput = {
   playlistId: null,
@@ -142,6 +142,8 @@ export interface PlaylistActionsProps {
   copyPlaylist?: (row: number) => void;
   openScheduleModal?: (row: Playlist) => void;
   openTimeline?: (id: number) => void;
+  openEnableStatsModal?: (id: number) => void;
+  openUsageReportModal?: (id: number) => void;
 }
 
 export const getPlaylistItemActions = ({
@@ -153,6 +155,8 @@ export const getPlaylistItemActions = ({
   copyPlaylist,
   openScheduleModal,
   openTimeline,
+  openEnableStatsModal,
+  openUsageReportModal,
 }: PlaylistActionsProps): ((playlist: Playlist) => ActionItem[]) => {
   return (playlist: Playlist) => [
     // Quick Actions
@@ -208,11 +212,11 @@ export const getPlaylistItemActions = ({
     { isSeparator: true },
     {
       label: t('Enable Stats Collection'),
-      onClick: () => console.log('Enable Stats', playlist.playlistId),
+      onClick: () => openEnableStatsModal && openEnableStatsModal(playlist.playlistId),
     },
     {
       label: t('Usage Report'),
-      onClick: () => console.log('Usage Report', playlist.playlistId),
+      onClick: () => openUsageReportModal && openUsageReportModal(playlist.playlistId),
     },
     { isSeparator: true },
     {

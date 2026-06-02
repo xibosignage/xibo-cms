@@ -580,19 +580,38 @@ class Notification extends Base
 
         // Displays and Users to link
         foreach ($sanitizedParams->getIntArray('displayGroupIds', ['default' => [] ]) as $displayGroupId) {
-            $notification->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
+            $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+            // Verify the caller can view the display group they're assigning the notification to.
+            if (!$this->getUser()->checkViewable($displayGroup)) {
+                throw new AccessDeniedException(__('Access to one or more display groups denied'));
+            }
+
+            $notification->assignDisplayGroup($displayGroup);
 
             // Notify (don't collect)
             $this->displayNotifyService->collectLater()->notifyByDisplayGroupId($displayGroupId);
         }
 
         foreach ($sanitizedParams->getIntArray('userGroupIds', ['default' => [] ]) as $userGroupId) {
-            $notification->assignUserGroup($this->userGroupFactory->getById($userGroupId));
+            $userGroup = $this->userGroupFactory->getById($userGroupId);
+
+            // Verify the caller can view the user group they're assigning the notification to.
+            if (!$this->getUser()->checkViewable($userGroup)) {
+                throw new AccessDeniedException(__('Access to one or more user groups denied'));
+            }
+
+            $notification->assignUserGroup($userGroup);
         }
 
         $notification->save();
 
-        $attachedFilename = $sanitizedParams->getString('attachedFilename', ['defaultOnEmptyString' => true]);
+        // basename() strips any path components — defence-in-depth against a caller submitting
+        // attachedFilename values with traversal sequences (`../`, absolute paths) that could
+        // be interpreted by the filesystem when concatenated below.
+        $attachedFilename = basename(
+            $sanitizedParams->getString('attachedFilename', ['defaultOnEmptyString' => true]) ?? ''
+        );
         $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
         if (!empty($attachedFilename)) {
@@ -722,20 +741,56 @@ class Notification extends Base
         $notification->userId = $this->getUser()->userId;
         $notification->nonusers = $sanitizedParams->getString('nonusers');
 
+        // Capture the assignment IDs the notification already had before we clear them.
+        // The per-iteration checkViewable below only needs to gate NEW assignments — a user
+        // with edit access to the notification should be able to re-save the existing groups
+        // even if they were originally added by someone who shared the notification but not
+        // the groups. Mirrors the pattern used by Campaign::edit() (lines ~766-788) which
+        // captures $originalLayoutAssignments before unassignAllLayouts() and bypasses the
+        // checkViewable() for IDs already in that list.
+        $originalDisplayGroupIds = array_map(
+            fn ($dg) => $dg->displayGroupId,
+            $notification->displayGroups ?? []
+        );
+        $originalUserGroupIds = array_map(
+            fn ($ug) => $ug->groupId,
+            $notification->userGroups ?? []
+        );
+
         // Clear existing assignments
         $notification->displayGroups = [];
         $notification->userGroups = [];
 
         // Displays and Users to link
         foreach ($sanitizedParams->getIntArray('displayGroupIds', ['default' => []]) as $displayGroupId) {
-            $notification->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
+            $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+            // Verify the caller can view the display group they're assigning the notification to.
+            // Bypass the check when re-saving an already-assigned group (see comment above).
+            if (!$this->getUser()->checkViewable($displayGroup)
+                && !in_array($displayGroupId, $originalDisplayGroupIds)
+            ) {
+                throw new AccessDeniedException(__('Access to one or more display groups denied'));
+            }
+
+            $notification->assignDisplayGroup($displayGroup);
 
             // Notify (don't collect)
             $this->displayNotifyService->collectLater()->notifyByDisplayGroupId($displayGroupId);
         }
 
         foreach ($sanitizedParams->getIntArray('userGroupIds', ['default' => []]) as $userGroupId) {
-            $notification->assignUserGroup($this->userGroupFactory->getById($userGroupId));
+            $userGroup = $this->userGroupFactory->getById($userGroupId);
+
+            // Verify the caller can view the user group they're assigning the notification to.
+            // Bypass the check when re-saving an already-assigned group (see comment above).
+            if (!$this->getUser()->checkViewable($userGroup)
+                && !in_array($userGroupId, $originalUserGroupIds)
+            ) {
+                throw new AccessDeniedException(__('Access to one or more user groups denied'));
+            }
+
+            $notification->assignUserGroup($userGroup);
         }
 
         $notification->save();

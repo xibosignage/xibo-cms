@@ -554,6 +554,10 @@ $app->post('/user', ['\Xibo\Controller\User','add'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['users.add']))
     ->setName('user.add');
 
+// Welcome wizard state
+$app->put('/user/welcome', ['\Xibo\Controller\User','userWelcomeSetSeen'])->setName('welcome.wizard.seen');
+$app->post('/user/welcome', ['\Xibo\Controller\User','userWelcomeSetUnseen'])->setName('welcome.wizard.unseen');
+
 $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/user/{id}', ['\Xibo\Controller\User','edit'])->setName('user.edit');
     $group->delete('/user/{id}', ['\Xibo\Controller\User','delete'])->setName('user.delete');
@@ -693,6 +697,8 @@ $app->group('', function (RouteCollectorProxy $group) {
 // ----
 $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/task', ['\Xibo\Controller\Task', 'grid'])->setName('task.search');
+    $group->get('/task/list', ['\Xibo\Controller\Task', 'getTaskList'])->setName('task.list');
+    $group->get('/task/{id}', ['\Xibo\Controller\Task', 'searchById'])->setName('task.search.id');
     $group->post('/task', ['\Xibo\Controller\Task', 'add'])->setName('task.add');
     $group->put('/task/{id}', ['\Xibo\Controller\Task', 'edit'])->setName('task.edit');
     $group->delete('/task/{id}', ['\Xibo\Controller\Task', 'delete'])->setName('task.delete');

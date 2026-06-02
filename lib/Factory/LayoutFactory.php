@@ -2766,6 +2766,7 @@ class LayoutFactory extends BaseFactory
             $layout->permissionsFolderId = $parsedRow->getInt('permissionsFolderId');
             $layout->folderName = $parsedRow->getString('folderName');
             $layout->groupsWithPermissions = $row['groupsWithPermissions'];
+            $layout->setUnmatchedProperty('campaignType', $parsedRow->getString('type'));
             $layout->setOriginals();
 
             $entries[] = $layout;
