@@ -41,6 +41,7 @@ export interface Layout {
   thumbnail?: string;
   previewUrl?: string;
   previewDraftUrl?: string;
+  campaignType?: string;
   owner: string;
   groupsWithPermissions?: string;
   valid?: number;

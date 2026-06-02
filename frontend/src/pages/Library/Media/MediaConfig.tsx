@@ -96,7 +96,13 @@ export const getMediaIcon = (mediaType: string) => {
 
 type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
 
-export type ModalType = BaseModalType | 'replace' | 'schedule' | null;
+export type ModalType =
+  | BaseModalType
+  | 'replace'
+  | 'schedule'
+  | 'enableStats'
+  | 'usageReport'
+  | null;
 
 export const INITIAL_FILTER_STATE: MediaFilterInput = {
   mediaId: null,
@@ -256,6 +262,8 @@ export interface MediaActionsProps {
   copyMedia?: (row: number) => void;
   openReplaceModal: (id: number) => void;
   openScheduleModal?: (row: Media) => void;
+  openEnableStatsModal?: (id: number) => void;
+  openUsageReportModal?: (id: number) => void;
 }
 
 export const getMediaItemActions = ({
@@ -269,6 +277,8 @@ export const getMediaItemActions = ({
   copyMedia,
   openReplaceModal,
   openScheduleModal,
+  openEnableStatsModal,
+  openUsageReportModal,
 }: MediaActionsProps): ((media: Media) => ActionItem[]) => {
   return (media: Media) => {
     const actions: ActionItem[] = [];
@@ -359,11 +369,11 @@ export const getMediaItemActions = ({
     actions.push({ isSeparator: true });
     actions.push({
       label: t('Enable Stats Collection'),
-      onClick: () => console.log('Enable Stats', media.mediaId),
+      onClick: () => openEnableStatsModal && openEnableStatsModal(media.mediaId),
     });
     actions.push({
       label: t('Usage Report'),
-      onClick: () => console.log('Usage Report', media.mediaId),
+      onClick: () => openUsageReportModal && openUsageReportModal(media.mediaId),
     });
 
     if (canDelete) {
