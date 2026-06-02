@@ -289,6 +289,34 @@ export async function savePermissions({
   });
 }
 
+export async function fetchGroupFolderPermissions(
+  folderIds: number[],
+  groupId: number,
+): Promise<Map<number, { view: number; edit: number; delete: number }>> {
+  const response = await http.get<Record<string, MultiPermissionItem>>('/user/permissions/Folder', {
+    params: {
+      ids: folderIds.join(','),
+      start: 0,
+      length: folderIds.length,
+      isUserSpecific: 1,
+    },
+  });
+
+  const result = new Map<number, { view: number; edit: number; delete: number }>();
+
+  const groupEntry = Object.values(response.data).find((item) => item.groupId === groupId);
+  if (groupEntry?.permissions) {
+    Object.entries(groupEntry.permissions).forEach(([folderIdStr, perm]) => {
+      const folderId = parseInt(folderIdStr, 10);
+      if (perm.view === 1 || perm.edit === 1 || perm.delete === 1) {
+        result.set(folderId, { view: perm.view, edit: perm.edit, delete: perm.delete });
+      }
+    });
+  }
+
+  return result;
+}
+
 export async function saveMultiPermissions({
   entity,
   ids,
