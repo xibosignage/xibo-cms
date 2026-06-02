@@ -27,6 +27,10 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\ResolutionFactory;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Resolution
@@ -130,6 +134,13 @@ class Resolution extends Base
     #[OA\Response(
         response: 200,
         description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: '#/components/schemas/Resolution')
@@ -141,10 +152,10 @@ class Resolution extends Base
      * @param Request $request
      * @param Response $response
      * @return ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
      */
-    function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
 
@@ -250,11 +261,11 @@ class Resolution extends Base
      * @param Request $request
      * @param Response $response
      * @return ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
      */
-    function add(Request $request, Response $response)
+    public function add(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -327,12 +338,12 @@ class Resolution extends Base
      * @param $id
      * @return ResponseInterface|Response
      * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
-    function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $resolution = $this->resolutionFactory->getById($id);
 
@@ -381,11 +392,11 @@ class Resolution extends Base
      * @param $id
      * @return ResponseInterface|Response
      * @throws AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
      */
-    function delete(Request $request, Response $response, $id)
+    public function delete(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $resolution = $this->resolutionFactory->getById($id);
 

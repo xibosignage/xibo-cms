@@ -696,6 +696,8 @@ $app->group('', function (RouteCollectorProxy $group) {
 // ----
 $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/task', ['\Xibo\Controller\Task', 'grid'])->setName('task.search');
+    $group->get('/task/list', ['\Xibo\Controller\Task', 'getTaskList'])->setName('task.list');
+    $group->get('/task/{id}', ['\Xibo\Controller\Task', 'searchById'])->setName('task.search.id');
     $group->post('/task', ['\Xibo\Controller\Task', 'add'])->setName('task.add');
     $group->put('/task/{id}', ['\Xibo\Controller\Task', 'edit'])->setName('task.edit');
     $group->delete('/task/{id}', ['\Xibo\Controller\Task', 'delete'])->setName('task.delete');
