@@ -46,20 +46,11 @@ use Xibo\XTR\TaskInterface;
  */
 class Task extends Base
 {
-    /** @var  TaskFactory */
-    private $taskFactory;
-
-    /** @var  StorageServiceInterface */
-    private $store;
-
-    /** @var  TimeSeriesStoreInterface */
-    private $timeSeriesStore;
-
-    /** @var  PoolInterface */
-    private $pool;
-
-    /** ContainerInterface */
-    private $container;
+    private TaskFactory $taskFactory;
+    private StorageServiceInterface $store;
+    private TimeSeriesStoreInterface $timeSeriesStore;
+    private PoolInterface $pool;
+    private ContainerInterface $container;
 
     /**
      * Set common dependencies.
@@ -69,8 +60,13 @@ class Task extends Base
      * @param TaskFactory $taskFactory
      * @param ContainerInterface $container
      */
-    public function __construct($store, $timeSeriesStore, $pool, $taskFactory, ContainerInterface $container)
-    {
+    public function __construct(
+        StorageServiceInterface $store,
+        TimeSeriesStoreInterface $timeSeriesStore,
+        PoolInterface $pool,
+        TaskFactory $taskFactory,
+        ContainerInterface $container
+    ) {
         $this->taskFactory = $taskFactory;
         $this->store = $store;
         $this->timeSeriesStore = $timeSeriesStore;
@@ -157,15 +153,13 @@ class Task extends Base
         $task->setClassAndOptions();
         $task->save();
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 201,
-            'message' => sprintf(__('Added %s'), $task->name),
-            'id' => $task->taskId,
-            'data' => $task
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(201)
+            ->withJson([
+                'message' => sprintf(__('Added %s'), $task->name),
+                'id' => $task->taskId,
+                'data' => $task,
+            ]);
     }
 
     /**
@@ -203,15 +197,13 @@ class Task extends Base
 
         $task->save();
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 200,
-            'message' => sprintf(__('Edited %s'), $task->name),
-            'id' => $task->taskId,
-            'data' => $task
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson([
+                'message' => sprintf(__('Edited %s'), $task->name),
+                'id' => $task->taskId,
+                'data' => $task,
+            ]);
     }
 
     /**
@@ -220,7 +212,6 @@ class Task extends Base
      * @param $id
      * @return ResponseInterface|Response
      * @throws NotFoundException
-     * @throws ControllerNotImplemented
      * @throws GeneralException
      */
     public function delete(Request $request, Response $response, $id): Response|ResponseInterface
@@ -228,13 +219,11 @@ class Task extends Base
         $task = $this->taskFactory->getById($id);
         $task->delete();
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Deleted %s'), $task->name)
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson([
+                'message' => sprintf(__('Deleted %s'), $task->name),
+            ]);
     }
 
     /**
@@ -253,13 +242,11 @@ class Task extends Base
         $task->runNow = 1;
         $task->save();
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Run Now set on %s'), $task->name)
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson([
+                'message' => sprintf(__('Run Now set on %s'), $task->name),
+            ]);
     }
 
     /**
