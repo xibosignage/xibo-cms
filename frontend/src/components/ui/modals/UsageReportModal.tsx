@@ -20,6 +20,7 @@
  */
 
 import type { PaginationState, SortingState, ColumnDef, Row } from '@tanstack/react-table';
+import type { TFunction } from 'i18next';
 import { Palette, Eye } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -49,48 +50,48 @@ type Tab = 'displays' | 'layouts';
 
 const PAGE_SIZE = 10;
 
-const displaysColumns: ColumnDef<Display>[] = [
+const getDisplaysColumns = (t: TFunction): ColumnDef<Display>[] => [
   {
     accessorKey: 'displayId',
-    header: 'ID',
+    header: t('ID'),
     size: 60,
     enableSorting: false,
     cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
   },
   {
     accessorKey: 'display',
-    header: 'Display',
+    header: t('Display'),
     size: 200,
     enableSorting: false,
     cell: (info) => <TextCell weight="bold">{info.getValue<string>()}</TextCell>,
   },
   {
     accessorKey: 'description',
-    header: 'Description',
+    header: t('Description'),
     size: 250,
     enableSorting: false,
     cell: (info) => <TextCell>{info.getValue<string>() ?? ''}</TextCell>,
   },
 ];
 
-const layoutsColumns: ColumnDef<Layout>[] = [
+const getLayoutsColumns = (t: TFunction): ColumnDef<Layout>[] => [
   {
     accessorKey: 'layoutId',
-    header: 'ID',
+    header: t('ID'),
     size: 60,
     enableSorting: false,
     cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
   },
   {
     accessorKey: 'layout',
-    header: 'Layout',
+    header: t('Layout'),
     size: 200,
     enableSorting: false,
     cell: (info) => <TextCell weight="bold">{info.getValue<string>()}</TextCell>,
   },
   {
     accessorKey: 'description',
-    header: 'Description',
+    header: t('Description'),
     size: 250,
     enableSorting: false,
     cell: (info) => <TextCell>{info.getValue<string>() ?? ''}</TextCell>,
@@ -113,7 +114,7 @@ const layoutsColumns: ColumnDef<Layout>[] = [
             ...(!isFullscreen
               ? [
                   {
-                    label: 'Design',
+                    label: t('Design'),
                     icon: Palette,
                     isQuickAction: true,
                     onClick: () => window.open(`/layout/designer/${row.layoutId}`, '_blank'),
@@ -121,7 +122,7 @@ const layoutsColumns: ColumnDef<Layout>[] = [
                 ]
               : []),
             {
-              label: 'Preview',
+              label: t('Preview'),
               icon: Eye,
               isQuickAction: true,
               onClick: () => row.previewUrl && window.open(row.previewUrl, '_blank'),
@@ -187,7 +188,7 @@ export default function UsageReportModal({
 
         setDisplays(results);
       } catch (err) {
-        if ((err as { name?: string }).name !== 'CanceledError') {
+        if (!(err instanceof Error) || err.name !== 'CanceledError') {
           console.error(err);
           setDisplays([]);
         }
@@ -220,7 +221,7 @@ export default function UsageReportModal({
 
         setLayouts(results);
       } catch (err) {
-        if ((err as { name?: string }).name !== 'CanceledError') {
+        if (!(err instanceof Error) || err.name !== 'CanceledError') {
           console.error(err);
           setLayouts([]);
         }
@@ -233,6 +234,9 @@ export default function UsageReportModal({
 
     return () => controller.abort();
   }, [entityId, entityType, activeTab]);
+
+  const displaysColumns = getDisplaysColumns(t);
+  const layoutsColumns = getLayoutsColumns(t);
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'displays', label: t('Displays') },
