@@ -106,6 +106,7 @@ export type ModalType =
   | 'discard'
   | 'campaign'
   | 'export'
+  | 'import'
   | 'template'
   | 'retire'
   | 'enableStats'

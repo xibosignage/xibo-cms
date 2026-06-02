@@ -21,7 +21,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { Filter, FilterX, Plus, Search } from 'lucide-react';
+import { Filter, FilterX, Plus, Search, Upload } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
@@ -394,6 +394,14 @@ export default function Layouts() {
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Layouts" navigation={libraryTabs} />
           <div className="flex items-center gap-2 md:mb-0">
+            <Button
+              variant="secondary"
+              onClick={() => openModal('import')}
+              disabled={!canAddToFolder || !isHydrated}
+              leftIcon={Upload}
+            >
+              {t('Import')}
+            </Button>
             <Button
               variant="primary"
               className="font-semibold"

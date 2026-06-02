@@ -312,6 +312,49 @@ export async function saveLayoutAsTemplate(
   return result;
 }
 
+export interface ImportLayoutOptions {
+  file: File;
+  name: string;
+  tags?: string;
+  folderId: number;
+  replaceExisting?: boolean;
+  importTags?: boolean;
+  useExistingDataSets?: boolean;
+  importDataSetData?: boolean;
+  importFallback?: boolean;
+  onProgress?: (percent: number) => void;
+  signal?: AbortSignal;
+}
+
+export interface ImportLayoutResponse {
+  files: Array<{ name: string; id?: number; error?: string }>;
+}
+
+export async function importLayout(options: ImportLayoutOptions): Promise<ImportLayoutResponse> {
+  const formData = new FormData();
+  formData.append('files[]', options.file, options.file.name);
+  formData.append('name[]', options.name);
+  formData.append('tags[]', options.tags ?? '');
+  formData.append('folderId', String(options.folderId));
+  formData.append('replaceExisting', options.replaceExisting ? '1' : '0');
+  formData.append('importTags', options.importTags ? '1' : '0');
+  formData.append('useExistingDataSets', options.useExistingDataSets ? '1' : '0');
+  formData.append('importDataSetData', options.importDataSetData ? '1' : '0');
+  formData.append('importFallback', options.importFallback ? '1' : '0');
+
+  const response = await http.post('/layout/import', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    onUploadProgress: (e) => {
+      if (e.total && options.onProgress) {
+        options.onProgress(Math.round((e.loaded * 100) / e.total));
+      }
+    },
+    signal: options.signal,
+  });
+
+  return response.data;
+}
+
 export interface LayoutCode {
   code: string;
   layout: string;
