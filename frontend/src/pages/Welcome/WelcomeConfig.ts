@@ -26,12 +26,6 @@ export interface VideoLink {
   title: string;
 }
 
-export interface OnboardingCard {
-  titleKey: string;
-  sectionId: string;
-  iconUrl: string;
-}
-
 export interface ServiceCard {
   serviceId: string;
   titleKey: string;
@@ -60,35 +54,6 @@ export interface ResourceCard {
   }[];
 }
 
-// Onboarding quick-nav cards — scroll to corresponding service card section
-export const ONBOARDING_CARDS: OnboardingCard[] = [
-  {
-    titleKey: 'Displays',
-    sectionId: 'displays',
-    iconUrl: '/theme/default/img/onboarding/displays-icon.svg',
-  },
-  {
-    titleKey: 'Existing Content',
-    sectionId: 'existing-content',
-    iconUrl: '/theme/default/img/onboarding/existing-content-icon.svg',
-  },
-  {
-    titleKey: 'Playlists',
-    sectionId: 'playlists',
-    iconUrl: '/theme/default/img/onboarding/playlist-icon.svg',
-  },
-  {
-    titleKey: 'Create Content',
-    sectionId: 'create-content',
-    iconUrl: '/theme/default/img/onboarding/create-content-icon.svg',
-  },
-  {
-    titleKey: 'Schedule',
-    sectionId: 'schedule',
-    iconUrl: '/theme/default/img/onboarding/schedule-icon.svg',
-  },
-];
-
 // Main service/feature cards
 export const SERVICE_CARDS: ServiceCard[] = [
   {
@@ -100,7 +65,12 @@ export const SERVICE_CARDS: ServiceCard[] = [
     featureFlags: ['displays.view'],
     links: [
       { labelKey: 'Get Started', to: '/displays/displays', variant: 'primary' },
-      { labelKey: 'Learn More', to: '', isExternal: true, variant: 'link' },
+      {
+        labelKey: 'Learn More',
+        to: 'https://xibosignage.com/manual/en/displays',
+        isExternal: true,
+        variant: 'link',
+      },
     ],
     videoLinks: [{ id: '9H8Ct00qkqs', title: 'What is a Display?' }],
   },
@@ -114,7 +84,12 @@ export const SERVICE_CARDS: ServiceCard[] = [
     links: [
       { labelKey: 'Upload Content', to: '/library/media', variant: 'primary' },
       { labelKey: 'Schedule Content', to: '/schedule/events', variant: 'secondary' },
-      { labelKey: 'Learn More', to: '', isExternal: true, variant: 'link' },
+      {
+        labelKey: 'Learn More',
+        to: 'https://xibosignage.com/manual/en/getting_started_showing_an_image',
+        isExternal: true,
+        variant: 'link',
+      },
     ],
     videoLinks: [
       {
@@ -136,7 +111,12 @@ export const SERVICE_CARDS: ServiceCard[] = [
     featureFlags: ['library.view', 'layout.view'],
     links: [
       { labelKey: 'Get Started', to: '/library/playlists', variant: 'primary' },
-      { labelKey: 'Learn More', to: '', isExternal: true, variant: 'link' },
+      {
+        labelKey: 'Learn More',
+        to: 'https://xibosignage.com/manual/en/getting_started_showing_a_playlist',
+        isExternal: true,
+        variant: 'link',
+      },
     ],
     videoLinks: [{ id: 'IHCaSsKwKq4', title: 'How to create a Playlist and show on Displays' }],
   },
@@ -149,7 +129,12 @@ export const SERVICE_CARDS: ServiceCard[] = [
     featureFlags: ['library.view', 'layout.view'],
     links: [
       { labelKey: 'Get Started', to: '/design/layout', variant: 'primary' },
-      { labelKey: 'Learn More', to: '', isExternal: true, variant: 'link' },
+      {
+        labelKey: 'Learn More',
+        to: 'https://xibosignage.com/manual/en/layouts_editor',
+        isExternal: true,
+        variant: 'link',
+      },
     ],
     videoLinks: [{ id: 'Sh-5b8OJycE', title: 'Layout Editor Overview' }],
   },
@@ -162,7 +147,12 @@ export const SERVICE_CARDS: ServiceCard[] = [
     featureFlags: ['schedule.view'],
     links: [
       { labelKey: 'Get Started', to: '/schedule/events', variant: 'primary' },
-      { labelKey: 'Learn More', to: '', isExternal: true, variant: 'link' },
+      {
+        labelKey: 'Learn More',
+        to: 'https://xibosignage.com/manual/en/simple_scheduling',
+        isExternal: true,
+        variant: 'link',
+      },
     ],
     videoLinks: [
       { id: 'mHIzltOMUcI', title: 'Creating simple schedules to show content on Displays' },

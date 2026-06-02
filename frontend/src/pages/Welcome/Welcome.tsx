@@ -20,7 +20,7 @@
  */
 
 import { ArrowRight, Play } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
@@ -37,14 +37,13 @@ export default function Welcome() {
   const { t } = useTranslation();
   const { user } = useUserContext();
   const [videoModalData, setVideoModalData] = useState<VideoLink[] | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const isSuperAdmin = user?.userTypeId === UserType.SuperAdmin;
 
   // Mark welcome wizard as seen on first visit
   useEffect(() => {
     if (user?.newUserWizard === 0) {
-      markWelcomeSeen();
+      markWelcomeSeen().catch(() => {});
     }
   }, [user?.newUserWizard]);
 
@@ -59,8 +58,7 @@ export default function Welcome() {
   );
 
   // Filter resource cards (some are Xibo-branded only)
-  // TODO: Replace with actual theme check when available
-  const isXiboThemed = true;
+  const isXiboThemed = user?.settings?.app_name === 'Xibo';
   const visibleResourceCards = RESOURCE_CARDS.filter((card) => !card.xiboOnly || isXiboThemed);
 
   const openVideoModal = (videos: VideoLink[]) => {
@@ -92,7 +90,7 @@ export default function Welcome() {
   };
 
   return (
-    <div ref={containerRef} className="relative h-full overflow-y-auto">
+    <div className="relative h-full overflow-y-auto">
       {/* Hero Section */}
       <section className="flex py-20 bg-[radial-gradient(80%_60%_at_50%_-10%,rgba(99,102,241,0.18)_0%,rgba(0,0,0,0)_100%)]">
         <div className="flex flex-col items-center max-w-234.5 mx-auto">

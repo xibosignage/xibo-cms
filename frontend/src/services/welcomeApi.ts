@@ -24,7 +24,3 @@ import http from '@/lib/api';
 export async function markWelcomeSeen(): Promise<void> {
   await http.put('/user/welcome');
 }
-
-export async function markWelcomeUnseen(): Promise<void> {
-  await http.post('/user/welcome');
-}
