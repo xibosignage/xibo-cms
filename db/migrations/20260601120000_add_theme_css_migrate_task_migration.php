@@ -22,6 +22,10 @@
 
 use Phinx\Migration\AbstractMigration;
 
+/**
+ * Add a Task to migrate override.css to new theme.css
+ * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
+ */
 class AddThemeCssMigrateTaskMigration extends AbstractMigration
 {
     public function change()
