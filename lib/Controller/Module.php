@@ -209,7 +209,7 @@ class Module extends Base
     public function settingsForm(Request $request, Response $response, $id)
     {
         // Can we edit?
-        if (!$this->getUser()->userTypeId == 1) {
+        if (!$this->getUser()->isSuperAdmin()) {
             throw new AccessDeniedException();
         }
 
