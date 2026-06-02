@@ -25,6 +25,7 @@ import type { TFunction } from 'i18next';
 import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
 
+import { notify } from '@/components/ui/Notification';
 import { deleteTask, runTaskNow } from '@/services/taskApi';
 import type { Task } from '@/types/task';
 
@@ -78,8 +79,13 @@ export function useTasksActions({
   };
 
   const runNow = async (task: Task) => {
-    await runTaskNow(task.taskId);
-    handleRefresh();
+    try {
+      await runTaskNow(task.taskId);
+      notify.success(t('Task run started'));
+      handleRefresh();
+    } catch {
+      notify.error(t('Failed to run task'));
+    }
   };
 
   return {

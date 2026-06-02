@@ -40,7 +40,7 @@ export interface FetchTaskResponse {
 
 function normalizeTaskOptions(task: Task): Task {
   if (Array.isArray(task.options)) {
-    task.options = {};
+    return { ...task, options: {} };
   }
   return task;
 }
