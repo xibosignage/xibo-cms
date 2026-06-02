@@ -50,6 +50,7 @@ interface ModalProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
   closeOnOverlay?: boolean;
   className?: string;
+  contentClassName?: string;
   scrollable?: boolean;
   isPending?: boolean;
   error?: string;
@@ -65,6 +66,7 @@ export default function Modal({
   actions,
   size = 'md',
   className,
+  contentClassName,
   closeOnOverlay,
   scrollable = true,
   isPending = false,
@@ -141,6 +143,7 @@ export default function Modal({
           className={twMerge(
             'flex-1 min-h-0 w-full flex flex-col',
             scrollable ? 'overflow-y-auto' : 'overflow-hidden',
+            contentClassName,
           )}
         >
           {children}

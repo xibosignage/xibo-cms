@@ -29,7 +29,6 @@ use Xibo\Factory\AuditLogFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
 use Xibo\Helper\SendFile;
-use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -40,26 +39,19 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class AuditLog extends Base
 {
-    /**
-     * @var AuditLogFactory
-     */
-    private $auditLogFactory;
+    private AuditLogFactory $auditLogFactory;
 
-    /**
-     * Set common dependencies.
-     * @param AuditLogFactory $auditLogFactory
-     */
-    public function __construct($auditLogFactory)
+    public function __construct(auditLogFactory $auditLogFactory)
     {
         $this->auditLogFactory = $auditLogFactory;
     }
 
     /**
      * Get the list of audit logs
-     * @param Request $request
-     * @param Response $response
+     *
+     * @param  Request  $request
+     * @param  Response $response
      * @return ResponseInterface|Response
-     * @throws ControllerNotImplemented
      * @throws GeneralException
      */
     public function grid(Request $request, Response $response): Response|ResponseInterface
@@ -78,7 +70,6 @@ class AuditLog extends Base
 
         foreach ($auditLogs as $auditLog) {
             $auditLog->objectAfter = json_decode($auditLog->objectAfter);
-            $auditLog->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($auditLog));
         }
 
         return $response
@@ -89,11 +80,11 @@ class AuditLog extends Base
 
     /**
      * Audit log search by ID
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
+     *
+     * @param  Request  $request
+     * @param  Response $response
+     * @param  int      $id
      * @return Response|ResponseInterface
-     * @throws InvalidArgumentException
      * @throws NotFoundException
      */
     public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
@@ -101,7 +92,6 @@ class AuditLog extends Base
         $auditLog = $this->auditLogFactory->getById($id);
 
         $auditLog->objectAfter = json_decode($auditLog->objectAfter);
-        $auditLog->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($auditLog));
 
         return $response
             ->withStatus(200)
@@ -110,54 +100,65 @@ class AuditLog extends Base
 
     /**
      * Outputs a CSV of audit trail messages
-     * @param Request $request
-     * @param Response $response
+     *
+     * @param  Request  $request
+     * @param  Response $response
      * @return Response
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
      * @throws InvalidArgumentException
      */
-    public function export(Request $request, Response $response) : Response
+    public function export(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
-        // We are expecting some parameters
         $filterFromDt = $sanitizedParams->getDate('filterFromDt');
         $filterToDt = $sanitizedParams->getDate('filterToDt');
-        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/audittrail_' . Random::generateString();
 
-        if ($filterFromDt == null || $filterToDt == null) {
+        if ($filterFromDt === null || $filterToDt === null) {
             throw new InvalidArgumentException(__('Please provide a from/to date.'), 'filterFromDt');
         }
 
         $fromTimeStamp = $filterFromDt->setTime(0, 0, 0)->format('U');
         $toTimeStamp = $filterToDt->setTime(0, 0, 0)->format('U');
 
-        $rows = $this->auditLogFactory->query('logId', ['fromTimeStamp' => $fromTimeStamp, 'toTimeStamp' => $toTimeStamp]);
+        $rows = $this->auditLogFactory->query(
+            ['logId'],
+            ['fromTimeStamp' => $fromTimeStamp, 'toTimeStamp' => $toTimeStamp]
+        );
 
+        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/audittrail_' . Random::generateString();
         $out = fopen($tempFileName, 'w');
-        fputcsv($out, ['ID', 'Date', 'User', 'Entity', 'EntityId', 'Message', 'Object']);
+        fputcsv($out, ['ID', 'Date', 'User', 'Entity', 'EntityId', 'Message', 'Object'], ',', '"', '\\');
 
-        // Do some post processing
         foreach ($rows as $row) {
             /* @var \Xibo\Entity\AuditLog $row */
-            fputcsv($out, [$row->logId, Carbon::createFromTimestamp($row->logDate)->format(DateFormatHelper::getSystemFormat()), $row->userName, $row->entity, $row->entityId, $row->message, $row->objectAfter]);
+            fputcsv(
+                $out,
+                [
+                    $row->logId,
+                    Carbon::createFromTimestamp($row->logDate)->format(DateFormatHelper::getSystemFormat()),
+                    $row->userName,
+                    $row->entity,
+                    $row->entityId,
+                    $row->message,
+                    $row->objectAfter,
+                ],
+                ',', '"', '\\'
+            );
         }
 
         fclose($out);
 
-        $this->setNoOutput(true);
-
-        return $this->render($request, SendFile::decorateResponse(
+        return SendFile::decorateResponse(
             $response,
             $this->getConfig()->getSetting('SENDFILE_MODE'),
             $tempFileName,
             'audittrail.csv'
-        )->withHeader('Content-Type', 'text/csv;charset=utf-8'));
+        )->withHeader('Content-Type', 'text/csv;charset=utf-8');
     }
 
     /**
      * Get the audit log filters
-     * @param $sanitizedParams
+     *
+     * @param  $sanitizedParams
      * @return array
      */
     private function getAuditLogFilterQuery($sanitizedParams): array
@@ -177,7 +178,8 @@ class AuditLog extends Base
             $filterToDt = Carbon::now();
         }
 
-        return $this->gridRenderFilter([
+        return $this->gridRenderFilter(
+            [
             'fromTimeStamp' => $filterFromDt->format('U'),
             'toTimeStamp' => $filterToDt->format('U'),
             'userName' => $sanitizedParams->getString('user'),
@@ -187,6 +189,7 @@ class AuditLog extends Base
             'ipAddress' => $sanitizedParams->getString('ipAddress'),
             'sessionHistoryId' => $sanitizedParams->getInt('sessionHistoryId'),
             'keyword' => $sanitizedParams->getString('keyword'),
-        ], $sanitizedParams);
+            ], $sanitizedParams
+        );
     }
 }
