@@ -25,6 +25,7 @@ namespace Xibo\Controller;
 use Carbon\Carbon;
 use Exception;
 use GuzzleHttp\Client;
+use Xibo\Helper\Guzzle\SafeClient;
 use PicoFeed\PicoFeedException;
 use PicoFeed\Reader\Reader;
 use Psr\Http\Message\ResponseInterface;
@@ -312,8 +313,8 @@ class StatusDashboard extends Base
                     // Check the cache
                     if ($cache->isMiss()) {
                         // Create a Guzzle Client to get the Feed XML
-                        $client = new Client();
-                        $responseGuzzle = $client->get($feedUrl, $this->getConfig()->getGuzzleProxy());
+                        $client = SafeClient::getSafeClient($this->getConfig()->getGuzzleProxy());
+                        $responseGuzzle = $client->get($feedUrl);
 
                         // Pull out the content type and body
                         $result = explode('charset=', $responseGuzzle->getHeaderLine('Content-Type'));

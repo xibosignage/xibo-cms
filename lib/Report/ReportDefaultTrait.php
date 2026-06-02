@@ -33,6 +33,7 @@ use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
+use Xibo\Widget\Definition\Sql;
 
 /**
  * Trait ReportDefaultTrait
@@ -169,6 +170,8 @@ trait ReportDefaultTrait
      */
     public function getTemporaryPeriodsTable($fromDt, $toDt, $groupByFilter, $table = 'temp_periods', $customLabel = 'Y-m-d H:i:s')
     {
+        $table = Sql::validateIdentifier($table, 'table');
+
         // My from/to dt represent the entire range we're interested in.
         // we need to generate periods according to our grouping, within that range.
         // Clone them so as to not effect the calling object

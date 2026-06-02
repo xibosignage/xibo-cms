@@ -232,6 +232,26 @@ class PlayerVersion implements \JsonSerializable
             }
             mkdir($folder);
 
+            // Defense in depth against Zip-Slip: PHP's ZipArchive::extractTo() does not
+            // normalise entry names, so an archive containing `../foo` (or absolute paths,
+            // or backslash-separated paths interpreted on Windows) would write outside
+            // $folder. Reject any entry whose name contains traversal/absolute/backslash
+            // segments before extraction. This is a super-admin-only path today, but the
+            // hardening protects against shared-credential and later-regression scenarios.
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $entryName = $zip->getNameIndex($i);
+                if ($entryName === false
+                    || str_contains($entryName, '..')
+                    || str_contains($entryName, '\\')
+                    || str_starts_with($entryName, '/')
+                ) {
+                    $zip->close();
+                    throw new InvalidArgumentException(
+                        sprintf(__('Software package contains an unsafe entry: %s'), $entryName ?: '(unknown)')
+                    );
+                }
+            }
+
             // Extract to that folder
             $zip->extractTo($folder);
             $zip->close();
@@ -247,8 +267,10 @@ class PlayerVersion implements \JsonSerializable
                 $manifest['short_name'] = $this->config->getThemeConfig('app_name') . '-chromeos';
             }
 
-            // Start URL if we're running in a sub-folder.
-            $manifest['start_url'] = (new HttpsDetect())->getBaseUrl($request) . '/pwa';
+            // Start URL if we're running in a sub-folder. Pass config so
+            // WHITELIST_HOSTS (if set) defeats Host-header injection into the
+            // manifest URL persisted to the player-software package.
+            $manifest['start_url'] = (new HttpsDetect($this->config))->getBaseUrl($request) . '/pwa';
 
             // Update asset URLs
             for ($i = 0; $i < count($manifest['icons']); $i++) {

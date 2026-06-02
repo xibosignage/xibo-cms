@@ -114,7 +114,7 @@
             {% endif %}
 
             {% if currentUser.featureEnabled("task.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("task.view") }}">{% trans "Tasks" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/administration/tasks">{% trans "Tasks" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("tag.view") %}

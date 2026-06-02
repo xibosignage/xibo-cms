@@ -23,6 +23,7 @@ namespace Xibo\Controller;
 
 use Carbon\Carbon;
 use GuzzleHttp\Client;
+use Xibo\Helper\Guzzle\SafeClient;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManagerStatic as Img;
 use OpenApi\Attributes as OA;
@@ -2431,7 +2432,7 @@ class Library extends Base
                             $filePath = $libraryLocation . $media->getId() . '_' . $media->mediaType . 'cover.png';
 
                             // Expect a quick download.
-                            $client = new Client($this->getConfig()->getGuzzleProxy(['timeout' => 20]));
+                            $client = SafeClient::getSafeClient($this->getConfig()->getGuzzleProxy(['timeout' => 20]));
                             $client->request(
                                 'GET',
                                 $import->searchResult->videoThumbnailUrl,
