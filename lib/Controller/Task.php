@@ -220,7 +220,7 @@ class Task extends Base
         $task->delete();
 
         return $response
-            ->withStatus(200)
+            ->withStatus(204)
             ->withJson([
                 'message' => sprintf(__('Deleted %s'), $task->name),
             ]);
@@ -243,7 +243,7 @@ class Task extends Base
         $task->save();
 
         return $response
-            ->withStatus(200)
+            ->withStatus(204)
             ->withJson([
                 'message' => sprintf(__('Run Now set on %s'), $task->name),
             ]);
