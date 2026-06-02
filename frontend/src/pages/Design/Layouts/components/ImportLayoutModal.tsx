@@ -51,7 +51,6 @@ interface ImportFile {
   error?: string;
   layoutId?: number;
   hasUnsavedChanges?: boolean;
-  retryCount?: number;
 }
 
 const ACCEPTED_ZIP_TYPES: Record<string, string[]> = {
@@ -323,8 +322,7 @@ export default function ImportLayoutModal({ onClose, onSuccess }: ImportLayoutMo
     }
 
     const itemToSync = files.find(
-      (f) =>
-        f.status === 'completed' && f.hasUnsavedChanges && f.layoutId && (f.retryCount || 0) < 3,
+      (f) => f.status === 'completed' && f.hasUnsavedChanges && f.layoutId,
     );
 
     if (!itemToSync) {
@@ -341,9 +339,7 @@ export default function ImportLayoutModal({ onClose, onSuccess }: ImportLayoutMo
 
         setFiles((prev) =>
           prev.map((f) =>
-            f.id === itemToSync.id
-              ? { ...f, hasUnsavedChanges: false, retryCount: 0, error: undefined }
-              : f,
+            f.id === itemToSync.id ? { ...f, hasUnsavedChanges: false, error: undefined } : f,
           ),
         );
       } catch (err) {
@@ -361,7 +357,6 @@ export default function ImportLayoutModal({ onClose, onSuccess }: ImportLayoutMo
                   hasUnsavedChanges: false,
                   status: 'error' as const,
                   error: errorMsg,
-                  retryCount: (f.retryCount || 0) + 1,
                 }
               : f,
           ),
