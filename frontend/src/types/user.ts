@@ -21,6 +21,16 @@
 
 import type { UserGroup } from './userGroup';
 
+export interface BrandingConfig {
+  productName: string;
+  appName: string;
+  logoUrl: string;
+  faviconUrl: string;
+  cssUrl: string | null;
+  supportUrl: string;
+  isXiboThemed: boolean;
+}
+
 export enum UserType {
   SuperAdmin = 1,
   GroupAdmin = 2,
@@ -89,4 +99,6 @@ export interface User {
   homePage?: string;
   homeFolder?: string;
   isSuperAdmin?: boolean;
+
+  branding?: BrandingConfig;
 }
