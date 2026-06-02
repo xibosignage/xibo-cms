@@ -622,7 +622,8 @@ class LayoutFactory extends BaseFactory
      */
     public function getLinkedFullScreenPlaylistId(int $campaignId): ?int
     {
-        $playlistId = $this->getStore()->select('SELECT `lkplaylistplaylist`.childId AS playlistId
+        $playlistId = $this->getStore()->select(
+            'SELECT `lkplaylistplaylist`.childId AS playlistId
                     FROM region
                     INNER JOIN playlist
                         ON `playlist`.regionId = `region`.regionId
@@ -2416,7 +2417,7 @@ class LayoutFactory extends BaseFactory
 
         // Layout Duration
         if ($parsedFilter->getInt('duration') !== null) {
-            $body .= " AND layout.duration = :duration ";
+            $body .= ' AND layout.duration = :duration ';
             $params['duration'] = $parsedFilter->getInt('duration');
         }
 
@@ -2437,20 +2438,20 @@ class LayoutFactory extends BaseFactory
                 );
             }
 
-            $body .= " AND (layout.backgroundColor = :backgroundColor OR layout.backgroundColor = :bgConvertedHex) ";
+            $body .= ' AND (layout.backgroundColor = :backgroundColor OR layout.backgroundColor = :bgConvertedHex) ';
             $params['backgroundColor'] = $parsedFilter->getString('backgroundColor');
             $params['bgConvertedHex'] = $bgConvertedHex;
         }
 
         // Layout Height
         if ($parsedFilter->getInt('height') !== null) {
-            $body .= " AND layout.height = :height ";
+            $body .= ' AND layout.height = :height ';
             $params['height'] = $parsedFilter->getInt('height');
         }
 
         // Layout Width
         if ($parsedFilter->getInt('width') !== null) {
-            $body .= " AND layout.width = :width ";
+            $body .= ' AND layout.width = :width ';
             $params['width'] = $parsedFilter->getInt('width');
         }
 

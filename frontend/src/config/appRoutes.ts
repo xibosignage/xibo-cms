@@ -360,7 +360,10 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'modules',
         labelKey: 'Modules',
-        externalURL: '/module/view',
+        lazy: () =>
+          import('@/pages/Administration/Modules/Modules').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'module.view',
       },
       {
