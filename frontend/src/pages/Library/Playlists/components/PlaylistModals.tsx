@@ -24,11 +24,13 @@ import { useTranslation } from 'react-i18next';
 import AddAndEditPlaylistModal from './AddAndEditPlaylistModal';
 import CopyPlaylistModal from './CopyPlaylistModal';
 import DeletePlaylistModal from './DeletePlaylistModal';
+import EnableStatsPlaylistModal from './EnableStatsPlaylistModal';
 
 import FolderActionModals from '@/components/ui/FolderActionModals';
 import MoveModal from '@/components/ui/modals/MoveModal';
 import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
+import UsageReportModal from '@/components/ui/modals/UsageReportModal';
 import type { useFolderActions } from '@/hooks/useFolderActions';
 import { EventTypeId } from '@/types/event';
 import type { Playlist } from '@/types/playlist';
@@ -41,6 +43,7 @@ interface PlaylistModalsProps {
     deleteError: string | null;
     isDeleting: boolean;
     isCloning: boolean;
+    isUpdatingStats: boolean;
   };
   selection: {
     selectedPlaylist: Playlist | null;
@@ -56,6 +59,7 @@ interface PlaylistModalsProps {
     confirmDelete: (items: Playlist[]) => void;
     handleConfirmClone: (name: string, copyMediaFiles: boolean) => void;
     handleConfirmMove: (folderId: number) => void;
+    handleConfirmEnableStats: (value: string) => void;
   };
   folderActions: ReturnType<typeof useFolderActions>;
 }
@@ -143,6 +147,24 @@ export function PlaylistModals({
           eventTypeId={EventTypeId.Playlist}
           contentId={selection.selectedPlaylist.playlistId}
           contentName={selection.selectedPlaylist.name}
+        />
+      )}
+
+      {isModalOpen('enableStats') && (
+        <EnableStatsPlaylistModal
+          playlist={selection.selectedPlaylist}
+          isLoading={actions.isUpdatingStats}
+          onClose={actions.closeModal}
+          onConfirm={handlers.handleConfirmEnableStats}
+        />
+      )}
+
+      {isModalOpen('usageReport') && selection.selectedPlaylist && (
+        <UsageReportModal
+          entityType="playlist"
+          entityId={selection.selectedPlaylist.playlistId}
+          entityName={selection.selectedPlaylist.name}
+          onClose={actions.closeModal}
         />
       )}
     </>

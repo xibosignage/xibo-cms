@@ -191,9 +191,15 @@ export default function Templates() {
     deleteError,
     setDeleteError,
     isCloning,
+    isPublishing,
+    isDiscarding,
+    isExporting,
     confirmDelete,
+    confirmPublish,
     handleConfirmClone,
     handleConfirmMove,
+    handleConfirmDiscard,
+    handleExportTemplate,
     handleAlterTemplate,
   } = useTemplateActions({
     t,
@@ -201,6 +207,7 @@ export default function Templates() {
     closeModal,
     setRowSelection,
     setItemsToMove,
+    timezone: user?.settings?.defaultTimezone ?? 'UTC',
   });
 
   const handleDelete = (id: number) => {
@@ -246,6 +253,21 @@ export default function Templates() {
     openModal('schedule');
   };
 
+  const openPublishModal = (layoutId: number) => {
+    setSelectedTemplateId(layoutId);
+    openModal('publish');
+  };
+
+  const handleDiscardModal = (layoutId: number) => {
+    setSelectedTemplateId(layoutId);
+    openModal('discard');
+  };
+
+  const handleExportModal = (layoutId: number) => {
+    setSelectedTemplateId(layoutId);
+    openModal('export');
+  };
+
   const columns = getTemplateColumn({
     t,
     onDelete: handleDelete,
@@ -259,7 +281,10 @@ export default function Templates() {
         }
       : undefined,
     openCopyModal,
+    openPublishModal,
+    discardTemplate: handleDiscardModal,
     onSchedule: canSchedule ? openScheduleModal : undefined,
+    exportTemplate: handleExportModal,
   });
 
   const getAllSelectedItems = (): Template[] => {
@@ -426,6 +451,9 @@ export default function Templates() {
           deleteError,
           isDeleting,
           isCloning,
+          isPublishing,
+          isDiscarding,
+          isExporting,
         }}
         selection={{
           selectedTemplate,
@@ -442,6 +470,9 @@ export default function Templates() {
           handleConfirmMove: (folderId) => handleConfirmMove(itemsToMove, folderId),
           handleConfirmClone: (name, description, copyTemplate) =>
             handleConfirmClone(selectedTemplate, name, description, copyTemplate),
+          confirmPublish,
+          confirmDiscard: handleConfirmDiscard,
+          handleExportTemplate,
         }}
         folderActions={folderActions}
       />

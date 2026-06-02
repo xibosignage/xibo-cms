@@ -249,9 +249,11 @@ export default function Media() {
     deleteError,
     setDeleteError,
     isCloning,
+    isUpdatingStats,
     confirmDelete,
     handleConfirmClone,
     handleConfirmMove,
+    handleConfirmEnableStats,
   } = useMediaActions({
     t,
     handleRefresh,
@@ -309,6 +311,16 @@ export default function Media() {
     openModal('copy');
   };
 
+  const openEnableStatsModal = (mediaId: number) => {
+    setSelectedMediaId(mediaId);
+    openModal('enableStats');
+  };
+
+  const openUsageReportModal = (mediaId: number) => {
+    setSelectedMediaId(mediaId);
+    openModal('usageReport');
+  };
+
   const columns = getMediaColumns({
     t,
     onPreview: handlePreviewClick,
@@ -332,6 +344,8 @@ export default function Media() {
     copyMedia: openCopyModal,
     openReplaceModal: openReplaceFileModal,
     openScheduleModal: canSchedule ? openScheduleModal : undefined,
+    openEnableStatsModal,
+    openUsageReportModal,
   });
 
   const getAllSelectedItems = (): Media[] => {
@@ -466,6 +480,8 @@ export default function Media() {
     copyMedia: openCopyModal,
     openReplaceModal: openReplaceFileModal,
     openScheduleModal: canSchedule ? openScheduleModal : undefined,
+    openEnableStatsModal,
+    openUsageReportModal,
   } as MediaActionsProps);
 
   const { filterOptions } = useMediaFilterOptions(t);
@@ -685,6 +701,7 @@ export default function Media() {
           deleteError,
           isDeleting,
           isCloning,
+          isUpdatingStats,
         }}
         selection={{
           selectedMedia,
@@ -698,6 +715,8 @@ export default function Media() {
           confirmDelete: (opts) => confirmDelete(itemsToDelete, opts),
           handleConfirmClone: (name, tags) => handleConfirmClone(selectedMedia, name, tags),
           handleConfirmMove: (folderId) => handleConfirmMove(itemsToMove, folderId),
+          handleConfirmEnableStats: (value) =>
+            selectedMedia && handleConfirmEnableStats(selectedMedia, value),
         }}
         upload={{
           isOpen: isAddModalOpen,

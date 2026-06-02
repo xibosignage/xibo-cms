@@ -211,9 +211,11 @@ export default function Playlist() {
     deleteError,
     setDeleteError,
     isCloning,
+    isUpdatingStats,
     confirmDelete,
     handleConfirmClone,
     handleConfirmMove,
+    handleConfirmEnableStats,
   } = usePlaylistActions({
     t,
     handleRefresh,
@@ -275,6 +277,14 @@ export default function Playlist() {
     copyPlaylist: openCopyModal,
     openScheduleModal: canSchedule ? openScheduleModal : undefined,
     openTimeline: handleOpenTimeline,
+    openEnableStatsModal: (playlistId) => {
+      setSelectedPlaylistId(playlistId);
+      openModal('enableStats');
+    },
+    openUsageReportModal: (playlistId) => {
+      setSelectedPlaylistId(playlistId);
+      openModal('usageReport');
+    },
   });
 
   const getAllSelectedItems = (): Playlist[] => {
@@ -435,6 +445,7 @@ export default function Playlist() {
           deleteError,
           isDeleting,
           isCloning,
+          isUpdatingStats,
         }}
         selection={{
           selectedPlaylist,
@@ -453,6 +464,8 @@ export default function Playlist() {
           handleConfirmMove: (folderId) => {
             handleConfirmMove(itemsToMove, folderId);
           },
+          handleConfirmEnableStats: (value) =>
+            selectedPlaylist && handleConfirmEnableStats(selectedPlaylist, value),
         }}
         folderActions={folderActions}
       />

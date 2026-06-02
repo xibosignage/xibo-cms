@@ -234,6 +234,7 @@ export default function Layouts() {
     closeModal,
     setRowSelection,
     setItemsToMove,
+    timezone: user?.settings?.defaultTimezone ?? 'UTC',
   });
 
   const handleResetFilters = () => {

@@ -1784,11 +1784,25 @@ class Library extends Base
             ], $sanitizedParams)
         );
 
-        if (!$this->isApi($request)) {
-            // We need to generate preview URLs, base URL doesn't chagen between layouts
-            $baseUrl = (new HttpsDetect())->getBaseUrl($request);
+        // We need to generate preview URLs, base URL doesn't change between layouts
+        $baseUrl = (new HttpsDetect())->getBaseUrl($request);
 
-            foreach ($layouts as $layout) {
+        foreach ($layouts as $layout) {
+            // Preview JWT
+            $jwt = $this->jwtService->generateJwt(
+                'Preview',
+                'layout',
+                $layout->layoutId,
+                '/preview/layout/preview/' . $layout->layoutId,
+                3600,
+            )->toString();
+
+            $layout->setUnmatchedProperty(
+                'previewUrl',
+                $baseUrl . '/preview/layout/preview/' . $layout->layoutId . '?jwt=' . $jwt,
+            );
+
+            if (!$this->isApi($request) && !$this->isJson($request)) {
                 $layout->includeProperty('buttons');
 
                 // Add some buttons for this row
@@ -1802,17 +1816,7 @@ class Library extends Base
                     );
                 }
 
-                // Preview
-                // generate a JWT
-                $jwt = $this->jwtService->generateJwt(
-                    'Preview',
-                    'layout',
-                    $layout->layoutId,
-                    '/preview/layout/preview/' . $layout->layoutId,
-                    3600,
-                )->toString();
-
-                // Add it as a button
+                // Add preview as a button for legacy web UI
                 $layout->buttons[] = [
                     'id' => 'layout_button_preview',
                     'external' => true,

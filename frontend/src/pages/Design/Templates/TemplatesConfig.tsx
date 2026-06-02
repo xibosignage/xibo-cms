@@ -64,7 +64,7 @@ export const TEMPLATE_INITIAL_FILTER_STATE: TemplatesFilterInput = {
   exactTags: false,
 };
 
-export type ModalType = BaseModalType | 'schedule' | null;
+export type ModalType = BaseModalType | 'schedule' | 'publish' | 'discard' | 'export' | null;
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<TemplatesFilterInput>[] => [
   {
@@ -99,7 +99,10 @@ export interface TemplatesActionsProps {
   openShareModal?: (id: number) => void;
   openMoveModal?: (row: Template | Template[]) => void;
   openCopyModal?: (id: number) => void;
+  openPublishModal?: (id: number) => void;
   alterTemplate?: (id: number) => void;
+  discardTemplate?: (id: number) => void;
+  exportTemplate?: (id: number) => void;
   openDetails?: (id: number) => void;
   openTemplate?: (id: number) => void;
   onSchedule?: (template: Template) => void;
@@ -279,7 +282,10 @@ export const getTemplateItemActions = ({
   openShareModal,
   openMoveModal,
   openCopyModal,
+  openPublishModal,
   alterTemplate,
+  discardTemplate,
+  exportTemplate,
   onSchedule,
 }: TemplatesActionsProps): ((template: Template) => ActionItem[]) => {
   return (template: Template) => [
@@ -299,7 +305,7 @@ export const getTemplateItemActions = ({
     {
       label: t('Publish'),
       icon: CloudUpload,
-      onClick: () => console.log('Publish', template.layoutId),
+      onClick: () => openPublishModal && openPublishModal(template.layoutId),
     },
     { isSeparator: true },
     {
@@ -330,11 +336,11 @@ export const getTemplateItemActions = ({
     { isSeparator: true },
     {
       label: t('Discard'),
-      onClick: () => console.log('Discard', template.layoutId),
+      onClick: () => discardTemplate && discardTemplate(template.layoutId),
     },
     {
       label: t('Export'),
-      onClick: () => console.log('Export', template.layoutId),
+      onClick: () => exportTemplate && exportTemplate(template.layoutId),
     },
     { isSeparator: true },
     {
