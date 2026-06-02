@@ -78,7 +78,7 @@ export async function updateModuleSettings(
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   });
 
-  return response.data.data;
+  return response.data;
 }
 
 export async function clearModuleCache(id: string): Promise<void> {

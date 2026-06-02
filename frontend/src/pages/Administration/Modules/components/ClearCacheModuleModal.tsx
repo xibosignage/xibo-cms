@@ -76,9 +76,7 @@ export default function ClearCacheModuleModal({
           </h2>
         </div>
         <p className="text-center text-gray-500">
-          {t('Clear the cache for ')}
-          <strong>{module.name}</strong>
-          {t('. This process is not reversible.')}
+          {t('Clear the cache for {{name}}. This process is not reversible.', { name: module.name })}
         </p>
 
         {error && (

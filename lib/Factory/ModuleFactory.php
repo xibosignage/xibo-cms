@@ -64,28 +64,20 @@ class ModuleFactory extends BaseFactory
 
     private ?array $dataTypes = null;
 
-    private PoolInterface $pool;
-
-    private string $cachePath;
-
-    private Twig $twig;
-
-    private ConfigServiceInterface $config;
-
     /**
-     * Construct a factory
+     * ModuleFactory constructor.
      *
-     * @param string                 $cachePath
-     * @param PoolInterface          $pool
-     * @param Twig                   $twig
-     * @param ConfigServiceInterface $config
+     * @param  string                 $cachePath
+     * @param  PoolInterface          $pool
+     * @param  Twig                   $twig
+     * @param  ConfigServiceInterface $config
      */
-    public function __construct(string $cachePath, PoolInterface $pool, Twig $twig, ConfigServiceInterface $config)
-    {
-        $this->cachePath = $cachePath;
-        $this->pool = $pool;
-        $this->twig = $twig;
-        $this->config = $config;
+    public function __construct(
+        private readonly string $cachePath,
+        private readonly PoolInterface $pool,
+        private readonly Twig $twig,
+        private readonly ConfigServiceInterface $config,
+    ) {
     }
 
     /**

@@ -27,36 +27,28 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\ModuleTemplateFactory;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Module
+ *
  * @package Xibo\Controller
  */
 class Module extends Base
 {
-    /** @var ModuleFactory */
-    private $moduleFactory;
-
-    /** @var \Xibo\Factory\ModuleTemplateFactory */
-    private $moduleTemplateFactory;
-
     /**
-     * Set common dependencies.
-     * @param StorageServiceInterface $store
-     * @param ModuleFactory $moduleFactory
+     * Module constructor.
+     *
+     * @param  ModuleFactory         $moduleFactory
+     * @param  ModuleTemplateFactory $moduleTemplateFactory
      */
     public function __construct(
-        ModuleFactory $moduleFactory,
-        ModuleTemplateFactory $moduleTemplateFactory
+        private readonly ModuleFactory $moduleFactory,
+        private readonly ModuleTemplateFactory $moduleTemplateFactory,
     ) {
-        $this->moduleFactory = $moduleFactory;
-        $this->moduleTemplateFactory = $moduleTemplateFactory;
     }
 
     #[OA\Get(
@@ -140,12 +132,14 @@ class Module extends Base
         content: new OA\JsonContent(ref: '#/components/schemas/Module')
     )]
     /**
-     * @param Request $request
-     * @param Response $response
+     * @param  Request  $request
+     * @param  Response $response
      * @return ResponseInterface|Response
      */
-    public function grid(Request $request, Response $response): Response|ResponseInterface
-    {
+    public function grid(
+        Request $request,
+        Response $response
+    ): Response|ResponseInterface {
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
 
         $sortOrder = $this->gridRenderSort(
@@ -163,7 +157,11 @@ class Module extends Base
         ];
 
         $totalCount = 0;
-        $modules = $this->moduleFactory->getAllExceptCanvas($filter, $sortOrder, $totalCount);
+        $modules = $this->moduleFactory->getAllExceptCanvas(
+            $filter,
+            $sortOrder,
+            $totalCount
+        );
 
         return $response
             ->withStatus(200)
@@ -180,10 +178,10 @@ class Module extends Base
     )]
     #[OA\Parameter(
         name: 'moduleId',
-        description: 'Numeric ID of the Module to get',
+        description: 'ID of the Module to get',
         in: 'path',
         required: true,
-        schema: new OA\Schema(type: 'integer')
+        schema: new OA\Schema(type: 'string')
     )]
     #[OA\Response(
         response: 200,
@@ -191,14 +189,17 @@ class Module extends Base
         content: new OA\JsonContent(ref: '#/components/schemas/Module')
     )]
     /**
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
+     * @param  Request  $request
+     * @param  Response $response
+     * @param  string   $id
      * @return Response|ResponseInterface
      * @throws NotFoundException
      */
-    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
-    {
+    public function searchById(
+        Request $request,
+        Response $response,
+        string $id
+    ): Response|ResponseInterface {
 
         $module = $this->moduleFactory->getById($id);
 
@@ -227,19 +228,22 @@ class Module extends Base
         description: 'successful operation',
         content: new OA\JsonContent(ref: '#/components/schemas/Property')
     )]
+    // phpcs:enable
     /**
-     * @param Request $request
-     * @param Response $response
-     * @param $id
+     * @param  Request  $request
+     * @param  Response $response
+     * @param  string   $id
+     *
      * @return ResponseInterface|Response
-     * @throws AccessDeniedException
+     *
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws ControllerNotImplemented
      */
-    // phpcs:enable
-    public function getProperties(Request $request, Response $response, $id): Response|ResponseInterface
-    {
+    public function getProperties(
+        Request $request,
+        Response $response,
+        string $id
+    ): Response|ResponseInterface {
         // Get properties, but return a key->value object for easy parsing.
         $props = [];
 
@@ -252,24 +256,25 @@ class Module extends Base
             ];
         }
 
-        $this->getState()->setData($props);
-
-        return $this->render($request, $response);
+        return $response->withStatus(200)->withJson($props);
     }
 
     /**
      * Settings
-     * @param Request $request
-     * @param Response $response
-     * @param $id
+     *
+     * @param  Request  $request
+     * @param  Response $response
+     * @param  string   $id
      * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws ControllerNotImplemented
      */
-    public function settings(Request $request, Response $response, $id): Response|ResponseInterface
-    {
+    public function settings(
+        Request $request,
+        Response $response,
+        string $id
+    ): Response|ResponseInterface {
         if (!$this->getUser()->isSuperAdmin()) {
             throw new AccessDeniedException();
         }
@@ -290,45 +295,42 @@ class Module extends Base
         }
 
         // Preview is not allowed for generic file type
-        if ($module->allowPreview === 0 && $sanitizedParams->getCheckbox('previewEnabled') == 1) {
+        if ($module->allowPreview === 0
+            && $sanitizedParams->getCheckbox('previewEnabled') == 1
+        ) {
             throw new InvalidArgumentException(__('Preview is disabled'));
         }
 
         // Save
         $module->save();
 
-        // Successful
-        $this->getState()->hydrate([
-            'message' => sprintf(__('Configured %s'), $module->name),
-            'id' => $module->moduleId,
-            'data' => $module
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(200)->withJson($module);
     }
 
     /**
      * Clear Cache
-     * @param Request $request
-     * @param Response $response
-     * @param $id
+     *
+     * @param  Request  $request
+     * @param  Response $response
+     * @param  string   $id
      * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws ControllerNotImplemented
      */
-    public function clearCache(Request $request, Response $response, $id): Response|ResponseInterface
-    {
+    public function clearCache(
+        Request $request,
+        Response $response,
+        string $id
+    ): Response|ResponseInterface {
         $module = $this->moduleFactory->getById($id);
+
         if ($module->isDataProviderExpected()) {
             $this->moduleFactory->clearCacheForDataType($module->dataType);
         }
 
-        $this->getState()->hydrate([
-            'message' => __('Cleared the Cache')
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson(['message' => __('Cleared the Cache')]);
     }
 
     #[OA\Get(
@@ -358,16 +360,22 @@ class Module extends Base
         content: new OA\JsonContent(ref: '#/components/schemas/ModuleTemplate')
     )]
     /**
-     * @param Request $request
-     * @param Response $response
-     * @param string $dataType
+     * @param  Request  $request
+     * @param  Response $response
+     * @param  string   $dataType
      * @return Response
      * @throws GeneralException
      */
-    public function templateGrid(Request $request, Response $response, string $dataType): Response
-    {
+    public function templateGrid(
+        Request $request,
+        Response $response,
+        string $dataType
+    ): Response {
         if (empty($dataType)) {
-            throw new InvalidArgumentException(__('Please provide a datatype'), 'dataType');
+            throw new InvalidArgumentException(
+                __('Please provide a datatype'),
+                'dataType'
+            );
         }
 
         $params = $this->getSanitizer($request->getParams());
@@ -377,11 +385,7 @@ class Module extends Base
             ? $this->moduleTemplateFactory->getByTypeAndDataType($type, $dataType)
             : $this->moduleTemplateFactory->getByDataType($dataType);
 
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = 0;
-        $this->getState()->setData($templates);
-
-        return $this->render($request, $response);
+        return $response->withStatus(200)->withJson($templates);
     }
 
     // phpcs:disable
@@ -415,14 +419,15 @@ class Module extends Base
         )
     )]
     /**
-     * @param Request $request
-     * @param Response $response
-     * @param string $dataType
-     * @param string $id
+     * @param  Request  $request
+     * @param  Response $response
+     * @param  string   $dataType
+     * @param  string   $id
+     *
      * @return ResponseInterface|Response
+     *
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws ControllerNotImplemented
      */
         // phpcs:enable
     public function getTemplateProperties(
@@ -444,16 +449,15 @@ class Module extends Base
             ];
         }
 
-        $this->getState()->setData($props);
-
-        return $this->render($request, $response);
+        return $response->withStatus(200)->withJson($props);
     }
 
     /**
      * Serve an asset
-     * @param Request $request
-     * @param Response $response
-     * @param string $assetId the ID of the asset to serve
+     *
+     * @param  Request  $request
+     * @param  Response $response
+     * @param  string   $assetId  the ID of the asset to serve
      * @return ResponseInterface
      * @throws GeneralException
      * @throws InvalidArgumentException
@@ -471,6 +475,7 @@ class Module extends Base
             $this->moduleTemplateFactory,
             $this->getSanitizer($request->getParams())->getCheckbox('isAlias')
         );
+
         $asset->updateAssetCache($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 
         $this->getLog()->debug('assetDownload: found appropriate asset for assetId ' . $assetId);
@@ -481,8 +486,9 @@ class Module extends Base
 
     /**
      * Get the library modules list
-     * @param Request $request
-     * @param Response $response
+     *
+     * @param  Request  $request
+     * @param  Response $response
      * @return Response
      */
     public function getLibraryModules(Request $request, Response $response): Response
