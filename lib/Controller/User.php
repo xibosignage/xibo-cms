@@ -159,12 +159,37 @@ class User extends Base
             'jsShortLocale' => Translate::getRequestedJsLocale(['short' => true])
         ];
         $settings['accountId'] = defined('ACCOUNT_ID') ? constant('ACCOUNT_ID') : null;
+
+        // Theme middleware does not run on /json/* routes, so load the theme explicitly.
+        $this->getConfig()->loadTheme();
         $settings['app_name'] = $this->getConfig()->getThemeConfig('app_name', 'Xibo');
+
+        // Build branding URLs manually — rootUri() returns '/json/' on this route, not '/'.
+        $themeFolder = $this->getConfig()->getThemeConfig('themeFolder', 'theme/default/');
+        $logoUrl = file_exists(PROJECT_ROOT . '/web/' . $themeFolder . 'img/xibologo.png')
+            ? '/' . $themeFolder . 'img/xibologo.png'
+            : '/theme/default/img/xibologo.png';
+        $faviconUrl = file_exists(PROJECT_ROOT . '/web/' . $themeFolder . 'img/favicon.ico')
+            ? '/' . $themeFolder . 'img/favicon.ico'
+            : '/theme/default/img/favicon.ico';
+        $cssFile = $themeFolder . 'css/theme.css';
+        $cssUrl = file_exists(PROJECT_ROOT . '/web/' . $cssFile) ? '/' . $cssFile : null;
+
+        $branding = [
+            'productName' => $this->getConfig()->getThemeConfig('theme_title', 'Xibo Digital Signage'),
+            'appName' => $this->getConfig()->getThemeConfig('app_name', 'Xibo'),
+            'logoUrl' => $logoUrl,
+            'faviconUrl' => $faviconUrl,
+            'cssUrl' => $cssUrl,
+            'supportUrl' => $this->getConfig()->getThemeConfig('theme_url', 'https://xibosignage.com'),
+            'isXiboThemed' => $this->getConfig()->getThemeConfig('themeCode', 'default') === 'default',
+        ];
 
         // TODO: output some settings
         return $response->withJson(array_merge($this->getUser()->toArray(), [
             'settings' => $settings,
-            'features' => $this->getUserFeatures()
+            'features' => $this->getUserFeatures(),
+            'branding' => $branding,
         ]));
     }
 

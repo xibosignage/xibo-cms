@@ -23,11 +23,11 @@ import { useEffect } from 'react';
 import { Outlet, useMatches } from 'react-router-dom';
 
 import PageWrapper from '@/app/PageWrapper';
-
-const PRODUCT_NAME = 'Xibo Digital Signage';
+import { useBranding } from '@/context/BrandingContext';
 
 export default function WithPageWrapper() {
   const matches = useMatches();
+  const { productName } = useBranding();
 
   const title = matches
     .slice()
@@ -37,8 +37,8 @@ export default function WithPageWrapper() {
     | undefined;
 
   useEffect(() => {
-    document.title = title?.title ? `${title.title} | ${PRODUCT_NAME}` : PRODUCT_NAME;
-  }, [title]);
+    document.title = title?.title ? `${title.title} | ${productName}` : productName;
+  }, [title, productName]);
 
   return (
     <PageWrapper>
