@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2019 Xibo Signage Ltd
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -27,7 +27,7 @@ use Xibo\Entity\ReportForm;
 use Xibo\Entity\ReportResult;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
-/**
+/*
  * Interface ReportInterface
  * @package Xibo\Report
  */
@@ -66,12 +66,6 @@ interface ReportInterface
      * @return string
      */
     public function getReportEmailTemplate();
-
-    /**
-     * Return the twig file name of the saved report preview template
-     * @return string
-     */
-    public function getSavedReportTemplate();
 
     /**
      * Return the twig file name of the report form

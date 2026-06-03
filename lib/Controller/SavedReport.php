@@ -204,10 +204,7 @@ class SavedReport extends Base
         /* @var ReportResult $results */
         $results = $this->reportService->getSavedReportResults($id, $name);
 
-        $this->getState()->template = $this->reportService->getSavedReportTemplate($name);
-        $this->getState()->setData($results->jsonSerialize());
-
-        return $this->render($request, $response);
+        return $response->withJson($results->jsonSerialize());
     }
 
     /**

@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -398,19 +398,6 @@ class ReportService implements ReportServiceInterface
 
         // Set Report Schedule form data
         return $object->getReportEmailTemplate();
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getSavedReportTemplate($reportName)
-    {
-        $className = $this->getReportClass($reportName);
-
-        $object = $this->createReportObject($className);
-
-        // Set Report Schedule form data
-        return $object->getSavedReportTemplate();
     }
 
     /**

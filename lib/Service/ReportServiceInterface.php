@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2019 Xibo Signage Ltd
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -30,7 +30,7 @@ use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
 use Xibo\Support\Exception\GeneralException;
 
-/**
+/*
  * Interface ReportServiceInterface
  * @package Xibo\Service
  */
@@ -146,14 +146,6 @@ interface ReportServiceInterface
      * @return string
      */
     public function getReportEmailTemplate($reportName);
-
-    /**
-     * Get report email template twig file name
-     * @param string $reportName
-     * @throws GeneralException
-     * @return string
-     */
-    public function getSavedReportTemplate($reportName);
 
     /**
      * Get chart script
