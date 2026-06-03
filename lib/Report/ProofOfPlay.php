@@ -1285,7 +1285,7 @@ class ProofOfPlay implements ReportInterface
             'media' => 'mediaId',
             'layout' => 'layoutId',
             'dg' => 'displayId',
-        };;
+        };
 
         foreach ($rows as $row) {
             foreach ($tags as $tag) {

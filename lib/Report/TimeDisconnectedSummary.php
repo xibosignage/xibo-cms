@@ -558,7 +558,8 @@ class TimeDisconnectedSummary implements ReportInterface
 
                 // Calculate the average values
                 $displayGroup['avgTimeConnected'] = round($displayGroup['timeConnected'] / $displayGroup['count'], 2);
-                $displayGroup['avgTimeDisconnected'] = round($displayGroup['timeDisconnected'] / $displayGroup['count'], 2);
+                $displayGroup['avgTimeDisconnected'] =
+                    round($displayGroup['timeDisconnected'] / $displayGroup['count'], 2);
 
                 $data[] = $displayGroup;
             }
