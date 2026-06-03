@@ -79,7 +79,7 @@ export default function AuditTrailExportModal({ onClose }: AuditTrailExportModal
         },
       ]}
     >
-      <div className="flex flex-col gap-4 p-6">
+      <div className="flex flex-col gap-4 py-6 px-8">
         <DateFilter
           label={t('From Date')}
           name="filterFromDt"

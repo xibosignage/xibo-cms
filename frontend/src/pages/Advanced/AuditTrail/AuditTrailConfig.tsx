@@ -26,6 +26,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
+import Modal from '@/components/ui/modals/Modal';
 import { TextCell } from '@/components/ui/table/cells';
 import type { AuditLog } from '@/types/auditTrail';
 
@@ -91,47 +92,59 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<AuditTrailFilt
 
 function ObjectAfterCell({ value }: { value: Record<string, unknown> | null }) {
   const { t } = useTranslation();
-  const [expanded, setExpanded] = useState(false);
+  const [open, setOpen] = useState(false);
 
   if (!value || Object.keys(value).length === 0) return null;
 
   return (
-    <div>
+    <>
       <button
         type="button"
-        onClick={() => setExpanded((prev) => !prev)}
+        onClick={() => setOpen(true)}
         className="text-xibo-blue-600 hover:text-xibo-blue-800 flex items-center gap-1"
         title={t('View object')}
       >
         <Search size={14} />
       </button>
-      {expanded && (
-        <table className="mt-1 text-xs border border-gray-200 rounded min-w-[200px]">
-          <thead>
-            <tr>
-              <th className="px-2 py-1 border-b border-gray-200 text-left font-semibold">
-                {t('Property')}
-              </th>
-              <th className="px-2 py-1 border-b border-gray-200 text-left font-semibold">
-                {t('Value')}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {Object.entries(value).map(([key, val]) => (
-              <tr key={key} className="border-b border-gray-100 last:border-0">
-                <td className="px-2 py-1 font-medium text-gray-700">{key}</td>
-                <td className="px-2 py-1 text-gray-600 break-all">
-                  {val !== null && typeof val === 'object'
-                    ? JSON.stringify(val)
-                    : String(val ?? '')}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+      {open && (
+        <Modal
+          title={t('Audit Trail Object')}
+          onClose={() => setOpen(false)}
+          size="sm"
+          actions={[{ label: t('Close'), onClick: () => setOpen(false), variant: 'secondary' }]}
+        >
+          <div className="p-6">
+            <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="px-3 py-2 border-b border-gray-200 text-left text-sm font-semibold uppercase text-gray-500">
+                    {t('Property')}
+                  </th>
+                  <th className="px-3 py-2 border-b border-gray-200 text-left text-sm font-semibold uppercase text-gray-500">
+                    {t('Value')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {Object.entries(value).map(([key, val]) => (
+                  <tr key={key} className="bg-white">
+                    <td className="px-3 py-2 border-b border-gray-200 font-medium text-gray-700">
+                      {key}
+                    </td>
+                    <td className="px-3 py-2 border-b border-gray-200 text-gray-600 break-all">
+                      {val !== null && typeof val === 'object'
+                        ? JSON.stringify(val)
+                        : String(val ?? '')}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Modal>
       )}
-    </div>
+    </>
   );
 }
 
