@@ -19,20 +19,20 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type {TFunction} from 'i18next';
-import {Minus, Plus} from 'lucide-react';
+import type { TFunction } from 'i18next';
+import { Minus, Plus } from 'lucide-react';
 import React from 'react';
 
-import {DynamicSettingField} from './DynamicSettingField';
-import {getFieldMetaForType} from './fieldMetadata';
+import { DynamicSettingField } from './DynamicSettingField';
+import { getFieldMetaForType } from './fieldMetadata';
 
 import Button from '@/components/ui/Button';
 import Checkbox from '@/components/ui/forms/Checkbox';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import Slider from '@/components/ui/forms/Slider';
 import TimePickerInput from '@/components/ui/forms/TimePickerInput';
-import type {PlayerSoftware} from '@/services/playerSoftwareApi';
-import type {Daypart} from '@/types/daypart';
+import type { PlayerSoftware } from '@/services/playerSoftwareApi';
+import type { Daypart } from '@/types/daypart';
 
 export interface TimerRow {
   id: number;
@@ -374,11 +374,13 @@ export interface LgSsspFieldProps {
   daypartsHasMore?: boolean;
   onLoadMoreDayparts?: () => void;
   isLoadingMoreDayparts?: boolean;
+  onSearchDayparts?: (term: string) => void;
   playerType?: string;
   playerVersions: PlayerSoftware[];
   playerVersionsHasMore?: boolean;
   onLoadMorePlayerVersions?: () => void;
   isLoadingMorePlayerVersions?: boolean;
+  onSearchPlayerVersions?: (term: string) => void;
   timerRows?: TimerRow[];
   onTimerRowsChange?: (rows: TimerRow[]) => void;
   pictureOptionRows?: PictureOptionRow[];
@@ -400,11 +402,13 @@ export function LgSsspFields({
   daypartsHasMore,
   onLoadMoreDayparts,
   isLoadingMoreDayparts,
+  onSearchDayparts,
   playerType,
   playerVersions,
   playerVersionsHasMore,
   onLoadMorePlayerVersions,
   isLoadingMorePlayerVersions,
+  onSearchPlayerVersions,
   timerRows = [{ id: 0, day: '', on: '', off: '' }],
   onTimerRowsChange,
   pictureOptionRows = [{ id: 0, property: '', value: 0 }],
@@ -487,10 +491,12 @@ export function LgSsspFields({
     daypartsHasMore,
     onLoadMoreDayparts,
     isLoadingMoreDayparts,
+    onSearchDayparts,
     playerVersions,
     playerVersionsHasMore,
     onLoadMorePlayerVersions,
     isLoadingMorePlayerVersions,
+    onSearchPlayerVersions,
   };
 
   return (

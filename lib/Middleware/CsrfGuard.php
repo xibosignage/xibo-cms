@@ -124,7 +124,10 @@ class CsrfGuard implements Middleware
                     }
                 }
 
-                if ($token !== $userToken) {
+                // hash_equals avoids any short-circuit / length-prefix timing side channel
+                // on token comparison. The token and userToken are both nullable strings here
+                // so coerce to string before comparing — hash_equals throws on null.
+                if (!hash_equals((string)$token, (string)$userToken)) {
                     throw new ExpiredException(__('Sorry the form has expired. Please refresh.'));
                 }
             }

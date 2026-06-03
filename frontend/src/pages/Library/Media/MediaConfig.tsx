@@ -59,17 +59,20 @@ import { formatDuration } from '@/utils/formatters';
 
 export interface MediaFilterInput {
   type?: string;
+  mediaId?: number | null;
+  media?: string;
+  tags?: Tag[];
   ownerId?: string;
   ownerUserGroupId?: string;
   orientation?: string;
   retired?: number;
   lastModified?: string;
-  media?: string;
-  tags?: string;
   exactTags?: boolean;
   folderId?: number;
+  layoutId?: number | null;
   logicalOperator?: 'OR' | 'AND';
   logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: boolean;
 }
 
 export const getMediaIcon = (mediaType: string) => {
@@ -93,43 +96,80 @@ export const getMediaIcon = (mediaType: string) => {
 
 type MediaType = 'image' | 'video' | 'audio' | 'pdf' | 'archive' | 'other';
 
-export type ModalType = BaseModalType | 'replace' | 'schedule' | null;
+export type ModalType =
+  | BaseModalType
+  | 'replace'
+  | 'schedule'
+  | 'enableStats'
+  | 'usageReport'
+  | null;
 
 export const INITIAL_FILTER_STATE: MediaFilterInput = {
+  mediaId: null,
+  media: '',
+  tags: [],
   type: '',
   ownerId: '',
   ownerUserGroupId: '',
   orientation: '',
+  layoutId: null,
   lastModified: '',
+  logicalOperatorName: 'OR',
+  useRegexForName: false,
+  logicalOperator: 'OR',
+  exactTags: false,
 };
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<MediaFilterInput>[] => [
   {
-    label: t('Type'),
-    name: 'type',
-    shouldTranslateOptions: true,
-    options: [
-      { label: 'Image', value: 'image' },
-      { label: 'Video', value: 'video' },
-      { label: 'Audio', value: 'audio' },
-      { label: 'PDF', value: 'pdf' },
-      { label: 'Archive', value: 'archive' },
-      { label: 'Other', value: 'other' },
-    ],
+    label: t('ID'),
+    placeholder: ' ',
+    name: 'mediaId',
+    type: 'number',
+  },
+  {
+    label: t('Name'),
+    name: 'media',
+    type: 'text',
+    className: '',
+    placeholder: ' ',
+    showAndOr: true,
+    andOrKey: 'logicalOperatorName',
+    showRegex: true,
+    regexKey: 'useRegexForName',
+  },
+  {
+    label: t('Tags'),
+    name: 'tags',
+    type: 'tags',
+    placeholder: ' ',
+    className: '',
+    showAndOr: true,
+    andOrKey: 'logicalOperator',
+    showExactTags: true,
+    exactTagsKey: 'exactTags',
   },
   {
     label: t('Owner'),
     name: 'ownerId',
-    shouldTranslateOptions: false,
-    showAllOption: false,
-    options: [{ label: 'Select Owner', value: null }],
+    options: [{ label: t('Select Owner'), value: null }],
   },
   {
     label: t('User Group'),
     name: 'ownerUserGroupId',
-    shouldTranslateOptions: false,
-    showAllOption: false,
-    options: [{ label: 'Select Group', value: null }],
+    options: [{ label: t('Select Group'), value: null }],
+  },
+  {
+    label: t('Type'),
+    name: 'type',
+    options: [
+      { label: t('Image'), value: 'image' },
+      { label: t('Video'), value: 'video' },
+      { label: t('Audio'), value: 'audio' },
+      { label: t('PDF'), value: 'pdf' },
+      { label: t('Archive'), value: 'archive' },
+      { label: t('Other'), value: 'other' },
+    ],
   },
   {
     label: t('Orientation'),
@@ -139,20 +179,19 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<MediaFilterInp
   {
     label: t('Retired'),
     name: 'retired',
-    shouldTranslateOptions: true,
-    showAllOption: false,
-    options: [
-      { label: 'Any', value: null },
-      { label: 'No', value: 0 },
-      { label: 'Yes', value: 1 },
-    ],
+    options: getCommonFormOptions(t).retired,
+  },
+  {
+    label: t('Layout ID'),
+    name: 'layoutId',
+    type: 'number',
+    className: '',
+    placeholder: ' ',
   },
   {
     label: t('Last Modified'),
     name: 'lastModified',
-    shouldTranslateOptions: true,
-    showAllOption: false,
-    allowCustomRange: true,
+    type: 'date-range',
     options: getCommonFormOptions(t).lastModifiedFilter,
   },
 ];
@@ -223,6 +262,8 @@ export interface MediaActionsProps {
   copyMedia?: (row: number) => void;
   openReplaceModal: (id: number) => void;
   openScheduleModal?: (row: Media) => void;
+  openEnableStatsModal?: (id: number) => void;
+  openUsageReportModal?: (id: number) => void;
 }
 
 export const getMediaItemActions = ({
@@ -236,6 +277,8 @@ export const getMediaItemActions = ({
   copyMedia,
   openReplaceModal,
   openScheduleModal,
+  openEnableStatsModal,
+  openUsageReportModal,
 }: MediaActionsProps): ((media: Media) => ActionItem[]) => {
   return (media: Media) => {
     const actions: ActionItem[] = [];
@@ -326,11 +369,11 @@ export const getMediaItemActions = ({
     actions.push({ isSeparator: true });
     actions.push({
       label: t('Enable Stats Collection'),
-      onClick: () => console.log('Enable Stats', media.mediaId),
+      onClick: () => openEnableStatsModal && openEnableStatsModal(media.mediaId),
     });
     actions.push({
       label: t('Usage Report'),
-      onClick: () => console.log('Usage Report', media.mediaId),
+      onClick: () => openUsageReportModal && openUsageReportModal(media.mediaId),
     });
 
     if (canDelete) {

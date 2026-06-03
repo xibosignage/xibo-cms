@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { isAxiosError } from 'axios';
 import { useActionState, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
@@ -237,7 +238,7 @@ export default function ProfileEditModal({ isOpen = true, onClose }: ProfileEdit
             ...user,
             email: result.data.email,
             settings: {
-              ...(user.settings || {}),
+              ...(user.settings ?? {}),
               twoFactorTypeId: parseInt(result.data.twoFactorTypeId, 10),
             },
           });
@@ -248,9 +249,14 @@ export default function ProfileEditModal({ isOpen = true, onClose }: ProfileEdit
       } catch (error: unknown) {
         console.error('Failed to update profile:', error);
 
-        const apiError = error as { response?: { data?: { message?: string; property?: string } } };
-        const message = apiError?.response?.data?.message || t('An unexpected error occurred.');
-        const property = apiError?.response?.data?.property;
+        const message =
+          isAxiosError(error) && error.response?.data?.message
+            ? error.response.data.message
+            : t('An unexpected error occurred.');
+        const property =
+          isAxiosError(error) && error.response?.data?.property
+            ? error.response.data.property
+            : undefined;
 
         if (property) {
           return { fieldErrors: { [property]: [message] }, apiError: undefined };

@@ -226,7 +226,7 @@ class Schedule extends Base
             // If this event is active, collect extra information and add to the events list
             if (count($scheduleEvents) > 0) {
                 // Add the link to the schedule
-                if (!$this->isApi($request)) {
+                if (!$this->isApi($request) && !$this->isJson($request)) {
                     $route = 'schedule.edit.form';
                     $schedule->setUnmatchedProperty(
                         'link',
@@ -262,7 +262,7 @@ class Schedule extends Base
                     );
 
                     // Add the link to the layout
-                    if (!$this->isApi($request)) {
+                    if (!$this->isApi($request) && !$this->isJson($request)) {
                         // do not link to Layout Designer for Full screen Media/Playlist Layout.
                         $link = (in_array($event['eventTypeId'], [7, 8]))
                             ? ''
@@ -770,8 +770,21 @@ class Schedule extends Base
             ['default' => 0]
         );
 
+        // Verify the caller has the appropriate permission on each display group they're
+        // assigning. Mirrors isEventEditable() semantics: view is sufficient when
+        // SCHEDULE_WITH_VIEW_PERMISSION is enabled, otherwise edit is required.
+        $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
         foreach ($sanitizedParams->getIntArray('displayGroupIds', ['default' => []]) as $displayGroupId) {
-            $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
+            $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+            if ($scheduleWithView && !$this->getUser()->checkViewable($displayGroup)) {
+                throw new AccessDeniedException(__('Access to one or more display groups denied'));
+            }
+            if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup)) {
+                throw new AccessDeniedException(__('Access to one or more display groups denied'));
+            }
+
+            $schedule->assignDisplayGroup($displayGroup);
         }
 
         if (!$schedule->isAlwaysDayPart()) {
@@ -1185,6 +1198,16 @@ class Schedule extends Base
             'recurrenceMonthlyRepeatsOn',
             ['default' => 0]
         );
+        // Capture the assignment IDs the schedule already had before we clear them.
+        // The per-iteration permission check below only needs to gate NEW assignments —
+        // a user with edit access to the schedule should be able to re-save the existing
+        // groups even if they were originally added by someone who shared the schedule
+        // but not the groups. Mirrors the Campaign::edit() $originalLayoutAssignments
+        // pattern (lines ~766-788).
+        $originalDisplayGroupIds = array_map(
+            fn ($dg) => $dg->displayGroupId,
+            $schedule->displayGroups ?? []
+        );
         $schedule->displayGroups = [];
         $schedule->isGeoAware = $sanitizedParams->getCheckbox('isGeoAware');
         $schedule->maxPlaysPerHour = $sanitizedParams->getInt('maxPlaysPerHour', ['default' => 0]);
@@ -1278,9 +1301,9 @@ class Schedule extends Base
         // Get the campaignId for media/playlist events
         if ($schedule->isFullScreenSchedule()) {
             $type = $schedule->eventTypeId === \Xibo\Entity\Schedule::$MEDIA_EVENT ? 'media' : 'playlist';
-            $id = ($type === 'media') ? $sanitizedParams->getInt('mediaId') : $sanitizedParams->getInt('playlistId');
+            $fsId = ($type === 'media') ? $sanitizedParams->getInt('mediaId') : $sanitizedParams->getInt('playlistId');
 
-            if (!$id) {
+            if (!$fsId) {
                 throw new InvalidArgumentException(
                     sprintf('%sId is required when scheduling %s events.', ucfirst($type), $type)
                 );
@@ -1289,7 +1312,7 @@ class Schedule extends Base
             // Create a full screen layout for this event
             $fsLayout = $this->layoutFactory->createFullScreenLayout(
                 $type,
-                $id,
+                $fsId,
                 $sanitizedParams->getInt('resolutionId'),
                 $sanitizedParams->getString('backgroundColor'),
                 $sanitizedParams->getInt('layoutDuration'),
@@ -1322,8 +1345,25 @@ class Schedule extends Base
             $schedule->dayPartId = $this->dayPartFactory->getCustomDayPart()->dayPartId;
         }
 
+        // Verify the caller has the appropriate permission on each display group they're
+        // assigning. Mirrors isEventEditable() semantics: view is sufficient when
+        // SCHEDULE_WITH_VIEW_PERMISSION is enabled, otherwise edit is required. The
+        // $originalDisplayGroupIds bypass (captured before the assignment list was
+        // cleared) lets the user re-save already-assigned groups without view/edit
+        // access on each — mirrors the Campaign::edit() pattern.
+        $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
         foreach ($sanitizedParams->getIntArray('displayGroupIds', ['default' => []]) as $displayGroupId) {
-            $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
+            $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+            $isExisting = in_array($displayGroupId, $originalDisplayGroupIds);
+
+            if ($scheduleWithView && !$isExisting && !$this->getUser()->checkViewable($displayGroup)) {
+                throw new AccessDeniedException(__('Access to one or more display groups denied'));
+            }
+            if (!$scheduleWithView && !$isExisting && !$this->getUser()->checkEditable($displayGroup)) {
+                throw new AccessDeniedException(__('Access to one or more display groups denied'));
+            }
+
+            $schedule->assignDisplayGroup($displayGroup);
         }
 
         if (!$schedule->isAlwaysDayPart()) {
@@ -1792,7 +1832,7 @@ class Schedule extends Base
         }
 
         $events = $this->scheduleFactory->query(
-            $this->gridRenderSort($params, $this->isJson($request)),
+            $this->gridRenderSort($params, $this->isJson($request), 'eventId'),
             $this->getScheduleFilters($params, $resolvedDisplayGroupIds)
         );
 

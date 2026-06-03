@@ -6,6 +6,7 @@ import type { CampaignFilterInput } from '../CampaignConfig';
 
 import { fetchCampaigns } from '@/services/campaignApi';
 import type { FetchCampaignRequest } from '@/services/campaignApi';
+import { isValidRegex } from '@/utils/regex';
 
 export const campaignQueryKeys = {
   all: ['campaign'] as const,
@@ -47,6 +48,8 @@ export const useCampaignData = ({
       const sortBy = sorting?.[0]?.id;
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
 
+      const { useRegexForName, logicalOperatorName, exactTags, logicalOperator } = advancedFilters;
+
       const normalizedTags = advancedFilters.tags?.length
         ? advancedFilters.tags.map((t) => t.tag).join(',')
         : undefined;
@@ -59,6 +62,8 @@ export const useCampaignData = ({
         sortDir: sorting.length ? sortDir : undefined,
         signal,
         folderId: folderId ?? undefined,
+
+        ...(advancedFilters.name && { name: advancedFilters.name }),
 
         ...(advancedFilters.type && { type: advancedFilters.type }),
 
@@ -78,6 +83,15 @@ export const useCampaignData = ({
         }),
 
         ...(normalizedTags && { tags: normalizedTags }),
+
+        ...(advancedFilters.retired != null && { retired: advancedFilters.retired }),
+
+        ...(useRegexForName && advancedFilters.name && isValidRegex(advancedFilters.name)
+          ? { useRegexForName: 1 }
+          : {}),
+        ...(logicalOperatorName ? { logicalOperatorName } : {}),
+        ...(exactTags !== undefined ? { exactTags: exactTags ? 1 : 0 } : {}),
+        ...(logicalOperator ? { logicalOperator } : {}),
       };
 
       return fetchCampaigns(request);

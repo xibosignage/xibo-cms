@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -58,6 +58,11 @@ export default defineConfig(({ mode }) => ({
   server: {
     port: 5173,
     open: '/prototype/',
+    cors: {
+      origin: true,
+      methods: ['GET', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'X-Requested-With', 'Accept', 'Origin', 'X-PREVIEW-JWT'],
+    },
     proxy: {
       '/json': {
         target: 'http://localhost',

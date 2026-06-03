@@ -23,6 +23,7 @@ namespace Xibo\Controller;
 
 use Carbon\Carbon;
 use GuzzleHttp\Client;
+use Xibo\Helper\Guzzle\SafeClient;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManagerStatic as Img;
 use OpenApi\Attributes as OA;
@@ -1783,11 +1784,25 @@ class Library extends Base
             ], $sanitizedParams)
         );
 
-        if (!$this->isApi($request)) {
-            // We need to generate preview URLs, base URL doesn't chagen between layouts
-            $baseUrl = (new HttpsDetect())->getBaseUrl($request);
+        // We need to generate preview URLs, base URL doesn't change between layouts
+        $baseUrl = (new HttpsDetect())->getBaseUrl($request);
 
-            foreach ($layouts as $layout) {
+        foreach ($layouts as $layout) {
+            // Preview JWT
+            $jwt = $this->jwtService->generateJwt(
+                'Preview',
+                'layout',
+                $layout->layoutId,
+                '/preview/layout/preview/' . $layout->layoutId,
+                3600,
+            )->toString();
+
+            $layout->setUnmatchedProperty(
+                'previewUrl',
+                $baseUrl . '/preview/layout/preview/' . $layout->layoutId . '?jwt=' . $jwt,
+            );
+
+            if (!$this->isApi($request) && !$this->isJson($request)) {
                 $layout->includeProperty('buttons');
 
                 // Add some buttons for this row
@@ -1801,17 +1816,7 @@ class Library extends Base
                     );
                 }
 
-                // Preview
-                // generate a JWT
-                $jwt = $this->jwtService->generateJwt(
-                    'Preview',
-                    'layout',
-                    $layout->layoutId,
-                    '/preview/layout/preview/' . $layout->layoutId,
-                    3600,
-                )->toString();
-
-                // Add it as a button
+                // Add preview as a button for legacy web UI
                 $layout->buttons[] = [
                     'id' => 'layout_button_preview',
                     'external' => true,
@@ -2130,7 +2135,7 @@ class Library extends Base
         }
 
         // if we were provided with optional Media name set it here, otherwise get it from download info
-        $name = empty($optionalName) ? htmlspecialchars($downloadInfo['filename']) : $optionalName;
+        $name = empty($optionalName) ? htmlspecialchars($downloadInfo['filename']) : basename($optionalName);
 
         // double check that provided Module Type and Extension are valid
         if (!Str::contains($module->getSetting('validExtensions'), $ext)) {
@@ -2431,7 +2436,7 @@ class Library extends Base
                             $filePath = $libraryLocation . $media->getId() . '_' . $media->mediaType . 'cover.png';
 
                             // Expect a quick download.
-                            $client = new Client($this->getConfig()->getGuzzleProxy(['timeout' => 20]));
+                            $client = SafeClient::getSafeClient($this->getConfig()->getGuzzleProxy(['timeout' => 20]));
                             $client->request(
                                 'GET',
                                 $import->searchResult->videoThumbnailUrl,

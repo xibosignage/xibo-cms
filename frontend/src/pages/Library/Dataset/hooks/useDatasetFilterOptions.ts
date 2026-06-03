@@ -20,62 +20,90 @@
  */
 
 import type { TFunction } from 'i18next';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { getBaseFilterKeys } from '../DatasetConfig';
 
-import type { FilterOption } from '@/components/ui/SelectFilter';
+import { useDebounce } from '@/hooks/useDebounce';
 import { fetchUsers } from '@/services/userApi';
-import { fetchUserGroups } from '@/services/userGroupApi';
+import type { FilterOption } from '@/types/filter';
+
+const PAGE_SIZE = 10;
 
 export function useDatasetFilterOptions(t: TFunction) {
-  const [filterOptions, setFilterOptions] = useState(() => getBaseFilterKeys(t));
-  const [isLoading, setIsLoading] = useState(true);
+  const [ownerOptions, setOwnerOptions] = useState<FilterOption[]>([]);
+  const [ownerPage, setOwnerPage] = useState(0);
+  const [hasMoreOwners, setHasMoreOwners] = useState(false);
+  const [isLoadingOwners, setIsLoadingOwners] = useState(false);
+  const [isLoadingMoreOwners, setIsLoadingMoreOwners] = useState(false);
+  const [ownerSearch, setOwnerSearch] = useState('');
+  const debouncedOwnerSearch = useDebounce(ownerSearch, 300);
 
   useEffect(() => {
     let ignore = false;
-
-    async function loadDynamicOptions() {
-      try {
-        const [usersRes] = await Promise.all([
-          fetchUsers({ start: 0, length: 1000 }),
-          fetchUserGroups({ start: 0, length: 1000 }),
-        ]);
-
+    setIsLoadingOwners(true);
+    setOwnerOptions([]);
+    setOwnerPage(0);
+    setHasMoreOwners(false);
+    fetchUsers({ start: 0, length: PAGE_SIZE, userName: debouncedOwnerSearch || undefined })
+      .then((res) => {
         if (ignore) {
           return;
         }
-
-        const userOptions: FilterOption[] = usersRes.rows.map((user) => ({
-          label: user.userName,
-          value: user.userId.toString(),
-        }));
-
-        const mergedOptions = getBaseFilterKeys(t).map((item) => {
-          if (item.name === 'userId') {
-            return {
-              ...item,
-              options: [...(item.options ?? []), ...userOptions],
-            };
-          }
-
-          return item;
-        });
-
-        setFilterOptions(mergedOptions);
-      } catch (error) {
-        console.error('Failed to load filter options', error);
-      } finally {
-        if (!ignore) setIsLoading(false);
-      }
-    }
-
-    loadDynamicOptions();
-
+        setOwnerOptions(res.rows.map((u) => ({ label: u.userName, value: u.userId.toString() })));
+        setHasMoreOwners(res.rows.length === PAGE_SIZE);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!ignore) {
+          setIsLoadingOwners(false);
+        }
+      });
     return () => {
       ignore = true;
     };
-  }, [t]);
+  }, [debouncedOwnerSearch]);
 
-  return { filterOptions, isLoading };
+  const handleLoadMoreOwners = () => {
+    if (isLoadingMoreOwners || !hasMoreOwners) return;
+    const nextPage = ownerPage + 1;
+    setIsLoadingMoreOwners(true);
+    fetchUsers({
+      start: nextPage * PAGE_SIZE,
+      length: PAGE_SIZE,
+      userName: debouncedOwnerSearch || undefined,
+    })
+      .then((res) => {
+        setOwnerOptions((prev) => [
+          ...prev,
+          ...res.rows.map((u) => ({ label: u.userName, value: u.userId.toString() })),
+        ]);
+        setOwnerPage(nextPage);
+        setHasMoreOwners(res.rows.length === PAGE_SIZE);
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingMoreOwners(false));
+  };
+
+  const filterOptions = getBaseFilterKeys(t).map((item) => {
+    if (item.name === 'userId') {
+      return {
+        ...item,
+        options: ownerOptions,
+        onLoadMore: handleLoadMoreOwners,
+        hasMore: hasMoreOwners,
+        isLoadingMore: isLoadingMoreOwners,
+        isLoading: isLoadingOwners,
+        onSearch: (term: string) => setOwnerSearch(term),
+        resolveLabel: (value: string) =>
+          fetchUsers({ start: 0, length: 1, userId: Number(value) }).then(
+            (res) => res.rows[0]?.userName ?? value,
+          ),
+      };
+    }
+
+    return item;
+  });
+
+  return { filterOptions, isLoading: isLoadingOwners };
 }

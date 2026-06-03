@@ -19,9 +19,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type {TFunction} from 'i18next';
+import type { TFunction } from 'i18next';
 
-import type {DisplayProfileType} from '@/types/displayProfile';
+import type { DisplayProfileType } from '@/types/displayProfile';
 
 export const CHECKBOX_FIELDS_BY_TYPE: Record<DisplayProfileType, Set<string>> = {
   android: new Set([

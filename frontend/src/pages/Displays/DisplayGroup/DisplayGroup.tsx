@@ -39,6 +39,7 @@ import { useDisplayGroupFilterOptions } from './hooks/useDisplayGroupFilterOptio
 
 import Button from '@/components/ui/Button';
 import FilterInputs from '@/components/ui/FilterInputs';
+import FolderActionModals from '@/components/ui/FolderActionModals';
 import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import FolderSidebar from '@/components/ui/FolderSidebar';
 import TabNav from '@/components/ui/TabNav';
@@ -49,12 +50,14 @@ import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import type { DisplayGroup } from '@/types/displayGroup';
+import { hasFeature } from '@/utils/permissions';
 
 export default function DisplayGroupPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { user } = useUserContext();
   const canViewFolders = usePermissions()?.canViewFolders;
+  const canSchedule = hasFeature(user, 'schedule.add');
   const homeFolderId = user?.homeFolderId ?? 1;
 
   const {
@@ -236,10 +239,12 @@ export default function DisplayGroupPage() {
           openModal('move');
         }
       : undefined,
-    openScheduleModal: (displayGroup) => {
-      setSelectedDisplayGroup(displayGroup);
-      openModal('schedule');
-    },
+    openScheduleModal: canSchedule
+      ? (displayGroup) => {
+          setSelectedDisplayGroup(displayGroup);
+          openModal('schedule');
+        }
+      : undefined,
     openAssignFilesModal: (displayGroup) => {
       setSelectedDisplayGroup(displayGroup);
       openModal('assignFiles');
@@ -453,6 +458,7 @@ export default function DisplayGroupPage() {
           getAllSelectedItems,
         }}
       />
+      {canViewFolders && <FolderActionModals folderActions={folderActions} />}
     </section>
   );
 }

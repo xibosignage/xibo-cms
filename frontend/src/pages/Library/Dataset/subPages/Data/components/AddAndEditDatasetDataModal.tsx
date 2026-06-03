@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { isAxiosError } from 'axios';
 import { useEffect, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -136,9 +137,10 @@ export function AddAndEditDataModal({
         onSave();
         onClose();
       } catch (err: unknown) {
-        const error = err as { response?: { data?: { message?: string } }; message?: string };
         setApiError(
-          error.response?.data?.message || error.message || t('An unexpected error occurred.'),
+          (isAxiosError(err) && err.response?.data?.message) ||
+            (err instanceof Error && err.message) ||
+            t('An unexpected error occurred.'),
         );
       }
     });
@@ -162,7 +164,7 @@ export function AddAndEditDataModal({
           .sort((a, b) => (a.columnOrder || 0) - (b.columnOrder || 0))
           .map((col) => {
             const isRequired = Boolean(col.isRequired);
-            const label = `${col.heading} ${isRequired ? '*' : ''}`;
+            const label = isRequired ? `${col.heading} *` : col.heading;
             const currentValue = draft[String(col.dataSetColumnId)];
 
             // Date Picker (dataTypeId === 3)

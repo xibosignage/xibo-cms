@@ -22,6 +22,7 @@
 namespace Xibo\Controller;
 
 use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use RobThree\Auth\TwoFactorAuth;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -54,63 +55,15 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class User extends Base
 {
-    /**
-     * @var UserFactory
-     */
-    private $userFactory;
-
-    /**
-     * @var UserTypeFactory
-     */
-    private $userTypeFactory;
-
-    /**
-     * @var UserGroupFactory
-     */
-    private $userGroupFactory;
-
-    /**
-     * @var PermissionFactory
-     */
-    private $permissionFactory;
-
-    /**
-     * @var ApplicationFactory
-     */
-    private $applicationFactory;
-
-    /** @var SessionFactory */
-    private $sessionFactory;
-
-    /** @var MediaService */
-    private $mediaService;
-
-    /**
-     * Set common dependencies.
-     * @param UserFactory $userFactory
-     * @param UserTypeFactory $userTypeFactory
-     * @param UserGroupFactory $userGroupFactory
-     * @param PermissionFactory $permissionFactory
-     * @param ApplicationFactory $applicationFactory
-     * @param SessionFactory $sessionFactory
-     * @param MediaService $mediaService
-     */
     public function __construct(
-        $userFactory,
-        $userTypeFactory,
-        $userGroupFactory,
-        $permissionFactory,
-        $applicationFactory,
-        $sessionFactory,
-        MediaService $mediaService
+        private readonly UserFactory $userFactory,
+        private readonly UserTypeFactory $userTypeFactory,
+        private readonly UserGroupFactory $userGroupFactory,
+        private readonly PermissionFactory $permissionFactory,
+        private readonly ApplicationFactory $applicationFactory,
+        private readonly SessionFactory $sessionFactory,
+        private readonly MediaService $mediaService
     ) {
-        $this->userFactory = $userFactory;
-        $this->userTypeFactory = $userTypeFactory;
-        $this->userGroupFactory = $userGroupFactory;
-        $this->permissionFactory = $permissionFactory;
-        $this->applicationFactory = $applicationFactory;
-        $this->sessionFactory = $sessionFactory;
-        $this->mediaService = $mediaService;
     }
 
     private function getMediaService(\Xibo\Entity\User $user): MediaService
@@ -124,41 +77,31 @@ class User extends Base
      * this redirects to the appropriate page for this user.
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function home(Request $request, Response $response)
+    public function home(Request $request, Response $response): Response|ResponseInterface
     {
         // Should we show this user the welcome page?
         if ($this->getUser()->newUserWizard == 0) {
-            return $response->withRedirect($this->urlFor($request, 'welcome.view'));
+            return $response->withRedirect('/prototype/welcome');
         }
 
-        // User wizard seen, go to home page
+        // User wizard seen, go to the React dashboard
         $this->getLog()->debug('Showing the homepage: ' . $this->getUser()->homePageId);
 
-        try {
-            $homepage = $this->userGroupFactory->getHomepageByName($this->getUser()->homePageId);
-        } catch (NotFoundException $exception) {
-            return $response->withRedirect($this->urlFor($request, 'icondashboard.view'));
-        }
-
-        if (!$this->getUser()->featureEnabled($homepage->feature)) {
-            return $response->withRedirect($this->urlFor($request, 'icondashboard.view'));
-        } else {
-            return $response->withRedirect($this->urlFor($request, $homepage->homepage));
-        }
+        return $response->withRedirect('/prototype/dashboard');
     }
 
     /**
      * Welcome Page
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function welcome(Request $request, Response $response)
+    public function welcome(Request $request, Response $response): Response|ResponseInterface
     {
         $this->getState()->template = 'welcome-page';
 
@@ -167,25 +110,6 @@ class User extends Base
             $this->getUser()->newUserWizard = 1;
             $this->getUser()->save(['validate' => false]);
         }
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Controls which pages are to be displayed
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    function displayPage(Request $request, Response $response)
-    {
-        $this->getState()->template = 'user-page';
-        $this->getState()->setData([
-            'userTypes' => $this->userTypeFactory->query()
-        ]);
 
         return $this->render($request, $response);
     }
@@ -207,10 +131,10 @@ class User extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function myDetails(Request $request, Response $response)
+    public function myDetails(Request $request, Response $response): Response|ResponseInterface
     {
         $settings = $this->getConfig()->getSettings();
 
@@ -236,16 +160,36 @@ class User extends Base
         ];
         $settings['accountId'] = defined('ACCOUNT_ID') ? constant('ACCOUNT_ID') : null;
 
-        $homePageUrl = $this->urlFor(
-            $request,
-            $this->userGroupFactory->getHomepageByName($this->getUser()->homePageId)->homepage
-        );
+        // Theme middleware does not run on /json/* routes, so load the theme explicitly.
+        $this->getConfig()->loadTheme();
+        $settings['app_name'] = $this->getConfig()->getThemeConfig('app_name', 'Xibo');
+
+        // Build branding URLs manually — rootUri() returns '/json/' on this route, not '/'.
+        $themeFolder = $this->getConfig()->getThemeConfig('themeFolder', 'theme/default/');
+        $logoUrl = file_exists(PROJECT_ROOT . '/web/' . $themeFolder . 'img/xibologo.png')
+            ? '/' . $themeFolder . 'img/xibologo.png'
+            : '/theme/default/img/xibologo.png';
+        $faviconUrl = file_exists(PROJECT_ROOT . '/web/' . $themeFolder . 'img/favicon.ico')
+            ? '/' . $themeFolder . 'img/favicon.ico'
+            : '/theme/default/img/favicon.ico';
+        $cssFile = $themeFolder . 'css/theme.css';
+        $cssUrl = file_exists(PROJECT_ROOT . '/web/' . $cssFile) ? '/' . $cssFile : null;
+
+        $branding = [
+            'productName' => $this->getConfig()->getThemeConfig('theme_title', 'Xibo Digital Signage'),
+            'appName' => $this->getConfig()->getThemeConfig('app_name', 'Xibo'),
+            'logoUrl' => $logoUrl,
+            'faviconUrl' => $faviconUrl,
+            'cssUrl' => $cssUrl,
+            'supportUrl' => $this->getConfig()->getThemeConfig('theme_url', 'https://xibosignage.com'),
+            'isXiboThemed' => $this->getConfig()->getThemeConfig('themeCode', 'default') === 'default',
+        ];
 
         // TODO: output some settings
         return $response->withJson(array_merge($this->getUser()->toArray(), [
-            'homePageUrl' => $homePageUrl,
             'settings' => $settings,
-            'features' => $this->getUserFeatures()
+            'features' => $this->getUserFeatures(),
+            'branding' => $branding,
         ]));
     }
 
@@ -262,6 +206,13 @@ class User extends Base
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'keyword',
+        description: 'Filter by User name, email, first and last name',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
         name: 'userName',
@@ -284,9 +235,50 @@ class User extends Base
         required: false,
         schema: new OA\Schema(type: 'integer')
     )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: [
+                'userId',
+                'userName',
+                'firstName',
+                'lastName',
+                'email',
+                'homeFolder',
+                'libraryQuota',
+                'lastAccessed',
+                'retired',
+                'twoFactorTypeId',
+                'phone',
+                'ref1',
+                'ref2',
+                'ref3',
+                'ref4',
+                'ref5'
+            ]
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
     #[OA\Response(
         response: 200,
         description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: '#/components/schemas/User')
@@ -297,29 +289,74 @@ class User extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getQueryParams());
 
         // Load results into an array
         $users = $this->userFactory->query(
-            $this->gridRenderSort($sanitizedParams),
+            $this->gridRenderSort($sanitizedParams, $this->isJson($request)),
             $this->getUserFilters($sanitizedParams)
         );
 
         foreach ($users as $user) {
-            $this->decorateUserProperties($request, $user);
+            $this->decorateUserProperties($user);
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->userFactory->countLast();
-        $this->getState()->setData($users);
+        if ($this->isJson($request) || $this->isApi($request)) {
+            return $response
+                ->withStatus(200)
+                ->withHeader('X-Total-Count', $this->userFactory->countLast())
+                ->withJson($users);
+        } else {
+            // TODO remove once userGroups ( membership ) and pages with owner filters are converted.
+            $this->getState()->template = 'grid';
+            $this->getState()->recordsTotal = $this->userFactory->countLast();
+            $this->getState()->setData($users);
 
-        return $this->render($request, $response);
+            return $this->render($request, $response);
+        }
+    }
+
+    #[OA\Get(
+        path: '/user/{userId}',
+        operationId: 'userSearchById',
+        description: 'Get the User object specified by the provided userId',
+        summary: 'User Search by ID',
+        tags: ['user']
+    )]
+    #[OA\Parameter(
+        name: 'userId',
+        description: 'Numeric ID of the User to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/User')
+    )]
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return Response|ResponseInterface
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function searchById(Request $request, Response $response, $id): Response|ResponseInterface
+    {
+        $user = $this->userFactory->getById($id, false);
+        $this->decorateUserProperties($user);
+
+        return $response
+            ->withStatus(200)
+            ->withJson($user);
     }
 
     #[OA\Post(
@@ -330,9 +367,19 @@ class User extends Base
         tags: ['user']
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: [
+                    'userName',
+                    'userTypeId',
+                    'homePageId',
+                    'password',
+                    'groupId',
+                    'newUserWizard',
+                    'hideNavigation'
+                ],
                 properties: [
                     new OA\Property(property: 'userName', description: 'The User Name', type: 'string'),
                     new OA\Property(property: 'email', description: 'The user email address', type: 'string'),
@@ -340,13 +387,13 @@ class User extends Base
                     new OA\Property(
                         property: 'homePageId',
                         description: 'The homepage to use for this User',
+                        type: 'string',
                         enum: [
                             'statusdashboard.view',
                             'icondashboard.view',
                             'mediamanager.view',
                             'playlistdashboard.view'
-                        ],
-                        type: 'string'
+                        ]
                     ),
                     new OA\Property(
                         property: 'libraryQuota',
@@ -379,41 +426,31 @@ class User extends Base
                     ),
                     new OA\Property(
                         property: 'isPasswordChangeRequired',
-                        description: 'A flag indicating whether password change should be forced for this user', // phpcs:ignore
+                        description: 'A flag indicating whether password change should be forced for this user',
                         type: 'integer'
                     )
-                ],
-                required: [
-                    'userName',
-                    'userTypeId',
-                    'homePageId',
-                    'password',
-                    'groupId',
-                    'newUserWizard',
-                    'hideNavigation'
                 ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(
         response: 201,
         description: 'successful operation',
-        content: new OA\JsonContent(ref: '#/components/schemas/User'),
         headers: [
             new OA\Header(
                 header: 'Location',
                 description: 'Location of the new record',
                 schema: new OA\Schema(type: 'string')
             )
-        ]
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/User')
     )]
     /**
      * Adds a user
      *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
@@ -421,7 +458,7 @@ class User extends Base
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function add(Request $request, Response $response)
+    public function add(Request $request, Response $response): Response|ResponseInterface
     {
         // Only group admins or super admins can create Users.
         if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin()) {
@@ -488,19 +525,17 @@ class User extends Base
         if (!empty($user->homePageId)) {
             $homepage = $this->userGroupFactory->getHomepageByName($user->homePageId);
             if (!empty($homepage->feature) && !$user->featureEnabled($homepage->feature)) {
-                throw new InvalidArgumentException(__('User does not have the enabled Feature for this Dashboard'), 'homePageId');
+                throw new InvalidArgumentException(
+                    __('User does not have the enabled Feature for this Dashboard'),
+                    'homePageId'
+                );
             }
         }
 
         // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 201,
-            'message' => sprintf(__('Added %s'), $user->userName),
-            'id' => $user->userId,
-            'data' => $user
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(201)
+            ->withJson($user);
     }
 
     #[OA\Put(
@@ -518,9 +553,11 @@ class User extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['userName', 'userTypeId', 'homePageId', 'newUserWizard', 'hideNavigation'],
                 properties: [
                     new OA\Property(property: 'userName', description: 'The User Name', type: 'string'),
                     new OA\Property(property: 'email', description: 'The user email address', type: 'string'),
@@ -528,13 +565,13 @@ class User extends Base
                     new OA\Property(
                         property: 'homePageId',
                         description: 'The homepage to use for this User',
+                        type: 'string',
                         enum: [
                             'statusdashboard.view',
                             'icondashboard.view',
                             'mediamanager.view',
                             'playlistdashboard.view'
-                        ],
-                        type: 'string'
+                        ]
                     ),
                     new OA\Property(
                         property: 'libraryQuota',
@@ -542,7 +579,7 @@ class User extends Base
                         type: 'integer'
                     ),
                     new OA\Property(property: 'newPassword', description: 'New User password', type: 'string'),
-                    new OA\Property(property: 'retypeNewPassword', description: 'Repeat the new User password', type: 'string'),
+                    new OA\Property(property: 'retypeNewPassword', description: 'Repeat the new User password', type: 'string'), // phpcs:ignore
                     new OA\Property(
                         property: 'retired',
                         description: 'Flag indicating whether to retire this user',
@@ -571,31 +608,29 @@ class User extends Base
                         description: 'A flag indicating whether password change should be forced for this user', // phpcs:ignore
                         type: 'integer'
                     )
-                ],
-                required: ['userName', 'userTypeId', 'homePageId', 'newUserWizard', 'hideNavigation']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(
         response: 201,
         description: 'successful operation',
-        content: new OA\JsonContent(ref: '#/components/schemas/User'),
         headers: [
             new OA\Header(
                 header: 'Location',
                 description: 'Location of the new record',
                 schema: new OA\Schema(type: 'string')
             )
-        ]
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/User')
     )]
     /**
      * Edit a user
      *
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @param int $id
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
@@ -603,7 +638,7 @@ class User extends Base
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $user = $this->userFactory->getById($id);
 
@@ -715,13 +750,9 @@ class User extends Base
         $user = $this->userFactory->getById($id);
 
         // Return
-        $this->getState()->hydrate([
-            'message' => sprintf(__('Edited %s'), $user->userName),
-            'id' => $user->userId,
-            'data' => $user
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson($user);
     }
 
     #[OA\Delete(
@@ -765,8 +796,8 @@ class User extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @param int $id
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws ConfigurationException
      * @throws GeneralException
@@ -775,13 +806,16 @@ class User extends Base
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function delete(Request $request, Response $response, $id)
+    public function delete(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $user = $this->userFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // System User
         if ($user->userId == $this->getConfig()->getSetting('SYSTEM_USER')) {
-            throw new InvalidArgumentException(__('This User is set as System User and cannot be deleted.'), 'userId');
+            throw new InvalidArgumentException(
+                __('This User is set as System User and cannot be deleted.'),
+                'userId'
+            );
         }
 
         if (!$this->getUser()->checkDeleteable($user)) {
@@ -793,11 +827,17 @@ class User extends Base
         }
 
         if ($this->getUser()->isGroupAdmin() && $user->userTypeId !== 3) {
-            throw new InvalidArgumentException(__('Group Admin cannot remove Super Admins or other Group Admins.'));
+            throw new InvalidArgumentException(
+                __('Group Admin cannot remove Super Admins or other Group Admins.')
+            );
         }
 
         if ($sanitizedParams->getCheckbox('deleteAllItems') && $user->isSuperAdmin()) {
-            throw new InvalidArgumentException(__('Cannot delete all items owned by a Super Admin, please reassign to a different User.'));
+            throw new InvalidArgumentException(
+                __(
+                    'Cannot delete all items owned by a Super Admin, please reassign to a different User.'
+                )
+            );
         }
 
         $user->setChildAclDependencies($this->userGroupFactory);
@@ -806,28 +846,53 @@ class User extends Base
             // Do we have a userId to reassign content to?
             if ($sanitizedParams->getInt('reassignUserId') != null) {
                 // Reassign all content owned by this user to the provided user
-                $this->getLog()->debug(sprintf('Reassigning content to new userId: %d', $sanitizedParams->getInt('reassignUserId')));
+                $this->getLog()->debug(
+                    sprintf(
+                        'Reassigning content to new userId: %d',
+                        $sanitizedParams->getInt('reassignUserId')
+                    )
+                );
                 $this->getDispatcher()->dispatch(
-                    UserDeleteEvent::$NAME,
                     new UserDeleteEvent(
                         $user,
                         'reassignAll',
                         $this->userFactory->getSystemUser(),
                         $this->userFactory->getById($sanitizedParams->getInt('reassignUserId'))
-                    )
+                    ),
+                    UserDeleteEvent::$NAME,
                 );
             } else {
                 // Check to see if we have any child data that would prevent us from deleting
                 /** @var UserDeleteEvent $countChildren */
-                $countChildren = $this->getDispatcher()->dispatch(UserDeleteEvent::$NAME, new UserDeleteEvent($user, 'countChildren', $this->userFactory->getSystemUser()));
+                $countChildren = $this->getDispatcher()->dispatch(
+                    new UserDeleteEvent(
+                        $user,
+                        'countChildren',
+                        $this->userFactory->getSystemUser()
+                    ),
+                    UserDeleteEvent::$NAME
+                );
 
                 if ($countChildren->getReturnValue() > 0) {
-                    throw new InvalidArgumentException(sprintf(__('This user cannot be deleted as it has %d child items'), $countChildren->getReturnValue()));
+                    throw new InvalidArgumentException(
+                        sprintf(
+                            __('This user cannot be deleted as it has %d child items'),
+                            $countChildren->getReturnValue()
+                        )
+                    );
                 }
             }
         }
 
-        $this->getDispatcher()->dispatch(UserDeleteEvent::$NAME, new UserDeleteEvent($user, 'delete', $this->userFactory->getSystemUser()));
+        $this->getDispatcher()->dispatch(
+            new UserDeleteEvent(
+                $user,
+                'delete',
+                $this->userFactory->getSystemUser()
+            ),
+            UserDeleteEvent::$NAME
+        );
+
         // Delete the user
         $user->delete();
 
@@ -843,12 +908,14 @@ class User extends Base
     /**
      * @param \Slim\Http\ServerRequest $request
      * @param \Slim\Http\Response $response
-     * @return \Psr\Http\Message\ResponseInterface|\Slim\Http\Response
+     * @return ResponseInterface|\Slim\Http\Response
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function homepages(Request $request, Response $response)
+    public function homepages(Request $request, Response $response): Response|ResponseInterface
     {
+        // TODO change return when no longer used by old FE.
+
         // Only group admins or super admins can create Users.
         if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin()) {
             throw new AccessDeniedException(__('Only super and group admins can create users'));
@@ -916,127 +983,25 @@ class User extends Base
     }
 
     /**
-     * User Add Form
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function addForm(Request $request, Response $response)
-    {
-        // Only group admins or super admins can create Users.
-        if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin()) {
-            throw new AccessDeniedException(__('Only super and group admins can create users'));
-        }
-
-        $defaultUserTypeId = 3;
-        foreach ($this->userTypeFactory->query(null, [
-            'userType' => $this->getConfig()->getSetting('defaultUsertype')
-        ]) as $defaultUserType) {
-            $defaultUserTypeId = $defaultUserType->userTypeId;
-        }
-
-        $this->getState()->template = 'user-form-add';
-        $this->getState()->setData([
-            'options' => [
-                'userTypes' => ($this->getUser()->isSuperAdmin()) ? $this->userTypeFactory->getAllRoles() : $this->userTypeFactory->getNonAdminRoles(),
-                'defaultGroupId' => $this->getConfig()->getSetting('DEFAULT_USERGROUP'),
-                'defaultUserType' => $defaultUserTypeId
-            ],
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * User Edit Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function editForm(Request $request, Response $response, $id)
-    {
-        $user = $this->userFactory->getById($id);
-        $user->setChildAclDependencies($this->userGroupFactory);
-
-        if (!$this->getUser()->checkEditable($user)) {
-            throw new AccessDeniedException();
-        }
-
-        $homepage = [];
-        try {
-            $homepage = $this->userGroupFactory->getHomepageByName($user->homePageId);
-        } catch (NotFoundException $notFoundException) {
-            $this->getLog()->error(sprintf('User %d has non existing homepage %s', $user->userId, $user->homePageId));
-        }
-
-        $this->getState()->template = 'user-form-edit';
-        $this->getState()->setData([
-            'user' => $user,
-            'options' => [
-                'homepage' => $homepage,
-                'userTypes' => ($this->getUser()->isSuperAdmin()) ? $this->userTypeFactory->getAllRoles() : $this->userTypeFactory->getNonAdminRoles()
-            ],
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * User Delete Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function deleteForm(Request $request, Response $response, $id)
-    {
-        $user = $this->userFactory->getById($id);
-
-        if (!$this->getUser()->checkDeleteable($user)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'user-form-delete';
-        $this->getState()->setData([
-            'user' => $user,
-            'users' => $this->userFactory->query(null, ['notUserId' => $id]),
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
      * Change my password form
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function editProfileForm(Request $request, Response $response)
+    public function editProfileForm(Request $request, Response $response): Response|ResponseInterface
     {
+        // TODO Remove later
         $user = $this->getUser();
 
         $this->getState()->template = 'user-form-edit-profile';
         $this->getState()->setData([
             'user' => $user,
             'data' => [
-                'setup' => $this->urlFor($request,'user.setup.profile'),
-                'generate' => $this->urlFor($request,'user.recovery.generate.profile'),
-                'show' => $this->urlFor($request,'user.recovery.show.profile'),
+                'setup' => $this->urlFor($request, 'user.setup.profile'),
+                'generate' => $this->urlFor($request, 'user.recovery.generate.profile'),
+                'show' => $this->urlFor($request, 'user.recovery.show.profile'),
             ]
         ]);
 
@@ -1047,7 +1012,7 @@ class User extends Base
      * Change my Password
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws \QRException
@@ -1055,7 +1020,7 @@ class User extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
-    public function editProfile(Request $request, Response $response)
+    public function editProfile(Request $request, Response $response): Response|ResponseInterface
     {
         $user = $this->getUser();
 
@@ -1105,7 +1070,10 @@ class User extends Base
 
         // if we are setting up email two factor auth, check if the sending email address is entered in CMS Settings.
         if ($user->twoFactorTypeId === 1 && $this->getConfig()->getSetting('mail_from') == '') {
-            throw new InvalidArgumentException(__('Please provide valid sending email address in CMS Settings on Network tab'), 'mail_from');
+            throw new InvalidArgumentException(
+                __('Please provide valid sending email address in CMS Settings on Network tab'),
+                'mail_from'
+            );
         }
 
         // if we have a new password provided, update the user record
@@ -1166,13 +1134,13 @@ class User extends Base
     /**
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws \QRException
      * @throws \RobThree\Auth\TwoFactorAuthException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function tfaSetup(Request $request, Response $response)
+    public function tfaSetup(Request $request, Response $response): Response|ResponseInterface
     {
         $user = $this->getUser();
 
@@ -1212,7 +1180,7 @@ class User extends Base
      * @return bool
      * @throws \RobThree\Auth\TwoFactorAuthException
      */
-    public function tfaValidate($code, $user)
+    public function tfaValidate($code, $user): bool
     {
         $issuerSettings = $this->getConfig()->getSetting('TWOFACTOR_ISSUER');
         $appName = $this->getConfig()->getThemeConfig('app_name');
@@ -1240,11 +1208,11 @@ class User extends Base
     /**
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function tfaRecoveryGenerate(Request $request, Response $response)
+    public function tfaRecoveryGenerate(Request $request, Response $response): Response|ResponseInterface
     {
         $user = $this->getUser();
 
@@ -1270,18 +1238,18 @@ class User extends Base
     /**
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function tfaRecoveryShow(Request $request, Response $response)
+    public function tfaRecoveryShow(Request $request, Response $response): Response|ResponseInterface
     {
         $user = $this->getUser();
 
         $user->twoFactorRecoveryCodes = json_decode($user->twoFactorRecoveryCodes);
 
-        if (isset($_GET["generatedCodes"]) && !empty($_GET["generatedCodes"])) {
-            $generatedCodes = $_GET["generatedCodes"];
+        if (isset($_GET['generatedCodes']) && !empty($_GET['generatedCodes'])) {
+            $generatedCodes = $_GET['generatedCodes'];
             $user->twoFactorRecoveryCodes = json_encode($generatedCodes);
         }
 
@@ -1402,14 +1370,15 @@ class User extends Base
      * @param Response $response
      * @param string $entity
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function permissionsGrid(Request $request, Response $response, $entity, $id)
+    public function permissionsGrid(Request $request, Response $response, $entity, $id): Response|ResponseInterface
     {
+        // TODO change return when no longer used by old FE.
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Load our object
@@ -1443,7 +1412,7 @@ class User extends Base
         $this->getState()->setData($permissions);
         $this->getState()->recordsTotal = $this->permissionFactory->countLast();
 
-        return $this->render($request,  $response);
+        return $this->render($request, $response);
     }
 
 
@@ -1480,18 +1449,19 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @param string $entities
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function permissionsMultiGrid(Request $request, Response $response, $entity)
+    public function permissionsMultiGrid(Request $request, Response $response, $entity): Response|ResponseInterface
     {
+        // TODO change return when no longer used by old FE.
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check if the array of ids is passed
-        if($sanitizedParams->getString('ids') == '') {
+        if ($sanitizedParams->getString('ids') == '') {
             throw new InvalidArgumentException(__('The array of ids is empty!'));
         }
 
@@ -1515,33 +1485,41 @@ class User extends Base
             }
 
             // List of all Groups with a view / edit / delete check box
-            $permissions = array_merge_recursive($permissions, $this->permissionFactory->getAllByObjectId($this->getUser(), $objects[$i]->permissionsClass(), $objectId, $this->gridRenderSort($sanitizedParams), $this->gridRenderFilter(['name' => $sanitizedParams->getString('name')], $sanitizedParams)));
+            $permissions = array_merge_recursive(
+                $permissions,
+                $this->permissionFactory->getAllByObjectId(
+                    $this->getUser(),
+                    $objects[$i]->permissionsClass(),
+                    $objectId,
+                    $this->gridRenderSort($sanitizedParams),
+                    $this->gridRenderFilter(['name' => $sanitizedParams->getString('name')], $sanitizedParams)
+                )
+            );
         }
 
         // Change permissions structure to be grouped by user group
         foreach ($permissions as $permission) {
-
-            if(!array_key_exists($permission->groupId, $newPermissions)) {
+            if (!array_key_exists($permission->groupId, $newPermissions)) {
                 $newPermissions[$permission->groupId] = [
-                    "groupId" => $permission->groupId,
-                    "group" => $permission->group,
-                    "isUser" => $permission->isUser,
-                    "entity" => $permission->entity,
-                    "permissions" => [
+                    'groupId' => $permission->groupId,
+                    'group' => $permission->group,
+                    'isUser' => $permission->isUser,
+                    'entity' => $permission->entity,
+                    'permissions' => [
                         $permission->objectId => [
-                            "permissionId" => $permission->permissionId,
-                            "view" => $permission->view,
-                            "edit" => $permission->edit,
-                            "delete" => $permission->delete
+                            'permissionId' => $permission->permissionId,
+                            'view' => $permission->view,
+                            'edit' => $permission->edit,
+                            'delete' => $permission->delete
                         ]
                     ]
                 ];
             } else {
-                $newPermissions[$permission->groupId]["permissions"][] = [
-                    "permissionId" => $permission->permissionId,
-                    "view" => $permission->view,
-                    "edit" => $permission->edit,
-                    "delete" => $permission->delete
+                $newPermissions[$permission->groupId]['permissions'][] = [
+                    'permissionId' => $permission->permissionId,
+                    'view' => $permission->view,
+                    'edit' => $permission->edit,
+                    'delete' => $permission->delete
                 ];
             }
         }
@@ -1550,7 +1528,7 @@ class User extends Base
         $this->getState()->setData($newPermissions);
         $this->getState()->recordsTotal = $this->permissionFactory->countLast();
 
-        return $this->render($request,  $response);
+        return $this->render($request, $response);
     }
 
     /**
@@ -1559,14 +1537,15 @@ class User extends Base
      * @param Response $response
      * @param $entity
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function permissionsForm(Request $request, Response $response, $entity, $id)
+    public function permissionsForm(Request $request, Response $response, $entity, $id): Response|ResponseInterface
     {
+        // TODO remove later
         $requestEntity = $entity;
 
         // Load our object
@@ -1578,7 +1557,13 @@ class User extends Base
         }
 
         $currentPermissions = [];
-        foreach ($this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $id, ['groupId'], ['setOnly' => 1]) as $permission) {
+        foreach ($this->permissionFactory->getAllByObjectId(
+            $this->getUser(),
+            $object->permissionsClass(),
+            $id,
+            ['groupId'],
+            ['setOnly' => 1]
+        ) as $permission) {
             /* @var Permission $permission */
             $currentPermissions[$permission->groupId] = [
                 'view' => ($permission->view == null) ? 0 : $permission->view,
@@ -1609,18 +1594,19 @@ class User extends Base
      * @param Response $response
      * @param $entity
      * @param $ids
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function permissionsMultiForm(Request $request, Response $response, $entity)
+    public function permissionsMultiForm(Request $request, Response $response, $entity): Response|ResponseInterface
     {
+        // TODO remove later
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check if the array of ids is passed
-        if($sanitizedParams->getString('ids') == '') {
+        if ($sanitizedParams->getString('ids') == '') {
             throw new InvalidArgumentException(__('The array of ids is empty!'));
         }
 
@@ -1678,8 +1664,8 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @param string $entity
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @param int $id
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws ConfigurationException
      * @throws GeneralException
@@ -1688,8 +1674,12 @@ class User extends Base
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function permissions(Request $request, Response $response, $entity, $id)
-    {
+    public function permissions(
+        Request $request,
+        Response $response,
+        string $entity,
+        int $id
+    ): Response|ResponseInterface {
         // Load our object
         $object = $this->parsePermissionsEntity($entity, $id);
 
@@ -1780,12 +1770,7 @@ class User extends Base
         }
 
         // Return
-        $this->getState()->hydrate([
-            'httpCode' => 204,
-            'message' => __('Share option Updated')
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(204);
     }
 
 
@@ -1815,7 +1800,7 @@ class User extends Base
         description: 'Array of permissions with groupId as the key',
         in: 'query',
         required: true,
-        schema: new OA\Schema(items: new OA\Items(type: 'string'), type: 'array')
+        schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'string'))
     )]
     #[OA\Parameter(
         name: 'ownerId',
@@ -1829,7 +1814,7 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @param string $entity
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws ConfigurationException
      * @throws GeneralException
@@ -1838,12 +1823,14 @@ class User extends Base
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function permissionsMulti(Request $request, Response $response, $entity)
+    public function permissionsMulti(Request $request, Response $response, string $entity): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Get array of ids
-        $ids = ($sanitizedParams->getString('ids') != '') ? explode(',', $sanitizedParams->getString('ids')) : [];
+        $ids = ($sanitizedParams->getString('ids') != '')
+            ? explode(',', $sanitizedParams->getString('ids'))
+            : [];
 
         // Check if the array of ids is passed
         if (count($ids) == 0) {
@@ -1870,7 +1857,7 @@ class User extends Base
      * @param int $objectId
      * @throws InvalidArgumentException
      */
-    private function parsePermissionsEntity($entity, $objectId)
+    private function parsePermissionsEntity(string $entity, int $objectId)
     {
         if ($entity == '') {
             throw new InvalidArgumentException(__('Sharing requested without an entity'));
@@ -1894,9 +1881,14 @@ class User extends Base
      * @param Permission[] $permissions
      * @param array $groupIds
      */
-    private function updatePermissions($permissions, $groupIds)
+    private function updatePermissions(array $permissions, array $groupIds): void
     {
-        $this->getLog()->debug(sprintf('Received Permissions Array to update: %s', var_export($groupIds, true)));
+        $this->getLog()->debug(
+            sprintf(
+                'Received Permissions Array to update: %s',
+                var_export($groupIds, true)
+            )
+        );
 
         // List of groupIds with view, edit and del assignments
         foreach ($permissions as $row) {
@@ -1904,15 +1896,15 @@ class User extends Base
             // If all permissions are 0, then the record is deleted
             if (is_array($groupIds)) {
                 if (array_key_exists($row->groupId, $groupIds)) {
-                    if(array_key_exists('view', $groupIds[$row->groupId])) {
+                    if (array_key_exists('view', $groupIds[$row->groupId])) {
                         $row->view = $groupIds[$row->groupId]['view'];
                     }
 
-                    if(array_key_exists('edit', $groupIds[$row->groupId])) {
+                    if (array_key_exists('edit', $groupIds[$row->groupId])) {
                         $row->edit = $groupIds[$row->groupId]['edit'];
                     }
 
-                    if(array_key_exists('delete', $groupIds[$row->groupId])) {
+                    if (array_key_exists('delete', $groupIds[$row->groupId])) {
                         $row->delete = $groupIds[$row->groupId]['delete'];
                     }
 
@@ -1926,12 +1918,13 @@ class User extends Base
      * User Applications
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function myApplications(Request $request, Response $response)
+    public function myApplications(Request $request, Response $response): Response|ResponseInterface
     {
+        // TODO Remove later
         $this->getState()->template = 'user-applications-form';
         $this->getState()->setData([
             'applications' => $this->applicationFactory->getAuthorisedByUserId($this->getUser()->userId),
@@ -1965,12 +1958,12 @@ class User extends Base
     /**
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function pref(Request $request, Response $response)
+    public function pref(Request $request, Response $response): Response|ResponseInterface
     {
         $requestedPreference =  $request->getQueryParam('preference');
 
@@ -1996,20 +1989,20 @@ class User extends Base
         tags: ['user']
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/json',
             schema: new OA\Schema(
+                required: ['preference'],
                 properties: [
                     new OA\Property(
                         property: 'preference',
-                        items: new OA\Items(ref: '#/components/schemas/UserOption'),
-                        type: 'array'
+                        type: 'array',
+                        items: new OA\Items(ref: '#/components/schemas/UserOption')
                     )
-                ],
-                required: ['preference']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
@@ -2021,7 +2014,7 @@ class User extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
-    public function prefEdit(Request $request, Response $response)
+    public function prefEdit(Request $request, Response $response): Response
     {
         $parsedRequest = $this->getSanitizer($request->getParsedBody());
 
@@ -2054,40 +2047,8 @@ class User extends Base
     /**
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function membershipForm(Request $request, Response $response, $id)
-    {
-        $user = $this->userFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($user)) {
-            throw new AccessDeniedException();
-        }
-
-        // Groups we are assigned to
-        $groupsAssigned = $this->userGroupFactory->getByUserId($user->userId);
-
-        $this->getState()->template = 'user-form-membership';
-        $this->getState()->setData([
-            'user' => $user,
-            'extra' => [
-                'userGroupsAssigned' => $groupsAssigned
-            ],
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @param int $id
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
@@ -2095,7 +2056,7 @@ class User extends Base
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function assignUserGroup(Request $request, Response $response, $id)
+    public function assignUserGroup(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $user = $this->userFactory->getById($id);
 
@@ -2129,73 +2090,58 @@ class User extends Base
         }
 
         // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('%s assigned to User Groups'), $user->userName),
-            'id' => $user->userId
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(204);
     }
 
     /**
      * Update the User Welcome Tutorial to Seen
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
-    public function userWelcomeSetUnSeen(Request $request, Response $response)
+    public function userWelcomeSetUnSeen(Request $request, Response $response): Response|ResponseInterface
     {
         $this->getUser()->newUserWizard = 0;
         $this->getUser()->save(['validate' => false]);
 
         // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('%s has started the welcome tutorial'), $this->getUser()->userName)
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(204);
     }
 
     /**
      * Update the User Welcome Tutorial to Seen
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
-    public function userWelcomeSetSeen(Request $request, Response $response)
+    public function userWelcomeSetSeen(Request $request, Response $response): Response|ResponseInterface
     {
         $this->getUser()->newUserWizard = 1;
         $this->getUser()->save(['validate' => false]);
 
         // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('%s has seen the welcome tutorial'), $this->getUser()->userName)
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(204);
     }
 
     /**
      * Preferences Form
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function preferencesForm(Request $request, Response $response)
+    public function preferencesForm(Request $request, Response $response): Response|ResponseInterface
     {
+        // TODO Remove later
         $this->getState()->template = 'user-form-preferences';
 
         return $this->render($request, $response);
@@ -2209,39 +2155,54 @@ class User extends Base
         tags: ['user']
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['navigationMenuPosition'],
                 properties: [
                     new OA\Property(property: 'navigationMenuPosition', type: 'string'),
                     new OA\Property(property: 'useLibraryDuration', type: 'integer'),
                     new OA\Property(property: 'showThumbnailColumn', type: 'integer'),
                     new OA\Property(property: 'rememberFolderTreeStateGlobally', type: 'integer')
-                ],
-                required: ['navigationMenuPosition']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
-    public function prefEditFromForm(Request $request, Response $response)
+    public function prefEditFromForm(Request $request, Response $response): Response|ResponseInterface
     {
         $parsedParams = $this->getSanitizer($request->getParams());
 
-        $this->getUser()->setOptionValue('navigationMenuPosition', $parsedParams->getString('navigationMenuPosition', ['defaultOnEmptyString' => true]));
-        $this->getUser()->setOptionValue('useLibraryDuration', $parsedParams->getCheckbox('useLibraryDuration'));
-        $this->getUser()->setOptionValue('showThumbnailColumn', $parsedParams->getCheckbox('showThumbnailColumn'));
-        $this->getUser()->setOptionValue('isAlwaysUseManualAddUserForm', $parsedParams->getCheckbox('isAlwaysUseManualAddUserForm'));
-        $this->getUser()->setOptionValue('rememberFolderTreeStateGlobally', $parsedParams->getCheckbox('rememberFolderTreeStateGlobally'));
+        $this->getUser()->setOptionValue(
+            'navigationMenuPosition',
+            $parsedParams->getString('navigationMenuPosition', ['defaultOnEmptyString' => true])
+        );
+        $this->getUser()->setOptionValue(
+            'useLibraryDuration',
+            $parsedParams->getCheckbox('useLibraryDuration')
+        );
+        $this->getUser()->setOptionValue(
+            'showThumbnailColumn',
+            $parsedParams->getCheckbox('showThumbnailColumn')
+        );
+        $this->getUser()->setOptionValue(
+            'isAlwaysUseManualAddUserForm',
+            $parsedParams->getCheckbox('isAlwaysUseManualAddUserForm')
+        );
+        $this->getUser()->setOptionValue(
+            'rememberFolderTreeStateGlobally',
+            $parsedParams->getCheckbox('rememberFolderTreeStateGlobally')
+        );
 
         // Clear auto submits?
         if ($parsedParams->getCheckbox('autoSubmitClearAll', ['checkboxReturnInteger' => false])) {
@@ -2251,38 +2212,7 @@ class User extends Base
         $this->getUser()->save();
 
         // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => __('Updated Preferences')
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * User Onboarding Form
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function onboardingForm(Request $request, Response $response)
-    {
-        // Only group admins or super admins can create Users.
-        if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin()) {
-            throw new AccessDeniedException(__('Only super and group admins can create users'));
-        }
-
-        $this->getState()->template = 'user-form-onboarding';
-        $this->getState()->setData([
-            'groups' => $this->userGroupFactory->query(null, [
-                'isShownForAddUser' => 1
-            ])
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(204);
     }
 
     /**
@@ -2290,37 +2220,11 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function setHomeFolderForm(Request $request, Response $response, $id)
-    {
-        $user = $this->userFactory->getById($id);
-        $user->setChildAclDependencies($this->userGroupFactory);
-
-        if (!$this->getUser()->checkEditable($user)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'user-form-home-folder';
-        $this->getState()->setData([
-            'user' => $user
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Set home folder form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function setHomeFolder(Request $request, Response $response, $id)
+    public function setHomeFolder(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $user = $this->userFactory->getById($id);
         $user->setChildAclDependencies($this->userGroupFactory);
@@ -2357,13 +2261,9 @@ class User extends Base
      */
     private function getUserFeatures(): array
     {
-        $userFeatures = [];
-
-        foreach ($this->userGroupFactory->getFeatures() as $key => $feature) {
-            $userFeatures[$key] = $this->getUser()->featureEnabled($feature);
-        };
-
-        return $userFeatures;
+        return array_map(function ($feature) {
+            return $this->getUser()->featureEnabled($feature);
+        }, $this->userGroupFactory->getFeatures());
     }
 
     /**
@@ -2375,6 +2275,7 @@ class User extends Base
     {
         return $this->gridRenderFilter([
             'userId' => $sanitizedParams->getInt('userId'),
+            'keyword' => $sanitizedParams->getString('keyword'),
             'userTypeId' => $sanitizedParams->getInt('userTypeId'),
             'userName' => $sanitizedParams->getString('userName'),
             'firstName' => $sanitizedParams->getString('firstName'),
@@ -2388,11 +2289,10 @@ class User extends Base
 
     /**
      * Decorate user properties
-     * @param $request
      * @param $user
      * @throws InvalidArgumentException
      */
-    private function decorateUserProperties($request, $user)
+    private function decorateUserProperties($user): void
     {
         $user->setUnmatchedProperty('libraryQuotaFormatted', ByteFormatter::format($user->libraryQuota * 1024));
 
@@ -2411,7 +2311,10 @@ class User extends Base
                 $this->userGroupFactory->getHomepageByName($user->homePageId)->title
             );
         } catch (NotFoundException $exception) {
-            $this->getLog()->error('User has homepage which does not exist. userId: ' . $user->userId . ', homepage: ' . $user->homePageId);
+            $this->getLog()->error(
+                'User has homepage which does not exist. userId: ' . $user->userId .
+                ', homepage: ' . $user->homePageId
+            );
             $user->setUnmatchedProperty('homePage', __('Unknown homepage, please edit to update.'));
         }
 
@@ -2421,81 +2324,6 @@ class User extends Base
         $user->setUnmatchedProperty('isSuperAdmin', $user->isSuperAdmin());
 
         $user->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($user));
-
-        // TODO: Remove buttons
-        if ($this->isApi($request) || $this->isJson($request)) {
-            return;
-        }
-
-        $user->includeProperty('buttons');
-
-        // Super admins have some buttons
-        if ($this->getUser()->featureEnabled('users.modify')
-            && $this->getUser()->checkEditable($user)
-        ) {
-            // Edit
-            $user->buttons[] = [
-                'id' => 'user_button_edit',
-                'url' => $this->urlFor($request,'user.edit.form', ['id' => $user->userId]),
-                'text' => __('Edit')
-            ];
-        }
-
-        if ($this->getUser()->featureEnabled('users.modify')
-            && $this->getUser()->checkDeleteable($user)
-            && $user->userId != $this->getConfig()->getSetting('SYSTEM_USER')
-            && $this->getUser()->userId !== $user->userId
-            && ( ($this->getUser()->isGroupAdmin() && $user->userTypeId == 3) || $this->getUser()->isSuperAdmin() )
-        ) {
-            // Delete
-            $user->buttons[] = [
-                'id' => 'user_button_delete',
-                'url' => $this->urlFor($request,'user.delete.form', ['id' => $user->userId]),
-                'text' => __('Delete')
-            ];
-        }
-
-        if ($this->getUser()->featureEnabled('folder.userHome')) {
-            $user->buttons[] = [
-                'id' => 'user_button_set_home',
-                'url' => $this->urlFor($request, 'user.homeFolder.form', ['id' => $user->userId]),
-                'text' => __('Set Home Folder'),
-                'multi-select' => true,
-                'dataAttributes' => [
-                    ['name' => 'commit-url', 'value' => $this->urlFor($request, 'user.homeFolder', ['id' => $user->userId])],
-                    ['name' => 'commit-method', 'value' => 'post'],
-                    ['name' => 'id', 'value' => 'user_button_set_home'],
-                    ['name' => 'text', 'value' => __('Set home folder')],
-                    ['name' => 'rowtitle', 'value' => $user->userName],
-                    ['name' => 'form-callback', 'value' => 'userHomeFolderMultiselectFormOpen']
-                ],
-            ];
-        }
-
-        if ($this->getUser()->featureEnabled('users.modify')
-            && $this->getUser()->checkPermissionsModifyable($user)
-        ) {
-            $user->buttons[] = ['divider' => true];
-
-            // User Groups
-            $user->buttons[] = array(
-                'id' => 'user_button_group_membership',
-                'url' => $this->urlFor($request,'user.membership.form', ['id' => $user->userId]),
-                'text' => __('User Groups')
-            );
-        }
-
-        if ($this->getUser()->isSuperAdmin()) {
-            $user->buttons[] = ['divider' => true];
-
-            // Features
-            $user->buttons[] = [
-                'id' => 'user_button_page_security',
-                'url' => $this->urlFor($request,'group.acl.form', ['id' => $user->groupId, 'userId' => $user->userId]),
-                'text' => __('Features'),
-                'title' => __('Turn Features on/off for this User')
-            ];
-        }
     }
 
     /**
@@ -2521,8 +2349,8 @@ class User extends Base
     )]
     #[OA\Parameter(
         name: 'id',
-        in: 'path',
         description: 'The user ID',
+        in: 'path',
         required: true,
         schema: new OA\Schema(type: 'integer')
     )]
@@ -2533,12 +2361,13 @@ class User extends Base
     /**
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @param int $id
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      */
-    public function applicationsGrid(Request $request, Response $response, $id)
+    public function applicationsGrid(Request $request, Response $response, int $id): Response|ResponseInterface
     {
+        // TODO change return when no longer used by old FE.
         $user = $this->userFactory->getById($id);
 
         if ($this->getUser()->userId !== $user->userId && !$this->getUser()->checkEditable($user)) {
@@ -2552,5 +2381,22 @@ class User extends Base
         $this->getState()->setData($applications);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return Response|ResponseInterface
+     * @throws NotFoundException
+     */
+    public function getUserTypes(Request $request, Response $response): Response|ResponseInterface
+    {
+        $userTypes = ($this->getUser()->isSuperAdmin())
+            ? $this->userTypeFactory->getAllRoles()
+            : $this->userTypeFactory->getNonAdminRoles();
+
+        return $response
+            ->withStatus(200)
+            ->withJson($userTypes);
     }
 }

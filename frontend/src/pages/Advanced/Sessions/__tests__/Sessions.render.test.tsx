@@ -9,6 +9,10 @@ import { renderWithProviders, mockSessionsList } from './Setup';
 import { useTableState } from '@/hooks/useTableState';
 
 // --- MOCKS ---
+vi.mock('@/context/UserContext', () => ({
+  useUserContext: vi.fn(() => ({ user: null })),
+}));
+
 vi.mock('@/hooks/useFilteredTabs', () => ({
   useFilteredTabs: vi.fn(() => [{ name: 'Sessions', path: '/advanced/sessions' }]),
 }));

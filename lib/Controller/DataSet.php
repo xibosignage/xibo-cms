@@ -1375,8 +1375,13 @@ class DataSet extends Base
         $i = 0;
         $dataSet = $this->dataSetFactory->getById($id);
 
+        if (!$this->getUser()->checkEditable($dataSet)) {
+            throw new AccessDeniedException();
+        }
+
         // Create a CSV file
-        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . Random::generateString() .'.csv';
+        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' .
+            Random::generateString() .'.csv';
 
         $out = fopen($tempFileName, 'w');
 
@@ -1440,6 +1445,39 @@ class DataSet extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Get data connector script as JSON
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return Response
+     * @throws GeneralException
+     */
+    public function getDataConnectorScript(Request $request, Response $response, $id): Response
+    {
+        $dataSet = $this->dataSetFactory->getById($id);
+
+        if (!$this->getUser()->checkEditable($dataSet)) {
+            throw new AccessDeniedException();
+        }
+
+        if (!$this->getUser()->featureEnabled('dataset.data')) {
+            throw new AccessDeniedException(__('Feature not enabled'));
+        }
+
+        $dataSet->load();
+
+        if ($dataSet->dataConnectorSource !== 'user_defined') {
+            $event = new DataConnectorScriptRequestEvent($dataSet);
+            $this->getDispatcher()->dispatch($event, DataConnectorScriptRequestEvent::$NAME);
+        }
+
+        return $response->withJson([
+            'script' => $dataSet->getScript(),
+            'dataConnectorSource' => $dataSet->dataConnectorSource,
+        ]);
     }
 
     /**

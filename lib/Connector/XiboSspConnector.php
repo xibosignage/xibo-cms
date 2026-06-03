@@ -85,7 +85,7 @@ class XiboSspConnector implements ConnectorInterface
 
     public function getThumbnail(): string
     {
-        return 'theme/default/img/connectors/xibo-ssp.png';
+        return 'theme/default/img/connectors/xibo-ssp.svg';
     }
 
     public function getSettingsFormTwig(): string
@@ -98,9 +98,44 @@ class XiboSspConnector implements ConnectorInterface
         return 'xibo-ssp-connector-form-javascript';
     }
 
+    public function getEnabledLabel(): string
+    {
+        return __('Enable/Disable');
+    }
+
+    public function getEnabledMessage(): string
+    {
+        return __('Disabling this connector will stop all displays from making ad requests.');
+    }
+
     public function getFormError(): string
     {
         return $this->formError ?? __('Unknown error');
+    }
+
+    public function getSettingsFields(): array
+    {
+        return [
+            [
+                'name'         => 'apiKey',
+                'type'         => 'text',
+                'label'        => __('API Key'),
+                'helpText'     => __(
+                    'Your API key allows for secure communication between the CMS'
+                    . ' and the Xibo SSP connector service.'
+                    . ' It is used to orchestrate the delivery of ads to your players.'
+                    . ' Enter your API Key from Xibo.'
+                ),
+                'providerOnly' => $this->isProviderSetting('apiKey'),
+            ],
+            [
+                'name'         => 'cmsUrl',
+                'type'         => 'text',
+                'label'        => __('CMS URL'),
+                'helpText'     => __('The URL your players use to connect to your CMS.'),
+                'providerOnly' => $this->isProviderSetting('cmsUrl'),
+            ],
+        ];
     }
 
     public function processSettingsForm(SanitizerInterface $params, array $settings): array
@@ -202,7 +237,8 @@ class XiboSspConnector implements ConnectorInterface
                 $response = $this->getClient()->get($this->getServiceUrl() . '/configure', [
                     'headers' => [
                         'X-API-KEY' => $apiKey
-                    ]
+                    ],
+                    'timeout' => 10,
                 ]);
                 $body = $response->getBody()->getContents();
 

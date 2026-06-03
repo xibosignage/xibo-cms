@@ -26,6 +26,7 @@ import { getDefaultClassNames } from 'react-day-picker';
 import { DayPicker as GregorianDayPicker } from 'react-day-picker';
 import { enUS, faIR } from 'react-day-picker/locale';
 import { DayPicker as PersianDayPicker } from 'react-day-picker/persian';
+import { useTranslation } from 'react-i18next';
 
 import 'react-day-picker/dist/style.css';
 
@@ -80,6 +81,7 @@ export default function DatePicker({
   disableFutureDates = false,
   showTimePicker = true,
 }: DatePickerProps) {
+  const { t } = useTranslation();
   const { user } = useUserContext();
   const timeZone = user?.settings?.defaultTimezone;
 
@@ -268,13 +270,13 @@ export default function DatePicker({
         </p>
         <div className="flex gap-x-2.5">
           <Button variant="secondary" onClick={onCancel}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             onClick={handleApply}
             disabled={mode === 'single' ? !single : !range?.from || !range?.to}
           >
-            Apply
+            {t('Apply')}
           </Button>
         </div>
       </div>

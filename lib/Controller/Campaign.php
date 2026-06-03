@@ -537,7 +537,7 @@ class Campaign extends Base
         }
 
         // All done, save.
-        $campaign->save();
+        $campaign->save(['audit' => true]);
 
         // Return
         $this->getState()->hydrate([
@@ -802,7 +802,7 @@ class Campaign extends Base
         }
 
         // Save the campaign.
-        $campaign->save();
+        $campaign->save(['audit' => true]);
 
         // Return
         $this->getState()->hydrate([
@@ -972,6 +972,17 @@ class Campaign extends Base
         );
         $campaign->save(['validate' => false, 'saveTags' => false]);
 
+        // Audit
+        $this->getLog()->audit(
+            'Campaign',
+            $campaign->campaignId,
+            'Assigned Layout',
+            [
+                'layoutId' => $layout->layoutId,
+                'name' => $layout->layout,
+            ],
+        );
+
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
@@ -1079,6 +1090,16 @@ class Campaign extends Base
 
         $campaign->unassignLayout($layoutId, $displayOrder);
         $campaign->save(['validate' => false]);
+
+        // Audit
+        $this->getLog()->audit(
+            'Campaign',
+            $campaign->campaignId,
+            'Unassigned Layout',
+            [
+                'layoutId' => $layoutId,
+            ],
+        );
 
         return $this->render($request, $response);
     }

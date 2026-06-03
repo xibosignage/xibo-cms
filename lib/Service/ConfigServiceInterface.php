@@ -182,4 +182,11 @@ interface ConfigServiceInterface
      * @return array
      */
     public function getConnectorSettings(string $connector): array;
+
+    /**
+     * Get the operator-supplied Host-header allow-list (comma-separated). Empty when unset.
+     * Deployment-time only — sourced from web/settings.php, not the DB.
+     * @return string
+     */
+    public function getWhitelistHosts(): string;
 }

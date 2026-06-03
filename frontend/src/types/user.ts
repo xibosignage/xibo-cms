@@ -21,6 +21,16 @@
 
 import type { UserGroup } from './userGroup';
 
+export interface BrandingConfig {
+  productName: string;
+  appName: string;
+  logoUrl: string;
+  faviconUrl: string;
+  cssUrl: string | null;
+  supportUrl: string;
+  isXiboThemed: boolean;
+}
+
 export enum UserType {
   SuperAdmin = 1,
   GroupAdmin = 2,
@@ -30,10 +40,10 @@ export enum UserType {
 export type UserFeatures = Record<string, boolean>;
 
 export interface UserSettings {
-  defaultTimezone: string;
-  defaultLanguage: string;
-  DATE_FORMAT_JS: string;
-  TIME_FORMAT_JS: string;
+  defaultTimezone?: string;
+  defaultLanguage?: string;
+  DATE_FORMAT_JS?: string;
+  TIME_FORMAT_JS?: string;
   homeFolder?: string;
   [key: string]: string | number | boolean | object | null | undefined;
 }
@@ -49,12 +59,46 @@ export interface User {
   phone?: string;
 
   homeFolderId?: number;
+  homePageId?: string;
 
-  features: UserFeatures;
-  settings: UserSettings;
+  features?: UserFeatures;
+  settings?: UserSettings;
 
-  groupId: number;
+  groupId?: number;
   group?: string;
 
   groups?: UserGroup[];
+
+  retired?: number;
+  loggedIn?: number;
+  lastAccessed?: string;
+
+  libraryQuota?: number;
+  libraryQuotaFormatted?: string;
+
+  ref1?: string;
+  ref2?: string;
+  ref3?: string;
+  ref4?: string;
+  ref5?: string;
+
+  isPasswordChangeRequired?: number;
+  twoFactorTypeId?: number;
+  twoFactorDescription?: string;
+  newUserWizard?: number;
+
+  isSystemNotification?: number;
+  isDisplayNotification?: number;
+  isDataSetNotification?: number;
+  isLayoutNotification?: number;
+  isLibraryNotification?: number;
+  isReportNotification?: number;
+  isScheduleNotification?: number;
+  isCustomNotification?: number;
+
+  homePage?: string;
+  homeFolder?: string;
+  isSuperAdmin?: boolean;
+
+  branding?: BrandingConfig;
 }

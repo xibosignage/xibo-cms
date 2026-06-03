@@ -51,7 +51,15 @@ interface ConnectorInterface
     public function getThumbnail(): string;
     public function getSetting($setting, $default = null);
     public function isProviderSetting($setting): bool;
+    public function getProviderSettings(): array;
     public function getSettingsFormTwig(): string;
     public function getSettingsFormJavaScript(): string;
     public function processSettingsForm(SanitizerInterface $params, array $settings): array;
+    public function getSettingsFields(): array;
+    public function getFormSubtitle(): string;
+    public function getFormDescriptionHtml(): string;
+    public function getFormAlerts(): array;
+    public function getEnabledLabel(): string;
+    public function getEnabledDescription(): string;
+    public function getEnabledMessage(): string;
 }
