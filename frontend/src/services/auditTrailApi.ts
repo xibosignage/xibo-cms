@@ -25,13 +25,13 @@ import type { AuditLog } from '@/types/auditTrail';
 export interface FetchAuditTrailRequest {
   start: number;
   length: number;
-  fromDt?: string; // Matches PHP: getDate('fromDt')
-  toDt?: string; // Matches PHP: getDate('toDt')
-  user?: string; // Matches PHP: getString('user')
-  entity?: string; // Matches PHP: getString('entity')
-  entityId?: string; // Matches PHP: getString('entityId')
-  ipAddress?: string; // Matches PHP: getString('ipAddress')
-  message?: string; // Matches PHP: getString('message')
+  fromDt?: string;
+  toDt?: string;
+  user?: string;
+  entity?: string;
+  entityId?: string;
+  ipAddress?: string;
+  message?: string;
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;
@@ -43,8 +43,8 @@ export interface FetchAuditTrailResponse {
 }
 
 export interface ExportAuditTrailRequest {
-  filterFromDt: string; // Matches PHP: getDate('filterFromDt')
-  filterToDt: string; // Matches PHP: getDate('filterToDt')
+  filterFromDt: string;
+  filterToDt: string;
 }
 
 export async function fetchAuditTrail(
