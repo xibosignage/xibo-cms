@@ -195,7 +195,15 @@ export function DataTable<TData, TValue>({
     const rows = table.getRowModel().rows.map((row) =>
       row.getVisibleCells().map((cell) => {
         const value = cell.getValue();
-        const stringValue = String(value ?? '').replace(/"/g, '""');
+
+        // Some tables have an object row so we need to convert it to JSON string
+        const raw =
+          value === null || value === undefined
+            ? ''
+            : typeof value === 'object'
+              ? JSON.stringify(value)
+              : String(value);
+        const stringValue = raw.replace(/"/g, '""');
         return `"${stringValue}"`;
       }),
     );

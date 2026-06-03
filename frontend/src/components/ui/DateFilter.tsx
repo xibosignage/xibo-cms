@@ -89,7 +89,7 @@ export default function DateFilter({
         className={twMerge(
           'absolute z-50 mt-1 transition-all duration-200 ease-linear bg-xibo-white overflow-hidden rounded-lg border border-gray-200 shadow-lg',
           open
-            ? 'max-h-175 opacity-100 top-17 right-0'
+            ? 'max-h-175 opacity-100 top-17 left-0'
             : 'max-h-0 opacity-0 top-15 pointer-events-none',
         )}
       >
