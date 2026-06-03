@@ -397,9 +397,11 @@ class ScheduleReport extends Base
 
         // We get the report description
         try {
+            $reportSchedule->setUnmatchedProperty('reportNameId', $reportSchedule->reportName);
             $reportSchedule->reportName =
                 $this->reportService->getReportByName($reportSchedule->reportName)->description;
         } catch (NotFoundException $notFoundException) {
+            $reportSchedule->setUnmatchedProperty('reportNameId', $reportSchedule->reportName);
             $reportSchedule->reportName = __('Unknown or removed report.');
         }
 

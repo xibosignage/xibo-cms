@@ -76,7 +76,12 @@ export default function ExportStatisticsModal({ isOpen, onClose }: ExportStatist
     return () => controller.abort();
   }, [isOpen]);
 
-  async function loadDisplays(search: string, start: number, append: boolean, signal?: AbortSignal) {
+  async function loadDisplays(
+    search: string,
+    start: number,
+    append: boolean,
+    signal?: AbortSignal,
+  ) {
     if (start === 0) {
       setDisplayIsLoading(true);
     } else {

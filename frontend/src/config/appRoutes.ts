@@ -420,7 +420,10 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'report-schedules',
         labelKey: 'Report Schedules',
-        externalURL: '/report/reportschedule/view',
+        lazy: () =>
+          import('@/pages/Reporting/ReportSchedules/ReportSchedules').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'report.scheduling',
       },
       {
