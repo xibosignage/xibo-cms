@@ -103,28 +103,6 @@ class DistributionReport implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams): array
-    {
-        $type = $sanitizedParams->getString('type');
-
-        $formParams = $this->getReportScheduleFormTitle($sanitizedParams);
-
-        $data = [];
-        $data['formTitle'] = $formParams['title'];
-        $data['hiddenFields'] = json_encode([
-            'type' => $type,
-            'selectedId' => $formParams['selectedId'],
-            'eventTag' => $eventTag ?? null
-        ]);
-        $data['reportName'] = 'distributionReport';
-
-        return [
-            'template' => 'distribution-schedule-form-add',
-            'data' => $data
-        ];
-    }
-
-    /** @inheritdoc */
     public function setReportScheduleFormData(SanitizerInterface $sanitizedParams): array
     {
         $filter = $sanitizedParams->getString('filter');

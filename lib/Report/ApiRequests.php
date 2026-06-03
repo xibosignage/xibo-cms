@@ -74,18 +74,6 @@ class ApiRequests implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams): array
-    {
-        $data = [];
-        $data['reportName'] = 'apirequests';
-
-        return [
-            'template' => 'apirequests-schedule-form-add',
-            'data' => $data
-        ];
-    }
-
-    /** @inheritdoc */
     public function setReportScheduleFormData(SanitizerInterface $sanitizedParams): array
     {
         $filter = $sanitizedParams->getString('filter');

@@ -71,18 +71,6 @@ class SessionHistory implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams): array
-    {
-        $data = [];
-        $data['reportName'] = 'sessionhistory';
-
-        return [
-            'template' => 'sessionhistory-schedule-form-add',
-            'data' => $data
-        ];
-    }
-
-    /** @inheritdoc */
     public function setReportScheduleFormData(SanitizerInterface $sanitizedParams): array
     {
         $filter = $sanitizedParams->getString('filter');

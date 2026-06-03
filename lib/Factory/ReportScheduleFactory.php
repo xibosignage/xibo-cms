@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -46,7 +46,7 @@ class ReportScheduleFactory extends BaseFactory
      * Create Empty
      * @return ReportSchedule
      */
-    public function createEmpty()
+    public function createEmpty(): ReportSchedule
     {
         return new ReportSchedule(
             $this->getStore(),
@@ -62,14 +62,16 @@ class ReportScheduleFactory extends BaseFactory
      * @return ReportSchedule
      * @throws NotFoundException
      */
-    public function getById($reportScheduleId, $disableUserCheck = 0)
+    public function getById(int $reportScheduleId, int $disableUserCheck = 0): ReportSchedule
     {
-
         if ($reportScheduleId == 0) {
             throw new NotFoundException();
         }
 
-        $reportSchedules = $this->query(null, ['reportScheduleId' => $reportScheduleId, 'disableUserCheck' => $disableUserCheck]);
+        $reportSchedules = $this->query(null, [
+            'reportScheduleId' => $reportScheduleId,
+            'disableUserCheck' => $disableUserCheck
+        ]);
 
         if (count($reportSchedules) <= 0) {
             throw new NotFoundException(\__('Report Schedule not found'));
@@ -79,18 +81,23 @@ class ReportScheduleFactory extends BaseFactory
         return $reportSchedules[0];
     }
 
-    public function getByOwnerId($ownerId)
+    /**
+     * @param $ownerId
+     * @return ReportSchedule[]
+     * @throws NotFoundException
+     */
+    public function getByOwnerId($ownerId): array
     {
         return $this->query(null, ['disableUserCheck' => 1, 'userId' => $ownerId]);
     }
 
     /**
-     * @param null $sortOrder
+     * @param ?array $sortOrder
      * @param array $filterBy
      * @return ReportSchedule[]
      * @throws NotFoundException
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query(?array $sortOrder = null, array $filterBy = []): array
     {
         if ($sortOrder == null) {
             $sortOrder = ['name'];
@@ -167,21 +174,58 @@ class ReportScheduleFactory extends BaseFactory
             $params['isActive'] = $sanitizedFilter->getInt('isActive');
         }
 
+        // fulltext
+        if ($sanitizedFilter->getString('keyword') != null) {
+            $body .= $this->buildSearchQuery(
+                $sanitizedFilter->getString('keyword'),
+                $params,
+                ['reportschedule.name'],
+                ['reportschedule.reportScheduleId']
+            );
+        }
+
         // View Permissions
         if ($this->getUser()->userTypeId != 1) {
-            $this->viewPermissionSql('Xibo\Entity\ReportSchedule', $body, $params, '`reportschedule`.reportScheduleId', '`reportschedule`.userId', $filterBy);
+            $this->viewPermissionSql(
+                'Xibo\Entity\ReportSchedule',
+                $body,
+                $params,
+                '`reportschedule`.reportScheduleId',
+                '`reportschedule`.userId',
+                $filterBy
+            );
         }
 
         // Sorting?
-        $order = '';
-        if (is_array($sortOrder)) {
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
-        }
+        $allowedColumns = [
+            'reportScheduleId',
+            'name',
+            'reportName',
+            'schedule',
+            'owner',
+            'lastRunDt',
+            'previousRunDt',
+            'createdDt',
+            'fromDt',
+            'toDt',
+            'isActive',
+            'message',
+        ];
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            ['reportName ASC']
+        );
+
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null
+            && $sanitizedFilter->getInt('length') !== null
+        ) {
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) .
+                ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
@@ -189,7 +233,13 @@ class ReportScheduleFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
-                    'reportScheduleId', 'lastRunDt', 'previousRunDt', 'lastSavedReportId', 'isActive', 'fromDt', 'toDt'
+                    'reportScheduleId',
+                    'lastRunDt',
+                    'previousRunDt',
+                    'lastSavedReportId',
+                    'isActive',
+                    'fromDt',
+                    'toDt'
                 ]
             ]);
         }

@@ -85,15 +85,6 @@ interface ReportServiceInterface
     public function createReportObject($className);
 
     /**
-     * Populate form title and hidden fields
-     * @param string $reportName
-     * @param Request $request
-     * @throws GeneralException
-     * @return array
-     */
-    public function getReportScheduleFormData($reportName, Request $request);
-
-    /**
      * Set Report Schedule form data
      * @param string $reportName
      * @param Request $request

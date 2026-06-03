@@ -237,21 +237,6 @@ class ReportService implements ReportServiceInterface
     /**
      * @inheritdoc
      */
-    public function getReportScheduleFormData($reportName, Request $request)
-    {
-        $this->log->debug('Populate form title and hidden fields');
-
-        $className = $this->getReportClass($reportName);
-
-        $object = $this->createReportObject($className);
-
-        // Populate form title and hidden fields
-        return $object->getReportScheduleFormData($this->sanitizer->getSanitizer($request->getParams()));
-    }
-
-    /**
-     * @inheritdoc
-     */
     public function setReportScheduleFormData($reportName, Request $request)
     {
         $this->log->debug('Set Report Schedule form data');

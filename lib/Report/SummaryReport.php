@@ -97,34 +97,6 @@ class SummaryReport implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams): array
-    {
-        $type = $sanitizedParams->getString('type');
-        $formParams = $this->getReportScheduleFormTitle($sanitizedParams);
-
-        $data = ['filters' => []];
-        $data['filters'][] = ['name'=> 'Daily', 'filter'=> 'daily'];
-        $data['filters'][] = ['name'=> 'Weekly', 'filter'=> 'weekly'];
-        $data['filters'][] = ['name'=> 'Monthly', 'filter'=> 'monthly'];
-        $data['filters'][] = ['name'=> 'Yearly', 'filter'=> 'yearly'];
-
-        $data['formTitle'] = $formParams['title'];
-
-        $data['hiddenFields'] = json_encode([
-            'type' => $type,
-            'selectedId' => $formParams['selectedId'],
-            'eventTag' => $eventTag ?? null
-        ]);
-
-        $data['reportName'] = 'summaryReport';
-
-        return [
-            'template' => 'summary-report-schedule-form-add',
-            'data' => $data
-        ];
-    }
-
-    /** @inheritdoc */
     public function setReportScheduleFormData(SanitizerInterface $sanitizedParams): array
     {
         $filter = $sanitizedParams->getString('filter');

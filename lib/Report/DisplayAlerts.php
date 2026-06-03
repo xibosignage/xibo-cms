@@ -74,18 +74,7 @@ class DisplayAlerts implements ReportInterface
         );
     }
 
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams): array
-    {
-        $data = [];
-        $data['reportName'] = 'displayalerts';
-
-        return [
-            'template' => 'displayalerts-schedule-form-add',
-            'data' => $data
-        ];
-    }
-
-    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams): array
+    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams)
     {
         $filter = $sanitizedParams->getString('filter');
         $displayId = $sanitizedParams->getInt('displayId');

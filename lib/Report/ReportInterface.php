@@ -75,13 +75,6 @@ interface ReportInterface
     public function getReportForm();
 
     /**
-     * Populate form title and hidden fields
-     * @param SanitizerInterface $sanitizedParams
-     * @return array
-     */
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams);
-
-    /**
      * Set Report Schedule form data
      * @param SanitizerInterface $sanitizedParams
      * @return array
