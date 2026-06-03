@@ -21,6 +21,8 @@
 
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
 
+import defaultFavIcon from '@/assets/xibo-logo-icon.svg';
+import defaultLogoUrl from '@/assets/xibo-logo.svg';
 import type { BrandingConfig } from '@/types/user';
 
 const THEME_LINK_ID = 'xibo-theme-css';
@@ -29,8 +31,8 @@ const FAVICON_LINK_ID = 'xibo-favicon';
 const defaults: BrandingConfig = {
   productName: 'Xibo Digital Signage',
   appName: 'Xibo',
-  logoUrl: '/theme/default/img/xibologo.png',
-  faviconUrl: '/theme/default/img/favicon.ico',
+  logoUrl: defaultLogoUrl,
+  faviconUrl: defaultFavIcon,
   cssUrl: null,
   supportUrl: 'https://xibosignage.com',
   isXiboThemed: true,
@@ -44,7 +46,11 @@ interface Props {
 }
 
 export function BrandingProvider({ branding, children }: Props) {
-  const value = branding ?? defaults;
+  const value = branding
+    ? branding.isXiboThemed
+      ? { ...branding, logoUrl: defaultLogoUrl, faviconUrl: defaultFavIcon }
+      : branding
+    : defaults;
 
   useEffect(() => {
     document.getElementById(THEME_LINK_ID)?.remove();
