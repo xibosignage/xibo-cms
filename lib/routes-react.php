@@ -96,3 +96,14 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/playlistdashboard/{id}', ['\Xibo\Controller\PlaylistDashboard', 'show'])
         ->setName('playlistdashboard.show');
 })->add(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.playlist']));
+
+//
+// Reports
+//
+$app->get('/report/available', ['\Xibo\Controller\Stats', 'availableReports'])
+    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['report.view']))
+    ->setName('report.available');
+
+$app->get('/stats/export/count', ['\Xibo\Controller\Stats', 'exportStatsCount'])
+    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['proof-of-play']))
+    ->setName('stats.export.count');
