@@ -128,7 +128,7 @@ class Report extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Return data to build chart/table
-        $result =  $object->getResults($sanitizedParams);
+        $result = $object->getResults($sanitizedParams, $this->isJson($request));
 
         //
         // Output Results
