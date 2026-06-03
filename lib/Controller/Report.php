@@ -51,29 +51,6 @@ class Report extends Base
         $this->reportService = $reportService;
     }
 
-    // <editor-fold desc="Report list">
-
-    #[OA\Get(
-        path: '/report/list',
-        operationId: 'reportList',
-        summary: 'List available reports grouped by category',
-        tags: ['report'],
-        responses: [
-            new OA\Response(response: 200, description: 'Successful response'),
-        ]
-    )]
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     */
-    public function listReports(Request $request, Response $response): Response
-    {
-        return $response->withJson($this->reportService->listReports());
-    }
-
-    // </editor-fold>
-
     /// //<editor-fold desc="Ad hoc reports">
 
     /**

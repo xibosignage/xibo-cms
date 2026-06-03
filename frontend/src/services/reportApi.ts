@@ -23,9 +23,9 @@ import http from '@/lib/api';
 import type { ReportsByCategory } from '@/types/report';
 
 export const fetchReports = async (signal?: AbortSignal): Promise<ReportsByCategory> => {
-  const response = await http.get<ReportsByCategory>('/report/list', {
+  const response = await http.get<{ availableReports: ReportsByCategory }>('/report/available', {
     headers: { 'X-Requested-With': 'XMLHttpRequest' },
     signal,
   });
-  return response.data;
+  return response.data.availableReports;
 };
