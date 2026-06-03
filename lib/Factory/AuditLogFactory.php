@@ -174,15 +174,6 @@ class AuditLogFactory extends BaseFactory
             $params['logId'] = $sanitizedFilter->getInt('logId');
         }
 
-        if ($sanitizedFilter->getString('keyword') != null) {
-            $body .= $this->buildSearchQuery(
-                $sanitizedFilter->getString('keyword'),
-                $params,
-                ['auditlog.entity', 'auditlog.message', 'auditlog.ipAddress'],
-                ['auditlog.logId', 'auditlog.entityId'],
-            );
-        }
-
         // Sorting?
         $allowedColumns = [
             'logId',

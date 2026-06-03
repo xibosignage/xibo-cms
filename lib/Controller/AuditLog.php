@@ -32,18 +32,22 @@ use Xibo\Helper\SendFile;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Class AuditLog
+ *
  * @package Xibo\Controller
  */
 class AuditLog extends Base
 {
-    private AuditLogFactory $auditLogFactory;
-
-    public function __construct(auditLogFactory $auditLogFactory)
+    /**
+     * AuditLog constructor.
+     *
+     * @param AuditLogFactory $auditLogFactory Audit log factory
+     */
+    public function __construct(private readonly AuditLogFactory $auditLogFactory)
     {
-        $this->auditLogFactory = $auditLogFactory;
     }
 
     /**
@@ -156,12 +160,13 @@ class AuditLog extends Base
     }
 
     /**
-     * Get the audit log filters
+     * Build the audit log filter query array from sanitized request params.
      *
-     * @param  $sanitizedParams
+     * @param SanitizerInterface $sanitizedParams The sanitized request parameters
+     *
      * @return array
      */
-    private function getAuditLogFilterQuery($sanitizedParams): array
+    private function getAuditLogFilterQuery(SanitizerInterface $sanitizedParams): array
     {
         $filterFromDt = $sanitizedParams->getDate('fromDt');
         $filterToDt = $sanitizedParams->getDate('toDt');
@@ -180,15 +185,14 @@ class AuditLog extends Base
 
         return $this->gridRenderFilter(
             [
-            'fromTimeStamp' => $filterFromDt->format('U'),
-            'toTimeStamp' => $filterToDt->format('U'),
-            'userName' => $sanitizedParams->getString('user'),
-            'entity' => $sanitizedParams->getString('entity'),
-            'entityId' => $sanitizedParams->getString('entityId'),
-            'message' => $sanitizedParams->getString('message'),
-            'ipAddress' => $sanitizedParams->getString('ipAddress'),
-            'sessionHistoryId' => $sanitizedParams->getInt('sessionHistoryId'),
-            'keyword' => $sanitizedParams->getString('keyword'),
+                'fromTimeStamp' => $filterFromDt->format('U'),
+                'toTimeStamp' => $filterToDt->format('U'),
+                'userName' => $sanitizedParams->getString('user'),
+                'entity' => $sanitizedParams->getString('entity'),
+                'entityId' => $sanitizedParams->getString('entityId'),
+                'message' => $sanitizedParams->getString('message'),
+                'ipAddress' => $sanitizedParams->getString('ipAddress'),
+                'sessionHistoryId' => $sanitizedParams->getInt('sessionHistoryId'),
             ], $sanitizedParams
         );
     }
