@@ -413,7 +413,8 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'all-reports',
         labelKey: 'All Reports',
-        externalURL: '/report/view',
+        lazy: () =>
+          import('@/pages/Reporting/AllReports/AllReports').then((m) => ({ Component: m.default })),
         feature: 'report.view',
       },
       {

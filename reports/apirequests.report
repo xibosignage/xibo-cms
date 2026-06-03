@@ -1,11 +1,10 @@
 {
   "name": "apirequests",
-  "description": "API Requests History",
+  "description": "API Request History",
   "class": "\\Xibo\\Report\\ApiRequests",
   "type": "Report",
   "output_type": "table",
-  "color":"orange",
-  "fa_icon": "fa-th",
+  "lucide_icon": "FileCode2",
   "sort_order": 5,
   "hidden": 0,
   "category": "Audit",

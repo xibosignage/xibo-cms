@@ -705,6 +705,12 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->post('/task/{id}/run', ['\Xibo\Controller\Task', 'runNow'])->setName('task.runNow');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['task.view']));
 
+// Report list
+// -----------
+$app->get('/report/list', ['\Xibo\Controller\Report', 'listReports'])
+    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['report.view']))
+    ->setName('report.list');
+
 // Report schedule (no APIs)
 // -------------------------
 $app->get('/report/reportschedule', ['\Xibo\Controller\ScheduleReport','reportScheduleGrid'])->setName('reportschedule.search');
