@@ -23,6 +23,7 @@ namespace Xibo\Controller;
 
 use Carbon\Carbon;
 use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Event\ConnectorReportEvent;
@@ -73,71 +74,30 @@ use Xibo\Support\Exception\NotFoundException;
 )]
 class Stats extends Base
 {
-    /**
-     * @var StorageServiceInterface
-     */
-    private $store;
-
-    /**
-     * @var TimeSeriesStoreInterface
-     */
-    private $timeSeriesStore;
-
-    /**
-     * @var ReportServiceInterface
-     */
-    private $reportService;
-
-    /**
-     * @var DisplayFactory
-     */
-    private $displayFactory;
-
-    /**
-     * Set common dependencies.
-     * @param StorageServiceInterface $store
-     * @param TimeSeriesStoreInterface $timeSeriesStore
-     * @param ReportServiceInterface $reportService
-     * @param DisplayFactory $displayFactory
-     */
-    public function __construct($store, $timeSeriesStore, $reportService, $displayFactory)
-    {
-        $this->store = $store;
-        $this->timeSeriesStore = $timeSeriesStore;
-        $this->reportService = $reportService;
-        $this->displayFactory = $displayFactory;
+    public function __construct(
+        private readonly StorageServiceInterface $store,
+        private readonly TimeSeriesStoreInterface $timeSeriesStore,
+        private readonly ReportServiceInterface $reportService,
+        private readonly DisplayFactory $displayFactory,
+    ) {
     }
 
     /**
-     * Report page
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @return ResponseInterface|Response
      */
-    function displayReportPage(Request $request, Response $response)
+    public function availableReports(Request $request, Response $response): Response|ResponseInterface
     {
-        // ------------
-        // Dispatch an event to get connector reports
         $event = new ConnectorReportEvent();
         $this->getDispatcher()->dispatch($event, ConnectorReportEvent::$NAME);
 
-        $data = [
-            // List of Displays this user has permission for
-            'defaults' => [
-                'fromDate' => Carbon::now()->subSeconds(86400 * 35)->format(DateFormatHelper::getSystemFormat()),
-                'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
-                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+        return $response
+            ->withStatus(200)
+            ->withJson([
                 'availableReports' => $this->reportService->listReports(),
-                'connectorReports' => $event->getReports()
-            ]
-        ];
-
-        $this->getState()->template = 'report-page';
-        $this->getState()->setData($data);
-
-        return $this->render($request, $response);
+                'connectorReports' => $event->getReports(),
+            ]);
     }
 
     #[OA\Get(
@@ -192,14 +152,14 @@ class Stats extends Base
         description: 'An optional array of display Id to filter',
         in: 'query',
         required: false,
-        schema: new OA\Schema(items: new OA\Items(type: 'integer'), type: 'array')
+        schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'integer'))
     )]
     #[OA\Parameter(
         name: 'layoutId',
         description: 'An optional array of layout Id to filter',
         in: 'query',
         required: false,
-        schema: new OA\Schema(items: new OA\Items(type: 'integer'), type: 'array')
+        schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'integer'))
     )]
     #[OA\Parameter(
         name: 'parentCampaignId',
@@ -213,7 +173,7 @@ class Stats extends Base
         description: 'An optional array of media Id to filter',
         in: 'query',
         required: false,
-        schema: new OA\Schema(items: new OA\Items(type: 'integer'), type: 'array')
+        schema: new OA\Schema(type: 'array', items: new OA\Items(type: 'integer'))
     )]
     #[OA\Parameter(
         name: 'campaignId',
@@ -256,12 +216,12 @@ class Stats extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws InvalidArgumentException
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
 
@@ -282,7 +242,10 @@ class Stats extends Base
 
         // Return formatting
         $returnDisplayLocalTime = $sanitizedQueryParams->getCheckbox('returnDisplayLocalTime');
-        $returnDateFormat = $sanitizedQueryParams->getString('returnDateFormat', ['default' => DateFormatHelper::getSystemFormat()]);
+        $returnDateFormat = $sanitizedQueryParams->getString(
+            'returnDateFormat',
+            ['default' => DateFormatHelper::getSystemFormat()]
+        );
 
         // Embed Tags
         $embed = explode(',', $sanitizedQueryParams->getString('embed', ['default' => '']));
@@ -324,7 +287,8 @@ class Stats extends Base
                 'mediaTags' => in_array('mediaTags', $embed),
                 'start' => $start,
                 'length' => $length,
-            ]);
+            ]
+        );
 
         $rows = [];
         foreach ($resultSet->getArray() as $row) {
@@ -347,7 +311,9 @@ class Stats extends Base
                 if (!array_key_exists($entry['displayId'], $timeZoneCache)) {
                     try {
                         $display = $this->displayFactory->getById($entry['displayId']);
-                        $timeZoneCache[$entry['displayId']] = (empty($display->timeZone)) ? $defaultTimezone : $display->timeZone;
+                        $timeZoneCache[$entry['displayId']] = (empty($display->timeZone))
+                            ? $defaultTimezone
+                            : $display->timeZone;
                     } catch (\Xibo\Support\Exception\NotFoundException $e) {
                         $timeZoneCache[$entry['displayId']] = $defaultTimezone;
                     }
@@ -373,7 +339,9 @@ class Stats extends Base
             $entry['mediaId'] = $sanitizedRow->getInt('mediaId', ['default' => 0]);
             $entry['scheduleId'] = $sanitizedRow->getInt('scheduleId', ['default' => 0]);
             $entry['tag'] = $sanitizedRow->getString('tag');
-            $entry['statDate'] = isset($row['statDate']) ? $resultSet->getDateFromValue($row['statDate'])->format(DateFormatHelper::getSystemFormat()) : '';
+            $entry['statDate'] = isset($row['statDate'])
+                ? $resultSet->getDateFromValue($row['statDate'])->format(DateFormatHelper::getSystemFormat())
+                : '';
             $entry['engagements'] = $resultSet->getEngagementsFromRow($row);
 
             // Tags
@@ -408,16 +376,19 @@ class Stats extends Base
      * Bandwidth Data
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws InvalidArgumentException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function bandwidthData(Request $request, Response $response)
+    public function bandwidthData(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
-        $fromDt = $sanitizedParams->getDate('fromDt', ['default' => $sanitizedParams->getDate('bandwidthFromDt')]);
+        $fromDt = $sanitizedParams->getDate(
+            'fromDt',
+            ['default' => $sanitizedParams->getDate('bandwidthFromDt')]
+        );
         $toDt = $sanitizedParams->getDate('toDt', ['default' => $sanitizedParams->getDate('bandwidthToDt')]);
 
         // Get an array of display id this user has access to.
@@ -436,27 +407,33 @@ class Stats extends Base
 
         $displayId = $sanitizedParams->getInt('displayId');
         $params = array(
-            'month' => $fromDt->setDateTime($fromDt->year, $fromDt->month, 1, 0, 0)->format('U'),
-            'month2' => $toDt->addMonth()->setDateTime($toDt->year, $toDt->month, 1, 0, 0)->format('U')
+            'month' => $fromDt
+                ->setDateTime($fromDt->year, $fromDt->month, 1, 0, 0)->format('U'),
+            'month2' => $toDt
+                ->addMonth()
+                ->setDateTime($toDt->year, $toDt->month, 1, 0, 0)->format('U')
         );
 
         $SQL = 'SELECT display.display, IFNULL(SUM(Size), 0) AS size ';
 
-        if ($displayId != 0)
+        if ($displayId != 0) {
             $SQL .= ', bandwidthtype.name AS type ';
+        }
 
         // For user with limited access, return only data for displays this user has permissions to.
         $joinType = ($this->getUser()->isSuperAdmin()) ? 'LEFT OUTER JOIN' : 'INNER JOIN';
 
         $SQL .= ' FROM `bandwidth` ' .
             $joinType . ' `display`
-                ON display.displayid = bandwidth.displayid AND display.displayId IN (' . implode(',', $displayIds) . ') ';
+                ON display.displayid = bandwidth.displayid 
+                AND display.displayId IN (' . implode(',', $displayIds) . ') ';
 
-        if ($displayId != 0)
+        if ($displayId != 0) {
             $SQL .= '
                     INNER JOIN bandwidthtype
                     ON bandwidthtype.bandwidthtypeid = bandwidth.type
                 ';
+        }
 
         $SQL .= '  WHERE month > :month
                 AND month < :month2 ';
@@ -468,8 +445,9 @@ class Stats extends Base
 
         $SQL .= 'GROUP BY display.display ';
 
-        if ($displayId != 0)
+        if ($displayId != 0) {
             $SQL .= ' , bandwidthtype.name ';
+        }
 
         $SQL .= 'ORDER BY display.display';
 
@@ -493,7 +471,6 @@ class Stats extends Base
         $backgroundColor = [];
 
         foreach ($results as $row) {
-
             // label depends whether we are filtered by display
             if ($displayId != 0) {
                 $labels[] = $row['type'];
@@ -511,68 +488,23 @@ class Stats extends Base
             'labels' => $labels,
             'data' => $data,
             'backgroundColor' => $backgroundColor,
-            'postUnits' => (isset($suffixes[$base]) ? $suffixes[$base] : '')
+            'postUnits' => ($suffixes[$base] ?? '')
         ];
 
         return $this->render($request, $response);
     }
 
     /**
-     * Output CSV Form
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function exportForm(Request $request, Response $response)
-    {
-        $this->getState()->template = 'statistics-form-export';
-
-        return $this->render($request, $response);
-    }
-
-    #[OA\Get(
-        path: '/stats/getExportStatsCount',
-        operationId: 'getExportStatsCount',
-        tags: ['statistics']
-    )]
-    #[OA\Parameter(
-        name: 'fromDt',
-        description: 'The start date for the filter. Default = 24 hours ago',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
-        name: 'toDt',
-        description: 'The end date for the filter. Default = now.',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
-        name: 'displayId',
-        description: 'An optional display Id to filter',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'integer')
-    )]
-    #[OA\Response(response: 200, description: 'successful operation')]
-    /**
-     * Total count of stats
-     *
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws InvalidArgumentException
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function getExportStatsCount(Request $request, Response $response)
+    public function exportStatsCount(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
-        // We are expecting some parameters
         $fromDt = $sanitizedParams->getDate('fromDt');
         $toDt = $sanitizedParams->getDate('toDt');
         $displayId = $sanitizedParams->getInt('displayId');
@@ -585,8 +517,7 @@ class Stats extends Base
             $toDt->addDay()->startOfDay();
         }
 
-        // What if the fromdt and todt are exactly the same?
-        // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
+        // If fromDt and toDt are identical, assume an entire day
         if ($fromDt != null && $toDt != null && $fromDt == $toDt) {
             $toDt->addDay();
         }
@@ -595,15 +526,14 @@ class Stats extends Base
         // Super admin will be able to see stat records of deleted display, we will not filter by display later
         $displayIds = [];
         if (!$this->getUser()->isSuperAdmin()) {
-            // Get an array of display id this user has access to.
             foreach ($this->displayFactory->query() as $display) {
                 $displayIds[] = $display->displayId;
             }
 
-            if (count($displayIds) <= 0)
+            if (count($displayIds) <= 0) {
                 throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
+            }
 
-            // Set displayIds as [-1] if the user selected a display for which they don't have permission
             if ($displayId != 0) {
                 if (!in_array($displayId, $displayIds)) {
                     $displayIds = [-1];
@@ -617,44 +547,36 @@ class Stats extends Base
             }
         }
 
-        // Call the time series interface getStats
-        $resultSet =  $this->timeSeriesStore->getExportStatsCount(
-            [
-                'fromDt'=> $fromDt,
-                'toDt'=> $toDt,
-                'displayIds' => $displayIds
-            ]);
+        $resultSet = $this->timeSeriesStore->getExportStatsCount([
+            'fromDt' => $fromDt,
+            'toDt' => $toDt,
+            'displayIds' => $displayIds,
+        ]);
 
-        $data = [
-            'total' => $resultSet
-        ];
-
-        $this->getState()->template = 'statistics-form-export';
-        $this->getState()->recordsTotal = $resultSet;
-        $this->getState()->setData($data);
-
-        return $this->render($request, $response);
-
+        return $response
+            ->withStatus(200)
+            ->withJson($resultSet);
     }
 
     /**
      * Outputs a CSV of stats
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws InvalidArgumentException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function export(Request $request, Response $response)
+    public function export(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // We are expecting some parameters
         $fromDt = $sanitizedParams->getDate('fromDt');
         $toDt = $sanitizedParams->getDate('toDt');
         $displayId = $sanitizedParams->getInt('displayId');
-        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/stats_' . Random::generateString();
+        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION')
+            . 'temp/stats_' . Random::generateString();
         $isOutputUtc = $sanitizedParams->getCheckbox('isOutputUtc');
 
         // Do not filter by display if super admin and no display is selected
@@ -692,7 +614,8 @@ class Stats extends Base
         $toDt->addDay()->startOfDay();
 
         // What if the fromdt and todt are exactly the same?
-        // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
+        // in this case assume an entire day from midnight
+        // on the fromdt to midnight on the todt (i.e. add a day to the todt)
         if ($fromDt == $toDt) {
             $toDt->addDay();
         }
@@ -705,11 +628,27 @@ class Stats extends Base
         ]);
 
         $out = fopen($tempFileName, 'w');
-        fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Campaign', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'Engagements']);
+        fputcsv(
+            $out,
+            [
+                'Stat Date',
+                'Type',
+                'FromDT',
+                'ToDT',
+                'Layout',
+                'Campaign',
+                'Display',
+                'Media',
+                'Tag',
+                'Duration',
+                'Count',
+                'Engagements'
+            ]
+        );
 
         $defaultTimezone = $this->getConfig()->getSetting('defaultTimezone');
 
-        while ($row = $resultSet->getNextRow() ) {
+        while ($row = $resultSet->getNextRow()) {
             $sanitizedRow = $this->getSanitizer($row);
             $sanitizedRow->setDefaultOptions(['defaultIfNotExists' => true]);
 
@@ -735,17 +674,17 @@ class Stats extends Base
                 if ($this->timeSeriesStore->getEngine() == 'mysql') {
                     $fromDt = $fromDt->setTimezone('UTC');
                     $toDt = $toDt->setTimezone('UTC');
-                    $statDate = isset($statDate) ? $statDate->setTimezone('UTC') : null;
+                    $statDate = $statDate?->setTimezone('UTC');
                 }
             } else {
                 if ($this->timeSeriesStore->getEngine() == 'mongodb') {
                     $fromDt = $fromDt->setTimezone($defaultTimezone);
                     $toDt = $toDt->setTimezone($defaultTimezone);
-                    $statDate = isset($statDate) ? $statDate->setTimezone($defaultTimezone) : null;
+                    $statDate = $statDate?->setTimezone($defaultTimezone);
                 }
             }
 
-            $statDate = isset($statDate) ? $statDate->format(DateFormatHelper::getSystemFormat()) : null;
+            $statDate = $statDate?->format(DateFormatHelper::getSystemFormat());
             $fromDt = $fromDt->format(DateFormatHelper::getSystemFormat());
             $toDt = $toDt->format(DateFormatHelper::getSystemFormat());
 
@@ -758,7 +697,23 @@ class Stats extends Base
             $duration = $sanitizedRow->getInt('duration', ['default' => 0]);
             $count = $sanitizedRow->getInt('count', ['default' => 0]);
 
-            fputcsv($out, [$statDate, $type, $fromDt, $toDt, $layout, $parentCampaign, $display, $media, $tag, $duration, $count, $engagements]);
+            fputcsv(
+                $out,
+                [
+                    $statDate,
+                    $type,
+                    $fromDt,
+                    $toDt,
+                    $layout,
+                    $parentCampaign,
+                    $display,
+                    $media,
+                    $tag,
+                    $duration,
+                    $count,
+                    $engagements
+                ]
+            );
         }
 
         fclose($out);
@@ -831,7 +786,7 @@ class Stats extends Base
     /**
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws InvalidArgumentException
      * @throws \Xibo\Support\Exception\GeneralException
      */
@@ -890,8 +845,9 @@ class Stats extends Base
         $sortOrder = $this->gridRenderSort($params);
 
         $order = '';
-        if (is_array($sortOrder))
+        if (is_array($sortOrder)) {
             $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        }
 
         $limit = '';
 
@@ -924,7 +880,9 @@ class Stats extends Base
                 if (!array_key_exists($entry['displayId'], $timeZoneCache)) {
                     try {
                         $display = $this->displayFactory->getById($entry['displayId']);
-                        $timeZoneCache[$entry['displayId']] = (empty($display->timeZone)) ? $defaultTimezone : $display->timeZone;
+                        $timeZoneCache[$entry['displayId']] = (empty($display->timeZone))
+                            ? $defaultTimezone
+                            : $display->timeZone;
                     } catch (NotFoundException $e) {
                         $timeZoneCache[$entry['displayId']] = $defaultTimezone;
                     }
@@ -955,7 +913,7 @@ class Stats extends Base
      * @return array|int[]
      * @throws \Xibo\Support\Exception\InvalidArgumentException|\Xibo\Support\Exception\NotFoundException
      */
-    private function authoriseDisplayIds($displays, &$timeZoneCache)
+    private function authoriseDisplayIds($displays, &$timeZoneCache): array
     {
         $displayIds = [];
         $displaysAccessible = [];
@@ -969,8 +927,9 @@ class Stats extends Base
                 $timeZoneCache[$display->displayId] = $display->timeZone;
             }
 
-            if (count($displaysAccessible) <= 0)
+            if (count($displaysAccessible) <= 0) {
                 throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
+            }
 
             // Set displayIds as [-1] if the user selected a display for which they don't have permission
             if (count($displays) <= 0) {
@@ -984,7 +943,7 @@ class Stats extends Base
                     }
                 }
 
-                if (count($displays) <= 0 ) {
+                if (count($displays) <= 0) {
                     $displayIds = [-1];
                 }
             }
