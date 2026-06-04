@@ -111,7 +111,7 @@ class Tag extends Base
     )]
     #[OA\Parameter(
         name: 'haveOptions',
-        description: 'Set to 1 to show only results that have options set',
+        description: 'Filter by options: 1 = has options (IS NOT NULL), 0 = no options (IS NULL), omit for all',
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'integer')
@@ -704,7 +704,7 @@ class Tag extends Base
             'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
             'isSystem' => $sanitizedQueryParams->getCheckbox('isSystem'),
             'isRequired' => $sanitizedQueryParams->getCheckbox('isRequired'),
-            'haveOptions' => $sanitizedQueryParams->getCheckbox('haveOptions'),
+            'haveOptions' => $sanitizedQueryParams->getInt('haveOptions'),
             'allTags' => $sanitizedQueryParams->getInt('allTags'),
             'logicalOperatorName' => $sanitizedQueryParams->getString('logicalOperatorName'),
         ], $sanitizedQueryParams);

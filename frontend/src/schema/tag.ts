@@ -19,18 +19,15 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export interface Tag {
-  tagId: number;
-  tag: string;
-  isSystem?: number;
-  isRequired?: number;
-  options?: string | null;
-  value: string | number;
-}
+import type { TFunction } from 'i18next';
+import { z } from 'zod';
 
-export interface TagUsageEntry {
-  entityId: number;
-  type: string;
-  name: string;
-  value: string | null;
-}
+export const getTagSchema = (t: TFunction) =>
+  z.object({
+    name: z
+      .string()
+      .min(1, t('Name is required'))
+      .max(50, t('Name must be less than 50 characters')),
+    options: z.string(),
+    isRequired: z.boolean(),
+  });

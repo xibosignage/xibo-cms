@@ -290,8 +290,12 @@ class TagFactory extends BaseFactory
             $params['isRequired'] = $sanitizedFilter->getCheckbox('isRequired');
         }
 
-        if ($sanitizedFilter->getCheckbox('haveOptions') === 1) {
+        $haveOptions = $sanitizedFilter->getInt('haveOptions');
+
+        if ($haveOptions === 1) {
             $body .= ' AND `tag`.options IS NOT NULL';
+        } elseif ($haveOptions === 0) {
+            $body .= ' AND `tag`.options IS NULL';
         }
 
         // table sorting
