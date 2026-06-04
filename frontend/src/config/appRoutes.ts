@@ -429,7 +429,10 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'saved-reports',
         labelKey: 'Saved Reports',
-        externalURL: '/report/savedreport/view',
+        lazy: () =>
+          import('@/pages/Reporting/SavedReports/SavedReports').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'report.saving',
       },
     ],

@@ -24,25 +24,25 @@ import { Trans, useTranslation } from 'react-i18next';
 
 import Modal from '@/components/ui/modals/Modal';
 
-interface DeleteReportScheduleModalProps {
+interface DeleteSavedReportModalProps {
   isOpen?: boolean;
   onClose: () => void;
   onDelete: () => void;
   itemCount: number;
-  scheduleName?: string;
+  reportName?: string;
   error?: string | null;
   isLoading?: boolean;
 }
 
-export default function DeleteReportScheduleModal({
+export default function DeleteSavedReportModal({
   isOpen = true,
   onClose,
   onDelete,
-  scheduleName,
+  reportName,
   isLoading,
   itemCount,
   error,
-}: DeleteReportScheduleModalProps) {
+}: DeleteSavedReportModalProps) {
   const { t } = useTranslation();
 
   return (
@@ -74,19 +74,19 @@ export default function DeleteReportScheduleModal({
         </div>
 
         <h2 className="text-center text-lg font-semibold mb-2 text-red-800">
-          {itemCount === 1 ? t('Delete Report Schedule?') : t('Delete Report Schedules?')}
+          {itemCount === 1 ? t('Delete Saved Report?') : t('Delete Saved Reports?')}
         </h2>
 
         <p className="text-center text-gray-500">
           {itemCount === 1 ? (
             <Trans
               i18nKey='Are you sure you want to delete "<strong>{{name}}</strong>"?'
-              values={{ name: scheduleName }}
+              values={{ name: reportName }}
               components={{ strong: <strong /> }}
             />
           ) : (
             <Trans
-              i18nKey="Are you sure you want to delete <strong>{{count}}</strong> report schedules?"
+              i18nKey="Are you sure you want to delete <strong>{{count}}</strong> saved reports?"
               values={{ count: itemCount }}
               components={{ strong: <strong /> }}
             />

@@ -20,7 +20,7 @@
  */
 
 import { Info, RefreshCw } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 import Modal from '@/components/ui/modals/Modal';
 import type { ReportSchedule } from '@/types/reportSchedule';
@@ -79,8 +79,11 @@ export default function ResetReportScheduleModal({
         <h2 className="text-center text-lg font-semibold mb-2">{t('Reset to Previous Run?')}</h2>
 
         <p className="text-center text-gray-500">
-          {t('Are you sure you want to reset ')}"<strong>{schedule.name}</strong>"
-          {t(' to its previous run state?')}
+          <Trans
+            i18nKey='Are you sure you want to reset "<strong>{{name}}</strong>" to its previous run state?'
+            values={{ name: schedule.name }}
+            components={{ strong: <strong /> }}
+          />
         </p>
 
         <span className="flex gap-px rounded-md justify-center bg-gray-50 p-1.5">

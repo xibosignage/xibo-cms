@@ -22,7 +22,7 @@
 import axios from 'axios';
 import { Download, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 import DatePickerInput from '@/components/ui/forms/DatePickerInput';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
@@ -266,8 +266,11 @@ export default function ExportStatisticsModal({ isOpen, onClose }: ExportStatist
           )}
           {!countLoading && recordCount !== null && (
             <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-              {t('Total number of records to be exported: ')}
-              <strong>{recordCount}</strong>
+              <Trans
+                i18nKey="Total number of records to be exported: <strong>{{count}}</strong>"
+                values={{ count: recordCount }}
+                components={{ strong: <strong /> }}
+              />
             </div>
           )}
           {!countLoading && countError && (
