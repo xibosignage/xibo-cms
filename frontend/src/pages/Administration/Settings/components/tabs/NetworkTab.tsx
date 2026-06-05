@@ -148,8 +148,8 @@ export default function NetworkTab({
       <SettingsSection title={t('HTTPS & Security')}>
         {isVisible('FORCE_HTTPS') && (
           <SwitchRow
-            title={t('Allow Library imports')}
-            description={t('Enable importing content packages into the Library.')}
+            title={t('Force HTTPS?')}
+            description={t('Force the portal into HTTPS?')}
             checked={formValues.FORCE_HTTPS === '1'}
             onChange={(v) => updateField('FORCE_HTTPS', v ? '1' : '0')}
             disabled={!isEditable('FORCE_HTTPS')}
@@ -157,8 +157,10 @@ export default function NetworkTab({
         )}
         {isVisible('ISSUE_STS') && (
           <SwitchRow
-            title={t('Enable Library Tidy')}
-            description={t('Show the Tidy Library button to remove unused media.')}
+            title={t('Enable STS?')}
+            description={t(
+              'Add STS to the response headers? Make sure you fully understand STS before turning it on as it will prevent access via HTTP after the first successful HTTPS connection.',
+            )}
             checked={formValues.ISSUE_STS === '1'}
             onChange={(v) => updateField('ISSUE_STS', v ? '1' : '0')}
             disabled={!isEditable('ISSUE_STS')}

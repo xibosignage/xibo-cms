@@ -40,8 +40,7 @@ export default function SharingTab({
       <SettingsSection title={t('Widget Colour Coding in Playlist Editor')}>
         {isVisible('REGION_OPTIONS_COLOURING') && (
           <SelectDropdown
-            label={t('Maintenance Mode')}
-            helpText={t('Set to "Protected" to secure the script behind a secret key.')}
+            label={t('Widget colouring in Playlist editor')}
             value={formValues.REGION_OPTIONS_COLOURING ?? ''}
             options={[
               { value: 'Media Colouring', label: t('Media Colouring') },

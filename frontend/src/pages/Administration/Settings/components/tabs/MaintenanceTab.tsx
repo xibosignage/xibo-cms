@@ -66,7 +66,9 @@ export default function MaintenanceTab({
         {isVisible('MAINTENANCE_ALWAYS_ALERT') && (
           <SwitchRow
             title={t('Send repeat Display Timeouts')}
-            description={t('Show the Tidy Library button to remove unused media.')}
+            description={t(
+              'Should the CMS send an email if a display is in an error state every time maintenance runs?',
+            )}
             checked={formValues.MAINTENANCE_ALWAYS_ALERT === '1'}
             onChange={(v) => updateField('MAINTENANCE_ALWAYS_ALERT', v ? '1' : '0')}
             disabled={!isEditable('MAINTENANCE_ALWAYS_ALERT')}

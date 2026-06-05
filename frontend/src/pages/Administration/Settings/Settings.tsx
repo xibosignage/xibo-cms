@@ -115,7 +115,7 @@ export default function Settings() {
                     ? 'text-xibo-blue-600 border-xibo-blue-600'
                     : 'border-transparent hover:text-gray-600 hover:border-gray-300',
                 )}
-                aria-current={activeTab === 'Configuration' ? 'page' : undefined}
+                aria-current={activeTab === tab.labelKey ? 'page' : undefined}
                 key={tab.path}
                 onClick={() => handleTabClick(tab)}
               >
@@ -134,7 +134,7 @@ export default function Settings() {
           )}
           <div className="flex-1 overflow-y-auto flex flex-col">
             {isLoading && (
-              <div className="flex-1 flex center p-5 space-y-5 bg-gray-50 ">
+              <div className="flex-1 flex items-center justify-center p-5 space-y-5 bg-gray-50 ">
                 <span className="text-gray-400 animate-pulse font-medium">{t('Loading...')}</span>
               </div>
             )}

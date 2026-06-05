@@ -26,7 +26,7 @@ interface SettingsSectionProps {
 
 export default function SettingsSection({ title, children }: SettingsSectionProps) {
   return (
-    <div className="flex flex-col gap-2.5 p-5 bg-white rounded-lg border-gray-200">
+    <div className="flex flex-col gap-2.5 p-5 bg-white rounded-lg border border-gray-200">
       <span className="font-semibold">{title}</span>
       {children}
     </div>
