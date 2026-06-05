@@ -22,7 +22,7 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import { ArrowLeft, ArrowRight, CalendarClock, Minus, Plus, Tablet } from 'lucide-react';
 import { useEffect, useRef, useState, useTransition } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 import Button from '../Button';
 import GeoScheduleMap from '../GeoScheduleMap';
@@ -1082,25 +1082,30 @@ export default function ScheduleEventModal({
         {currentStep === displayStepIndex && !isEditMode && hasDisplays && showDisplayBanner && (
           <div className="shrink-0 mx-8 mt-4">
             <InfoBanner type="success">
-              {t("You're all set! Click")} <strong>{t('Finish')}</strong>{' '}
-              {t("to create an 'Always Schedule', or")} <strong>{t('Next')}</strong>{' '}
-              {t('to choose times.')}
+              <Trans
+                i18nKey="You're all set! Click <strong>Finish</strong> to create an 'Always Schedule', or <strong>Next</strong> to choose times."
+                components={{ strong: <strong /> }}
+              />
             </InfoBanner>
           </div>
         )}
         {currentStep === timeStepIndex && !isEditMode && (
           <div className="shrink-0 mx-8 mt-4">
             <InfoBanner type="success">
-              {t('Click')} <strong>{t('Finish')}</strong> {t('to complete schedule or click')}{' '}
-              <strong>{t('Next')}</strong> {t('to customized settings.')}
+              <Trans
+                i18nKey="Click <strong>Finish</strong> to complete schedule or click <strong>Next</strong> to customized settings."
+                components={{ strong: <strong /> }}
+              />
             </InfoBanner>
           </div>
         )}
         {currentStep === optionalStepIndex && !isEditMode && (
           <div className="shrink-0 mx-8 mt-4">
             <InfoBanner type="success">
-              {t("You're all set! Simply click")} <strong>{t('Finish')}</strong>{' '}
-              {t('to complete schedule or optional criteria.')}
+              <Trans
+                i18nKey="You're all set! Simply click <strong>Finish</strong> to complete schedule or optional criteria."
+                components={{ strong: <strong /> }}
+              />
             </InfoBanner>
           </div>
         )}
@@ -1320,8 +1325,10 @@ export default function ScheduleEventModal({
                   <p className="text-xs text-red-600 ml-2 mt-1">{formErrors.displayGroupIds}</p>
                 ) : (
                   <span className="text-xs text-gray-400">
-                    {t('Please select one or more')} <strong>{t('Displays/Groups')}</strong>{' '}
-                    {t('for this event to be shown on.')}
+                    <Trans
+                      i18nKey="Please select one or more <strong>Displays/Groups</strong> for this event to be shown on."
+                      components={{ strong: <strong /> }}
+                    />
                   </span>
                 )}
               </div>
