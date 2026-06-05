@@ -154,8 +154,11 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
       const links = screen.getAllByRole('link', { name: new RegExp(name, 'i') });
       const link = links.find((l) => l.getAttribute('href') === href);
 
+      expect(link).toBeDefined();
       expect(link).toBeVisible();
     });
+
+    
 
     // Developer is a top-level external link (no subLinks) — always visible, not expandable.
     expect(screen.getByRole('link', { name: /developer/i })).toHaveAttribute(
