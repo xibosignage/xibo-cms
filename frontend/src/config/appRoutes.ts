@@ -452,7 +452,10 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'audit-trail',
         labelKey: 'Audit Trail',
-        externalURL: '/audit/view',
+        lazy: () =>
+          import('@/pages/Advanced/AuditTrail/AuditTrail').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'auditlog.view',
       },
       {

@@ -316,14 +316,6 @@ $app->get('/stats/data/bandwidth', ['\Xibo\Controller\Stats','bandwidthData'])
     ->setName('stats.bandwidth.data');
 
 //
-// Audit Log
-//
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/audit/view', ['\Xibo\Controller\AuditLog','displayPage'])->setName('auditlog.view');
-    $group->get('/audit/form/export', ['\Xibo\Controller\AuditLog','exportForm'])->setName('auditLog.export.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['auditlog.view']));
-
-//
 // Report Schedule
 //
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
