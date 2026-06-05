@@ -316,7 +316,7 @@ export default function Campaigns() {
       />
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
         <div className="flex flex-row justify-between py-4 items-center gap-4">
-          <TabNav activeTab="Campaign" navigation={libraryTabs} />
+          <TabNav activeTab="Campaigns" navigation={libraryTabs} />
           <div className="flex items-center gap-2 md:mb-0">
             <Button
               variant="primary"
