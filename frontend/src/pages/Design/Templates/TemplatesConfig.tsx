@@ -219,9 +219,9 @@ export const getTemplateColumn = (props: TemplatesActionsProps): ColumnDef<Templ
     {
       id: 'tableActions',
       header: '',
-      size: 120,
-      minSize: 120,
-      maxSize: 120,
+      size: 80,
+      minSize: 80,
+      maxSize: 80,
       enableHiding: false,
       enableResizing: false,
       cell: (info) => {

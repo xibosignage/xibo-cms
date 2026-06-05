@@ -201,9 +201,9 @@ export const getPlayerVersionColumns = (
     {
       id: 'tableActions',
       header: '',
-      size: 80,
-      minSize: 80,
-      maxSize: 80,
+      size: 110,
+      minSize: 110,
+      maxSize: 110,
       enableHiding: false,
       enableResizing: false,
       cell: ({ row }) => (
