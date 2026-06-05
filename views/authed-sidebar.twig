@@ -98,7 +98,7 @@
             {% endif %}
 
             {% if currentUser.isSuperAdmin() %}
-                <li class="sidebar-list"><a href="{{ url_for("admin.view") }}">{% trans "Settings" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/administration/settings">{% trans "Settings" %}</a></li>
             {% endif %}
 
             {% if currentUser.isSuperAdmin() %}
