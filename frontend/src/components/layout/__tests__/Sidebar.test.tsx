@@ -158,8 +158,6 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
       expect(link).toBeVisible();
     });
 
-    
-
     // Developer is a top-level external link (no subLinks) — always visible, not expandable.
     expect(screen.getByRole('link', { name: /developer/i })).toHaveAttribute(
       'href',
