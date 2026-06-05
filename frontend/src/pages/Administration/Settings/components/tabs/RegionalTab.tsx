@@ -34,8 +34,8 @@ import { Info } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { DATE_FORMAT_ROWS, type SettingsTabProps } from '../SettingsConfig';
-import SettingsSection from '../components/SettingsSection';
+import { DATE_FORMAT_ROWS, type SettingsTabProps } from '../../SettingsConfig';
+import SettingsSection from '../SettingsSection';
 
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import TextInput from '@/components/ui/forms/TextInput';

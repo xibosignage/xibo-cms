@@ -27,18 +27,18 @@ import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
 import { SETTINGS_TABS } from './SettingsConfig';
+import ConfigurationTab from './components/tabs/ConfigurationTab';
+import DefaultsTab from './components/tabs/DefaultsTab';
+import DisplaysTab from './components/tabs/DisplaysTab';
+import GeneralTab from './components/tabs/GeneralTab';
+import MaintenanceTab from './components/tabs/MaintenanceTab';
+import NetworkTab from './components/tabs/NetworkTab';
+import RegionalTab from './components/tabs/RegionalTab';
+import SharingTab from './components/tabs/SharingTab';
+import TroubleshootingTab from './components/tabs/TroubleshootingTab';
+import UsersTab from './components/tabs/UsersTab';
 import { useSettingsData, settingsQueryKeys } from './hooks/useSettingsData';
 import { useSettingsForm } from './hooks/useSettingsForm';
-import ConfigurationTab from './tabs/ConfigurationTab';
-import DefaultsTab from './tabs/DefaultsTab';
-import DisplaysTab from './tabs/DisplaysTab';
-import GeneralTab from './tabs/GeneralTab';
-import MaintenanceTab from './tabs/MaintenanceTab';
-import NetworkTab from './tabs/NetworkTab';
-import RegionalTab from './tabs/RegionalTab';
-import SharingTab from './tabs/SharingTab';
-import TroubleshootingTab from './tabs/TroubleshootingTab';
-import UsersTab from './tabs/UsersTab';
 
 import Button from '@/components/ui/Button';
 import { notify } from '@/components/ui/Notification';
@@ -53,7 +53,8 @@ export default function Settings() {
   const adminTabs = useFilteredTabs('administration');
 
   const { data, isLoading, isError, error: queryError } = useSettingsData();
-  const { formValues, updateField, isVisible, isEditable, isDirty } = useSettingsForm(data);
+  const { formValues, updateField, isVisible, isEditable, isDirty, resetForm } =
+    useSettingsForm(data);
 
   const [activeTab, setActiveTab] = useState('Configuration');
   const [isPending, startTransition] = useTransition();
@@ -165,7 +166,9 @@ export default function Settings() {
                 <div />
               )}
               <div className="flex gap-x-3">
-                <Button variant="secondary">{t('Cancel')}</Button>
+                <Button variant="secondary" onClick={resetForm}>
+                  {t('Cancel')}
+                </Button>
                 <Button variant="primary" onClick={handleSave} disabled={isPending || !isDirty}>
                   {isPending ? t('Saving...') : t('Save')}
                 </Button>

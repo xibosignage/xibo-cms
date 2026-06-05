@@ -21,8 +21,8 @@
 
 import { useTranslation } from 'react-i18next';
 
-import type { SettingsTabProps } from '../SettingsConfig';
-import SettingsSection from '../components/SettingsSection';
+import type { SettingsTabProps } from '../../SettingsConfig';
+import SettingsSection from '../SettingsSection';
 
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import SwitchRow from '@/pages/Administration/Users/components/SwitchRow';
