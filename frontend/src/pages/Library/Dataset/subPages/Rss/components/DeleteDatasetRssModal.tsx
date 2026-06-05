@@ -73,7 +73,7 @@ export function DeleteDatasetRssModal({
             </div>
           </div>
           <h2 className="text-center text-lg font-semibold mb-2 text-red-800">
-            {t('Delete Rss?')}
+            {t('Delete RSS?')}
           </h2>
         </div>
         <p className="text-center text-gray-500">
@@ -85,7 +85,7 @@ export function DeleteDatasetRssModal({
             />
           ) : (
             <Trans
-              i18nKey="Are you sure you want to delete <strong>{{count}}</strong> Rss?"
+              i18nKey="Are you sure you want to delete <strong>{{count}}</strong> RSS feeds?"
               values={{ count: itemCount }}
               components={{ strong: <strong /> }}
             />

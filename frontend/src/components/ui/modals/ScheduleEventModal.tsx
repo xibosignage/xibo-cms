@@ -1093,7 +1093,7 @@ export default function ScheduleEventModal({
           <div className="shrink-0 mx-8 mt-4">
             <InfoBanner type="success">
               <Trans
-                i18nKey="Click <strong>Finish</strong> to complete schedule or click <strong>Next</strong> to customized settings."
+                i18nKey="Click <strong>Finish</strong> to complete schedule or click <strong>Next</strong> to customize settings."
                 components={{ strong: <strong /> }}
               />
             </InfoBanner>
