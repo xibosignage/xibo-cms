@@ -530,17 +530,18 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
     },
 
     {
-      accessorKey: 'valid',
+      id: 'valid',
       header: t('Valid?'),
       size: 100,
-      cell: (info) => <CheckMarkCell active={info.getValue<number>() === 1} />,
+      accessorFn: (row) => (row as Layout).status,
+      cell: (info) => <CheckMarkCell active={info.getValue<number>() <= 2} />,
     },
 
     {
-      accessorKey: 'status',
+      accessorKey: 'enableStat',
       header: t('Stats?'),
       size: 100,
-      cell: (info) => <CheckMarkCell active={info.getValue<number>() === 1} />,
+      cell: (info) => <CheckMarkCell active={info.getValue<boolean>()} />,
     },
 
     {

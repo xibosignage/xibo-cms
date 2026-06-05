@@ -120,7 +120,7 @@ const mockLayout: Layout = {
   publishedStatusId: 1,
   publishedStatus: 'Published',
   campaignId: 20,
-  status: 'Published',
+  status: 1,
   retired: false,
   width: 1920,
   height: 1080,

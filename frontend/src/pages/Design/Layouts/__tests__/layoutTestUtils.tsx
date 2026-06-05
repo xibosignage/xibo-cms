@@ -49,7 +49,7 @@ export const mockLayout: Layout = {
   publishedStatusId: 1,
   publishedStatus: 'Published',
   modifiedDt: '2026-03-01 10:00:00',
-  status: 'Published',
+  status: 1,
   retired: false,
   width: 1920,
   height: 1080,
