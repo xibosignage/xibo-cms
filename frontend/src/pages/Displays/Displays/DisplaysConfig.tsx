@@ -402,6 +402,7 @@ export interface DisplayActionsProps {
   onSendCommand: (display: Display) => void;
   onJumpToScheduledLayouts?: (displayGroupId: number) => void;
   onSchedule?: (display: Display) => void;
+  onPreviewScreenshot?: (display: Display) => void;
 }
 
 export const getDisplayItemActions = ({
@@ -797,9 +798,16 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
       enableSorting: false,
       cell: ({ row }) => (
         <MediaCell
-          thumb={`/display/screenshot/${row.original.displayId}`}
+          thumb={
+            row.original.screenShotRequested
+              ? `/display/screenshot/${row.original.displayId}`
+              : undefined
+          }
           alt={row.original.display}
           mediaType="image"
+          onPreview={
+            props.onPreviewScreenshot ? () => props.onPreviewScreenshot!(row.original) : undefined
+          }
         />
       ),
     },

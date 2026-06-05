@@ -33,6 +33,7 @@ import {
   type DisplayFilterInput,
 } from './DisplaysConfig';
 import DisplayMap from './components/DisplayMap';
+import DisplayScreenshotPreviewer from './components/DisplayScreenshotPreviewer';
 import { DisplayModals } from './components/DisplaysModals';
 import { useDisplaysActions } from './hooks/useDisplaysActions';
 import { useDisplaysData } from './hooks/useDisplaysData';
@@ -160,6 +161,7 @@ export default function Displays() {
   const [selectedDisplayId, setSelectedDisplayId] = useState<number | null>(null);
   const [actionDisplay, setActionDisplay] = useState<Display | null>(null);
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
+  const [previewDisplay, setPreviewDisplay] = useState<Display | null>(null);
 
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
@@ -327,6 +329,7 @@ export default function Displays() {
     onSendCommand: (display) => openActionModal(display, 'sendCommand'),
     onJumpToScheduledLayouts: handleJumpToScheduledLayouts,
     onSchedule: canSchedule ? (display) => openActionModal(display, 'schedule') : undefined,
+    onPreviewScreenshot: (display) => setPreviewDisplay(display),
   });
 
   const getAllSelectedItems = (): Display[] => {
@@ -518,6 +521,15 @@ export default function Displays() {
           )}
         </div>
       </div>
+
+      <DisplayScreenshotPreviewer
+        display={previewDisplay}
+        onClose={() => setPreviewDisplay(null)}
+        onRequestScreenshot={(display) => {
+          setPreviewDisplay(null);
+          openActionModal(display, 'requestScreenShot');
+        }}
+      />
 
       <DisplayModals
         actions={{
