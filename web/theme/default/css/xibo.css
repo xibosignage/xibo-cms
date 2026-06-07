@@ -992,7 +992,7 @@ ul li.active.tab-design:hover a {
 }
 
 .XiboFilter .form-inline {
-    overflow: auto;
+    overflow: visible;
 }
 
 .XiboFilter .form-inline .form-group, .XiboFilterCustom .form-inline .form-group {
