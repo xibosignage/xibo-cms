@@ -19,18 +19,14 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export interface Tag {
-  tagId: number;
-  tag: string;
-  isSystem?: number;
-  isRequired?: number;
-  options?: string | null;
-  value: string | number;
-}
+import { useTranslation } from 'react-i18next';
 
-export interface TagUsageEntry {
-  entityId: number;
-  type: string;
-  name: string;
-  value: string | null;
+import { getBaseFilterKeys } from '../TagsConfig';
+
+export function useTagFilterOptions() {
+  const { t } = useTranslation();
+
+  return {
+    filterOptions: getBaseFilterKeys(t),
+  };
 }

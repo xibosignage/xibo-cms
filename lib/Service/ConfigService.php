@@ -529,6 +529,21 @@ class ConfigService implements ConfigServiceInterface
         }
     }
 
+    /** @inheritdoc */
+    public function getAllSettingsWithMeta()
+    {
+        $settings = $this->loadSettings();
+        $result = [];
+        foreach ($settings as $setting) {
+            $result[$setting['setting']] = [
+                'value' => $setting['value'],
+                'userSee' => intval($setting['userSee']),
+                'userChange' => intval($setting['userChange']),
+            ];
+        }
+        return $result;
+    }
+
     /**
      * Is the provided setting visible
      * @param string $setting

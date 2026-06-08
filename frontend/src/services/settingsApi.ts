@@ -19,18 +19,20 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export interface Tag {
-  tagId: number;
-  tag: string;
-  isSystem?: number;
-  isRequired?: number;
-  options?: string | null;
-  value: string | number;
+import http from '@/lib/api';
+import type { SettingsData } from '@/types/settings';
+
+export async function fetchSettings(): Promise<SettingsData> {
+  const { data } = await http.get('/admin');
+  return data;
 }
 
-export interface TagUsageEntry {
-  entityId: number;
-  type: string;
-  name: string;
-  value: string | null;
+export async function updateSettings(values: Record<string, string>): Promise<void> {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(values)) {
+    params.append(key, value);
+  }
+  await http.put('/admin', params.toString(), {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
 }

@@ -1,3 +1,4 @@
+<?php
 /*
  * Copyright (C) 2026 Xibo Signage Ltd
  *
@@ -19,18 +20,17 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export interface Tag {
-  tagId: number;
-  tag: string;
-  isSystem?: number;
-  isRequired?: number;
-  options?: string | null;
-  value: string | number;
-}
+use Phinx\Migration\AbstractMigration;
 
-export interface TagUsageEntry {
-  entityId: number;
-  type: string;
-  name: string;
-  value: string | null;
+/**
+ * Add search index in Tag Table
+ * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
+ */
+class AddIndexToTagTableMigration extends AbstractMigration
+{
+    public function change(): void
+    {
+        $this->execute('ALTER TABLE tag ADD FULLTEXT idx_tag_search(`tag`, `options`) 
+            WITH PARSER ngram');
+    }
 }

@@ -19,18 +19,18 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export interface Tag {
-  tagId: number;
-  tag: string;
-  isSystem?: number;
-  isRequired?: number;
-  options?: string | null;
-  value: string | number;
-}
+import { useQuery } from '@tanstack/react-query';
 
-export interface TagUsageEntry {
-  entityId: number;
-  type: string;
-  name: string;
-  value: string | null;
+import { fetchSettings } from '@/services/settingsApi';
+
+export const settingsQueryKeys = {
+  all: ['settings'] as const,
+};
+
+export function useSettingsData() {
+  return useQuery({
+    queryKey: settingsQueryKeys.all,
+    queryFn: fetchSettings,
+    staleTime: 5 * 60 * 1000,
+  });
 }

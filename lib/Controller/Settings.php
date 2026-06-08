@@ -71,6 +71,150 @@ class Settings extends Base
     }
 
     /**
+     * Get all settings as JSON
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function get(Request $request, Response $response)
+    {
+        if (!$this->getUser()->isSuperAdmin()) {
+            throw new AccessDeniedException();
+        }
+
+        // Get all settings with metadata
+        $settings = $this->getConfig()->getAllSettingsWithMeta();
+
+        // Should we hide other themes?
+        $themes = [];
+        $hideThemes = $this->getConfig()->getThemeConfig('hide_others');
+
+        if (!$hideThemes) {
+            $directory = new \RecursiveDirectoryIterator(
+                PROJECT_ROOT . '/web/theme',
+                \FilesystemIterator::SKIP_DOTS
+            );
+            $filter = new \RecursiveCallbackFilterIterator(
+                $directory,
+                function ($current, $key, $iterator) {
+                    if ($current->isDir()) {
+                        return true;
+                    }
+                    return str_starts_with($current->getFilename(), 'config.php');
+                }
+            );
+            $iterator = new \RecursiveIteratorIterator($filter);
+
+            foreach ($iterator as $file) {
+                $config = [];
+                include $file->getPath() . '/' . $file->getFilename();
+                if (!empty($config['theme_name'])) {
+                    $themes[] = ['id' => basename($file->getPath()), 'value' => $config['theme_name']];
+                }
+            }
+        }
+
+        // Timezones
+        $timeZones = [];
+        foreach (DateFormatHelper::timezoneList() as $key => $value) {
+            $timeZones[] = ['id' => $key, 'value' => $value];
+        }
+
+        // Languages
+        $languages = [];
+        $localeDir = PROJECT_ROOT . '/locale';
+        foreach (array_map('basename', glob($localeDir . '/*.mo')) as $lang) {
+            $lang = str_replace('.mo', '', $lang);
+            $languages[] = ['id' => $lang, 'value' => $lang];
+        }
+
+        // Resolve related entities for current values
+        $defaultLayout = null;
+        try {
+            $layout = $this->layoutFactory->getById($this->getConfig()->getSetting('DEFAULT_LAYOUT'));
+            $defaultLayout = ['layoutId' => $layout->layoutId, 'layout' => $layout->layout];
+        } catch (NotFoundException $e) {
+        }
+
+        $systemUser = null;
+        try {
+            $user = $this->userFactory->getById($this->getConfig()->getSetting('SYSTEM_USER'));
+            $systemUser = ['userId' => $user->userId, 'userName' => $user->userName];
+        } catch (NotFoundException $e) {
+        }
+
+        $defaultUserGroup = null;
+        try {
+            $group = $this->userGroupFactory->getById(
+                $this->getConfig()->getSetting('DEFAULT_USERGROUP')
+            );
+            $defaultUserGroup = ['groupId' => $group->groupId, 'group' => $group->group];
+        } catch (NotFoundException $e) {
+        }
+
+        $defaultTransitionIn = null;
+        try {
+            $transition = $this->transitionfactory->getByCode(
+                $this->getConfig()->getSetting('DEFAULT_TRANSITION_IN')
+            );
+            $defaultTransitionIn = [
+                'transitionId' => $transition->transitionId,
+                'transition' => $transition->transition,
+                'code' => $transition->code,
+            ];
+        } catch (NotFoundException $e) {
+        }
+
+        $defaultTransitionOut = null;
+        try {
+            $transition = $this->transitionfactory->getByCode(
+                $this->getConfig()->getSetting('DEFAULT_TRANSITION_OUT')
+            );
+            $defaultTransitionOut = [
+                'transitionId' => $transition->transitionId,
+                'transition' => $transition->transition,
+                'code' => $transition->code,
+            ];
+        } catch (NotFoundException $e) {
+        }
+
+        // Elevate log until
+        $elevateLogUntil = $this->getConfig()->getSetting('ELEVATE_LOG_UNTIL');
+        if ($elevateLogUntil != null) {
+            $elevateLogUntil = intval($elevateLogUntil);
+            if ($elevateLogUntil <= Carbon::now()->format('U')) {
+                $elevateLogUntil = null;
+            } else {
+                $elevateLogUntil = Carbon::createFromTimestamp($elevateLogUntil)
+                    ->format(DateFormatHelper::getSystemFormat());
+            }
+        }
+
+        $this->getState()->setData([
+            'settings' => $settings,
+            'options' => [
+                'themes' => $themes,
+                'languages' => $languages,
+                'timeZones' => $timeZones,
+            ],
+            'relatedEntities' => [
+                'defaultLayout' => $defaultLayout,
+                'systemUser' => $systemUser,
+                'defaultUserGroup' => $defaultUserGroup,
+                'defaultTransitionIn' => $defaultTransitionIn,
+                'defaultTransitionOut' => $defaultTransitionOut,
+            ],
+            'elevateLogUntil' => $elevateLogUntil,
+            'hideThemes' => (bool) $hideThemes,
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
      * Display Page
      * @param Request $request
      * @param Response $response
