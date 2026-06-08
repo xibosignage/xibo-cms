@@ -23,6 +23,7 @@
 namespace Xibo\Controller;
 
 use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Event\DisplayGroupLoadEvent;
@@ -31,17 +32,17 @@ use Xibo\Event\TagDeleteEvent;
 use Xibo\Event\TagEditEvent;
 use Xibo\Event\TriggerTaskEvent;
 use Xibo\Factory\CampaignFactory;
-use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PlaylistFactory;
-use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
-use Xibo\Factory\UserFactory;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Class Tag
@@ -49,85 +50,14 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class Tag extends Base
 {
-    /** @var CampaignFactory */
-    private $campaignFactory;
-
-    /**
-     * @var DisplayFactory
-     */
-    private $displayFactory;
-
-    /**
-     * @var DisplayGroupFactory
-     */
-    private $displayGroupFactory;
-
-    /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
-
-    /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
-
-    /** @var PlaylistFactory */
-    private $playlistFactory;
-
-    /**
-     * @var ScheduleFactory
-     */
-    private $scheduleFactory;
-
-    /**
-     * @var TagFactory
-     */
-    private $tagFactory;
-
-    /** @var UserFactory */
-    private $userFactory;
-
-    /**
-     * Set common dependencies.
-     * @param DisplayGroupFactory $displayGroupFactory
-     * @param LayoutFactory $layoutFactory
-     * @param TagFactory $tagFactory
-     * @param UserFactory $userFactory
-     * @param DisplayFactory $displayFactory
-     * @param MediaFactory $mediaFactory
-     * @param ScheduleFactory $scheduleFactory
-     * @param CampaignFactory $campaignFactory
-     * @param PlaylistFactory $playlistFactory
-     */
-    public function __construct($displayGroupFactory, $layoutFactory, $tagFactory, $userFactory, $displayFactory, $mediaFactory, $scheduleFactory, $campaignFactory, $playlistFactory)
-    {
-        $this->displayGroupFactory = $displayGroupFactory;
-        $this->layoutFactory = $layoutFactory;
-        $this->tagFactory = $tagFactory;
-        $this->userFactory = $userFactory;
-        $this->displayFactory = $displayFactory;
-        $this->mediaFactory = $mediaFactory;
-        $this->scheduleFactory = $scheduleFactory;
-        $this->campaignFactory = $campaignFactory;
-        $this->playlistFactory = $playlistFactory;
-    }
-
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function displayPage(Request $request, Response $response)
-    {
-        $this->getState()->template = 'tag-page';
-        $this->getState()->setData([
-            'users' => $this->userFactory->query()
-        ]);
-
-        return $this->render($request, $response);
+    public function __construct(
+        private readonly DisplayGroupFactory $displayGroupFactory,
+        private readonly LayoutFactory $layoutFactory,
+        private readonly TagFactory $tagFactory,
+        private readonly MediaFactory $mediaFactory,
+        private readonly CampaignFactory $campaignFactory,
+        private readonly PlaylistFactory $playlistFactory
+    ) {
     }
 
     #[OA\Get(
@@ -143,6 +73,13 @@ class Tag extends Base
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'keyword',
+        description: 'Filter by Tag name and options',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
         name: 'tag',
@@ -174,14 +111,44 @@ class Tag extends Base
     )]
     #[OA\Parameter(
         name: 'haveOptions',
-        description: 'Set to 1 to show only results that have options set',
+        description: 'Filter by options: 1 = has options (IS NOT NULL), 0 = no options (IS NULL), omit for all',
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'integer')
     )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: [
+                'tagId',
+                'tag',
+                'isSystem',
+                'options',
+                'isRequired',
+            ]
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
     #[OA\Response(
         response: 200,
         description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: '#/components/schemas/Tag')
@@ -192,90 +159,67 @@ class Tag extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
 
-        $filter = [
-            'tagId' => $sanitizedQueryParams->getInt('tagId'),
-            'tag' => $sanitizedQueryParams->getString('tag'),
-            'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
-            'isSystem' => $sanitizedQueryParams->getCheckbox('isSystem'),
-            'isRequired' => $sanitizedQueryParams->getCheckbox('isRequired'),
-            'haveOptions' => $sanitizedQueryParams->getCheckbox('haveOptions'),
-            'allTags' => $sanitizedQueryParams->getInt('allTags'),
-            'logicalOperatorName' => $sanitizedQueryParams->getString('logicalOperatorName'),
-        ];
+        $tags = $this->tagFactory->query(
+            $this->gridRenderSort($sanitizedQueryParams, $this->isJson($request)),
+            $this->getTagFilters($sanitizedQueryParams)
+        );
 
-        $tags = $this->tagFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter($filter, $sanitizedQueryParams));
+        if ($this->isJson($request) || $this->isApi($request)) {
+            return $response
+                ->withStatus(200)
+                ->withHeader('X-Total-Count', $this->tagFactory->countLast())
+                ->withJson($tags);
+        } else {
+            // TODO remove once all pages/forms using tags are updated.
+            $this->getState()->template = 'grid';
+            $this->getState()->recordsTotal = $this->tagFactory->countLast();
+            $this->getState()->setData($tags);
 
-        foreach ($tags as $tag) {
-            /* @var \Xibo\Entity\Tag $tag */
-
-            if ($this->isApi($request)) {
-                continue;
-            }
-
-            $tag->includeProperty('buttons');
-            $tag->buttons = [];
-
-
-            //Show buttons for non system tags
-            if ($tag->isSystem === 0 && $this->getUser()->isSuperAdmin()) {
-                // Edit the Tag
-                $tag->buttons[] = [
-                    'id' => 'tag_button_edit',
-                    'url' => $this->urlFor($request,'tag.edit.form', ['id' => $tag->tagId]),
-                    'text' => __('Edit')
-                ];
-
-                // Delete Tag
-                $tag->buttons[] = [
-                    'id' => 'tag_button_delete',
-                    'url' => $this->urlFor($request,'tag.delete.form', ['id' => $tag->tagId]),
-                    'text' => __('Delete'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'tag.delete', ['id' => $tag->tagId])],
-                        ['name' => 'commit-method', 'value' => 'delete'],
-                        ['name' => 'id', 'value' => 'tag_button_delete'],
-                        ['name' => 'text', 'value' => __('Delete')],
-                        ['name' => 'sort-group', 'value' => 1],
-                        ['name' => 'rowtitle', 'value' => $tag->tag]
-                    ]
-                ];
-            }
-
-            $tag->buttons[] = [
-                'id' => 'tag_button_usage',
-                'url' => $this->urlFor($request, 'tag.usage.form', ['id' => $tag->tagId]),
-                'text' => __('Usage')
-            ];
+            return $this->render($request, $response);
         }
-
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->tagFactory->countLast();
-        $this->getState()->setData($tags);
-
-        return $this->render($request, $response);
     }
 
+    #[OA\Get(
+        path: '/tag/{tagId}',
+        operationId: 'TagSearchById',
+        description: 'Get the Tag object specified by the provided tagId',
+        summary: 'Tag search by ID',
+        tags: ['tags']
+    )]
+    #[OA\Parameter(
+        name: 'tagId',
+        description: 'Numeric ID of the Tag to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Tag')
+    )]
     /**
-     * Tag Add Form
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @param int $id
+     * @return Response|ResponseInterface
+     * @throws NotFoundException
      */
-    public function addForm(Request $request, Response $response)
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
-        $this->getState()->template = 'tag-form-add';
-        return $this->render($request, $response);
+        $tag = $this->tagFactory->getById($id, 1);
+
+        return $response
+            ->withStatus(200)
+            ->withJson($tag);
     }
 
     #[OA\Post(
@@ -286,6 +230,7 @@ class Tag extends Base
         tags: ['tags']
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
@@ -303,8 +248,7 @@ class Tag extends Base
                     )
                 ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(
         response: 201,
@@ -319,14 +263,14 @@ class Tag extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
-    public function add(Request $request, Response $response)
+    public function add(Request $request, Response $response): Response|ResponseInterface
     {
         if (!$this->getUser()->isSuperAdmin()) {
             throw new AccessDeniedException();
@@ -367,6 +311,83 @@ class Tag extends Base
         return $this->render($request, $response);
     }
 
+
+    #[OA\Get(
+        path: '/tag/usage/{tagId}',
+        operationId: 'TagUsageReport',
+        description: 'Get the records for the Tag item usage report',
+        summary: 'Get Tag Item Usage Report',
+        tags: ['tags']
+    )]
+    #[OA\Parameter(
+        name: 'tagId',
+        description: 'Numeric ID of the Tag to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: [
+                'entityId',
+                'type',
+                'name',
+                'value',
+            ]
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
+    )]
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return Response|ResponseInterface
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     */
+    public function usage(Request $request, Response $response, $id): Response|ResponseInterface
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
+
+        $filter = [
+            'tagId' => $id,
+            'allTags' => 1
+        ];
+
+        $entries = $this->tagFactory->getAllLinks(
+            $this->gridRenderSort($sanitizedParams, $this->isJson($request)),
+            $this->gridRenderFilter($filter, $sanitizedQueryParams)
+        );
+
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $this->tagFactory->countLast())
+            ->withJson($entries);
+    }
+
     #[OA\Put(
         path: '/tag/{tagId}',
         operationId: 'tagEdit',
@@ -382,6 +403,7 @@ class Tag extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
@@ -399,8 +421,7 @@ class Tag extends Base
                     )
                 ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(
         response: 201,
@@ -416,69 +437,7 @@ class Tag extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function editForm(Request $request, Response $response, $id)
-    {
-        $tag = $this->tagFactory->getById($id);
-        $tagOptions = '';
-
-        if (isset($tag->options)) {
-            $tagOptions = implode(',', json_decode($tag->options));
-        }
-
-        $this->getState()->template = 'tag-form-edit';
-        $this->getState()->setData([
-            'tag' => $tag,
-            'options' => $tagOptions,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    public function usageForm(Request $request, Response $response, $id)
-    {
-        $tag = $this->tagFactory->getById($id);
-
-        $this->getState()->template = 'tag-usage-form';
-        $this->getState()->setData([
-            'tag' => $tag
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    public function usage(Request $request, Response $response, $id)
-    {
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-        $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
-
-        $filter = [
-            'tagId' => $id,
-        ];
-
-        $entries = $this->tagFactory->getAllLinks(
-            $this->gridRenderSort($sanitizedParams),
-            $this->gridRenderFilter($filter, $sanitizedQueryParams)
-        );
-
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->tagFactory->countLast();
-        $this->getState()->setData($entries);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Edit a Tag
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
@@ -486,7 +445,7 @@ class Tag extends Base
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response, $id): Response|ResponseInterface
     {
         if (!$this->getUser()->isSuperAdmin()) {
             throw new AccessDeniedException();
@@ -499,7 +458,7 @@ class Tag extends Base
             throw new AccessDeniedException(__('Access denied System tags cannot be edited'));
         }
 
-        if(isset($tag->options)) {
+        if (isset($tag->options)) {
             $tagOptionsCurrent = implode(',', json_decode($tag->options));
             $tagOptionsArrayCurrent = explode(',', $tagOptionsCurrent);
         }
@@ -522,11 +481,9 @@ class Tag extends Base
         }
 
         // if option were changed, we need to compare the array of options before and after edit
-        if($tag->hasPropertyChanged('options')) {
-
+        if ($tag->hasPropertyChanged('options')) {
             if (isset($tagOptionsArrayCurrent)) {
-
-                if(isset($tag->options)) {
+                if (isset($tag->options)) {
                     $tagOptions = implode(',', json_decode($tag->options));
                     $tagOptionsArray = explode(',', $tagOptions);
                 } else {
@@ -555,28 +512,6 @@ class Tag extends Base
             'data' => $tag
         ]);
 
-        return $this->render($request,$response);
-    }
-
-    /**
-     * Shows the Delete Group Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    function deleteForm(Request $request, Response $response, $id)
-    {
-        $tag = $this->tagFactory->getById($id);
-
-        $this->getState()->template = 'tag-form-delete';
-        $this->getState()->setData([
-            'tag' => $tag,
-        ]);
-
         return $this->render($request, $response);
     }
 
@@ -601,7 +536,7 @@ class Tag extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ConfigurationException
@@ -610,7 +545,7 @@ class Tag extends Base
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
-    public function delete(Request $request, Response $response, $id)
+    public function delete(Request $request, Response $response, $id): Response|ResponseInterface
     {
         if (!$this->getUser()->isSuperAdmin()) {
             throw new AccessDeniedException();
@@ -640,11 +575,11 @@ class Tag extends Base
     /**
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function loadTagOptions(Request $request, Response $response)
+    public function loadTagOptions(Request $request, Response $response): Response|ResponseInterface
     {
         $tagName = $this->getSanitizer($request->getParams())->getString('name');
 
@@ -665,7 +600,7 @@ class Tag extends Base
     /**
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ConfigurationException
@@ -674,7 +609,7 @@ class Tag extends Base
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
-    public function editMultiple(Request $request, Response $response)
+    public function editMultiple(Request $request, Response $response): Response|ResponseInterface
     {
         // Handle permissions
         if (!$this->getUser()->featureEnabled('tag.tagging')) {
@@ -690,7 +625,6 @@ class Tag extends Base
 
         // check if we need to do anything first
         if ($tagsToAdd != '' || $tagsToRemove != '') {
-
             // covert comma separated string of ids into array
             $targetIdsArray = explode(',', $targetIds);
 
@@ -699,26 +633,17 @@ class Tag extends Base
             $untags = $this->tagFactory->tagsFromString($tagsToRemove);
 
             // depending on the type we need different factory
-            switch ($targetType){
-                case 'layout':
-                    $entityFactory = $this->layoutFactory;
-                    break;
-                case 'playlist':
-                    $entityFactory = $this->playlistFactory;
-                    break;
-                case 'media':
-                    $entityFactory = $this->mediaFactory;
-                    break;
-                case 'campaign':
-                    $entityFactory = $this->campaignFactory;
-                    break;
-                case 'displayGroup':
-                case 'display':
-                    $entityFactory = $this->displayGroupFactory;
-                    break;
-                default:
-                    throw new InvalidArgumentException(__('Edit multiple tags is not supported on this item'), 'targetType');
-            }
+            $entityFactory = match ($targetType) {
+                'layout' => $this->layoutFactory,
+                'playlist' => $this->playlistFactory,
+                'media' => $this->mediaFactory,
+                'campaign' => $this->campaignFactory,
+                'displayGroup', 'display' => $this->displayGroupFactory,
+                default => throw new InvalidArgumentException(
+                    __('Edit multiple tags is not supported on this item'),
+                    'targetType'
+                ),
+            };
 
             foreach ($targetIdsArray as $id) {
                 // get the entity by provided id, for display we need different function
@@ -764,5 +689,24 @@ class Tag extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * @param SanitizerInterface $sanitizedQueryParams
+     * @return array
+     */
+    private function getTagFilters(SanitizerInterface $sanitizedQueryParams): array
+    {
+        return $this->gridRenderFilter([
+            'tagId' => $sanitizedQueryParams->getInt('tagId'),
+            'keyword' => $sanitizedQueryParams->getString('keyword'),
+            'tag' => $sanitizedQueryParams->getString('tag'),
+            'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
+            'isSystem' => $sanitizedQueryParams->getCheckbox('isSystem'),
+            'isRequired' => $sanitizedQueryParams->getCheckbox('isRequired'),
+            'haveOptions' => $sanitizedQueryParams->getInt('haveOptions'),
+            'allTags' => $sanitizedQueryParams->getInt('allTags'),
+            'logicalOperatorName' => $sanitizedQueryParams->getString('logicalOperatorName'),
+        ], $sanitizedQueryParams);
     }
 }
