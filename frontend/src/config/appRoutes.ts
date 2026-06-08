@@ -336,7 +336,10 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'settings',
         labelKey: 'Settings',
-        externalURL: '/admin/view',
+        lazy: () =>
+          import('@/pages/Administration/Settings/Settings').then((m) => ({
+            Component: m.default,
+          })),
         validator: isSuperAdmin,
       },
       {
