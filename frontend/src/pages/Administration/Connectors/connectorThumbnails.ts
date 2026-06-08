@@ -19,15 +19,15 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import alphaVantageImg from '@/assets/connectors/coins.svg';
-import audienceReportingImg from '@/assets/connectors/magnifying-glass-chart.svg';
 import canvaImg from '@/assets/connectors/canva.png';
-import capImg from '@/assets/connectors/triangle-exclamation.svg';
-import dashboardImg from '@/assets/connectors/magnifying-glass-chart.svg';
-import exchangeImg from '@/assets/connectors/xibo-exchange.svg';
 import nationalWeatherImg from '@/assets/connectors/cloud-sun.svg';
+import alphaVantageImg from '@/assets/connectors/coins.svg';
 import openWeatherImg from '@/assets/connectors/location-dot.svg';
+import audienceReportingImg from '@/assets/connectors/magnifying-glass-chart.svg';
+import dashboardImg from '@/assets/connectors/magnifying-glass-chart.svg';
 import pixabayImg from '@/assets/connectors/pixabay.png';
+import capImg from '@/assets/connectors/triangle-exclamation.svg';
+import exchangeImg from '@/assets/connectors/xibo-exchange.svg';
 import sspImg from '@/assets/connectors/xibo-ssp.svg';
 
 // Maps PHP connector className (as returned by the API) to a locally-bundled thumbnail.

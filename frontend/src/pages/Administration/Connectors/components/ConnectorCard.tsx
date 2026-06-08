@@ -22,10 +22,11 @@
 import { CheckCircle, ExternalLink } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { connectorThumbnails } from '../connectorThumbnails';
+
 import placeholderImg from '@/assets/connectors/placeholder.png';
 import Button from '@/components/ui/Button';
 import type { Connector } from '@/types/connector';
-import { connectorThumbnails } from '../connectorThumbnails';
 
 interface ConnectorCardProps {
   connector?: Connector;
