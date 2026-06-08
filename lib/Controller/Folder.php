@@ -436,6 +436,8 @@ class Folder extends Base
             $event = new \Xibo\Event\FolderMovingEvent($folder, $newParentFolder, true);
             $this->getDispatcher()->dispatch($event, $event::$NAME);
 
+            $newParentFolder->touch();
+
             // after moving event is done, we should be able to safely delete the original folder
             $folder = $this->folderFactory->getById($folderId, 0);
             $folder->load();

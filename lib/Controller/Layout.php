@@ -34,6 +34,7 @@ use Stash\Interfaces\PoolInterface;
 use Stash\Item;
 use Xibo\Entity\Region;
 use Xibo\Entity\Session;
+use Xibo\Event\FolderTouchEvent;
 use Xibo\Event\TemplateProviderImportEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
@@ -439,6 +440,8 @@ class Layout extends Base
         // Save
         $layout->save(['appendCountOnDuplicate' => true]);
 
+        $this->touchFolder($layout->folderId);
+
         if ($templateId != null && $template !== null) {
             $layout->copyActions($layout, $template);
             // set Layout original values to current values
@@ -582,11 +585,10 @@ class Layout extends Base
         $layout->code = $sanitizedParams->getString('code');
         $layout->folderId = $sanitizedParams->getInt('folderId', ['default' => $layout->folderId]);
 
-        if ($layout->hasPropertyChanged('folderId')) {
-            if ($layout->folderId === 1) {
-                $this->checkRootFolderAllowSave();
-            }
-            $folderChanged = true;
+        $folderChanged = $layout->hasPropertyChanged('folderId');
+        $oldFolderId = $folderChanged ? $layout->getOriginalValue('folderId') : null;
+        if ($folderChanged && $layout->folderId === 1) {
+            $this->checkRootFolderAllowSave();
         }
 
         if ($layout->hasPropertyChanged('layout')) {
@@ -601,6 +603,10 @@ class Layout extends Base
             'setBuildRequired' => false,
             'notify' => false
         ]);
+
+        if ($folderChanged) {
+            $this->touchFolder($layout->folderId, $oldFolderId);
+        }
 
         if ($folderChanged || $nameChanged) {
             // permissionsFolderId depends on the Campaign, hence why we need to get the edited Layout back here
@@ -1058,6 +1064,7 @@ class Layout extends Base
         }
 
         $layout->delete();
+        $this->touchFolder($layout->folderId);
 
         // Return
         $this->getState()->hydrate([
@@ -3246,5 +3253,13 @@ class Layout extends Base
 
         $layout->setUnmatchedProperty('statusDescription', $statusDescription);
         $layout->setUnmatchedProperty('enableStatDescription', $enableStatDescription);
+    }
+
+    private function touchFolder(int $folderId, ?int $oldFolderId = null): void
+    {
+        $this->getDispatcher()->dispatch(
+            new FolderTouchEvent($folderId, $oldFolderId),
+            FolderTouchEvent::$NAME
+        );
     }
 }

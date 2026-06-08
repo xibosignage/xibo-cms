@@ -26,6 +26,7 @@ use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Event\DisplayGroupLoadEvent;
+use Xibo\Event\FolderTouchEvent;
 use Xibo\Event\TriggerTaskEvent;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -1230,11 +1231,14 @@ class Display implements \JsonSerializable
         ]);
 
         // Maintain the Display Group
+        $folderChanged = $this->hasPropertyChanged('folderId');
+        $oldFolderId = $folderChanged ? $this->getOriginalValue('folderId') : null;
+
         if ($this->hasPropertyChanged('display')
             || $this->hasPropertyChanged('description')
             || $this->hasPropertyChanged('tags')
             || $this->hasPropertyChanged('bandwidthLimit')
-            || $this->hasPropertyChanged('folderId')
+            || $folderChanged
             || $this->hasPropertyChanged('ref1')
             || $this->hasPropertyChanged('ref2')
             || $this->hasPropertyChanged('ref3')
@@ -1264,7 +1268,7 @@ class Display implements \JsonSerializable
             // If the folderId has changed, we should check this user has permissions to the new folderId
             // it shouldn't ever be null, but just in case.
             $displayGroup->folderId = ($this->folderId == null) ? 1 : $this->folderId;
-            if ($this->hasPropertyChanged('folderId')) {
+            if ($folderChanged) {
                 $folder = $this->folderFactory->getById($displayGroup->folderId, 0);
                 // We have permission, so assert the new folder's permission id
                 $displayGroup->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
@@ -1281,6 +1285,13 @@ class Display implements \JsonSerializable
                 'saveTags' => $saveTags,
                 'setModifiedDt' => $options['setModifiedDt'],
             ]);
+
+            if ($folderChanged) {
+                $this->getDispatcher()->dispatch(
+                    new FolderTouchEvent($this->folderId, $oldFolderId),
+                    FolderTouchEvent::$NAME
+                );
+            }
         } else if ($options['setModifiedDt']) {
             // Bump the modified date.
             $this->store->update('

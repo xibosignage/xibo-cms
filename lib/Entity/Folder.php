@@ -261,6 +261,15 @@ class Folder implements \JsonSerializable
         );
     }
 
+    public function touch(): void
+    {
+        $this->modifiedDt = Carbon::now()->format(DateFormatHelper::getSystemFormat());
+        $this->getStore()->update(
+            'UPDATE `folder` SET modifiedDt = :modifiedDt WHERE folderId = :folderId',
+            ['modifiedDt' => $this->modifiedDt, 'folderId' => $this->id]
+        );
+    }
+
     /**
      * Manages folder tree structure
      *
@@ -304,6 +313,10 @@ class Folder implements \JsonSerializable
                 'folderId' => $this->parentId,
                 'children' => $updatedChildren
             ]);
+
+        if ($mode === 'add') {
+            $parent->touch();
+        }
     }
 
     /**
@@ -495,7 +508,7 @@ class Folder implements \JsonSerializable
         }
 
         $this->getStore()->update(
-            'UPDATE `folder` SET 
+            'UPDATE `folder` SET
                     parentId = :parentId,
                     permissionsFolderId = :permissionsFolderId
                 WHERE folderId = :folderId',
@@ -505,6 +518,10 @@ class Folder implements \JsonSerializable
                 'folderId' => $this->id
             ]
         );
+
+        $this->touch();
+        $oldParentFolder->touch();
+        $newParentFolder->touch();
     }
 
     /**
