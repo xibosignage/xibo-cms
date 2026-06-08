@@ -98,7 +98,7 @@ class CapConnector implements ConnectorInterface, EmergencyAlertInterface
 
     public function getThumbnail(): string
     {
-        return 'theme/default/img/connectors/triangle-exclamation.svg';
+        return '';
     }
 
     public function processSettingsForm(SanitizerInterface $params, array $settings): array

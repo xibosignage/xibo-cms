@@ -80,7 +80,7 @@ class OpenWeatherMapConnector implements ConnectorInterface
 
     public function getThumbnail(): string
     {
-        return 'theme/default/img/connectors/location-dot.svg';
+        return '';
     }
 
     public function getFormDescriptionHtml(): string

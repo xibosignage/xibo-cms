@@ -72,7 +72,7 @@ class AlphaVantageConnector implements ConnectorInterface
 
     public function getThumbnail(): string
     {
-        return 'theme/default/img/connectors/coins.svg';
+        return '';
     }
 
     public function getSettingsFormTwig(): string

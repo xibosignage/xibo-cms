@@ -80,35 +80,8 @@ class Settings extends Base
      */
     public function displayPage(Request $request, Response $response)
     {
-        // Should we hide other themes?
-        $themes = [];
-        $hideThemes = $this->getConfig()->getThemeConfig('hide_others');
-
-        if (!$hideThemes) {
-            // Get all theme options
-            $directory = new \RecursiveDirectoryIterator(PROJECT_ROOT . '/web/theme', \FilesystemIterator::SKIP_DOTS);
-            $filter = new \RecursiveCallbackFilterIterator($directory, function($current, $key, $iterator) {
-
-                if ($current->isDir()) {
-                    return true;
-                }
-
-                return strpos($current->getFilename(), 'config.php') === 0;
-            });
-
-            $iterator = new \RecursiveIteratorIterator($filter);
-
-            // Add options for all themes installed
-            foreach($iterator as $file) {
-                /* @var \SplFileInfo $file */
-                $this->getLog()->debug('Found ' . $file->getPath());
-
-                // Include the config file
-                include $file->getPath() . '/' . $file->getFilename();
-
-                $themes[] = ['id' => basename($file->getPath()), 'value' => $config['theme_name']];
-            }
-        }
+        // Branding is now handled via library/brand/ — theme selection is no longer supported.
+        $themes = [['id' => 'default', 'value' => 'Xibo Default Theme']];
 
         // A list of timezones
         $timeZones = [];

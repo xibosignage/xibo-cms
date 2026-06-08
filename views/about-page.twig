@@ -48,7 +48,7 @@
 {% block contentClass %}{% endblock %}
 
 {% block content %}
-    <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="{{ theme.uri("img/xibologo.png") }}" alt="Logo"></a></p>
+    <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="/brand/xibologo.png" alt="Logo"></a></p>
     <a class="btn btn-info" href="{{ url_for("home") }}">{% trans "Home" %}</a>
     <div class="about-container">
         {% include "licence.twig" %}
