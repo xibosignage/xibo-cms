@@ -549,10 +549,7 @@ class Controllers
                     $c->get('displayGroupFactory'),
                     $c->get('layoutFactory'),
                     $c->get('tagFactory'),
-                    $c->get('userFactory'),
-                    $c->get('displayFactory'),
                     $c->get('mediaFactory'),
-                    $c->get('scheduleFactory'),
                     $c->get('campaignFactory'),
                     $c->get('playlistFactory')
                 );

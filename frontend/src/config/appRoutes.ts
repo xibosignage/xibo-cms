@@ -390,7 +390,8 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'tags',
         labelKey: 'Tags',
-        externalURL: '/tag/view',
+        lazy: () =>
+          import('@/pages/Administration/Tags/Tags').then((m) => ({ Component: m.default })),
         feature: 'tag.view',
       },
       {
