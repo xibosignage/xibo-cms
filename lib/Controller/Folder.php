@@ -32,33 +32,9 @@ use Xibo\Support\Exception\NotFoundException;
 
 class Folder extends Base
 {
-    /**
-     * @var FolderFactory
-     */
-    private $folderFactory;
-
-    /**
-     * Set common dependencies.
-     * @param FolderFactory $folderFactory
-     */
-    public function __construct(FolderFactory $folderFactory)
-    {
-        $this->folderFactory = $folderFactory;
-    }
-
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function displayPage(Request $request, Response $response)
-    {
-        $this->getState()->template = 'folders-page';
-        $this->getState()->setData([]);
-
-        return $this->render($request, $response);
+    public function __construct(
+        private readonly FolderFactory $folderFactory,
+    ) {
     }
 
     #[OA\Get(
@@ -68,30 +44,37 @@ class Folder extends Base
         summary: 'Search Folders',
         tags: ['folder']
     )]
-    #[OA\Parameter(
-        name: 'folderId',
-        description: 'Use with gridView, Filter by Folder Id',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'integer')
+    #[OA\Get(
+        path: '/folders/{folderId}',
+        operationId: 'folderSearchById',
+        description: 'Returns a single decorated Folder including sharing, usage and buttons',
+        summary: 'Get Folder',
+        tags: ['folder']
     )]
     #[OA\Parameter(
-        name: 'gridView',
-        description: 'Flag (0, 1), Show Folders in a standard grid response',
-        in: 'query',
-        required: false,
+        name: 'folderId',
+        description: 'The ID of the Folder to return',
+        in: 'path',
+        required: true,
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
         name: 'folderName',
-        description: 'Use with gridView, Filter by Folder name',
+        description: 'Filter by Folder name',
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
         name: 'exactFolderName',
-        description: 'Use with gridView, Filter by exact Folder name match',
+        description: 'Filter by exact Folder name match',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Parameter(
+        name: 'homeFolderId',
+        description: 'Override the home folder ID used when building the tree view',
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'integer')
@@ -104,31 +87,11 @@ class Folder extends Base
             items: new OA\Items(ref: '#/components/schemas/Folder')
         )
     )]
-    /**
-     * Returns JSON representation of the Folder tree
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param int|null $folderId
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function grid(Request $request, Response $response, $folderId = null)
+    public function grid(Request $request, Response $response, ?int $folderId = null): Response
     {
         $params = $this->getSanitizer($request->getParams());
-        if ($params->getInt('gridView') === 1) {
-            $folders = $this->folderFactory->query($this->gridRenderSort($params), $this->gridRenderFilter([
-                'folderName' => $params->getString('folderName'),
-                'folderId' => $params->getInt('folderId'),
-                'exactFolderName' => $params->getInt('exactFolderName'),
-            ], $params));
 
-            $this->getState()->template = 'grid';
-            $this->getState()->recordsTotal = $this->folderFactory->countLast();
-            $this->getState()->setData($folders);
-
-            return $this->render($request, $response);
-        } else if ($params->getString('folderName') !== null) {
+        if ($params->getString('folderName') !== null) {
             // Search all folders by name
             $folders = $this->folderFactory->query($this->gridRenderSort($params), $this->gridRenderFilter([
                 'folderName' => $params->getString('folderName'),
@@ -136,8 +99,8 @@ class Folder extends Base
             ], $params));
 
             return $response->withJson($folders);
-        } else if ($folderId !== null) {
-            // Should we return information for a specific folder?
+        } elseif ($folderId !== null) {
+            // Return information for a specific folder
             $folder = $this->folderFactory->getById($folderId);
 
             $this->decorateWithButtons($folder);
@@ -147,16 +110,13 @@ class Folder extends Base
 
             return $response->withJson($folder);
         } else {
-            // Show a tree view of all folders.
+            // Show a tree view of all folders
             $rootFolder = $this->folderFactory->getById(1);
 
-            // homeFolderId,
-            // do we show tree for current user
-            // or a specified user?
             $homeFolderId = ($params->getInt('homeFolderId') !== null)
-                    ? $params->getInt('homeFolderId')
-                    : $this->getUser()->homeFolderId;
-            
+                ? $params->getInt('homeFolderId')
+                : $this->getUser()->homeFolderId;
+
             $this->buildTreeView($rootFolder, $homeFolderId);
             return $response->withJson([$rootFolder]);
         }
@@ -165,9 +125,10 @@ class Folder extends Base
     /**
      * @param \Xibo\Entity\Folder $folder
      * @param int $homeFolderId
+     * @return void
      * @throws InvalidArgumentException
      */
-    private function buildTreeView(\Xibo\Entity\Folder $folder, int $homeFolderId)
+    private function buildTreeView(\Xibo\Entity\Folder $folder, int $homeFolderId): void
     {
         // Set the folder type
         $folder->type = '';
@@ -221,9 +182,11 @@ class Folder extends Base
         tags: ['folder']
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['text'],
                 properties: [
                     new OA\Property(property: 'text', description: 'Folder Name', type: 'string'),
                     new OA\Property(
@@ -231,28 +194,16 @@ class Folder extends Base
                         description: 'The ID of the parent Folder, if not provided, Folder will be added under Root Folder', // phpcs:ignore
                         type: 'string'
                     )
-                ],
-                required: ['text']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(
         response: 200,
         description: 'successful operation',
         content: new OA\JsonContent(ref: '#/components/schemas/Folder')
     )]
-    /**
-     * Add a new Folder
-     *
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
-     */
-    public function add(Request $request, Response $response)
+    public function add(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -262,14 +213,11 @@ class Folder extends Base
 
         $folder->save();
 
-        // Return
-        $this->getState()->hydrate([
+        return $response->withStatus(200)->withJson([
             'message' => sprintf(__('Added %s'), $folder->text),
             'id' => $folder->id,
-            'data' => $folder
+            'data' => $folder,
         ]);
-
-        return $this->render($request, $response);
     }
 
     #[OA\Put(
@@ -287,35 +235,23 @@ class Folder extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['text'],
                 properties: [
                     new OA\Property(property: 'text', description: 'Folder Name', type: 'string')
-                ],
-                required: ['text']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(
         response: 200,
         description: 'successful operation',
         content: new OA\JsonContent(ref: '#/components/schemas/Folder')
     )]
-    /**
-     * Edit existing Folder
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param $folderId
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function edit(Request $request, Response $response, $folderId)
+    public function edit(Request $request, Response $response, int $folderId): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -333,14 +269,11 @@ class Folder extends Base
 
         $folder->save();
 
-        // Return
-        $this->getState()->hydrate([
+        return $response->withStatus(200)->withJson([
             'message' => sprintf(__('Edited %s'), $folder->text),
             'id' => $folder->id,
-            'data' => $folder
+            'data' => $folder,
         ]);
-
-        return $this->render($request, $response);
     }
 
     #[OA\Delete(
@@ -352,24 +285,13 @@ class Folder extends Base
     )]
     #[OA\Parameter(
         name: 'folderId',
-        description: 'Folder ID to edit',
+        description: 'Folder ID to delete',
         in: 'path',
         required: true,
         schema: new OA\Schema(type: 'integer')
     )]
-    #[OA\Response(response: 204, description: 'successful operation')]
-    /**
-     * Delete existing Folder
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param $folderId
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function delete(Request $request, Response $response, $folderId)
+    #[OA\Response(response: 200, description: 'successful operation')]
+    public function delete(Request $request, Response $response, int $folderId): Response
     {
         $folder = $this->folderFactory->getById($folderId);
         $folder->load();
@@ -429,23 +351,12 @@ class Folder extends Base
             );
         }
 
-        // Return
-        $this->getState()->hydrate([
-            'message' => sprintf(__('Deleted %s'), $folder->text)
+        return $response->withStatus(200)->withJson([
+            'message' => sprintf(__('Deleted %s'), $folder->text),
         ]);
-
-        return $this->render($request, $response);
     }
 
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @param $folderId
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     */
-    public function getContextMenuButtons(Request $request, Response $response, $folderId)
+    public function getContextMenuButtons(Request $request, Response $response, int $folderId): Response
     {
         $folder = $this->folderFactory->getById($folderId);
         $this->decorateWithButtons($folder);
@@ -453,7 +364,7 @@ class Folder extends Base
         return $response->withJson($folder->buttons);
     }
 
-    private function decorateWithButtons(\Xibo\Entity\Folder $folder)
+    private function decorateWithButtons(\Xibo\Entity\Folder $folder): void
     {
         $user = $this->getUser();
 
@@ -490,24 +401,7 @@ class Folder extends Base
         }
     }
 
-    public function moveForm(Request $request, Response $response, $folderId)
-    {
-        $folder = $this->folderFactory->getById($folderId, 0);
-
-        if (!$this->getUser()->checkEditable($folder)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'folder-form-move';
-        $this->getState()->setData([
-            'folder' => $folder,
-            'deletable' => $this->getUser()->checkDeleteable($folder)
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    public function move(Request $request, Response $response, $folderId)
+    public function move(Request $request, Response $response, int $folderId): Response
     {
         $params = $this->getSanitizer($request->getParams());
         $folder = $this->folderFactory->getById($folderId);
@@ -552,6 +446,8 @@ class Folder extends Base
             $folder->updateFoldersAfterMove($folder->parentId, $newParentFolder->getId());
         }
 
-        return $this->render($request, $response);
+        return $response->withStatus(200)->withJson([
+            'message' => sprintf(__('Moved %s'), $folder->text),
+        ]);
     }
 }

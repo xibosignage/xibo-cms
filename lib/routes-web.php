@@ -224,16 +224,6 @@ $app->get('/maintenance/form/tidy', ['\Xibo\Controller\Maintenance','tidyLibrary
     ->setName('maintenance.libraryTidy.form');
 
 //
-// Folders
-//
-$app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/folders/view', ['\Xibo\Controller\Folder', 'displayPage'])->setName('folders.view');
-    $group->get('/folders/form/add', ['\Xibo\Controller\Folder', 'addForm'])->setName('folders.add.form');
-    $group->get('/folders/form/edit/{id}', ['\Xibo\Controller\Folder', 'editForm'])->setName('folders.edit.form');
-    $group->get('/folders/form/delete/{id}', ['\Xibo\Controller\Folder', 'deleteForm'])->setName('folders.delete.form');
-})->addMiddleware(new SuperAdminAuth($app->getContainer()));
-
-//
 // Module
 //
 $app->get('/module/asset/{assetId}', ['\Xibo\Controller\Module', 'assetDownload'])
@@ -358,10 +348,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/tag/form/usage/{id}', ['\Xibo\Controller\Tag', 'usageForm'])->setName('tag.usage.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['tag.view']));
 
-
-$app->group('', function (RouteCollectorProxy $group) {
-    $group->get('/folders/form/{folderId}/move', ['\Xibo\Controller\Folder', 'moveForm'])->setName('folders.move.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['folder.modify']));
 
 $app->get('/fonts/fontcss', ['\Xibo\Controller\Font','fontCss'])->setName('library.font.css');
 

@@ -1,3 +1,4 @@
+<?php
 /*
  * Copyright (C) 2026 Xibo Signage Ltd
  *
@@ -19,27 +20,22 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export interface FolderSharingEntry {
-  name: string;
-  isGroup: boolean;
-  view: number;
-  edit: number;
-  delete: number;
-}
+use Phinx\Migration\AbstractMigration;
 
-export interface Folder {
-  id: number;
-  folderId?: number;
-  type: FolderType;
-  text: string;
-  parentId: number;
-  isRoot: number;
-  children: Folder[] | null;
-  ownerId: number;
-  ownerName: string;
-  createdDt: string | null;
-  modifiedDt: string | null;
-  sharing?: FolderSharingEntry[];
-}
+/**
+ * Migration to add createdDt and modifiedDt columns to the folder table
+ * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
+ */
+class AddDatesToFolderTableMigration extends AbstractMigration
+{
+    public function change(): void
+    {
+        $this->table('folder')
+            ->addColumn('createdDt', 'datetime', ['null' => true, 'default' => null])
+            ->addColumn('modifiedDt', 'datetime', ['null' => true, 'default' => null])
+            ->save();
 
-export type FolderType = 'root' | 'home' | 'disabled' | '' | null;
+        // Backfill existing rows so createdDt is not null
+        $this->execute('UPDATE `folder` SET `createdDt` = NOW() WHERE `createdDt` IS NULL');
+    }
+}

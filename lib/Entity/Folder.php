@@ -22,10 +22,12 @@
 
 namespace Xibo\Entity;
 
+use Carbon\Carbon;
 use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -42,40 +44,46 @@ class Folder implements \JsonSerializable
     /**
      * @var int
      */
-    #[OA\Property(description: "The ID of this Folder")]
+    #[OA\Property(description: 'The ID of this Folder')]
     public $id;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The type of folder (home or root)")]
+    #[OA\Property(description: 'The type of folder (home or root)')]
     public $type;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The name of this Folder")]
+    #[OA\Property(description: 'The name of this Folder')]
     public $text;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The folderId of the parent of this Folder")]
+    #[OA\Property(description: 'The folderId of the parent of this Folder')]
     public $parentId;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "Flag indicating whether this is root Folder")]
+    #[OA\Property(description: 'Flag indicating whether this is root Folder')]
     public $isRoot;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "An array of children folderIds")]
+    #[OA\Property(description: 'An array of children folderIds')]
     public $children;
 
     public $permissionsFolderId;
+
+    #[OA\Property(description: 'Date this Folder was created')]
+    public ?string $createdDt = null;
+
+    #[OA\Property(description: 'Date this Folder was last modified')]
+    public ?string $modifiedDt = null;
 
     /** @var FolderFactory */
     private $folderFactory;
@@ -103,7 +111,7 @@ class Folder implements \JsonSerializable
         $this->permissionFactory = $permissionFactory;
     }
 
-    public function getId()
+    public function getId(): int
     {
         return $this->id;
     }
@@ -127,7 +135,7 @@ class Folder implements \JsonSerializable
      * Get Owner Id
      * @return int
      */
-    public function getOwnerId()
+    public function getOwnerId(): int
     {
         return -1;
     }
@@ -142,7 +150,7 @@ class Folder implements \JsonSerializable
         return $this->isRoot === 1;
     }
 
-    public function getChildren()
+    public function getChildren(): array
     {
         return explode(',', $this->children);
     }
@@ -150,18 +158,24 @@ class Folder implements \JsonSerializable
     /**
      * @throws InvalidArgumentException
      */
-    public function validate()
+    public function validate(): void
     {
         if (!v::stringType()->notEmpty()->length(1, 254)->validate($this->text)) {
-            throw new InvalidArgumentException(__('Folder needs to have a name, between 1 and 254 characters.'), 'folderName');
+            throw new InvalidArgumentException(
+                __('Folder needs to have a name, between 1 and 254 characters.'),
+                'folderName'
+            );
         }
 
         if (empty($this->parentId)) {
-            throw new InvalidArgumentException(__('Folder needs a specified parent Folder id'), 'parentId');
+            throw new InvalidArgumentException(
+                __('Folder needs a specified parent Folder id'),
+                'parentId'
+            );
         }
     }
 
-    public function load()
+    public function load(): void
     {
         if ($this->loaded || $this->id == null) {
             return;
@@ -176,7 +190,7 @@ class Folder implements \JsonSerializable
      * @param bool $validate
      * @throws InvalidArgumentException
      */
-    public function save($validate = true)
+    public function save(bool $validate = true): void
     {
         if ($validate) {
             $this->validate();
@@ -189,7 +203,7 @@ class Folder implements \JsonSerializable
         }
     }
 
-    public function delete()
+    public function delete(): void
     {
         foreach ($this->permissions as $permission) {
             /* @var Permission $permission */
@@ -203,29 +217,48 @@ class Folder implements \JsonSerializable
         ]);
     }
 
-    private function add()
+    private function add(): void
     {
         $parent = $this->folderFactory->getById($this->parentId);
 
-        $this->id = $this->getStore()->insert('INSERT INTO `folder` (folderName, parentId, isRoot, permissionsFolderId) VALUES (:folderName, :parentId, :isRoot, :permissionsFolderId)',
+        $this->createdDt = Carbon::now()->format(DateFormatHelper::getSystemFormat());
+        $this->modifiedDt = Carbon::now()->format(DateFormatHelper::getSystemFormat());
+
+        $this->id = $this->getStore()->insert(
+            'INSERT INTO `folder` (folderName, parentId, isRoot, permissionsFolderId, createdDt, modifiedDt)
+              VALUES (:folderName, :parentId, :isRoot, :permissionsFolderId, :createdDt, :modifiedDt)',
             [
                 'folderName' => $this->text,
                 'parentId' => $this->parentId,
                 'isRoot' => 0,
-                'permissionsFolderId' => ($parent->permissionsFolderId == null) ? $this->parentId : $parent->permissionsFolderId
-            ]);
+                'permissionsFolderId' => ($parent->permissionsFolderId == null)
+                    ? $this->parentId
+                    : $parent->permissionsFolderId,
+                'createdDt' => $this->createdDt,
+                'modifiedDt' => $this->modifiedDt,
+            ]
+        );
 
         $this->manageChildren('add');
     }
 
-    private function edit()
+    private function edit(): void
     {
-        $this->getStore()->update('UPDATE `folder` SET folderName = :folderName, parentId = :parentId WHERE folderId = :folderId',
+        $this->modifiedDt = Carbon::now()->format(DateFormatHelper::getSystemFormat());
+
+        $this->getStore()->update(
+            'UPDATE `folder` SET
+                    folderName = :folderName,
+                    parentId = :parentId,
+                    modifiedDt = :modifiedDt
+                WHERE folderId = :folderId',
             [
                 'folderId' => $this->id,
                 'folderName' => $this->text,
-                'parentId' => $this->parentId
-            ]);
+                'parentId' => $this->parentId,
+                'modifiedDt' => $this->modifiedDt,
+            ]
+        );
     }
 
     /**
@@ -239,7 +272,7 @@ class Folder implements \JsonSerializable
      * @param $mode
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    private function manageChildren($mode)
+    private function manageChildren($mode): void
     {
         $parent = $this->folderFactory->getById($this->parentId);
         $parentChildren = array_filter(explode(',', $parent->children ?? ''));
@@ -284,34 +317,46 @@ class Folder implements \JsonSerializable
      *
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function managePermissions()
+    public function managePermissions(): void
     {
         // this function happens after permissions are inserted into permission table
         // with that we can look up if there are any permissions for edited folder and act accordingly.
-        $permissionExists = $this->getStore()->exists('SELECT permissionId FROM permission INNER JOIN permissionentity ON permission.entityId = permissionentity.entityId WHERE objectId = :folderId AND permissionentity.entity = :folderEntity', [
-            'folderId' => $this->id,
-            'folderEntity' => 'Xibo\Entity\Folder'
-        ]);
+        $permissionExists = $this->getStore()->exists(
+            'SELECT permissionId FROM permission
+                    INNER JOIN permissionentity ON permission.entityId = permissionentity.entityId 
+                    WHERE objectId = :folderId AND permissionentity.entity = :folderEntity',
+            [
+                'folderId' => $this->id,
+                'folderEntity' => 'Xibo\Entity\Folder'
+            ]
+        );
 
         if ($permissionExists) {
-            // if we added/edited permission on this folder, then new ACL starts here, cascade this folderId as permissionFolderId to all children
+            // if we added/edited permission on this folder, then new ACL starts here,
+            // cascade this folderId as permissionFolderId to all children
             $this->getStore()->update('UPDATE `folder` SET permissionsFolderId = NULL WHERE folderId = :folderId', [
                 'folderId' => $this->id
             ]);
             $permissionFolderId = $this->id;
         } else {
-            // if there are no permissions for this folder, basically reset the permissions on this folder and its children
+            // if there are no permissions for this folder,
+            // basically reset the permissions on this folder and its children
             if ($this->id === 1 && $this->isRoot()) {
                 $permissionFolderId = 1;
             } else {
                 $parent = $this->folderFactory->getById($this->parentId);
-                $permissionFolderId = ($parent->permissionsFolderId == null) ? $parent->id : $parent->permissionsFolderId;
+                $permissionFolderId = ($parent->permissionsFolderId == null)
+                    ? $parent->id
+                    : $parent->permissionsFolderId;
             }
 
-            $this->getStore()->update('UPDATE `folder` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId', [
-                'folderId' => $this->id,
-                'permissionsFolderId' => $permissionFolderId
-            ]);
+            $this->getStore()->update(
+                'UPDATE `folder` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',
+                [
+                    'folderId' => $this->id,
+                    'permissionsFolderId' => $permissionFolderId
+                ]
+            );
         }
 
         $this->updateChildObjects($permissionFolderId, $this->id);
@@ -321,19 +366,18 @@ class Folder implements \JsonSerializable
     }
 
     /**
-     * Helper recursive function to make sure all folders under the edited parent folder have correct permissionsFolderId set on them
+     * Helper recursive function to make sure all folders
+     * under the edited parent folder have correct permissionsFolderId set on them
      * along with all relevant objects in those folders.
-     *
      *
      * @param $permissionFolderId
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    private function manageChildPermissions($permissionFolderId)
+    private function manageChildPermissions($permissionFolderId): void
     {
         $children = array_filter(explode(',', $this->children ?? ''));
 
         foreach ($children as $child) {
-
             $this->updateChildObjects($permissionFolderId, $child);
 
             $childObject = $this->folderFactory->getById($child);
@@ -341,57 +385,81 @@ class Folder implements \JsonSerializable
         }
     }
 
-    private function updateChildObjects($permissionFolderId, $folderId)
+    private function updateChildObjects($permissionFolderId, $folderId): void
     {
-        $this->getStore()->update('UPDATE `folder` SET permissionsFolderId = :permissionsFolderId WHERE parentId = :folderId', [
-            'permissionsFolderId' => $permissionFolderId,
-            'folderId' => $folderId
-        ]);
+        $this->getStore()->update(
+            'UPDATE `folder` SET permissionsFolderId = :permissionsFolderId WHERE parentId = :folderId',
+            [
+                'permissionsFolderId' => $permissionFolderId,
+                'folderId' => $folderId
+            ]
+        );
 
-        $this->getStore()->update('UPDATE `media` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId', [
-            'permissionsFolderId' => $permissionFolderId,
-            'folderId' => $folderId
-        ]);
+        $this->getStore()->update(
+            'UPDATE `media` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',
+            [
+                'permissionsFolderId' => $permissionFolderId,
+                'folderId' => $folderId
+            ]
+        );
 
-        $this->getStore()->update('UPDATE `campaign` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId', [
-            'permissionsFolderId' => $permissionFolderId,
-            'folderId' => $folderId
-        ]);
+        $this->getStore()->update(
+            'UPDATE `campaign` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',
+            [
+                'permissionsFolderId' => $permissionFolderId,
+                'folderId' => $folderId
+            ]
+        );
 
-        $this->getStore()->update('UPDATE `displaygroup` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId', [
-            'permissionsFolderId' => $permissionFolderId,
-            'folderId' => $folderId
-        ]);
+        $this->getStore()->update(
+            'UPDATE `displaygroup` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',
+            [
+                'permissionsFolderId' => $permissionFolderId,
+                'folderId' => $folderId
+            ]
+        );
 
-        $this->getStore()->update('UPDATE `dataset` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId', [
-            'permissionsFolderId' => $permissionFolderId,
-            'folderId' => $folderId
-        ]);
+        $this->getStore()->update(
+            'UPDATE `dataset` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',
+            [
+                'permissionsFolderId' => $permissionFolderId,
+                'folderId' => $folderId
+            ]
+        );
 
-        $this->getStore()->update('UPDATE `playlist` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId', [
-            'permissionsFolderId' => $permissionFolderId,
-            'folderId' => $folderId
-        ]);
+        $this->getStore()->update(
+            'UPDATE `playlist` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',
+            [
+                'permissionsFolderId' => $permissionFolderId,
+                'folderId' => $folderId
+            ]
+        );
 
-        $this->getStore()->update('UPDATE `menu_board` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId', [
-            'permissionsFolderId' => $permissionFolderId,
-            'folderId' => $folderId
-        ]);
+        $this->getStore()->update(
+            'UPDATE `menu_board` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',
+            [
+                'permissionsFolderId' => $permissionFolderId,
+                'folderId' => $folderId
+            ]
+        );
 
-        $this->getStore()->update('UPDATE `syncgroup` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId', [
-            'permissionsFolderId' => $permissionFolderId,
-            'folderId' => $folderId
-        ]);
+        $this->getStore()->update(
+            'UPDATE `syncgroup` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',
+            [
+                'permissionsFolderId' => $permissionFolderId,
+                'folderId' => $folderId
+            ]
+        );
     }
 
     /**
      * Update old parent, new parent records with adjusted children
      * Update current folders records with new parent, permissionsFolderId
      * Recursively go through the current folder's children folder and objects and adjust permissionsFolderId if needed.
-     * @param int $oldParentFolder
-     * @param int $newParentFolder
+     * @param int $oldParentFolderId
+     * @param int $newParentFolderId
      */
-    public function updateFoldersAfterMove(int $oldParentFolderId, int $newParentFolderId)
+    public function updateFoldersAfterMove(int $oldParentFolderId, int $newParentFolderId): void
     {
         $oldParentFolder = $this->folderFactory->getById($oldParentFolderId, 0);
         $newParentFolder = $this->folderFactory->getById($newParentFolderId, 0);
@@ -426,11 +494,17 @@ class Folder implements \JsonSerializable
             $this->manageChildPermissions($this->permissionsFolderId);
         }
 
-        $this->getStore()->update('UPDATE `folder` SET parentId = :parentId, permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId', [
-            'parentId' => $newParentFolder->id,
-            'permissionsFolderId' => $this->permissionsFolderId,
-            'folderId' => $this->id
-        ]);
+        $this->getStore()->update(
+            'UPDATE `folder` SET 
+                    parentId = :parentId,
+                    permissionsFolderId = :permissionsFolderId
+                WHERE folderId = :folderId',
+            [
+                'parentId' => $newParentFolder->id,
+                'permissionsFolderId' => $this->permissionsFolderId,
+                'folderId' => $this->id
+            ]
+        );
     }
 
     /**
