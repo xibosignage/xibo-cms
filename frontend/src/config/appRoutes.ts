@@ -396,7 +396,10 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'folders',
         labelKey: 'Folders',
-        externalURL: '/folders/view',
+        lazy: () =>
+          import('@/pages/Administration/Folders/Folders').then((m) => ({
+            Component: m.default,
+          })),
         validator: isSuperAdmin,
       },
       {
