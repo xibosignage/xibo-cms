@@ -75,15 +75,15 @@ class TagFactory extends BaseFactory
 
     /**
      * Get tags from a string
-     * @param string $tagString
+     * @param string|null $tagString
      * @return array[Tag]
      * @throws InvalidArgumentException
      */
-    public function tagsFromString(string $tagString): array
+    public function tagsFromString(?string $tagString): array
     {
         $tags = [];
 
-        if ($tagString == '') {
+        if ($tagString === null || $tagString === '') {
             return $tags;
         }
 
