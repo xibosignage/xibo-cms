@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -406,7 +406,6 @@ class OpenWeatherMapConnector implements ConnectorInterface
                 $cache->set($data);
                 $cache->expiresAt($cacheExpiresAt);
                 $this->pool->saveDeferred($cache);
-
             } catch (RequestException $e) {
                 $this->getLogger()->error('Unable to reach Open Weather Map API: '
                     . str_replace($this->getSetting('owmApiKey'), '[API_KEY]', $e->getMessage()));
@@ -491,7 +490,6 @@ class OpenWeatherMapConnector implements ConnectorInterface
             $day->temperatureNight = ($day->temperatureNight) * 9 / 5 + 32;
             $day->temperatureEvening = ($day->temperatureEvening) * 9 / 5 + 32;
             $day->temperatureMorning = ($day->temperatureMorning) * 9 / 5 + 32;
-
         } else if ($requestUnit === 'imperial' && $day->temperatureUnit === 'C') {
             // Convert F to C
             $day->temperature = ($day->temperature - 32) * 5 / 9;
