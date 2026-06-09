@@ -1,3 +1,4 @@
+<?php
 /*
  * Copyright (C) 2026 Xibo Signage Ltd
  *
@@ -19,22 +20,25 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { TFunction } from 'i18next';
-import z from 'zod';
+use Phinx\Migration\AbstractMigration;
 
-export const getAddDisplayProfileSchema = (t: TFunction) =>
-  z.object({
-    name: z.string().min(1, t('Name is required')).max(50, t('Name must be 50 characters or less')),
-    type: z.enum(['android', 'windows', 'linux', 'lg', 'sssp', 'chromeOS', 'hisense'], {
-      errorMap: () => ({ message: t('Display type is required') }),
-    }),
-    isDefault: z.number(),
-  });
+/**
+ * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
+ */
+class AddDefaultHisenseDisplayProfileMigration extends AbstractMigration
+{
+    public function change(): void
+    {
+        if (!$this->fetchRow('SELECT * FROM displayprofile WHERE type = \'hisense\' AND isDefault = 1')) {
+            $user = $this->fetchRow('SELECT userId FROM `user` WHERE userTypeId = 1');
 
-export const getEditDisplayProfileSchema = (t: TFunction) =>
-  z.object({
-    name: z.string().min(1, t('Name is required')).max(50, t('Name must be 50 characters or less')),
-    isDefault: z.number(),
-  });
-
-export const getDisplayProfileSchema = getEditDisplayProfileSchema;
+            $this->table('displayprofile')->insert([
+                'name' => 'Hisense',
+                'type' => 'hisense',
+                'config' => '[]',
+                'userId' => $user['userId'],
+                'isDefault' => 1
+            ])->save();
+        }
+    }
+}

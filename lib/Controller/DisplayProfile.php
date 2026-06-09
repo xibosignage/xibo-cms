@@ -21,7 +21,6 @@
  */
 namespace Xibo\Controller;
 
-use Carbon\Carbon;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
@@ -31,7 +30,6 @@ use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Factory\PlayerVersionFactory;
-use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
@@ -46,42 +44,13 @@ class DisplayProfile extends Base
 {
     use DisplayProfileConfigFields;
 
-    /** @var  PoolInterface */
-    private $pool;
-
-    /**
-     * @var DayPartFactory
-     */
-    private $dayPartFactory;
-
-    /**
-     * @var DisplayProfileFactory
-     */
-    private $displayProfileFactory;
-
-    /**
-     * @var CommandFactory
-     */
-    private $commandFactory;
-
-    /** @var PlayerVersionFactory */
-    private $playerVersionFactory;
-
-    /**
-     * Set common dependencies.
-     * @param PoolInterface $pool
-     * @param DisplayProfileFactory $displayProfileFactory
-     * @param CommandFactory $commandFactory
-     * @param PlayerVersionFactory $playerVersionFactory
-     * @param DayPartFactory $dayPartFactory
-     */
-    public function __construct($pool, $displayProfileFactory, $commandFactory, $playerVersionFactory, $dayPartFactory)
-    {
-        $this->pool = $pool;
-        $this->displayProfileFactory = $displayProfileFactory;
-        $this->commandFactory = $commandFactory;
-        $this->playerVersionFactory = $playerVersionFactory;
-        $this->dayPartFactory = $dayPartFactory;
+    public function __construct(
+        private readonly PoolInterface $pool,
+        private readonly DisplayProfileFactory $displayProfileFactory,
+        private readonly CommandFactory $commandFactory,
+        private readonly PlayerVersionFactory $playerVersionFactory,
+        private readonly DayPartFactory $dayPartFactory,
+    ) {
     }
 
     #[OA\Get(
@@ -107,7 +76,7 @@ class DisplayProfile extends Base
     )]
     #[OA\Parameter(
         name: 'type',
-        description: 'Filter by DisplayProfile Type (windows|android|lg)',
+        description: 'Filter by DisplayProfile Type (windows|android|linux|lg|sssp|chromeOS|hisense)',
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'string')
@@ -531,7 +500,7 @@ class DisplayProfile extends Base
         $displayProfile = $this->displayProfileFactory->getById($id);
 
         if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId) {
-            throw new AccessDeniedException(__('You do not have permission to delete this profile'));
+            throw new AccessDeniedException(__('You do not have permission to copy this profile'));
         }
 
         // clear DisplayProfileId, commands and set isDefault to 0
@@ -539,7 +508,6 @@ class DisplayProfile extends Base
         $new->name = $this->getSanitizer($request->getParams())->getString('name');
 
         foreach ($displayProfile->commands as $command) {
-            /* @var \Xibo\Entity\Command $command */
             if (!empty($command->commandStringDisplayProfile)) {
                 // if the original Display Profile has a commandString
                 // assign this command with the same commandString to new Display Profile
