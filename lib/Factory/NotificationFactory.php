@@ -34,25 +34,18 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class NotificationFactory extends BaseFactory
 {
-    /** @var  UserGroupFactory */
-    private $userGroupFactory;
-
-    /** @var  DisplayGroupFactory */
-    private $displayGroupFactory;
-
     /**
      * Construct a factory
      * @param User $user
      * @param UserFactory $userFactory
-     * @param UserGroupFactory $userGroupFactory
-     * @param DisplayGroupFactory $displayGroupFactory
      */
-    public function __construct($user, $userFactory, $userGroupFactory, $displayGroupFactory)
-    {
+    public function __construct(
+        $user,
+        $userFactory,
+        private readonly UserGroupFactory $userGroupFactory,
+        private readonly DisplayGroupFactory $displayGroupFactory,
+    ) {
         $this->setAclDependencies($user, $userFactory);
-
-        $this->userGroupFactory = $userGroupFactory;
-        $this->displayGroupFactory = $displayGroupFactory;
     }
 
     /**
@@ -161,10 +154,6 @@ class NotificationFactory extends BaseFactory
         $entries = [];
         $sanitizedFilter = $this->getSanitizer($filterBy);
 
-        if (empty($sortOrder)) {
-            $sortOrder = ['subject'];
-        }
-
         $params = [];
         $select = 'SELECT `notification`.notificationId,
             `notification`.subject,
@@ -270,11 +259,20 @@ class NotificationFactory extends BaseFactory
             $params['type'] = $sanitizedFilter->getString('type');
         }
 
-        // Sorting?
-        $order = '';
-        if (is_array($sortOrder)) {
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
-        }
+        // table sorting
+        $allowedColumns = [
+            'subject',
+            'type',
+            'releaseDt',
+            'isInterrupt',
+        ];
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['subject ASC']
+        );
+
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         $limit = '';
         // Paging

@@ -68,6 +68,7 @@ $app->group('', function (RouteCollectorProxy $group) {
  * Notification
  */
 $app->get('/notification', ['\Xibo\Controller\Notification','grid'])->setName('notification.search');
+$app->get('/notification/{id}', ['\Xibo\Controller\Notification', 'searchById'])->setName('notification.search.id');
 
 $app->post('/notification', ['\Xibo\Controller\Notification','add'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['notification.add']))
