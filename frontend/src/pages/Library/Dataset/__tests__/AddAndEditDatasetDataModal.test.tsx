@@ -31,19 +31,6 @@ import type { DatasetColumn } from '@/types/datasetColumn';
 
 // -- Module mocks --
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (str: string, opts?: Record<string, unknown>) => {
-      if (!opts) return str;
-      return Object.entries(opts).reduce(
-        (acc, [k, v]) => acc.replace(new RegExp(`{{${k}}}`, 'g'), String(v)),
-        str,
-      );
-    },
-    i18n: { changeLanguage: () => new Promise(() => {}) },
-  }),
-}));
-
 const mockCreateDatasetRow = vi.fn();
 const mockUpdateDatasetRow = vi.fn();
 

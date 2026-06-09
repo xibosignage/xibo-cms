@@ -21,7 +21,6 @@
 
 import { screen, fireEvent, waitFor, within, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import { usePlaylistData } from '../hooks/usePlaylistData';
@@ -33,11 +32,6 @@ import { testQueryClient } from '@/setupTests';
 // =============================================================================
 // Module mocks
 // =============================================================================
-
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
 
 vi.mock('@/services/folderApi', () => ({
   fetchFolderById: vi.fn().mockResolvedValue({ id: 1, text: 'Root' }),
