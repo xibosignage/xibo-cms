@@ -166,7 +166,7 @@ export default function FolderActionModals({ folderActions }: FolderActionModals
           <div className="p-8 pt-0 flex flex-col gap-4">
             <div className="text-sm text-gray-600 bg-red-100 p-4 py-8 rounded-lg overflow-hidden">
               <Trans
-                i18nKey='Delete "<strong>{{name}}</strong>"?'
+                i18nKey='Delete <strong>"{{name}}"</strong>?'
                 values={{ name: activeFolder?.text }}
                 components={{ strong: <strong /> }}
               />
