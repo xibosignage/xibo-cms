@@ -20,7 +20,7 @@
  */
 
 import type { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table';
-import { FolderPlus, Loader2, RefreshCw } from 'lucide-react';
+import { Eye, Loader2, PenSquare, Plus, RefreshCw, ShieldCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
@@ -28,29 +28,11 @@ import { twMerge } from 'tailwind-merge';
 import Button from '@/components/ui/Button';
 import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { TextCell } from '@/components/ui/table/cells/TextCell';
 import type { ActionType } from '@/hooks/useFolderActions';
-import type { FolderPermissions } from '@/services/folderApi';
 import { fetchFolderById } from '@/services/folderApi';
-import type { Folder } from '@/types/folder';
-
-interface FolderSharingEntry {
-  name: string;
-  isGroup: boolean;
-}
-
-interface FolderUsageEntry {
-  type: string;
-  count: number;
-  sizeBytes: number;
-  size: string;
-}
-
-interface DecoratedFolder extends Folder {
-  buttons: FolderPermissions;
-  homeFolderCount: number;
-  sharing: FolderSharingEntry[];
-  usage: FolderUsageEntry[];
-}
+import type { Folder, FolderUsageEntry } from '@/types/folder';
+import { formatDate } from '@/utils/date';
 
 interface FolderInfoPanelProps {
   folderId: number;
@@ -68,7 +50,7 @@ export default function FolderInfoPanel({
   onAction,
 }: FolderInfoPanelProps) {
   const { t } = useTranslation();
-  const [folder, setFolder] = useState<DecoratedFolder | null>(null);
+  const [folder, setFolder] = useState<Folder | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isTableLoading, setIsTableLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -81,29 +63,34 @@ export default function FolderInfoPanel({
     {
       accessorKey: 'type',
       header: t('Section'),
+      cell: ({ row }) => <TextCell>{row.original.type}</TextCell>,
     },
     {
       accessorKey: 'count',
       header: t('Number of Items'),
+      cell: ({ row }) => <TextCell>{row.original.count}</TextCell>,
     },
     {
       accessorKey: 'size',
       header: t('Size'),
-      cell: ({ row }) => (row.original.sizeBytes > 0 ? row.original.size : '0 MiB'),
+      cell: ({ row }) => (
+        <TextCell>{row.original.sizeBytes > 0 ? row.original.size : '0 MiB'}</TextCell>
+      ),
     },
   ];
 
   useEffect(() => {
-    const isRefresh = folder !== null;
-    if (isRefresh) {
+    const isSameFolderRefresh = folder !== null && folder.id === folderId;
+    if (isSameFolderRefresh) {
       setIsTableLoading(true);
     } else {
+      setFolder(null);
       setIsLoading(true);
     }
     setError(null);
 
     const controller = new AbortController();
-    (fetchFolderById(folderId, controller.signal) as Promise<DecoratedFolder>)
+    fetchFolderById(folderId, controller.signal)
       .then((data) => {
         setFolder(data);
       })
@@ -145,7 +132,9 @@ export default function FolderInfoPanel({
       : Array.isArray(childrenRaw)
         ? childrenRaw.length
         : 0;
-  const totalItems = folder.usage.reduce((sum, entry) => sum + entry.count, 0);
+  const usage = folder.usage ?? [];
+  const sharing = folder.sharing ?? [];
+  const totalItems = usage.reduce((sum, entry) => sum + entry.count, 0);
 
   return (
     <div className="flex flex-col h-full">
@@ -162,14 +151,20 @@ export default function FolderInfoPanel({
               refreshTrigger={refreshTrigger}
             />
           </div>
-          <Button variant="primary" leftIcon={FolderPlus} onClick={onCreateFolder}>
+          <Button variant="primary" leftIcon={Plus} onClick={onCreateFolder}>
             {t('New Folder')}
           </Button>
         </div>
 
         {/* Folder name + stats */}
         <div className="flex items-start justify-between">
-          <h2 className="text-xl font-semibold">{folder.text}</h2>
+          <div>
+            <h2 className="text-xl font-semibold">{folder.text}</h2>
+            <span className="text-xs text-gray-500">
+              {t('Created')}:{' '}
+              {folder.createdDt ? formatDate(new Date(folder.createdDt.replace(' ', 'T'))) : '-'}
+            </span>
+          </div>
           <div className="flex items-center gap-4 text-sm text-gray-500">
             <div className="text-right p-2 bg-slate-50 rounded-lg">
               <div className="text-xs text-gray-400">{t('Subfolders')}</div>
@@ -181,27 +176,39 @@ export default function FolderInfoPanel({
             </div>
             <div className="text-right p-2 bg-slate-50 rounded-lg">
               <div className="text-xs text-gray-400">{t('Used as Home Folder')}</div>
-              <div className="font-semibold text-gray-700">{folder.homeFolderCount}</div>
+              <div className="font-semibold text-gray-700">{folder.homeFolderCount ?? 0}</div>
+            </div>
+            <div className="text-right p-2 bg-slate-50 rounded-lg">
+              <div className="text-xs text-gray-400">{t('Updated')}</div>
+              <div className="font-semibold text-gray-700">
+                {folder.modifiedDt
+                  ? formatDate(new Date(folder.modifiedDt.replace(' ', 'T')))
+                  : '-'}
+              </div>
             </div>
           </div>
         </div>
 
         {/* Shared with */}
-        {folder.sharing.length > 0 && (
+        {sharing.length > 0 && (
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500">{t('Shared with')}</span>
+            <span className="text-xs text-gray-500">{t('Shared with')}</span>
             <div className="flex flex-wrap gap-1.5">
-              {folder.sharing.map((entry, i) => (
-                <span
-                  key={i}
-                  className={twMerge(
-                    'text-xs px-2.5 py-1 rounded-full',
-                    entry.isGroup ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-700',
-                  )}
-                >
-                  {entry.name}
-                </span>
-              ))}
+              {sharing.map((entry, i) => {
+                const PermIcon = entry.delete ? ShieldCheck : entry.edit ? PenSquare : Eye;
+                return (
+                  <span
+                    key={i}
+                    className={twMerge(
+                      'inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full',
+                      entry.isGroup ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-700',
+                    )}
+                  >
+                    <PermIcon size={12} />
+                    {entry.name}
+                  </span>
+                );
+              })}
             </div>
           </div>
         )}
@@ -223,8 +230,8 @@ export default function FolderInfoPanel({
         </div>
         <DataTable
           columns={usageColumns}
-          data={folder.usage}
-          pageCount={Math.ceil(folder.usage.length / pagination.pageSize)}
+          data={usage}
+          pageCount={Math.ceil(usage.length / pagination.pageSize)}
           pagination={pagination}
           onPaginationChange={setPagination}
           sorting={sorting}

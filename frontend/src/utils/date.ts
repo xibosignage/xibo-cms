@@ -24,6 +24,17 @@ export type ExpiryValue =
   | { type: 'preset'; value: string }
   | { type: 'datePicked'; date: Date };
 
+export function formatDate(date: Date, timeZone?: string) {
+  return new Intl.DateTimeFormat('en-US', {
+    month: '2-digit',
+    day: '2-digit',
+    year: 'numeric',
+    ...(timeZone ? { timeZone } : {}),
+  })
+    .format(date)
+    .replace(/\//g, '-');
+}
+
 export function formatDateTime(date: Date, timeZone?: string) {
   return new Intl.DateTimeFormat('sv-SE', {
     year: 'numeric',

@@ -27,6 +27,13 @@ export interface FolderSharingEntry {
   delete: number;
 }
 
+export interface FolderUsageEntry {
+  type: string;
+  count: number;
+  sizeBytes: number;
+  size: string;
+}
+
 export interface Folder {
   id: number;
   folderId?: number;
@@ -40,6 +47,8 @@ export interface Folder {
   createdDt: string | null;
   modifiedDt: string | null;
   sharing?: FolderSharingEntry[];
+  homeFolderCount?: number;
+  usage?: FolderUsageEntry[];
 }
 
 export type FolderType = 'root' | 'home' | 'disabled' | '' | null;

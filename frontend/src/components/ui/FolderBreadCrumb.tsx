@@ -39,7 +39,7 @@ import { twMerge } from 'tailwind-merge';
 import Button from './Button';
 
 import type { ActionType } from '@/hooks/useFolderActions';
-import { fetchFolderById, fetchContextButtons, type FolderPermissions } from '@/services/folderApi';
+import { fetchFolderTree, fetchContextButtons, type FolderPermissions } from '@/services/folderApi';
 import type { Folder } from '@/types/folder';
 
 interface FolderBreadcrumbProps {
@@ -129,7 +129,7 @@ export default function FolderBreadcrumb({
           <div
             title={folder.text}
             aria-label={folder.text}
-            className="font-semibold text-xibo-blue-500 truncate max-w-20 sm:max-w-[120px]"
+            className="font-semibold text-xibo-blue-500 truncate max-w-20 sm:max-w-30"
           >
             {folder.text}
           </div>
@@ -343,51 +343,56 @@ function ContextMenuItem({
   );
 }
 
+function buildPathFromTree(
+  nodes: Folder[],
+  targetId: number,
+  path: Folder[] = [],
+): Folder[] | null {
+  for (const node of nodes) {
+    const current = [...path, node];
+    if (node.id === targetId) return current;
+    if (node.children && node.children.length > 0) {
+      const found = buildPathFromTree(node.children, targetId, current);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
 function useBreadcrumbPath(currentFolderId: number | null, refreshTrigger: number) {
   const [breadcrumbs, setBreadcrumbs] = useState<Folder[]>([]);
   const [isLoading, setIsLoading] = useState(!!currentFolderId);
 
   useEffect(() => {
-    let active = true;
-
-    async function loadPath() {
-      setIsLoading(true);
-      try {
-        const path: Folder[] = [];
-        let nextId = currentFolderId;
-        let depth = 0;
-
-        while (nextId && depth < 20) {
-          const folder = await fetchFolderById(nextId);
-          path.unshift(folder);
-
-          if (folder.id === 1) break;
-
-          nextId = Number(folder.parentId);
-          if (!nextId) break;
-
-          depth++;
-        }
-
-        if (active) {
-          if (path.length > 0 && path[0]?.id !== 1) {
-            const root = await fetchFolderById(1);
-            path.unshift(root);
-          }
-          setBreadcrumbs(path);
-        }
-      } catch (error) {
-        console.error('Failed to resolve breadcrumb path', error);
-        if (active) setBreadcrumbs([]);
-      } finally {
-        if (active) setIsLoading(false);
-      }
+    if (!currentFolderId) {
+      setBreadcrumbs([]);
+      setIsLoading(false);
+      return;
     }
 
-    loadPath();
+    let active = true;
+    const controller = new AbortController();
+
+    setIsLoading(true);
+    fetchFolderTree(controller.signal)
+      .then((tree) => {
+        if (!active) return;
+        const path = buildPathFromTree(tree, currentFolderId) ?? [];
+        setBreadcrumbs(path);
+      })
+      .catch((err) => {
+        if (active && !controller.signal.aborted) {
+          console.error('Failed to resolve breadcrumb path', err);
+          setBreadcrumbs([]);
+        }
+      })
+      .finally(() => {
+        if (active) setIsLoading(false);
+      });
 
     return () => {
       active = false;
+      controller.abort();
     };
   }, [currentFolderId, refreshTrigger]);
 
