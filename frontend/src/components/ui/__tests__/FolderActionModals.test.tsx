@@ -76,6 +76,8 @@ const mockFolder: Folder = {
   ownerId: 1,
   ownerName: 'MockUser',
   children: [],
+  createdDt: null,
+  modifiedDt: null,
 };
 
 // -----------------------------------------------------------------------------
