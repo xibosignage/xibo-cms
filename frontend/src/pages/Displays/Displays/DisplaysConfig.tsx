@@ -798,11 +798,7 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
       enableSorting: false,
       cell: ({ row }) => (
         <MediaCell
-          thumb={
-            row.original.screenShotRequested
-              ? `/display/screenshot/${row.original.displayId}`
-              : undefined
-          }
+          thumb={row.original.thumbnail || undefined}
           alt={row.original.display}
           mediaType="image"
           onPreview={

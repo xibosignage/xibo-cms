@@ -82,6 +82,7 @@ export const buildDisplay = (overrides: Partial<Display> = {}): Display => ({
   displayProfile: null,
   currentLayoutId: null,
   screenShotRequested: 0,
+  thumbnail: '',
   storageAvailableSpace: null,
   storageTotalSpace: null,
   displayGroupId: 1,

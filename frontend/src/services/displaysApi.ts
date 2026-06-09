@@ -306,8 +306,9 @@ export type DisplayStatusWindow = Record<string, string | number> | string | unk
 
 export async function fetchDisplayStatusWindow(
   displayId: number | string,
+  signal?: AbortSignal,
 ): Promise<DisplayStatusWindow> {
-  const response = await http.get(`/display/status/${displayId}`);
+  const response = await http.get(`/display/status/${displayId}`, { signal });
   return response.data;
 }
 

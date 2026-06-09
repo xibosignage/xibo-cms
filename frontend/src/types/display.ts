@@ -86,6 +86,7 @@ export interface Display {
   displayProfile: string | null;
   currentLayoutId: number | null;
   screenShotRequested: number;
+  thumbnail: string;
   storageAvailableSpace: number | null;
   storageTotalSpace: number | null;
   displayGroupId: number;

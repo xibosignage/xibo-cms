@@ -34,7 +34,7 @@ type DisplayInfoPanelProps = {
 };
 
 function formatTimestamp(ts: number | null): string {
-  if (!ts) {
+  if (ts === null) {
     return '-';
   }
   return new Date(ts * 1000).toLocaleString();
@@ -80,22 +80,21 @@ export default function DisplayInfoPanel({
       return;
     }
 
-    let isMounted = true;
+    const controller = new AbortController();
 
-    fetchDisplayStatusWindow(display.displayId)
+    fetchDisplayStatusWindow(display.displayId, controller.signal)
       .then((data) => {
-        if (isMounted) {
-          setStatusWindow(data);
-        }
+        setStatusWindow(data);
       })
-      .catch(() => {
-        if (isMounted) {
-          setStatusWindow(null);
+      .catch((err: unknown) => {
+        if (err instanceof DOMException && err.name === 'AbortError') {
+          return;
         }
+        setStatusWindow(null);
       });
 
     return () => {
-      isMounted = false;
+      controller.abort();
     };
   }, [display?.displayId, isOpen]);
 
@@ -127,7 +126,7 @@ export default function DisplayInfoPanel({
     >
       <div className="flex w-full justify-between items-center px-3 py-2 text-gray-400 shrink-0">
         <span className="uppercase font-semibold text-sm">{t('Display Details')}</span>
-        <button onClick={onClose} className="cursor-pointer rounded-lg">
+        <button onClick={onClose} aria-label={t('Close')} className="cursor-pointer rounded-lg">
           <X className="p-1 size-6" />
         </button>
       </div>
