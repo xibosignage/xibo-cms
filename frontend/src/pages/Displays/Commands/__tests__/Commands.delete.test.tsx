@@ -95,6 +95,8 @@ describe('Commands page - single delete', () => {
 
     expect(await screen.findByText('Delete Command?')).toBeInTheDocument();
     expect(screen.getByText(mockCommand.command, { selector: 'strong' })).toBeInTheDocument();
+    // Routing: the Delete action opens ONLY the Delete modal — not Share/Edit.
+    expect(screen.queryByRole('dialog', { name: /share command/i })).not.toBeInTheDocument();
   }, 20_000);
 
   test('clicking Cancel closes the modal without deleting', async () => {
@@ -178,6 +180,20 @@ describe('Commands page - bulk delete', () => {
     testQueryClient.clear();
     vi.clearAllMocks();
     mockFetchCommands(MULTIPLE_COMMANDS);
+  });
+
+  test('selecting rows reveals the bulk action buttons', async () => {
+    const user = userEvent.setup();
+    renderCommandsPage();
+    await screen.findByText('Command Alpha');
+
+    expect(screen.queryByRole('button', { name: /delete selected/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /share selected/i })).not.toBeInTheDocument();
+
+    await selectAllRows(user);
+
+    expect(await screen.findByRole('button', { name: /share selected/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /delete selected/i })).toBeInTheDocument();
   });
 
   test('multiple items: heading is plural with the count', async () => {

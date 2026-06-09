@@ -100,6 +100,9 @@ describe('Commands page - share wiring', () => {
 
     const dialog = await screen.findByRole('dialog', { name: /share command/i });
     expect(dialog).toHaveAttribute('data-entity-id', String(mockCommand.commandId));
+    // Routing: the Share action opens ONLY the Share modal — not Delete/Edit.
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    expect(screen.queryByText('Delete Command?')).not.toBeInTheDocument();
   }, 20_000);
 
   test('"Share Selected" opens the Share modal for the selected commands', async () => {

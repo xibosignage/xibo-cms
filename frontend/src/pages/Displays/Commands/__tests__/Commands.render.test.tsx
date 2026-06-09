@@ -28,6 +28,7 @@ import { renderCommandsPage } from './helpers/renderCommandsPage';
 import { mockFetchCommands } from './mocks/commandApi';
 
 import { fetchCommands } from '@/services/commandApi';
+import { fetchUserPreference } from '@/services/userApi';
 import { testQueryClient } from '@/setupTests';
 
 // =============================================================================
@@ -124,5 +125,17 @@ describe('Commands page - render', () => {
     await screen.findByText(mockCommand.command);
 
     expect(fetchCommands).toHaveBeenCalledWith(expect.objectContaining({ start: 0, length: 10 }));
+  });
+
+  test('shows the loading pulse and disables controls while preferences load', async () => {
+    mockFetchCommands(SINGLE_COMMAND);
+    vi.mocked(fetchUserPreference).mockReturnValueOnce(new Promise(() => {}));
+
+    renderCommandsPage({ hydrated: false });
+
+    expect(await screen.findByText('Loading commands...')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /add command/i })).toBeDisabled();
+    expect(screen.getByPlaceholderText('Search commands...')).toBeDisabled();
+    expect(screen.getByRole('button', { name: /filters/i })).toBeDisabled();
   });
 });

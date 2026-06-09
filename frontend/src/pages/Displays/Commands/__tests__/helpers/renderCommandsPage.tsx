@@ -29,8 +29,13 @@ import { mockUser, queryKeys } from '../fixtures/command';
 import { UserProvider } from '@/context/UserContext';
 import { testQueryClient } from '@/setupTests';
 
-export const renderCommandsPage = () => {
-  testQueryClient.setQueryData(queryKeys.commandsPage, null);
+// Pass { hydrated: false } to skip seeding the preference cache — used by the
+// loading-state test, which keeps the page on the "Loading commands..." pulse
+// (with the Add button / search / Filters disabled) while preferences load.
+export const renderCommandsPage = ({ hydrated = true }: { hydrated?: boolean } = {}) => {
+  if (hydrated) {
+    testQueryClient.setQueryData(queryKeys.commandsPage, null);
+  }
   return render(
     <QueryClientProvider client={testQueryClient}>
       <UserProvider initialUser={mockUser}>

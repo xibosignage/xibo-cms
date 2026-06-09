@@ -87,6 +87,18 @@ describe('Commands page - filters', () => {
     await screen.findByRole('button', { name: /reset/i });
   });
 
+  test('the Name and Code filters expose AND/OR and regex toggles', async () => {
+    const user = userEvent.setup();
+    renderCommandsPage();
+    await waitForPageReady();
+
+    await user.click(screen.getByRole('button', { name: /filters/i }));
+    await screen.findByRole('textbox', { name: /^name$/i });
+
+    expect(screen.getAllByRole('button', { name: 'OR' }).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByTitle('Use RegEx pattern matching').length).toBeGreaterThanOrEqual(2);
+  });
+
   test('clicking Filters again closes the panel', async () => {
     const user = userEvent.setup();
     renderCommandsPage();

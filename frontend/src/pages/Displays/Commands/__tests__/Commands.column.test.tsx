@@ -78,6 +78,25 @@ describe('Commands page - column visibility', () => {
     expect(screen.getByRole('columnheader', { name: /^id$/i })).toBeInTheDocument();
   });
 
+  // All seven data columns are visible on first load (none are hidden by the
+  // initial columnVisibility state).
+  test('all default columns are visible on first load', async () => {
+    renderCommandsPage();
+    await screen.findByText(mockCommand.command);
+
+    for (const name of [
+      /^id$/i,
+      /^name$/i,
+      /^code$/i,
+      /^description$/i,
+      /^available on$/i,
+      /^create alert on$/i,
+      /^sharing$/i,
+    ]) {
+      expect(screen.getByRole('columnheader', { name })).toBeInTheDocument();
+    }
+  });
+
   test('Columns button opens the column picker', async () => {
     const user = userEvent.setup();
     renderCommandsPage();

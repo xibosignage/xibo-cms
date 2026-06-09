@@ -244,6 +244,7 @@ describe('AddEditCommandModal', () => {
       validationString: 'val-string',
       availableOn: 'android,windows',
       createAlertOn: 'success',
+      commandString: 'tpv_led|red',
     });
 
     test('modal opens with the title "Edit Command"', () => {
@@ -277,6 +278,12 @@ describe('AddEditCommandModal', () => {
         'data-selected',
         'android,windows',
       );
+    });
+
+    test('the Command Builder is pre-populated from the stored command string', () => {
+      renderAddEditCommandModal({ mode: 'edit', command: existingCommand });
+
+      expect(screen.getByTestId('mock-command-builder')).toHaveValue('tpv_led|red');
     });
 
     test('a successful save sends the updated values to the API without the code', async () => {
