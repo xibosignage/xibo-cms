@@ -291,6 +291,27 @@ export async function requestScreenShot(displayId: number | string): Promise<voi
   });
 }
 
+export async function fetchDisplayScreenshotBlob(
+  displayId: number | string,
+  signal?: AbortSignal,
+): Promise<Blob> {
+  const response = await http.get(`/display/screenshot/${displayId}`, {
+    responseType: 'blob',
+    signal,
+  });
+  return response.data;
+}
+
+export type DisplayStatusWindow = Record<string, string | number> | string | unknown[];
+
+export async function fetchDisplayStatusWindow(
+  displayId: number | string,
+  signal?: AbortSignal,
+): Promise<DisplayStatusWindow> {
+  const response = await http.get(`/display/status/${displayId}`, { signal });
+  return response.data;
+}
+
 export async function collectNow(displayGroupId: number | string): Promise<void> {
   await http.post(`/displaygroup/${displayGroupId}/action/collectNow`, null, {
     headers: { 'X-Requested-With': 'XMLHttpRequest' },
