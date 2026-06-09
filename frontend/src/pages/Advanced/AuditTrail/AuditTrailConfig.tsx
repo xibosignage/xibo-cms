@@ -26,7 +26,6 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
-import Modal from '@/components/ui/modals/Modal';
 import { TextCell } from '@/components/ui/table/cells';
 import type { AuditLog } from '@/types/auditTrail';
 
@@ -97,54 +96,43 @@ function ObjectAfterCell({ value }: { value: Record<string, unknown> | null }) {
   if (!value || Object.keys(value).length === 0) return null;
 
   return (
-    <>
+    <div>
       <button
         type="button"
-        onClick={() => setOpen(true)}
-        className="text-xibo-blue-600 hover:text-xibo-blue-800 flex items-center gap-1"
+        onClick={() => setOpen((prev) => !prev)}
+        className="text-xibo-blue-600 hover:text-xibo-blue-800 flex items-center gap-1 cursor-pointer"
         title={t('View object')}
       >
         <Search size={14} />
       </button>
 
       {open && (
-        <Modal
-          title={t('Audit Trail Object')}
-          onClose={() => setOpen(false)}
-          size="sm"
-          actions={[{ label: t('Close'), onClick: () => setOpen(false), variant: 'secondary' }]}
-        >
-          <div className="p-6">
-            <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="px-3 py-2 border-b border-gray-200 text-left text-sm font-semibold uppercase text-gray-500">
-                    {t('Property')}
-                  </th>
-                  <th className="px-3 py-2 border-b border-gray-200 text-left text-sm font-semibold uppercase text-gray-500">
-                    {t('Value')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {Object.entries(value).map(([key, val]) => (
-                  <tr key={key} className="bg-white">
-                    <td className="px-3 py-2 border-b border-gray-200 font-medium text-gray-700">
-                      {key}
-                    </td>
-                    <td className="px-3 py-2 border-b border-gray-200 text-gray-600 break-all">
-                      {val !== null && typeof val === 'object'
-                        ? JSON.stringify(val)
-                        : String(val ?? '')}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Modal>
+        <table className="mt-2 w-full text-xs border border-gray-200 rounded overflow-hidden">
+          <thead>
+            <tr className="bg-gray-50">
+              <th className="px-2 py-1 border-b border-gray-200 text-left font-semibold uppercase text-gray-500">
+                {t('Property')}
+              </th>
+              <th className="px-2 py-1 border-b border-gray-200 text-left font-semibold uppercase text-gray-500">
+                {t('Value')}
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {Object.entries(value).map(([key, val]) => (
+              <tr key={key} className="bg-white">
+                <td className="px-2 py-1 font-medium text-gray-700 align-top">{key}</td>
+                <td className="px-2 py-1 text-gray-600 break-all">
+                  {val !== null && typeof val === 'object'
+                    ? JSON.stringify(val)
+                    : String(val ?? '')}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
-    </>
+    </div>
   );
 }
 
@@ -200,7 +188,7 @@ export const getAuditTrailColumns = (t: TFunction): ColumnDef<AuditLog>[] => [
   {
     id: 'objectAfter',
     header: t('Object'),
-    size: 80,
+    size: 250,
     enableSorting: false,
     accessorFn: (row) => {
       if (!row.objectAfter || Object.keys(row.objectAfter).length === 0) return '';
