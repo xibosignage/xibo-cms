@@ -75,6 +75,12 @@ interface ConfigServiceInterface
     public function changeSetting($setting, $value, $userChange = 0);
 
     /**
+     * Get all settings with metadata (value, userSee, userChange)
+     * @return array
+     */
+    public function getAllSettingsWithMeta();
+
+    /**
      * Is the provided setting visible
      * @param string $setting
      * @return bool

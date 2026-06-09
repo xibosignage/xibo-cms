@@ -336,7 +336,10 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'settings',
         labelKey: 'Settings',
-        externalURL: '/admin/view',
+        lazy: () =>
+          import('@/pages/Administration/Settings/Settings').then((m) => ({
+            Component: m.default,
+          })),
         validator: isSuperAdmin,
       },
       {
@@ -387,7 +390,8 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'tags',
         labelKey: 'Tags',
-        externalURL: '/tag/view',
+        lazy: () =>
+          import('@/pages/Administration/Tags/Tags').then((m) => ({ Component: m.default })),
         feature: 'tag.view',
       },
       {

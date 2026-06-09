@@ -141,7 +141,7 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
       { group: 'Design', name: 'Layouts', href: '/design/layout' }, // React Router
       { group: 'Library', name: 'Media', href: '/library/media' }, // React Router
       { group: 'Displays', name: 'Commands', href: '/displays/commands' }, // React Router
-      { group: 'Administration', name: 'Tags', href: '/tag/view' }, // external
+      { group: 'Administration', name: 'Tags', href: '/administration/tags' }, // React Router
       { group: 'Reporting', name: 'All Reports', href: '/report/view' }, // external
       { group: 'Advanced', name: 'Sessions', href: '/advanced/sessions' }, // React Router
     ];
@@ -154,6 +154,7 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
       const links = screen.getAllByRole('link', { name: new RegExp(name, 'i') });
       const link = links.find((l) => l.getAttribute('href') === href);
 
+      expect(link).toBeDefined();
       expect(link).toBeVisible();
     });
 
@@ -163,12 +164,15 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
       '/developer/template/view',
     );
 
-    // Displays > Display Settings is a React Router link; Administration > Settings is external.
+    // Displays > Display Settings and Administration > Settings are both React Router links.
     expect(screen.getByRole('link', { name: 'Display Settings' })).toHaveAttribute(
       'href',
       '/displays/settings',
     );
-    expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute('href', '/admin/view');
+    expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute(
+      'href',
+      '/administration/settings',
+    );
   });
 
   it('should try to close when the hamburger button is clicked', () => {

@@ -27,6 +27,8 @@ export interface FetchTransitionsRequest {
   length: number;
   sortBy?: string;
   sortDir?: string;
+  availableAsIn?: number;
+  availableAsOut?: number;
   signal?: AbortSignal;
 }
 

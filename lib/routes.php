@@ -639,6 +639,10 @@ $app->group('', function (RouteCollectorProxy $group) {
 //
 // Settings
 //
+$app->get('/admin', ['\Xibo\Controller\Settings','get'])
+    ->addMiddleware(new SuperAdminAuth($app->getContainer()))
+    ->setName('settings.get');
+
 $app->put('/admin', ['\Xibo\Controller\Settings','update'])
     ->addMiddleware(new SuperAdminAuth($app->getContainer()))
     ->setName('settings.update');
@@ -781,6 +785,7 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/tag/{type}/multi', ['\Xibo\Controller\Tag','editMultiple'])->setName('tag.editMultiple');
     $group->get('/tag/usage/{id}', ['\Xibo\Controller\Tag', 'usage'])->setName('tag.usage');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['tag.view']));
+$app->get('/tag/{id}', ['\Xibo\Controller\Tag','searchById'])->setName('tag.search.id');
 
 // Actions (no APIs)
 // -----------------

@@ -27,6 +27,7 @@ interface TextInputProps {
   name: string;
   value?: string;
   label?: string;
+  labelExtra?: React.ReactNode;
   placeholder?: string;
   helpText?: string;
   error?: string;
@@ -51,6 +52,7 @@ export default function TextInput({
   labelClassName,
   wrapperClassName,
   label,
+  labelExtra,
   placeholder,
   helpText,
   error,
@@ -75,7 +77,10 @@ export default function TextInput({
             labelClassName,
           )}
         >
-          <span>{label}</span>
+          <span className="inline-flex items-center gap-1.5">
+            {label}
+            {labelExtra}
+          </span>
           {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
         </label>
       )}

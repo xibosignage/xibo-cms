@@ -26,9 +26,16 @@ export interface SwitchRowProps {
   description?: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  disabled?: boolean;
 }
 
-export default function SwitchRow({ title, description, checked, onChange }: SwitchRowProps) {
+export default function SwitchRow({
+  title,
+  description,
+  checked,
+  onChange,
+  disabled,
+}: SwitchRowProps) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 flex items-center justify-between gap-4">
       <div className="flex flex-col">
@@ -36,7 +43,7 @@ export default function SwitchRow({ title, description, checked, onChange }: Swi
         {description && <p className="text-sm text-gray-500 mt-0.5">{description}</p>}
       </div>
       <div className="shrink-0">
-        <Switch size="sm" checked={checked} onChange={onChange} hideOnOff />
+        <Switch size="sm" checked={checked} onChange={onChange} hideOnOff disabled={disabled} />
       </div>
     </div>
   );
