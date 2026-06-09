@@ -41,7 +41,7 @@ export interface Folder {
   text: string;
   parentId: number;
   isRoot: number;
-  children: Folder[] | null;
+  children: Folder[] | string | null;
   ownerId: number;
   ownerName: string;
   createdDt: string | null;

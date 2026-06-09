@@ -43,7 +43,7 @@ const flattenTree = (nodes: Folder[]): Folder[] => {
   const result: Folder[] = [];
   for (const node of nodes) {
     result.push(node);
-    if (node.children && node.children.length > 0) {
+    if (Array.isArray(node.children) && node.children.length > 0) {
       result.push(...flattenTree(node.children));
     }
   }
@@ -65,7 +65,7 @@ const buildVisibleTree = (nodes: Folder[], expandedIds: Set<number>, depth = 0):
     const isExpanded = expandedIds.has(node.id);
     result.push({ ...node, depth, hasChildren, isExpanded });
     if (hasChildren && isExpanded) {
-      result.push(...buildVisibleTree(node.children!, expandedIds, depth + 1));
+      result.push(...buildVisibleTree(node.children as Folder[], expandedIds, depth + 1));
     }
   }
   return result;

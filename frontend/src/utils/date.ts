@@ -24,19 +24,23 @@ export type ExpiryValue =
   | { type: 'preset'; value: string }
   | { type: 'datePicked'; date: Date };
 
+function getParts(date: Date, options: Intl.DateTimeFormatOptions) {
+  const parts = new Intl.DateTimeFormat('en', options).formatToParts(date);
+  return (type: string) => parts.find((p) => p.type === type)?.value ?? '00';
+}
+
 export function formatDate(date: Date, timeZone?: string) {
-  return new Intl.DateTimeFormat('en-US', {
+  const get = getParts(date, {
+    year: 'numeric',
     month: '2-digit',
     day: '2-digit',
-    year: 'numeric',
     ...(timeZone ? { timeZone } : {}),
-  })
-    .format(date)
-    .replace(/\//g, '-');
+  });
+  return `${get('month')}-${get('day')}-${get('year')}`;
 }
 
 export function formatDateTime(date: Date, timeZone?: string) {
-  return new Intl.DateTimeFormat('sv-SE', {
+  const get = getParts(date, {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -45,9 +49,8 @@ export function formatDateTime(date: Date, timeZone?: string) {
     second: '2-digit',
     hour12: false,
     ...(timeZone ? { timeZone } : {}),
-  })
-    .format(date)
-    .replace(',', '');
+  });
+  return `${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')}:${get('second')}`;
 }
 
 function daysFromNow(days: number) {

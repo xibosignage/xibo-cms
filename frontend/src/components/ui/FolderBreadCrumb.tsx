@@ -351,7 +351,7 @@ function buildPathFromTree(
   for (const node of nodes) {
     const current = [...path, node];
     if (node.id === targetId) return current;
-    if (node.children && node.children.length > 0) {
+    if (Array.isArray(node.children) && node.children.length > 0) {
       const found = buildPathFromTree(node.children, targetId, current);
       if (found) return found;
     }

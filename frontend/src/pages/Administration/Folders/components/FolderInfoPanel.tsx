@@ -125,14 +125,23 @@ export default function FolderInfoPanel({
     );
   }
 
-  const childrenRaw = folder.children as unknown;
   const subfolderCount =
-    typeof childrenRaw === 'string' && childrenRaw.length > 0
-      ? childrenRaw.split(',').length
-      : Array.isArray(childrenRaw)
-        ? childrenRaw.length
+    typeof folder.children === 'string' && folder.children.length > 0
+      ? folder.children.split(',').length
+      : Array.isArray(folder.children)
+        ? folder.children.length
         : 0;
   const usage = folder.usage ?? [];
+
+  const activeSorting = sorting[0];
+  const sortedUsage = activeSorting
+    ? [...usage].sort((a, b) => {
+        const key = activeSorting.id as keyof FolderUsageEntry;
+        return activeSorting.desc
+          ? String(b[key]).localeCompare(String(a[key]))
+          : String(a[key]).localeCompare(String(b[key]));
+      })
+    : usage;
   const sharing = folder.sharing ?? [];
   const totalItems = usage.reduce((sum, entry) => sum + entry.count, 0);
 
@@ -230,7 +239,7 @@ export default function FolderInfoPanel({
         </div>
         <DataTable
           columns={usageColumns}
-          data={usage}
+          data={sortedUsage}
           pageCount={Math.ceil(usage.length / pagination.pageSize)}
           pagination={pagination}
           onPaginationChange={setPagination}
