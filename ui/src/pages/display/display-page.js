@@ -356,7 +356,7 @@ $(function() {
                 '" title="' + displayPageTrans.TeamViewertoThisDisplay +
                 '" target="_blank">' +
                 '<img src="' + publicPath +
-                'theme/default/img/remote_icons/teamviewer.png"' +
+                '/img/remote_icons/teamviewer.png"' +
                 ' alt="TeamViewer Icon"></a>';
             }
 
@@ -364,7 +364,7 @@ $(function() {
               html += '<a href="' + row.webkeyLink + '" title="' +
               displayPageTrans.WebkeytoThisDisplay + '" target="_blank">' +
                 '<img src="' + publicPath +
-                'theme/default/img/remote_icons/webkey.png" ' +
+                '/img/remote_icons/webkey.png" ' +
                 'alt="Webkey Icon"></a>';
             }
 

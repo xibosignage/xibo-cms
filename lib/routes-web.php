@@ -210,13 +210,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['dataset.modify']));
 
 //
-// admin
-//
-$app->get('/admin/view', ['\Xibo\Controller\Settings','displayPage'])
-    ->addMiddleware(new SuperAdminAuth($app->getContainer()))
-    ->setName('admin.view');
-
-//
 // maintenance
 //
 $app->get('/maintenance/form/tidy', ['\Xibo\Controller\Maintenance','tidyLibraryForm'])

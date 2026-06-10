@@ -76,6 +76,17 @@ $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
 })->addMiddleware(new SuperAdminAuth($app->getContainer()));
 
 //
+// Settings
+//
+$app->get('/admin', ['\Xibo\Controller\Settings', 'get'])
+    ->addMiddleware(new SuperAdminAuth($app->getContainer()))
+    ->setName('settings.get');
+
+$app->put('/admin', ['\Xibo\Controller\Settings', 'update'])
+    ->addMiddleware(new SuperAdminAuth($app->getContainer()))
+    ->setName('settings.update');
+
+//
 // Dashboards
 //
 $app->get('/statusdashboard', ['\Xibo\Controller\StatusDashboard', 'displayPage'])

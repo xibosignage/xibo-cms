@@ -22,6 +22,9 @@
 import { CheckCircle, ExternalLink } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { connectorThumbnails } from '../connectorThumbnails';
+
+import placeholderImg from '@/assets/connectors/placeholder.png';
 import Button from '@/components/ui/Button';
 import type { Connector } from '@/types/connector';
 
@@ -46,7 +49,9 @@ export default function ConnectorCard({
 
   const cardTitle = connector?.title ?? title ?? '';
   const cardDescription = connector?.description ?? description ?? '';
-  const imgSrc = connector ? `/${connector.thumbnail}` : (thumbnailSrc ?? '');
+  const imgSrc = connector
+    ? (connectorThumbnails[connector.className] ?? placeholderImg)
+    : (thumbnailSrc ?? '');
 
   return (
     <div className="flex flex-col h-81.5 justify-between relative bg-white rounded-xl p-5 pt-8 border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
@@ -74,7 +79,7 @@ export default function ConnectorCard({
             alt={cardTitle}
             className="max-h-full max-w-full object-contain"
             onError={(e) => {
-              e.currentTarget.src = '/theme/default/img/connectors/placeholder.png';
+              e.currentTarget.src = placeholderImg;
             }}
           />
         </div>

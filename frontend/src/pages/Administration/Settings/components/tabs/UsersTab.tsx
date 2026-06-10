@@ -19,44 +19,173 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { SettingsTabProps } from '../../SettingsConfig';
 import SettingsSection from '../SettingsSection';
 
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
+import type { SelectOption } from '@/components/ui/forms/SelectDropdown';
 import TextInput from '@/components/ui/forms/TextInput';
+import { useDebounce } from '@/hooks/useDebounce';
+import { fetchUsers } from '@/services/userApi';
+import { fetchUserGroups } from '@/services/userGroupApi';
+
+const PAGE_SIZE = 10;
+
+function useUserOptions() {
+  const [options, setOptions] = useState<SelectOption[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
+  const pageRef = useRef(0);
+
+  useEffect(() => {
+    setIsLoading(true);
+    setOptions([]);
+    pageRef.current = 0;
+    fetchUsers({
+      start: 0,
+      length: PAGE_SIZE,
+      userTypeId: 1,
+      userName: debouncedSearch || undefined,
+    })
+      .then((res) => {
+        setOptions(res.rows.map((u) => ({ value: String(u.userId), label: u.userName })));
+        setHasMore(res.rows.length === PAGE_SIZE);
+        pageRef.current = 1;
+      })
+      .catch(() => setOptions([]))
+      .finally(() => setIsLoading(false));
+  }, [debouncedSearch]);
+
+  const loadMore = () => {
+    if (isLoadingMore || !hasMore) return;
+    setIsLoadingMore(true);
+    fetchUsers({
+      start: pageRef.current * PAGE_SIZE,
+      length: PAGE_SIZE,
+      userTypeId: 1,
+      userName: debouncedSearch || undefined,
+    })
+      .then((res) => {
+        setOptions((prev) => [
+          ...prev,
+          ...res.rows.map((u) => ({ value: String(u.userId), label: u.userName })),
+        ]);
+        setHasMore(res.rows.length === PAGE_SIZE);
+        pageRef.current += 1;
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingMore(false));
+  };
+
+  return { options, isLoading, isLoadingMore, hasMore, loadMore, setSearch };
+}
+
+function useUserGroupOptions() {
+  const [options, setOptions] = useState<SelectOption[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
+  const pageRef = useRef(0);
+
+  useEffect(() => {
+    setIsLoading(true);
+    setOptions([]);
+    pageRef.current = 0;
+    fetchUserGroups({
+      start: 0,
+      length: PAGE_SIZE,
+      userGroup: debouncedSearch || undefined,
+    })
+      .then((res) => {
+        setOptions(res.rows.map((g) => ({ value: String(g.groupId), label: g.group })));
+        setHasMore(res.rows.length === PAGE_SIZE);
+        pageRef.current = 1;
+      })
+      .catch(() => setOptions([]))
+      .finally(() => setIsLoading(false));
+  }, [debouncedSearch]);
+
+  const loadMore = () => {
+    if (isLoadingMore || !hasMore) return;
+    setIsLoadingMore(true);
+    fetchUserGroups({
+      start: pageRef.current * PAGE_SIZE,
+      length: PAGE_SIZE,
+      userGroup: debouncedSearch || undefined,
+    })
+      .then((res) => {
+        setOptions((prev) => [
+          ...prev,
+          ...res.rows.map((g) => ({ value: String(g.groupId), label: g.group })),
+        ]);
+        setHasMore(res.rows.length === PAGE_SIZE);
+        pageRef.current += 1;
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingMore(false));
+  };
+
+  return { options, isLoading, isLoadingMore, hasMore, loadMore, setSearch };
+}
 
 export default function UsersTab({
   formValues,
   updateField,
   isVisible,
   isEditable,
+  relatedEntities,
 }: SettingsTabProps) {
   const { t } = useTranslation();
+
+  const userOptions = useUserOptions();
+  const userGroupOptions = useUserGroupOptions();
 
   return (
     <div className="flex flex-col gap-3">
       <SettingsSection title={t('Account Defaults')}>
         <div className="flex items-start justify-between space-x-4">
           {isVisible('SYSTEM_USER') && (
-            <TextInput
-              name="SYSTEM_USER"
+            <SelectDropdown
               label={t('System User')}
               helpText={t('The system User for this CMS.')}
               value={formValues.SYSTEM_USER ?? ''}
-              onChange={(v) => updateField('SYSTEM_USER', v)}
-              disabled={!isEditable('SYSTEM_USER')}
+              initialLabel={relatedEntities.systemUser?.userName}
+              options={userOptions.options}
+              onSelect={(v) => updateField('SYSTEM_USER', v ?? '')}
+              isLoading={userOptions.isLoading}
+              onLoadMore={userOptions.loadMore}
+              hasMore={userOptions.hasMore}
+              isLoadingMore={userOptions.isLoadingMore}
+              searchable
+              searchPlaceholder={t('Search users...')}
+              onSearch={userOptions.setSearch}
+              className="flex-1"
             />
           )}
           {isVisible('DEFAULT_USERGROUP') && (
-            <TextInput
-              name="DEFAULT_USERGROUP"
+            <SelectDropdown
               label={t('Default User Group')}
               helpText={t('The default User Group for new Users.')}
               value={formValues.DEFAULT_USERGROUP ?? ''}
-              onChange={(v) => updateField('DEFAULT_USERGROUP', v)}
-              disabled={!isEditable('DEFAULT_USERGROUP')}
+              initialLabel={relatedEntities.defaultUserGroup?.group}
+              options={userGroupOptions.options}
+              onSelect={(v) => updateField('DEFAULT_USERGROUP', v ?? '')}
+              isLoading={userGroupOptions.isLoading}
+              onLoadMore={userGroupOptions.loadMore}
+              hasMore={userGroupOptions.hasMore}
+              isLoadingMore={userGroupOptions.isLoadingMore}
+              searchable
+              searchPlaceholder={t('Search groups...')}
+              onSearch={userGroupOptions.setSearch}
+              className="flex-1"
             />
           )}
         </div>

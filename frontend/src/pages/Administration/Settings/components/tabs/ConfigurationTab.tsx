@@ -26,7 +26,6 @@ import { useTranslation } from 'react-i18next';
 import type { SettingsTabProps } from '../../SettingsConfig';
 import SettingsSection from '../SettingsSection';
 
-import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import TextInput from '@/components/ui/forms/TextInput';
 
 export default function ConfigurationTab({
@@ -34,8 +33,6 @@ export default function ConfigurationTab({
   updateField,
   isVisible,
   isEditable,
-  options,
-  hideThemes,
 }: SettingsTabProps) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
@@ -89,30 +86,6 @@ export default function ConfigurationTab({
             }
           />
         )}
-      </SettingsSection>
-      <SettingsSection title={t('Appearance')}>
-        {isVisible('GLOBAL_THEME_NAME') &&
-          (hideThemes ? (
-            <TextInput
-              name="GLOBAL_THEME_NAME"
-              label={t('CMS Theme')}
-              helpText={t('Applied to all pages by default.')}
-              value={formValues.GLOBAL_THEME_NAME ?? ''}
-              onChange={(v) => updateField('GLOBAL_THEME_NAME', v)}
-              disabled={!isEditable('GLOBAL_THEME_NAME')}
-            />
-          ) : (
-            <SelectDropdown
-              label={t('CMS Theme')}
-              helpText={t('Applied to all pages by default.')}
-              value={formValues.GLOBAL_THEME_NAME ?? ''}
-              options={options.themes.map((theme) => ({
-                value: theme.id,
-                label: theme.value,
-              }))}
-              onSelect={(v) => updateField('GLOBAL_THEME_NAME', v)}
-            />
-          ))}
       </SettingsSection>
     </div>
   );

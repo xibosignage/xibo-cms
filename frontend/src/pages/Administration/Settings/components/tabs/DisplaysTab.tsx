@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { SettingsTabProps } from '../../SettingsConfig';
@@ -26,31 +27,98 @@ import SettingsSection from '../SettingsSection';
 
 import NumberInput from '@/components/ui/forms/NumberInput';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
+import type { SelectOption } from '@/components/ui/forms/SelectDropdown';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TextInput from '@/components/ui/forms/TextInput';
+import { useDebounce } from '@/hooks/useDebounce';
 import SwitchRow from '@/pages/Administration/Users/components/SwitchRow';
+import { fetchLayouts } from '@/services/layoutsApi';
+
+const LAYOUT_PAGE_SIZE = 10;
+
+function useLayoutOptions() {
+  const [options, setOptions] = useState<SelectOption[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
+  const pageRef = useRef(0);
+
+  useEffect(() => {
+    setIsLoading(true);
+    setOptions([]);
+    pageRef.current = 0;
+    fetchLayouts({
+      start: 0,
+      length: LAYOUT_PAGE_SIZE,
+      retired: 0,
+      layout: debouncedSearch || undefined,
+    })
+      .then((res) => {
+        setOptions(res.rows.map((l) => ({ value: String(l.layoutId), label: l.layout })));
+        setHasMore(res.rows.length === LAYOUT_PAGE_SIZE);
+        pageRef.current = 1;
+      })
+      .catch(() => setOptions([]))
+      .finally(() => setIsLoading(false));
+  }, [debouncedSearch]);
+
+  const loadMore = () => {
+    if (isLoadingMore || !hasMore) return;
+    setIsLoadingMore(true);
+    fetchLayouts({
+      start: pageRef.current * LAYOUT_PAGE_SIZE,
+      length: LAYOUT_PAGE_SIZE,
+      retired: 0,
+      layout: debouncedSearch || undefined,
+    })
+      .then((res) => {
+        setOptions((prev) => [
+          ...prev,
+          ...res.rows.map((l) => ({ value: String(l.layoutId), label: l.layout })),
+        ]);
+        setHasMore(res.rows.length === LAYOUT_PAGE_SIZE);
+        pageRef.current += 1;
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingMore(false));
+  };
+
+  return { options, isLoading, isLoadingMore, hasMore, loadMore, setSearch };
+}
 
 export default function DisplaysTab({
   formValues,
   updateField,
   isVisible,
   isEditable,
+  relatedEntities,
 }: SettingsTabProps) {
   const { t } = useTranslation();
+
+  const layoutOptions = useLayoutOptions();
 
   return (
     <div className="flex flex-col gap-3">
       <SettingsSection title={t('Setup')}>
         {isVisible('DEFAULT_LAYOUT') && (
-          <TextInput
-            name="DEFAULT_LAYOUT"
+          <SelectDropdown
             label={t('Default Layout')}
             helpText={t(
               'The default layout to assign for new displays and displays which have their current default deleted.',
             )}
             value={formValues.DEFAULT_LAYOUT ?? ''}
-            onChange={(v) => updateField('DEFAULT_LAYOUT', v)}
-            disabled={!isEditable('DEFAULT_LAYOUT')}
+            initialLabel={relatedEntities.defaultLayout?.layout}
+            options={layoutOptions.options}
+            onSelect={(v) => updateField('DEFAULT_LAYOUT', v ?? '')}
+            isLoading={layoutOptions.isLoading}
+            onLoadMore={layoutOptions.loadMore}
+            hasMore={layoutOptions.hasMore}
+            isLoadingMore={layoutOptions.isLoadingMore}
+            searchable
+            searchPlaceholder={t('Search layouts...')}
+            onSearch={layoutOptions.setSearch}
           />
         )}
         {isVisible('DISPLAY_DEFAULT_FOLDER') && (
