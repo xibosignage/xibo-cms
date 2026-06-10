@@ -29,7 +29,7 @@ import {
   SINGLE_CAMPAIGN,
   defaultCampaignActions,
   mockCampaign,
-  mockFetchCampaigns,
+  mockCampaignData,
   mockUserNoSchedule,
   renderCampaignsPage,
 } from './campaignTestUtils';
@@ -46,6 +46,7 @@ vi.mock('react-i18next', () => ({
 }));
 
 vi.mock('@/services/campaignApi');
+vi.mock('../hooks/useCampaignData', () => ({ useCampaignData: vi.fn() }));
 vi.mock('@/services/folderApi', () => ({
   fetchFolderById: vi.fn().mockResolvedValue({ id: 1, text: 'Root' }),
   fetchFolderTree: vi.fn().mockResolvedValue([]),
@@ -145,7 +146,7 @@ describe('Campaigns page - row actions', () => {
     testQueryClient.clear();
     vi.clearAllMocks();
     vi.mocked(useCampaignActions).mockReturnValue(defaultCampaignActions());
-    mockFetchCampaigns(SINGLE_CAMPAIGN);
+    mockCampaignData(SINGLE_CAMPAIGN);
   });
 
   // ---------------------------------------------------------------------------
