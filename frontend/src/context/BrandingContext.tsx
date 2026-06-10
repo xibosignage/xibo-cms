@@ -21,21 +21,20 @@
 
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
 
-import defaultFavIcon from '@/assets/xibo-logo-icon.svg';
-import defaultLogoUrl from '@/assets/xibo-logo.svg';
 import type { BrandingConfig } from '@/types/user';
 
 const THEME_LINK_ID = 'xibo-theme-css';
 const FAVICON_LINK_ID = 'xibo-favicon';
 
+// Fallback used only while the /user/me API call is in-flight.
+// Once the response arrives, BrandingProvider replaces these with server values.
 const defaults: BrandingConfig = {
   productName: 'Xibo Digital Signage',
   appName: 'Xibo',
-  logoUrl: defaultLogoUrl,
-  faviconUrl: defaultFavIcon,
-  cssUrl: null,
+  logoUrl: '/brand/logo.svg',
+  faviconUrl: '/brand/logo-icon.svg',
+  cssUrl: '/brand/theme.css',
   supportUrl: 'https://xibosignage.com',
-  isXiboThemed: true,
 };
 
 const BrandingContext = createContext<BrandingConfig>(defaults);
@@ -46,15 +45,10 @@ interface Props {
 }
 
 export function BrandingProvider({ branding, children }: Props) {
-  const value = branding
-    ? branding.isXiboThemed
-      ? { ...branding, logoUrl: defaultLogoUrl, faviconUrl: defaultFavIcon }
-      : branding
-    : defaults;
+  const value = branding ?? defaults;
 
   useEffect(() => {
     document.getElementById(THEME_LINK_ID)?.remove();
-    if (!value.cssUrl) return;
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = value.cssUrl;

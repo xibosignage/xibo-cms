@@ -86,7 +86,7 @@ export default function Settings() {
     updateField,
     isVisible,
     isEditable,
-    options: data?.options ?? { themes: [], languages: [], timeZones: [] },
+    options: data?.options ?? { languages: [], timeZones: [] },
     relatedEntities: data?.relatedEntities ?? {
       defaultLayout: null,
       systemUser: null,
@@ -94,7 +94,6 @@ export default function Settings() {
       defaultTransitionIn: null,
       defaultTransitionOut: null,
     },
-    hideThemes: data?.hideThemes ?? false,
     elevateLogUntil: data?.elevateLogUntil ?? null,
   };
 

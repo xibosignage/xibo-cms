@@ -637,17 +637,6 @@ $app->group('', function (RouteCollectorProxy $group) {
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['session.view']));
 
 //
-// Settings
-//
-$app->get('/admin', ['\Xibo\Controller\Settings','get'])
-    ->addMiddleware(new SuperAdminAuth($app->getContainer()))
-    ->setName('settings.get');
-
-$app->put('/admin', ['\Xibo\Controller\Settings','update'])
-    ->addMiddleware(new SuperAdminAuth($app->getContainer()))
-    ->setName('settings.update');
-
-//
 // Maintenance
 //
 $app->post('/maintenance/tidy', ['\Xibo\Controller\Maintenance','tidyLibrary'])

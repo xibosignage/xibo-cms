@@ -45,4 +45,5 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !\.(css|js|png|jpg)$
 RewriteCond %{REQUEST_URI} !^REPLACE_ME/dist/.*$
 RewriteCond %{REQUEST_URI} !^REPLACE_ME/theme/.*$
+RewriteCond %{REQUEST_URI} !^REPLACE_ME/brand/.*$
 RewriteRule ^ index.php [QSA,L]

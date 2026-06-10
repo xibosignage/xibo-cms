@@ -256,7 +256,6 @@ RUN mkdir -p /var/www/cms/library/temp &&  \
 # Expose volume mount points
 VOLUME /var/www/cms/library
 VOLUME /var/www/cms/custom
-VOLUME /var/www/cms/web/theme/custom
 VOLUME /var/www/backup
 VOLUME /var/www/cms/web/userscripts
 VOLUME /var/www/cms/ca-certs

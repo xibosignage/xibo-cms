@@ -189,8 +189,8 @@ class MaintenanceDailyTask implements TaskInterface
             // Make sure the library exists
             $this->mediaService->initLibrary();
 
-            // Import any layouts
-            $folder = $this->config->uri('layouts', true);
+            // Import any layouts from library/brand/layouts/
+            $folder = rtrim($this->config->getSetting('LIBRARY_LOCATION'), '/') . '/brand/layouts';
 
             foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
                 if (stripos($file, '.zip')) {
@@ -233,9 +233,9 @@ class MaintenanceDailyTask implements TaskInterface
 
             // Fonts
             // -----
-            // install fonts from the theme folder
+            // install fonts from the project fonts/ directory
             $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
-            $fontFolder =  $this->config->uri('fonts', true);
+            $fontFolder = PROJECT_ROOT . '/fonts';
             foreach (array_diff(scandir($fontFolder), array('..', '.')) as $file) {
                 // check if we already have this font file
                 if (count($this->fontFactory->getByFileName($file)) <= 0) {

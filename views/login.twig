@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="token" content="{{ csrfToken }}"/>
     <meta name="public-path" content="{{ theme.rootUri() }}"/>
-    <link rel="shortcut icon" href="{{ theme.uri("img/favicon.ico") }}" />
+    <link rel="shortcut icon" href="{{ theme.rootUri() }}brand/favicon.ico" />
     <!-- Import CSS bundle from dist -->
     <script src="{{ theme.rootUri() }}dist/style.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
 
@@ -53,8 +53,8 @@
         }
 
     </style>
-    <!-- Import user made CSS from theme -->
-    <link href="{{ theme.uri("css/override.css") }}?{{ version }}" rel="stylesheet" media="screen">
+    <!-- Brand CSS variables -->
+    <link href="{{ theme.rootUri() }}brand/theme.css" rel="stylesheet" media="screen">
 </head>
 <body>
     <div class="container">
@@ -63,7 +63,7 @@
             {% for priorRoute in flash('priorRoute') %}
                 <input name="priorRoute" type="hidden" value="{{ priorRoute }}" />
             {% endfor %}
-            <p><img alt="Logo" class="login-logo" src="{{ theme.uri("img/xibologo.png") }}"></p>
+            <p><img alt="Logo" class="login-logo" src="{{ theme.rootUri() }}brand/xibologo.png"></p>
 
             <p>{% trans  %}Connect with the Central Authentication Server{% endtrans %}</p>
 
@@ -79,7 +79,7 @@
                 <input name="priorRoute" type="hidden" value="{{ priorRoute }}" />
             {% endfor %}
             <input type="hidden" name="{{ csrfKey }}" value="{{ csrfToken }}" />
-            <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="{{ theme.uri("img/xibologo.png") }}"></a></p>
+            <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="{{ theme.rootUri() }}brand/xibologo.png"></a></p>
 
             <p>{% trans "Please provide your credentials" %}</p>
 
@@ -99,7 +99,7 @@
         {% if passwordReminderEnabled %}
         <form id="reminder-form" class="form-signin text-center d-none" action="{{ url_for("login.forgotten") }}" method="post">
             <input type="hidden" name="{{ csrfKey }}" value="{{ csrfToken }}" />
-            <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="{{ theme.uri("img/xibologo.png") }}"></a></p>
+            <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="{{ theme.rootUri() }}brand/xibologo.png"></a></p>
 
             <p>{% trans "Please provide your user name" %}</p>
             <input id="username" class="form-control input-block-level" name="username" type="text" placeholder="{% trans "User" %}">
@@ -115,7 +115,7 @@
         {% endif %}
 
         <p class="text-center">{% trans %}Version {{ version }}{% endtrans %}
-            | <a id="source-link" href="{{ theme.getThemeConfig("cms_source_url") }}">{% trans "Source" %}</a>
+            | <a id="source-link" href="https://github.com/xibosignage/xibo/">{% trans "Source" %}</a>
             | <a id="about-link" class="XiboFormButton" href="{{ url_for("about") }}" title="{% trans "About" %}">{% trans "About" %}</a>
         </p>
     </div> <!-- /container -->

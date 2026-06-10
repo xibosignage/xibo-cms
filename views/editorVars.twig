@@ -10,7 +10,7 @@
         var librarySearchUrl = "{{ url_for("library.search.all") }}";
         var libraryAddUrl = "{{ url_for("library.add") }}";
         var templateSearchUrl = "{{ url_for("template.search.all") }}";
-        var defaultThumbnailUrl = '{{ theme.rootUri() }}theme/default/img/thumbs/placeholder.png';
+        var defaultThumbnailUrl = '/img/thumbs/placeholder.png';
         var uploadFormUpdateAllDefault = {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}true{% else %}false{% endif %};
         var uploadFormDeleteOldDefault = {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == 1 %}true{% else %}false{% endif %};
         var assetDownloadUrl = "{{ url_for("module.asset.download", {assetId: ':assetId'}) }}";

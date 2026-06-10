@@ -275,9 +275,9 @@ class PlayerVersion implements \JsonSerializable
             // Update asset URLs
             for ($i = 0; $i < count($manifest['icons']); $i++) {
                 if ($manifest['icons'][$i]['sizes'] == '512x512') {
-                    $manifest['icons'][$i]['src'] = $this->config->uri('img/512x512.png');
+                    $manifest['icons'][$i]['src'] = '/brand/512x512.png';
                 } else {
-                    $manifest['icons'][$i]['src'] = $this->config->uri('img/192x192.png');
+                    $manifest['icons'][$i]['src'] = '/brand/192x192.png';
                 }
             }
 

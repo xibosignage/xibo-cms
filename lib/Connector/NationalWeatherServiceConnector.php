@@ -108,7 +108,7 @@ class NationalWeatherServiceConnector implements ConnectorInterface, EmergencyAl
 
     public function getThumbnail(): string
     {
-        return 'theme/default/img/connectors/cloud-sun.svg';
+        return '';
     }
 
     public function getSettingsFormTwig(): string
