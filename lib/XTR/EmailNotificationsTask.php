@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -79,12 +79,12 @@ class EmailNotificationsTask implements TaskInterface
         foreach ($this->userNotificationFactory->getEmailQueue() as $notification) {
             $this->log->debug('Notification found: ' . $notification->notificationId);
 
-            if (!empty($notification->email) || $notification->isSystem == 1) {
+            if (!empty($notification->email) || $notification->isSystem == 1 || !empty($notification->nonusers)) {
                 $mail = new \PHPMailer\PHPMailer\PHPMailer();
 
                 $this->log->debug('Sending Notification email to ' . $notification->email);
 
-                if ($this->checkEmailPreferences($notification)) {
+                if (!empty($notification->email) && $this->checkEmailPreferences($notification)) {
                     $mail->addAddress($notification->email);
                 }
 
@@ -133,9 +133,13 @@ class EmailNotificationsTask implements TaskInterface
 
                 $mail->Subject = $notification->subject;
 
-                $addresses = explode(',', $notification->nonusers);
-                foreach ($addresses as $address) {
-                    $mail->AddAddress($address);
+                if (!empty($notification->nonusers)) {
+                    foreach (explode(',', $notification->nonusers) as $address) {
+                        $address = trim($address);
+                        if (!empty($address)) {
+                            $mail->addAddress($address);
+                        }
+                    }
                 }
 
                 // Body
