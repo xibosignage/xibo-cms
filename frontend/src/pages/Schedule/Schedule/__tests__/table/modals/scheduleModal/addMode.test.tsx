@@ -53,11 +53,6 @@ import { EventTypeId } from '@/types/event';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
-
 vi.mock('@/components/ui/modals/Modal');
 
 vi.mock('@/services/eventApi');

@@ -54,6 +54,9 @@ export default defineConfig(({ mode }) => ({
     environment: 'jsdom',
     setupFiles: './src/setupTests.ts',
     include: ['**/*.test.{js,jsx,ts,tsx}'],
+    alias: {
+      'react-i18next': path.resolve(__dirname, '__mocks__/react-i18next.tsx'),
+    },
   },
   server: {
     port: 5173,

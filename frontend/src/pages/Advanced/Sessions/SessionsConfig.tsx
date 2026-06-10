@@ -128,9 +128,9 @@ export const getSessionColumns = (props: SessionActionsProps): ColumnDef<Session
     {
       id: 'tableActions',
       header: '',
-      size: 40,
-      minSize: 40,
-      maxSize: 40,
+      size: 80,
+      minSize: 80,
+      maxSize: 80,
       enableHiding: false,
       enableResizing: false,
       cell: ({ row }) =>

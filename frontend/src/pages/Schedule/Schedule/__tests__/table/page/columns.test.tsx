@@ -37,11 +37,6 @@ import { testQueryClient } from '@/setupTests';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
-
 vi.mock('@/services/userApi', () => ({
   fetchUserPreference: vi.fn().mockResolvedValue(null),
   saveUserPreference: vi.fn().mockResolvedValue(undefined),

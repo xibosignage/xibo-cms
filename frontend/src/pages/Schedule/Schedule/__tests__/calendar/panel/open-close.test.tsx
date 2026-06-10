@@ -36,12 +36,6 @@ vi.mock('@/context/UserContext', () => ({
   })),
 }));
 
-const t = (key: string) => key;
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
-
 // April 14 2026 10:00 UTC
 const APR14_10H = Math.floor(new Date('2026-04-14T10:00:00Z').getTime() / 1000);
 // April 20 2026 10:00 UTC

@@ -48,11 +48,6 @@ import { testQueryClient } from '@/setupTests';
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
-
 vi.mock('@/services/campaignApi');
 vi.mock('@/services/folderApi', () => ({
   fetchFolderById: vi.fn().mockResolvedValue({ id: 1, text: 'Root' }),

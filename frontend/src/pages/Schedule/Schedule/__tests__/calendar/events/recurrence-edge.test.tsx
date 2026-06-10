@@ -13,12 +13,6 @@ import { renderCalendar } from '../helpers/renderCalendar';
 
 import { testQueryClient } from '@/setupTests';
 
-const t = (key: string) => key;
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
-
 vi.mock('@/context/UserContext', () => ({
   useUserContext: vi.fn(() => ({
     user: { settings: { defaultTimezone: 'UTC' } },

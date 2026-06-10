@@ -38,10 +38,6 @@ import { testQueryClient } from '@/setupTests';
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
 // 3rd-party
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
 
 // Services
 vi.mock('@/services/folderApi');

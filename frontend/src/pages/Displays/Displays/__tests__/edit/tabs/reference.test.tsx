@@ -35,16 +35,6 @@ import { testQueryClient } from '@/setupTests';
 
 // Enhanced t: supports {{key}} interpolation so ref field labels resolve to
 // "Reference 1", "Reference 2", etc. rather than the raw key "Reference {{n}}".
-vi.mock('react-i18next', () => {
-  const t = (key: string, options?: Record<string, unknown>) => {
-    if (!options) return key;
-    return key.replace(/\{\{(\w+)\}\}/g, (_, k) => String(options[k] ?? `{{${k}}}`));
-  };
-  return {
-    useTranslation: () => ({ t, i18n: { changeLanguage: vi.fn() } }),
-    Trans: ({ children }: { children: React.ReactNode }) => children,
-  };
-});
 
 vi.mock('@/services/displaysApi', () => ({
   updateDisplay: vi.fn(),

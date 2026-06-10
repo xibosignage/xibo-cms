@@ -153,7 +153,7 @@ describe('SidebarMenu — Permissions', () => {
       const layoutsVisible = getVisibleByText('Layouts');
       expect(layoutsVisible.length).toBeGreaterThanOrEqual(1);
 
-      for (const label of ['Campaign', 'Templates', 'Resolutions']) {
+      for (const label of ['Campaigns', 'Templates', 'Resolutions']) {
         const visible = getVisibleByText(label);
         expect(visible).toHaveLength(0);
       }
@@ -213,7 +213,7 @@ describe('SidebarMenu — Permissions', () => {
       const layoutsVisible = getVisibleByText('Layouts');
       expect(layoutsVisible.length).toBeGreaterThanOrEqual(1);
 
-      for (const label of ['Campaign', 'Templates', 'Resolutions']) {
+      for (const label of ['Campaigns', 'Templates', 'Resolutions']) {
         const visible = getVisibleByText(label);
         expect(visible).toHaveLength(0);
       }
@@ -569,7 +569,7 @@ describe('SidebarMenu — Permissions', () => {
       renderSidebar({ user: contentManagerUser });
       fireEvent.click(getChevronButton('Design'));
 
-      for (const label of ['Campaign', 'Layouts', 'Templates', 'Resolutions']) {
+      for (const label of ['Campaigns', 'Layouts', 'Templates', 'Resolutions']) {
         const visible = getVisibleByText(label);
         expect(visible.length).toBeGreaterThanOrEqual(1);
       }

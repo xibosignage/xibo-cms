@@ -398,7 +398,7 @@ export default function AddAndEditPlaylistModal({
                 <TextInput
                   name="filterMediaName"
                   label={t('Name Filter')}
-                  placeholder={t('Enter Name Filter ')}
+                  placeholder={t('Enter Name Filter')}
                   value={draft.filterMediaName}
                   onChange={(val) => setDraft((prev) => ({ ...prev, filterMediaName: val }))}
                   suffix={

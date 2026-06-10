@@ -20,7 +20,7 @@
  */
 
 import { Trash2Icon } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 import Modal from '@/components/ui/modals/Modal';
 
@@ -73,19 +73,22 @@ export function DeleteDatasetRssModal({
             </div>
           </div>
           <h2 className="text-center text-lg font-semibold mb-2 text-red-800">
-            {t('Delete Rss?')}
+            {t('Delete RSS?')}
           </h2>
         </div>
         <p className="text-center text-gray-500">
           {itemCount === 1 ? (
-            <>
-              {t('Are you sure you want to delete ')}"<strong>{rssTitle}</strong>?"
-            </>
+            <Trans
+              i18nKey='Are you sure you want to delete "<strong>{{name}}</strong>"?'
+              values={{ name: rssTitle }}
+              components={{ strong: <strong /> }}
+            />
           ) : (
-            <>
-              {t('Are you sure you want to delete ')}
-              <strong>{itemCount}</strong> {t('Rss')}?
-            </>
+            <Trans
+              i18nKey="Are you sure you want to delete <strong>{{count}}</strong> RSS feeds?"
+              values={{ count: itemCount }}
+              components={{ strong: <strong /> }}
+            />
           )}
         </p>
 

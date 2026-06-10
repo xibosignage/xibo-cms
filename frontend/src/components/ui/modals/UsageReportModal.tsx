@@ -99,9 +99,9 @@ const getLayoutsColumns = (t: TFunction): ColumnDef<Layout>[] => [
   {
     id: 'tableActions',
     header: '',
-    size: 120,
-    minSize: 120,
-    maxSize: 120,
+    size: 110,
+    minSize: 110,
+    maxSize: 110,
     enableResizing: false,
     enableSorting: false,
     cell: (info: { row: Row<Layout> }) => {

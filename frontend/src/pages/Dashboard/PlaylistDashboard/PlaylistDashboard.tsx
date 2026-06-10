@@ -22,7 +22,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Info, Loader2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 import DeleteSpotModal from './components/DeleteSpotModal';
 import PlaylistDropdown from './components/PlaylistDropdown';
@@ -143,11 +143,10 @@ export default function PlaylistDashboard() {
         <div className="flex gap-x-2 w-fit bg-gray-50 p-2">
           <Info className="h-4 w-4 shrink-0" />
           <span className=" text-sm text-gray-800 text-[12px]">
-            <strong>{t('Drag and drop file')}</strong> {t('or')}{' '}
-            <strong>{t('Select File')} </strong>
-            {t(
-              'to fill an empty spot or select an existing spot to replace its media. Maximum file size is 2GB.',
-            )}
+            <Trans
+              i18nKey="<strong>Drag and drop file</strong> or <strong>Select File</strong> to fill an empty spot or select an existing spot to replace its media. Maximum file size is 2GB."
+              components={{ strong: <strong /> }}
+            />
           </span>
         </div>
       </div>

@@ -127,7 +127,7 @@ export const APP_ROUTES: AppRoute[] = [
     subLinks: [
       {
         path: 'campaign',
-        labelKey: 'Campaign',
+        labelKey: 'Campaigns',
         lazy: () =>
           import('@/pages/Design/Campaigns/Campaigns').then((m) => ({ Component: m.default })),
         feature: 'campaign.view',

@@ -20,7 +20,7 @@
  */
 
 import { AlertTriangle } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 import Modal from '@/components/ui/modals/Modal';
 
@@ -74,8 +74,11 @@ export default function DiscardLayoutModal({
         <h2 className="text-lg font-semibold text-gray-800">{t('Discard Changes?')}</h2>
 
         <p className="text-gray-500">
-          {t('Are you sure you want to discard changes for ')}
-          <strong>{layoutName}</strong>?
+          <Trans
+            i18nKey="Are you sure you want to discard changes for <strong>{{name}}</strong>?"
+            values={{ name: layoutName }}
+            components={{ strong: <strong /> }}
+          />
         </p>
 
         <p className="text-sm text-gray-400">
