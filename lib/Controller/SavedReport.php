@@ -379,7 +379,7 @@ class SavedReport extends Base
                 $emailTemplate,
                 [
                     'header' => $report->description,
-                    'logo' => ($showLogo) ? $this->getConfig()->uri('img/xibologo.png', true) : null,
+                    'logo' => ($showLogo) ? rtrim($this->getConfig()->getSetting('LIBRARY_LOCATION'), '/') . '/brand/xibologo.png' : null,
                     'title' => $savedReport->saveAs,
                     'metadata' => $results->metadata,
                     'tableData' => $tableData ?? null,
@@ -405,7 +405,7 @@ class SavedReport extends Base
                 ]);
                 $mpdf->setFooter('Page {PAGENO}') ;
                 $mpdf->SetDisplayMode('fullpage');
-                $stylesheet =  file_get_contents($this->getConfig()->uri('css/email-report.css', true));
+                $stylesheet =  file_get_contents(PROJECT_ROOT . '/web/css/email-report.css');
                 $mpdf->WriteHTML($stylesheet, 1);
                 $mpdf->WriteHTML($body);
                 $mpdf->Output($fileName, \Mpdf\Output\Destination::FILE);

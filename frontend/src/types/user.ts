@@ -26,9 +26,8 @@ export interface BrandingConfig {
   appName: string;
   logoUrl: string;
   faviconUrl: string;
-  cssUrl: string | null;
+  cssUrl: string;
   supportUrl: string;
-  isXiboThemed: boolean;
 }
 
 export enum UserType {

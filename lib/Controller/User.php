@@ -104,15 +104,13 @@ class User extends Base
      */
     public function welcome(Request $request, Response $response): Response|ResponseInterface
     {
-        $this->getState()->template = 'welcome-page';
-
         // Mark the page as seen
         if ($this->getUser()->newUserWizard == 0) {
             $this->getUser()->newUserWizard = 1;
             $this->getUser()->save(['validate' => false]);
         }
 
-        return $this->render($request, $response);
+        return $response->withRedirect($this->getConfig()->rootUri() . 'prototype/welcome');
     }
 
     #[OA\Get(
@@ -161,29 +159,21 @@ class User extends Base
         ];
         $settings['accountId'] = defined('ACCOUNT_ID') ? constant('ACCOUNT_ID') : null;
 
-        // Theme middleware does not run on /json/* routes, so load the theme explicitly.
-        $this->getConfig()->loadTheme();
-        $settings['app_name'] = $this->getConfig()->getThemeConfig('app_name', 'Xibo');
+        // Branding is served from library/brand/ via the /brand Apache alias.
+        $brandConfig = $this->getConfig()->getBrandConfig();
+        $brandDir = rtrim($this->getConfig()->getSetting('LIBRARY_LOCATION'), '/') . '/brand';
 
-        // Build branding URLs manually — rootUri() returns '/json/' on this route, not '/'.
-        $themeFolder = $this->getConfig()->getThemeConfig('themeFolder', 'theme/default/');
-        $logoUrl = file_exists(PROJECT_ROOT . '/web/' . $themeFolder . 'img/xibologo.png')
-            ? '/' . $themeFolder . 'img/xibologo.png'
-            : '/theme/default/img/xibologo.png';
-        $faviconUrl = file_exists(PROJECT_ROOT . '/web/' . $themeFolder . 'img/favicon.ico')
-            ? '/' . $themeFolder . 'img/favicon.ico'
-            : '/theme/default/img/favicon.ico';
-        $cssFile = $themeFolder . 'css/theme.css';
-        $cssUrl = file_exists(PROJECT_ROOT . '/web/' . $cssFile) ? '/' . $cssFile : null;
+        // Prefer SVG; fall back to PNG for WL packages that ship a raster logo.
+        $logoFile = file_exists($brandDir . '/logo.svg') ? 'logo.svg' : 'logo.png';
+        $iconFile = file_exists($brandDir . '/logo-icon.svg') ? 'logo-icon.svg' : 'logo-icon.png';
 
         $branding = [
-            'productName' => $this->getConfig()->getThemeConfig('theme_title', 'Xibo Digital Signage'),
-            'appName' => $this->getConfig()->getThemeConfig('app_name', 'Xibo'),
-            'logoUrl' => $logoUrl,
-            'faviconUrl' => $faviconUrl,
-            'cssUrl' => $cssUrl,
-            'supportUrl' => $this->getConfig()->getThemeConfig('theme_url', 'https://xibosignage.com'),
-            'isXiboThemed' => $this->getConfig()->getThemeConfig('themeCode', 'default') === 'default',
+            'productName' => $brandConfig['productName'] ?? 'Xibo Digital Signage',
+            'appName'     => $brandConfig['appName']     ?? 'Xibo',
+            'logoUrl'     => '/brand/' . $logoFile,
+            'faviconUrl'  => '/brand/' . $iconFile,
+            'cssUrl'      => '/brand/theme.css',
+            'supportUrl'  => $brandConfig['supportUrl']  ?? 'https://xibosignage.com',
         ];
 
         // TODO: output some settings

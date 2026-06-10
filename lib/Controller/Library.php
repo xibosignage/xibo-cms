@@ -1326,7 +1326,7 @@ class Library extends Base
 
             // Output a 1px image if we're not allowed to see the media.
             if (!$this->getUser()->checkViewable($media) && $request->getAttribute('authedViaToken') !== true) {
-                echo Img::make($this->getConfig()->uri('img/1x1.png', true))->encode();
+                echo Img::make(PROJECT_ROOT . '/web/img/1x1.png')->encode();
                 return $this->render($request, $response->withHeader('Content-Type', 'image/png'));
             }
 
@@ -1336,14 +1336,14 @@ class Library extends Base
                     $params,
                     $media->storedAs,
                     $response,
-                    $this->getConfig()->uri('img/error.png', true),
+                    PROJECT_ROOT . '/web/img/error.png',
                 );
             } else if ($module->type === 'video') {
                 $response = $downloader->imagePreview(
                     $params,
                     $media->mediaId . '_videocover.png',
                     $response,
-                    $this->getConfig()->uri('img/1x1.png', true),
+                    PROJECT_ROOT . '/web/img/1x1.png',
                 );
             } else {
                 $response = $downloader->download($media, $request, $response, $media->getMimeType());
@@ -1424,7 +1424,7 @@ class Library extends Base
         // Permissions.
         if (!$this->getUser()->checkViewable($media) && $request->getAttribute('authedViaToken') !== true) {
             // Output a 1px image if we're not allowed to see the media.
-            echo Img::make($this->getConfig()->uri('img/1x1.png', true))->encode();
+            echo Img::make(PROJECT_ROOT . '/web/img/1x1.png')->encode();
             return $this->render($request, $response);
         }
 
@@ -1439,7 +1439,7 @@ class Library extends Base
         $response = $downloader->thumbnail(
             $media,
             $response,
-            $this->getConfig()->uri('img/error.png', true)
+            PROJECT_ROOT . '/web/img/error.png'
         );
 
         return $this->render($request, $response);
