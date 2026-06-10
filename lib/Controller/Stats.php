@@ -26,7 +26,6 @@ use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Event\ConnectorReportEvent;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
@@ -89,14 +88,10 @@ class Stats extends Base
      */
     public function availableReports(Request $request, Response $response): Response|ResponseInterface
     {
-        $event = new ConnectorReportEvent();
-        $this->getDispatcher()->dispatch($event, ConnectorReportEvent::$NAME);
-
         return $response
             ->withStatus(200)
             ->withJson([
                 'availableReports' => $this->reportService->listReports(),
-                'connectorReports' => $event->getReports(),
             ]);
     }
 

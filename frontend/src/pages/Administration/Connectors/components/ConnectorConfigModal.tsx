@@ -23,18 +23,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import AudienceConnectorForm from './AudienceConnectorForm';
 import ConnectorForm from './ConnectorForm';
 import DashboardConnectorForm from './DashboardConnectorForm';
 import SspConnectorForm from './SspConnectorForm';
 
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/modals/Modal';
-import {
-  AUDIENCE_CLASS,
-  DASHBOARD_CLASS,
-  SSP_CLASS,
-} from '@/pages/Administration/Connectors/ConnectorsConfig';
+import { DASHBOARD_CLASS, SSP_CLASS } from '@/pages/Administration/Connectors/ConnectorsConfig';
 import { connectorQueryKeys } from '@/pages/Administration/Connectors/hooks/useConnectorsData';
 import { fetchConnectorFields } from '@/services/connectorApi';
 import type { Connector } from '@/types/connector';
@@ -63,7 +58,6 @@ export default function ConnectorConfigModal({
   const connectorId = getConnectorId(connector);
   const isDashboard = connector.className === DASHBOARD_CLASS;
   const isSSP = connector.className === SSP_CLASS;
-  const isAudience = connector.className === AUDIENCE_CLASS;
 
   const { data, isLoading, isError } = useQuery({
     queryKey: connectorQueryKeys.fields(connectorId),
@@ -74,9 +68,7 @@ export default function ConnectorConfigModal({
     ? 'dashboard-connector-form'
     : isSSP
       ? 'ssp-connector-form'
-      : isAudience
-        ? 'audience-connector-form'
-        : 'connector-form';
+      : 'connector-form';
 
   function handleSave() {
     void queryClient.invalidateQueries({ queryKey: connectorQueryKeys.fields(connectorId) });
@@ -99,7 +91,7 @@ export default function ConnectorConfigModal({
       isOpen
       onClose={onClose}
       title={t('Configure {{title}}', { title: connector.title })}
-      size={isDashboard || isSSP || isAudience ? 'xl' : 'lg'}
+      size={isDashboard || isSSP ? 'xl' : 'lg'}
       variant={isSSP ? 'tabbed' : 'standard'}
       scrollable={!isSSP}
       actions={isLoading || isError || !data ? undefined : formActions}
@@ -137,18 +129,6 @@ export default function ConnectorConfigModal({
           />
         ) : isSSP ? (
           <SspConnectorForm
-            connector={connector}
-            connectorId={connectorId}
-            fields={data.fields}
-            settings={data.settings}
-            enabledLabel={data.enabledLabel}
-            enabledDescription={data.enabledDescription}
-            enabledMessage={data.enabledMessage}
-            onSave={handleSave}
-            startTransition={startSaving}
-          />
-        ) : isAudience ? (
-          <AudienceConnectorForm
             connector={connector}
             connectorId={connectorId}
             fields={data.fields}

@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2022 Xibo Signage Ltd
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -19,27 +19,19 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-namespace Xibo\Event;
+
+use Phinx\Migration\AbstractMigration;
 
 /**
- * Event used to get list of connector reports
+ * Remove the retired Xibo Audience Reporting Connector.
+ * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
  */
-class ConnectorReportEvent extends Event
+class RemoveAudienceConnectorMigration extends AbstractMigration
 {
-    public static $NAME = 'connector.report.event';
-
-    /** @var array */
-    private $reports = [];
-
-    public function getReports()
+    public function change(): void
     {
-        return $this->reports;
-    }
-
-    public function addReports($reports)
-    {
-        $this->reports = array_merge_recursive($this->reports, $reports);
-
-        return $this;
+        $this->execute(
+            "DELETE FROM `connectors` WHERE `className` = '\\\\Xibo\\\\Connector\\\\XiboAudienceReportingConnector'"
+        );
     }
 }
