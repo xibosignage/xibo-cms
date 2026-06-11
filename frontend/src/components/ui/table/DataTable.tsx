@@ -75,6 +75,7 @@ interface DataTableProps<TData, TValue> {
   columnVisibility?: VisibilityState;
   onColumnVisibilityChange?: OnChangeFn<VisibilityState>;
   noResultsCustom?: React.ReactNode;
+  tableLabel?: string;
 }
 
 const getCommonPinningStyles = <TData, TValue>(column: Column<TData, TValue>): CSSProperties => {
@@ -125,6 +126,7 @@ export function DataTable<TData, TValue>({
   columnVisibility,
   onColumnVisibilityChange,
   noResultsCustom,
+  tableLabel,
 }: DataTableProps<TData, TValue>) {
   const { t } = useTranslation();
 
@@ -193,7 +195,15 @@ export function DataTable<TData, TValue>({
     const rows = table.getRowModel().rows.map((row) =>
       row.getVisibleCells().map((cell) => {
         const value = cell.getValue();
-        const stringValue = String(value ?? '').replace(/"/g, '""');
+
+        // Some tables have an object row so we need to convert it to JSON string
+        const raw =
+          value === null || value === undefined
+            ? ''
+            : typeof value === 'object'
+              ? JSON.stringify(value)
+              : String(value);
+        const stringValue = raw.replace(/"/g, '""');
         return `"${stringValue}"`;
       }),
     );
@@ -234,14 +244,20 @@ export function DataTable<TData, TValue>({
     return () => clearTimeout(timer);
   }, [loading]);
 
+  useEffect(() => {
+    if (data.length === 0 && pagination.pageIndex > 0 && !loading) {
+      onPaginationChange({ ...pagination, pageIndex: pagination.pageIndex - 1 });
+    }
+  }, [data.length, loading, onPaginationChange, pagination]);
+
   return (
     <div className="flex flex-col gap-y-3 data-table flex-1 min-h-0">
       {!hideToolbar && (
         <div className="flex justify-between data-table-header flex-none mt-5">
           <div className="flex items-center gap-3">
-            {viewMode && (
+            {(viewMode || tableLabel) && (
               <div className="text-gray-500 font-sans text-sm font-semibold leading-normal tracking-tight uppercase">
-                {t('Table View')}
+                {tableLabel ? tableLabel : t('Table View')}
               </div>
             )}
             {selectedCount > 0 && bulkActions.length > 0 && (

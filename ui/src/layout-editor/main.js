@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -309,18 +309,6 @@ $(() => {
             logo: 'fa fa-unlock',
             class: 'show-on-lock',
             action: lD.showUnlockScreen,
-          },
-          {
-            id: 'scheduleLayout',
-            title: layoutEditorTrans.scheduleTitle,
-            logo: 'fa fa-clock-o',
-            action: lD.showScheduleScreen,
-            inactiveCheck: function() {
-              return lD.templateEditMode ||
-                (lD.layout.editable ||
-                  !lD.layout.scheduleNowPermission);
-            },
-            inactiveCheckClass: 'd-none',
           },
           {
             id: 'clearLayout',
@@ -820,6 +808,10 @@ lD.reloadData = function(
         lD.mainObjectId = lD.layout.layoutId;
         // get Layout folder id
         lD.folderId = lD.layout.folderId;
+
+        // Update the previewJWT for the new layout
+        const previewUrl = new URL(lD.layout.previewUrl);
+        window.previewJwt = previewUrl.searchParams.get('jwt');
 
         // Select the same object
         const selectObjectId = (lD.selectedObject.type === 'element') ?
@@ -2797,7 +2789,6 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           data: {
             templateId: draggableData?.templateId,
             source: draggableData?.source,
-            download: draggableData?.download,
           },
           success: function(response) {
             // Hide loading screen
@@ -5908,13 +5899,18 @@ lD.calculateLayers = function(
     layerMap[calculatedLayers.top + 1] === undefined &&
     !isSingleOnTopLayer
   ) {
-    // If we don't have any layers yet, set to 0
+    // Layer 0 is reserved for the background; regions always start at 1+
+    const backgroundTop = (!!lD.layout.backgroundImage) ?
+      lD.layout.backgroundzIndex : 0;
+
+    // If we don't have any layers yet, start above the background (or 1)
     if (layerMap.length === 0) {
-      calculatedLayers.availableTop = 0;
+      calculatedLayers.availableTop = backgroundTop + 1;
     } else {
-      // Set top value, but not over the limit
+      // Set top value above both existing layers and the background,
+      // but not over the limit
       calculatedLayers.availableTop = Math.min(
-        (calculatedLayers.top + 1),
+        Math.max(calculatedLayers.top + 1, backgroundTop + 1),
         limits.top,
       );
     }

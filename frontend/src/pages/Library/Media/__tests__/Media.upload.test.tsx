@@ -20,7 +20,6 @@
  */
 
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import type React from 'react';
 import { vi, beforeEach } from 'vitest';
 
 import { mockMediaData, renderMediaPage } from './mediaTestUtils';
@@ -59,11 +58,6 @@ vi.mock('@/services/folderApi', () => ({
   searchFolders: vi.fn().mockResolvedValue([]),
   fetchContextButtons: vi.fn().mockResolvedValue({ create: true }),
   selectFolder: vi.fn(),
-}));
-
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 // The Media page saves and loads user preferences (column order, page size, etc.)
@@ -292,7 +286,7 @@ describe('Media page — file upload', () => {
     renderMediaPage();
     await openAddMediaModal();
 
-    const urlInput = await screen.findByPlaceholderText('https://www.exampleurl.com/funnycat4364');
+    const urlInput = await screen.findByPlaceholderText('https://www.example.com/example');
     fireEvent.change(urlInput, { target: { value: 'https://example.com/video.mp4' } });
     fireEvent.click(screen.getByRole('button', { name: 'Upload' }));
 

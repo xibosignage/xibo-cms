@@ -61,9 +61,22 @@ class PixabayConnector implements ConnectorInterface
         return 'Show Pixabay images and videos in the Layout editor toolbar and download them to the library for use on your Layouts.';
     }
 
+    public function getFormSubtitle(): string
+    {
+        return __('Pixabay - Stunning free images & royalty free stock');
+    }
+
+    public function getFormDescriptionHtml(): string
+    {
+        $link = '<a href="https://pixabay.com/service/license/" target="_blank" rel="noreferrer">'
+            . __('Pixabay license')
+            . '</a>';
+        return __('Images and Videos are available under the') . ' ' . $link . '.';
+    }
+
     public function getThumbnail(): string
     {
-        return 'theme/default/img/connectors/pixabay_square_green.png';
+        return '';
     }
 
     public function getFilters(): array
@@ -125,6 +138,20 @@ class PixabayConnector implements ConnectorInterface
             $settings['apiKey'] = $params->getString('apiKey');
         }
         return $settings;
+    }
+
+    public function getSettingsFields(): array
+    {
+        return [
+            [
+                'name'         => 'apiKey',
+                'type'         => 'text',
+                'label'        => __('API Key'),
+                'helpText'     => __('Enter your API Key from Pixabay.'),
+                'required'     => false,
+                'providerOnly' => $this->isProviderSetting('apiKey'),
+            ],
+        ];
     }
 
     /**
@@ -224,8 +251,8 @@ class PixabayConnector implements ConnectorInterface
             $providerDetails = new ProviderDetails();
             $providerDetails->id = 'pixabay';
             $providerDetails->link = 'https://pixabay.com';
-            $providerDetails->logoUrl = '/theme/default/img/connectors/pixabay_logo.svg';
-            $providerDetails->iconUrl = '/theme/default/img/connectors/pixabay_logo_square.svg';
+            $providerDetails->logoUrl = '';
+            $providerDetails->iconUrl = '';
             $providerDetails->backgroundColor = '';
             $providerDetails->filters = $this->getFilters();
 
@@ -313,8 +340,8 @@ class PixabayConnector implements ConnectorInterface
         $providerDetails = new ProviderDetails();
         $providerDetails->id = 'pixabay';
         $providerDetails->link = 'https://pixabay.com';
-        $providerDetails->logoUrl = '/theme/default/img/connectors/pixabay_logo.svg';
-        $providerDetails->iconUrl = '/theme/default/img/connectors/pixabay_logo_square.svg';
+        $providerDetails->logoUrl = '';
+        $providerDetails->iconUrl = '';
         $providerDetails->backgroundColor = '';
         $providerDetails->mediaTypes = ['image', 'video'];
         $providerDetails->filters = $this->getFilters();

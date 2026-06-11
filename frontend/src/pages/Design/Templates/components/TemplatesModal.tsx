@@ -24,11 +24,17 @@ import { useTranslation } from 'react-i18next';
 import AddAndEditTemplateModal from './AddAndEditTemplate';
 import CopyTemplateModal from './CopyTemplateModal';
 import DeleteTemplateModal from './DeleteTemplateModal';
+import DiscardTemplateModal from './DiscardTemplateModal';
+import ExportTemplateModal from './ExportTemplateModal';
 
 import FolderActionModals from '@/components/ui/FolderActionModals';
+import type { PublishValue } from '@/components/ui/forms/PublishDateSelect';
 import MoveModal from '@/components/ui/modals/MoveModal';
+import PublishModal from '@/components/ui/modals/PublishModal';
+import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
 import type { useFolderActions } from '@/hooks/useFolderActions';
+import { EventTypeId } from '@/types/event';
 import type { Template } from '@/types/templates';
 
 interface TemplatesModalsProps {
@@ -39,10 +45,14 @@ interface TemplatesModalsProps {
     deleteError: string | null;
     isDeleting: boolean;
     isCloning: boolean;
+    isPublishing: boolean;
+    isDiscarding: boolean;
+    isExporting: boolean;
   };
   selection: {
     selectedTemplate: Template | null;
     selectedTemplateId: number | null;
+    defaultFolderId?: number;
     itemsToDelete: Template[];
     existingNames: string[];
     itemsToMove: Template[];
@@ -53,6 +63,16 @@ interface TemplatesModalsProps {
     confirmDelete: (items: Template[]) => void;
     handleConfirmMove: (newFolderId: number) => void;
     handleConfirmClone: (newName: string, description: string, copyTemplate: boolean) => void;
+    confirmPublish: (layoutId: number, value: PublishValue) => void;
+    confirmDiscard: (layoutId: number) => void;
+    handleExportTemplate: (
+      layoutId: number,
+      options: {
+        includeData: boolean;
+        includeFallback: boolean;
+        fileName: string;
+      },
+    ) => void;
   };
   folderActions: ReturnType<typeof useFolderActions>;
 }
@@ -72,6 +92,7 @@ export function TemplateModals({
       {isModalOpen('edit') && (
         <AddAndEditTemplateModal
           type={selection.selectedTemplateId ? 'edit' : 'add'}
+          defaultFolderId={selection.defaultFolderId}
           onClose={() => {
             actions.closeModal();
           }}
@@ -123,6 +144,51 @@ export function TemplateModals({
           onConfirm={handlers?.handleConfirmMove}
           items={selection.itemsToMove}
           entityLabel={t('Templates')}
+        />
+      )}
+      {isModalOpen('schedule') && selection.selectedTemplate && (
+        <ScheduleEventModal
+          isOpen
+          onClose={() => {
+            actions.closeModal();
+            actions.handleRefresh();
+          }}
+          mode="schedule"
+          eventTypeId={EventTypeId.Layout}
+          contentId={selection.selectedTemplate.campaignId}
+          contentName={selection.selectedTemplate.layout}
+        />
+      )}
+      {isModalOpen('publish') && (
+        <PublishModal
+          onClose={actions.closeModal}
+          fileName={selection.selectedTemplate?.layout}
+          titleText={t('Publish Template?')}
+          isLoading={actions.isPublishing}
+          onPublish={handlers.confirmPublish}
+          layoutId={selection.selectedTemplate?.layoutId}
+        />
+      )}
+      {isModalOpen('discard') && (
+        <DiscardTemplateModal
+          onClose={actions.closeModal}
+          onConfirm={() =>
+            selection.selectedTemplate &&
+            handlers.confirmDiscard(selection.selectedTemplate.layoutId)
+          }
+          templateName={selection.selectedTemplate?.layout}
+          isLoading={actions.isDiscarding}
+        />
+      )}
+      {isModalOpen('export') && (
+        <ExportTemplateModal
+          onClose={actions.closeModal}
+          onConfirm={(options) =>
+            selection.selectedTemplate &&
+            handlers.handleExportTemplate(selection.selectedTemplate.layoutId, options)
+          }
+          templateName={selection.selectedTemplate?.layout}
+          isLoading={actions.isExporting}
         />
       )}
     </>

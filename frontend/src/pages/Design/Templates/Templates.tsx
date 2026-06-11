@@ -49,12 +49,14 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import { fetchContextButtons } from '@/services/folderApi';
 import type { Template } from '@/types/templates';
+import { hasFeature } from '@/utils/permissions';
 
 export default function Templates() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { user } = useUserContext();
   const canViewFolders = usePermissions()?.canViewFolders;
+  const canSchedule = hasFeature(user, 'schedule.add');
   const homeFolderId = user?.homeFolderId ?? 1;
 
   const {
@@ -122,10 +124,10 @@ export default function Templates() {
     folderId: selectedFolderId,
   });
 
+  const effectiveFolderId = selectedFolderId ?? homeFolderId;
   const { data: folderPerms } = useQuery({
-    queryKey: ['folderPermissions', selectedFolderId],
-    queryFn: () => fetchContextButtons(selectedFolderId as number),
-    enabled: selectedFolderId !== null,
+    queryKey: ['folderPermissions', effectiveFolderId],
+    queryFn: () => fetchContextButtons(effectiveFolderId),
     staleTime: 1000 * 60 * 5,
   });
 
@@ -189,9 +191,15 @@ export default function Templates() {
     deleteError,
     setDeleteError,
     isCloning,
+    isPublishing,
+    isDiscarding,
+    isExporting,
     confirmDelete,
+    confirmPublish,
     handleConfirmClone,
     handleConfirmMove,
+    handleConfirmDiscard,
+    handleExportTemplate,
     handleAlterTemplate,
   } = useTemplateActions({
     t,
@@ -199,6 +207,7 @@ export default function Templates() {
     closeModal,
     setRowSelection,
     setItemsToMove,
+    timezone: user?.settings?.defaultTimezone ?? 'UTC',
   });
 
   const handleDelete = (id: number) => {
@@ -239,6 +248,26 @@ export default function Templates() {
     openModal('copy');
   };
 
+  const openScheduleModal = (template: Template) => {
+    setSelectedTemplateId(template.layoutId);
+    openModal('schedule');
+  };
+
+  const openPublishModal = (layoutId: number) => {
+    setSelectedTemplateId(layoutId);
+    openModal('publish');
+  };
+
+  const handleDiscardModal = (layoutId: number) => {
+    setSelectedTemplateId(layoutId);
+    openModal('discard');
+  };
+
+  const handleExportModal = (layoutId: number) => {
+    setSelectedTemplateId(layoutId);
+    openModal('export');
+  };
+
   const columns = getTemplateColumn({
     t,
     onDelete: handleDelete,
@@ -252,6 +281,10 @@ export default function Templates() {
         }
       : undefined,
     openCopyModal,
+    openPublishModal,
+    discardTemplate: handleDiscardModal,
+    onSchedule: canSchedule ? openScheduleModal : undefined,
+    exportTemplate: handleExportModal,
   });
 
   const getAllSelectedItems = (): Template[] => {
@@ -418,10 +451,14 @@ export default function Templates() {
           deleteError,
           isDeleting,
           isCloning,
+          isPublishing,
+          isDiscarding,
+          isExporting,
         }}
         selection={{
           selectedTemplate,
           selectedTemplateId,
+          defaultFolderId: effectiveFolderId,
           itemsToDelete,
           existingNames,
           shareEntityIds,
@@ -433,6 +470,9 @@ export default function Templates() {
           handleConfirmMove: (folderId) => handleConfirmMove(itemsToMove, folderId),
           handleConfirmClone: (name, description, copyTemplate) =>
             handleConfirmClone(selectedTemplate, name, description, copyTemplate),
+          confirmPublish,
+          confirmDiscard: handleConfirmDiscard,
+          handleExportTemplate,
         }}
         folderActions={folderActions}
       />

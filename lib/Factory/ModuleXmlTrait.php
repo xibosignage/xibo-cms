@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -460,10 +460,25 @@ trait ModuleXmlTrait
                 $assetId = $node->getAttribute('id');
 
                 if (!array_key_exists($assetId, $this->assetCache)) {
+                    $path = $node->getAttribute('path');
+
+                    // Asset paths must stay within /modules/ or /custom/ relative to PROJECT_ROOT.
+                    // Reject anything else at parse time — defence in depth alongside the
+                    // realpath-based check in Asset::updateAssetCache.
+                    if ($path !== ''
+                        && (str_contains($path, '..')
+                            || (!str_starts_with($path, '/modules/')
+                                && !str_starts_with($path, '/custom/')))
+                    ) {
+                        throw new \InvalidArgumentException(
+                            'Asset path is not in an allowed location: ' . $path
+                        );
+                    }
+
                     $asset = new Asset();
                     $asset->id = $assetId;
                     $asset->alias = $node->getAttribute('alias');
-                    $asset->path = $node->getAttribute('path');
+                    $asset->path = $path;
                     $asset->mimeType = $node->getAttribute('mimeType');
                     $asset->type = $node->getAttribute('type');
                     $asset->cmsOnly = $node->getAttribute('cmsOnly') === 'true';

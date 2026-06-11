@@ -28,6 +28,7 @@ import DiscardLayoutModal from './DiscardLayoutModal';
 import EditLayout from './EditLayout';
 import { EnableStatsLayoutModal } from './EnableStatsLayoutModal';
 import ExportLayoutModal from './ExportLayoutModal';
+import ImportLayoutModal from './ImportLayoutModal';
 import { LayoutInfoPanel } from './LayoutInfoPannel';
 import { RetireLayoutModal } from './RetireLayoutModal';
 import SaveAsTemplateModal from './SaveAsTemplateModal';
@@ -36,8 +37,10 @@ import FolderActionModals from '@/components/ui/FolderActionModals';
 import type { PublishValue } from '@/components/ui/forms/PublishDateSelect';
 import MoveModal from '@/components/ui/modals/MoveModal';
 import PublishModal from '@/components/ui/modals/PublishModal';
+import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
 import type { useFolderActions } from '@/hooks/useFolderActions';
+import { EventTypeId } from '@/types/event';
 import type { Layout } from '@/types/layout';
 import type { User } from '@/types/user';
 
@@ -201,16 +204,46 @@ export function LayoutModals({
           isLoading={actions.isExporting}
         />
       )}
+      {isModalOpen('import') && (
+        <ImportLayoutModal
+          onClose={actions.closeModal}
+          onSuccess={() => {
+            actions.closeModal();
+            actions.handleRefresh();
+          }}
+        />
+      )}
+
       {isModalOpen('template') && selection.selectedLayout && (
         <SaveAsTemplateModal onClose={actions.closeModal} layout={selection.selectedLayout} />
       )}
 
       {isModalOpen('retire') && selection.selectedLayout && (
-        <RetireLayoutModal layout={selection.selectedLayout} onClose={actions.closeModal} />
+        <RetireLayoutModal
+          layout={selection.selectedLayout}
+          onClose={() => {
+            actions.closeModal();
+            actions.handleRefresh();
+          }}
+        />
       )}
 
       {isModalOpen('enableStats') && selection.selectedLayout && (
         <EnableStatsLayoutModal layout={selection.selectedLayout} onClose={actions.closeModal} />
+      )}
+
+      {isModalOpen('schedule') && selection.selectedLayout && (
+        <ScheduleEventModal
+          isOpen
+          onClose={() => {
+            actions.closeModal();
+            actions.handleRefresh();
+          }}
+          mode="schedule"
+          eventTypeId={EventTypeId.Layout}
+          contentId={selection.selectedLayout.campaignId}
+          contentName={selection.selectedLayout.layout}
+        />
       )}
 
       {infoPanel.isOpen && (

@@ -30,6 +30,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -338,6 +339,10 @@ class Action  extends Base
 
         $layout = $this->layoutFactory->getById($layoutId);
 
+        if (!$this->getUser()->checkEditable($layout)) {
+            throw new AccessDeniedException();
+        }
+
         // Make sure the Layout is checked out to begin with
         if (!$layout->isEditable()) {
             throw new InvalidArgumentException(__('Layout is not checked out'), 'statusId');
@@ -476,6 +481,10 @@ class Action  extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $layout = $this->layoutFactory->getById($action->layoutId);
 
+        if (!$this->getUser()->checkEditable($layout)) {
+            throw new AccessDeniedException();
+        }
+
         // Make sure the Layout is checked out to begin with
         if (!$layout->isEditable()) {
             throw new InvalidArgumentException(__('Layout is not checked out'), 'statusId');
@@ -543,6 +552,10 @@ class Action  extends Base
     {
         $action = $this->actionFactory->getById($id);
         $layout = $this->layoutFactory->getById($action->layoutId);
+
+        if (!$this->getUser()->checkEditable($layout)) {
+            throw new AccessDeniedException();
+        }
 
         // Make sure the Layout is checked out to begin with
         if (!$layout->isEditable()) {

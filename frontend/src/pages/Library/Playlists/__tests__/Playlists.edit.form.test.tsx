@@ -20,7 +20,6 @@
  */
 
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import { usePlaylistActions } from '../hooks/usePlaylistActions';
@@ -40,11 +39,6 @@ import { testQueryClient } from '@/setupTests';
 // =============================================================================
 // Module mocks
 // =============================================================================
-
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
 
 vi.mock('@/services/folderApi');
 vi.mock('@/services/playlistApi');
@@ -159,6 +153,7 @@ describe('Playlists page - edit form fields', () => {
   // ---------------------------------------------------------------------------
   test('Failed save keeps the modal open', async () => {
     vi.mocked(updatePlaylist).mockRejectedValueOnce({
+      isAxiosError: true,
       response: { data: { message: 'Playlist name already exists' } },
     });
 
@@ -170,5 +165,53 @@ describe('Playlists page - edit form fields', () => {
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeInTheDocument();
     });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Cancel closes the modal without calling updatePlaylist.
+  // ---------------------------------------------------------------------------
+  test('Cancel closes the modal without calling updatePlaylist', async () => {
+    renderPlaylistsPage();
+    await openEditModal();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+    expect(updatePlaylist).not.toHaveBeenCalled();
+  });
+
+  // ---------------------------------------------------------------------------
+  // Enabling isDynamic reveals the dynamic filter fields (Name Filter, Max items).
+  // The fields are conditionally rendered inside the !!draft.isDynamic block.
+  // ---------------------------------------------------------------------------
+  test('toggling Dynamic Playlist on reveals the dynamic filter fields', async () => {
+    renderPlaylistsPage();
+    await openEditModal();
+
+    const dynamicCheckbox = screen.getByRole('checkbox', { name: /Dynamic Playlist/i });
+    expect(dynamicCheckbox).not.toBeChecked();
+
+    fireEvent.click(dynamicCheckbox);
+
+    expect(screen.getByLabelText('Name Filter')).toBeInTheDocument();
+    expect(screen.getByLabelText('Max number of Items')).toBeInTheDocument();
+  });
+
+  // ---------------------------------------------------------------------------
+  // Disabling isDynamic hides the dynamic filter fields again.
+  // ---------------------------------------------------------------------------
+  test('toggling Dynamic Playlist off hides the dynamic filter fields', async () => {
+    renderPlaylistsPage();
+    await openEditModal();
+
+    const dynamicCheckbox = screen.getByRole('checkbox', { name: /Dynamic Playlist/i });
+
+    fireEvent.click(dynamicCheckbox); // enable
+    expect(screen.getByLabelText('Name Filter')).toBeInTheDocument();
+
+    fireEvent.click(dynamicCheckbox); // disable
+    expect(screen.queryByLabelText('Name Filter')).not.toBeInTheDocument();
   });
 });

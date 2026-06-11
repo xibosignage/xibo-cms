@@ -64,7 +64,7 @@ const flattenTree = (nodes: Folder[]): Folder[] => {
   let result: Folder[] = [];
   for (const node of nodes) {
     result.push(node);
-    if (node.children && node.children.length > 0) {
+    if (Array.isArray(node.children) && node.children.length > 0) {
       result = result.concat(flattenTree(node.children));
     }
   }
@@ -75,7 +75,7 @@ const findSubtree = (nodes: Folder[], targetId: number): Folder | null => {
     if (node.id === targetId) {
       return node;
     }
-    if (node.children && node.children.length > 0) {
+    if (Array.isArray(node.children) && node.children.length > 0) {
       const found = findSubtree(node.children, targetId);
       if (found !== null) {
         return found;
@@ -99,7 +99,7 @@ const buildVisibleTree = (
     result.push({ ...node, depth, hasChildren, isExpanded });
 
     if (hasChildren && isExpanded) {
-      result.push(...buildVisibleTree(node.children!, expandedIds, depth + 1));
+      result.push(...buildVisibleTree(node.children as Folder[], expandedIds, depth + 1));
     }
   }
   return result;
@@ -247,7 +247,7 @@ export default function FolderTreeList({
   } else if (activeTab === 'Home' && homeRoot) {
     const homeRootExpanded = expandedIds.has(homeRoot.id);
     const visibleList = homeRootExpanded
-      ? buildVisibleTree(homeRoot.children ?? [], expandedIds)
+      ? buildVisibleTree(Array.isArray(homeRoot.children) ? homeRoot.children : [], expandedIds)
       : [];
 
     content = (
@@ -257,7 +257,7 @@ export default function FolderTreeList({
           folder={{
             ...homeRoot,
             depth: 0,
-            hasChildren: (homeRoot.children?.length ?? 0) > 0,
+            hasChildren: Array.isArray(homeRoot.children) && homeRoot.children.length > 0,
             isExpanded: homeRootExpanded,
           }}
           isSelected={selectedId === homeRoot.id}

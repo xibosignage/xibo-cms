@@ -26,9 +26,17 @@ import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
 
 import { notify } from '@/components/ui/Notification';
+import type { PublishValue } from '@/components/ui/forms/PublishDateSelect';
 import { selectFolder } from '@/services/folderApi';
-import { copyLayout, deleteLayout } from '@/services/layoutsApi';
+import {
+  copyLayout,
+  deleteLayout,
+  discardLayout,
+  exportLayout,
+  publishLayout,
+} from '@/services/layoutsApi';
 import type { Template } from '@/types/templates';
+import { formatDateTime } from '@/utils/date';
 
 interface UseTemplateActionsProps {
   t: TFunction;
@@ -36,6 +44,7 @@ interface UseTemplateActionsProps {
   closeModal: () => void;
   setRowSelection: Dispatch<SetStateAction<RowSelectionState>>;
   setItemsToMove: (items: Template[]) => void;
+  timezone: string;
 }
 
 export function useTemplateActions({
@@ -44,10 +53,14 @@ export function useTemplateActions({
   closeModal,
   setRowSelection,
   setItemsToMove,
+  timezone,
 }: UseTemplateActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isCloning, setIsCloning] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [isDiscarding, setIsDiscarding] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const confirmDelete = async (itemsToDelete: Template[]) => {
     if (itemsToDelete.length === 0 || isDeleting) {
@@ -84,15 +97,6 @@ export function useTemplateActions({
       setRowSelection({});
       handleRefresh();
       closeModal();
-    } catch (error) {
-      console.error(error);
-
-      const message =
-        isAxiosError(error) && error.response?.data?.message
-          ? error.response.data.message
-          : t('Some selected items are in use and cannot be deleted.');
-
-      setDeleteError(message);
     } finally {
       setIsDeleting(false);
     }
@@ -119,7 +123,6 @@ export function useTemplateActions({
       notify.success(t('Template copied successfully'));
       handleRefresh();
       closeModal();
-      console.log('copy template', selectedTemplate, newName, description, copyMediaFiles);
     } catch (error) {
       console.error('Copy template failed', error);
       notify.error(t('Failed to copy template'));
@@ -168,6 +171,97 @@ export function useTemplateActions({
     }
   };
 
+  const confirmPublish = async (layoutId: number, value: PublishValue) => {
+    if (!layoutId || isPublishing) {
+      return;
+    }
+
+    try {
+      setIsPublishing(true);
+
+      await publishLayout(layoutId, {
+        publishNow: value.type === 'now' ? 1 : 0,
+        publishDate: value.type === 'scheduled' ? formatDateTime(value.date, timezone) : undefined,
+      });
+
+      notify.success(t('Template published successfully'));
+      setRowSelection({});
+      handleRefresh();
+      closeModal();
+    } catch (error) {
+      console.error(error);
+      const message =
+        (isAxiosError(error) && error.response?.data?.message) || t('Failed to publish template');
+      notify.error(message);
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  const handleConfirmDiscard = async (layoutId: number | null) => {
+    if (!layoutId || isDiscarding) {
+      return;
+    }
+
+    try {
+      setIsDiscarding(true);
+
+      notify.info(t('Discarding template changes...'));
+
+      await discardLayout(layoutId);
+
+      notify.success(t('Template restored successfully'));
+
+      setRowSelection({});
+      handleRefresh();
+      closeModal();
+    } catch (error) {
+      console.error(error);
+      notify.error(t('Failed to discard template changes'));
+    } finally {
+      setIsDiscarding(false);
+    }
+  };
+
+  const handleExportTemplate = async (
+    layoutId: number,
+    options: {
+      includeData: boolean;
+      includeFallback: boolean;
+      fileName: string;
+    },
+  ) => {
+    if (!layoutId || isExporting) {
+      return;
+    }
+
+    try {
+      setIsExporting(true);
+
+      const blob = await exportLayout(layoutId, {
+        includeData: options.includeData,
+        includeFallback: options.includeFallback,
+      });
+
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${options.fileName}.zip`;
+      a.click();
+
+      window.URL.revokeObjectURL(url);
+
+      notify.success(t('Template exported successfully'));
+      closeModal();
+    } catch (error) {
+      console.error(error);
+      notify.error(t('Failed to export template'));
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const handleAlterTemplate = (layoutId: number) => {
     window.open(`/layout/designer/${layoutId}?isTemplateEditor=1`, '_blank');
   };
@@ -177,9 +271,15 @@ export function useTemplateActions({
     deleteError,
     setDeleteError,
     isCloning,
+    isPublishing,
+    isDiscarding,
+    isExporting,
     confirmDelete,
+    confirmPublish,
     handleConfirmClone,
     handleConfirmMove,
+    handleConfirmDiscard,
+    handleExportTemplate,
     handleAlterTemplate,
   };
 }

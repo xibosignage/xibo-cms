@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -68,6 +68,6 @@ class Wsdl
      */
     public static function getRoot(): string
     {
-        return (new HttpsDetect())->getBaseUrl();
+        return (new HttpsDetect())->getBaseUrl() . '/xmds.php';
     }
 }

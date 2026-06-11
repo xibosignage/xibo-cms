@@ -20,7 +20,6 @@
  */
 
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
-import type React from 'react';
 import { test, vi, beforeEach } from 'vitest';
 
 import { mockEditMedia, mockMediaData, openEditModal, renderMediaPage } from './mediaTestUtils';
@@ -45,10 +44,6 @@ vi.mock('@/services/mediaApi', () => ({
   deleteMedia: vi.fn(),
 }));
 vi.mock('@/services/folderApi');
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
 vi.mock('@/services/userApi', () => ({
   fetchUserPreference: vi.fn().mockResolvedValue(null),
   saveUserPreference: vi.fn().mockResolvedValue(undefined),
@@ -225,7 +220,7 @@ describe('Edit Media — form fields', () => {
     fireEvent.click(screen.getAllByText('Landscape')[0]!);
 
     // Portrait option button appears in the open dropdown
-    const portraitBtn = await screen.findByRole('button', { name: 'Portrait' });
+    const portraitBtn = await screen.findByRole('option', { name: 'Portrait' });
     fireEvent.click(portraitBtn);
 
     // Toggle now shows "Portrait"
@@ -299,7 +294,7 @@ describe('Edit Media — form fields', () => {
     fireEvent.click(screen.getAllByText('Inherit')[0]!);
 
     // Click "On" from the dropdown options
-    fireEvent.click(await screen.findByRole('button', { name: 'On' }));
+    fireEvent.click(await screen.findByRole('option', { name: 'On' }));
 
     // Toggle now reflects "On"
     expect(screen.getAllByText('On')[0]).toBeInTheDocument();

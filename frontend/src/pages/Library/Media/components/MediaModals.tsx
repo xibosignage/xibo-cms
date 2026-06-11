@@ -26,6 +26,7 @@ import { ACCEPTED_MIME_TYPES } from '../MediaConfig';
 import CopyMediaModal from './CopyMediaModal';
 import DeleteMediaModal from './DeleteMediaModal';
 import EditMediaModal from './EditMediaModal';
+import EnableStatsMediaModal from './EnableStatsMediaModal';
 import { MediaInfoPanel } from './MediaInfoPanel';
 import ReplaceFileModal from './ReplaceFileModal';
 import { UploadProgressDock } from './UploadProgressDock';
@@ -35,9 +36,12 @@ import FolderActionModals from '@/components/ui/FolderActionModals';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
 import Modal from '@/components/ui/modals/Modal';
 import MoveModal from '@/components/ui/modals/MoveModal';
+import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
+import UsageReportModal from '@/components/ui/modals/UsageReportModal';
 import type { useFolderActions } from '@/hooks/useFolderActions';
 import type { UploadItem } from '@/hooks/useUploadQueue';
+import { EventTypeId } from '@/types/event';
 import type { Media } from '@/types/media';
 import type { Tag } from '@/types/tag';
 import type { User } from '@/types/user';
@@ -50,6 +54,7 @@ interface MediaModalsProps {
     deleteError: string | null;
     isDeleting: boolean;
     isCloning: boolean;
+    isUpdatingStats: boolean;
   };
   selection: {
     selectedMedia: Media | null;
@@ -63,6 +68,7 @@ interface MediaModalsProps {
     confirmDelete: (options: { allLayouts: boolean; purgeList: boolean }) => void;
     handleConfirmClone: (newName: string, tags: Tag[]) => void;
     handleConfirmMove: (newFolderId: number) => void;
+    handleConfirmEnableStats: (value: string) => void;
   };
   upload: {
     isOpen: boolean;
@@ -187,7 +193,36 @@ export function MediaModals({
               }}
             />
           )}
+
+          {isModalOpen('enableStats') && (
+            <EnableStatsMediaModal
+              media={selection.selectedMedia}
+              isLoading={actions.isUpdatingStats}
+              onClose={actions.closeModal}
+              onConfirm={handlers.handleConfirmEnableStats}
+            />
+          )}
         </>
+      )}
+
+      {isModalOpen('schedule') && (
+        <ScheduleEventModal
+          isOpen
+          onClose={actions.closeModal}
+          mode="schedule"
+          eventTypeId={EventTypeId.Media}
+          contentId={selection.selectedMedia?.mediaId}
+          contentName={selection.selectedMedia?.name}
+        />
+      )}
+
+      {isModalOpen('usageReport') && selection.selectedMedia && (
+        <UsageReportModal
+          entityType="media"
+          entityId={selection.selectedMedia.mediaId}
+          entityName={selection.selectedMedia.name}
+          onClose={actions.closeModal}
+        />
       )}
 
       {upload.isOpen && (
@@ -195,7 +230,7 @@ export function MediaModals({
           <div className="flex flex-col gap-3 p-8 pt-0">
             {upload.canViewFolders && (
               <SelectFolder
-                selectedId={upload.selectedFolderId}
+                selectedId={upload.selectedFolderId ?? upload.targetFolderId}
                 onSelect={(folder) => {
                   if (folder) {
                     upload.setSelectedFolderId(folder.id);

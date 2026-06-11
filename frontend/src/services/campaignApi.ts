@@ -42,6 +42,11 @@ export interface FetchCampaignRequest {
   type?: string;
   cyclePlaybackEnabled?: number;
 
+  useRegexForName?: number;
+  logicalOperatorName?: 'OR' | 'AND';
+  exactTags?: number;
+  logicalOperator?: 'OR' | 'AND';
+
   signal?: AbortSignal;
 }
 
@@ -181,5 +186,10 @@ export async function copyCampaign(campaignId: number, payload: CopyCampaignPayl
 
 export async function deleteCampaign(campaignId: number) {
   const response = await http.delete(`/campaign/${campaignId}`);
+  return response.data;
+}
+
+export async function fetchCampaignById(campaignId: number): Promise<Campaign> {
+  const response = await http.get(`/campaign/${campaignId}`);
   return response.data;
 }

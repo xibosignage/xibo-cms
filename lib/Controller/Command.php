@@ -24,14 +24,15 @@
 namespace Xibo\Controller;
 
 use OpenApi\Attributes as OA;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Event\CommandDeleteEvent;
 use Xibo\Factory\CommandFactory;
 use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Class Command
@@ -40,32 +41,9 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class Command extends Base
 {
-    /**
-     * @var CommandFactory
-     */
-    private $commandFactory;
-
-    /**
-     * Set common dependencies.
-     * @param CommandFactory $commandFactory
-     */
-    public function __construct($commandFactory)
-    {
-        $this->commandFactory = $commandFactory;
-    }
-
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
-     */
-    public function displayPage(Request $request, Response $response)
-    {
-        $this->getState()->template = 'command-page';
-
-        return $this->render($request, $response);
+    public function __construct(
+        private readonly CommandFactory $commandFactory,
+    ) {
     }
 
     #[OA\Get(
@@ -92,6 +70,13 @@ class Command extends Base
     #[OA\Parameter(
         name: 'code',
         description: 'Filter by Command Code',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'keyword',
+        description: 'Filter by keyword (searches command name and id)',
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'string')
@@ -131,9 +116,33 @@ class Command extends Base
         required: false,
         schema: new OA\Schema(type: 'string')
     )]
+    #[OA\Parameter(
+        name: 'sortBy',
+        description: 'Specifies which field the results are sorted by. Used together with sortDir',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'string',
+            enum: ['commandId', 'command', 'code', 'description']
+        )
+    )]
+    #[OA\Parameter(
+        name: 'sortDir',
+        description: 'Sort direction',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', enum: ['asc', 'desc'])
+    )]
     #[OA\Response(
         response: 200,
         description: 'successful operation',
+        headers: [
+            new OA\Header(
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
+            )
+        ],
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: '#/components/schemas/Command')
@@ -142,187 +151,64 @@ class Command extends Base
     /**
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ControllerNotImplemented
+     * @return Response|ResponseInterface
      * @throws GeneralException
      * @throws NotFoundException
      */
-    public function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-
-        $filter = [
-            'commandId' => $sanitizedParams->getInt('commandId'),
-            'command' => $sanitizedParams->getString('command'),
-            'code' => $sanitizedParams->getString('code'),
-            'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
-            'useRegexForCode' => $sanitizedParams->getCheckbox('useRegexForCode'),
-            'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
-            'logicalOperatorCode' => $sanitizedParams->getString('logicalOperatorCode'),
-            'type' => $sanitizedParams->getString('type'),
-        ];
+        $sanitizedParams = $this->getSanitizer($request->getQueryParams());
 
         $commands = $this->commandFactory->query(
-            $this->gridRenderSort($sanitizedParams),
-            $this->gridRenderFilter($filter, $sanitizedParams)
+            $this->gridRenderSort($sanitizedParams, $this->isJson($request)),
+            $this->getCommandFilters($sanitizedParams)
         );
 
         foreach ($commands as $command) {
-            /* @var \Xibo\Entity\Command $command */
-
-            if ($this->isApi($request) || $this->isJson($request)) {
-                continue;
-            }
-
-            $command->includeProperty('buttons');
-
-            if ($this->getUser()->featureEnabled('command.modify')) {
-                // Command edit
-                if ($this->getUser()->checkEditable($command)) {
-                    $command->buttons[] = array(
-                        'id' => 'command_button_edit',
-                        'url' => $this->urlFor($request, 'command.edit.form', ['id' => $command->commandId]),
-                        'text' => __('Edit')
-                    );
-                }
-
-                // Command delete
-                if ($this->getUser()->checkDeleteable($command)) {
-                    $command->buttons[] = [
-                        'id' => 'command_button_delete',
-                        'url' => $this->urlFor($request, 'command.delete.form', ['id' => $command->commandId]),
-                        'text' => __('Delete'),
-                        'multi-select' => true,
-                        'dataAttributes' => [
-                            [
-                                'name' => 'commit-url',
-                                'value' => $this->urlFor($request, 'command.delete', ['id' => $command->commandId])
-                            ],
-                            ['name' => 'commit-method', 'value' => 'delete'],
-                            ['name' => 'id', 'value' => 'command_button_delete'],
-                            ['name' => 'text', 'value' => __('Delete')],
-                            ['name' => 'sort-group', 'value' => 1],
-                            ['name' => 'rowtitle', 'value' => $command->command]
-                        ]
-                    ];
-                }
-
-                // Command Permissions
-                if ($this->getUser()->checkPermissionsModifyable($command)) {
-                    // Permissions button
-                    $command->buttons[] = [
-                        'id' => 'command_button_permissions',
-                        'url' => $this->urlFor(
-                            $request,
-                            'user.permissions.form',
-                            ['entity' => 'Command', 'id' => $command->commandId]
-                        ),
-                        'text' => __('Share'),
-                        'multi-select' => true,
-                        'dataAttributes' => [
-                            [
-                                'name' => 'commit-url',
-                                'value' => $this->urlFor(
-                                    $request,
-                                    'user.permissions.multi',
-                                    ['entity' => 'Command', 'id' => $command->commandId]
-                                )
-                            ],
-                            ['name' => 'commit-method', 'value' => 'post'],
-                            ['name' => 'id', 'value' => 'command_button_permissions'],
-                            ['name' => 'text', 'value' => __('Share')],
-                            ['name' => 'rowtitle', 'value' => $command->command],
-                            ['name' => 'sort-group', 'value' => 2],
-                            ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                            [
-                                'name' => 'custom-handler-url',
-                                'value' => $this->urlFor(
-                                    $request,
-                                    'user.permissions.multi.form',
-                                    ['entity' => 'Command']
-                                )
-                            ],
-                            ['name' => 'content-id-name', 'value' => 'commandId']
-                        ]
-                    ];
-                }
-            }
+            $command->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($command));
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->commandFactory->countLast();
-        $this->getState()->setData($commands);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $this->commandFactory->countLast())
+            ->withJson($commands);
     }
 
+    #[OA\Get(
+        path: '/command/{commandId}',
+        operationId: 'commandSearchById',
+        description: 'Get the Command object specified by the provided commandId',
+        summary: 'Search Commands by ID',
+        tags: ['command']
+    )]
+    #[OA\Parameter(
+        name: 'commandId',
+        description: 'Numeric ID of the Command to get',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'integer')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'successful operation',
+        content: new OA\JsonContent(ref: '#/components/schemas/Command')
+    )]
     /**
-     * Add Command Form
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
-     */
-    public function addForm(Request $request, Response $response)
-    {
-        $this->getState()->template = 'command-form-add';
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Edit Command
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
+     * @param int $id
+     * @return Response|ResponseInterface
      * @throws GeneralException
      * @throws NotFoundException
      */
-    public function editForm(Request $request, Response $response, $id)
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $command = $this->commandFactory->getById($id);
+        $command->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($command));
 
-        if (!$this->getUser()->checkEditable($command)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'command-form-edit';
-        $this->getState()->setData([
-            'command' => $command
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Delete Command
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
-     * @throws NotFoundException
-     */
-    public function deleteForm(Request $request, Response $response, $id)
-    {
-        $command = $this->commandFactory->getById($id);
-
-        if (!$this->getUser()->checkDeleteable($command)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'command-form-delete';
-        $this->getState()->setData([
-            'command' => $command
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson($command);
     }
 
     #[OA\Post(
@@ -333,9 +219,11 @@ class Command extends Base
         tags: ['command']
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['command', 'code'],
                 properties: [
                     new OA\Property(
                         property: 'command',
@@ -372,38 +260,33 @@ class Command extends Base
                         description: 'On command execution, when should a Display alert be created? success, failure, always or never', // phpcs:ignore
                         type: 'string'
                     )
-                ],
-                required: ['command', 'code']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(
         response: 201,
         description: 'successful operation',
-        content: new OA\JsonContent(ref: '#/components/schemas/Command'),
         headers: [
             new OA\Header(
                 header: 'Location',
                 description: 'Location of the new record',
                 schema: new OA\Schema(type: 'string')
             )
-        ]
+        ],
+        content: new OA\JsonContent(ref: '#/components/schemas/Command')
     )]
     /**
-     * Add Command
-     *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ControllerNotImplemented
+     * @return Response|ResponseInterface
      * @throws GeneralException
      */
-    public function add(Request $request, Response $response)
+    public function add(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        $command = $this->commandFactory->create();
+        $command = $this->commandFactory->createEmpty();
         $command->command = $sanitizedParams->getString('command');
         $command->description = $sanitizedParams->getString('description');
         $command->code = $sanitizedParams->getString('code');
@@ -419,15 +302,7 @@ class Command extends Base
         }
         $command->save();
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 201,
-            'message' => sprintf(__('Added %s'), $command->command),
-            'id' => $command->commandId,
-            'data' => $command
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(201)->withJson($command);
     }
 
     #[OA\Put(
@@ -445,9 +320,11 @@ class Command extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\RequestBody(
+        required: true,
         content: new OA\MediaType(
             mediaType: 'application/x-www-form-urlencoded',
             schema: new OA\Schema(
+                required: ['command'],
                 properties: [
                     new OA\Property(
                         property: 'command',
@@ -479,11 +356,9 @@ class Command extends Base
                         description: 'On command execution, when should a Display alert be created? success, failure, always or never', // phpcs:ignore
                         type: 'string'
                     )
-                ],
-                required: ['command']
+                ]
             )
-        ),
-        required: true
+        )
     )]
     #[OA\Response(
         response: 200,
@@ -491,17 +366,15 @@ class Command extends Base
         content: new OA\JsonContent(ref: '#/components/schemas/Command')
     )]
     /**
-     * Edit Command
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @param int $id
+     * @return Response|ResponseInterface
      * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws NotFoundException
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $command = $this->commandFactory->getById($id);
@@ -523,15 +396,7 @@ class Command extends Base
         }
         $command->save();
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 200,
-            'message' => sprintf(__('Edited %s'), $command->command),
-            'id' => $command->commandId,
-            'data' => $command
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(200)->withJson($command);
     }
 
     #[OA\Delete(
@@ -553,17 +418,15 @@ class Command extends Base
         description: 'successful operation'
     )]
     /**
-     * Delete Command
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @param int $id
+     * @return Response|ResponseInterface
      * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws NotFoundException
      */
-    public function delete(Request $request, Response $response, $id)
+    public function delete(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $command = $this->commandFactory->getById($id);
 
@@ -575,12 +438,21 @@ class Command extends Base
 
         $command->delete();
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Deleted %s'), $command->command)
-        ]);
+        return $response->withStatus(204);
+    }
 
-        return $this->render($request, $response);
+    private function getCommandFilters(SanitizerInterface $sanitizedParams): array
+    {
+        return $this->gridRenderFilter([
+            'commandId'           => $sanitizedParams->getInt('commandId'),
+            'command'             => $sanitizedParams->getString('command'),
+            'code'                => $sanitizedParams->getString('code'),
+            'keyword'             => $sanitizedParams->getString('keyword'),
+            'useRegexForName'     => $sanitizedParams->getCheckbox('useRegexForName'),
+            'useRegexForCode'     => $sanitizedParams->getCheckbox('useRegexForCode'),
+            'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
+            'logicalOperatorCode' => $sanitizedParams->getString('logicalOperatorCode'),
+            'type'                => $sanitizedParams->getString('type'),
+        ], $sanitizedParams);
     }
 }

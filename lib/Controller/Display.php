@@ -26,6 +26,7 @@ use GeoJson\Feature\Feature;
 use GeoJson\Feature\FeatureCollection;
 use GeoJson\Geometry\Point;
 use GuzzleHttp\Client;
+use Xibo\Helper\Guzzle\SafeClient;
 use Intervention\Image\ImageManagerStatic as Img;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
@@ -35,6 +36,7 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Event\DisplayGroupLoadEvent;
+use Xibo\Event\FolderTouchEvent;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayEventFactory;
 use Xibo\Factory\DisplayFactory;
@@ -725,7 +727,7 @@ class Display extends Base
 
         // Get a list of displays
         $displays = $this->displayFactory->query(
-            $this->gridRenderSort($parsedQueryParams, $this->isJson($request)),
+            $this->gridRenderSort($parsedQueryParams, $this->isJson($request), 'display'),
             $this->gridRenderFilter($filter, $parsedQueryParams)
         );
 
@@ -1254,6 +1256,7 @@ class Display extends Base
         }
 
         $display->delete();
+        $this->touchFolder($display->folderId);
 
         // Return
         return $response->withStatus(204);
@@ -1831,14 +1834,16 @@ class Display extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         $user_code = $sanitizedParams->getString('user_code');
-        $cmsAddress = (new HttpsDetect())->getBaseUrl($request);
+        // Pass config so WHITELIST_HOSTS (if set) defeats Host-header injection
+        // into the cmsAddress posted to the external auth service.
+        $cmsAddress = (new HttpsDetect($this->getConfig()))->getBaseUrl($request);
         $cmsKey = $this->getConfig()->getSetting('SERVER_KEY');
 
         if ($user_code == '') {
             throw new InvalidArgumentException(__('Code cannot be empty'), 'code');
         }
 
-        $guzzle = new Client();
+        $guzzle = SafeClient::getSafeClient();
 
         try {
             // When the valid code is submitted, it will be sent along with CMS Address and Key to Authentication Service maintained by Xibo Signage Ltd.
@@ -2323,5 +2328,13 @@ class Display extends Base
 
         // permissions
         $display->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($display));
+    }
+
+    private function touchFolder(int $folderId, ?int $oldFolderId = null): void
+    {
+        $this->getDispatcher()->dispatch(
+            new FolderTouchEvent($folderId, $oldFolderId),
+            FolderTouchEvent::$NAME
+        );
     }
 }

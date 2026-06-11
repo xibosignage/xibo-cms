@@ -31,12 +31,16 @@ export interface FetchDisplaysRequest {
   start: number;
   length: number;
   keyword?: string;
+  displayId?: number;
+  display?: string;
+  tags?: string;
   mediaInventoryStatus?: number | string;
   loggedIn?: number | string;
   authorised?: number | string;
   xmrRegistered?: number | string;
   clientType?: string;
   displayGroupId?: number | string;
+  displayGroupIds?: number[];
   displayProfileId?: number | string;
   orientation?: string;
   commercialLicence?: number | string;
@@ -285,6 +289,27 @@ export async function requestScreenShot(displayId: number | string): Promise<voi
   await http.put(`/display/requestscreenshot/${displayId}`, null, {
     headers: { 'X-Requested-With': 'XMLHttpRequest' },
   });
+}
+
+export async function fetchDisplayScreenshotBlob(
+  displayId: number | string,
+  signal?: AbortSignal,
+): Promise<Blob> {
+  const response = await http.get(`/display/screenshot/${displayId}`, {
+    responseType: 'blob',
+    signal,
+  });
+  return response.data;
+}
+
+export type DisplayStatusWindow = Record<string, string | number> | string | unknown[];
+
+export async function fetchDisplayStatusWindow(
+  displayId: number | string,
+  signal?: AbortSignal,
+): Promise<DisplayStatusWindow> {
+  const response = await http.get(`/display/status/${displayId}`, { signal });
+  return response.data;
 }
 
 export async function collectNow(displayGroupId: number | string): Promise<void> {

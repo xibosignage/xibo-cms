@@ -20,7 +20,7 @@
  */
 
 import { Info, LogOut } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 import Modal from '@/components/ui/modals/Modal';
 
@@ -46,6 +46,7 @@ export default function LogoutSessionModal({
   const { t } = useTranslation();
   return (
     <Modal
+      variant="confirmation"
       isOpen={isOpen}
       isPending={isLoading}
       onClose={onClose}
@@ -76,14 +77,17 @@ export default function LogoutSessionModal({
         </div>
         <p className="text-center text-gray-500">
           {itemCount === 1 ? (
-            <>
-              {t('Are you sure you want to logout ')}"<strong>{userName}</strong>?"
-            </>
+            <Trans
+              i18nKey='Are you sure you want to logout "<strong>{{name}}</strong>"?'
+              values={{ name: userName }}
+              components={{ strong: <strong /> }}
+            />
           ) : (
-            <>
-              {t('Are you sure you want to logout ')}
-              <strong>{itemCount}</strong> {t('sessions')}?
-            </>
+            <Trans
+              i18nKey="Are you sure you want to logout <strong>{{count}}</strong> sessions?"
+              values={{ count: itemCount }}
+              components={{ strong: <strong /> }}
+            />
           )}
         </p>
 

@@ -27,7 +27,7 @@ import { useState } from 'react';
 
 import { notify } from '@/components/ui/Notification';
 import { selectFolder } from '@/services/folderApi';
-import { clonePlaylist, deletePlaylist } from '@/services/playlistApi';
+import { clonePlaylist, deletePlaylist, updatePlaylist } from '@/services/playlistApi';
 import type { Playlist } from '@/types/playlist';
 
 interface UsePlaylistActionsProps {
@@ -48,6 +48,7 @@ export function usePlaylistActions({
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isCloning, setIsCloning] = useState(false);
+  const [isUpdatingStats, setIsUpdatingStats] = useState(false);
 
   const confirmDelete = async (itemsToDelete: Playlist[]) => {
     if (itemsToDelete.length === 0 || isDeleting) {
@@ -77,13 +78,6 @@ export function usePlaylistActions({
       setRowSelection({});
       handleRefresh();
       closeModal();
-    } catch (error) {
-      console.error(error);
-      const message =
-        isAxiosError(error) && error.response?.data?.message
-          ? error.response.data.message
-          : t('Some selected items could not be deleted.');
-      setDeleteError(message);
     } finally {
       setIsDeleting(false);
     }
@@ -157,13 +151,39 @@ export function usePlaylistActions({
     }
   };
 
+  const handleConfirmEnableStats = async (playlist: Playlist, value: string) => {
+    if (isUpdatingStats) {
+      return;
+    }
+
+    try {
+      setIsUpdatingStats(true);
+
+      await updatePlaylist(playlist.playlistId, {
+        name: playlist.name,
+        enableStat: value,
+      });
+
+      notify.success(t('Stats collection updated'));
+      handleRefresh();
+      closeModal();
+    } catch (error) {
+      console.error(error);
+      notify.error(t('Failed to update stats collection'));
+    } finally {
+      setIsUpdatingStats(false);
+    }
+  };
+
   return {
     isDeleting,
     deleteError,
     setDeleteError,
     isCloning,
+    isUpdatingStats,
     confirmDelete,
     handleConfirmClone,
     handleConfirmMove,
+    handleConfirmEnableStats,
   };
 }

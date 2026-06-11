@@ -20,7 +20,6 @@
  */
 
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
-import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import { mockFetchLayouts, mockLayout, renderLayoutsPage, SINGLE_LAYOUT } from './layoutTestUtils';
@@ -33,10 +32,6 @@ import { testQueryClient } from '@/setupTests';
 // -----------------------------------------------------------------------------
 
 // 3rd-party
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
 
 // Services
 vi.mock('@/services/folderApi');
@@ -44,6 +39,7 @@ vi.mock('@/services/layoutsApi');
 vi.mock('@/services/userApi', () => ({
   fetchUserPreference: vi.fn().mockResolvedValue(null),
   saveUserPreference: vi.fn().mockResolvedValue(undefined),
+  fetchUsers: vi.fn().mockResolvedValue({ rows: [], totalCount: 0 }),
 }));
 
 // Hooks
@@ -141,6 +137,6 @@ describe('Delete Layout', () => {
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeInTheDocument();
     });
-    expect(screen.getByText('{{count}} item(s) could not be deleted.')).toBeInTheDocument();
+    expect(screen.getByText('1 item(s) could not be deleted.')).toBeInTheDocument();
   });
 });

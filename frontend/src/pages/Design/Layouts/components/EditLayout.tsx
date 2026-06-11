@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { isAxiosError } from 'axios';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -106,7 +107,7 @@ export default function EditLayout({ isOpen = true, onClose, data, onSave }: Edi
         description: fieldErrors.description?.[0],
         code: fieldErrors.code?.[0],
       });
-
+      setApiError(t('Please fix the highlighted errors before saving.'));
       return;
     }
 
@@ -123,6 +124,7 @@ export default function EditLayout({ isOpen = true, onClose, data, onSave }: Edi
         name: draft.name,
         description: draft.description,
         tags: serializedTags,
+        code: draft.code,
         retired: draft.retired ? 1 : 0,
         enableStat: draft.enableStat ? 1 : 0,
         folderId: draft.folderId,
@@ -132,10 +134,8 @@ export default function EditLayout({ isOpen = true, onClose, data, onSave }: Edi
       onClose();
     } catch (err) {
       console.error('Failed to update layout', err);
-      const apiError = err as { response?: { data?: { message?: string } } };
-
-      if (apiError.response?.data?.message) {
-        setApiError(apiError.response.data.message);
+      if (isAxiosError(err) && err.response?.data?.message) {
+        setApiError(err.response.data.message);
       } else if (err instanceof Error) {
         setApiError(err.message);
       } else {

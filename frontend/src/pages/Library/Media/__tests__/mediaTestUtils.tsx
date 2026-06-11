@@ -64,6 +64,7 @@ export const mockEditMedia: MediaItem = {
   mediaNoExpiryDate: '1',
   enableStat: 'Inherit',
   expires: '',
+  released: 1,
   retired: false,
   updateInLayouts: false,
   userPermissions: { view: 1, edit: 1, delete: 1 },
@@ -111,6 +112,8 @@ export const mockArchiveFolder: Folder = {
   ownerId: 0,
   ownerName: '',
   children: [],
+  createdDt: null,
+  modifiedDt: null,
 };
 
 export const mockDesignFolder: Folder = {
@@ -122,6 +125,8 @@ export const mockDesignFolder: Folder = {
   ownerId: 0,
   ownerName: '',
   children: [],
+  createdDt: null,
+  modifiedDt: null,
 };
 
 // -----------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 
 namespace Xibo\Controller;
 
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\MediaFactory;
@@ -36,46 +37,18 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class MediaManager extends Base
 {
-    private StorageServiceInterface $store;
-    private ModuleFactory $moduleFactory;
-    private MediaFactory $mediaFactory;
-
-    /**
-     * Set common dependencies.
-     */
     public function __construct(
-        StorageServiceInterface $store,
-        ModuleFactory $moduleFactory,
-        MediaFactory $mediaFactory
+        private readonly StorageServiceInterface $store,
+        private readonly ModuleFactory           $moduleFactory,
+        private readonly MediaFactory            $mediaFactory,
     ) {
-        $this->store = $store;
-        $this->moduleFactory = $moduleFactory;
-        $this->mediaFactory = $mediaFactory;
-    }
-
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function displayPage(Request $request, Response $response)
-    {
-        $this->getState()->template = 'media-manager-page';
-        $this->getState()->setData([
-            'library' => $this->getLibraryUsage()
-        ]);
-
-        return $this->render($request, $response);
     }
 
     /**
      * Get the library usage
-     * @return array
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    private function getLibraryUsage(): array
+    public function getLibraryUsage(Request $request, Response $response): Response|ResponseInterface
     {
         // Set up some suffixes
         $suffixes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
@@ -126,12 +99,16 @@ class MediaManager extends Base
         // Decide what our units are going to be, based on the size
         $base = ($totalSize === 0) ? 0 : floor(log($totalSize) / log(1024));
 
-        return [
-            'countOf' => $totalCount,
-            'size' => ByteFormatter::format($totalSize, 1, true),
-            'types' => $libraryUsage,
-            'typesSuffix' => $suffixes[$base],
-            'typesBase' => $base,
-        ];
+        return $response
+            ->withStatus(200)
+            ->withJson([
+                'library' => [
+                    'countOf' => $totalCount,
+                    'size' => ByteFormatter::format($totalSize, 1, true),
+                    'types' => $libraryUsage,
+                    'typesSuffix' => $suffixes[$base],
+                    'typesBase' => $base,
+                ]
+            ]);
     }
 }

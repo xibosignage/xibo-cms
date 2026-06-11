@@ -19,10 +19,12 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import type { ReactNode } from 'react';
+
 type Props = {
   title?: string;
-  actions?: React.ReactNode;
-  children: React.ReactNode;
+  actions?: ReactNode;
+  children: ReactNode;
 };
 
 export default function PageWrapper({ title, actions, children }: Props) {

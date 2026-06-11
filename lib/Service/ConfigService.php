@@ -83,6 +83,7 @@ class ConfigService implements ConfigServiceInterface
     private $apiKeyPaths = null;
     private $connectorSettings = null;
     private $allowLocalNetworkRequests = false;
+    private string $whitelistHosts = '';
 
     /**
      * Theme Specific Config
@@ -194,6 +195,14 @@ class ConfigService implements ConfigServiceInterface
     }
 
     /**
+     * @inheritDoc
+     */
+    public function getWhitelistHosts(): string
+    {
+        return $this->whitelistHosts;
+    }
+
+    /**
      * Loads the settings from file.
      *  DO NOT CALL ANY STORE() METHODS IN HERE
      * @param \Psr\Container\ContainerInterface $container DI container which may be used in settings.php
@@ -267,44 +276,69 @@ class ConfigService implements ConfigServiceInterface
             $config->allowLocalNetworkRequests = $allowLocalNetworkRequests;
         }
 
+        // Host-header allow-list (comma-separated). Operator-set; deployment-time only.
+        if (isset($whitelistHosts)) {
+            $config->whitelistHosts = (string)$whitelistHosts;
+        }
+
         // Set this as the global config
         return $config;
     }
 
     /**
-     * Loads the theme
-     * @param string|null $themeName
-     * @throws ConfigurationException
+     * Loads the theme.
+     * Branding config is read from library/brand/config.json; the web/theme/ folder is no longer required.
      */
     public function loadTheme($themeName = null): void
     {
-        global $config;
-
-        // What is the currently selected theme?
-        $globalTheme = ($themeName == null)
-            ? basename($this->getSetting('GLOBAL_THEME_NAME', 'default'))
-            : $themeName;
-
-        // Is this theme valid?
-        $systemTheme = (is_dir(PROJECT_ROOT . '/web/theme/' . $globalTheme)
-            && file_exists(PROJECT_ROOT . '/web/theme/' . $globalTheme . '/config.php'));
-        $customTheme = (is_dir(PROJECT_ROOT . '/web/theme/custom/' . $globalTheme)
-            && file_exists(PROJECT_ROOT . '/web/theme/custom/' . $globalTheme . '/config.php'));
-
-        if ($systemTheme) {
-            require(PROJECT_ROOT . '/web/theme/' . $globalTheme . '/config.php');
-            $themeFolder = 'theme/' . $globalTheme . '/';
-        } elseif ($customTheme) {
-            require(PROJECT_ROOT . '/web/theme/custom/' . $globalTheme . '/config.php');
-            $themeFolder = 'theme/custom/' . $globalTheme . '/';
-        } else {
-            throw new ConfigurationException(__('The theme "%s" does not exist', $globalTheme));
-        }
-
         $this->themeLoaded = true;
-        $this->themeConfig = $config;
-        $this->themeConfig['themeCode'] = $globalTheme;
-        $this->themeConfig['themeFolder'] = $themeFolder;
+        $this->themeConfig = [
+            'theme_name'     => 'Xibo Default Theme',
+            'theme_title'    => 'Xibo Digital Signage',
+            'app_name'       => 'Xibo',
+            'theme_url'      => 'https://xibosignage.com',
+            'cms_source_url' => 'https://github.com/xibosignage/xibo/',
+            'themeCode'      => 'default',
+            'themeFolder'    => '',
+        ];
+
+        // Overlay brand config from library/brand/config.json
+        $brandConfig = $this->getBrandConfig();
+        if (!empty($brandConfig['productName'])) {
+            $this->themeConfig['theme_title'] = $brandConfig['productName'];
+        }
+        if (!empty($brandConfig['appName'])) {
+            $this->themeConfig['app_name'] = $brandConfig['appName'];
+        }
+        if (!empty($brandConfig['supportUrl'])) {
+            $this->themeConfig['theme_url'] = $brandConfig['supportUrl'];
+        }
+    }
+
+    /**
+     * Read branding configuration from library/brand/config.json.
+     * Returns an empty array when the file is absent (Xibo defaults apply).
+     */
+    public function getBrandConfig(): array
+    {
+        $libraryLocation = $this->getSetting('LIBRARY_LOCATION', '');
+        if (empty($libraryLocation)) {
+            return [];
+        }
+        $configFile = rtrim($libraryLocation, '/') . '/brand/config.json';
+        if (!file_exists($configFile)) {
+            return [];
+        }
+        $raw = json_decode(file_get_contents($configFile), true) ?? [];
+
+        // Support both new key names (productName/appName/supportUrl) and the legacy
+        // PHP config keys (theme_title/app_name/theme_url) so existing WL config.json
+        // files produced with old key names keep working during the transition.
+        return [
+            'productName' => $raw['productName'] ?? $raw['theme_title'] ?? null,
+            'appName'     => $raw['appName']     ?? $raw['app_name']    ?? null,
+            'supportUrl'  => $raw['supportUrl']  ?? $raw['theme_url']   ?? null,
+        ];
     }
 
     /**
@@ -329,6 +363,7 @@ class ConfigService implements ConfigServiceInterface
      * @param string $uri
      * @param bool $local
      * @return string
+     * @deprecated All callers should use direct paths; web/theme/ folder is being removed.
      */
     public function uri($uri, $local = false)
     {
@@ -365,17 +400,10 @@ class ConfigService implements ConfigServiceInterface
      * @param string $uri
      * @return string
      */
+    /** @deprecated web/theme/ has been removed; always returns false */
     public function themeFileExists($uri)
     {
-        if (!$this->themeLoaded)
-            return file_exists(PROJECT_ROOT . '/web/theme/default/' . $uri);
-
-        // Serve the appropriate theme file
-        if (file_exists(PROJECT_ROOT . '/web/' . $this->themeConfig['themeFolder'] . $uri)) {
-            return true;
-        } else {
-            return file_exists(PROJECT_ROOT . '/web/theme/default/' . $uri);
-        }
+        return false;
     }
 
     /**
@@ -499,6 +527,21 @@ class ConfigService implements ConfigServiceInterface
             $this->settingsCacheDropped = true;
             $this->settings = null;
         }
+    }
+
+    /** @inheritdoc */
+    public function getAllSettingsWithMeta()
+    {
+        $settings = $this->loadSettings();
+        $result = [];
+        foreach ($settings as $setting) {
+            $result[$setting['setting']] = [
+                'value' => $setting['value'],
+                'userSee' => intval($setting['userSee']),
+                'userChange' => intval($setting['userChange']),
+            ];
+        }
+        return $result;
     }
 
     /**

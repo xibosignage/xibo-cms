@@ -556,6 +556,11 @@ class DataSet implements \JsonSerializable
                     continue;
                 }
 
+                // Formula path is the one DataSet sanitization site that does NOT use
+                // Sql::sanitizeFragment() — when a formula column contains a disallowed
+                // keyword we silently skip the offending column and keep rendering the
+                // rest of the dataset, rather than failing the whole query. The other
+                // two sites (filter, keyword) below throw via sanitizeFragment().
                 $count = 0;
                 $formula = Sql::cleanup(
                     htmlspecialchars_decode($column->formula, ENT_QUOTES),
@@ -585,19 +590,18 @@ class DataSet implements \JsonSerializable
         $body .= ' FROM `dataset_' . $this->dataSetId . '`) dataset WHERE 1 = 1 ';
 
         // Filtering
+        // ---------
+        // Boundary sanitization choke point. Multiple upstream sites assemble filter
+        // fragments (DataSetDataProviderListener::buildFilterClause for the clause
+        // builder, DataSetRss::getFeed for RSS feed clauses, DataSet.filter for the
+        // raw mode). All of them converge here; this is the ONE place where SQL is
+        // sanitized for the filter path. Per-callsite escaping in the assembly code
+        // is unnecessary by design.
         if ($filter != '') {
             // Support display filtering.
             $filter = str_replace('[DisplayId]', $displayId, $filter);
 
-            $filterCount = 0;
-            $filter = Sql::cleanup($filter, $filterCount);
-
-            if ($filterCount > 0) {
-                throw new InvalidArgumentException(
-                    __('Filter contains disallowed keywords'),
-                    'filter'
-                );
-            }
+            $filter = Sql::sanitizeFragment($filter, 'filter');
 
             $body .= ' AND ' . $filter;
         }
@@ -612,8 +616,12 @@ class DataSet implements \JsonSerializable
         $keyword = $filterBy['keyword'] ?? '';
 
         if ($keyword !== '') {
-            $keyword = str_ireplace(Sql::DISALLOWED_KEYWORDS, '', $keyword);
-
+            // Same boundary-sanitizer pattern as the filter path above. Callers
+            // (DataSetData::buildKeywordFilter, DataSetRss::getDataRssFilterQuery)
+            // build keyword fragments from validated column headings + PDO-bound
+            // :keyword_$i placeholders, but the sanitizeFragment() call defends
+            // against future regressions that introduce user text into this path.
+            $keyword = Sql::sanitizeFragment($keyword, 'keyword');
             $body .= ' AND ' . $keyword;
         }
 

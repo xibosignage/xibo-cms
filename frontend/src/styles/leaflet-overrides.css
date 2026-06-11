@@ -1,0 +1,209 @@
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+.leaflet-bar {
+  border: none !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18) !important;
+}
+
+.leaflet-top.leaflet-right .leaflet-control {
+  margin-top: 12px !important;
+  margin-right: 16px !important;
+}
+
+.leaflet-top.leaflet-right > .leaflet-control:first-of-type {
+  margin-top: 16px !important;
+}
+
+.leaflet-top.leaflet-left .leaflet-control {
+  margin-top: 12px !important;
+  margin-left: 16px !important;
+}
+
+.leaflet-top.leaflet-left > .leaflet-control:first-of-type {
+  margin-top: 16px !important;
+}
+
+.leaflet-bar a {
+  width: 38px !important;
+  height: 38px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-bottom-color: #e5e7eb !important;
+}
+
+.leaflet-bar a:first-child {
+  border-radius: 8px 8px 0 0 !important;
+}
+
+.leaflet-bar a:last-child {
+  border-radius: 0 0 8px 8px !important;
+  border-bottom: none !important;
+}
+
+.leaflet-bar a:only-child {
+  border-radius: 8px !important;
+}
+
+.leaflet-control-easyPrint > a:first-child {
+  border-radius: 8px !important;
+}
+
+.leaflet-control-easyPrint {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.easyPrintHolder {
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+  position: absolute !important;
+  right: 38px !important;
+  height: 38px;
+  top: 0 !important;
+  white-space: nowrap !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.easyPrintSizeMode {
+  display: inline-block !important;
+  margin-right: 8px !important;
+}
+
+.easyPrintHolder .easyPrintSizeMode a {
+  border-radius: 8px !important;
+  background-color: white !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18) !important;
+  border-bottom: none !important;
+}
+
+.easyPrintHolder .easyPrintSizeMode a:hover {
+  background-color: #f4f4f4 !important;
+}
+
+.leaflet-draw-toolbar a,
+.leaflet-control-geosearch a.leaflet-bar-part {
+  background-origin: content-box !important;
+  padding: 4px !important;
+  box-sizing: border-box !important;
+}
+
+.leaflet-control-geosearch.leaflet-bar {
+  overflow: visible !important;
+}
+
+.leaflet-control-geosearch a.leaflet-bar-part {
+  border-radius: 8px !important;
+  position: relative !important;
+}
+
+.leaflet-control-geosearch a.leaflet-bar-part:after {
+  top: 15px !important;
+  left: 15px !important;
+}
+
+.leaflet-control-geosearch a.leaflet-bar-part:before {
+  top: 22px !important;
+  left: 20px !important;
+}
+
+.leaflet-geosearch-button.active .leaflet-bar-part {
+  border-radius: 8px 0 0 8px !important;
+  width: 38px !important;
+}
+
+.leaflet-control-geosearch form {
+  border-radius: 0 8px 8px 8px !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18) !important;
+  border: none !important;
+  padding: 0 38px 0 8px !important;
+}
+
+.leaflet-control-geosearch form input {
+  height: 38px !important;
+  border: none !important;
+  outline: none !important;
+  border-radius: 0 !important;
+  font-size: 14px !important;
+}
+
+.leaflet-control-geosearch button.reset {
+  width: 38px !important;
+  height: 38px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 0 8px 8px 0 !important;
+  background-color: white !important;
+  color: #9ca3af !important;
+  font-size: 18px !important;
+  font-weight: 300 !important;
+  border: none !important;
+  cursor: pointer !important;
+  top: 0 !important;
+  right: 0 !important;
+}
+
+.leaflet-control-geosearch button.reset:hover {
+  background-color: #f3f4f6 !important;
+  color: #374151 !important;
+}
+
+.leaflet-right .leaflet-draw-actions {
+  right: 46px !important;
+  left: auto !important;
+  top: 0 !important;
+}
+
+.leaflet-right .leaflet-draw-actions.leaflet-draw-actions-bottom {
+  top: 38px !important;
+}
+
+.leaflet-draw-actions li {
+  display: inline-block !important;
+  margin-left: 6px !important;
+  background: transparent !important;
+}
+
+.leaflet-draw-actions li a {
+  background-color: white !important;
+  color: #374151 !important;
+  height: 38px !important;
+  line-height: 38px !important;
+  padding: 0 16px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+  border: none !important;
+  display: inline-block !important;
+}
+
+.leaflet-draw-actions li a:hover {
+  background-color: #f3f4f6 !important;
+  color: #111827 !important;
+}

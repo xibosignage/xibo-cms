@@ -24,8 +24,23 @@ export type ExpiryValue =
   | { type: 'preset'; value: string }
   | { type: 'datePicked'; date: Date };
 
-export function formatDateTime(date: Date) {
-  return new Intl.DateTimeFormat('sv-SE', {
+function getParts(date: Date, options: Intl.DateTimeFormatOptions) {
+  const parts = new Intl.DateTimeFormat('en', options).formatToParts(date);
+  return (type: string) => parts.find((p) => p.type === type)?.value ?? '00';
+}
+
+export function formatDate(date: Date, timeZone?: string) {
+  const get = getParts(date, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    ...(timeZone ? { timeZone } : {}),
+  });
+  return `${get('month')}-${get('day')}-${get('year')}`;
+}
+
+export function formatDateTime(date: Date, timeZone?: string) {
+  const get = getParts(date, {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -33,9 +48,9 @@ export function formatDateTime(date: Date) {
     minute: '2-digit',
     second: '2-digit',
     hour12: false,
-  })
-    .format(date)
-    .replace(',', '');
+    ...(timeZone ? { timeZone } : {}),
+  });
+  return `${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')}:${get('second')}`;
 }
 
 function daysFromNow(days: number) {
@@ -156,4 +171,9 @@ export function resolveLastModified(value?: string | null) {
   }
 
   return {};
+}
+
+export function resolveLastAccessed(value?: string | null) {
+  if (!value) return {};
+  return { lastAccessed: value };
 }

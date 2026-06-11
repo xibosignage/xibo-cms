@@ -32,31 +32,48 @@ import type { Dataset } from '@/types/dataset';
 import type { ActionItem, BaseModalType } from '@/types/table';
 
 export interface DatasetFilterInput {
+  dataSet: string;
   dataSetId: string;
   code: string;
   userId: string;
   lastModified: string;
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: boolean;
 }
 
 export type ModalType = BaseModalType | null;
 
 export const INITIAL_FILTER_STATE: DatasetFilterInput = {
+  dataSet: '',
   dataSetId: '',
   userId: '',
   code: '',
   lastModified: '',
+  logicalOperatorName: 'OR',
+  useRegexForName: false,
 };
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DatasetFilterInput>[] => [
   {
-    label: t('Dataset ID'),
-    placeholder: t('Enter ID'),
+    label: t('ID'),
+    placeholder: ' ',
     name: 'dataSetId',
     type: 'number',
   },
   {
+    label: t('Name'),
+    name: 'dataSet',
+    type: 'text',
+    className: '',
+    placeholder: ' ',
+    showAndOr: true,
+    andOrKey: 'logicalOperatorName',
+    showRegex: true,
+    regexKey: 'useRegexForName',
+  },
+  {
     label: t('Code'),
-    placeholder: t('Enter Code'),
+    placeholder: ' ',
     name: 'code',
     type: 'text',
   },
@@ -64,17 +81,13 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DatasetFilterI
     label: t('Owner'),
     name: 'userId',
     className: '',
-    shouldTranslateOptions: false,
-    showAllOption: false,
     options: [{ label: t('Select Owner'), value: null }],
   },
   {
     label: t('Last Modified'),
     name: 'lastModified',
     className: '',
-    shouldTranslateOptions: true,
-    showAllOption: false,
-    allowCustomRange: true,
+    type: 'date-range',
     options: getCommonFormOptions(t).lastModifiedFilter,
   },
 ];
@@ -173,6 +186,15 @@ export const getDatasetItemActions = ({
         onNavigate(`/library/datasets/${dataset.dataSetId}/rss`);
       },
     },
+    ...(dataset.isRealTime
+      ? [
+          {
+            label: t('View Data Connector'),
+            isNavigation: true,
+            onClick: () => onNavigate(`/library/datasets/${dataset.dataSetId}/dataconnector`),
+          },
+        ]
+      : []),
     { isSeparator: true },
     {
       label: t('Delete'),
@@ -255,9 +277,9 @@ export const getDatasetColumns = (props: DatasetActionsProps): ColumnDef<Dataset
     {
       id: 'tableActions',
       header: '',
-      size: 120,
-      minSize: 120,
-      maxSize: 120,
+      size: 80,
+      minSize: 80,
+      maxSize: 80,
       enableHiding: false,
       enableResizing: false,
       cell: ({ row }) => (

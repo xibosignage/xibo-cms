@@ -53,7 +53,6 @@ export interface UploadItem {
   duration?: number;
   enableStat?: string;
   retired?: number;
-  retryCount?: number;
   thumbnailBlob?: Blob;
 }
 
@@ -112,7 +111,6 @@ export const useUploadQueue = (defaultFolderId: number = 1): UseUploadQueueRetur
           displayName: data.name ?? item.displayName,
           tags: data.tags ?? item.tags,
           isDirty: true, // Marks item for sync if upload is done or in progress
-          retryCount: 0,
           thumbnailBlob: data.thumbnailBlob !== undefined ? data.thumbnailBlob : item.thumbnailBlob,
           ...(shouldRetry && { status: 'pending', error: undefined, progress: 0 }),
         };
@@ -311,10 +309,7 @@ export const useUploadQueue = (defaultFolderId: number = 1): UseUploadQueueRetur
 
     const itemToSync = queue.find(
       (item) =>
-        (item.status === 'completed' || item.status === 'error') &&
-        item.isDirty &&
-        item.mediaId &&
-        (item.retryCount || 0) < 3,
+        (item.status === 'completed' || item.status === 'error') && item.isDirty && item.mediaId,
     );
 
     if (!itemToSync) {
@@ -338,7 +333,6 @@ export const useUploadQueue = (defaultFolderId: number = 1): UseUploadQueueRetur
               ? {
                   ...item,
                   isDirty: false,
-                  retryCount: 0,
                   status: 'completed',
                   error: undefined,
                 }
@@ -366,7 +360,6 @@ export const useUploadQueue = (defaultFolderId: number = 1): UseUploadQueueRetur
                   isDirty: false,
                   status: 'error',
                   error: errorMsg,
-                  retryCount: (item.retryCount || 0) + 1,
                 }
               : item,
           ),

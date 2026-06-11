@@ -38,29 +38,26 @@ class ModuleTemplateFactory extends BaseFactory
 {
     use ModuleXmlTrait;
 
-    /** @var ModuleTemplate[]|null */
-    private $templates = null;
-
-    /** @var \Stash\Interfaces\PoolInterface */
-    private $pool;
-
-    /** @var \Slim\Views\Twig */
-    private $twig;
+    /**
+     * @var ModuleTemplate[]|null
+     */
+    private ?array $templates = null;
 
     /**
-     * Construct a factory
-     * @param PoolInterface $pool
-     * @param \Slim\Views\Twig $twig
+     * ModuleTemplateFactory constructor.
+     *
+     * @param  PoolInterface $pool
+     * @param  Twig          $twig
      */
-    public function __construct(PoolInterface $pool, Twig $twig)
-    {
-        $this->pool = $pool;
-        $this->twig = $twig;
+    public function __construct(
+        private readonly PoolInterface $pool,
+        private readonly Twig $twig,
+    ) {
     }
 
     /**
-     * @param string $type The type of template (element|elementGroup|static)
-     * @param string $id
+     * @param  string $type The type of template (element|elementGroup|static)
+     * @param  string $id
      * @return ModuleTemplate
      * @throws NotFoundException
      */
@@ -71,11 +68,12 @@ class ModuleTemplateFactory extends BaseFactory
                 return $template;
             }
         }
+
         throw new NotFoundException(sprintf(__('%s not found for %s'), $type, $id));
     }
 
     /**
-     * @param int $id
+     * @param  int $id
      * @return ModuleTemplate
      * @throws NotFoundException
      */
@@ -91,8 +89,8 @@ class ModuleTemplateFactory extends BaseFactory
     }
 
     /**
-     * @param string $dataType
-     * @param string $id
+     * @param  string $dataType
+     * @param  string $id
      * @return ModuleTemplate
      * @throws NotFoundException
      */
@@ -121,6 +119,7 @@ class ModuleTemplateFactory extends BaseFactory
                 $templates[] = $template;
             }
         }
+
         return $templates;
     }
 
@@ -145,7 +144,7 @@ class ModuleTemplateFactory extends BaseFactory
     }
 
     /**
-     * @param string $assetId
+     * @param  string $assetId
      * @return Asset
      * @throws NotFoundException
      */
@@ -163,7 +162,7 @@ class ModuleTemplateFactory extends BaseFactory
     }
 
     /**
-     * @param string $alias
+     * @param  string $alias
      * @return Asset
      * @throws NotFoundException
      */
@@ -182,6 +181,7 @@ class ModuleTemplateFactory extends BaseFactory
 
     /**
      * Get an array of all modules
+     *
      * @param string|null $ownership
      * @param bool $includeUserTemplates
      * @return ModuleTemplate[]
@@ -208,6 +208,7 @@ class ModuleTemplateFactory extends BaseFactory
 
     /**
      * Get an array of all modules
+     *
      * @return Asset[]
      * @throws NotFoundException
      */
@@ -226,7 +227,8 @@ class ModuleTemplateFactory extends BaseFactory
 
     /**
      * Load templates
-     * @param bool $includeUserTemplates
+     *
+     * @param  bool $includeUserTemplates
      * @return ModuleTemplate[]
      * @throws NotFoundException
      */
@@ -259,6 +261,7 @@ class ModuleTemplateFactory extends BaseFactory
 
     /**
      * Load templates
+     *
      * @return ModuleTemplate[]
      */
     private function loadFolder(string $folder, string $ownership): array
@@ -271,8 +274,10 @@ class ModuleTemplateFactory extends BaseFactory
             try {
                 $templates = array_merge($templates, $this->createMultiFromXml($file, $ownership));
             } catch (\Exception $exception) {
-                $this->getLog()->error('Unable to create template from '
-                    . basename($file) . ', skipping. e = ' . $exception->getMessage());
+                $this->getLog()->error(
+                    'Unable to create template from '
+                    . basename($file) . ', skipping. e = ' . $exception->getMessage()
+                );
             }
         }
 
@@ -281,6 +286,7 @@ class ModuleTemplateFactory extends BaseFactory
 
     /**
      * Load user templates from the database.
+     *
      * @return ModuleTemplate[]
      * @throws NotFoundException
      */
@@ -322,7 +328,7 @@ class ModuleTemplateFactory extends BaseFactory
 
         if (!empty($filter->getString('dataType'))) {
             $body .= ' AND `dataType` = :dataType ';
-            $params['dataType'] = $filter->getString('dataType') ;
+            $params['dataType'] = $filter->getString('dataType');
         }
 
         if (!$disableUserCheck) {
@@ -398,7 +404,8 @@ class ModuleTemplateFactory extends BaseFactory
 
     /**
      * Create a user template from an XML string
-     * @param string $xmlString
+     *
+     * @param  string $xmlString
      * @return ModuleTemplate
      */
     public function createUserTemplate(string $xmlString): ModuleTemplate
@@ -415,8 +422,9 @@ class ModuleTemplateFactory extends BaseFactory
 
     /**
      * Create multiple templates from XML
-     * @param string $file
-     * @param string $ownership
+     *
+     * @param  string $file
+     * @param  string $ownership
      * @return ModuleTemplate[]
      */
     private function createMultiFromXml(string $file, string $ownership): array
@@ -428,8 +436,10 @@ class ModuleTemplateFactory extends BaseFactory
 
         foreach ($xml->getElementsByTagName('templates') as $node) {
             if ($node instanceof DOMElement) {
-                $this->getLog()->debug('createMultiFromXml: there are ' . count($node->childNodes)
-                    . ' templates in ' . $file);
+                $this->getLog()->debug(
+                    'createMultiFromXml: there are ' . count($node->childNodes)
+                    . ' templates in ' . $file
+                );
                 foreach ($node->childNodes as $childNode) {
                     if ($childNode instanceof DOMElement) {
                         $templates[] = $this->createFromXml($childNode, $ownership, $file);
@@ -442,9 +452,9 @@ class ModuleTemplateFactory extends BaseFactory
     }
 
     /**
-     * @param DOMElement $xml
-     * @param string $ownership
-     * @param string $file
+     * @param  DOMElement $xml
+     * @param  string      $ownership
+     * @param  string      $file
      * @return ModuleTemplate
      */
     private function createFromXml(DOMElement $xml, string $ownership, string $file): ModuleTemplate
@@ -489,8 +499,10 @@ class ModuleTemplateFactory extends BaseFactory
             $template->extends = $this->getExtends($xml->getElementsByTagName('extends'))[0] ?? null;
         } catch (\Exception $e) {
             $template->errors[] = __('Invalid Extends');
-            $this->getLog()->error('Module Template ' . $template->templateId
-                . ' has invalid extends definition. e: ' .  $e->getMessage());
+            $this->getLog()->error(
+                'Module Template ' . $template->templateId
+                . ' has invalid extends definition. e: ' .  $e->getMessage()
+            );
         }
 
         // Parse property definitions.
@@ -498,8 +510,10 @@ class ModuleTemplateFactory extends BaseFactory
             $template->properties = $this->parseProperties($xml->getElementsByTagName('properties'));
         } catch (\Exception $e) {
             $template->errors[] = __('Invalid properties');
-            $this->getLog()->error('Module Template ' . $template->templateId
-                . ' has invalid properties. e: ' .  $e->getMessage());
+            $this->getLog()->error(
+                'Module Template ' . $template->templateId
+                . ' has invalid properties. e: ' .  $e->getMessage()
+            );
         }
 
         // Parse group property definitions.
@@ -507,8 +521,10 @@ class ModuleTemplateFactory extends BaseFactory
             $template->propertyGroups = $this->parsePropertyGroups($xml->getElementsByTagName('propertyGroups'));
         } catch (\Exception $e) {
             $template->errors[] = __('Invalid property groups');
-            $this->getLog()->error('Module Template ' . $template->templateId . ' has invalid property groups. e: '
-                .  $e->getMessage());
+            $this->getLog()->error(
+                'Module Template ' . $template->templateId . ' has invalid property groups. e: '
+                .  $e->getMessage()
+            );
         }
 
         // Parse stencil
@@ -516,8 +532,10 @@ class ModuleTemplateFactory extends BaseFactory
             $template->stencil = $this->getStencils($xml->getElementsByTagName('stencil'))[0] ?? null;
         } catch (\Exception $e) {
             $template->errors[] = __('Invalid stencils');
-            $this->getLog()->error('Module Template ' . $template->templateId
-                . ' has invalid stencils. e: ' .  $e->getMessage());
+            $this->getLog()->error(
+                'Module Template ' . $template->templateId
+                . ' has invalid stencils. e: ' .  $e->getMessage()
+            );
         }
 
         // Parse assets
@@ -525,8 +543,10 @@ class ModuleTemplateFactory extends BaseFactory
             $template->assets = $this->parseAssets($xml->getElementsByTagName('assets'));
         } catch (\Exception $e) {
             $template->errors[] = __('Invalid assets');
-            $this->getLog()->error('Module Template ' . $template->templateId
-                . ' has invalid assets. e: ' .  $e->getMessage());
+            $this->getLog()->error(
+                'Module Template ' . $template->templateId
+                . ' has invalid assets. e: ' .  $e->getMessage()
+            );
         }
 
         return $template;
@@ -535,7 +555,7 @@ class ModuleTemplateFactory extends BaseFactory
     /**
      * Parse properties json into xml node.
      *
-     * @param string $properties
+     * @param  string $properties
      * @return DOMDocument
      * @throws DOMException
      */

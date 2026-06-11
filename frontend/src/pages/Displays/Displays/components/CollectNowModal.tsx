@@ -41,6 +41,7 @@ export default function CollectNowModal({
 
   return (
     <Modal
+      variant="confirmation"
       isOpen
       isPending={isActionPending}
       onClose={onClose}

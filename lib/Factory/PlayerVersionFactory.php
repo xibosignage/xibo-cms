@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -33,30 +33,15 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class PlayerVersionFactory extends BaseFactory
 {
-    /**
-     * @var ConfigServiceInterface
-     */
-    private $config;
-
-    /**
-     * Construct a factory
-     * @param User $user
-     * @param UserFactory $userFactory
-     * @param ConfigServiceInterface $config
-     */
-    public function __construct($user, $userFactory, $config)
-    {
+    public function __construct(
+        User $user,
+        UserFactory $userFactory,
+        private readonly ConfigServiceInterface $config,
+    ) {
         $this->setAclDependencies($user, $userFactory);
-
-        $this->config = $config;
-
     }
 
-    /**
-     * Create Empty
-     * @return PlayerVersion
-     */
-    public function createEmpty()
+    public function createEmpty(): PlayerVersion
     {
         return new PlayerVersion(
             $this->getStore(),
@@ -67,29 +52,16 @@ class PlayerVersionFactory extends BaseFactory
         );
     }
 
-    /**
-     * Populate Player Version table
-     * @param string $type
-     * @param int $version
-     * @param int $code
-     * @param string $playerShowVersion
-     * @param string $modifiedBy
-     * @param string $fileName
-     * @param int $size
-     * @param string $md5
-     * @return PlayerVersion
-     */
     public function create(
-        $type,
-        $version,
-        $code,
-        $playerShowVersion,
-        $modifiedBy,
-        $fileName,
-        $size,
-        $md5
-    )
-    {
+        string $type,
+        string $version,
+        int $code,
+        string $playerShowVersion,
+        string $modifiedBy,
+        string $fileName,
+        int $size,
+        string $md5,
+    ): PlayerVersion {
         $playerVersion = $this->createEmpty();
         $playerVersion->type = $type;
         $playerVersion->version = $version;
@@ -105,17 +77,15 @@ class PlayerVersionFactory extends BaseFactory
     }
 
     /**
-     * Get by Version Id
-     * @param int $versionId
-     * @return PlayerVersion
      * @throws NotFoundException
      */
-    public function getById($versionId)
+    public function getById(int $versionId): PlayerVersion
     {
         $versions = $this->query(null, array('disableUserCheck' => 1, 'versionId' => $versionId));
 
-        if (count($versions) <= 0)
+        if (count($versions) <= 0) {
             throw new NotFoundException(__('Cannot find version'));
+        }
 
         return $versions[0];
     }
@@ -138,18 +108,22 @@ class PlayerVersionFactory extends BaseFactory
     }
 
     /**
-     * @param null $sortOrder
-     * @param array $filterBy
      * @return PlayerVersion[]
-     * @throws NotFoundException
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query(?array $sortOrder = null, array $filterBy = []): array
     {
-        if ($sortOrder === null) {
-            $sortOrder = ['code DESC'];
-        }
-
         $sanitizedFilter = $this->getSanitizer($filterBy);
+
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            [
+                'versionId', 'type', 'version', 'code',
+                'playerShowVersion', 'fileName', 'size',
+                'createdAt', 'modifiedAt', 'modifiedBy',
+            ],
+            [],
+            ['code DESC'],
+        );
 
         $params = [];
         $entries = [];
@@ -173,40 +147,59 @@ class PlayerVersionFactory extends BaseFactory
             ';
 
         if ($sanitizedFilter->getInt('versionId', ['default' => -1]) != -1) {
-            $body .= " AND player_software.versionId = :versionId ";
+            $body .= ' AND player_software.versionId = :versionId ';
             $params['versionId'] = $sanitizedFilter->getInt('versionId');
         }
 
         if ($sanitizedFilter->getString('playerType') != '') {
-            $body .= " AND player_software.player_type = :playerType ";
+            $body .= ' AND player_software.player_type = :playerType ';
             $params['playerType'] = $sanitizedFilter->getString('playerType');
         }
 
         if ($sanitizedFilter->getString('playerVersion') != '') {
-            $body .= " AND player_software.player_version = :playerVersion ";
+            $body .= ' AND player_software.player_version = :playerVersion ';
             $params['playerVersion'] = $sanitizedFilter->getString('playerVersion');
         }
 
         if ($sanitizedFilter->getInt('playerCode') != '') {
-            $body .= " AND player_software.player_code = :playerCode ";
+            $body .= ' AND player_software.player_code = :playerCode ';
             $params['playerCode'] = $sanitizedFilter->getInt('playerCode');
         }
 
         if ($sanitizedFilter->getString('playerShowVersion') !== null) {
             $terms = explode(',', $sanitizedFilter->getString('playerShowVersion'));
-            $this->nameFilter('player_software', 'playerShowVersion', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
+            $this->nameFilter(
+                'player_software',
+                'playerShowVersion',
+                $terms,
+                $body,
+                $params,
+                ($sanitizedFilter->getCheckbox('useRegexForName') == 1)
+            );
+        }
+
+        if ($sanitizedFilter->getString('keyword') != null) {
+            $body .= $this->buildSearchQuery(
+                $sanitizedFilter->getString('keyword'),
+                $params,
+                ['player_software.playerShowVersion'],
+                ['player_software.versionId'],
+            );
         }
 
         // Sorting?
-        $order = '';
-        if (is_array($sortOrder)) {
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
-        }
+        $order = empty($sortOrder) ? '' : ' ORDER BY ' . implode(', ', $sortOrder);
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+        if ($filterBy !== null
+            && $sanitizedFilter->getInt('start') !== null
+            && $sanitizedFilter->getInt('length') !== null
+        ) {
+            $limit = ' LIMIT '
+                . $sanitizedFilter->getInt('start', ['default' => 0])
+                . ', '
+                . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
@@ -229,7 +222,7 @@ class PlayerVersionFactory extends BaseFactory
         return $entries;
     }
 
-    public function getDistinctType()
+    public function getDistinctType(): array
     {
         $params = [];
         $entries = [];
@@ -255,7 +248,7 @@ class PlayerVersionFactory extends BaseFactory
         return $entries;
     }
 
-    public function getDistinctVersion()
+    public function getDistinctVersion(): array
     {
         $params = [];
         $entries = [];
@@ -272,8 +265,11 @@ class PlayerVersionFactory extends BaseFactory
         return $entries;
     }
 
-    public function getSizeAndCount()
+    public function getSizeAndCount(): array
     {
-        return $this->getStore()->select('SELECT IFNULL(SUM(size), 0) AS SumSize, COUNT(*) AS totalCount FROM `player_software`', [])[0];
+        return $this->getStore()->select(
+            'SELECT IFNULL(SUM(size), 0) AS SumSize, COUNT(*) AS totalCount FROM `player_software`',
+            []
+        )[0];
     }
 }

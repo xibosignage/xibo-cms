@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -26,6 +26,7 @@ use Carbon\Carbon;
 use Cron\CronExpression;
 use Illuminate\Support\Str;
 use Psr\Container\ContainerInterface;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Interfaces\PoolInterface;
@@ -33,6 +34,9 @@ use Xibo\Factory\TaskFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\XTR\TaskInterface;
 
@@ -42,20 +46,11 @@ use Xibo\XTR\TaskInterface;
  */
 class Task extends Base
 {
-    /** @var  TaskFactory */
-    private $taskFactory;
-
-    /** @var  StorageServiceInterface */
-    private $store;
-
-    /** @var  TimeSeriesStoreInterface */
-    private $timeSeriesStore;
-
-    /** @var  PoolInterface */
-    private $pool;
-
-    /** ContainerInterface */
-    private $container;
+    private TaskFactory $taskFactory;
+    private StorageServiceInterface $store;
+    private TimeSeriesStoreInterface $timeSeriesStore;
+    private PoolInterface $pool;
+    private ContainerInterface $container;
 
     /**
      * Set common dependencies.
@@ -65,8 +60,13 @@ class Task extends Base
      * @param TaskFactory $taskFactory
      * @param ContainerInterface $container
      */
-    public function __construct($store, $timeSeriesStore, $pool, $taskFactory, ContainerInterface $container)
-    {
+    public function __construct(
+        StorageServiceInterface $store,
+        TimeSeriesStoreInterface $timeSeriesStore,
+        PoolInterface $pool,
+        TaskFactory $taskFactory,
+        ContainerInterface $container
+    ) {
         $this->taskFactory = $taskFactory;
         $this->store = $store;
         $this->timeSeriesStore = $timeSeriesStore;
@@ -75,134 +75,70 @@ class Task extends Base
     }
 
     /**
-     * Display Page
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function displayPage(Request $request, Response $response)
-    {
-        $this->getState()->template = 'task-page';
-
-        return $this->render($request, $response);
-    }
-
-    /**
      * Grid
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @return ResponseInterface|Response
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
      */
-    public function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $taskSortQuery = $this->gridRenderSort(
+            $sanitizedParams,
+            $this->isJson($request),
+        );
+
         $tasks = $this->taskFactory->query(
-            $this->gridRenderSort($sanitizedParams),
+            $taskSortQuery,
             $this->gridRenderFilter([], $sanitizedParams)
         );
 
         foreach ($tasks as $task) {
-            /** @var \Xibo\Entity\Task $task */
-
-            $task->setUnmatchedProperty('nextRunDt', $task->nextRunDate());
-
-            if ($this->isApi($request)) {
-                continue;
-            }
-
-            $task->includeProperty('buttons');
-
-            $task->buttons[] = array(
-                'id' => 'task_button_run.now',
-                'url' => $this->urlFor($request, 'task.runNow.form', ['id' => $task->taskId]),
-                'text' => __('Run Now'),
-                'dataAttributes' => [
-                    ['name' => 'auto-submit', 'value' => true],
-                    [
-                        'name' => 'commit-url',
-                        'value' => $this->urlFor($request, 'task.runNow', ['id' => $task->taskId]),
-                    ],
-                    ['name' => 'commit-method', 'value' => 'POST']
-                ]
-            );
-
-            // Don't show any edit buttons if the config is locked.
-            if ($this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') == 1
-                || $this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') == 'Checked'
-            ) {
-                continue;
-            }
-
-            // Edit Button
-            $task->buttons[] = array(
-                'id' => 'task_button_edit',
-                'url' => $this->urlFor($request, 'task.edit.form', ['id' => $task->taskId]),
-                'text' => __('Edit')
-            );
-
-            // Delete Button
-            $task->buttons[] = array(
-                'id' => 'task_button_delete',
-                'url' => $this->urlFor($request, 'task.delete.form', ['id' => $task->taskId]),
-                'text' => __('Delete')
-            );
+            $task->setClassAndOptions();
+            $this->decorateTaskProperties($task);
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->taskFactory->countLast();
-        $this->getState()->setData($tasks);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $this->taskFactory->countLast())
+            ->withJson($tasks);
     }
 
     /**
-     * Add form
+     * Search by ID
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @param int $id
+     * @return ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
-    public function addForm(Request $request, Response $response)
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
-        // Provide a list of possible task classes by searching for .task file in /tasks and /custom
-        $data = ['tasksAvailable' => []];
+        $task = $this->taskFactory->getById($id);
+        $task->setClassAndOptions();
 
-        // Do we have any modules to install?!
-        if ($this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') != 1 && $this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') != 'Checked') {
-            // Get a list of matching files in the modules folder
-            $files = array_merge(glob(PROJECT_ROOT . '/tasks/*.task'), glob(PROJECT_ROOT . '/custom/*.task'));
+        $this->decorateTaskProperties($task);
 
-            // Add to the list of available tasks
-            foreach ($files as $file) {
-                $config = json_decode(file_get_contents($file));
-                $config->file = Str::replaceFirst(PROJECT_ROOT, '', $file);
-
-                $data['tasksAvailable'][] = $config;
-            }
-        }
-
-        $this->getState()->template = 'task-form-add';
-        $this->getState()->setData($data);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson($task);
     }
 
     /**
      * Add
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
      */
-    public function add(Request $request, Response $response)
+    public function add(Request $request, Response $response): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -217,51 +153,26 @@ class Task extends Base
         $task->setClassAndOptions();
         $task->save();
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 201,
-            'message' => sprintf(__('Added %s'), $task->name),
-            'id' => $task->taskId,
-            'data' => $task
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Edit Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function editForm(Request $request, Response $response, $id)
-    {
-        $task = $this->taskFactory->getById($id);
-        $task->setClassAndOptions();
-
-        $this->getState()->template = 'task-form-edit';
-        $this->getState()->setData([
-            'task' => $task
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(201)
+            ->withJson([
+                'message' => sprintf(__('Added %s'), $task->name),
+                'id' => $task->taskId,
+                'data' => $task,
+            ]);
     }
 
     /**
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $task = $this->taskFactory->getById($id);
 
@@ -286,121 +197,69 @@ class Task extends Base
 
         $task->save();
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 200,
-            'message' => sprintf(__('Edited %s'), $task->name),
-            'id' => $task->taskId,
-            'data' => $task
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Delete Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function deleteForm(Request $request, Response $response, $id)
-    {
-        $task = $this->taskFactory->getById($id);
-
-        $this->getState()->template = 'task-form-delete';
-        $this->getState()->setData([
-            'task' => $task
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson([
+                'message' => sprintf(__('Edited %s'), $task->name),
+                'id' => $task->taskId,
+                'data' => $task,
+            ]);
     }
 
     /**
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws GeneralException
      */
-    public function delete(Request $request, Response $response, $id)
+    public function delete(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $task = $this->taskFactory->getById($id);
         $task->delete();
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Deleted %s'), $task->name)
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Delete Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function runNowForm(Request $request, Response $response, $id)
-    {
-        $task = $this->taskFactory->getById($id);
-
-        $this->getState()->template = 'task-form-run-now';
-        $this->getState()->autoSubmit = $this->getAutoSubmit('taskRunNowForm');
-        $this->getState()->setData([
-            'task' => $task
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(204)
+            ->withJson([
+                'message' => sprintf(__('Deleted %s'), $task->name),
+            ]);
     }
 
     /**
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
      */
-    public function runNow(Request $request, Response $response, $id)
+    public function runNow(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $task = $this->taskFactory->getById($id);
         $task->runNow = 1;
         $task->save();
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Run Now set on %s'), $task->name)
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(204)
+            ->withJson([
+                'message' => sprintf(__('Run Now set on %s'), $task->name),
+            ]);
     }
 
     /**
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return ResponseInterface|Response
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
      */
-    public function run(Request $request, Response $response, $id)
+    public function run(Request $request, Response $response, $id): Response|ResponseInterface
     {
         // Get this task
         if (is_numeric($id)) {
@@ -490,11 +349,11 @@ class Task extends Base
      *  allow for multiple polls to run at the same time
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @return ResponseInterface|Response
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
      */
-    public function poll(Request $request, Response $response)
+    public function poll(Request $request, Response $response): Response|ResponseInterface
     {
         $this->getLog()->debug('poll: XTR poll started');
 
@@ -540,7 +399,11 @@ class Task extends Base
 
                     // Try and take the first X characters instead.
                     try {
-                        $cron = new CronExpression(substr($task['schedule'], 0, strlen($task['schedule']) - 2));
+                        $cron = new CronExpression(substr(
+                            $task['schedule'],
+                            0,
+                            strlen($task['schedule']) - 2)
+                        );
                     } catch (\Exception) {
                         $this->getLog()->error('run: cannot fix CRON syntax error  ' . $taskId);
                         continue;
@@ -617,5 +480,56 @@ class Task extends Base
         } else {
             $this->getLog()->debug('No timed out tasks.');
         }
+    }
+
+    /**
+     * Returns the task list
+     * @param Request $request
+     * @param Response $response
+     * @return ResponseInterface|Response
+     */
+    public function getTaskList(Request $request, Response $response): Response|ResponseInterface
+    {
+        // Provide a list of possible task classes by searching for .task file in /tasks and /custom
+        $data = ['tasksAvailable' => []];
+
+        // Do we have any modules to install?!
+        if ($this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') != 1 &&
+            $this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') != 'Checked'
+        ) {
+            // Get a list of matching files in the modules folder
+            $files = array_merge(
+                glob(PROJECT_ROOT . '/tasks/*.task'),
+                glob(PROJECT_ROOT . '/custom/*.task')
+            );
+
+            // Add to the list of available tasks
+            foreach ($files as $file) {
+                $config = json_decode(file_get_contents($file));
+                $config->file = Str::replaceFirst(PROJECT_ROOT, '', $file);
+
+                $data['tasksAvailable'][] = $config;
+            }
+        }
+
+        return $response
+            ->withStatus(200)
+            ->withJson($data);
+    }
+
+    /**
+     * Decorate the task properties
+     * @param $task
+     * @return void
+     * @throws InvalidArgumentException
+     */
+    private function decorateTaskProperties($task): void
+    {
+        $task->setUnmatchedProperty('nextRunDt', $task->nextRunDate());
+
+        $task->setUnmatchedProperty('isConfigLocked', (
+            $this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') == 1 ||
+            $this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') == 'Checked'
+        ));
     }
 }

@@ -38,16 +38,25 @@ import { twMerge } from 'tailwind-merge';
 
 import DatePicker from '../DatePicker';
 
+import { useUserContext } from '@/context/UserContext';
 import type { ExpiryValue } from '@/utils/date';
 
 interface ExpiryDateSelectProps {
   value?: ExpiryValue;
   options: string[];
   onSelect: (value: ExpiryValue) => void;
+  optional?: boolean;
 }
 
-export default function ExpiryDateSelect({ value, options, onSelect }: ExpiryDateSelectProps) {
+export default function ExpiryDateSelect({
+  value,
+  options,
+  onSelect,
+  optional = false,
+}: ExpiryDateSelectProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
+  const timeZone = user?.settings?.defaultTimezone;
 
   const [isOpen, setIsOpen] = useState(false);
   const [openDatePicker, setOpenDatePicker] = useState(false);
@@ -82,7 +91,10 @@ export default function ExpiryDateSelect({ value, options, onSelect }: ExpiryDat
 
   return (
     <div className="relative overflow-visible">
-      <label className="text-sm font-semibold text-gray-500">{t('Expiry Date')}</label>
+      <label className="flex items-center justify-between text-sm font-semibold text-gray-500">
+        <span>{t('Expiry Date')}</span>
+        {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
+      </label>
 
       <div
         ref={refs.setReference}
@@ -97,7 +109,7 @@ export default function ExpiryDateSelect({ value, options, onSelect }: ExpiryDat
             ? t('Never Expire')
             : value?.type === 'preset'
               ? t(value.value)
-              : value?.date.toLocaleString()}
+              : value?.date.toLocaleString(undefined, timeZone ? { timeZone } : undefined)}
         </span>
         <button
           type="button"

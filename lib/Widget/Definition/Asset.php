@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -97,6 +97,16 @@ class Asset implements \JsonSerializable
         // Verify the asset is cached and update its path.
         $assetPath = $libraryLocation . 'assets/' . $this->getFilename();
         if (!file_exists($assetPath) || $forceUpdate) {
+            // Runtime safety net mirroring the parser check in ModuleXmlTrait::parseAssets —
+            // asset paths must reference files under /modules/ or /custom/ and may not contain
+            // traversal sequences.
+            if (str_contains($this->path, '..')
+                || (!str_starts_with($this->path, '/modules/')
+                    && !str_starts_with($this->path, '/custom/'))
+            ) {
+                throw new GeneralException('Asset path is not in an allowed location');
+            }
+
             $result = @copy(PROJECT_ROOT . $this->path, $assetPath);
             if (!$result) {
                 throw new GeneralException('Unable to copy asset');

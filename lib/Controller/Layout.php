@@ -34,6 +34,7 @@ use Stash\Interfaces\PoolInterface;
 use Stash\Item;
 use Xibo\Entity\Region;
 use Xibo\Entity\Session;
+use Xibo\Event\FolderTouchEvent;
 use Xibo\Event\TemplateProviderImportEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
@@ -214,7 +215,7 @@ class Layout extends Base
             throw new AccessDeniedException();
         }
 
-        // Get the parent layout if it's editable
+        // Get the draft layout if it's editable
         if ($layout->isEditable()) {
             // Get the Layout using the Draft ID
             $layout = $this->layoutFactory->getByParentId($id);
@@ -439,6 +440,8 @@ class Layout extends Base
         // Save
         $layout->save(['appendCountOnDuplicate' => true]);
 
+        $this->touchFolder($layout->folderId);
+
         if ($templateId != null && $template !== null) {
             $layout->copyActions($layout, $template);
             // set Layout original values to current values
@@ -582,11 +585,10 @@ class Layout extends Base
         $layout->code = $sanitizedParams->getString('code');
         $layout->folderId = $sanitizedParams->getInt('folderId', ['default' => $layout->folderId]);
 
-        if ($layout->hasPropertyChanged('folderId')) {
-            if ($layout->folderId === 1) {
-                $this->checkRootFolderAllowSave();
-            }
-            $folderChanged = true;
+        $folderChanged = $layout->hasPropertyChanged('folderId');
+        $oldFolderId = $folderChanged ? $layout->getOriginalValue('folderId') : null;
+        if ($folderChanged && $layout->folderId === 1) {
+            $this->checkRootFolderAllowSave();
         }
 
         if ($layout->hasPropertyChanged('layout')) {
@@ -601,6 +603,10 @@ class Layout extends Base
             'setBuildRequired' => false,
             'notify' => false
         ]);
+
+        if ($folderChanged) {
+            $this->touchFolder($layout->folderId, $oldFolderId);
+        }
 
         if ($folderChanged || $nameChanged) {
             // permissionsFolderId depends on the Campaign, hence why we need to get the edited Layout back here
@@ -846,7 +852,6 @@ class Layout extends Base
         if ($source === 'remote') {
             // Hand off to the connector
             $event = new TemplateProviderImportEvent(
-                $sanitizedParams->getString('download'),
                 $sanitizedParams->getString('templateId'),
                 $this->getConfig()->getSetting('LIBRARY_LOCATION')
             );
@@ -1059,6 +1064,7 @@ class Layout extends Base
         }
 
         $layout->delete();
+        $this->touchFolder($layout->folderId);
 
         // Return
         $this->getState()->hydrate([
@@ -1568,21 +1574,41 @@ class Layout extends Base
             // Preview
             if ($this->getUser()->featureEnabled('layout.view')) {
                 $baseUrl = (new HttpsDetect())->getBaseUrl($request);
-                $jwt = $this->jwtService->generateJwt(
-                    'Preview',
-                    'layout',
-                    $layout->layoutId,
-                    '/preview/layout/preview/' . $layout->layoutId,
-                    3600,
-                )->toString();
+
+                // Published layout (this one)
                 $layout->setUnmatchedProperty(
                     'previewUrl',
-                    $baseUrl . '/preview/layout/preview/' . $layout->layoutId . '?jwt=' . $jwt,
+                    $baseUrl . '/preview/layout/preview/' . $layout->layoutId . '?jwt='
+                    . $this->jwtService->generateJwt(
+                        'Preview',
+                        'layout',
+                        $layout->layoutId,
+                        '/preview/layout/preview/' . $layout->layoutId,
+                        3600,
+                    )->toString(),
                 );
-                $layout->setUnmatchedProperty(
-                    'previewDraftUrl',
-                    $baseUrl . '/preview/layout/preview/' . $layout->layoutId . '?jwt=' . $jwt,
-                );
+
+                // If we are a draft, output the draft URL
+                if ($layout->isEditable()) {
+                    // Draft
+                    try {
+                        $draftLayout = $this->layoutFactory->getByParentId($layout->layoutId);
+
+                        $layout->setUnmatchedProperty(
+                            'previewDraftUrl',
+                            $baseUrl . '/preview/layout/preview/' . $draftLayout->layoutId . '?jwt='
+                            . $this->jwtService->generateJwt(
+                                'Preview',
+                                'layout',
+                                $draftLayout->layoutId,
+                                '/preview/layout/preview/' . $draftLayout->layoutId,
+                                3600,
+                            )->toString(),
+                        );
+                    } catch (NotFoundException) {
+                        // There should be a draft layout, but there isn't
+                    }
+                }
             }
         }
 
@@ -2043,7 +2069,15 @@ class Layout extends Base
     public function status(Request $request, Response $response, $id)
     {
         // Get the layout
-        $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($id));
+        $layout = $this->layoutFactory->getById($id);
+
+        // Ensure this layout is viewable for this user.
+        if (!$this->getUser()->checkViewable($layout)) {
+            throw new AccessDeniedException();
+        }
+
+        // Take out a lock
+        $layout = $this->layoutFactory->concurrentRequestLock($layout);
         try {
             $layout = $this->layoutFactory->decorateLockedProperties($layout);
             $layout->xlfToDisk();
@@ -2734,7 +2768,7 @@ class Layout extends Base
                                 $region->left + ($region->width / 2),
                                 $region->top + ($region->height / 2),
                                 function ($font) {
-                                    $font->file(PROJECT_ROOT . '/web/theme/default/fonts/Railway.ttf');
+                                    $font->file(PROJECT_ROOT . '/fonts/Railway.ttf');
                                     $font->size(84);
                                     $font->color('#000000');
                                     $font->align('center');
@@ -2796,7 +2830,7 @@ class Layout extends Base
                                     $region->left + ($region->width / 2),
                                     $region->top + ($region->height / 2),
                                     function ($font) {
-                                        $font->file(PROJECT_ROOT . '/web/theme/default/fonts/Railway.ttf');
+                                        $font->file(PROJECT_ROOT . '/fonts/Railway.ttf');
                                         $font->size(84);
                                         $font->color('#000000');
                                         $font->align('center');
@@ -2812,7 +2846,7 @@ class Layout extends Base
                             $region->left + $region->width - 10,
                             $region->top + $region->height - 10,
                             function ($font) {
-                                $font->file(PROJECT_ROOT . '/web/theme/default/fonts/Railway.ttf');
+                                $font->file(PROJECT_ROOT . '/fonts/Railway.ttf');
                                 $font->size(36);
                                 $font->color('#000000');
                                 $font->align('right');
@@ -3219,5 +3253,13 @@ class Layout extends Base
 
         $layout->setUnmatchedProperty('statusDescription', $statusDescription);
         $layout->setUnmatchedProperty('enableStatDescription', $enableStatDescription);
+    }
+
+    private function touchFolder(int $folderId, ?int $oldFolderId = null): void
+    {
+        $this->getDispatcher()->dispatch(
+            new FolderTouchEvent($folderId, $oldFolderId),
+            FolderTouchEvent::$NAME
+        );
     }
 }

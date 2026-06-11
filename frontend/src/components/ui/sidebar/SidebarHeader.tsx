@@ -21,8 +21,7 @@
 
 import { ChevronLeftSquare, ChevronRightSquare, X } from 'lucide-react';
 
-import favIcon from '@/assets/xibo-logo-icon.svg';
-import logo from '@/assets/xibo-logo.svg';
+import { useBranding } from '@/context/BrandingContext';
 
 interface Props {
   isCollapsed: boolean;
@@ -31,11 +30,13 @@ interface Props {
 }
 
 export function SidebarHeader({ isCollapsed, toggleSidebar, closeMobileDrawer }: Props) {
+  const { logoUrl, faviconUrl, appName } = useBranding();
+
   return (
     <>
       {isCollapsed && (
         <div className="flex justify-center">
-          <img src={favIcon} alt="Xibo Logo" className="w-11 h-10" />
+          <img src={faviconUrl} alt={appName} className="w-11 h-10" />
         </div>
       )}
 
@@ -46,10 +47,7 @@ export function SidebarHeader({ isCollapsed, toggleSidebar, closeMobileDrawer }:
       >
         {!isCollapsed && (
           <div className="flex gap-2 items-end">
-            <img src={logo} alt="Xibo Logo" className="w-[77.287px] h-auto" />
-            <span className="border text-[10px] border-xibo-white/20 px-1 py-0.5 rounded-full text-white">
-              V5.0
-            </span>
+            <img src={logoUrl} alt={appName} className="w-[77.287px] h-auto" />
           </div>
         )}
 

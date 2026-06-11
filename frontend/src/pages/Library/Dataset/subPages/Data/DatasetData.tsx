@@ -21,6 +21,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
+import { isAxiosError } from 'axios';
 import { Plus, Search, Slash, Table, Filter, FilterX } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -67,7 +68,7 @@ export default function DatasetData() {
     filterInputs,
     setFilterInputs,
     isHydrated,
-  } = useTableState<Record<string, string>>(`dataset_data_${datasetId}`, {
+  } = useTableState<Record<string, string>>('dataset_data', {
     pagination: { pageIndex: 0, pageSize: 10 },
     sorting: [],
     columnVisibility: {},
@@ -226,8 +227,9 @@ export default function DatasetData() {
       handleRefresh();
     },
     onError: (err: unknown) => {
-      const apiError = err as { response?: { data?: { message?: string } } };
-      setDeleteError(apiError.response?.data?.message || t('Failed to delete rows.'));
+      setDeleteError(
+        (isAxiosError(err) && err.response?.data?.message) || t('Failed to delete rows.'),
+      );
     },
   });
 

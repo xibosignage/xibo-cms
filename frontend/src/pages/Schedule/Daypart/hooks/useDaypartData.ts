@@ -27,6 +27,7 @@ import type { DaypartFilterInput } from '../DaypartConfig';
 
 import type { FetchDaypartRequest } from '@/services/daypartApi';
 import { fetchDaypart } from '@/services/daypartApi';
+import { isValidRegex } from '@/utils/regex';
 
 export const daypartQueryKeys = {
   all: ['daypart'] as const,
@@ -66,14 +67,21 @@ export const useDaypartData = ({
       const sortBy = sorting?.[0]?.id;
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
 
+      const { useRegexForName, logicalOperatorName } = advancedFilters;
+
       const request: FetchDaypartRequest = {
         start: startOffset,
         length: pagination.pageSize,
         keyword: filter,
+        name: advancedFilters.name ?? undefined,
         isRetired: advancedFilters.retired ?? undefined,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
+        ...(useRegexForName && advancedFilters.name && isValidRegex(advancedFilters.name)
+          ? { useRegexForName: 1 }
+          : {}),
+        ...(logicalOperatorName ? { logicalOperatorName } : {}),
       };
 
       return fetchDaypart(request);

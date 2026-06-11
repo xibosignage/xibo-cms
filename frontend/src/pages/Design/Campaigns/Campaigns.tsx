@@ -46,12 +46,14 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import { fetchContextButtons } from '@/services/folderApi';
 import type { Campaign } from '@/types/campaign';
+import { hasFeature } from '@/utils/permissions';
 
 export default function Campaigns() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { user } = useUserContext();
   const canViewFolders = usePermissions()?.canViewFolders;
+  const canSchedule = hasFeature(user, 'schedule.add');
   const homeFolderId = user?.homeFolderId ?? 1;
 
   const location = useLocation();
@@ -145,10 +147,10 @@ export default function Campaigns() {
     folderId: selectedFolderId,
   });
 
+  const effectiveFolderId = selectedFolderId ?? homeFolderId;
   const { data: folderPerms } = useQuery({
-    queryKey: ['folderPermissions', selectedFolderId],
-    queryFn: () => fetchContextButtons(selectedFolderId as number),
-    enabled: selectedFolderId !== null,
+    queryKey: ['folderPermissions', effectiveFolderId],
+    queryFn: () => fetchContextButtons(effectiveFolderId),
     staleTime: 1000 * 60 * 5,
   });
 
@@ -247,6 +249,11 @@ export default function Campaigns() {
     openModal('move');
   };
 
+  const openScheduleModal = (campaign: Campaign) => {
+    setSelectedCampaignId(campaign.campaignId);
+    openModal('schedule');
+  };
+
   const openAddModal = () => {
     openModal('add');
   };
@@ -263,6 +270,7 @@ export default function Campaigns() {
     openCopyModal,
     openMoveModal,
     openShareModal,
+    onSchedule: canSchedule ? openScheduleModal : undefined,
   });
 
   const getAllSelectedItems = (): Campaign[] => {
@@ -308,7 +316,7 @@ export default function Campaigns() {
       />
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
         <div className="flex flex-row justify-between py-4 items-center gap-4">
-          <TabNav activeTab="Campaign" navigation={libraryTabs} />
+          <TabNav activeTab="Campaigns" navigation={libraryTabs} />
           <div className="flex items-center gap-2 md:mb-0">
             <Button
               variant="primary"
@@ -422,6 +430,7 @@ export default function Campaigns() {
         }}
         selection={{
           selectedCampaign,
+          defaultFolderId: effectiveFolderId,
           itemsToDelete,
           existingNames,
           itemsToMove,

@@ -48,21 +48,17 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<SessionFilterI
     label: t('From Date'),
     name: 'lastModified',
     className: '',
-    shouldTranslateOptions: true,
-    showAllOption: false,
-    allowCustomRange: true,
+    type: 'date-range',
     options: getCommonFormOptions(t).lastModifiedFilter,
   },
   {
     label: t('Type'),
     name: 'type',
     className: '',
-    shouldTranslateOptions: true,
-    showAllOption: true,
     options: [
-      { label: 'Active', value: 'active' },
-      { label: 'Guest', value: 'guest' },
-      { label: 'Expired', value: 'expired' },
+      { label: t('Active'), value: 'active' },
+      { label: t('Guest'), value: 'guest' },
+      { label: t('Expired'), value: 'expired' },
     ],
   },
 ];
@@ -132,9 +128,9 @@ export const getSessionColumns = (props: SessionActionsProps): ColumnDef<Session
     {
       id: 'tableActions',
       header: '',
-      size: 40,
-      minSize: 40,
-      maxSize: 40,
+      size: 80,
+      minSize: 80,
+      maxSize: 80,
       enableHiding: false,
       enableResizing: false,
       cell: ({ row }) =>

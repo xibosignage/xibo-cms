@@ -23,6 +23,7 @@
 namespace Xibo\Factory;
 
 use Xibo\Entity\TagLink;
+use Xibo\Widget\Definition\Sql;
 
 trait TagTrait
 {
@@ -35,6 +36,9 @@ trait TagTrait
      */
     public function loadTagsByEntityId(string $table, string $column, int $entityId)
     {
+        $table = Sql::validateIdentifier($table, 'table');
+        $column = Sql::validateIdentifier($column, 'column');
+
         $tags = [];
 
         $sql = 'SELECT tag.tagId, tag.tag, `'. $table .'`.value FROM `tag` INNER JOIN `'.$table.'` ON `'.$table.'`.tagId = tag.tagId WHERE `'.$table.'`.'.$column.' = :entityId';
@@ -62,6 +66,14 @@ trait TagTrait
      */
     public function decorateWithTagLinks(string $table, string $column, array $entityIds, array $entries): void
     {
+        $table = Sql::validateIdentifier($table, 'table');
+        $column = Sql::validateIdentifier($column, 'column');
+
+        // Force every entity ID to int before concatenating into the IN-list.
+        // Defence in depth — current callers always pass int arrays, but this
+        // makes the assumption an enforced contract.
+        $entityIds = array_map('intval', $entityIds);
+
         // Query to get all tags from a tag link table for a set of entityIds
         $sql = 'SELECT `tag`.`tagId`, `tag`.`tag`, `' . $table . '`.`value`, `' . $table . '`.`' . $column . '`'
             . '   FROM `tag` '
@@ -92,6 +104,11 @@ trait TagTrait
 
     public function getTagUsageByEntity(string $tagLinkTable, string $idColumn, string $nameColumn, string $entity, int $tagId, &$entries)
     {
+        $tagLinkTable = Sql::validateIdentifier($tagLinkTable, 'tagLinkTable');
+        $idColumn = Sql::validateIdentifier($idColumn, 'idColumn');
+        $nameColumn = Sql::validateIdentifier($nameColumn, 'nameColumn');
+        $entity = Sql::validateIdentifier($entity, 'entity');
+
         $sql = 'SELECT `'.$tagLinkTable.'`.'.$idColumn.' AS entityId, `'.$entity.'`.'.$nameColumn.' AS name, `'. $tagLinkTable .'`.value, \''.$entity.'\' AS type FROM `'.$tagLinkTable.'` INNER JOIN `'.$entity.'` ON `'.$tagLinkTable.'`.'.$idColumn.' = `'.$entity.'`.'.$idColumn.' WHERE `'.$tagLinkTable.'`.tagId = :tagId ';
         foreach ($this->getStore()->select($sql, ['tagId' => $tagId]) as $row) {
             $entries[] = $row;

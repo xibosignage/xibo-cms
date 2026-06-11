@@ -94,9 +94,21 @@ class NationalWeatherServiceConnector implements ConnectorInterface, EmergencyAl
         return 'National Weather Service (NWS)';
     }
 
+    public function getFormDescriptionHtml(): string
+    {
+        return '<p>' . __('Access real-time weather alerts provided by the National Weather Service (NWS).') . '</p>'
+            . "\n" . '<p>'
+            . __('The data includes weather warnings, watches, and advisories delivered in Atom feed format.')
+            . '</p>'
+            . "\n" . '<p>' . __(
+                'Weather alert data is sourced directly from the'
+                . ' <a href="https://www.weather.gov/" target="_blank">National Weather Service</a>.'
+            ) . '</p>';
+    }
+
     public function getThumbnail(): string
     {
-        return 'theme/default/img/connectors/xibo-nws.png';
+        return '';
     }
 
     public function getSettingsFormTwig(): string
@@ -110,6 +122,24 @@ class NationalWeatherServiceConnector implements ConnectorInterface, EmergencyAl
             $settings['atomFeedUri'] = $params->getString('atomFeedUri');
         }
         return $settings;
+    }
+
+    public function getSettingsFields(): array
+    {
+        return [
+            [
+                'name'         => 'atomFeedUri',
+                'type'         => 'text',
+                'label'        => __('NWS Atom Feed URL'),
+                'helpText'     => __(
+                    'This is the default URL for the NWS Atom Feed.'
+                    . ' You can update it if the URL changes in the future.'
+                ),
+                'required'     => false,
+                'providerOnly' => $this->isProviderSetting('atomFeedUri'),
+                'default'      => 'https://api.weather.gov/alerts/active.atom',
+            ],
+        ];
     }
 
     /**

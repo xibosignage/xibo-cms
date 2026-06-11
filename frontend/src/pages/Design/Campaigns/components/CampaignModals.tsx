@@ -28,9 +28,11 @@ import EditCampaignModal from './EditCampaignModal';
 
 import FolderActionModals from '@/components/ui/FolderActionModals';
 import MoveModal from '@/components/ui/modals/MoveModal';
+import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
 import type { useFolderActions } from '@/hooks/useFolderActions';
 import type { Campaign } from '@/types/campaign';
+import { EventTypeId } from '@/types/event';
 
 interface CampaignModalsProps {
   actions: {
@@ -43,6 +45,7 @@ interface CampaignModalsProps {
   };
   selection: {
     selectedCampaign: Campaign | null;
+    defaultFolderId?: number;
     itemsToDelete: Campaign[];
     itemsToMove: Campaign[];
     existingNames: string[];
@@ -82,6 +85,7 @@ export function CampaignModals({
       {/* Add */}
       {isModalOpen('add') && (
         <AddCampaignModal
+          defaultFolderId={selection.defaultFolderId}
           onClose={actions.closeModal}
           onSuccess={() => {
             actions.handleRefresh();
@@ -137,6 +141,21 @@ export function CampaignModals({
           onConfirm={handlers.handleConfirmMove}
           items={selection.itemsToMove}
           entityLabel={t('Campaigns')}
+        />
+      )}
+
+      {/* Schedule */}
+      {isModalOpen('schedule') && selection.selectedCampaign && (
+        <ScheduleEventModal
+          isOpen
+          onClose={() => {
+            actions.closeModal();
+            actions.handleRefresh();
+          }}
+          mode="schedule"
+          eventTypeId={EventTypeId.Campaign}
+          contentId={selection.selectedCampaign.campaignId}
+          contentName={selection.selectedCampaign.campaign}
         />
       )}
     </>

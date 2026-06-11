@@ -21,7 +21,7 @@
 
 import { UploadCloud } from 'lucide-react';
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 import type { PublishValue } from '../forms/PublishDateSelect';
 import PublishDateSelect from '../forms/PublishDateSelect';
@@ -95,8 +95,11 @@ export default function PublishModal({
         <h2 className="text-center text-lg font-semibold text-gray-800">{titleText}</h2>
 
         <p className="text-center text-gray-500">
-          {t('Are you sure you want to publish ')}"<strong>{fileName}</strong>?"
-          {t(' If it is already in use the update will automatically get pushed.')}
+          <Trans
+            i18nKey='Are you sure you want to publish "<strong>{{name}}</strong>"? If it is already in use the update will automatically get pushed.'
+            values={{ name: fileName }}
+            components={{ strong: <strong /> }}
+          />
         </p>
 
         <PublishDateSelect value={publishValue} onSelect={setPublishValue} />

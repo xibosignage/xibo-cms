@@ -89,7 +89,7 @@ class ApiAuthentication implements Middleware
 
                 $server->enableGrantType(
                     new AuthCodeGrant(
-                        new \Xibo\OAuth\AuthCodeRepository(),
+                        new \Xibo\OAuth\AuthCodeRepository($container->get('pool')),
                         new \Xibo\OAuth\RefreshTokenRepository($logger, $container->get('pool')),
                         new \DateInterval('PT10M')
                     ),

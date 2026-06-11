@@ -20,6 +20,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
+import { isAxiosError } from 'axios';
 import { Minus, Plus } from 'lucide-react';
 import { useEffect, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -213,7 +214,7 @@ export function AddAndEditDatasetRssModal({
         setFilterRows([{ operator: 'AND', column: '', criteria: 'starts-with', value: '' }]);
       }
     }
-  }, [isOpen, type, rss, t]);
+  }, [isOpen, type, rss]);
 
   const updateDraft = <K extends keyof DatasetRssPayload>(
     field: K,
@@ -249,6 +250,7 @@ export function AddAndEditDatasetRssModal({
 
       setFormErrors(errors);
       setActiveTab('general');
+      setApiError(t('Please fix the highlighted errors before saving.'));
       return;
     }
 
@@ -264,8 +266,9 @@ export function AddAndEditDatasetRssModal({
         onSave();
         onClose();
       } catch (err: unknown) {
-        const apiErr = err as { response?: { data?: { message?: string } } };
-        setApiError(apiErr.response?.data?.message || t('An unexpected error occurred.'));
+        setApiError(
+          (isAxiosError(err) && err.response?.data?.message) || t('An unexpected error occurred.'),
+        );
       }
     });
   };
@@ -281,6 +284,7 @@ export function AddAndEditDatasetRssModal({
 
   return (
     <Modal
+      variant="tabbed"
       title={type === 'add' ? t('Add RSS') : t('Edit RSS')}
       onClose={onClose}
       isOpen={isOpen}
@@ -294,10 +298,7 @@ export function AddAndEditDatasetRssModal({
       ]}
     >
       <div className="flex flex-col h-full overflow-y-hidden overflow-x-visible px-4">
-        <nav
-          className="flex px-4 overflow-x-auto shrink-0 border-b border-gray-200"
-          aria-label="Tabs"
-        >
+        <nav className="flex px-4 overflow-x-auto shrink-0" aria-label="Tabs">
           <button
             type="button"
             className={getTabClass('general')}
