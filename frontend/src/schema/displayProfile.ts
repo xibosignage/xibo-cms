@@ -25,7 +25,7 @@ import z from 'zod';
 export const getAddDisplayProfileSchema = (t: TFunction) =>
   z.object({
     name: z.string().min(1, t('Name is required')).max(50, t('Name must be 50 characters or less')),
-    type: z.enum(['android', 'windows', 'linux', 'lg', 'sssp', 'chromeOS'], {
+    type: z.enum(['android', 'windows', 'linux', 'lg', 'sssp', 'chromeOS', 'hisense'], {
       errorMap: () => ({ message: t('Display type is required') }),
     }),
     isDefault: z.number(),

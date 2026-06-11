@@ -20,7 +20,6 @@
  */
 
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import type React from 'react';
 import { vi, beforeEach } from 'vitest';
 
 import { mockMediaData, renderMediaPage } from './mediaTestUtils';
@@ -59,11 +58,6 @@ vi.mock('@/services/folderApi', () => ({
   searchFolders: vi.fn().mockResolvedValue([]),
   fetchContextButtons: vi.fn().mockResolvedValue({ create: true }),
   selectFolder: vi.fn(),
-}));
-
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 // The Media page saves and loads user preferences (column order, page size, etc.)

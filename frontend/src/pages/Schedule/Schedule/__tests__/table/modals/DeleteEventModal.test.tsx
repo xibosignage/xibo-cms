@@ -27,11 +27,6 @@ import DeleteEventModal from '../../../components/DeleteEventModal';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
-
 // Swap the real Modal wrapper for a simple stand-in. The stand-in just dumps
 // the modal's contents and buttons into the page as plain HTML so the tests
 // can find them with normal queries. The stand-in marks itself as a "dialog"

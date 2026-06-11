@@ -26,6 +26,7 @@ use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Event\FolderTouchEvent;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\MenuBoardFactory;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -328,6 +329,8 @@ class MenuBoard extends Base
         $menuBoard->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
         $menuBoard->save();
 
+        $this->touchFolder($menuBoard->folderId);
+
         return $response
             ->withStatus(201)
             ->withJson($menuBoard);
@@ -378,7 +381,9 @@ class MenuBoard extends Base
         $menuBoard->code = $sanitizedParams->getString('code');
         $menuBoard->folderId = $sanitizedParams->getInt('folderId', ['default' => $menuBoard->folderId]);
 
-        if ($menuBoard->hasPropertyChanged('folderId')) {
+        $folderChanged = $menuBoard->hasPropertyChanged('folderId');
+        $oldFolderId = $folderChanged ? $menuBoard->getOriginalValue('folderId') : null;
+        if ($folderChanged) {
             if ($menuBoard->folderId === 1) {
                 $this->checkRootFolderAllowSave();
             }
@@ -389,6 +394,10 @@ class MenuBoard extends Base
         }
 
         $menuBoard->save();
+
+        if ($folderChanged) {
+            $this->touchFolder($menuBoard->folderId, $oldFolderId);
+        }
 
         return $response
             ->withStatus(200)
@@ -419,6 +428,7 @@ class MenuBoard extends Base
         }
 
         $menuBoard->delete();
+        $this->touchFolder($menuBoard->folderId);
 
         return $response->withStatus(204);
     }
@@ -472,6 +482,7 @@ class MenuBoard extends Base
             $this->checkRootFolderAllowSave();
         }
 
+        $oldFolderId = $menuBoard->folderId;
         $menuBoard->folderId = $folderId;
         $folder = $this->folderFactory->getById($menuBoard->folderId);
         $menuBoard->permissionsFolderId = ($folder->getPermissionFolderId() == null)
@@ -480,6 +491,16 @@ class MenuBoard extends Base
 
         $menuBoard->save();
 
+        $this->touchFolder($menuBoard->folderId, $oldFolderId);
+
         return $response->withStatus(204);
+    }
+
+    private function touchFolder(int $folderId, ?int $oldFolderId = null): void
+    {
+        $this->getDispatcher()->dispatch(
+            new FolderTouchEvent($folderId, $oldFolderId),
+            FolderTouchEvent::$NAME
+        );
     }
 }

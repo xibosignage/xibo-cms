@@ -53,6 +53,7 @@ export const getTypeOptions = (t: TFunction): { label: string; value: string }[]
   { label: t('webOS'), value: 'lg' },
   { label: t('Tizen'), value: 'sssp' },
   { label: t('ChromeOS'), value: 'chromeOS' },
+  { label: t('Hisense'), value: 'hisense' },
 ];
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayProfileFilterInput>[] => [

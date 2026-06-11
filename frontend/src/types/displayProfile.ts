@@ -19,7 +19,14 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export type DisplayProfileType = 'android' | 'windows' | 'linux' | 'lg' | 'sssp' | 'chromeOS';
+export type DisplayProfileType =
+  | 'android'
+  | 'windows'
+  | 'linux'
+  | 'lg'
+  | 'sssp'
+  | 'chromeOS'
+  | 'hisense';
 
 export interface DisplayProfileConfigItem {
   name: string;

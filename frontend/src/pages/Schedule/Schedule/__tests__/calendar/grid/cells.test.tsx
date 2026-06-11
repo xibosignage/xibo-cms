@@ -30,12 +30,6 @@ import { testQueryClient } from '@/setupTests';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
-const t = (key: string) => key;
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
-
 vi.mock('@/context/UserContext', () => ({
   useUserContext: () => ({
     user: {

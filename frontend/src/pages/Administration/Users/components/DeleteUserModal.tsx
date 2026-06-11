@@ -21,7 +21,7 @@
 
 import { Trash2Icon } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 import Checkbox from '@/components/ui/forms/Checkbox';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
@@ -108,7 +108,11 @@ export default function DeleteUserModal({
         </div>
 
         <p className="text-center text-gray-500">
-          {t('Are you sure you want to delete ')}"<strong>{userName}</strong>"?
+          <Trans
+            i18nKey='Are you sure you want to delete "<strong>{{name}}</strong>"?'
+            values={{ name: userName }}
+            components={{ strong: <strong /> }}
+          />
         </p>
 
         <div className="mt-2 space-y-3">

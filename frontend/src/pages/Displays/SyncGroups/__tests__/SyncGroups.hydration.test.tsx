@@ -46,14 +46,6 @@ import { testQueryClient } from '@/setupTests';
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next', () => {
-  const t = (key: string) => key;
-  return {
-    useTranslation: () => ({ t, i18n: { changeLanguage: vi.fn() } }),
-    Trans: ({ children }: { children: React.ReactNode }) => children,
-  };
-});
-
 vi.mock('@/services/syncGroupApi');
 vi.mock('@/services/userApi', () => ({
   // Never-resolving promise keeps the userPref query pending, so isHydrated

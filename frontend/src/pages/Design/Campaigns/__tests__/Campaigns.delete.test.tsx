@@ -20,7 +20,6 @@
  */
 
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import {
@@ -39,11 +38,6 @@ import { testQueryClient } from '@/setupTests';
 // the real hook with only the API layer stubbed, so the full delete flow
 // (confirmDelete → deleteCampaign → notify → closeModal) is exercised end-to-end.
 // =============================================================================
-
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
 
 vi.mock('@/services/campaignApi');
 vi.mock('@/services/folderApi', () => ({

@@ -20,7 +20,7 @@
  */
 
 import { Trash2Icon } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 import Modal from '@/components/ui/modals/Modal';
 
@@ -77,14 +77,17 @@ export default function DeleteDisplayModal({
         </div>
         <p className="text-center text-gray-500">
           {itemCount === 1 ? (
-            <>
-              {t('Are you sure you want to delete ')}"<strong>{displayName}</strong>?"
-            </>
+            <Trans
+              i18nKey='Are you sure you want to delete "<strong>{{name}}</strong>"?'
+              values={{ name: displayName }}
+              components={{ strong: <strong /> }}
+            />
           ) : (
-            <>
-              {t('Are you sure you want to delete ')}
-              <strong>{itemCount}</strong> {t('displays')}?
-            </>
+            <Trans
+              i18nKey="Are you sure you want to delete <strong>{{count}}</strong> displays?"
+              values={{ count: itemCount }}
+              components={{ strong: <strong /> }}
+            />
           )}
         </p>
 
