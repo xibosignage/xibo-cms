@@ -131,6 +131,7 @@ const renderWithAllColumns = (user = mockUser) => {
   testQueryClient.setQueryData(['userPref', 'campaign_page'], {
     columnVisibility: ALL_COLUMNS_VISIBLE,
   });
+  testQueryClient.setQueryData(['folderPermissions', user.homeFolderId ?? 1], { create: true });
   return render(
     <QueryClientProvider client={testQueryClient}>
       <UserProvider initialUser={user}>
@@ -160,6 +161,7 @@ const renderFresh = () => {
 // Standard render with default column visibility (most visible-column tests).
 const renderPage = (user = mockUser) => {
   testQueryClient.setQueryData(['userPref', 'campaign_page'], null);
+  testQueryClient.setQueryData(['folderPermissions', user.homeFolderId ?? 1], { create: true });
   return render(
     <QueryClientProvider client={testQueryClient}>
       <UserProvider initialUser={user}>

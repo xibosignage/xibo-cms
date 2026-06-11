@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -29,27 +29,15 @@ use Xibo\Support\Exception\NotFoundException;
 
 class FolderFactory extends BaseFactory
 {
-    /**
-     * @var PermissionFactory
-     */
-    private $permissionFactory;
-
-    /**
-     * Construct a factory
-     * @param PermissionFactory $permissionFactory
-     * @param User $user
-     * @param UserFactory $userFactory
-     */
-    public function __construct($permissionFactory, $user, $userFactory)
-    {
+    public function __construct(
+        private readonly PermissionFactory $permissionFactory,
+        User $user,
+        UserFactory $userFactory,
+    ) {
         $this->setAclDependencies($user, $userFactory);
-        $this->permissionFactory = $permissionFactory;
     }
 
-    /**
-     * @return Folder
-     */
-    public function createEmpty()
+    public function createEmpty(): Folder
     {
         return new Folder(
             $this->getStore(),
@@ -61,11 +49,9 @@ class FolderFactory extends BaseFactory
     }
 
     /**
-     * @param int $folderId
-     * @return Folder
      * @throws NotFoundException
      */
-    public function getById($folderId, $disableUserCheck = 1)
+    public function getById(int $folderId, int $disableUserCheck = 1): Folder
     {
         $folder = $this->query(null, ['folderId' => $folderId, 'disableUserCheck' => $disableUserCheck]);
 
@@ -77,11 +63,9 @@ class FolderFactory extends BaseFactory
     }
 
     /**
-     * @param int $folderId
-     * @return Folder
      * @throws NotFoundException
      */
-    public function getByParentId($folderId)
+    public function getByParentId(int $folderId): Folder
     {
         $folder = $this->query(null, ['parentId' => $folderId]);
 
@@ -93,25 +77,24 @@ class FolderFactory extends BaseFactory
     }
 
     /**
-     * @param array $sortOrder
-     * @param array $filterBy
      * @return Folder[]
-     * @throws NotFoundException
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query(?array $sortOrder = null, array $filterBy = []): array
     {
         $entries = [];
         $params = [];
         $sanitizedFilter = $this->getSanitizer($filterBy);
 
         $select = 'SELECT `folderId`,
-            `folderName`, 
+            `folderName`,
             `folderId` AS id,
             IF(`isRoot`=1, \'Root Folder\', `folderName`) AS text,
             `parentId`,
             `isRoot`,
             `children`,
-            `permissionsFolderId`
+            `permissionsFolderId`,
+            `createdDt`,
+            `modifiedDt`
         ';
 
         $body = '
@@ -154,7 +137,7 @@ class FolderFactory extends BaseFactory
 
         // get the exact match for the search functionality
         if ($sanitizedFilter->getInt('exactFolderName') === 1) {
-            $body.= " AND folder.folderName = :exactFolderName ";
+            $body .= ' AND folder.folderName = :exactFolderName ';
             $params['exactFolderName'] = $sanitizedFilter->getString('folderName');
         }
 
@@ -199,12 +182,7 @@ class FolderFactory extends BaseFactory
         return $entries;
     }
 
-    /**
-     * Add the count of times the provided folder has been used as a home folder
-     * @param Folder $folder
-     * @return void
-     */
-    public function decorateWithHomeFolderCount(Folder $folder)
+    public function decorateWithHomeFolderCount(Folder $folder): void
     {
         $results = $this->getStore()->select('
             SELECT COUNT(*) AS cnt
@@ -218,16 +196,14 @@ class FolderFactory extends BaseFactory
         $folder->setUnmatchedProperty('homeFolderCount', intval($results[0]['cnt'] ?? 0));
     }
 
-    /**
-     * Add sharing information to the provided folder
-     * @param Folder $folder
-     * @return void
-     */
-    public function decorateWithSharing(Folder $folder)
+    public function decorateWithSharing(Folder $folder): void
     {
         $results = $this->getStore()->select('
             SELECT `group`.group,
-                   `group`.isUserSpecific
+                   `group`.isUserSpecific,
+                   `permission`.`view`,
+                   `permission`.`edit`,
+                   `permission`.`delete`
               FROM `permission`
                 INNER JOIN `permissionentity`
                 ON `permissionentity`.entityId = permission.entityId
@@ -235,7 +211,7 @@ class FolderFactory extends BaseFactory
                 ON `group`.groupId = `permission`.groupId
              WHERE entity = :permissionEntity
                 AND objectId = :folderId
-                AND `view` = 1
+                AND (`view` = 1 OR `edit` = 1 OR `delete` = 1)
             ORDER BY `group`.isUserSpecific
         ', [
             'folderId' => $folder->id,
@@ -245,19 +221,17 @@ class FolderFactory extends BaseFactory
         $sharing = [];
         foreach ($results as $row) {
             $sharing[] = [
-                'name' => $row['group'],
+                'name'    => $row['group'],
                 'isGroup' => intval($row['isUserSpecific']) !== 1,
+                'view'    => intval($row['view']),
+                'edit'    => intval($row['edit']),
+                'delete'  => intval($row['delete']),
             ];
         }
         $folder->setUnmatchedProperty('sharing', $sharing);
     }
 
-    /**
-     * Add usage information to the provided folder
-     * @param Folder $folder
-     * @return void
-     */
-    public function decorateWithUsage(Folder $folder)
+    public function decorateWithUsage(Folder $folder): void
     {
         $usage = [];
 

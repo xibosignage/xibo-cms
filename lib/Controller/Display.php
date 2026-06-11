@@ -36,6 +36,7 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Event\DisplayGroupLoadEvent;
+use Xibo\Event\FolderTouchEvent;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayEventFactory;
 use Xibo\Factory\DisplayFactory;
@@ -75,72 +76,23 @@ class Display extends Base
 {
     use DisplayProfileConfigFields;
 
-    private StorageServiceInterface $store;
-    private PoolInterface $pool;
-    private PlayerActionServiceInterface $playerAction;
-    private DayPartFactory $dayPartFactory;
-    private DisplayFactory $displayFactory;
-    private DisplayGroupFactory $displayGroupFactory;
-    private LayoutFactory $layoutFactory;
-    private DisplayProfileFactory $displayProfileFactory;
-    private DisplayTypeFactory $displayTypeFactory;
-    private DisplayEventFactory $displayEventFactory;
-    private PlayerVersionFactory $playerVersionFactory;
-    private RequiredFileFactory $requiredFileFactory;
-    private TagFactory $tagFactory;
-    private NotificationFactory $notificationFactory;
-    private UserGroupFactory $userGroupFactory;
-
-    /**
-     * Set common dependencies.
-     * @param StorageServiceInterface $store
-     * @param PoolInterface $pool
-     * @param PlayerActionServiceInterface $playerAction
-     * @param DisplayFactory $displayFactory
-     * @param DisplayGroupFactory $displayGroupFactory
-     * @param DisplayTypeFactory $displayTypeFactory
-     * @param LayoutFactory $layoutFactory
-     * @param DisplayProfileFactory $displayProfileFactory
-     * @param DisplayEventFactory $displayEventFactory
-     * @param RequiredFileFactory $requiredFileFactory
-     * @param TagFactory $tagFactory
-     * @param NotificationFactory $notificationFactory
-     * @param UserGroupFactory $userGroupFactory
-     * @param PlayerVersionFactory $playerVersionFactory
-     * @param DayPartFactory $dayPartFactory
-     */
     public function __construct(
-        StorageServiceInterface $store,
-        PoolInterface $pool,
-        PlayerActionServiceInterface $playerAction,
-        DisplayFactory $displayFactory,
-        DisplayGroupFactory $displayGroupFactory,
-        DisplayTypeFactory $displayTypeFactory,
-        LayoutFactory $layoutFactory,
-        DisplayProfileFactory $displayProfileFactory,
-        DisplayEventFactory $displayEventFactory,
-        RequiredFileFactory $requiredFileFactory,
-        TagFactory $tagFactory,
-        NotificationFactory $notificationFactory,
-        UserGroupFactory $userGroupFactory,
-        PlayerVersionFactory $playerVersionFactory,
-        DayPartFactory $dayPartFactory
+        private readonly StorageServiceInterface $store,
+        private readonly PoolInterface $pool,
+        private readonly PlayerActionServiceInterface $playerAction,
+        private readonly DisplayFactory $displayFactory,
+        private readonly DisplayGroupFactory $displayGroupFactory,
+        private readonly DisplayTypeFactory $displayTypeFactory,
+        private readonly LayoutFactory $layoutFactory,
+        private readonly DisplayProfileFactory $displayProfileFactory,
+        private readonly DisplayEventFactory $displayEventFactory,
+        private readonly RequiredFileFactory $requiredFileFactory,
+        private readonly TagFactory $tagFactory,
+        private readonly NotificationFactory $notificationFactory,
+        private readonly UserGroupFactory $userGroupFactory,
+        private readonly PlayerVersionFactory $playerVersionFactory,
+        private readonly DayPartFactory $dayPartFactory
     ) {
-        $this->store = $store;
-        $this->pool = $pool;
-        $this->playerAction = $playerAction;
-        $this->displayFactory = $displayFactory;
-        $this->displayGroupFactory = $displayGroupFactory;
-        $this->displayTypeFactory = $displayTypeFactory;
-        $this->layoutFactory = $layoutFactory;
-        $this->displayProfileFactory = $displayProfileFactory;
-        $this->displayEventFactory = $displayEventFactory;
-        $this->requiredFileFactory = $requiredFileFactory;
-        $this->tagFactory = $tagFactory;
-        $this->notificationFactory = $notificationFactory;
-        $this->userGroupFactory = $userGroupFactory;
-        $this->playerVersionFactory = $playerVersionFactory;
-        $this->dayPartFactory = $dayPartFactory;
     }
 
     #[OA\Get(
@@ -1255,6 +1207,7 @@ class Display extends Base
         }
 
         $display->delete();
+        $this->touchFolder($display->folderId);
 
         // Return
         return $response->withStatus(204);
@@ -2237,7 +2190,8 @@ class Display extends Base
         // when there is no default display profile set for any of the existing display types.
         $displayProfileName = '';
         try {
-            $defaultDisplayProfile = $this->displayProfileFactory->getDefaultByType($display->clientType);
+            $profileType = $display->isHisensePlayer() ? 'hisense' : $display->clientType;
+            $defaultDisplayProfile = $this->displayProfileFactory->getDefaultByType($profileType);
             $displayProfileName = $defaultDisplayProfile->name;
         } catch (NotFoundException) {
             $this->getLog()->debug('No default Display Profile set for Display type ' . $display->clientType);
@@ -2326,5 +2280,13 @@ class Display extends Base
 
         // permissions
         $display->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($display));
+    }
+
+    private function touchFolder(int $folderId, ?int $oldFolderId = null): void
+    {
+        $this->getDispatcher()->dispatch(
+            new FolderTouchEvent($folderId, $oldFolderId),
+            FolderTouchEvent::$NAME
+        );
     }
 }

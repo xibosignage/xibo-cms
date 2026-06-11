@@ -167,6 +167,9 @@ class Soap5 extends Soap4
                 $displayElement->setAttribute('code', 'READY');
                 $displayElement->setAttribute('message', 'Display is active and ready to start.');
 
+                // Assign correct Hisense profile before generating settings (uses stored manufacturer/model)
+                $display->assignHisenseProfile();
+
                 // Display Settings
                 $settings = $this->display->getSettings(['displayOverride' => true]);
 
@@ -202,6 +205,10 @@ class Soap5 extends Soap4
                     }
 
                     $value = ($arrayItem['value'] ?? $arrayItem['default']);
+
+                    if ($value === null) {
+                        continue;
+                    }
 
                     // Patch download and update windows to make sure they are only 00:00
                     // https://github.com/xibosignage/xibo/issues/1791

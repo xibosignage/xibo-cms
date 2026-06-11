@@ -27,6 +27,7 @@ use RobThree\Auth\TwoFactorAuth;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Permission;
+use Xibo\Event\FolderTouchEvent;
 use Xibo\Event\LayoutOwnerChangeEvent;
 use Xibo\Event\LayoutSharingChangeEvent;
 use Xibo\Event\ParsePermissionEntityEvent;
@@ -1733,6 +1734,10 @@ class User extends Base
         if ($object->permissionsClass() === 'Xibo\Entity\Folder') {
             /** @var $object \Xibo\Entity\Folder */
             $object->managePermissions();
+            $this->getDispatcher()->dispatch(
+                new FolderTouchEvent($object->getId()),
+                FolderTouchEvent::$NAME,
+            );
         } else if ($object->permissionsClass() === 'Xibo\Entity\Campaign') {
             // Update any Canvas Regions to have the same permissions.
             $event = new LayoutSharingChangeEvent($object->getId());
