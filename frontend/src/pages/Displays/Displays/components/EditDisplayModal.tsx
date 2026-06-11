@@ -606,7 +606,9 @@ export default function EditDisplayModal({
     fetchDisplayProfile({
       start: 0,
       length: 200,
-      ...(data.clientType ? { type: data.clientType as never } : {}),
+      ...((data.displayProfileType ?? data.clientType)
+        ? { type: (data.displayProfileType ?? data.clientType) as never }
+        : {}),
     })
       .then((res) => setProfiles(res.rows))
       .catch(() => setProfiles([]));
@@ -660,7 +662,7 @@ export default function EditDisplayModal({
 
   useEffect(() => {
     setIsLoadingProfile(true);
-    const clientType = data?.clientType as string | null | undefined;
+    const clientType = (data?.displayProfileType ?? data?.clientType) as string | null | undefined;
 
     const load: Promise<DisplayProfile | null> = draft.displayProfileId
       ? fetchDisplayProfileById(draft.displayProfileId)
@@ -685,7 +687,7 @@ export default function EditDisplayModal({
         setProfileDefaults({});
       })
       .finally(() => setIsLoadingProfile(false));
-  }, [draft.displayProfileId, data?.clientType]);
+  }, [draft.displayProfileId, data?.displayProfileType, data?.clientType]);
 
   const handleLoadMoreLayouts = () => {
     if (isLoadingMoreLayouts || !hasMoreLayouts) {
@@ -809,7 +811,7 @@ export default function EditDisplayModal({
   const getProfileValue = (name: string): string | number | null =>
     profileFlat[name] !== undefined ? profileFlat[name] : (profileDefaults[name] ?? null);
 
-  const fieldMeta = getFieldMetaForType(data?.clientType, t);
+  const fieldMeta = getFieldMetaForType(data?.displayProfileType ?? data?.clientType, t);
 
   const commitOverride = (name: string, value: string) => {
     if (value.trim() === '') {

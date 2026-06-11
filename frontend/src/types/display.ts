@@ -80,6 +80,7 @@ export interface Display {
   latitude: number | null;
   longitude: number | null;
   clientType: string | null;
+  displayProfileType?: string | null;
   clientVersion: string | null;
   clientCode: number | null;
   displayProfileId: number | null;
