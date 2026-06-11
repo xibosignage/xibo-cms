@@ -19,4 +19,10 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export type ViewMode = 'table' | 'grid' | 'map' | 'calendar' | 'chart';
+import { DISTRIBUTION_CONFIG } from './DistributionConfig';
+
+import StatsReportPage from '@/pages/Reporting/Reports/shared/StatsReportPage';
+
+export default function Distribution() {
+  return <StatsReportPage config={DISTRIBUTION_CONFIG} />;
+}

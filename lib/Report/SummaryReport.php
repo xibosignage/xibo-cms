@@ -189,6 +189,8 @@ class SummaryReport implements ReportInterface
         $metadata = [
             'periodStart' => $json['metadata']['periodStart'],
             'periodEnd' => $json['metadata']['periodEnd'],
+            'type' => $json['metadata']['type'] ?? '',
+            'subject' => $json['metadata']['subject'] ?? '',
             'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
                 ->format(DateFormatHelper::getSystemFormat()),
             'title' => $savedReport->saveAs,
@@ -431,9 +433,25 @@ class SummaryReport implements ReportInterface
             ]
         ];
 
+        // Resolve a human-readable subject (e.g. the Layout name) for the chosen type
+        $subject = '';
+        try {
+            if ($type === 'layout' && !empty($layoutId)) {
+                $subject = $this->layoutFactory->getById($layoutId)->layout;
+            } elseif ($type === 'media' && !empty($mediaId)) {
+                $subject = $this->mediaFactory->getById($mediaId)->name;
+            } elseif ($type === 'event') {
+                $subject = $eventTag;
+            }
+        } catch (NotFoundException $e) {
+            $subject = '';
+        }
+
         $metadata =   [
             'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
             'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
+            'type' => $type,
+            'subject' => $subject,
         ];
 
         // Total records

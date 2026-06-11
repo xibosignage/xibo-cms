@@ -439,6 +439,26 @@ export const APP_ROUTES: AppRoute[] = [
           })),
         feature: 'report.saving',
       },
+      {
+        path: 'summary',
+        labelKey: 'Summary by Layout, Media or Event',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Reporting/Reports/Summary/Summary').then((m) => ({
+            Component: m.default,
+          })),
+        feature: 'proof-of-play',
+      },
+      {
+        path: 'distribution',
+        labelKey: 'Distribution by Layout, Media or Event',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Reporting/Reports/Distribution/Distribution').then((m) => ({
+            Component: m.default,
+          })),
+        feature: 'proof-of-play',
+      },
     ],
   },
   {

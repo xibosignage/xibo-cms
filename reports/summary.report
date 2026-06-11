@@ -9,5 +9,6 @@
   "hidden": 0,
   "category": "Proof of Play",
   "feature": "proof-of-play",
-  "adminOnly": 0
+  "adminOnly": 0,
+  "prototype_url": "/prototype/reporting/summary"
 }

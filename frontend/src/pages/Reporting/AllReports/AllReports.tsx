@@ -150,7 +150,7 @@ function ReportCard({ report }: { report: Report }) {
         report.type === 'Export' ? t('Export') : t('View {{type}}', { type: t(report.type) })
       }
       onClick={() => {
-        window.location.href = `/report/form/${report.name}`;
+        window.location.href = report.prototype_url ?? `/report/form/${report.name}`;
       }}
     />
   );

@@ -442,9 +442,25 @@ class DistributionReport implements ReportInterface
             ]
         ];
 
+        // Resolve a human-readable subject (e.g. the Layout name) for the chosen type
+        $subject = '';
+        try {
+            if ($type === 'layout' && !empty($layoutId)) {
+                $subject = $this->layoutFactory->getById($layoutId)->layout;
+            } elseif ($type === 'media' && !empty($mediaId)) {
+                $subject = $this->mediaFactory->getById($mediaId)->name;
+            } elseif ($type === 'event') {
+                $subject = $eventTag;
+            }
+        } catch (NotFoundException $e) {
+            $subject = '';
+        }
+
         $metadata =   [
             'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
             'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
+            'type' => $type,
+            'subject' => $subject,
         ];
 
         // Total records

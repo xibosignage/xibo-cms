@@ -86,6 +86,54 @@ export async function updateReportSchedule(
   return data;
 }
 
+export interface CreateReportSchedulePayload {
+  name: string;
+  reportName: string;
+  filter: string;
+  groupByFilter: string;
+  displayGroupIds: number[];
+  fromDt?: string;
+  toDt?: string;
+  sendEmail?: boolean;
+  nonusers?: string;
+  displayId?: number | null;
+  displayGroupId?: number[];
+  hiddenFields?: Record<string, unknown>;
+}
+
+export async function createReportSchedule(
+  payload: CreateReportSchedulePayload,
+): Promise<ReportSchedule> {
+  const params = new URLSearchParams();
+  params.append('name', payload.name);
+  params.append('reportName', payload.reportName);
+  params.append('filter', payload.filter);
+  params.append('groupByFilter', payload.groupByFilter);
+  payload.displayGroupIds.forEach((id) => params.append('displayGroupIds[]', String(id)));
+  if (payload.displayId) {
+    params.append('displayId', String(payload.displayId));
+  }
+  payload.displayGroupId?.forEach((id) => params.append('displayGroupId[]', String(id)));
+  if (payload.hiddenFields) {
+    params.append('hiddenFields', JSON.stringify(payload.hiddenFields));
+  }
+  if (payload.fromDt) {
+    params.append('fromDt', formatDateTime(new Date(payload.fromDt)));
+  }
+  if (payload.toDt) {
+    params.append('toDt', formatDateTime(new Date(payload.toDt)));
+  }
+  params.append('sendEmail', payload.sendEmail ? '1' : '0');
+  if (payload.nonusers) {
+    params.append('nonusers', payload.nonusers);
+  }
+
+  const { data } = await http.post('/report/reportschedule', params.toString(), {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+  return data;
+}
+
 export async function deleteReportSchedule(id: number): Promise<void> {
   await http.delete(`/report/reportschedule/${id}`);
 }
