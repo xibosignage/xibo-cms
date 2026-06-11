@@ -58,7 +58,7 @@ export default function Welcome() {
   );
 
   // Filter resource cards (some are Xibo-branded only)
-  const isXiboThemed = user?.settings?.app_name === 'Xibo';
+  const isXiboThemed = user?.branding?.appName === 'Xibo';
   const visibleResourceCards = RESOURCE_CARDS.filter((card) => !card.xiboOnly || isXiboThemed);
 
   const openVideoModal = (videos: VideoLink[]) => {

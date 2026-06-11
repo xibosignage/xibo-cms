@@ -212,9 +212,9 @@ export const getProductColumnDefinitions = (
     {
       id: 'tableActions',
       header: '',
-      size: 100,
-      minSize: 100,
-      maxSize: 100,
+      size: 80,
+      minSize: 80,
+      maxSize: 80,
       enableHiding: false,
       enableResizing: false,
       cell: ({ row }) => (

@@ -126,7 +126,7 @@ class Preview extends Base
                     time() + 3600,
                     $this->getConfig()->getApiKeyDetails()['encryptionKey'],
                 ),
-                'loaderUrl' => $this->getConfig()->uri('img/loader.gif'),
+                'loaderUrl' => $this->getConfig()->rootUri() . 'img/loader.gif',
                 // We can use layout.preview here because this route is inside the Preview end point
                 'layoutPreviewUrl' => $this->urlFor($request, 'layout.preview', ['id' => '[layoutCode]']),
             ],

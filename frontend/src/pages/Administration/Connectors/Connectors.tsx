@@ -28,6 +28,7 @@ import type { ConnectorFilterInput } from './ConnectorsConfig';
 import { INITIAL_FILTER_STATE, getFilterKeys } from './ConnectorsConfig';
 import ConnectorCard from './components/ConnectorCard';
 import ConnectorConfigModal from './components/ConnectorConfigModal';
+import { canvaImg } from './connectorThumbnails';
 import { connectorQueryKeys, useConnectorsData } from './hooks/useConnectorsData';
 
 import Button from '@/components/ui/Button';
@@ -104,7 +105,7 @@ export default function Connectors() {
         <div
           className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-5 mt-4 transition-opacity ${isFetching ? 'opacity-50' : ''}`}
         >
-          {user?.settings?.app_name === 'Xibo' &&
+          {user?.branding?.appName === 'Xibo' &&
             (!filterInputs.name || 'canva'.includes(filterInputs.name.toLowerCase())) && (
               <ConnectorCard
                 title={t('Canva')}
@@ -112,7 +113,7 @@ export default function Connectors() {
                   'Publish your designs from Canva to Xibo at the push of a button.' +
                     ' This connector is configured in Canva using the "Publish menu".',
                 )}
-                thumbnailSrc="/theme/default/img/connectors/canva.png"
+                thumbnailSrc={canvaImg}
                 externalLink={{ href: 'https://www.canva.com', label: t('Visit Canva') }}
               />
             )}

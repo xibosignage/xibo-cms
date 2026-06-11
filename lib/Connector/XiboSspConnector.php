@@ -85,7 +85,7 @@ class XiboSspConnector implements ConnectorInterface
 
     public function getThumbnail(): string
     {
-        return 'theme/default/img/connectors/xibo-ssp.svg';
+        return '';
     }
 
     public function getSettingsFormTwig(): string

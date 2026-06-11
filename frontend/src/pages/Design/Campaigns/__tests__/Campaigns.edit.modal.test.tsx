@@ -44,16 +44,6 @@ import type { Layout } from '@/types/layout';
 // =============================================================================
 
 // Interpolation-aware t() so labels like 'Reference {{n}}' render as 'Reference 1'.
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string, opts?: Record<string, unknown>) => {
-      if (!opts) return key;
-      return Object.entries(opts).reduce((s, [k, v]) => s.replace(`{{${k}}}`, String(v)), key);
-    },
-    i18n: { changeLanguage: vi.fn() },
-  }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
 
 vi.mock('@/services/campaignApi');
 vi.mock('@/services/layoutsApi');
@@ -120,7 +110,7 @@ const mockLayout: Layout = {
   publishedStatusId: 1,
   publishedStatus: 'Published',
   campaignId: 20,
-  status: 'Published',
+  status: 1,
   retired: false,
   width: 1920,
   height: 1080,

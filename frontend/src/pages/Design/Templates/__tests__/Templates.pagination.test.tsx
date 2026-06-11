@@ -21,7 +21,6 @@
 
 import { screen, fireEvent, waitFor, within, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import { useTemplateData } from '../hooks/useTemplatesData';
@@ -35,10 +34,6 @@ import { testQueryClient } from '@/setupTests';
 // =============================================================================
 
 // 3rd-party
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
 
 // Services
 vi.mock('@/services/folderApi', () => ({

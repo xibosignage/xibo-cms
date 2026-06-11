@@ -20,7 +20,6 @@
  */
 
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import { useTemplateActions } from '../hooks/useTemplateActions';
@@ -42,10 +41,6 @@ import { testQueryClient } from '@/setupTests';
 // =============================================================================
 
 // 3rd-party
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
 
 // Services
 vi.mock('@/services/folderApi');

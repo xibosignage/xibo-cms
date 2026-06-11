@@ -20,7 +20,6 @@
  */
 
 import { screen, waitFor } from '@testing-library/react';
-import type React from 'react';
 import { useDropzone } from 'react-dropzone';
 import type * as ReactDropzone from 'react-dropzone';
 import { vi, beforeEach } from 'vitest';
@@ -30,10 +29,6 @@ import { mockMediaData, renderMediaPage } from './mediaTestUtils';
 import type * as FolderApi from '@/services/folderApi';
 import { testQueryClient } from '@/setupTests';
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
 vi.mock('@/services/userApi', () => ({
   fetchUserPreference: vi.fn().mockResolvedValue(null),
   saveUserPreference: vi.fn().mockResolvedValue(undefined),

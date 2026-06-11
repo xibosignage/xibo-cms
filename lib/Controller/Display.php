@@ -36,6 +36,7 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Event\DisplayGroupLoadEvent;
+use Xibo\Event\FolderTouchEvent;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayEventFactory;
 use Xibo\Factory\DisplayFactory;
@@ -1255,6 +1256,7 @@ class Display extends Base
         }
 
         $display->delete();
+        $this->touchFolder($display->folderId);
 
         // Return
         return $response->withStatus(204);
@@ -2326,5 +2328,13 @@ class Display extends Base
 
         // permissions
         $display->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($display));
+    }
+
+    private function touchFolder(int $folderId, ?int $oldFolderId = null): void
+    {
+        $this->getDispatcher()->dispatch(
+            new FolderTouchEvent($folderId, $oldFolderId),
+            FolderTouchEvent::$NAME
+        );
     }
 }

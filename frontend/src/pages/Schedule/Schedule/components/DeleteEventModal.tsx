@@ -21,7 +21,7 @@
 
 import { Trash2Icon } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 import Modal from '@/components/ui/modals/Modal';
 
@@ -96,13 +96,18 @@ export default function DeleteEventModal({
           </div>
           <h2 className="text-center text-lg mb-2 text-gray-800">
             {itemCount === 1 ? (
-              <>
-                {t('Delete ')}
-                <span className="font-semibold">
-                  {eventName ? <>&ldquo;{eventName}&rdquo;</> : t('this event')}
-                </span>
-                ?
-              </>
+              eventName ? (
+                <Trans
+                  i18nKey="Delete <span>&#x201C;{{name}}&#x201D;</span>?"
+                  values={{ name: eventName }}
+                  components={{ span: <span className="font-semibold" /> }}
+                />
+              ) : (
+                <Trans
+                  i18nKey="Delete <span>this event</span>?"
+                  components={{ span: <span className="font-semibold" /> }}
+                />
+              )
             ) : (
               t('Delete Events?')
             )}
@@ -133,15 +138,21 @@ export default function DeleteEventModal({
         ) : (
           <p className="text-center text-gray-500">
             {itemCount === 1 ? (
-              <>
-                {t('Are you sure you want to delete ')}
-                {eventName ? <strong>&ldquo;{eventName}&rdquo;</strong> : t('this event')}?
-              </>
+              eventName ? (
+                <Trans
+                  i18nKey="Are you sure you want to delete <strong>&#x201C;{{name}}&#x201D;</strong>?"
+                  values={{ name: eventName }}
+                  components={{ strong: <strong /> }}
+                />
+              ) : (
+                t('Are you sure you want to delete this event?')
+              )
             ) : (
-              <>
-                {t('Are you sure you want to delete ')}
-                <strong>{itemCount}</strong> {t('events')}?
-              </>
+              <Trans
+                i18nKey="Are you sure you want to delete <strong>{{count}}</strong> events?"
+                values={{ count: itemCount }}
+                components={{ strong: <strong /> }}
+              />
             )}
           </p>
         )}

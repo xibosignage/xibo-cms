@@ -21,6 +21,12 @@
 
 import { BookOpen, CircleHelp, PlayCircle, type LucideIcon } from 'lucide-react';
 
+import createContentImg from '@/assets/onboarding/create-content.png';
+import displaysImg from '@/assets/onboarding/displays.png';
+import existingContentImg from '@/assets/onboarding/existing-content.png';
+import playlistsImg from '@/assets/onboarding/playlists.png';
+import scheduleImg from '@/assets/onboarding/schedule.png';
+
 export interface VideoLink {
   id: string;
   title: string;
@@ -61,7 +67,7 @@ export const SERVICE_CARDS: ServiceCard[] = [
     titleKey: 'Displays',
     descriptionKey:
       "Displays are managed from the CMS and control when and how content is shown. Get started by installing one of our Player App's to start scheduling content to show on Displays.",
-    imageUrl: '/theme/default/img/onboarding/displays.png',
+    imageUrl: displaysImg,
     featureFlags: ['displays.view'],
     links: [
       { labelKey: 'Get Started', to: '/displays/displays', variant: 'primary' },
@@ -79,7 +85,7 @@ export const SERVICE_CARDS: ServiceCard[] = [
     titleKey: 'Existing Content',
     descriptionKey:
       'Do you already have an image or video content ready to be shown? Upload your media and schedule to be shown full screen on Displays in a few easy steps.',
-    imageUrl: '/theme/default/img/onboarding/existing-content.png',
+    imageUrl: existingContentImg,
     featureFlags: ['library.view', 'layout.view'],
     links: [
       { labelKey: 'Upload Content', to: '/library/media', variant: 'primary' },
@@ -107,7 +113,7 @@ export const SERVICE_CARDS: ServiceCard[] = [
     titleKey: 'Playlists',
     descriptionKey:
       "Create a 'slideshow' of content to be shown in sequence to schedule and show on your Displays.",
-    imageUrl: '/theme/default/img/onboarding/playlists.png',
+    imageUrl: playlistsImg,
     featureFlags: ['library.view', 'layout.view'],
     links: [
       { labelKey: 'Get Started', to: '/library/playlists', variant: 'primary' },
@@ -125,7 +131,7 @@ export const SERVICE_CARDS: ServiceCard[] = [
     titleKey: 'Create Content',
     descriptionKey:
       'Create your own eye catching Layout designs using a variety of tools available in the Layout Editor.',
-    imageUrl: '/theme/default/img/onboarding/create-content.png',
+    imageUrl: createContentImg,
     featureFlags: ['library.view', 'layout.view'],
     links: [
       { labelKey: 'Get Started', to: '/design/layout', variant: 'primary' },
@@ -143,7 +149,7 @@ export const SERVICE_CARDS: ServiceCard[] = [
     titleKey: 'Schedule',
     descriptionKey:
       'Once you have your content ready to be shown, use the Scheduling tools to ensure that your content is shown at the right place at the right time.',
-    imageUrl: '/theme/default/img/onboarding/schedule.png',
+    imageUrl: scheduleImg,
     featureFlags: ['schedule.view'],
     links: [
       { labelKey: 'Get Started', to: '/schedule/events', variant: 'primary' },

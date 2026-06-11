@@ -622,7 +622,7 @@ function flattenFolderIds(nodes: Folder[]): number[] {
   const ids: number[] = [];
   for (const node of nodes) {
     ids.push(node.id);
-    if (node.children && node.children.length > 0) {
+    if (Array.isArray(node.children) && node.children.length > 0) {
       ids.push(...flattenFolderIds(node.children));
     }
   }

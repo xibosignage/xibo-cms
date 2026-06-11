@@ -157,7 +157,7 @@ export default function FolderPermissionTab({
 function findFolderById(nodes: Folder[], id: number): Folder | null {
   for (const node of nodes) {
     if (node.id === id) return node;
-    if (node.children && node.children.length > 0) {
+    if (Array.isArray(node.children) && node.children.length > 0) {
       const found = findFolderById(node.children, id);
       if (found) return found;
     }
@@ -171,7 +171,7 @@ function getFolderPath(nodes: Folder[], id: number, ancestors: string[] = []): s
     if (node.id === id) {
       return path.length > 0 ? path.join(' / ') : node.text;
     }
-    if (node.children && node.children.length > 0) {
+    if (Array.isArray(node.children) && node.children.length > 0) {
       const found = getFolderPath(node.children, id, path);
       if (found) return found;
     }

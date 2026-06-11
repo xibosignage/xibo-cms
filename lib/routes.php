@@ -494,7 +494,8 @@ $app->group('', function (RouteCollectorProxy $group) {
  */
 $app->get('/folders[/{folderId}]', ['\Xibo\Controller\Folder', 'grid'])->setName('folders.search');
 $app->group('', function (RouteCollectorProxy $group) {
-    $group->get('/folders/contextButtons/{folderId}', ['\Xibo\Controller\Folder', 'getContextMenuButtons'])->setName('folders.context.buttons');
+    $group->get('/folders/contextButtons/{folderId}', ['\Xibo\Controller\Folder', 'getContextMenuButtons'])
+        ->setName('folders.context.buttons');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['folder.view']));
 
 $app->post('/folders', ['\Xibo\Controller\Folder', 'add'])
@@ -636,17 +637,6 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/sessions', ['\Xibo\Controller\Sessions','grid'])->setName('sessions.search');
     $group->delete('/sessions/logout/{id}', ['\Xibo\Controller\Sessions','logout'])->setName('sessions.confirm.logout');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['session.view']));
-
-//
-// Settings
-//
-$app->get('/admin', ['\Xibo\Controller\Settings','get'])
-    ->addMiddleware(new SuperAdminAuth($app->getContainer()))
-    ->setName('settings.get');
-
-$app->put('/admin', ['\Xibo\Controller\Settings','update'])
-    ->addMiddleware(new SuperAdminAuth($app->getContainer()))
-    ->setName('settings.update');
 
 //
 // Maintenance

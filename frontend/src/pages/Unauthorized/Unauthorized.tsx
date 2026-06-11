@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { DEFAULT_INTERNAL_ROUTE } from '@/config/appRoutes';
@@ -40,8 +40,11 @@ export default function Unauthorized() {
         <p className="text-sm uppercase tracking-widest text-gray-500">{t('Error 403')}</p>
         <h1 className="mt-1 text-3xl font-semibold">{t('Access denied')}</h1>
         <p className="mt-2 text-gray-600">
-          {t('You do not have permission to view ')}
-          <span className="font-mono text-gray-800">{pathname}</span>.
+          <Trans
+            i18nKey="You do not have permission to view <path>{{path}}</path>."
+            values={{ path: pathname }}
+            components={{ path: <span className="font-mono text-gray-800" /> }}
+          />
         </p>
       </div>
 

@@ -21,7 +21,7 @@
 
 import { Info, Trash2Icon } from 'lucide-react';
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 import Checkbox from '@/components/ui/forms/Checkbox';
 import Modal from '@/components/ui/modals/Modal';
@@ -83,14 +83,17 @@ export default function DeleteMediaModal({
         </div>
         <p className="text-center text-gray-500">
           {itemCount === 1 ? (
-            <>
-              {t('Are you sure you want to delete ')}"<strong>{fileName}</strong>"?
-            </>
+            <Trans
+              i18nKey='Are you sure you want to delete "<strong>{{name}}</strong>"?'
+              values={{ name: fileName }}
+              components={{ strong: <strong /> }}
+            />
           ) : (
-            <>
-              {t('Are you sure you want to delete ')}
-              <strong>{itemCount}</strong> {t('files')}?
-            </>
+            <Trans
+              i18nKey="Are you sure you want to delete <strong>{{count}}</strong> files?"
+              values={{ count: itemCount }}
+              components={{ strong: <strong /> }}
+            />
           )}
         </p>
 

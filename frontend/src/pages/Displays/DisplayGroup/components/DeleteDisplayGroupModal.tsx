@@ -20,7 +20,7 @@
  */
 
 import { Trash2Icon } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 import Modal from '@/components/ui/modals/Modal';
 
@@ -78,14 +78,17 @@ export default function DeleteDisplayGroupModal({
         </div>
         <p className="text-center text-gray-500">
           {itemCount === 1 ? (
-            <>
-              {t('Are you sure you want to delete ')}"<strong>{displayGroupName}</strong>"?
-            </>
+            <Trans
+              i18nKey='Are you sure you want to delete "<strong>{{name}}</strong>"?'
+              values={{ name: displayGroupName }}
+              components={{ strong: <strong /> }}
+            />
           ) : (
-            <>
-              {t('Are you sure you want to delete ')}
-              <strong>{itemCount}</strong> {t('display groups')}?
-            </>
+            <Trans
+              i18nKey="Are you sure you want to delete <strong>{{count}}</strong> display groups?"
+              values={{ count: itemCount }}
+              components={{ strong: <strong /> }}
+            />
           )}
         </p>
 

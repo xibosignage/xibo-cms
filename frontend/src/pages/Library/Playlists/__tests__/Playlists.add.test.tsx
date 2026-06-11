@@ -36,7 +36,6 @@
 // =============================================================================
 
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import { usePlaylistActions } from '../hooks/usePlaylistActions';
@@ -53,11 +52,6 @@ import { createPlaylist } from '@/services/playlistApi';
 import { testQueryClient } from '@/setupTests';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
-
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
 
 vi.mock('@/services/folderApi');
 vi.mock('@/services/playlistApi');

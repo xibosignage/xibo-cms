@@ -33,7 +33,6 @@ export interface SettingsOptionItem {
 export interface SettingsData {
   settings: Record<string, SettingMeta>;
   options: {
-    themes: SettingsOptionItem[];
     languages: SettingsOptionItem[];
     timeZones: SettingsOptionItem[];
   };
@@ -53,7 +52,6 @@ export interface SettingsData {
     } | null;
   };
   elevateLogUntil: string | null;
-  hideThemes: boolean;
 }
 
 export type SettingsFormValues = Record<string, string>;

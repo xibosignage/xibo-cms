@@ -43,7 +43,7 @@ const flattenTree = (nodes: Folder[]): Folder[] => {
   const result: Folder[] = [];
   for (const node of nodes) {
     result.push(node);
-    if (node.children && node.children.length > 0) {
+    if (Array.isArray(node.children) && node.children.length > 0) {
       result.push(...flattenTree(node.children));
     }
   }
@@ -65,7 +65,7 @@ const buildVisibleTree = (nodes: Folder[], expandedIds: Set<number>, depth = 0):
     const isExpanded = expandedIds.has(node.id);
     result.push({ ...node, depth, hasChildren, isExpanded });
     if (hasChildren && isExpanded) {
-      result.push(...buildVisibleTree(node.children!, expandedIds, depth + 1));
+      result.push(...buildVisibleTree(node.children as Folder[], expandedIds, depth + 1));
     }
   }
   return result;
@@ -144,36 +144,36 @@ export default function FolderPermissionTree({
   ];
 
   return (
-    <div className="flex flex-col border border-gray-200 rounded-lg overflow-hidden bg-white">
-      {/* Column headers */}
-      <div className="grid grid-cols-[1fr_120px_120px_120px] items-center bg-gray-50 border-b border-gray-200 px-3 py-2.5">
-        <span className="text-sm font-medium text-gray-600">{t('Folders')}</span>
-        {getColumnHeaders().map(({ level, label, Icon }) => (
-          <span
-            key={level}
-            className="flex items-center justify-center gap-1.5 text-sm font-medium text-gray-600"
-          >
-            <Icon size={14} />
-            {label}
-          </span>
-        ))}
-      </div>
+    <div className="border border-gray-200 rounded-lg bg-white">
+      <div className="overflow-y-auto select-none max-h-[50vh]">
+        {/* Column headers */}
+        <div className="grid grid-cols-[1fr_120px_120px_120px] items-center bg-gray-50 border-b border-gray-200 px-3 py-2.5 sticky top-0 z-10">
+          <span className="text-sm font-medium text-gray-600">{t('Folders')}</span>
+          {getColumnHeaders().map(({ level, label, Icon }) => (
+            <span
+              key={level}
+              className="flex items-center justify-center gap-1.5 text-sm font-medium text-gray-600"
+            >
+              <Icon size={14} />
+              {label}
+            </span>
+          ))}
+        </div>
 
-      {/* "Select all as" row */}
-      <div className="grid grid-cols-[1fr_120px_120px_120px] items-center bg-gray-100 border-b border-gray-200 px-3 py-2">
-        <span className="text-sm text-gray-500 italic">{t('Select all as')}</span>
-        {PERMISSION_LEVELS.map((level) => (
-          <div key={level} className="flex justify-center">
-            <PermissionCheckbox
-              checked={getSelectAllState(level)}
-              onChange={() => selectAllAs(level)}
-            />
-          </div>
-        ))}
-      </div>
+        {/* "Select all as" row */}
+        <div className="grid grid-cols-[1fr_120px_120px_120px] items-center bg-gray-100 border-b border-gray-200 pr-3 py-2 sticky top-10 z-10">
+          <span className="pl-3 text-sm text-gray-500 italic">{t('Select all as')}</span>
+          {PERMISSION_LEVELS.map((level) => (
+            <div key={level} className="flex justify-center">
+              <PermissionCheckbox
+                checked={getSelectAllState(level)}
+                onChange={() => selectAllAs(level)}
+              />
+            </div>
+          ))}
+        </div>
 
-      {/* Folder tree rows */}
-      <div className="overflow-y-auto max-h-85 select-none">
+        {/* Folder tree rows */}
         {visibleList.map((node) => {
           const isRoot = node.isRoot === 1;
           const currentLevel = folderPermissions.get(node.id);
