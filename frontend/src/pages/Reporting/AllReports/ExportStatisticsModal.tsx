@@ -19,7 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import axios from 'axios';
 import { Download, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
@@ -28,6 +27,7 @@ import DatePickerInput from '@/components/ui/forms/DatePickerInput';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import Modal from '@/components/ui/modals/Modal';
 import { fetchDisplays } from '@/services/displaysApi';
+import { fetchExportStatsCount } from '@/services/reportApi';
 
 interface ExportStatisticsModalProps {
   isOpen: boolean;
@@ -129,24 +129,16 @@ export default function ExportStatisticsModal({ isOpen, onClose }: ExportStatist
       setRecordCount(null);
       setCountError(null);
       try {
-        const params: Record<string, string> = {
-          fromDt: toPhpDatetime(fromDt),
-          toDt: toPhpDatetime(toDt),
-        };
-        if (displayId) {
-          params.displayId = displayId;
-        }
-        const response = await axios.get<{ data: { total: number } }>(
-          '/stats/getExportStatsCount',
+        const count = await fetchExportStatsCount(
           {
-            params,
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
-            signal: controller.signal,
-            withCredentials: true,
+            fromDt: toPhpDatetime(fromDt),
+            toDt: toPhpDatetime(toDt),
+            ...(displayId ? { displayId } : {}),
           },
+          controller.signal,
         );
         if (!cancelled) {
-          setRecordCount(response.data.data.total);
+          setRecordCount(count);
         }
       } catch (err) {
         if (!cancelled && !(err instanceof Error && err.name === 'CanceledError')) {

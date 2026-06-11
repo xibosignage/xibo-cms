@@ -29,3 +29,14 @@ export const fetchReports = async (signal?: AbortSignal): Promise<ReportsByCateg
   });
   return response.data.availableReports;
 };
+
+export const fetchExportStatsCount = async (
+  params: { fromDt: string; toDt: string; displayId?: string },
+  signal?: AbortSignal,
+): Promise<number> => {
+  const response = await http.get<number>('/stats/export/count', {
+    params,
+    signal,
+  });
+  return response.data;
+};

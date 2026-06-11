@@ -20,7 +20,7 @@
  */
 
 import { PauseCircle, PlayCircle } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 import Modal from '@/components/ui/modals/Modal';
 import type { ReportSchedule } from '@/types/reportSchedule';
@@ -58,10 +58,6 @@ export default function ToggleActiveModal({
     : isLoading
       ? t('Resuming…')
       : t('Yes, Resume');
-  const message = isPausing
-    ? t('Are you sure you want to pause ')
-    : t('Are you sure you want to resume ');
-
   return (
     <Modal
       variant="confirmation"
@@ -93,7 +89,19 @@ export default function ToggleActiveModal({
         <h2 className="text-center text-lg font-semibold mb-2">{title}</h2>
 
         <p className="text-center text-gray-500">
-          {message}"<strong>{schedule.name}</strong>"?
+          {isPausing ? (
+            <Trans
+              i18nKey='Are you sure you want to pause "<strong>{{name}}</strong>"?'
+              values={{ name: schedule.name }}
+              components={{ strong: <strong /> }}
+            />
+          ) : (
+            <Trans
+              i18nKey='Are you sure you want to resume "<strong>{{name}}</strong>"?'
+              values={{ name: schedule.name }}
+              components={{ strong: <strong /> }}
+            />
+          )}
         </p>
       </div>
     </Modal>
