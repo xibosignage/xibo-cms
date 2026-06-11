@@ -1,3 +1,4 @@
+<?php
 /*
  * Copyright (C) 2026 Xibo Signage Ltd
  *
@@ -19,36 +20,25 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export interface FolderSharingEntry {
-  name: string;
-  isGroup: boolean;
-  view: number;
-  edit: number;
-  delete: number;
-}
+namespace Xibo\Event;
 
-export interface FolderUsageEntry {
-  type: string;
-  count: number;
-  sizeBytes: number;
-  size: string;
-}
+class FolderTouchEvent extends Event
+{
+    public static $NAME = 'folder.touch.event';
 
-export interface Folder {
-  id: number;
-  folderId?: number;
-  type: FolderType;
-  text: string;
-  parentId: number;
-  isRoot: number;
-  children: Folder[] | string | null;
-  ownerId: number;
-  ownerName: string;
-  createdDt: string | null;
-  modifiedDt: string | null;
-  sharing?: FolderSharingEntry[];
-  homeFolderCount?: number;
-  usage?: FolderUsageEntry[];
-}
+    public function __construct(
+        private int $newFolderId,
+        private ?int $oldFolderId = null
+    ) {
+    }
 
-export type FolderType = 'root' | 'home' | 'disabled' | '' | null;
+    public function getNewFolderId(): int
+    {
+        return $this->newFolderId;
+    }
+
+    public function getOldFolderId(): ?int
+    {
+        return $this->oldFolderId;
+    }
+}

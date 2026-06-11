@@ -1,3 +1,4 @@
+<?php
 /*
  * Copyright (C) 2026 Xibo Signage Ltd
  *
@@ -19,36 +20,25 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export interface FolderSharingEntry {
-  name: string;
-  isGroup: boolean;
-  view: number;
-  edit: number;
-  delete: number;
-}
+namespace Xibo\Listener;
 
-export interface FolderUsageEntry {
-  type: string;
-  count: number;
-  sizeBytes: number;
-  size: string;
-}
+use Xibo\Event\FolderTouchEvent;
+use Xibo\Factory\FolderFactory;
 
-export interface Folder {
-  id: number;
-  folderId?: number;
-  type: FolderType;
-  text: string;
-  parentId: number;
-  isRoot: number;
-  children: Folder[] | string | null;
-  ownerId: number;
-  ownerName: string;
-  createdDt: string | null;
-  modifiedDt: string | null;
-  sharing?: FolderSharingEntry[];
-  homeFolderCount?: number;
-  usage?: FolderUsageEntry[];
-}
+class FolderTouchListener
+{
+    public function __construct(private readonly FolderFactory $folderFactory)
+    {
+    }
 
-export type FolderType = 'root' | 'home' | 'disabled' | '' | null;
+    public function onFolderTouch(FolderTouchEvent $event): void
+    {
+        $this->folderFactory->getById($event->getNewFolderId())->touch();
+
+        if ($event->getOldFolderId() !== null
+            && $event->getOldFolderId() !== $event->getNewFolderId()
+        ) {
+            $this->folderFactory->getById($event->getOldFolderId())->touch();
+        }
+    }
+}

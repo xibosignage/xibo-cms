@@ -210,6 +210,7 @@ export const defaultCampaignActions = (
 // -----------------------------------------------------------------------------
 export const renderCampaignsPage = (user: User = mockUser) => {
   testQueryClient.setQueryData(['userPref', 'campaign_page'], null);
+  testQueryClient.setQueryData(['folderPermissions', user.homeFolderId ?? 1], { create: true });
   return render(
     <QueryClientProvider client={testQueryClient}>
       <UserProvider initialUser={user}>
