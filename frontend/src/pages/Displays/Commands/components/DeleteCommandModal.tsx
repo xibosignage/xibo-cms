@@ -81,13 +81,17 @@ export default function DeleteCommandModal({
               i18nKey='Are you sure you want to delete "<strong>{{name}}</strong>"?'
               values={{ name: commandName }}
               components={{ strong: <strong /> }}
-            />
+            >
+              Are you sure you want to delete &quot;<strong>{commandName}</strong>&quot;?
+            </Trans>
           ) : (
             <Trans
               i18nKey="Are you sure you want to delete <strong>{{count}}</strong> commands?"
               values={{ count: itemCount }}
               components={{ strong: <strong /> }}
-            />
+            >
+              Are you sure you want to delete <strong>{itemCount}</strong> commands?
+            </Trans>
           )}
         </p>
 
