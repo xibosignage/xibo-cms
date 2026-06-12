@@ -114,6 +114,8 @@ export type FieldInputType =
   | 'datepicker'
   | 'daypart'
   | 'dropdown'
+  | 'hisense-picture-options'
+  | 'hisense-timers'
   | 'number'
   | 'player-version'
   | 'text'
@@ -883,11 +885,17 @@ function hisenseMeta(t: TFunction): FieldMetaMap {
       helpText: t('Set the colour temperature (0-100).'),
       inputType: 'number',
     },
+    hisensePictureOptions: {
+      label: t('Picture Options'),
+      tab: 'pictureOptions',
+      helpText: t('Configure picture settings including brightness, contrast, and colour options.'),
+      inputType: 'hisense-picture-options',
+    },
     timers: {
       label: t('Timers'),
       tab: 'timers',
       helpText: t('Configure on/off timers for this display.'),
-      inputType: 'timers',
+      inputType: 'hisense-timers',
     },
   };
 }
