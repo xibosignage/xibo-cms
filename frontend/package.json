@@ -87,10 +87,10 @@
     "prettier": "^3.6.2",
     "rollup-plugin-visualizer": "^6.0.5",
     "tailwindcss": "^4.1.17",
-    "tsx": "^4.20.5",
+    "tsx": "^4.22.4",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.43.0",
-    "vite": "^7.3.2",
+    "vite": "^8.0.16",
     "vite-tsconfig-paths": "^6.1.0",
     "vitest": "^4.0.18"
   },
