@@ -59,6 +59,11 @@ export interface AppRoute {
 
 const isSuperAdmin = (user: User) => user.userTypeId === UserType.SuperAdmin;
 
+const canAccessReport =
+  (feature: string, adminOnly = false) =>
+  (user: User) =>
+    (isSuperAdmin(user) || !!user.features?.[feature]) && (!adminOnly || isSuperAdmin(user));
+
 const canViewUsers = (user: User) => {
   const hasFeature = user.features?.['users.view'];
   const isAdmin =
@@ -450,7 +455,7 @@ export const APP_ROUTES: AppRoute[] = [
           import('@/pages/Reporting/Reports/TimeConnected/TimeConnected').then((m) => ({
             Component: m.default,
           })),
-        feature: 'report.view',
+        validator: canAccessReport('displays.reporting'),
       },
       {
         path: 'summary',
@@ -460,7 +465,7 @@ export const APP_ROUTES: AppRoute[] = [
           import('@/pages/Reporting/Reports/Summary/Summary').then((m) => ({
             Component: m.default,
           })),
-        feature: 'proof-of-play',
+        validator: canAccessReport('proof-of-play'),
       },
       {
         path: 'distribution',
@@ -470,7 +475,17 @@ export const APP_ROUTES: AppRoute[] = [
           import('@/pages/Reporting/Reports/Distribution/Distribution').then((m) => ({
             Component: m.default,
           })),
-        feature: 'proof-of-play',
+        validator: canAccessReport('proof-of-play'),
+      },
+      {
+        path: 'library-usage',
+        labelKey: 'Library Usage',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Reporting/Reports/LibraryUsage/LibraryUsage').then((m) => ({
+            Component: m.default,
+          })),
+        validator: canAccessReport('admin', true),
       },
     ],
   },

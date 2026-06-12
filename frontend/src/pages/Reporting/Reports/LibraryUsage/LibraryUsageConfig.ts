@@ -19,18 +19,29 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { AppRoute } from '@/config/appRoutes';
+export type LibraryUsageFilter = {
+  userId: number | null;
+  groupId: number | null;
+};
 
-export function isRouteActive(route: AppRoute, pathname: string): boolean {
-  // Match the parent by its path prefix so child pages that are hidden from the menu
-  // (hideFromMenu, e.g. individual report pages) still mark their section as active.
-  if (pathname === `/${route.path}` || pathname.startsWith(`/${route.path}/`)) {
-    return true;
-  }
+export const INITIAL_FILTER_STATE: LibraryUsageFilter = {
+  userId: null,
+  groupId: null,
+};
 
-  return (
-    route.subLinks?.some(
-      (sub) => pathname === `/${sub.path}` || pathname === `/${route.path}/${sub.path}`,
-    ) ?? false
-  );
-}
+export const LIBRARY_CATEGORY_REPORTS = [{ label: 'Library Usage', url: null }];
+
+export const CHART_PALETTE = [
+  '#0ea5a0',
+  '#3b82f6',
+  '#f59e0b',
+  '#8b5cf6',
+  '#ec4899',
+  '#10b981',
+  '#ef4444',
+  '#6366f1',
+  '#14b8a6',
+  '#f97316',
+  '#a855f7',
+  '#84cc16',
+];

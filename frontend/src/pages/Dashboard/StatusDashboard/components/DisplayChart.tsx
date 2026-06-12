@@ -19,9 +19,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useRef, useState } from 'react';
-import type { TooltipContentProps } from 'recharts';
 import { Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+
+import { makePieTooltip, usePieTooltip } from '@/components/ui/charts/pieTooltip';
 
 export interface DisplayChartItem {
   name: string;
@@ -35,40 +35,19 @@ interface DisplayChartProps {
   label?: string;
 }
 
-function CustomTooltip({ active, payload }: TooltipContentProps) {
-  if (!active || !payload?.length) return null;
-  const entry = payload[0]?.payload as DisplayChartItem | undefined;
-  if (!entry) return null;
-
-  return (
-    <div className="-translate-x-1/2">
-      <div className="flex items-center gap-2 rounded-lg bg-gray-800 px-3 py-2 text-sm text-white shadow-lg">
-        <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
-        <span>
-          {entry.name}: {entry.value}
-        </span>
-      </div>
-      <div className="mx-auto h-0 w-0 border-x-[6px] border-x-transparent border-t-[6px] border-t-gray-800" />
-    </div>
-  );
-}
+const TooltipContent = makePieTooltip<DisplayChartItem>((entry) => ({
+  color: entry.color,
+  text: `${entry.name}: ${entry.value}`,
+}));
 
 export default function DisplayChart({ data, label }: DisplayChartProps) {
   const total = data.reduce((sum, item) => sum + item.value, 0);
   const chartData = data.map((item) => ({ ...item, fill: item.color }));
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    const rect = containerRef.current?.getBoundingClientRect();
-    if (rect) {
-      setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top - 40 });
-    }
-  };
+  const { active, onMouseMove, onMouseLeave } = usePieTooltip();
 
   return (
     <div className="flex flex-col items-center">
-      <div ref={containerRef} onMouseMove={handleMouseMove} className="w-full">
+      <div onMouseMove={onMouseMove} onMouseLeave={onMouseLeave} className="w-full">
         <ResponsiveContainer width="100%" height={250} className="outline-none">
           <PieChart accessibilityLayer={false} className="outline-none">
             <Pie
@@ -81,6 +60,7 @@ export default function DisplayChart({ data, label }: DisplayChartProps) {
               paddingAngle={total > 0 ? 2 : 0}
               stroke="none"
               className="outline-none"
+              isAnimationActive={false}
             />
             {label && (
               <text
@@ -93,7 +73,7 @@ export default function DisplayChart({ data, label }: DisplayChartProps) {
                 {label}
               </text>
             )}
-            <Tooltip content={CustomTooltip} position={mousePos} />
+            <Tooltip content={TooltipContent} active={active} isAnimationActive={false} />
             <Legend
               iconType="circle"
               iconSize={8}

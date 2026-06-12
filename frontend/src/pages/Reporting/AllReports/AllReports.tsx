@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 import { INITIAL_FILTER_STATE, getFilterKeys } from './AllReportsConfig';
 import type { ReportFilterInput } from './AllReportsConfig';
@@ -142,6 +143,7 @@ function ReportCardBase({
 
 function ReportCard({ report }: { report: Report }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   return (
     <ReportCardBase
       icon={LUCIDE_ICON_MAP[report.lucide_icon] ?? FileBarChart}
@@ -150,7 +152,14 @@ function ReportCard({ report }: { report: Report }) {
         report.type === 'Export' ? t('Export') : t('View {{type}}', { type: t(report.type) })
       }
       onClick={() => {
-        window.location.href = report.prototype_url ?? `/report/form/${report.name}`;
+        if (report.prototype_url) {
+          // React report inside this SPA (mounted at basename /prototype), navigate
+          // client-side so the app/sidebar isn't torn down and rebooted.
+          navigate(report.prototype_url.replace(/^\/prototype/, ''));
+        } else {
+          // Legacy Twig report lives outside the SPA, so a full navigation is required.
+          window.location.href = `/report/form/${report.name}`;
+        }
       }}
     />
   );

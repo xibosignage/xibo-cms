@@ -20,7 +20,7 @@
  */
 
 import { Eye, EyeOff } from 'lucide-react';
-import { useState } from 'react';
+import { useState, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Bar,
@@ -34,10 +34,12 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  type TooltipContentProps,
 } from 'recharts';
 
 import type { StatsChartType } from './types';
 
+import { makePieTooltip, usePieTooltip } from '@/components/ui/charts/pieTooltip';
 import type { StatsReportTableRow } from '@/services/statsReportApi';
 
 const DURATION_COLOR = '#14b8a6';
@@ -56,13 +58,33 @@ const SLICE_COLORS = [
   '#06b6d4',
 ];
 
-const TOOLTIP_STYLE = {
-  borderRadius: 4,
-  border: 'none',
-  backgroundColor: '#1f2937',
-  color: '#fff',
-  fontSize: 12,
-} as const;
+const PieTooltipContent = makePieTooltip<{ name: string; value: number; fill: string }>(
+  (entry) => ({
+    color: entry.fill,
+    text: `${entry.name}: ${entry.value}`,
+  }),
+);
+
+function LineTooltipContent({ active, payload, label }: TooltipContentProps): ReactElement | null {
+  if (!active || !payload?.length) {
+    return null;
+  }
+  return (
+    <div className="rounded-lg bg-gray-800 px-3 py-2 text-sm text-white shadow-lg">
+      {label !== undefined && label !== '' && (
+        <div className="mb-1 font-medium">{String(label)}</div>
+      )}
+      {payload.map((item) => (
+        <div key={String(item.dataKey)} className="flex items-center gap-2">
+          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+          <span>
+            {item.name}: {item.value}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 interface StatsChartProps {
   rows: StatsReportTableRow[];
@@ -72,6 +94,7 @@ interface StatsChartProps {
 export default function StatsChart({ rows, type }: StatsChartProps) {
   const { t } = useTranslation();
   const [hidden, setHidden] = useState<Record<string, boolean>>({});
+  const { active, onMouseMove, onMouseLeave } = usePieTooltip();
 
   const toggleSeries = (dataKey: string) => {
     setHidden((prev) => ({ ...prev, [dataKey]: !prev[dataKey] }));
@@ -84,35 +107,38 @@ export default function StatsChart({ rows, type }: StatsChartProps) {
       fill: SLICE_COLORS[index % SLICE_COLORS.length],
     }));
     return (
-      <div className="flex-1 min-h-75 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart margin={{ top: 16, right: 16, bottom: 8, left: 0 }}>
-            <Tooltip
-              contentStyle={TOOLTIP_STYLE}
-              labelStyle={{ color: '#fff', fontWeight: 500 }}
-              itemStyle={{ color: '#fff' }}
-            />
-            <Legend
-              verticalAlign="bottom"
-              iconType="circle"
-              iconSize={8}
-              formatter={(value: string) => (
-                <span className="text-xs text-gray-600">{t(value)}</span>
-              )}
-              wrapperStyle={{ paddingTop: 8 }}
-            />
-            <Pie
-              data={pieData}
-              dataKey="value"
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              outerRadius="70%"
-              innerRadius="45%"
-              paddingAngle={2}
-            />
-          </PieChart>
-        </ResponsiveContainer>
+      <div className="flex-1 min-h-75 w-full flex">
+        <div
+          onMouseMove={onMouseMove}
+          onMouseLeave={onMouseLeave}
+          className="mx-auto h-full w-full max-w-100"
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart margin={{ top: 16, right: 16, bottom: 8, left: 0 }}>
+              <Tooltip content={PieTooltipContent} active={active} isAnimationActive={false} />
+              <Legend
+                verticalAlign="bottom"
+                iconType="circle"
+                iconSize={8}
+                formatter={(value: string) => (
+                  <span className="text-xs text-gray-600">{t(value)}</span>
+                )}
+                wrapperStyle={{ paddingTop: 8 }}
+              />
+              <Pie
+                data={pieData}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius="70%"
+                innerRadius="45%"
+                paddingAngle={2}
+                isAnimationActive={false}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     );
   }
@@ -159,11 +185,7 @@ export default function StatsChart({ rows, type }: StatsChartProps) {
               style: { fontSize: 12, fill: '#9CA3AF', textAnchor: 'middle' },
             }}
           />
-          <Tooltip
-            contentStyle={TOOLTIP_STYLE}
-            labelStyle={{ color: '#fff', fontWeight: 500 }}
-            itemStyle={{ color: '#fff' }}
-          />
+          <Tooltip content={LineTooltipContent} />
           <Legend
             verticalAlign="top"
             align="right"

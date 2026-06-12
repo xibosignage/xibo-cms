@@ -98,6 +98,8 @@ export interface CreateReportSchedulePayload {
   nonusers?: string;
   displayId?: number | null;
   displayGroupId?: number[];
+  userId?: number | null;
+  groupId?: number | null;
   hiddenFields?: Record<string, unknown>;
 }
 
@@ -114,6 +116,12 @@ export async function createReportSchedule(
     params.append('displayId', String(payload.displayId));
   }
   payload.displayGroupId?.forEach((id) => params.append('displayGroupId[]', String(id)));
+  if (payload.userId) {
+    params.append('userId', String(payload.userId));
+  }
+  if (payload.groupId) {
+    params.append('groupId', String(payload.groupId));
+  }
   if (payload.hiddenFields) {
     params.append('hiddenFields', JSON.stringify(payload.hiddenFields));
   }
