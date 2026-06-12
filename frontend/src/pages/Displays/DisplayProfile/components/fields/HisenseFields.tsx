@@ -21,7 +21,8 @@
 
 import type { TFunction } from 'i18next';
 import { Minus, Plus } from 'lucide-react';
-import React from 'react';
+import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { DynamicSettingField } from './DynamicSettingField';
 import type { PicturePropertyDef } from './LgSsspFields';
@@ -59,7 +60,7 @@ export const HISENSE_PICTURE_PROPERTY_DEFS: Record<string, PicturePropertyDef> =
 
 export const HISENSE_PICTURE_KEYS = Object.keys(HISENSE_PICTURE_PROPERTY_DEFS);
 
-const GAMMA_MODE_OPTIONS = [
+export const GAMMA_MODE_OPTIONS = [
   { value: '0', label: 'Standard' },
   { value: '1', label: 'Bias' },
   { value: '2', label: 'Darker' },
@@ -95,7 +96,7 @@ function getDayScopeOptions(t: TFunction) {
   ];
 }
 
-function HisenseTimersInput({
+export function HisenseTimersInput({
   rules,
   onChange,
   t,
@@ -224,7 +225,7 @@ function HisenseTimersInput({
   );
 }
 
-function HisensePictureInput({
+export function HisensePictureInput({
   rows,
   onChange,
   t,
@@ -287,13 +288,13 @@ function HisensePictureInput({
           <div key={row.id} className="flex gap-3 items-center">
             <SelectDropdown
               label=""
-              className="flex-4"
+              className="w-40 min-w-40 max-w-40 truncate"
               value={row.property}
               placeholder={t('Select property')}
               options={availableOptions}
               onSelect={(v) => updateRowProperty(row.id, v)}
             />
-            <div className="flex-6 h-11.25 flex items-center">
+            <div className="flex-1 min-w-0 h-11.25 flex items-center">
               {def && sliderLabels ? (
                 <Slider
                   min={def.min}
@@ -427,7 +428,11 @@ export function HisenseFields({
 
   const metaMap = getFieldMetaForType('hisense', t);
   const fieldsForTab = Object.entries(metaMap).filter(
-    ([, meta]) => meta.tab === tab && !['timers', 'picture-options'].includes(meta.inputType),
+    ([, meta]) =>
+      meta.tab === tab &&
+      !['timers', 'picture-options', 'hisense-timers', 'hisense-picture-options'].includes(
+        meta.inputType,
+      ),
   );
 
   if (fieldsForTab.length === 0) {
@@ -476,6 +481,148 @@ export function HisenseFields({
           contextData={contextData}
         />
       ))}
+    </div>
+  );
+}
+
+function parseHisenseTimerRules(value: string | number | null): HisenseTimerRule[] {
+  if (typeof value === 'string' && value.trim().length > 0) {
+    try {
+      const parsed = JSON.parse(value) as Array<{
+        index: number;
+        type: number;
+        hour: number;
+        minute: number;
+        manualWeeks?: number[];
+      }>;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((entry, i) => ({
+          id: i,
+          index: entry.index,
+          dayScope: entry.type,
+          time: `${String(entry.hour).padStart(2, '0')}:${String(entry.minute).padStart(2, '0')}`,
+          manualWeeks: entry.manualWeeks ?? [],
+        }));
+      }
+    } catch (e) {
+      console.warn('Failed to parse hisense timers override JSON:', e);
+    }
+  }
+  return [];
+}
+
+export function HisenseTimersFieldWrapper({
+  value,
+  onChange,
+}: {
+  value: string | number | null;
+  onChange: (v: string) => void;
+}) {
+  const { t } = useTranslation();
+  const [rules, setRules] = useState<HisenseTimerRule[]>(() => parseHisenseTimerRules(value));
+
+  const handleChange = (newRules: HisenseTimerRule[]) => {
+    setRules(newRules);
+    const out = newRules
+      .filter((r) => r.dayScope !== 0)
+      .map(({ index, dayScope, time, manualWeeks }) => ({
+        index,
+        dayScope,
+        time,
+        manualWeeks,
+      }));
+    onChange(JSON.stringify(out));
+  };
+
+  return (
+    <div className="min-w-100">
+      <HisenseTimersInput rules={rules} onChange={handleChange} t={t} />
+    </div>
+  );
+}
+
+export function HisensePictureOptionsFieldWrapper({
+  value,
+  onChange,
+}: {
+  value: string | number | null;
+  onChange: (v: string) => void;
+}) {
+  const { t } = useTranslation();
+
+  const parsed: Record<string, number> = (() => {
+    if (typeof value === 'string' && value.trim().length > 0) {
+      try {
+        return JSON.parse(value) as Record<string, number>;
+      } catch {
+        return {};
+      }
+    }
+    return {};
+  })();
+
+  const sliderKeys = Object.keys(HISENSE_PICTURE_PROPERTY_DEFS);
+
+  const initRows: HisensePictureRow[] = sliderKeys
+    .filter((key) => parsed[key] !== undefined)
+    .map((key, i) => ({
+      id: i,
+      property: key,
+      value: getHisensePictureSliderIndex(key, parsed[key] ?? 0),
+    }));
+  if (initRows.length === 0) {
+    initRows.push({ id: 0, property: '', value: 0 });
+  }
+
+  const [rows, setRows] = useState<HisensePictureRow[]>(initRows);
+  const [gammaMode, setGammaMode] = useState<string>(
+    parsed.gammaMode !== undefined ? String(parsed.gammaMode) : '',
+  );
+  const [dynamicContrast, setDynamicContrast] = useState<boolean>(parsed.dynamicContrast === 1);
+
+  const emitChange = (newRows: HisensePictureRow[], gm: string, dc: boolean) => {
+    const out: Record<string, number> = {};
+    newRows.forEach((r) => {
+      if (r.property) {
+        out[r.property] = r.value;
+      }
+    });
+    if (gm !== '') {
+      out.gammaMode = Number(gm);
+    }
+    out.dynamicContrast = dc ? 1 : 0;
+    onChange(JSON.stringify(out));
+  };
+
+  return (
+    <div className="min-w-100 space-y-4">
+      <HisensePictureInput
+        rows={rows}
+        onChange={(newRows) => {
+          setRows(newRows);
+          emitChange(newRows, gammaMode, dynamicContrast);
+        }}
+        t={t}
+      />
+      <SelectDropdown
+        label={t('Gamma Mode')}
+        value={gammaMode}
+        options={GAMMA_MODE_OPTIONS.map((o) => ({ ...o, label: t(o.label) }))}
+        onSelect={(v) => {
+          setGammaMode(v);
+          emitChange(rows, v, dynamicContrast);
+        }}
+      />
+      <Checkbox
+        id="dynamicContrast-override"
+        title={t('Dynamic Contrast')}
+        label={t('Automatically adjusts contrast levels to enhance picture quality')}
+        checked={dynamicContrast}
+        onChange={(e) => {
+          setDynamicContrast(e.target.checked);
+          emitChange(rows, gammaMode, e.target.checked);
+        }}
+      />
     </div>
   );
 }
