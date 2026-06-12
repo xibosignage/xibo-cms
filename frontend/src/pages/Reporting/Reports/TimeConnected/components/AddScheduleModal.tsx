@@ -46,22 +46,28 @@ export default function AddScheduleModal({
   const { t } = useTranslation();
 
   const [groupByFilter, setGroupByFilter] = useState(currentFilter.groupByFilter);
-  const [displayGroupIds, setDisplayGroupIds] = useState<number[]>(currentFilter.displayGroupId);
+  const [displayValue, setDisplayValue] = useState<DisplayGroupMultiSelectValue>({
+    displaySpecificGroupIds: currentFilter.displaySpecificGroupIds,
+    displayGroupIds: currentFilter.displayGroupIds,
+  });
 
   useEffect(() => {
     if (isOpen) {
       setGroupByFilter(currentFilter.groupByFilter);
-      setDisplayGroupIds(currentFilter.displayGroupId);
+      setDisplayValue({
+        displaySpecificGroupIds: currentFilter.displaySpecificGroupIds,
+        displayGroupIds: currentFilter.displayGroupIds,
+      });
     }
   }, [isOpen]);
 
-  const displayValue: DisplayGroupMultiSelectValue = {
-    displaySpecificGroupIds: displayGroupIds,
-    displayGroupIds: [],
-  };
+  const displayGroupIds = [
+    ...displayValue.displaySpecificGroupIds,
+    ...displayValue.displayGroupIds,
+  ];
 
   const handleDisplayChange = (value: DisplayGroupMultiSelectValue) => {
-    setDisplayGroupIds([...value.displaySpecificGroupIds, ...value.displayGroupIds]);
+    setDisplayValue(value);
   };
 
   return (

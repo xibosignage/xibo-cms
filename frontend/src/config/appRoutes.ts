@@ -443,6 +443,16 @@ export const APP_ROUTES: AppRoute[] = [
         feature: 'report.saving',
       },
       {
+        path: 'time-connected',
+        labelKey: 'Time Connected',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Reporting/Reports/TimeConnected/TimeConnected').then((m) => ({
+            Component: m.default,
+          })),
+        feature: 'report.view',
+      },
+      {
         path: 'summary',
         labelKey: 'Summary by Layout, Media or Event',
         hideFromMenu: true,

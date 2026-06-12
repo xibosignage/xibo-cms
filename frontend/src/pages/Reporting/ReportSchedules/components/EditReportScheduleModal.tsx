@@ -118,7 +118,7 @@ export default function EditReportScheduleModal({
         },
       ]}
     >
-      <div className="flex flex-col gap-4 p-5">
+      <div className="flex flex-col gap-4 p-8 pt-0">
         <TextInput
           name="name"
           label={t('Schedule Name')}

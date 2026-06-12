@@ -179,6 +179,11 @@ class TimeConnected implements ReportInterface
         $now = Carbon::now();
 
         switch ($reportFilter) {
+            case 'today':
+                $fromDt = $now->copy()->startOfDay();
+                $toDt = $now->copy()->endOfDay();
+                break;
+
             case 'yesterday':
                 $fromDt = $now->copy()->startOfDay()->subDay();
                 $toDt = $now->copy()->startOfDay();
@@ -219,15 +224,17 @@ class TimeConnected implements ReportInterface
         //
         // Output Results
         // --------------
-        if ($this->getUser()->isSuperAdmin()) {
-            $sql = 'SELECT displayId, display FROM display WHERE 1 = 1';
-            if (count($displayIds) > 0) {
-                $sql .= ' AND displayId IN (' . implode(',', $displayIds) . ')';
-            }
+        // The displayIds have already been permission-filtered by getDisplayIdFilter (a non-super
+        // admin with no viewable displays throws there), so it is safe to build the query for any
+        // user. A super admin with no filter gets every display (empty IN clause is skipped).
+        $sql = 'SELECT displayId, display, lastAccessed FROM display WHERE 1 = 1';
+        if (count($displayIds) > 0) {
+            $sql .= ' AND displayId IN (' . implode(',', $displayIds) . ')';
         }
 
         $timeConnected = [];
         $displays = [];
+        $displayMeta = [];
         $i = 0;
         $key = 0;
         foreach ($this->store->select($sql, []) as $row) {
@@ -236,6 +243,13 @@ class TimeConnected implements ReportInterface
 
             // Set the display name for the displays in this row.
             $displays[$key][$displayId] = $displayName;
+
+            // lastAccessed drives the "Last seen" value shown against each row.
+            $displayMeta[$displayId] = [
+                'lastAccessed' => !empty($row['lastAccessed'])
+                    ? Carbon::createFromTimestamp($row['lastAccessed'])->format(DateFormatHelper::getSystemFormat())
+                    : null,
+            ];
 
             // Go through each period
             foreach ($result['periods'] as $resPeriods) {
@@ -276,7 +290,8 @@ class TimeConnected implements ReportInterface
             ],
             [
                 'timeConnected' => $timeConnected,
-                'displays' => $displays
+                'displays' => $displays,
+                'displayMeta' => $displayMeta
             ]
         );
     }
