@@ -229,6 +229,8 @@ function summarizeHisensePictureOptions(str: string, t: TFunction): string {
     }
     const names = entries.map(([key, val]) => {
       if (val === null) {
+        if (key === 'gammaMode') return t('Gamma');
+        if (key === 'dynamicContrast') return t('Dynamic Contrast');
         const def = HISENSE_PICTURE_PROPERTY_DEFS[key];
         return def ? t(def.name) : key;
       }
@@ -960,7 +962,8 @@ export default function EditDisplayModal({
       const obj: Record<string, number | null> = {};
       HISENSE_PICTURE_SETTING_KEYS.forEach((key) => {
         if (profileFlat[key] !== undefined) {
-          obj[key] = Number(profileFlat[key]);
+          const pv = profileFlat[key];
+          obj[key] = pv !== null && pv !== undefined && pv !== '' ? Number(pv) : null;
         } else if (key in profileDefaults) {
           obj[key] = profileDefaults[key] !== null ? Number(profileDefaults[key]) : null;
         }
