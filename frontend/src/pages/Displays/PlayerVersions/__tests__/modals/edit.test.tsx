@@ -34,14 +34,6 @@ import { updatePlayerVersion } from '@/services/playerVersionApi';
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next', () => {
-  const t = (key: string) => key;
-  return {
-    useTranslation: () => ({ t, i18n: { changeLanguage: vi.fn() } }),
-    Trans: ({ children }: { children: React.ReactNode }) => children,
-  };
-});
-
 vi.mock('@/components/ui/modals/Modal');
 
 vi.mock('@/services/playerVersionApi', () => ({

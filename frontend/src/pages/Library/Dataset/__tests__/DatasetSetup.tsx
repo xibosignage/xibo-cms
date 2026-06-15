@@ -29,7 +29,6 @@ import { vi } from 'vitest';
 import type { DatasetDataConnectorSource } from '@/services/datasetApi';
 import type { Dataset } from '@/types/dataset';
 
-vi.mock('react-i18next');
 
 vi.mock('@/components/ui/Notification', () => ({
   notify: {
