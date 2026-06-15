@@ -5469,16 +5469,16 @@
         },
         {
             "name": "symfony/html-sanitizer",
-            "version": "v6.4.35",
+            "version": "v6.4.41",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/html-sanitizer.git",
-                "reference": "7b4a2d08a68772dc5f8ad3de1ffeec4aaa9f8c4a"
+                "reference": "fba29d97d888ca69b496a626c9248fd56a293d8a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/html-sanitizer/zipball/7b4a2d08a68772dc5f8ad3de1ffeec4aaa9f8c4a",
-                "reference": "7b4a2d08a68772dc5f8ad3de1ffeec4aaa9f8c4a",
+                "url": "https://api.github.com/repos/symfony/html-sanitizer/zipball/fba29d97d888ca69b496a626c9248fd56a293d8a",
+                "reference": "fba29d97d888ca69b496a626c9248fd56a293d8a",
                 "shasum": ""
             },
             "require": {
@@ -5518,7 +5518,7 @@
                 "sanitizer"
             ],
             "support": {
-                "source": "https://github.com/symfony/html-sanitizer/tree/v6.4.35"
+                "source": "https://github.com/symfony/html-sanitizer/tree/v6.4.41"
             },
             "funding": [
                 {
@@ -5538,7 +5538,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-03-06T10:29:42+00:00"
+            "time": "2026-05-24T11:08:37+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
