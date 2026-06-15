@@ -33,8 +33,6 @@ import { testQueryClient } from '@/setupTests';
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next');
-
 vi.mock('@/components/ui/modals/Modal');
 
 // fetchLayouts is called inside a useEffect on mount — return a minimal list so

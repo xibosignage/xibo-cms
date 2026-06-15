@@ -38,8 +38,6 @@ vi.mock('@/context/UserContext', () => ({
   })),
 }));
 
-vi.mock('react-i18next');
-
 function mockTimezone(timezone: string) {
   vi.mocked(useUserContext).mockReturnValue({
     user: { settings: { defaultTimezone: timezone } } as unknown as ReturnType<

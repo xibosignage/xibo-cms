@@ -90,6 +90,8 @@ export const getDynamicDataColumns = (
     id: 'tableActions',
     header: t('ACTION'),
     size: 80,
+    minSize: 80,
+    maxSize: 80,
     enableHiding: false,
     enableResizing: false,
     cell: ({ row }) => {

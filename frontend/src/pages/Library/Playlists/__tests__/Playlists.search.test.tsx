@@ -50,8 +50,6 @@ import type { User } from '@/types/user';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
-vi.mock('react-i18next');
-
 vi.mock('i18next', () => {
   const t = (key: string) => key;
   return { default: { t, language: 'en', isInitialized: true }, t };

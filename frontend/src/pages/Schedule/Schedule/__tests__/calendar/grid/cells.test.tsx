@@ -30,8 +30,6 @@ import { testQueryClient } from '@/setupTests';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
-vi.mock('react-i18next');
-
 vi.mock('@/context/UserContext', () => ({
   useUserContext: () => ({
     user: {

@@ -38,8 +38,6 @@ import type { DisplayProfile } from '@/types/displayProfile';
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next');
-
 vi.mock('@/services/displayProfileApi');
 vi.mock('@/services/userApi', () => ({
   fetchUserPreference: vi.fn().mockResolvedValue(null),

@@ -26,6 +26,7 @@ use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Event\DataConnectorScriptRequestEvent;
+use Xibo\Event\FolderTouchEvent;
 use Xibo\Event\DataConnectorSourceRequestEvent;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
@@ -504,6 +505,8 @@ class DataSet extends Base
         // Save
         $dataSet->save();
 
+        $this->touchFolder($dataSet->folderId);
+
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 201,
@@ -673,7 +676,9 @@ class DataSet extends Base
         $dataSet->isRemote = $sanitizedParams->getCheckbox('isRemote');
         $dataSet->folderId = $sanitizedParams->getInt('folderId', ['default' => $dataSet->folderId]);
 
-        if ($dataSet->hasPropertyChanged('folderId')) {
+        $folderChanged = $dataSet->hasPropertyChanged('folderId');
+        $oldFolderId = $folderChanged ? $dataSet->getOriginalValue('folderId') : null;
+        if ($folderChanged) {
             if ($dataSet->folderId === 1) {
                 $this->checkRootFolderAllowSave();
             }
@@ -714,6 +719,10 @@ class DataSet extends Base
         }
 
         $dataSet->save();
+
+        if ($folderChanged) {
+            $this->touchFolder($dataSet->folderId, $oldFolderId);
+        }
 
         // Return
         $this->getState()->hydrate([
@@ -844,6 +853,7 @@ class DataSet extends Base
 
         // Otherwise delete
         $dataSet->delete();
+        $this->touchFolder($dataSet->folderId);
 
         // Return
         $this->getState()->hydrate([
@@ -916,6 +926,7 @@ class DataSet extends Base
             $this->checkRootFolderAllowSave();
         }
 
+        $oldFolderId = $dataSet->folderId;
         $dataSet->folderId = $folderId;
         $folder = $this->folderFactory->getById($dataSet->folderId);
         $dataSet->permissionsFolderId = ($folder->getPermissionFolderId() == null)
@@ -924,6 +935,8 @@ class DataSet extends Base
 
         // Save
         $dataSet->save();
+
+        $this->touchFolder($dataSet->folderId, $oldFolderId);
 
         // Return
         $this->getState()->hydrate([
@@ -1593,5 +1606,13 @@ class DataSet extends Base
             'modifiedDateTo' => $sanitizedParams->getDate('modifiedDateTo'),
             'keyword' => $sanitizedParams->getString('keyword')
         ], $sanitizedParams);
+    }
+
+    private function touchFolder(int $folderId, ?int $oldFolderId = null): void
+    {
+        $this->getDispatcher()->dispatch(
+            new FolderTouchEvent($folderId, $oldFolderId),
+            FolderTouchEvent::$NAME
+        );
     }
 }

@@ -31,7 +31,6 @@ import type { UploadItem } from '@/hooks/useUploadQueue';
 // Mocks
 // -----------------------------------------------------------------------------
 
-vi.mock('react-i18next');
 vi.mock('react-dropzone', async (importOriginal) => {
   const actual = await importOriginal();
   return {

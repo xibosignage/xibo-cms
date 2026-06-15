@@ -34,8 +34,6 @@ import { testQueryClient } from '@/setupTests';
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next');
-
 vi.mock('@/services/displaysApi', () => ({
   updateDisplay: vi.fn(),
   fetchDisplayVenues: vi.fn().mockResolvedValue([]),

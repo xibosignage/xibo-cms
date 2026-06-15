@@ -49,7 +49,6 @@ vi.mock('@/services/folderApi', () => ({
   fetchContextButtons: vi.fn().mockResolvedValue({ create: true }),
   selectFolder: vi.fn(),
 }));
-vi.mock('react-i18next');
 vi.mock('@/services/userApi', () => ({
   fetchUserPreference: vi.fn().mockResolvedValue(null),
   saveUserPreference: vi.fn().mockResolvedValue(undefined),

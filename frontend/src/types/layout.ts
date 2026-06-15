@@ -36,7 +36,7 @@ export interface Layout {
   embed?: string;
   campaignId: number;
   folderId: number;
-  status: string;
+  status: number;
   duration: number;
   thumbnail?: string;
   previewUrl?: string;
@@ -44,7 +44,6 @@ export interface Layout {
   campaignType?: string;
   owner: string;
   groupsWithPermissions?: string;
-  valid?: number;
   enableStat: boolean;
   modifiedDt: string;
   code?: string | number;

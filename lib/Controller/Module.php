@@ -163,10 +163,18 @@ class Module extends Base
             $totalCount
         );
 
-        return $response
-            ->withStatus(200)
-            ->withHeader('X-Total-Count', $totalCount)
-            ->withJson($modules);
+        if ($this->isJson($request) || $this->isApi($request)) {
+            return $response
+                ->withStatus(200)
+                ->withHeader('X-Total-Count', $totalCount)
+                ->withJson($modules);
+        }
+
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = $totalCount;
+        $this->getState()->setData($modules);
+
+        return $this->render($request, $response);
     }
 
     #[OA\Get(
@@ -385,7 +393,13 @@ class Module extends Base
             ? $this->moduleTemplateFactory->getByTypeAndDataType($type, $dataType)
             : $this->moduleTemplateFactory->getByDataType($dataType);
 
-        return $response->withStatus(200)->withJson($templates);
+        if ($this->isJson($request) || $this->isApi($request)) {
+            return $response->withStatus(200)->withJson($templates);
+        }
+
+        $this->getState()->setData($templates);
+
+        return $this->render($request, $response);
     }
 
     // phpcs:disable

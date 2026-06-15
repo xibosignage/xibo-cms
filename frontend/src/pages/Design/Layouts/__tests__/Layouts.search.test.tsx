@@ -40,7 +40,6 @@ import { testQueryClient } from '@/setupTests';
 // -----------------------------------------------------------------------------
 
 // 3rd-party
-vi.mock('react-i18next');
 
 vi.mock('i18next', () => {
   const t = (key: string) => key;

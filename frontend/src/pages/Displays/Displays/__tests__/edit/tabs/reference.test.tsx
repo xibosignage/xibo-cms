@@ -35,7 +35,6 @@ import { testQueryClient } from '@/setupTests';
 
 // Enhanced t: supports {{key}} interpolation so ref field labels resolve to
 // "Reference 1", "Reference 2", etc. rather than the raw key "Reference {{n}}".
-vi.mock('react-i18next');
 
 vi.mock('@/services/displaysApi', () => ({
   updateDisplay: vi.fn(),

@@ -31,8 +31,6 @@ import type { DatasetColumn } from '@/types/datasetColumn';
 
 // -- Module mocks --
 
-vi.mock('react-i18next');
-
 const mockCreateDatasetRow = vi.fn();
 const mockUpdateDatasetRow = vi.fn();
 

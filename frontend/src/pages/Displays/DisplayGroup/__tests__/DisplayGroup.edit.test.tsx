@@ -38,8 +38,6 @@ import type { DisplayGroup } from '@/types/displayGroup';
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next');
-
 vi.mock('@/services/displayGroupApi');
 vi.mock('@/services/displaysApi', () => ({
   fetchDisplays: vi.fn().mockResolvedValue({ rows: [], totalCount: 0 }),

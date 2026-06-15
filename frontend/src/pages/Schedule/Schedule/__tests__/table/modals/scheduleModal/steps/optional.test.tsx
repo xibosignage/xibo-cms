@@ -48,8 +48,6 @@ import { hasFeature } from '@/utils/permissions';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
-vi.mock('react-i18next');
-
 vi.mock('@/components/ui/modals/Modal');
 
 vi.mock('@/components/ui/forms/SelectDropdown', () => ({

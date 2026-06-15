@@ -48,8 +48,6 @@ import type { Layout } from '@/types/layout';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
-vi.mock('react-i18next');
-
 vi.mock('@/components/ui/modals/Modal');
 
 // SelectDropdown as a native <select> so getByRole('combobox') works for

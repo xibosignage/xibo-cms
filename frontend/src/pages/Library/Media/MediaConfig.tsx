@@ -589,9 +589,9 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
     {
       id: 'tableActions',
       header: '',
-      size: 120,
-      minSize: 120,
-      maxSize: 120,
+      size: 110,
+      minSize: 110,
+      maxSize: 110,
       enableHiding: false,
       enableResizing: false,
       cell: ({ row }) => (

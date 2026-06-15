@@ -38,8 +38,6 @@ import type { Display } from '@/types/display';
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next');
-
 vi.mock('@/components/ui/modals/Modal');
 
 // useDebounce is identity in tests so keyword changes flow through immediately.

@@ -29,7 +29,6 @@ import { mockMediaData, renderMediaPage } from './mediaTestUtils';
 import type * as FolderApi from '@/services/folderApi';
 import { testQueryClient } from '@/setupTests';
 
-vi.mock('react-i18next');
 vi.mock('@/services/userApi', () => ({
   fetchUserPreference: vi.fn().mockResolvedValue(null),
   saveUserPreference: vi.fn().mockResolvedValue(undefined),

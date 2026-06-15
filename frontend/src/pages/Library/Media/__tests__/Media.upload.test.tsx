@@ -60,8 +60,6 @@ vi.mock('@/services/folderApi', () => ({
   selectFolder: vi.fn(),
 }));
 
-vi.mock('react-i18next');
-
 // The Media page saves and loads user preferences (column order, page size, etc.)
 // from the server via /user/pref - fake to return "no saved preferences".
 vi.mock('@/services/userApi', () => ({

@@ -29,8 +29,6 @@ import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
 import type React from 'react';
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 
-vi.mock('react-i18next');
-
 vi.mock('@/context/UserContext', () => ({
   useUserContext: vi.fn(),
 }));

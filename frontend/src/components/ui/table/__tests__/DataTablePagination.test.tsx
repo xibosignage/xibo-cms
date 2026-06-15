@@ -6,7 +6,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DataTablePagination } from '../DataTablePagination';
 
 // Mock translation
-vi.mock('react-i18next');
 
 // Mock usePreline so it doesn't try to run DOM animations in our headless test
 vi.mock('@/hooks/usePreline', () => ({

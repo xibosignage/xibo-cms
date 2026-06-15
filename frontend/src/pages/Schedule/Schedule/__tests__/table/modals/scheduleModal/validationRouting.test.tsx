@@ -49,8 +49,6 @@ import { EventTypeId } from '@/types/event';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
-vi.mock('react-i18next');
-
 vi.mock('@/components/ui/modals/Modal');
 
 vi.mock('@/services/eventApi');

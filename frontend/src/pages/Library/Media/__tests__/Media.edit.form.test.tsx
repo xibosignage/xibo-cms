@@ -44,7 +44,6 @@ vi.mock('@/services/mediaApi', () => ({
   deleteMedia: vi.fn(),
 }));
 vi.mock('@/services/folderApi');
-vi.mock('react-i18next');
 vi.mock('@/services/userApi', () => ({
   fetchUserPreference: vi.fn().mockResolvedValue(null),
   saveUserPreference: vi.fn().mockResolvedValue(undefined),

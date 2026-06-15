@@ -41,8 +41,6 @@ import type { Playlist } from '@/types/playlist';
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next');
-
 vi.mock('@/services/folderApi');
 vi.mock('@/services/playlistApi');
 vi.mock('@/services/userApi', () => ({

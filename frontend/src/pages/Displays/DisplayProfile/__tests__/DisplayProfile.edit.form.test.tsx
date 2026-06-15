@@ -34,8 +34,6 @@ import { testQueryClient } from '@/setupTests';
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next');
-
 vi.mock('@/services/displayProfileApi');
 vi.mock('@/components/ui/modals/Modal');
 

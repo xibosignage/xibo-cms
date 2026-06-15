@@ -20,7 +20,7 @@
  */
 
 import { Trash2Icon } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 import Modal from '@/components/ui/modals/Modal';
 
@@ -79,13 +79,20 @@ export default function DeleteMenuBoardCategoryModal({
         <p className="text-center text-gray-500">
           {itemCount === 1 ? (
             <>
-              {t('Are you sure you want to delete ')}"<strong>{categoryName}</strong>"?{' '}
+              <Trans
+                i18nKey='Are you sure you want to delete "<strong>{{name}}</strong>"?'
+                values={{ name: categoryName }}
+                components={{ strong: <strong /> }}
+              />{' '}
               {t('All Products linked to this Category will also be removed.')}
             </>
           ) : (
             <>
-              {t('Are you sure you want to delete ')}
-              <strong>{itemCount}</strong> {t('categories')}?{' '}
+              <Trans
+                i18nKey="Are you sure you want to delete <strong>{{count}}</strong> categories?"
+                values={{ count: itemCount }}
+                components={{ strong: <strong /> }}
+              />{' '}
               {t('All Products linked to these Categories will also be removed.')}
             </>
           )}

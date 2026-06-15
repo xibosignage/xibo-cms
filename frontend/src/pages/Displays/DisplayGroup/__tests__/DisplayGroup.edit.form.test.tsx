@@ -53,8 +53,6 @@ const mockUser: User = {
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next');
-
 vi.mock('@/services/displayGroupApi', () => ({
   updateDisplayGroup: vi.fn(),
   createDisplayGroup: vi.fn(),

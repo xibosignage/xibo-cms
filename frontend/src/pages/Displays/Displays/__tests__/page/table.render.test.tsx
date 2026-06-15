@@ -32,8 +32,6 @@ import { testQueryClient } from '@/setupTests';
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next');
-
 vi.mock('@/services/displaysApi');
 vi.mock('@/services/displayGroupApi', () => ({
   fetchDisplayGroups: vi.fn().mockResolvedValue({ rows: [], totalCount: 0 }),

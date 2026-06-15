@@ -21,7 +21,7 @@
 
 import { CircleMinus, ListOrdered, Lock, Upload } from 'lucide-react';
 import { useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
 import type { SpotUploadState } from '../hooks/usePlaylistDashboardActions';
@@ -238,14 +238,18 @@ export default function SpotRow({
         >
           <Upload className="h-3.5 w-3.5 text-xibo-blue-600" />
           <span className="text-sm text-gray-500">
-            {t('Drag and drop files or ')}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="text-xibo-blue-600 cursor-pointer"
-            >
-              {t('Select File')}
-            </button>
+            <Trans
+              i18nKey="Drag and drop files or <button>Select File</button>"
+              components={{
+                button: (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-xibo-blue-600 cursor-pointer"
+                  />
+                ),
+              }}
+            />
           </span>
         </div>
       </div>

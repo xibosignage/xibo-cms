@@ -29,7 +29,6 @@ export interface SettingsTabProps {
   isEditable: (key: string) => boolean;
   options: SettingsData['options'];
   relatedEntities: SettingsData['relatedEntities'];
-  hideThemes: boolean;
   elevateLogUntil: string | null;
 }
 

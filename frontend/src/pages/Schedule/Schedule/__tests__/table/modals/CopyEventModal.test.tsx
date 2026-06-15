@@ -28,8 +28,6 @@ import { mockEvent } from '../../fixtures/event';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
-vi.mock('react-i18next');
-
 // Replace the real Modal with a fake one for testing. The fake uses the
 // modal's title ("Copy Event") as its accessibility label, which is how the
 // tests below find the dialog on screen.

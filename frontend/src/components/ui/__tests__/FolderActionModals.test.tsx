@@ -41,7 +41,6 @@ import type { Folder } from '@/types/folder';
 // Module mocks
 // -----------------------------------------------------------------------------
 
-vi.mock('react-i18next');
 vi.mock('@/components/ui/modals/Modal');
 vi.mock('@/components/ui/modals/ShareModal', () => ({
   default: () => null,
@@ -74,6 +73,8 @@ const mockFolder: Folder = {
   ownerId: 1,
   ownerName: 'MockUser',
   children: [],
+  createdDt: null,
+  modifiedDt: null,
 };
 
 // -----------------------------------------------------------------------------

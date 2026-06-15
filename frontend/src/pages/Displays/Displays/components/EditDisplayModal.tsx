@@ -50,6 +50,11 @@ import TimezoneSelect from '@/components/ui/forms/TimezoneSelect';
 import Modal from '@/components/ui/modals/Modal';
 import { useDebounce } from '@/hooks/useDebounce';
 import { DynamicSettingField } from '@/pages/Displays/DisplayProfile/components/fields/DynamicSettingField';
+import {
+  HISENSE_PICTURE_KEYS,
+  HISENSE_PICTURE_PROPERTY_DEFS,
+  GAMMA_MODE_OPTIONS,
+} from '@/pages/Displays/DisplayProfile/components/fields/HisenseFields';
 import { PICTURE_PROPERTY_DEFS } from '@/pages/Displays/DisplayProfile/components/fields/LgSsspFields';
 import type { FieldMeta } from '@/pages/Displays/DisplayProfile/components/fields/fieldMetadata';
 import { getFieldMetaForType } from '@/pages/Displays/DisplayProfile/components/fields/fieldMetadata';
@@ -198,6 +203,50 @@ function summarizeLockOptions(str: string, t: TFunction): string {
   }
 }
 
+function summarizeHisenseTimers(str: string, t: TFunction): string {
+  try {
+    const parsed = JSON.parse(str) as Array<{ index: number }>;
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return '—';
+    }
+    const onCount = parsed.filter((r) => r.index < 3).length;
+    const offCount = parsed.filter((r) => r.index >= 3).length;
+    const parts: string[] = [];
+    if (onCount > 0) parts.push(`${onCount} ${t('on')}`);
+    if (offCount > 0) parts.push(`${offCount} ${t('off')}`);
+    return parts.join(', ');
+  } catch {
+    return str ? t('Configured') : '—';
+  }
+}
+
+function summarizeHisensePictureOptions(str: string, t: TFunction): string {
+  try {
+    const parsed = JSON.parse(str) as Record<string, number>;
+    const entries = Object.entries(parsed).filter(([key]) => key !== '');
+    if (entries.length === 0) {
+      return '—';
+    }
+    const names = entries.map(([key, val]) => {
+      if (key === 'gammaMode') {
+        const opt = GAMMA_MODE_OPTIONS.find((o) => o.value === String(val));
+        return `${t('Gamma')}: ${opt ? t(opt.label) : val}`;
+      }
+      if (key === 'dynamicContrast') {
+        return `${t('Dynamic Contrast')}: ${val ? t('On') : t('Off')}`;
+      }
+      const def = HISENSE_PICTURE_PROPERTY_DEFS[key];
+      return def ? `${t(def.name)}: ${val}` : `${key}: ${val}`;
+    });
+    if (names.length <= 3) {
+      return names.join(', ');
+    }
+    return `${names.length} ${t('settings')}`;
+  } catch {
+    return str ? t('Configured') : '—';
+  }
+}
+
 function resolveLabel(
   raw: string | number | null | undefined,
   meta: FieldMeta,
@@ -221,8 +270,14 @@ function resolveLabel(
   if (meta.inputType === 'timers') {
     return summarizeTimers(str, t);
   }
+  if (meta.inputType === 'hisense-timers') {
+    return summarizeHisenseTimers(str, t);
+  }
   if (meta.inputType === 'picture-options') {
     return summarizePictureOptions(str, t);
+  }
+  if (meta.inputType === 'hisense-picture-options') {
+    return summarizeHisensePictureOptions(str, t);
   }
   if (meta.inputType === 'lock-options') {
     return summarizeLockOptions(str, t);
@@ -320,7 +375,7 @@ function OverrideCell({
             ref={refs.setFloating}
             style={floatingStyles}
             {...getFloatingProps()}
-            className={`z-9999 bg-white shadow-xl rounded-lg border border-gray-100 overflow-hidden flex flex-col min-w-72 ${['timers', 'picture-options'].includes(meta.inputType) ? 'min-w-120 max-w-160' : 'max-w-96'}`}
+            className={`z-9999 bg-white shadow-xl rounded-lg border border-gray-100 overflow-hidden flex flex-col min-w-72 ${['timers', 'picture-options', 'hisense-timers', 'hisense-picture-options'].includes(meta.inputType) ? 'min-w-120 max-w-160' : 'max-w-96'}`}
           >
             <span className="bg-gray-100 px-3 py-2 text-xs font-semibold text-gray-500 uppercase">
               {t('Override')}: {meta.label}
@@ -601,12 +656,30 @@ export default function EditDisplayModal({
         }
       });
     }
+
+    // Compose individual hisense picture overrides into a single key
+    if ((data.displayProfileType ?? data.clientType) === 'hisense') {
+      const pictureKeys = [...HISENSE_PICTURE_KEYS, 'gammaMode', 'dynamicContrast'];
+      const pictureJson: Record<string, number> = {};
+      pictureKeys.forEach((key) => {
+        if (initOverrides[key] !== undefined) {
+          pictureJson[key] = Number(initOverrides[key]);
+          delete initOverrides[key];
+        }
+      });
+      if (Object.keys(pictureJson).length > 0) {
+        initOverrides['hisensePictureOptions'] = JSON.stringify(pictureJson);
+      }
+    }
+
     setOverrides(initOverrides);
 
     fetchDisplayProfile({
       start: 0,
       length: 200,
-      ...(data.clientType ? { type: data.clientType as never } : {}),
+      ...((data.displayProfileType ?? data.clientType)
+        ? { type: (data.displayProfileType ?? data.clientType) as never }
+        : {}),
     })
       .then((res) => setProfiles(res.rows))
       .catch(() => setProfiles([]));
@@ -660,7 +733,7 @@ export default function EditDisplayModal({
 
   useEffect(() => {
     setIsLoadingProfile(true);
-    const clientType = data?.clientType as string | null | undefined;
+    const clientType = (data?.displayProfileType ?? data?.clientType) as string | null | undefined;
 
     const load: Promise<DisplayProfile | null> = draft.displayProfileId
       ? fetchDisplayProfileById(draft.displayProfileId)
@@ -685,7 +758,7 @@ export default function EditDisplayModal({
         setProfileDefaults({});
       })
       .finally(() => setIsLoadingProfile(false));
-  }, [draft.displayProfileId, data?.clientType]);
+  }, [draft.displayProfileId, data?.displayProfileType, data?.clientType]);
 
   const handleLoadMoreLayouts = () => {
     if (isLoadingMoreLayouts || !hasMoreLayouts) {
@@ -805,11 +878,47 @@ export default function EditDisplayModal({
   const tab = (name: ActiveTab) => tabClass(activeTab, name);
   const title = data ? `${t('Edit')} "${data.display}"` : t('Edit Display');
 
-  const profileSettingNames = activeProfile?.configDefault?.map((d) => d.name) ?? [];
-  const getProfileValue = (name: string): string | number | null =>
-    profileFlat[name] !== undefined ? profileFlat[name] : (profileDefaults[name] ?? null);
+  const resolvedProfileType = data?.displayProfileType ?? data?.clientType;
+  const isHisenseType = resolvedProfileType === 'hisense';
+  const fieldMeta = getFieldMetaForType(resolvedProfileType, t);
 
-  const fieldMeta = getFieldMetaForType(data?.clientType, t);
+  const HISENSE_PICTURE_SETTING_KEYS = new Set([
+    ...HISENSE_PICTURE_KEYS,
+    'gammaMode',
+    'dynamicContrast',
+  ]);
+
+  const profileSettingNames = (() => {
+    const names = activeProfile?.configDefault?.map((d) => d.name) ?? [];
+    if (!isHisenseType) {
+      return names;
+    }
+    // Filter out individual picture settings, inject grouped hisensePictureOptions
+    const filtered = names.filter((n) => !HISENSE_PICTURE_SETTING_KEYS.has(n));
+    const timersIdx = filtered.indexOf('timers');
+    if (timersIdx >= 0) {
+      filtered.splice(timersIdx, 0, 'hisensePictureOptions');
+    } else {
+      filtered.push('hisensePictureOptions');
+    }
+    return filtered;
+  })();
+
+  const getProfileValue = (name: string): string | number | null => {
+    // Compose virtual hisensePictureOptions from individual profile values
+    if (name === 'hisensePictureOptions' && isHisenseType) {
+      const obj: Record<string, number> = {};
+      HISENSE_PICTURE_SETTING_KEYS.forEach((key) => {
+        const v =
+          profileFlat[key] !== undefined ? profileFlat[key] : (profileDefaults[key] ?? null);
+        if (v !== null && v !== undefined && v !== '') {
+          obj[key] = Number(v);
+        }
+      });
+      return Object.keys(obj).length > 0 ? JSON.stringify(obj) : null;
+    }
+    return profileFlat[name] !== undefined ? profileFlat[name] : (profileDefaults[name] ?? null);
+  };
 
   const commitOverride = (name: string, value: string) => {
     if (value.trim() === '') {

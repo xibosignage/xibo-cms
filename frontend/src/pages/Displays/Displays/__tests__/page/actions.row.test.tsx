@@ -47,8 +47,6 @@ import type { User } from '@/types/user';
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next');
-
 // Spy on navigate — must be declared before any test renders the component.
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async (importOriginal) => {

@@ -27,6 +27,7 @@ use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Event\FolderTouchEvent;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
@@ -496,6 +497,8 @@ class Playlist extends Base
 
         $playlist->save();
 
+        $this->touchFolder($playlist->folderId);
+
         // Should we assign any existing media
         if (!empty($nameFilter) || !empty($tagFilter) || !empty($folderIdFilter)) {
             $media = $this->mediaFactory->query(
@@ -678,7 +681,9 @@ class Playlist extends Base
         $playlist->enableStat = $sanitizedParams->getString('enableStat');
         $playlist->folderId = $sanitizedParams->getInt('folderId', ['default' => $playlist->folderId]);
 
-        if ($playlist->hasPropertyChanged('folderId')) {
+        $folderChanged = $playlist->hasPropertyChanged('folderId');
+        $oldFolderId = $folderChanged ? $playlist->getOriginalValue('folderId') : null;
+        if ($folderChanged) {
             if ($playlist->folderId === 1) {
                 $this->checkRootFolderAllowSave();
             }
@@ -724,6 +729,10 @@ class Playlist extends Base
 
         $playlist->save();
 
+        if ($folderChanged) {
+            $this->touchFolder($playlist->folderId, $oldFolderId);
+        }
+
         // Success
         return $response->withStatus(204);
     }
@@ -768,6 +777,7 @@ class Playlist extends Base
         // Issue the delete
         $playlist->setModuleFactory($this->moduleFactory);
         $playlist->delete();
+        $this->touchFolder($playlist->folderId);
 
         // Success
         return $response->withStatus(204);
@@ -1551,12 +1561,15 @@ class Playlist extends Base
             $this->checkRootFolderAllowSave();
         }
 
+        $oldFolderId = $playlist->folderId;
         $playlist->folderId = $folderId;
         $folder = $this->folderFactory->getById($playlist->folderId);
         $playlist->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
 
         // Save
         $playlist->save();
+
+        $this->touchFolder($playlist->folderId, $oldFolderId);
 
         // Return
         return $response->withStatus(204);
@@ -1849,5 +1862,13 @@ class Playlist extends Base
 
         // User permissions
         $playlist->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($playlist));
+    }
+
+    private function touchFolder(int $folderId, ?int $oldFolderId = null): void
+    {
+        $this->getDispatcher()->dispatch(
+            new FolderTouchEvent($folderId, $oldFolderId),
+            FolderTouchEvent::$NAME
+        );
     }
 }

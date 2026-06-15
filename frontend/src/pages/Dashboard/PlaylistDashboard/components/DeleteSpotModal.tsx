@@ -21,7 +21,7 @@
 
 import { Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 import Checkbox from '@/components/ui/forms/Checkbox';
 import Modal from '@/components/ui/modals/Modal';
@@ -78,15 +78,17 @@ export default function DeleteSpotModal({
         </h2>
         <p className="text-center text-gray-500">
           {isRemoveAll ? (
-            <>
-              {t('Are you sure you want to remove all')} <strong>{itemCount}</strong>{' '}
-              {t('widgets from this playlist?')}
-            </>
+            <Trans
+              i18nKey="Are you sure you want to remove all <strong>{{count}}</strong> widgets from this playlist?"
+              values={{ count: itemCount }}
+              components={{ strong: <strong /> }}
+            />
           ) : (
-            <>
-              {t('Are you sure you want to remove ')}&quot;<strong>{widgetName}</strong>&quot;
-              {t(' from this playlist?')}
-            </>
+            <Trans
+              i18nKey='Are you sure you want to remove "<strong>{{name}}</strong>" from this playlist?'
+              values={{ name: widgetName }}
+              components={{ strong: <strong /> }}
+            />
           )}
         </p>
 

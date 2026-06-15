@@ -116,7 +116,7 @@ class XiboAudienceReportingConnector implements ConnectorInterface
 
     public function getThumbnail(): string
     {
-        return 'theme/default/img/connectors/magnifying-glass-chart.svg';
+        return '';
     }
 
     public function getSettingsFormTwig(): string

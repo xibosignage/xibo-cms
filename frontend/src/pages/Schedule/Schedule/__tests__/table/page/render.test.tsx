@@ -34,8 +34,6 @@ import { testQueryClient } from '@/setupTests';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
-vi.mock('react-i18next');
-
 // Replace the user-preferences API. By default we make it return "no saved
 // preferences" right away, which is what most tests want. A specific test
 // can override this if it wants to simulate the user's preferences still

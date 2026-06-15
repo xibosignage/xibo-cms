@@ -37,8 +37,6 @@ vi.mock('@/context/UserContext', () => ({
   })),
 }));
 
-vi.mock('react-i18next');
-
 // April 14 2026 10:00 UTC
 const APR14_10H = Math.floor(new Date('2026-04-14T10:00:00Z').getTime() / 1000);
 

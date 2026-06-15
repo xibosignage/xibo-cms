@@ -21,7 +21,7 @@
 
 import { Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 import { notify } from '@/components/ui/Notification';
 import Modal from '@/components/ui/modals/Modal';
@@ -90,7 +90,11 @@ export default function TidyLibraryModal({
           </div>
         ) : (
           <p className="text-center text-gray-500">
-            {t('There are ')} <strong>{unusedCount}</strong> {t('file(s) that can be removed.')}
+            <Trans
+              i18nKey="There are <strong>{{count}}</strong> file(s) that can be removed."
+              values={{ count: unusedCount }}
+              components={{ strong: <strong /> }}
+            />
           </p>
         )}
       </div>

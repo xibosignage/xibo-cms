@@ -10,8 +10,6 @@ import { renderCalendar } from './helpers/renderCalendar';
 
 import { testQueryClient } from '@/setupTests';
 
-vi.mock('react-i18next');
-
 vi.mock('@/context/UserContext', () => ({
   useUserContext: vi.fn(() => ({
     user: { settings: { defaultTimezone: 'UTC' } },

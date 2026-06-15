@@ -33,8 +33,6 @@ import { testQueryClient } from '@/setupTests';
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next');
-
 vi.mock('@/components/ui/modals/Modal');
 
 // Sub-component modals are tested in isolation in their own test files.
