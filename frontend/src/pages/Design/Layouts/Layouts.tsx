@@ -409,7 +409,7 @@ export default function Layouts() {
               disabled={!canAddToFolder || !isHydrated}
               leftIcon={Plus}
             >
-              {t('New Layout')}
+              {t('Add Layout')}
             </Button>
           </div>
         </div>

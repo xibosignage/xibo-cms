@@ -144,7 +144,7 @@ class UserNotificationFactory extends BaseFactory
 
         $params = ['now' => Carbon::now()->format('U')];
         $select = 'SELECT `lknotificationuser`.lknotificationuserId,
-            `lknotificationuser`.notificationId,
+            `notification`.notificationId,
             `lknotificationuser`.userId,
             `lknotificationuser`.read,
             `lknotificationuser`.readDt,
@@ -164,7 +164,16 @@ class UserNotificationFactory extends BaseFactory
 
         $body = ' FROM `notification`
                 LEFT OUTER JOIN `lknotificationuser`
-                    ON `notification`.notificationId = `lknotificationuser`.notificationId
+                    ON `notification`.notificationId = `lknotificationuser`.notificationId';
+
+        // Scope the join to the requesting user so that other users' lknotificationuser rows
+        // are not inadvertently returned when the creator condition (notification.userId) also matches.
+        if ($parsedBody->getInt('userId') !== null) {
+            $body .= ' AND `lknotificationuser`.userId = :userId';
+            $params['userId'] = $parsedBody->getInt('userId');
+        }
+
+        $body .= '
                 LEFT OUTER JOIN `user`
                     ON `user`.userId = `lknotificationuser`.userId
          ';
@@ -177,8 +186,10 @@ class UserNotificationFactory extends BaseFactory
         }
 
         if ($parsedBody->getInt('userId') !== null) {
-            $body .= ' AND (`lknotificationuser`.userId = :userId OR `notification`.userId = :userId) ';
-            $params['userId'] = $parsedBody->getInt('userId');
+            // lknotificationuser.notificationId IS NOT NULL means the scoped join succeeded
+            // (the user has a real user-notification record). The OR covers the creator case.
+            $body .= ' AND (`lknotificationuser`.notificationId IS NOT NULL OR `notification`.userId = :userId2) ';
+            $params['userId2'] = $parsedBody->getInt('userId');
         }
 
         if ($parsedBody->getInt('read') !== null) {
