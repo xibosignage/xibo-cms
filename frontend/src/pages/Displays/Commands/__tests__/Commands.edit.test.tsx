@@ -35,7 +35,6 @@ import { testQueryClient } from '@/setupTests';
 // Module mocks
 // =============================================================================
 
-
 vi.mock('@/services/commandApi');
 vi.mock('@/services/userApi', () => ({
   fetchUserPreference: vi.fn().mockResolvedValue(null),

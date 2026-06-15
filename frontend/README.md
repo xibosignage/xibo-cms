@@ -102,9 +102,9 @@ npm run preview
 ## Conventions
 
 - TypeScript strict mode (`strict: true`, `noUncheckedIndexedAccess: true`)
-- Always use **semicolons**  
-- Use **path aliases**: `@/` → `src/`  
-- Components in PascalCase, hooks in `useSomething` format  
+- Always use **semicolons**
+- Use **path aliases**: `@/` → `src/`
+- Components in PascalCase, hooks in `useSomething` format
 - Styling via Tailwind utilities; avoid standalone CSS unless necessary
 
 ---

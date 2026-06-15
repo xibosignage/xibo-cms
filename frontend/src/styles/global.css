@@ -47,7 +47,7 @@ body,
    automatically recolours every palette shade via oklch. */
 :root {
   --brand-primary: #3f7fff;
-  --brand-accent:  #eb7857;
+  --brand-accent: #eb7857;
 }
 
 /* Colour palette — all shades are derived from the brand tokens so that
@@ -56,7 +56,7 @@ body,
    only the hue follows the brand token. */
 @theme inline {
   /* Primary colour scale */
-  --color-xibo-blue-50:  oklch(from var(--brand-primary) 0.952 0.024 h);
+  --color-xibo-blue-50: oklch(from var(--brand-primary) 0.952 0.024 h);
   --color-xibo-blue-100: oklch(from var(--brand-primary) 0.886 0.057 h);
   --color-xibo-blue-200: oklch(from var(--brand-primary) 0.813 0.089 h);
   --color-xibo-blue-300: oklch(from var(--brand-primary) 0.737 0.122 h);
@@ -64,28 +64,28 @@ body,
   --color-xibo-blue-500: var(--brand-primary);
   --color-xibo-blue-600: oklch(from var(--brand-primary) 0.513 0.228 h);
   --color-xibo-blue-700: oklch(from var(--brand-primary) 0.434 0.185 h);
-  --color-xibo-blue-800: oklch(from var(--brand-primary) 0.322 0.140 h);
+  --color-xibo-blue-800: oklch(from var(--brand-primary) 0.322 0.14 h);
   --color-xibo-blue-900: oklch(from var(--brand-primary) 0.261 0.112 h);
   --color-xibo-blue-950: oklch(from var(--brand-primary) 0.193 0.072 h);
 
   /* Accent colour scale */
-  --color-xibo-burnt-sienna-50:  oklch(from var(--brand-accent) 0.947 0.030 h);
+  --color-xibo-burnt-sienna-50: oklch(from var(--brand-accent) 0.947 0.03 h);
   --color-xibo-burnt-sienna-100: oklch(from var(--brand-accent) 0.885 0.068 h);
   --color-xibo-burnt-sienna-200: oklch(from var(--brand-accent) 0.815 0.098 h);
   --color-xibo-burnt-sienna-300: oklch(from var(--brand-accent) 0.745 0.118 h);
-  --color-xibo-burnt-sienna-400: oklch(from var(--brand-accent) 0.700 0.130 h);
+  --color-xibo-burnt-sienna-400: oklch(from var(--brand-accent) 0.7 0.13 h);
   --color-xibo-burnt-sienna-500: var(--brand-accent);
-  --color-xibo-burnt-sienna-600: oklch(from var(--brand-accent) 0.580 0.113 h);
-  --color-xibo-burnt-sienna-700: oklch(from var(--brand-accent) 0.490 0.093 h);
+  --color-xibo-burnt-sienna-600: oklch(from var(--brand-accent) 0.58 0.113 h);
+  --color-xibo-burnt-sienna-700: oklch(from var(--brand-accent) 0.49 0.093 h);
   --color-xibo-burnt-sienna-800: oklch(from var(--brand-accent) 0.387 0.075 h);
-  --color-xibo-burnt-sienna-900: oklch(from var(--brand-accent) 0.302 0.060 h);
+  --color-xibo-burnt-sienna-900: oklch(from var(--brand-accent) 0.302 0.06 h);
   --color-xibo-burnt-sienna-950: oklch(from var(--brand-accent) 0.215 0.045 h);
 
   /* Neutral colours — not tied to brand tokens */
-  --color-xibo-black:   #000;
-  --color-xibo-grey:    #484848;
+  --color-xibo-black: #000;
+  --color-xibo-grey: #484848;
   --color-xibo-seasalt: #f7f7f7;
-  --color-xibo-white:   #ffffff;
+  --color-xibo-white: #ffffff;
 }
 
 @layer components {

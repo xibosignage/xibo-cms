@@ -21,7 +21,6 @@
 
 import { screen, waitFor } from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
-import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import {

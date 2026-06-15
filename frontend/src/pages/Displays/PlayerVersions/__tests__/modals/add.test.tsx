@@ -157,7 +157,7 @@ describe('AddPlayerVersionModal', () => {
 
     act(() => capturedOnDrop?.([makeFile('a.apk'), makeFile('b.apk')]));
 
-    expect(await screen.findByText('All {{count}} items completed')).toBeInTheDocument();
+    expect(await screen.findByText('All 2 items completed')).toBeInTheDocument();
   });
 
   test('a mix of success and failure reports both counts', async () => {

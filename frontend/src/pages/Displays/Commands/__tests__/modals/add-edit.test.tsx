@@ -35,7 +35,6 @@ import { testQueryClient } from '@/setupTests';
 // Module mocks
 // =============================================================================
 
-
 vi.mock('@/components/ui/modals/Modal');
 
 vi.mock('@/services/commandApi', () => ({
