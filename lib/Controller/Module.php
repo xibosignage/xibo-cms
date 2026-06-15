@@ -163,10 +163,18 @@ class Module extends Base
             $totalCount
         );
 
-        return $response
-            ->withStatus(200)
-            ->withHeader('X-Total-Count', $totalCount)
-            ->withJson($modules);
+        if ($this->isJson($request) || $this->isApi($request)) {
+            return $response
+                ->withStatus(200)
+                ->withHeader('X-Total-Count', $totalCount)
+                ->withJson($modules);
+        }
+
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = $totalCount;
+        $this->getState()->setData($modules);
+
+        return $this->render($request, $response);
     }
 
     #[OA\Get(
@@ -385,13 +393,10 @@ class Module extends Base
             ? $this->moduleTemplateFactory->getByTypeAndDataType($type, $dataType)
             : $this->moduleTemplateFactory->getByDataType($dataType);
 
-        if ($this->isApi($request) || $this->isJson($request)) {
+        if ($this->isJson($request) || $this->isApi($request)) {
             return $response->withStatus(200)->withJson($templates);
         }
 
-        // TODO: Remove this once the layout editor is ready
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = 0;
         $this->getState()->setData($templates);
 
         return $this->render($request, $response);
@@ -458,13 +463,7 @@ class Module extends Base
             ];
         }
 
-        if ($this->isApi($request) || $this->isJson($request)) {
-            return $response->withStatus(200)->withJson($props);
-        }
-
-        // TODO: Remove this once the layout editor is ready
-        $this->getState()->setData($props);
-        return $this->render($request, $response);
+        return $response->withStatus(200)->withJson($props);
     }
 
     /**
