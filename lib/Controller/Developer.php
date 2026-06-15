@@ -220,7 +220,6 @@ class Developer extends Base
         $this->setNode($document, 'title', $title, false);
         $this->setNode($document, 'showIn', $showIn, false);
         $this->setNode($document, 'dataType', $dataType, false);
-        $this->setNode($document, 'enabled', $template->isEnabled ? '1' : '0', false);
         $this->setNode($document, 'onTemplateRender', $onTemplateRender);
         $this->setNode($document, 'onTemplateVisible', $onTemplateVisible);
 
