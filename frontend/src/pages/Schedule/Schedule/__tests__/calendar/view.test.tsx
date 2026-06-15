@@ -16,11 +16,7 @@ import type { User } from '@/types/user';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
-const t = (key: string) => key;
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
+vi.mock('react-i18next');
 
 vi.mock('@/services/userApi', () => ({
   fetchUserPreference: vi.fn().mockResolvedValue(null),

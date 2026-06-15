@@ -24,9 +24,7 @@ import { describe, test, expect, vi } from 'vitest';
 
 import InputFilter from '../InputFilter';
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-}));
+vi.mock('react-i18next');
 
 type RenderProps = Partial<React.ComponentProps<typeof InputFilter>>;
 

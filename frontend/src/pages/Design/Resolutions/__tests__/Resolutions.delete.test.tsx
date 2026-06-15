@@ -36,9 +36,7 @@ vi.mock('@/services/resolutionApi', () => ({
   deleteResolution: vi.fn(),
 }));
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
-}));
+vi.mock('react-i18next');
 
 vi.mock('@/services/userApi', () => ({
   fetchUserPreference: vi.fn().mockResolvedValue(null),

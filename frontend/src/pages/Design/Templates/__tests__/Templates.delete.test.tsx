@@ -20,7 +20,6 @@
  */
 
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
-import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import {
@@ -38,10 +37,7 @@ import { testQueryClient } from '@/setupTests';
 // =============================================================================
 
 // 3rd-party
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
+vi.mock('react-i18next');
 
 // Services
 vi.mock('@/services/folderApi');
@@ -143,7 +139,7 @@ describe('Delete Template', () => {
       expect(screen.getByRole('dialog')).toBeInTheDocument();
     });
     expect(
-      screen.getByText('{{count}} item(s) could not be deleted because they are in use.'),
+      screen.getByText('1 item(s) could not be deleted because they are in use.'),
     ).toBeInTheDocument();
   });
 });

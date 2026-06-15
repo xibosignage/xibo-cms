@@ -44,10 +44,7 @@ import type { Display } from '@/types/display';
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
+vi.mock('react-i18next');
 
 vi.mock('@/services/displaysApi');
 vi.mock('@/services/displayGroupApi', () => ({

@@ -31,20 +31,7 @@ import type { UploadItem } from '@/hooks/useUploadQueue';
 // Mocks
 // -----------------------------------------------------------------------------
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    // t() returns the key, but also replaces {{placeholders}} if options are provided
-    t: (key: string, opts?: Record<string, unknown>) =>
-      opts
-        ? Object.entries(opts).reduce(
-            (str, [k, v]) => str.replace(new RegExp(`{{${k}}}`, 'g'), String(v)),
-            key,
-          )
-        : key,
-    i18n: { changeLanguage: vi.fn() },
-  }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
+vi.mock('react-i18next');
 vi.mock('react-dropzone', async (importOriginal) => {
   const actual = await importOriginal();
   return {

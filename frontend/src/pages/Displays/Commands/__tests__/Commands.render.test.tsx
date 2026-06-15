@@ -20,7 +20,6 @@
  */
 
 import { screen } from '@testing-library/react';
-import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import { EMPTY_COMMAND_TABLE, mockCommand, SINGLE_COMMAND } from './fixtures/command';
@@ -35,13 +34,7 @@ import { testQueryClient } from '@/setupTests';
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next', () => {
-  const t = (key: string) => key;
-  return {
-    useTranslation: () => ({ t, i18n: { changeLanguage: vi.fn() } }),
-    Trans: ({ children }: { children: React.ReactNode }) => children,
-  };
-});
+vi.mock('react-i18next');
 
 vi.mock('@/services/commandApi');
 vi.mock('@/services/userApi', () => ({

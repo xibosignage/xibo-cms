@@ -20,7 +20,6 @@
  */
 
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
-import type React from 'react';
 import { test, vi, beforeEach } from 'vitest';
 
 import { mockEditMedia, mockMediaData, openEditModal, renderMediaPage } from './mediaTestUtils';
@@ -50,10 +49,7 @@ vi.mock('@/services/folderApi', () => ({
   fetchContextButtons: vi.fn().mockResolvedValue({ create: true }),
   selectFolder: vi.fn(),
 }));
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
+vi.mock('react-i18next');
 vi.mock('@/services/userApi', () => ({
   fetchUserPreference: vi.fn().mockResolvedValue(null),
   saveUserPreference: vi.fn().mockResolvedValue(undefined),

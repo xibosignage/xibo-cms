@@ -32,13 +32,7 @@ import { testQueryClient } from '@/setupTests';
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next', () => {
-  const t = (key: string) => key;
-  return {
-    useTranslation: () => ({ t, i18n: { changeLanguage: vi.fn() } }),
-    Trans: ({ children }: { children: React.ReactNode }) => children,
-  };
-});
+vi.mock('react-i18next');
 
 vi.mock('@/components/ui/modals/Modal');
 

@@ -47,13 +47,7 @@ import type { User } from '@/types/user';
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next', () => {
-  const t = (key: string) => key;
-  return {
-    useTranslation: () => ({ t, i18n: { changeLanguage: vi.fn() } }),
-    Trans: ({ children }: { children: React.ReactNode }) => children,
-  };
-});
+vi.mock('react-i18next');
 
 // Spy on navigate — must be declared before any test renders the component.
 const mockNavigate = vi.fn();

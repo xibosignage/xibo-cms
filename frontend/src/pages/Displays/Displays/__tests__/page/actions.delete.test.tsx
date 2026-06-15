@@ -21,7 +21,6 @@
 
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
-import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import { mockDisplay, SINGLE_DISPLAY } from '../fixtures/display';
@@ -35,10 +34,7 @@ import { testQueryClient } from '@/setupTests';
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
+vi.mock('react-i18next');
 
 vi.mock('@/services/displaysApi');
 vi.mock('@/services/displayGroupApi', () => ({

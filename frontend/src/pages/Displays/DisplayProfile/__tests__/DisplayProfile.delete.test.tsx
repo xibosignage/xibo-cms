@@ -20,7 +20,6 @@
  */
 
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
-import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import {
@@ -37,10 +36,7 @@ import { testQueryClient } from '@/setupTests';
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
+vi.mock('react-i18next');
 
 vi.mock('@/services/displayProfileApi');
 vi.mock('@/services/userApi', () => ({
@@ -135,7 +131,7 @@ describe('Delete Display Profile', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Yes, Delete' }));
 
     await waitFor(() => {
-      expect(screen.getByText('{{count}} item(s) could not be deleted.')).toBeInTheDocument();
+      expect(screen.getByText('1 item(s) could not be deleted.')).toBeInTheDocument();
     });
     expect(screen.getByRole('dialog')).toBeInTheDocument();
   });

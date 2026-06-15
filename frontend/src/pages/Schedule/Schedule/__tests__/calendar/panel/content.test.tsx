@@ -38,11 +38,7 @@ vi.mock('@/context/UserContext', () => ({
   })),
 }));
 
-const t = (key: string) => key;
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
+vi.mock('react-i18next');
 
 function mockTimezone(timezone: string) {
   vi.mocked(useUserContext).mockReturnValue({

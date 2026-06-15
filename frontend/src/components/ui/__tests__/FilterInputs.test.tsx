@@ -25,9 +25,7 @@ import { describe, test, expect, vi } from 'vitest';
 import FilterInputs from '../FilterInputs';
 import type { FilterConfigItem } from '../FilterInputs';
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-}));
+vi.mock('react-i18next');
 // FilterInputs imports t directly from i18next (not via useTranslation). Mock it so
 // the Reset button renders with accessible text instead of an empty string.
 vi.mock('i18next', () => {

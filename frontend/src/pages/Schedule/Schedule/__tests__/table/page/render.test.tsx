@@ -34,10 +34,7 @@ import { testQueryClient } from '@/setupTests';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
+vi.mock('react-i18next');
 
 // Replace the user-preferences API. By default we make it return "no saved
 // preferences" right away, which is what most tests want. A specific test

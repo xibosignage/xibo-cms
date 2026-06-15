@@ -38,22 +38,7 @@ import type { Display } from '@/types/display';
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next', () => {
-  const t = (key: string, options?: Record<string, unknown>) => {
-    // Support the interpolation pattern in the title: "Manage Members for {{name}}"
-    if (options && typeof options === 'object') {
-      return Object.entries(options).reduce<string>(
-        (acc, [k, v]) => acc.replace(`{{${k}}}`, String(v)),
-        key,
-      );
-    }
-    return key;
-  };
-  return {
-    useTranslation: () => ({ t, i18n: { changeLanguage: vi.fn() } }),
-    Trans: ({ children }: { children: React.ReactNode }) => children,
-  };
-});
+vi.mock('react-i18next');
 
 vi.mock('@/components/ui/modals/Modal');
 

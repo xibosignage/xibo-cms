@@ -30,12 +30,7 @@ import type { MenuBoard } from '@/types/menuBoard';
 import type { MenuBoardCategory } from '@/types/menuBoardCategory';
 import type { MenuBoardProduct } from '@/types/menuBoardProduct';
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (str: string) => str,
-    i18n: { changeLanguage: () => new Promise(() => {}) },
-  }),
-}));
+vi.mock('react-i18next');
 
 vi.mock('@/components/ui/Notification', () => ({
   notify: {

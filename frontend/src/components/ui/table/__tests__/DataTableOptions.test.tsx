@@ -26,9 +26,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { DataTableOptions } from '../DataTableOptions';
 
 // Mock translations
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (str: string) => str }),
-}));
+vi.mock('react-i18next');
 
 describe('DataTableOptions', () => {
   beforeEach(() => {

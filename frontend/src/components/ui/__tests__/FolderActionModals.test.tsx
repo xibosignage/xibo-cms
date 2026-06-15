@@ -41,9 +41,7 @@ import type { Folder } from '@/types/folder';
 // Module mocks
 // -----------------------------------------------------------------------------
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
-}));
+vi.mock('react-i18next');
 vi.mock('@/components/ui/modals/Modal');
 vi.mock('@/components/ui/modals/ShareModal', () => ({
   default: () => null,

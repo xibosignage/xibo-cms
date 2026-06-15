@@ -9,9 +9,7 @@ import { vi } from 'vitest';
 import type { Session } from '@/types/session';
 
 // --- Mocks ---
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
-}));
+vi.mock('react-i18next');
 
 vi.mock('@/services/sessionApi', () => ({
   fetchSession: vi.fn(),

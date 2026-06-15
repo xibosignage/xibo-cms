@@ -28,10 +28,7 @@ import { mockEvent } from '../../fixtures/event';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
+vi.mock('react-i18next');
 
 // Replace the real Modal with a fake one for testing. The fake uses the
 // modal's title ("Copy Event") as its accessibility label, which is how the
