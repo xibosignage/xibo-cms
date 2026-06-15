@@ -385,7 +385,16 @@ class Module extends Base
             ? $this->moduleTemplateFactory->getByTypeAndDataType($type, $dataType)
             : $this->moduleTemplateFactory->getByDataType($dataType);
 
-        return $response->withStatus(200)->withJson($templates);
+        if ($this->isApi($request) || $this->isJson($request)) {
+            return $response->withStatus(200)->withJson($templates);
+        }
+
+        // TODO: Remove this once the layout editor is ready
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = 0;
+        $this->getState()->setData($templates);
+
+        return $this->render($request, $response);
     }
 
     // phpcs:disable
@@ -449,7 +458,13 @@ class Module extends Base
             ];
         }
 
-        return $response->withStatus(200)->withJson($props);
+        if ($this->isApi($request) || $this->isJson($request)) {
+            return $response->withStatus(200)->withJson($props);
+        }
+
+        // TODO: Remove this once the layout editor is ready
+        $this->getState()->setData($props);
+        return $this->render($request, $response);
     }
 
     /**
