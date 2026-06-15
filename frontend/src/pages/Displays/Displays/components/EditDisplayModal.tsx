@@ -222,12 +222,16 @@ function summarizeHisenseTimers(str: string, t: TFunction): string {
 
 function summarizeHisensePictureOptions(str: string, t: TFunction): string {
   try {
-    const parsed = JSON.parse(str) as Record<string, number>;
+    const parsed = JSON.parse(str) as Record<string, number | null>;
     const entries = Object.entries(parsed).filter(([key]) => key !== '');
     if (entries.length === 0) {
       return '—';
     }
     const names = entries.map(([key, val]) => {
+      if (val === null) {
+        const def = HISENSE_PICTURE_PROPERTY_DEFS[key];
+        return def ? t(def.name) : key;
+      }
       if (key === 'gammaMode') {
         const opt = GAMMA_MODE_OPTIONS.find((o) => o.value === String(val));
         return `${t('Gamma')}: ${opt ? t(opt.label) : val}`;
@@ -568,9 +572,7 @@ export default function EditDisplayModal({
     setActiveTab('general');
     setApiError(undefined);
     setFieldErrors({});
-    setActiveProfile(null);
-    setProfileFlat({});
-    setProfileDefaults({});
+    setIsLoadingProfile(true);
     setDayparts([]);
     setPlayerVersions([]);
 
@@ -732,6 +734,10 @@ export default function EditDisplayModal({
   }, [isOpen, data, debouncedLayoutSearch]);
 
   useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    let stale = false;
     setIsLoadingProfile(true);
     const clientType = (data?.displayProfileType ?? data?.clientType) as string | null | undefined;
 
@@ -748,17 +754,61 @@ export default function EditDisplayModal({
 
     load
       .then((profile) => {
+        if (stale) {
+          return;
+        }
         setActiveProfile(profile);
-        setProfileFlat(profile ? configArrayToFlat(profile.config) : {});
-        setProfileDefaults(profile ? defaultsToFlat(profile.configDefault) : {});
+        const flat = profile ? configArrayToFlat(profile.config) : {};
+        const defaults = profile ? defaultsToFlat(profile.configDefault) : {};
+        setProfileFlat(flat);
+        setProfileDefaults(defaults);
+
+        if (clientType === 'hisense') {
+          const pictureKeys = [...HISENSE_PICTURE_KEYS, 'gammaMode', 'dynamicContrast'];
+          setOverrides((prev) => {
+            if (!prev['hisensePictureOptions']) {
+              return prev;
+            }
+            try {
+              const parsed = JSON.parse(prev['hisensePictureOptions']) as Record<string, number>;
+              let changed = false;
+              pictureKeys.forEach((key) => {
+                if (parsed[key] === undefined) {
+                  const pv = flat[key] !== undefined ? flat[key] : defaults[key];
+                  if (pv !== null && pv !== undefined && pv !== '') {
+                    parsed[key] = Number(pv);
+                    changed = true;
+                  }
+                }
+              });
+              if (!changed) {
+                return prev;
+              }
+              return { ...prev, hisensePictureOptions: JSON.stringify(parsed) };
+            } catch {
+              return prev;
+            }
+          });
+        }
       })
       .catch(() => {
+        if (stale) {
+          return;
+        }
         setActiveProfile(null);
         setProfileFlat({});
         setProfileDefaults({});
       })
-      .finally(() => setIsLoadingProfile(false));
-  }, [draft.displayProfileId, data?.displayProfileType, data?.clientType]);
+      .finally(() => {
+        if (!stale) {
+          setIsLoadingProfile(false);
+        }
+      });
+
+    return () => {
+      stale = true;
+    };
+  }, [isOpen, draft.displayProfileId, data?.displayProfileType, data?.clientType]);
 
   const handleLoadMoreLayouts = () => {
     if (isLoadingMoreLayouts || !hasMoreLayouts) {
@@ -907,12 +957,12 @@ export default function EditDisplayModal({
   const getProfileValue = (name: string): string | number | null => {
     // Compose virtual hisensePictureOptions from individual profile values
     if (name === 'hisensePictureOptions' && isHisenseType) {
-      const obj: Record<string, number> = {};
+      const obj: Record<string, number | null> = {};
       HISENSE_PICTURE_SETTING_KEYS.forEach((key) => {
-        const v =
-          profileFlat[key] !== undefined ? profileFlat[key] : (profileDefaults[key] ?? null);
-        if (v !== null && v !== undefined && v !== '') {
-          obj[key] = Number(v);
+        if (profileFlat[key] !== undefined) {
+          obj[key] = Number(profileFlat[key]);
+        } else if (key in profileDefaults) {
+          obj[key] = profileDefaults[key] !== null ? Number(profileDefaults[key]) : null;
         }
       });
       return Object.keys(obj).length > 0 ? JSON.stringify(obj) : null;
