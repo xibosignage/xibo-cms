@@ -2189,8 +2189,8 @@ class Display extends Base
         // use try and catch here to cover scenario
         // when there is no default display profile set for any of the existing display types.
         $displayProfileName = '';
+        $profileType = $display->isHisensePlayer() ? 'hisense' : $display->clientType;
         try {
-            $profileType = $display->isHisensePlayer() ? 'hisense' : $display->clientType;
             $defaultDisplayProfile = $this->displayProfileFactory->getDefaultByType($profileType);
             $displayProfileName = $defaultDisplayProfile->name;
         } catch (NotFoundException) {
@@ -2204,6 +2204,7 @@ class Display extends Base
                 ? $displayProfileName . __(' (Default)')
                 : $displayProfiles[$display->displayProfileId]
         );
+        $display->setUnmatchedProperty('displayProfileType', $profileType);
 
         // Format the storage available / total space
         $display->setUnmatchedProperty(

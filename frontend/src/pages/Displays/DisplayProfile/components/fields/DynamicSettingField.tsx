@@ -22,6 +22,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { HisensePictureOptionsFieldWrapper, HisenseTimersFieldWrapper } from './HisenseFields';
 import {
   TimersInput,
   PictureOptionsInput,
@@ -274,6 +275,12 @@ export function DynamicSettingField({
   }
   if (meta.inputType === 'timers') {
     return <TimersFieldWrapper value={value} onChange={(v) => onChange(v)} />;
+  }
+  if (meta.inputType === 'hisense-timers') {
+    return <HisenseTimersFieldWrapper value={value} onChange={(v) => onChange(v)} />;
+  }
+  if (meta.inputType === 'hisense-picture-options') {
+    return <HisensePictureOptionsFieldWrapper value={value} onChange={(v) => onChange(v)} />;
   }
 
   if (meta.inputType === 'picture-options') {

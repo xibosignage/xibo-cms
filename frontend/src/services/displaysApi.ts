@@ -159,21 +159,57 @@ export async function updateDisplay(
         }
       } else if (key === 'timers') {
         try {
-          const parsed = JSON.parse(value) as Record<string, { on?: string; off?: string }>;
-          const entries = Object.entries(parsed).filter(([day]) => day !== '');
-          if (entries.length > 0) {
-            entries.forEach(([day, times], i) => {
-              params.append(`timers[${i}][day]`, day);
-              params.append(`timers[${i}][on]`, times.on ?? '');
-              params.append(`timers[${i}][off]`, times.off ?? '');
+          const parsed = JSON.parse(value) as unknown;
+          if (Array.isArray(parsed)) {
+            // Hisense format: flat array of indexed rules
+            (
+              parsed as Array<{
+                index: number;
+                dayScope: number;
+                time: string;
+                manualWeeks?: number[];
+              }>
+            ).forEach((rule, i) => {
+              params.append(`timers[${i}][index]`, String(rule.index));
+              params.append(`timers[${i}][type]`, String(rule.dayScope));
+              params.append(`timers[${i}][time]`, rule.time);
+              if (rule.manualWeeks) {
+                rule.manualWeeks.forEach((day, j) => {
+                  params.append(`timers[${i}][manualWeeks][${j}]`, String(day));
+                });
+              }
             });
           } else {
-            params.append('timers[0][day]', '');
-            params.append('timers[0][on]', '');
-            params.append('timers[0][off]', '');
+            // LG/SSSP format: day-keyed object
+            const entries = Object.entries(
+              parsed as Record<string, { on?: string; off?: string }>,
+            ).filter(([day]) => day !== '');
+            if (entries.length > 0) {
+              entries.forEach(([day, times], i) => {
+                params.append(`timers[${i}][day]`, day);
+                params.append(`timers[${i}][on]`, times.on ?? '');
+                params.append(`timers[${i}][off]`, times.off ?? '');
+              });
+            } else {
+              params.append('timers[0][day]', '');
+              params.append('timers[0][on]', '');
+              params.append('timers[0][off]', '');
+            }
           }
         } catch {
           params.append(key, value);
+        }
+      } else if (key === 'hisensePictureOptions') {
+        // Decompose grouped hisense picture JSON into individual params
+        try {
+          const parsed = JSON.parse(value) as Record<string, number>;
+          Object.entries(parsed).forEach(([prop, val]) => {
+            if (prop !== '') {
+              params.append(prop, String(val));
+            }
+          });
+        } catch (e) {
+          console.warn('Failed to parse hisensePictureOptions override JSON:', e);
         }
       } else if (key === 'lockOptions') {
         try {
