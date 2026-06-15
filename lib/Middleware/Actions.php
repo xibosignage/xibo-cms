@@ -113,9 +113,10 @@ class Actions implements Middleware
                 if ($resource != '/drawer/notification/interrupt/{id}' && !$this->isAjax($request) && $container->get('session')->isExpired() != 1) {
                     foreach ($notifications as $notification) {
                         /** @var UserNotification $notification */
-                        if ($notification->isInterrupt == 1 && $notification->read == 0) {
+                        if ($notification->isInterrupt == 1 && $notification->read == 0 && $notification->userId > 0) {
                             $container->get('flash')->addMessage('interruptedUrl', $resource);
                             return $handler->handle($request)
+                                ->withStatus(302)
                                 ->withHeader('Location', $routeParser->urlFor('notification.interrupt', ['id' => $notification->notificationId]))
                                 ->withHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
                                 ->withHeader('Pragma',' no-cache')
