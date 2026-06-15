@@ -35,20 +35,19 @@ use Xibo\Service\MediaService;
 use Xibo\Service\UploadService;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
-use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
- * Class Module
+ * Class Developer
  * @package Xibo\Controller
  */
 class Developer extends Base
 {
     public function __construct(
         private readonly ModuleFactory $moduleFactory,
-        private readonly ModuleTemplateFactory $moduleTemplateFactory
+        private readonly ModuleTemplateFactory $moduleTemplateFactory,
     ) {
     }
 
@@ -80,10 +79,18 @@ class Developer extends Base
             $template->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($template));
         }
 
+        $draw  = $params->getInt('draw');
+        $total = $this->moduleTemplateFactory->countLast();
+
         return $response
             ->withStatus(200)
-            ->withHeader('X-Total-Count', $this->moduleTemplateFactory->countLast())
-            ->withJson($templates);
+            ->withHeader('X-Total-Count', $total)
+            ->withJson([
+                'draw'            => $draw,
+                'recordsTotal'    => $total,
+                'recordsFiltered' => $total,
+                'data'            => $templates,
+            ]);
     }
 
     /**
@@ -99,13 +106,15 @@ class Developer extends Base
     {
         $template = $this->moduleTemplateFactory->getUserTemplateById($id);
 
-        if ($template->ownership !== 'user') {
+        if (!$this->getUser()->checkEditable($template)) {
             throw new AccessDeniedException();
         }
 
+        $template->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($template));
+
         return $response
             ->withStatus(200)
-            ->withJson($template);
+            ->withJson(['data' => $template]);
     }
 
     /**
@@ -164,24 +173,20 @@ class Developer extends Base
         $template->ownerId = $this->getUser()->userId;
         $template->save();
 
-        $this->getState()->hydrate([
-            'httpState' => 201,
-            'message' => __('Added'),
-            'id' => $template->id,
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(201)
+            ->withJson(['data' => $template]);
     }
 
     /**
      * Edit a module template
      * @param Request $request
      * @param Response $response
-     * @param $id
+     * @param int $id
      * @return Response
      * @throws GeneralException|DOMException
      */
-    public function templateEdit(Request $request, Response $response, $id): Response
+    public function templateEdit(Request $request, Response $response, int $id): Response
     {
         $template = $this->moduleTemplateFactory->getUserTemplateById($id);
 
@@ -215,6 +220,7 @@ class Developer extends Base
         $this->setNode($document, 'title', $title, false);
         $this->setNode($document, 'showIn', $showIn, false);
         $this->setNode($document, 'dataType', $dataType, false);
+        $this->setNode($document, 'enabled', $template->isEnabled ? '1' : '0', false);
         $this->setNode($document, 'onTemplateRender', $onTemplateRender);
         $this->setNode($document, 'onTemplateVisible', $onTemplateVisible);
 
@@ -261,12 +267,9 @@ class Developer extends Base
             $template->invalidate();
         }
 
-        $this->getState()->hydrate([
-            'message' => sprintf(__('Edited %s'), $template->title),
-            'id' => $template->id,
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson(['data' => $template]);
     }
 
     /**
@@ -321,7 +324,6 @@ class Developer extends Base
 
     /**
      * Return all available data types
-     * @throws ControllerNotImplemented
      * @throws GeneralException
      */
     public function getAvailableDataTypes(Request $request, Response $response): Response|ResponseInterface
@@ -337,25 +339,22 @@ class Developer extends Base
             }
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = 0;
-        $this->getState()->setData($dataTypes);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson(['data' => $dataTypes]);
     }
 
     /**
      * Export module template
      * @param Request $request
      * @param Response $response
-     * @param $id
+     * @param int $id
      * @return ResponseInterface|Response
      * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws NotFoundException
      */
-    public function templateExport(Request $request, Response $response, $id): Response|ResponseInterface
+    public function templateExport(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $template = $this->moduleTemplateFactory->getUserTemplateById($id);
 
@@ -367,14 +366,12 @@ class Developer extends Base
 
         $template->getDocument()->save($tempFileName);
 
-        $this->setNoOutput(true);
-
-        return $this->render($request, SendFile::decorateResponse(
+        return SendFile::decorateResponse(
             $response,
             $this->getConfig()->getSetting('SENDFILE_MODE'),
             $tempFileName,
             $template->templateId . '.xml'
-        )->withHeader('Content-Type', 'text/xml;charset=utf-8'));
+        )->withHeader('Content-Type', 'text/xml;charset=utf-8');
     }
 
     /**
@@ -382,7 +379,6 @@ class Developer extends Base
      * @param Request $request
      * @param Response $response
      * @return ResponseInterface|Response
-     * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws ConfigurationException
      */
@@ -443,24 +439,21 @@ class Developer extends Base
 
         $uploadHandler->post();
 
-        $this->setNoOutput(true);
-
-        return $this->render($request, $response);
+        return $response->withStatus(200)->withJson(['success' => true]);
     }
 
     /**
      * Copy module template
      * @param Request $request
      * @param Response $response
-     * @param $id
+     * @param int $id
      * @return Response|ResponseInterface
      * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function templateCopy(Request $request, Response $response, $id): Response|ResponseInterface
+    public function templateCopy(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $moduleTemplate = $this->moduleTemplateFactory->getUserTemplateById($id);
 
@@ -474,30 +467,23 @@ class Developer extends Base
         $newTemplate->templateId = $params->getString('templateId');
         $newTemplate->save();
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 201,
-            'message' => sprintf(__('Copied as %s'), $newTemplate->templateId),
-            'id' => $newTemplate->id,
-            'data' => $newTemplate
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(201)
+            ->withJson(['data' => $newTemplate]);
     }
 
     /**
      * Delete module template
      * @param Request $request
      * @param Response $response
-     * @param $id
+     * @param int $id
      * @return Response|ResponseInterface
      * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function templateDelete(Request $request, Response $response, $id): Response|ResponseInterface
+    public function templateDelete(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $moduleTemplate = $this->moduleTemplateFactory->getUserTemplateById($id);
 
@@ -507,13 +493,7 @@ class Developer extends Base
 
         $moduleTemplate->delete();
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Deleted %s'), $moduleTemplate->templateId)
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(204);
     }
 
     /**

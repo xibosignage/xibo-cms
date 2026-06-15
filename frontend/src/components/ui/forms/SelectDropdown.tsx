@@ -222,7 +222,7 @@ export default function SelectDropdown({
       {label && (
         <label
           id={`${id}-label`}
-          className="flex items-center justify-between text-sm font-semibold text-gray-500 leading-5"
+          className="flex items-center justify-between text-sm font-semibold text-gray-500 leading-5 mb-2"
         >
           <span>{t(label)}</span>
           {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}

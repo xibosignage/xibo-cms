@@ -357,8 +357,6 @@ class ModuleTemplateFactory extends BaseFactory
             'id',
             'templateId',
             'dataType',
-            'title',
-            'type',
             'groupsWithPermissions',
         ];
 
