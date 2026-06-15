@@ -46,8 +46,8 @@ body,
    Overriding --brand-primary and --brand-accent in a custom theme.css
    automatically recolours every palette shade via oklch. */
 :root {
-  --brand-primary: #3f7fff;
-  --brand-accent:  #eb7857;
+  --brand-primary: #0e70f6;
+  --brand-accent: #eb7857;
 }
 
 /* Colour palette — all shades are derived from the brand tokens so that
@@ -56,36 +56,36 @@ body,
    only the hue follows the brand token. */
 @theme inline {
   /* Primary colour scale */
-  --color-xibo-blue-50:  oklch(from var(--brand-primary) 0.952 0.024 h);
-  --color-xibo-blue-100: oklch(from var(--brand-primary) 0.886 0.057 h);
-  --color-xibo-blue-200: oklch(from var(--brand-primary) 0.813 0.089 h);
-  --color-xibo-blue-300: oklch(from var(--brand-primary) 0.737 0.122 h);
-  --color-xibo-blue-400: oklch(from var(--brand-primary) 0.659 0.156 h);
-  --color-xibo-blue-500: var(--brand-primary);
-  --color-xibo-blue-600: oklch(from var(--brand-primary) 0.513 0.228 h);
-  --color-xibo-blue-700: oklch(from var(--brand-primary) 0.434 0.185 h);
-  --color-xibo-blue-800: oklch(from var(--brand-primary) 0.322 0.140 h);
-  --color-xibo-blue-900: oklch(from var(--brand-primary) 0.261 0.112 h);
-  --color-xibo-blue-950: oklch(from var(--brand-primary) 0.193 0.072 h);
+  --color-xibo-blue-50: oklch(from var(--brand-primary) 0.948 0.026 h);
+  --color-xibo-blue-100: oklch(from var(--brand-primary) 0.869 0.064 h);
+  --color-xibo-blue-200: oklch(from var(--brand-primary) 0.804 0.098 h);
+  --color-xibo-blue-300: oklch(from var(--brand-primary) 0.741 0.133 h);
+  --color-xibo-blue-400: oklch(from var(--brand-primary) 0.681 0.167 h);
+  --color-xibo-blue-500: oklch(from var(--brand-primary) 0.625 0.202 h);
+  --color-xibo-blue-600: oklch(from var(--brand-primary) 0.577 0.217 h);
+  --color-xibo-blue-700: oklch(from var(--brand-primary) 0.500 0.202 h);
+  --color-xibo-blue-800: oklch(from var(--brand-primary) 0.366 0.155 h);
+  --color-xibo-blue-900: oklch(from var(--brand-primary) 0.299 0.128 h);
+  --color-xibo-blue-950: oklch(from var(--brand-primary) 0.199 0.078 h);
 
   /* Accent colour scale */
-  --color-xibo-burnt-sienna-50:  oklch(from var(--brand-accent) 0.947 0.030 h);
-  --color-xibo-burnt-sienna-100: oklch(from var(--brand-accent) 0.885 0.068 h);
-  --color-xibo-burnt-sienna-200: oklch(from var(--brand-accent) 0.815 0.098 h);
-  --color-xibo-burnt-sienna-300: oklch(from var(--brand-accent) 0.745 0.118 h);
-  --color-xibo-burnt-sienna-400: oklch(from var(--brand-accent) 0.700 0.130 h);
-  --color-xibo-burnt-sienna-500: var(--brand-accent);
-  --color-xibo-burnt-sienna-600: oklch(from var(--brand-accent) 0.580 0.113 h);
-  --color-xibo-burnt-sienna-700: oklch(from var(--brand-accent) 0.490 0.093 h);
-  --color-xibo-burnt-sienna-800: oklch(from var(--brand-accent) 0.387 0.075 h);
-  --color-xibo-burnt-sienna-900: oklch(from var(--brand-accent) 0.302 0.060 h);
-  --color-xibo-burnt-sienna-950: oklch(from var(--brand-accent) 0.215 0.045 h);
+  --color-xibo-burnt-sienna-50: oklch(from var(--brand-accent) 0.941 0.040 calc(h + 29.2));
+  --color-xibo-burnt-sienna-100: oklch(from var(--brand-accent) 0.878 0.074 calc(h + 15.7));
+  --color-xibo-burnt-sienna-200: oklch(from var(--brand-accent) 0.823 0.096 calc(h + 6.1));
+  --color-xibo-burnt-sienna-300: oklch(from var(--brand-accent) 0.775 0.127 calc(h + 1.3));
+  --color-xibo-burnt-sienna-400: oklch(from var(--brand-accent) 0.737 0.138 h);
+  --color-xibo-burnt-sienna-500: oklch(from var(--brand-accent) 0.698 0.150 h);
+  --color-xibo-burnt-sienna-600: oklch(from var(--brand-accent) 0.637 0.146 h);
+  --color-xibo-burnt-sienna-700: oklch(from var(--brand-accent) 0.568 0.143 h);
+  --color-xibo-burnt-sienna-800: oklch(from var(--brand-accent) 0.481 0.135 calc(h - 1.5));
+  --color-xibo-burnt-sienna-900: oklch(from var(--brand-accent) 0.394 0.122 calc(h - 2.1));
+  --color-xibo-burnt-sienna-950: oklch(from var(--brand-accent) 0.307 0.103 h);
 
   /* Neutral colours — not tied to brand tokens */
-  --color-xibo-black:   #000;
-  --color-xibo-grey:    #484848;
+  --color-xibo-black: #000;
+  --color-xibo-grey: #484848;
   --color-xibo-seasalt: #f7f7f7;
-  --color-xibo-white:   #ffffff;
+  --color-xibo-white: #ffffff;
 }
 
 @layer components {
