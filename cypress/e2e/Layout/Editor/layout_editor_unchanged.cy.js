@@ -61,7 +61,8 @@ describe('Layout Designer (Populated/Unchanged)', function() {
     cy.get('.editor-modal #timeline-container .playlist-widget:first').rightclick();
 
     // Open the delete modal for the first widget
-    cy.get('.context-menu-overlay .context-menu-widget .deleteBtn').should('be.visible').click();
+    cy.get('.context-menu-overlay .context-menu-widget .deleteBtn').should('be.visible');
+    cy.get('.context-menu-overlay .context-menu-widget .deleteBtn').click();
 
     // Modal should be visible
     cy.get('[data-test="deleteObjectModal"]').should('be.visible');

@@ -23,27 +23,26 @@
 describe('Mastodon', function() {
   beforeEach(function() {
     cy.login();
+    cy.clearToolbarPrefs();
   });
 
   it('should create a new layout and be redirected to the layout designer, add/delete Mastodon widget', function() {
     cy.intercept('DELETE', '**/region/**').as('deleteWidget');
-    cy.intercept('POST', '/user/pref').as('userPref');
+    cy.intercept('GET', '/user/pref?preference=toolbar').as('toolbarPrefsInit');
 
     cy.visit('/layout/view');
     cy.get('button[href="/layout"]').click();
+    cy.wait('@toolbarPrefsInit');
+    cy.get('.editor-side-bar #btn-menu-0').should('be.visible');
 
     // Open widget menu
-    cy.openToolbarMenu(0);
+    cy.openToolbarMenu(0, false);
 
-    cy.get('[data-sub-type="mastodon"]')
-      .should('be.visible')
-      .click();
-    cy.wait('@userPref');
+    cy.get('[data-sub-type="mastodon"]').should('be.visible');
+    cy.get('[data-sub-type="mastodon"]').click();
 
-    cy.get('[data-template-id="social_media_static_1"] > .toolbar-card-thumb')
-      .should('be.visible')
-      .click();
-    cy.wait('@userPref');
+    cy.get('[data-template-id="social_media_static_1"] > .toolbar-card-thumb').should('be.visible');
+    cy.get('[data-template-id="social_media_static_1"] > .toolbar-card-thumb').click();
 
     cy.get('.viewer-object.layout.ui-droppable-active')
       .should('be.visible')

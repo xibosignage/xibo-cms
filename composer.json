@@ -102,7 +102,7 @@
     "symfony/html-sanitizer": "v6.4.*",
     "symfony/yaml": "5.4.*",
     "tedivm/stash": "v1.2.*",
-    "twig/twig": "3.11.*",
+    "twig/twig": "3.26.*",
     "xibosignage/support": "dev-php8"
   },
   "require-dev": {
