@@ -23,17 +23,13 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import ReportScheduleModalShell from './ReportScheduleModalShell';
-import type { OptionsLoader } from './hooks/usePaginatedOptions';
-import { usePaginatedOptions } from './hooks/usePaginatedOptions';
+import { useDisplayGroupSelect } from './hooks/useDisplayGroupSelect';
+import { useDisplayOptions } from './hooks/useDisplayOptions';
 import type { StatsFilter, StatsReportConfig } from './types';
 
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
-import { fetchDisplayGroups } from '@/services/displayGroupApi';
-import { fetchDisplays } from '@/services/displaysApi';
 import { fetchLayouts } from '@/services/layoutsApi';
 import { fetchMedia } from '@/services/mediaApi';
-
-const PAGE_SIZE = 20;
 
 interface StatsReportScheduleModalProps {
   config: StatsReportConfig;
@@ -95,44 +91,8 @@ export default function StatsReportScheduleModal({
     };
   }, [isOpen, currentFilter.type, currentFilter.layoutId, currentFilter.mediaId]);
 
-  const displayLoader: OptionsLoader = async (search, start, signal) => {
-    const { rows, totalCount } = await fetchDisplays({
-      start,
-      length: PAGE_SIZE,
-      display: search,
-      signal,
-    });
-    return {
-      options: rows.map((d) => ({ value: String(d.displayId), label: d.display })),
-      totalCount,
-    };
-  };
-
-  const displayGroupLoader: OptionsLoader = async (search, start, signal) => {
-    const { rows, totalCount } = await fetchDisplayGroups({
-      start,
-      length: PAGE_SIZE,
-      displayGroup: search,
-      signal,
-    });
-    return {
-      options: rows.map((g) => ({ value: String(g.displayGroupId), label: g.displayGroup })),
-      totalCount,
-    };
-  };
-
-  const displaySelect = usePaginatedOptions({ loader: displayLoader, enabled: isOpen });
-  const displayGroupSelect = usePaginatedOptions({ loader: displayGroupLoader, enabled: isOpen });
-
-  const resolveDisplayLabel = async (val: string): Promise<string> => {
-    const { rows } = await fetchDisplays({ start: 0, length: 1, displayId: Number(val) });
-    return rows[0]?.display ?? '';
-  };
-
-  const resolveDisplayGroupLabel = async (val: string): Promise<string> => {
-    const { rows } = await fetchDisplayGroups({ start: 0, length: 1, displayGroupId: Number(val) });
-    return rows[0]?.displayGroup ?? '';
-  };
+  const displaySelect = useDisplayOptions(isOpen);
+  const displayGroupSelect = useDisplayGroupSelect(isOpen);
 
   const selectedId =
     currentFilter.type === 'layout'
@@ -204,7 +164,7 @@ export default function StatsReportScheduleModal({
         placeholder={t('All Displays')}
         searchable
         clearable
-        resolveLabel={resolveDisplayLabel}
+        resolveLabel={displaySelect.resolveLabel}
         options={displaySelect.options}
         isLoading={displaySelect.isLoading}
         isLoadingMore={displaySelect.isLoadingMore}
@@ -228,7 +188,7 @@ export default function StatsReportScheduleModal({
           placeholder={t('All Groups')}
           searchable
           clearable
-          resolveLabel={resolveDisplayGroupLabel}
+          resolveLabel={displayGroupSelect.resolveLabel}
           options={displayGroupSelect.options}
           isLoading={displayGroupSelect.isLoading}
           isLoadingMore={displayGroupSelect.isLoadingMore}

@@ -21,35 +21,37 @@
 
 import { useQuery } from '@tanstack/react-query';
 
-import type { LibraryUsageFilter } from '../LibraryUsageConfig';
+import type { BandwidthFilter } from '../BandwidthConfig';
 
-import { fetchLibraryUsage } from '@/services/libraryUsageApi';
+import { fetchBandwidthReport } from '@/services/bandwidthReportApi';
+import { formatDateTime } from '@/utils/date';
 
-export const libraryUsageQueryKeys = {
-  all: ['libraryUsage'] as const,
-  report: (params: Record<string, unknown>) => [...libraryUsageQueryKeys.all, params] as const,
+export const bandwidthQueryKeys = {
+  all: ['bandwidth'] as const,
+  report: (params: Record<string, unknown>) => [...bandwidthQueryKeys.all, params] as const,
 };
 
-interface UseLibraryUsageParams {
-  filter: LibraryUsageFilter;
+interface UseBandwidthDataParams {
+  filter: BandwidthFilter;
   enabled: boolean;
 }
 
-export function useLibraryUsageData({ filter, enabled }: UseLibraryUsageParams) {
+export function useBandwidthData({ filter, enabled }: UseBandwidthDataParams) {
   return useQuery({
-    queryKey: libraryUsageQueryKeys.report({ userId: filter.userId, groupId: filter.groupId }),
+    queryKey: bandwidthQueryKeys.report(filter as unknown as Record<string, unknown>),
 
     queryFn: async ({ signal }) => {
-      const response = await fetchLibraryUsage({
-        userId: filter.userId,
-        groupId: filter.groupId,
+      const response = await fetchBandwidthReport({
+        fromDt: filter.fromDt ? formatDateTime(new Date(filter.fromDt)) : undefined,
+        toDt: filter.toDt ? formatDateTime(new Date(filter.toDt)) : undefined,
+        displayId: filter.displayId,
         signal,
       });
 
       return {
-        rows: response.table,
-        chart: response.chart,
+        rows: response.table ?? [],
         metadata: response.metadata,
+        recordsTotal: response.recordsTotal,
       };
     },
 

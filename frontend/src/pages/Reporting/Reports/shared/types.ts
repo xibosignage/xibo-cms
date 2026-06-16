@@ -41,11 +41,6 @@ export interface StatsSelectOption {
   label: string;
 }
 
-export interface StatsReportSelectorItem {
-  label: string;
-  url: string | null;
-}
-
 export interface StatsReportConfig {
   reportName: string;
   title: string;
@@ -59,5 +54,4 @@ export interface StatsReportConfig {
   getGroupByOptions: (reportFilter: string) => StatsSelectOption[];
   defaultGroupBy: (reportFilter: string) => string;
   shouldShowDataWarning: (reportFilter: string) => boolean;
-  reportSelector: StatsReportSelectorItem[];
 }

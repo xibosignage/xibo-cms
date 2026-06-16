@@ -24,12 +24,12 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
-import type { TimeConnectedFilter } from './TimeConnectedConfig';
-import { INITIAL_FILTER_STATE } from './TimeConnectedConfig';
+import type { BandwidthFilter } from './BandwidthConfig';
+import { INITIAL_FILTER_STATE } from './BandwidthConfig';
 import AddScheduleModal from './components/AddScheduleModal';
-import TimeConnectedFilters from './components/TimeConnectedFilters';
-import TimeConnectedResults from './components/TimeConnectedResults';
-import { useTimeConnectedData } from './hooks/useTimeConnectedData';
+import BandwidthFilters from './components/BandwidthFilters';
+import BandwidthResults from './components/BandwidthResults';
+import { useBandwidthData } from './hooks/useBandwidthData';
 
 import Button from '@/components/ui/Button';
 import TabNav from '@/components/ui/TabNav';
@@ -37,37 +37,43 @@ import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import ReportSelector from '@/pages/Reporting/Reports/shared/ReportSelector';
 
-export default function TimeConnected() {
+export default function Bandwidth() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const reportingTabs = useFilteredTabs('reporting');
 
-  const [submittedFilter, setSubmittedFilter] = useState<TimeConnectedFilter | null>(null);
+  const [submittedFilter, setSubmittedFilter] = useState<BandwidthFilter | null>(null);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
 
-  const { filterInputs, setFilterInputs, isHydrated, pagination, setPagination } = useTableState<
-    Partial<TimeConnectedFilter>
-  >('timeconnected_report_page', {
+  const {
+    pagination,
+    setPagination,
+    sorting,
+    setSorting,
+    viewMode,
+    setViewMode,
+    filterInputs,
+    setFilterInputs,
+    isHydrated,
+  } = useTableState<Partial<BandwidthFilter>>('bandwidth_report_page', {
     pagination: { pageIndex: 0, pageSize: 10 },
     sorting: [],
     columnVisibility: {},
-    viewMode: 'table',
+    viewMode: 'chart',
     globalFilter: '',
     filterInputs: INITIAL_FILTER_STATE,
   });
 
-  const filter: TimeConnectedFilter = { ...INITIAL_FILTER_STATE, ...filterInputs };
+  const filter: BandwidthFilter = { ...INITIAL_FILTER_STATE, ...filterInputs };
 
-  const { data, isFetching, isError, refetch } = useTimeConnectedData({
+  const { data, isFetching, isError, refetch } = useBandwidthData({
     filter: submittedFilter ?? INITIAL_FILTER_STATE,
     enabled: submittedFilter !== null,
   });
 
-  const isLoading = isFetching || (submittedFilter !== null && data === undefined && !isError);
-
   const handleApply = () => {
-    setSubmittedFilter({ ...filter });
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    setSubmittedFilter({ ...filter });
   };
 
   const handleRefresh = () => {
@@ -76,13 +82,13 @@ export default function TimeConnected() {
     }
   };
 
-  const handleFilterChange = (patch: Partial<TimeConnectedFilter>) => {
+  const handleFilterChange = (patch: Partial<BandwidthFilter>) => {
     setFilterInputs((prev) => ({ ...INITIAL_FILTER_STATE, ...prev, ...patch }));
   };
 
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
-      <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5 overflow-y-auto">
+      <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="" navigation={reportingTabs} />
           <Button variant="primary" leftIcon={Plus} onClick={() => setScheduleModalOpen(true)}>
@@ -99,7 +105,10 @@ export default function TimeConnected() {
             {t('Back')}
           </Button>
 
-          <ReportSelector currentReportName="timeconnected" fallbackLabel={t('Time Connected')} />
+          <ReportSelector
+            currentReportName="bandwidth"
+            fallbackLabel={t('Display Statistics: Bandwidth')}
+          />
         </div>
 
         {!isHydrated ? (
@@ -108,23 +117,25 @@ export default function TimeConnected() {
           </div>
         ) : (
           <>
-            <TimeConnectedFilters
+            <BandwidthFilters
               filter={filter}
               onFilterChange={handleFilterChange}
               onApply={handleApply}
-              isLoading={isLoading}
+              isLoading={isFetching}
             />
 
             {submittedFilter !== null ? (
-              <TimeConnectedResults
+              <BandwidthResults
                 rows={data?.rows ?? []}
-                sortBy={filter.sortBy}
-                metadata={data?.metadata}
-                isFetching={isLoading}
+                isFetching={isFetching}
                 isError={isError}
                 onRefresh={handleRefresh}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
                 pagination={pagination}
                 onPaginationChange={setPagination}
+                sorting={sorting}
+                onSortingChange={setSorting}
               />
             ) : (
               <div className="flex-1 flex items-center justify-center mt-4 bg-gray-50 rounded-lg border border-gray-200 border-dashed">

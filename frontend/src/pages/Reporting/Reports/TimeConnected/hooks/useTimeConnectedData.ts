@@ -69,8 +69,7 @@ function transformData(table: TimeConnectedTable): DisplayReportRow[] {
 
 export const timeConnectedQueryKeys = {
   all: ['timeConnected'] as const,
-  report: (params: Record<string, unknown>) =>
-    [...timeConnectedQueryKeys.all, 'report', params] as const,
+  report: (params: Record<string, unknown>) => [...timeConnectedQueryKeys.all, params] as const,
 };
 
 interface UseTimeConnectedParams {

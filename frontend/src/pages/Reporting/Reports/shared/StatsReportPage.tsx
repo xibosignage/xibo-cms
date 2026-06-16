@@ -19,11 +19,12 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { ArrowLeft, ChevronDown, Loader2, Plus } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { ArrowLeft, Loader2, Plus } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
+import ReportSelector from './ReportSelector';
 import StatsReportFilters from './StatsReportFilters';
 import StatsReportResults from './StatsReportResults';
 import StatsReportScheduleModal from './StatsReportScheduleModal';
@@ -32,7 +33,6 @@ import type { StatsFilter, StatsReportConfig } from './types';
 
 import Button from '@/components/ui/Button';
 import TabNav from '@/components/ui/TabNav';
-import { useClickOutside } from '@/hooks/useClickOutside';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 
@@ -47,10 +47,6 @@ export default function StatsReportPage({ config }: StatsReportPageProps) {
 
   const [submittedFilter, setSubmittedFilter] = useState<StatsFilter | null>(null);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
-  const [reportSelectorOpen, setReportSelectorOpen] = useState(false);
-  const reportSelectorRef = useRef<HTMLDivElement>(null);
-
-  useClickOutside(reportSelectorRef, () => setReportSelectorOpen(false));
 
   const {
     pagination,
@@ -121,37 +117,7 @@ export default function StatsReportPage({ config }: StatsReportPageProps) {
             {t('Back')}
           </Button>
 
-          <div className="relative" ref={reportSelectorRef}>
-            <Button
-              variant="link"
-              rightIcon={ChevronDown}
-              onClick={() => setReportSelectorOpen((prev) => !prev)}
-            >
-              {t(config.title)}
-            </Button>
-
-            {reportSelectorOpen && (
-              <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-gray-200 rounded-lg shadow-lg min-w-72 py-1">
-                {config.reportSelector.map((report) => (
-                  <button
-                    key={report.label}
-                    type="button"
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${
-                      report.url === null ? 'font-semibold text-gray-900' : 'text-gray-700'
-                    }`}
-                    onClick={() => {
-                      if (report.url) {
-                        window.location.href = report.url;
-                      }
-                      setReportSelectorOpen(false);
-                    }}
-                  >
-                    {t(report.label)}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <ReportSelector currentReportName={config.reportName} fallbackLabel={t(config.title)} />
         </div>
 
         {!isHydrated ? (

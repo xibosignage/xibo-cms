@@ -26,15 +26,13 @@ import { Trans, useTranslation } from 'react-i18next';
 import DatePickerInput from '@/components/ui/forms/DatePickerInput';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import Modal from '@/components/ui/modals/Modal';
-import { fetchDisplays } from '@/services/displaysApi';
+import { useDisplayOptions } from '@/pages/Reporting/Reports/shared/hooks/useDisplayOptions';
 import { fetchExportStatsCount } from '@/services/reportApi';
 
 interface ExportStatisticsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-const PAGE_SIZE = 20;
 
 const toPhpDatetime = (iso: string): string =>
   new Date(iso).toISOString().slice(0, 19).replace('T', ' ');
@@ -47,12 +45,7 @@ export default function ExportStatisticsModal({ isOpen, onClose }: ExportStatist
   const [displayId, setDisplayId] = useState('');
   const [isOutputUtc, setIsOutputUtc] = useState(true);
 
-  const [displayOptions, setDisplayOptions] = useState<{ label: string; value: string }[]>([]);
-  const [displaySearchTerm, setDisplaySearchTerm] = useState('');
-  const [displayStart, setDisplayStart] = useState(0);
-  const [displayHasMore, setDisplayHasMore] = useState(false);
-  const [displayIsLoading, setDisplayIsLoading] = useState(false);
-  const [displayIsLoadingMore, setDisplayIsLoadingMore] = useState(false);
+  const displaySelect = useDisplayOptions(isOpen);
 
   const [countLoading, setCountLoading] = useState(false);
   const [recordCount, setRecordCount] = useState<number | null>(null);
@@ -71,48 +64,7 @@ export default function ExportStatisticsModal({ isOpen, onClose }: ExportStatist
     setErrors({});
     setRecordCount(null);
     setCountError(null);
-    const controller = new AbortController();
-    void loadDisplays('', 0, false, controller.signal);
-    return () => controller.abort();
   }, [isOpen]);
-
-  async function loadDisplays(
-    search: string,
-    start: number,
-    append: boolean,
-    signal?: AbortSignal,
-  ) {
-    if (start === 0) {
-      setDisplayIsLoading(true);
-    } else {
-      setDisplayIsLoadingMore(true);
-    }
-    try {
-      const result = await fetchDisplays({ start, length: PAGE_SIZE, display: search, signal });
-      const options = result.rows.map((d) => ({
-        label: d.display,
-        value: String(d.displayId),
-      }));
-      setDisplayOptions((prev) => (append ? [...prev, ...options] : options));
-      const loaded = start + options.length;
-      setDisplayHasMore(loaded < result.totalCount);
-      setDisplayStart(loaded);
-    } catch {
-      // silently ignore load errors for display list
-    } finally {
-      setDisplayIsLoading(false);
-      setDisplayIsLoadingMore(false);
-    }
-  }
-
-  function handleDisplaySearch(term: string) {
-    setDisplaySearchTerm(term);
-    void loadDisplays(term, 0, false);
-  }
-
-  function handleDisplayLoadMore() {
-    void loadDisplays(displaySearchTerm, displayStart, true);
-  }
 
   useEffect(() => {
     if (!fromDt || !toDt) {
@@ -225,15 +177,16 @@ export default function ExportStatisticsModal({ isOpen, onClose }: ExportStatist
           label={t('Display')}
           value={displayId}
           placeholder={t('All Displays')}
-          options={displayOptions}
+          options={displaySelect.options}
           searchable
           clearable
           optional
-          isLoading={displayIsLoading}
-          onLoadMore={handleDisplayLoadMore}
-          hasMore={displayHasMore}
-          isLoadingMore={displayIsLoadingMore}
-          onSearch={handleDisplaySearch}
+          resolveLabel={displaySelect.resolveLabel}
+          isLoading={displaySelect.isLoading}
+          onLoadMore={displaySelect.onLoadMore}
+          hasMore={displaySelect.hasMore}
+          isLoadingMore={displaySelect.isLoadingMore}
+          onSearch={displaySelect.onSearch}
           onSelect={setDisplayId}
         />
         <div className="flex items-start gap-3">

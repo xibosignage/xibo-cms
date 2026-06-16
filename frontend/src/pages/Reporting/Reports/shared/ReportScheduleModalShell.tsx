@@ -33,7 +33,7 @@ import Modal from '@/components/ui/modals/Modal';
 import type { CreateReportSchedulePayload } from '@/services/reportScheduleApi';
 import { createReportSchedule } from '@/services/reportScheduleApi';
 
-const FREQUENCY_OPTIONS = [
+const DEFAULT_FREQUENCY_OPTIONS = [
   { value: 'daily', label: 'Daily' },
   { value: 'weekly', label: 'Weekly' },
   { value: 'monthly', label: 'Monthly' },
@@ -67,6 +67,7 @@ interface ReportScheduleModalShellProps {
   canSave?: boolean;
   warning?: ReactNode;
   children?: ReactNode;
+  frequencyOptions?: { value: string; label: string }[];
 }
 
 export default function ReportScheduleModalShell({
@@ -78,15 +79,19 @@ export default function ReportScheduleModalShell({
   canSave = true,
   warning,
   children,
+  frequencyOptions = DEFAULT_FREQUENCY_OPTIONS,
 }: ReportScheduleModalShellProps) {
   const { t } = useTranslation();
   const [isPending, startTransition] = useTransition();
   const [apiError, setApiError] = useState('');
-  const [draft, setDraft] = useState<BaseScheduleDraft>(INITIAL_DRAFT);
+  const [draft, setDraft] = useState<BaseScheduleDraft>(() => ({
+    ...INITIAL_DRAFT,
+    filter: frequencyOptions[0]?.value ?? INITIAL_DRAFT.filter,
+  }));
 
   useEffect(() => {
     if (isOpen) {
-      setDraft(INITIAL_DRAFT);
+      setDraft({ ...INITIAL_DRAFT, filter: frequencyOptions[0]?.value ?? INITIAL_DRAFT.filter });
       setApiError('');
     }
   }, [isOpen]);
@@ -151,7 +156,7 @@ export default function ReportScheduleModalShell({
           <label className="text-sm font-semibold text-gray-500 leading-5">{t('Frequency')}</label>
           <SelectDropdown
             value={draft.filter}
-            options={FREQUENCY_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }))}
+            options={frequencyOptions.map((o) => ({ value: o.value, label: t(o.label) }))}
             onSelect={(val) => setDraft((prev) => ({ ...prev, filter: val }))}
           />
           <span className="text-xs text-gray-400">

@@ -19,38 +19,70 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { Table } from '@tanstack/react-table';
+import {
+  getCoreRowModel,
+  getPaginationRowModel,
+  useReactTable,
+  type ColumnDef,
+  type OnChangeFn,
+  type PaginationState,
+} from '@tanstack/react-table';
 import { Loader2, RefreshCw, TriangleAlert } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import type { DisplayReportRow } from '../TimeConnectedConfig';
+import type { DisplayReportRow, SortBy } from '../TimeConnectedConfig';
 
 import TimeConnectedRow from './TimeConnectedRow';
 
 import Button from '@/components/ui/Button';
 import { DataTablePagination } from '@/components/ui/table/DataTablePagination';
 
+const EMPTY_COLUMNS: ColumnDef<DisplayReportRow>[] = [];
+
 interface TimeConnectedResultsProps {
-  table: Table<DisplayReportRow>;
-  totalRowCount: number;
+  rows: DisplayReportRow[];
+  sortBy: SortBy;
   metadata?: { periodStart: string; periodEnd: string };
   isFetching: boolean;
   isError: boolean;
   onRefresh: () => void;
+  pagination: PaginationState;
+  onPaginationChange: OnChangeFn<PaginationState>;
 }
 
 export default function TimeConnectedResults({
-  table,
-  totalRowCount,
+  rows,
+  sortBy,
   metadata,
   isFetching,
   isError,
   onRefresh,
+  pagination,
+  onPaginationChange,
 }: TimeConnectedResultsProps) {
   const { t } = useTranslation();
 
   const rangeStart = metadata?.periodStart.split(' ')[0];
   const rangeEnd = metadata?.periodEnd.split(' ')[0];
+
+  const sortedRows = rows
+    .slice()
+    .sort((a, b) =>
+      sortBy === 'uptime_asc'
+        ? a.uptimePercent - b.uptimePercent
+        : b.uptimePercent - a.uptimePercent,
+    );
+  const totalRowCount = sortedRows.length;
+
+  const table = useReactTable({
+    data: sortedRows,
+    columns: EMPTY_COLUMNS,
+    state: { pagination },
+    onPaginationChange,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    autoResetPageIndex: false,
+  });
 
   const pageRows = table.getRowModel().rows;
 

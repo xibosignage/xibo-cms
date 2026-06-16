@@ -458,6 +458,28 @@ export const APP_ROUTES: AppRoute[] = [
         validator: canAccessReport('displays.reporting'),
       },
       {
+        path: 'bandwidth',
+        labelKey: 'Display Statistics: Bandwidth',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Reporting/Reports/Bandwidth/Bandwidth').then((m) => ({
+            Component: m.default,
+          })),
+        validator: canAccessReport('displays.reporting'),
+      },
+      {
+        path: 'time-connected-summary',
+        labelKey: 'Time Connected Summary',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Reporting/Reports/TimeDisconnectedSummary/TimeDisconnectedSummary').then(
+            (m) => ({
+              Component: m.default,
+            }),
+          ),
+        validator: canAccessReport('displays.reporting'),
+      },
+      {
         path: 'summary',
         labelKey: 'Summary by Layout, Media or Event',
         hideFromMenu: true,

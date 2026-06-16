@@ -19,52 +19,42 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export type GroupByFilter = 'byhour' | 'bydayofmonth';
-export type SortBy = 'uptime_desc' | 'uptime_asc';
+import type { Tag } from '@/types/tag';
 
-export type TimeConnectedFilter = {
+export type GroupBy = 'display' | 'displayGroup';
+
+export type TimeDisconnectedSummaryFilter = {
   reportFilter: string;
-  fromDt: string | null;
-  toDt: string | null;
-  groupByFilter: GroupByFilter;
-  displaySpecificGroupIds: number[];
-  displayGroupIds: number[];
-  sortBy: SortBy;
+  groupBy: GroupBy;
+  displayId: number | null;
+  displayGroupId: number[];
+  tags: Tag[];
+  exactTags: boolean;
+  onlyLoggedIn: boolean;
 };
 
-export const INITIAL_FILTER_STATE: TimeConnectedFilter = {
-  reportFilter: 'today',
-  fromDt: null,
-  toDt: null,
-  groupByFilter: 'bydayofmonth',
-  displaySpecificGroupIds: [],
-  displayGroupIds: [],
-  sortBy: 'uptime_desc',
+export const INITIAL_FILTER_STATE: TimeDisconnectedSummaryFilter = {
+  reportFilter: 'lastweek',
+  groupBy: 'display',
+  displayId: null,
+  displayGroupId: [],
+  tags: [],
+  exactTags: false,
+  onlyLoggedIn: false,
 };
 
 export const DATE_RANGE_OPTIONS = [
   { value: 'today', label: 'Today' },
   { value: 'yesterday', label: 'Yesterday' },
+  { value: 'thisweek', label: 'This Week' },
+  { value: 'thismonth', label: 'This Month' },
+  { value: 'thisyear', label: 'This Year' },
   { value: 'lastweek', label: 'Last Week' },
   { value: 'lastmonth', label: 'Last Month' },
   { value: 'lastyear', label: 'Last Year' },
 ];
 
 export const GROUP_BY_OPTIONS = [
-  { value: 'bydayofmonth', label: 'Day of Month' },
-  { value: 'byhour', label: 'Hour' },
+  { value: 'display', label: 'Display' },
+  { value: 'displayGroup', label: 'Display Group' },
 ];
-
-export const SORT_BY_OPTIONS = [
-  { value: 'uptime_desc', label: 'Uptime (high to low)' },
-  { value: 'uptime_asc', label: 'Uptime (low to high)' },
-];
-
-export type DisplayReportRow = {
-  displayId: number;
-  displayName: string;
-  lastAccessed: string | null;
-  periods: Array<{ label: string; percent: number }>;
-  uptimePercent: number;
-  offlinePercent: number;
-};

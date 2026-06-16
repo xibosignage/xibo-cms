@@ -22,6 +22,8 @@
 import { TriangleAlert } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { useDisplayGroupSelect } from './hooks/useDisplayGroupSelect';
+import { useDisplayOptions } from './hooks/useDisplayOptions';
 import type { OptionsLoader } from './hooks/usePaginatedOptions';
 import { usePaginatedOptions } from './hooks/usePaginatedOptions';
 import type { StatsFilter, StatsReportConfig, StatsReportType } from './types';
@@ -30,8 +32,6 @@ import Button from '@/components/ui/Button';
 import DateRangeFilter from '@/components/ui/DateRangeFilter';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import TextInput from '@/components/ui/forms/TextInput';
-import { fetchDisplayGroups } from '@/services/displayGroupApi';
-import { fetchDisplays } from '@/services/displaysApi';
 import { fetchLayouts } from '@/services/layoutsApi';
 import { fetchMedia } from '@/services/mediaApi';
 
@@ -82,32 +82,6 @@ export default function StatsReportFilters({
     };
   };
 
-  const displayLoader: OptionsLoader = async (search, start, signal) => {
-    const { rows, totalCount } = await fetchDisplays({
-      start,
-      length: PAGE_SIZE,
-      display: search,
-      signal,
-    });
-    return {
-      options: rows.map((d) => ({ value: String(d.displayId), label: d.display })),
-      totalCount,
-    };
-  };
-
-  const displayGroupLoader: OptionsLoader = async (search, start, signal) => {
-    const { rows, totalCount } = await fetchDisplayGroups({
-      start,
-      length: PAGE_SIZE,
-      displayGroup: search,
-      signal,
-    });
-    return {
-      options: rows.map((g) => ({ value: String(g.displayGroupId), label: g.displayGroup })),
-      totalCount,
-    };
-  };
-
   const resolveItemLabel = async (val: string): Promise<string> => {
     if (filter.type === 'layout') {
       const { rows } = await fetchLayouts({ start: 0, length: 1, layoutId: Number(val) });
@@ -120,24 +94,14 @@ export default function StatsReportFilters({
     return '';
   };
 
-  const resolveDisplayLabel = async (val: string): Promise<string> => {
-    const { rows } = await fetchDisplays({ start: 0, length: 1, displayId: Number(val) });
-    return rows[0]?.display ?? '';
-  };
-
-  const resolveDisplayGroupLabel = async (val: string): Promise<string> => {
-    const { rows } = await fetchDisplayGroups({ start: 0, length: 1, displayGroupId: Number(val) });
-    return rows[0]?.displayGroup ?? '';
-  };
-
   const itemSelect = usePaginatedOptions({
     loader: filter.type === 'media' ? mediaLoader : layoutLoader,
     enabled: filter.type !== 'event',
     resetKey: filter.type,
   });
 
-  const displaySelect = usePaginatedOptions({ loader: displayLoader });
-  const displayGroupSelect = usePaginatedOptions({ loader: displayGroupLoader });
+  const displaySelect = useDisplayOptions();
+  const displayGroupSelect = useDisplayGroupSelect();
 
   const handleTypeChange = (value: string) => {
     onFilterChange({
@@ -248,7 +212,7 @@ export default function StatsReportFilters({
             placeholder={t('All Displays')}
             searchable
             clearable
-            resolveLabel={resolveDisplayLabel}
+            resolveLabel={displaySelect.resolveLabel}
             options={displaySelect.options}
             isLoading={displaySelect.isLoading}
             isLoadingMore={displaySelect.isLoadingMore}
@@ -264,7 +228,7 @@ export default function StatsReportFilters({
             placeholder={t('All Groups')}
             searchable
             clearable
-            resolveLabel={resolveDisplayGroupLabel}
+            resolveLabel={displayGroupSelect.resolveLabel}
             options={displayGroupSelect.options}
             isLoading={displayGroupSelect.isLoading}
             isLoadingMore={displayGroupSelect.isLoadingMore}

@@ -33,6 +33,7 @@ import Button from '@/components/ui/Button';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { getToggleButtonStyle } from '@/components/ui/table/DataTableOptions';
 import type { ViewMode } from '@/components/ui/table/types';
+import { sortRows } from '@/pages/Reporting/Reports/shared/utils/sortRows';
 import type { LibraryUsageChartData, LibraryUsageTableRow } from '@/services/libraryUsageApi';
 
 interface LibraryUsageResultsProps {
@@ -55,26 +56,6 @@ const getColumns = (t: TFunction): ColumnDef<LibraryUsageTableRow>[] => [
   { accessorKey: 'bytesUsedFormatted', header: t('Usage'), size: 160 },
   { accessorKey: 'numFiles', header: t('Count Files'), size: 140 },
 ];
-
-function sortRows(rows: LibraryUsageTableRow[], sorting: SortingState): LibraryUsageTableRow[] {
-  const sort = sorting[0];
-  if (!sort) {
-    return rows;
-  }
-  // `bytesUsedFormatted` is a display string; sort by the raw byte count behind it.
-  const key = (
-    sort.id === 'bytesUsedFormatted' ? 'bytesUsed' : sort.id
-  ) as keyof LibraryUsageTableRow;
-  const sorted = [...rows].sort((a, b) => {
-    const av = a[key];
-    const bv = b[key];
-    if (typeof av === 'number' && typeof bv === 'number') {
-      return av - bv;
-    }
-    return String(av).localeCompare(String(bv));
-  });
-  return sort.desc ? sorted.reverse() : sorted;
-}
 
 /** Transform the Chart.js-shaped pie payload into items the recharts pie understands. */
 function toPieItems(
@@ -116,7 +97,11 @@ export default function LibraryUsageResults({
   const isEmpty = !isError && !isFetching && rows.length === 0;
   const isTableMode = viewMode !== 'chart';
 
-  const sortedRows = sortRows(rows, sorting);
+  // `bytesUsedFormatted` is a display string; sort by the raw byte count behind it.
+  const sortedRows = sortRows(
+    rows,
+    sorting.map((s) => (s.id === 'bytesUsedFormatted' ? { ...s, id: 'bytesUsed' } : s)),
+  );
   const pageStart = pagination.pageIndex * pagination.pageSize;
   const pageRows = sortedRows.slice(pageStart, pageStart + pagination.pageSize);
   const pageCount = Math.max(1, Math.ceil(rows.length / pagination.pageSize));

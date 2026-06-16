@@ -19,27 +19,25 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export type LibraryUsageFilter = {
-  userId: number | null;
-  groupId: number | null;
+export type BandwidthFilter = {
+  fromDt: string;
+  toDt: string;
+  displayId: number | null;
 };
 
-export const INITIAL_FILTER_STATE: LibraryUsageFilter = {
-  userId: null,
-  groupId: null,
+function firstOfCurrentMonthIso(): string {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0).toISOString();
+}
+
+export const INITIAL_FILTER_STATE: BandwidthFilter = {
+  fromDt: firstOfCurrentMonthIso(),
+  toDt: firstOfCurrentMonthIso(),
+  displayId: null,
 };
 
-export const CHART_PALETTE = [
-  '#0ea5a0',
-  '#3b82f6',
-  '#f59e0b',
-  '#8b5cf6',
-  '#ec4899',
-  '#10b981',
-  '#ef4444',
-  '#6366f1',
-  '#14b8a6',
-  '#f97316',
-  '#a855f7',
-  '#84cc16',
+export const FREQUENCY_OPTIONS = [
+  { value: 'daily', label: 'Daily' },
+  { value: 'monthly', label: 'Monthly' },
+  { value: 'yearly', label: 'Yearly' },
 ];

@@ -88,9 +88,4 @@ export const DISTRIBUTION_CONFIG: StatsReportConfig = {
   getGroupByOptions,
   defaultGroupBy,
   shouldShowDataWarning,
-  reportSelector: [
-    { label: 'Summary by Layout, Media or Event', url: '/prototype/reporting/summary' },
-    { label: 'Distribution by Layout, Media or Event', url: null },
-    { label: 'Proof of Play', url: '/report/form/proofofplayReport' },
-  ],
 };

@@ -174,9 +174,29 @@ class TimeDisconnectedSummary implements ReportInterface
         $now = Carbon::now();
 
         switch ($reportFilter) {
+            case 'today':
+                $fromDt = $now->copy()->startOfDay();
+                $toDt = $now->copy();
+                break;
+
             case 'yesterday':
                 $fromDt = $now->copy()->startOfDay()->subDay();
                 $toDt = $now->copy()->startOfDay();
+                break;
+
+            case 'thisweek':
+                $fromDt = $now->copy()->locale(Translate::GetLocale())->startOfWeek();
+                $toDt = $now->copy();
+                break;
+
+            case 'thismonth':
+                $fromDt = $now->copy()->startOfMonth();
+                $toDt = $now->copy();
+                break;
+
+            case 'thisyear':
+                $fromDt = $now->copy()->startOfYear();
+                $toDt = $now->copy();
                 break;
 
             case 'lastweek':

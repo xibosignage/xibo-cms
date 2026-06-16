@@ -285,6 +285,7 @@ class Bandwidth implements ReportInterface
             $entry['label'] = $label;
             $entry['bandwidth'] = $bandwidth;
             $entry['unit'] = (isset($suffixes[$base]) ? $suffixes[$base] : '');
+            $entry['deleted'] = ($row['display'] === null);
             $rows[] = $entry;
         }
 
