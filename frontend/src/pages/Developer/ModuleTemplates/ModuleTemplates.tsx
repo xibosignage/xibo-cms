@@ -183,11 +183,7 @@ export default function ModuleTemplates() {
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Module Templates" navigation={developerTabs} />
-        </div>
-
-        <div className="flex flex-col gap-2">
-          {/* Add + Import XML - right-aligned */}
-          <div className="flex justify-end items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 shrink-0">
             <input
               ref={fileInputRef}
               type="file"
@@ -206,7 +202,9 @@ export default function ModuleTemplates() {
               {t('Import XML')}
             </Button>
           </div>
+        </div>
 
+        <div className="flex flex-col gap-2">
           {/* Search + Filter - right-aligned */}
           <div className="flex justify-end">
             <div className="flex items-center gap-2 w-full xl:w-115 lg:w-75 shrink-0">
