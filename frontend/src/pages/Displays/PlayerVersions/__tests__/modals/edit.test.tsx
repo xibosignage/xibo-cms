@@ -21,7 +21,6 @@
 
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import { buildPlayerVersion } from '../fixtures/playerVersion';
@@ -33,14 +32,6 @@ import { updatePlayerVersion } from '@/services/playerVersionApi';
 // =============================================================================
 // Module mocks
 // =============================================================================
-
-vi.mock('react-i18next', () => {
-  const t = (key: string) => key;
-  return {
-    useTranslation: () => ({ t, i18n: { changeLanguage: vi.fn() } }),
-    Trans: ({ children }: { children: React.ReactNode }) => children,
-  };
-});
 
 vi.mock('@/components/ui/modals/Modal');
 
