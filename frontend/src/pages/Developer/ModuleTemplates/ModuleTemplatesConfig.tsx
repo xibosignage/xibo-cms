@@ -92,23 +92,22 @@ export const getModuleTemplateItemActions = ({
   onShare,
 }: ModuleTemplateActionsProps): ((template: ModuleTemplate) => ActionItem[]) => {
   return (template: ModuleTemplate) => {
-    const actions: ActionItem[] = [
-      {
-        label: t('Edit'),
-        icon: Edit,
-        onClick: () => onEdit(template),
-        isQuickAction: true,
-        variant: 'primary' as const,
-      },
-      {
-        label: t('Edit'),
-        icon: Edit,
-        onClick: () => onEdit(template),
-      },
-    ];
+    const actions: ActionItem[] = [];
 
     if (template.ownership === 'user') {
       actions.push(
+        {
+          label: t('Edit'),
+          icon: Edit,
+          onClick: () => onEdit(template),
+          isQuickAction: true,
+          variant: 'primary' as const,
+        },
+        {
+          label: t('Edit'),
+          icon: Edit,
+          onClick: () => onEdit(template),
+        },
         {
           label: t('Export XML'),
           icon: Download,

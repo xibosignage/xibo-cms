@@ -34,9 +34,13 @@ export default function CodeTab({ value, onChange, language }: CodeTabProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(value);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.warn('Clipboard copy failed: ', err);
+    }
   };
 
   return (
