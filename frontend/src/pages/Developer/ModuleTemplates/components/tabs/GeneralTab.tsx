@@ -59,7 +59,7 @@ export default function GeneralTab({
     <div className="flex flex-col gap-6">
       {/* Options */}
       <div className="bg-white rounded-lg p-5 flex flex-col gap-4">
-        <p className="font-bold text-l">{t('Template Identity')}</p>
+        <p className="font-bold text-lg">{t('Template Identity')}</p>
         <div className="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
           <AlertTriangle size={16} className="shrink-0 mt-0.5" />
           <span>
@@ -109,7 +109,7 @@ export default function GeneralTab({
 
       {/* Status and Invalidate */}
       <div className="bg-white rounded-lg p-5 flex flex-col gap-4">
-        <p className="font-bold text-l">{t('Status')}</p>
+        <p className="font-bold text-lg">{t('Status')}</p>
         <SwitchRow
           title={t('Enable')}
           description={t('Is this template enabled?')}

@@ -102,7 +102,7 @@ const CONTROL_TYPES: SelectOption[] = [
 function SectionLabel({ label, action }: { label: string; action?: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-s font-semibold text-gray-500 tracking-wide gap-1.5 inline-flex">
+      <span className="text-sm font-semibold text-gray-500 tracking-wide gap-1.5 inline-flex">
         {label}
         {action}
       </span>
@@ -134,7 +134,7 @@ function InfoTooltip({ text }: { text: string }) {
         ref={refs.setReference}
         {...getReferenceProps()}
         type="button"
-        className="inline-flex items-center text-gray-400 hover:text-blue-500 transition-colors"
+        className="inline-flex items-center text-gray-400 hover:text-xibo-blue-500 transition-colors"
         aria-label={t('More info')}
       >
         <Info size={14} />

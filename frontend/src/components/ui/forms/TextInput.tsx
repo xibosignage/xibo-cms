@@ -68,7 +68,7 @@ export default function TextInput({
   const generatedId = useId();
 
   return (
-    <div className={twMerge('flex flex-col gap-2 w-full', wrapperClassName)}>
+    <div className={twMerge('flex flex-col gap-1 w-full', wrapperClassName)}>
       {label && (
         <label
           htmlFor={generatedId}

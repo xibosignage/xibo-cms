@@ -62,7 +62,7 @@ export default function ModuleTemplateEdit() {
   const numericId = parseInt(id ?? '', 10);
 
   const { template, dataTypes, isLoading, isError, error } = useModuleTemplateEditData(numericId);
-  const { formValues, updateField, updateProperties, resetForm, hasUnsavedChanges } =
+  const { formValues, updateField, updateProperties, resetForm, markSaved, hasUnsavedChanges } =
     useModuleTemplateEditForm(template);
 
   const [activeTab, setActiveTab] = useState('General');
@@ -82,6 +82,7 @@ export default function ModuleTemplateEdit() {
           isInvalidateWidget: isInvalidateWidgetRef.current,
         });
         notify.success(t('Template saved'));
+        markSaved();
         setIsInvalidateWidget(true);
         isInvalidateWidgetRef.current = true;
         queryClient.invalidateQueries({ queryKey: moduleTemplateQueryKeys.detail(numericId) });
@@ -152,15 +153,6 @@ export default function ModuleTemplateEdit() {
 
           {/* Right content panel */}
           <div className="flex-1 flex flex-col overflow-hidden min-h-0">
-            {isError && (
-              <div
-                className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg m-4"
-                role="alert"
-              >
-                {error instanceof Error ? error.message : t('Failed to load template')}
-              </div>
-            )}
-
             <div className="flex-1 overflow-y-auto p-5 bg-gray-50">
               <h3 className="font-semibold text-xl mb-5">{t(activeTab)}</h3>
 

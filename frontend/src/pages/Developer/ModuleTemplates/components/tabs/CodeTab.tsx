@@ -53,7 +53,7 @@ export default function CodeTab({ value, onChange, language }: CodeTabProps) {
         <button
           type="button"
           onClick={handleCopy}
-          className="absolute top-2 right-2 flex items-center gap-1 text-xs text-gray-400 hover:text-gray-700 hover:bg-gray-100 hover:pointer transition-colors px-2 py-1 rounded"
+          className="absolute top-2 right-2 flex items-center gap-1 text-xs text-gray-400 hover:text-gray-700 hover:bg-gray-100 hover:cursor-pointer transition-colors px-2 py-1 rounded"
         >
           {copied ? (
             <>

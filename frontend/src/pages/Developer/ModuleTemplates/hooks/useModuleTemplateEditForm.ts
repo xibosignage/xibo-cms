@@ -49,12 +49,12 @@ export const useModuleTemplateEditForm = (template: ModuleTemplate | null) => {
   const [originalValues, setOriginalValues] = useState<ModuleTemplateEditFormValues | null>(null);
 
   useEffect(() => {
-    if (template && !formValues) {
+    if (template) {
       const initial = buildInitialValues(template);
       setFormValues(initial);
       setOriginalValues(initial);
     }
-  }, [template, formValues]);
+  }, [template?.id]);
 
   const updateField = <K extends keyof ModuleTemplateEditFormValues>(
     key: K,
@@ -71,10 +71,14 @@ export const useModuleTemplateEditForm = (template: ModuleTemplate | null) => {
     if (originalValues) setFormValues({ ...originalValues });
   };
 
+  const markSaved = () => {
+    if (formValues) setOriginalValues({ ...formValues });
+  };
+
   const hasUnsavedChanges =
     formValues !== null &&
     originalValues !== null &&
     JSON.stringify(formValues) !== JSON.stringify(originalValues);
 
-  return { formValues, updateField, updateProperties, resetForm, hasUnsavedChanges };
+  return { formValues, updateField, updateProperties, resetForm, markSaved, hasUnsavedChanges };
 };
