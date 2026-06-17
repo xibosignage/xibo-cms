@@ -123,9 +123,7 @@ export default function ProfileEditModal({ isOpen = true, onClose }: ProfileEdit
   const { user, updateUser } = useUserContext();
 
   const [email, setEmail] = useState(user?.email || '');
-  const [twoFactorType, setTwoFactorType] = useState(
-    String(user?.settings?.twoFactorTypeId ?? '0'),
-  );
+  const [twoFactorType, setTwoFactorType] = useState(String(user?.twoFactorTypeId ?? '0'));
 
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
@@ -146,7 +144,7 @@ export default function ProfileEditModal({ isOpen = true, onClose }: ProfileEdit
 
   // Fetch QR code
   useEffect(() => {
-    if (twoFactorType === '2' && String(user?.settings?.twoFactorTypeId) !== '2') {
+    if (twoFactorType === '2' && String(user?.twoFactorTypeId) !== '2') {
       setIsLoading2FA(true);
       fetch2FASetup()
         .then((data) => {
@@ -157,7 +155,7 @@ export default function ProfileEditModal({ isOpen = true, onClose }: ProfileEdit
         .catch(console.error)
         .finally(() => setIsLoading2FA(false));
     }
-  }, [twoFactorType, user?.settings?.twoFactorTypeId]);
+  }, [twoFactorType, user?.twoFactorTypeId]);
 
   const handleGenerateCodes = async () => {
     setIsLoading2FA(true);
@@ -178,7 +176,7 @@ export default function ProfileEditModal({ isOpen = true, onClose }: ProfileEdit
       return;
     }
 
-    if (String(user?.settings?.twoFactorTypeId) !== '2') {
+    if (String(user?.twoFactorTypeId) !== '2') {
       setShowCodesPanel(true);
       return;
     }
@@ -198,7 +196,7 @@ export default function ProfileEditModal({ isOpen = true, onClose }: ProfileEdit
 
   useEffect(() => {
     if (isOpen && user) {
-      setTwoFactorType(String(user.settings?.twoFactorTypeId ?? '0'));
+      setTwoFactorType(String(user.twoFactorTypeId ?? '0'));
       setEmail(user.email || '');
     }
   }, [isOpen, user]);
@@ -217,7 +215,7 @@ export default function ProfileEditModal({ isOpen = true, onClose }: ProfileEdit
 
       const schema = createProfileSchema(
         t,
-        String(user?.settings?.twoFactorTypeId ?? '0'),
+        String(user?.twoFactorTypeId ?? '0'),
         user?.email || '',
       );
 
@@ -237,10 +235,7 @@ export default function ProfileEditModal({ isOpen = true, onClose }: ProfileEdit
           updateUser({
             ...user,
             email: result.data.email,
-            settings: {
-              ...(user.settings ?? {}),
-              twoFactorTypeId: parseInt(result.data.twoFactorTypeId, 10),
-            },
+            twoFactorTypeId: parseInt(result.data.twoFactorTypeId, 10),
           });
         }
 
@@ -363,28 +358,36 @@ export default function ProfileEditModal({ isOpen = true, onClose }: ProfileEdit
               ref={twoFactorContainerRef}
               className="mt-4 flex flex-col items-center rounded-xl bg-gray-50 p-6 border border-gray-200"
             >
-              <p className="text-sm font-medium text-gray-900 mb-4">
-                {t('Please scan the following image with your app:')}
-              </p>
+              {user?.twoFactorTypeId !== 2 && (
+                <>
+                  <p className="text-sm font-medium text-gray-900 mb-4">
+                    {t('Please scan the following image with your app:')}
+                  </p>
 
-              {/* QR Code Rendering */}
-              <div className="h-40 w-40 bg-white border border-gray-300 flex items-center justify-center mb-6 overflow-hidden">
-                {isLoading2FA && !qrCodeUrl ? (
-                  <span className="text-xs text-gray-400">{t('Loading...')}</span>
-                ) : qrCodeUrl ? (
-                  <img src={qrCodeUrl} alt="2FA QR Code" className="h-full w-full object-contain" />
-                ) : (
-                  <span className="text-xs text-gray-400">{t('No QR Code available')}</span>
-                )}
-              </div>
+                  {/* QR Code Rendering */}
+                  <div className="h-40 w-40 bg-white border border-gray-300 flex items-center justify-center mb-6 overflow-hidden">
+                    {isLoading2FA && !qrCodeUrl ? (
+                      <span className="text-xs text-gray-400">{t('Loading...')}</span>
+                    ) : qrCodeUrl ? (
+                      <img
+                        src={qrCodeUrl}
+                        alt="2FA QR Code"
+                        className="h-full w-full object-contain"
+                      />
+                    ) : (
+                      <span className="text-xs text-gray-400">{t('No QR Code available')}</span>
+                    )}
+                  </div>
 
-              <div className="w-full max-w-xs">
-                <TextInput
-                  name="code"
-                  label={t('Access Code')}
-                  error={state.fieldErrors?.code?.[0]}
-                />
-              </div>
+                  <div className="w-full max-w-xs">
+                    <TextInput
+                      name="code"
+                      label={t('Access Code')}
+                      error={state.fieldErrors?.code?.[0]}
+                    />
+                  </div>
+                </>
+              )}
 
               {/* Recovery Codes Section */}
               <div className="w-full mt-6 pt-6 border-t border-gray-200 flex flex-col gap-4">

@@ -26,7 +26,6 @@ use Stash\Interfaces\PoolInterface;
 use Xibo\Helper\Environment;
 use Xibo\Helper\NatoAlphabet;
 use Xibo\Storage\StorageServiceInterface;
-use Xibo\Support\Exception\ConfigurationException;
 
 /**
  * Class ConfigService
@@ -297,12 +296,15 @@ class ConfigService implements ConfigServiceInterface
             'theme_title'    => 'Xibo Digital Signage',
             'app_name'       => 'Xibo',
             'theme_url'      => 'https://xibosignage.com',
-            'cms_source_url' => 'https://github.com/xibosignage/xibo/',
-            'themeCode'      => 'default',
+            'cms_source_url'           => 'https://github.com/xibosignage/xibo-cms',
+            'about_text'               => null,
+            'remove_licence_from_login' => false,
+            'themeCode'                => 'default',
             'themeFolder'    => '',
         ];
 
-        // Overlay brand config from library/brand/config.json
+        // Overlay brand config from library/brand/config.json.
+        // All brand fields are overlaid here so callers only need getThemeConfig().
         $brandConfig = $this->getBrandConfig();
         if (!empty($brandConfig['productName'])) {
             $this->themeConfig['theme_title'] = $brandConfig['productName'];
@@ -312,6 +314,17 @@ class ConfigService implements ConfigServiceInterface
         }
         if (!empty($brandConfig['supportUrl'])) {
             $this->themeConfig['theme_url'] = $brandConfig['supportUrl'];
+        }
+        // Use !== null (not !empty) so WL can set cmsSourceUrl to "" to suppress the link.
+        if (($brandConfig['cmsSourceUrl'] ?? null) !== null) {
+            $this->themeConfig['cms_source_url'] = $brandConfig['cmsSourceUrl'];
+        }
+        // null = show default AGPL text; non-null string = WL custom HTML.
+        if (($brandConfig['aboutText'] ?? null) !== null) {
+            $this->themeConfig['about_text'] = $brandConfig['aboutText'];
+        }
+        if (($brandConfig['removeLicenceFromLogin'] ?? null) !== null) {
+            $this->themeConfig['remove_licence_from_login'] = $brandConfig['removeLicenceFromLogin'];
         }
     }
 
@@ -335,9 +348,12 @@ class ConfigService implements ConfigServiceInterface
         // PHP config keys (theme_title/app_name/theme_url) so existing WL config.json
         // files produced with old key names keep working during the transition.
         return [
-            'productName' => $raw['productName'] ?? $raw['theme_title'] ?? null,
-            'appName'     => $raw['appName']     ?? $raw['app_name']    ?? null,
-            'supportUrl'  => $raw['supportUrl']  ?? $raw['theme_url']   ?? null,
+            'productName'            => $raw['productName']  ?? $raw['theme_title']    ?? null,
+            'appName'                => $raw['appName']      ?? $raw['app_name']       ?? null,
+            'supportUrl'             => $raw['supportUrl']   ?? $raw['theme_url']      ?? null,
+            'cmsSourceUrl'           => $raw['cmsSourceUrl'] ?? $raw['cms_source_url'] ?? null,
+            'aboutText'              => $raw['aboutText']    ?? null,
+            'removeLicenceFromLogin' => isset($raw['removeLicenceFromLogin']) ? (bool)$raw['removeLicenceFromLogin'] : null,
         ];
     }
 

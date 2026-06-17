@@ -11,28 +11,38 @@
 
     <!-- Import CSS bundle from dist -->
     <script src="{{ theme.rootUri() }}dist/style.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+    <!-- Brand CSS variables -->
+    <link href="{{ theme.rootUri() }}brand/theme.css" rel="stylesheet" media="screen">
 
     <!-- Copyright 2006-2021 Xibo Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
     <style type="text/css">
         body {
+            min-height: 100vh;
             padding-top: 40px !important;
             padding-bottom: 40px !important;
-            background-color: #f5f5f5;
+            background-color: #f7f7f7;
         }
 
         .form-signin {
-            max-width: 300px;
-            padding: 19px 29px 29px;
+            max-width: 330px;
+            padding: 0;
             margin: 0 auto 20px;
-            background-color: #fff;
+            background-color: var(--brand-primary, #3f7fff);
             border: 1px solid #e5e5e5;
             -webkit-border-radius: 5px;
             -moz-border-radius: 5px;
             border-radius: 5px;
             -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.05);
             -moz-box-shadow: 0 1px 2px rgba(0,0,0,.05);
-            box-shadow: 0 1px 2px rgba(0,0,0,.05);
+            box-shadow: 0 2px 8px rgba(0,0,0,.15);
+            overflow: hidden;
         }
+
+        .form-signin-body {
+            padding: 19px 29px 29px;
+            background-color: #fff;
+        }
+
         .form-signin .form-signin-heading,
         .form-signin .checkbox {
             margin-bottom: 10px;
@@ -46,6 +56,18 @@
         }
         .login-logo {
             width: 200px;
+            max-height: 80px;
+            object-fit: contain;
+        }
+        .btn-brand {
+            background-color: var(--brand-primary, #3f7fff);
+            border-color: var(--brand-primary, #3f7fff);
+            color: #fff;
+        }
+        .btn-brand:hover, .btn-brand:focus {
+            background-color: var(--brand-accent, #2563d4);
+            border-color: var(--brand-accent, #2563d4);
+            color: #fff;
         }
 
     </style>
@@ -57,18 +79,19 @@
                 <input name="priorRoute" type="hidden" value="{{ priorRoute }}" />
             {% endfor %}
             <input type="hidden" name="{{ csrfKey }}" value="{{ csrfToken }}" />
-            <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="{{ theme.rootUri() }}brand/xibologo.png"></a></p>
+            <p class="pt-4"><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="{{ logoUrl }}"></a></p>
+            <div class="form-signin-body">
+                <p>{% trans "Please provide your Two Factor Authorisation Code" %}</p>
+                <input id="code" class="form-control input-block-level" name="code" type="text" placeholder="{% trans "Code" %}" autofocus>
 
-            <p>{% trans "Please provide your Two Factor Authorisation Code" %}</p>
-            <input id="code" class="form-control input-block-level" name="code" type="text" placeholder="{% trans "Code" %}" autofocus>
+                {% if message != '' %}
+                    <div class="alert alert-danger">{{ message }}</div>
+                {% endif %}
 
-            {% if message != '' %}
-                <div class="alert alert-danger">{{ message }}</div>
-            {% endif %}
+                <p><button class="btn btn-brand" type="submit">{% trans "Verify" %}</button></p>
 
-            <p><button class="btn btn-primary" type="submit">{% trans "Verify" %}</button></p>
-
-            <p><a href="#" id="recovery-form-toggle">{% trans "Use Recovery Code instead?" %}</a></p>
+                <p><a href="#" id="recovery-form-toggle">{% trans "Use Recovery Code instead?" %}</a></p>
+            </div>
         </form>
 
     <form id="recovery-form" class="form-signin text-center d-none" action="{{ url_for("tfa.auth.validate") }}" method="post">
@@ -76,18 +99,19 @@
             <input name="priorRoute" type="hidden" value="{{ priorRoute }}" />
         {% endfor %}
         <input type="hidden" name="{{ csrfKey }}" value="{{ csrfToken }}" />
-        <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="{{ theme.rootUri() }}brand/xibologo.png"></a></p>
+        <p class="pt-4"><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="{{ logoUrl }}"></a></p>
+        <div class="form-signin-body">
+            <p>{% trans "Please provide your Two Factor Authorisation Recovery Code" %}</p>
+            <input id="recoveryCode" class="form-control input-block-level" name="recoveryCode" type="text" placeholder="{% trans "Recovery Code" %}" autofocus>
 
-        <p>{% trans "Please provide your Two Factor Authorisation Recovery Code" %}</p>
-        <input id="recoveryCode" class="form-control input-block-level" name="recoveryCode" type="text" placeholder="{% trans "Recovery Code" %}" autofocus>
+            {% for loginMessage in flash('2fa_message') %}
+                <div class="alert alert-danger">{{ loginMessage }}</div>
+            {% endfor %}
 
-        {% for loginMessage in flash('2fa_message') %}
-            <div class="alert alert-danger">{{ loginMessage }}</div>
-        {% endfor %}
+            <p><button class="btn btn-brand" type="submit">{% trans "Verify" %}</button></p>
 
-        <p><button class="btn btn-primary" type="submit">{% trans "Verify" %}</button></p>
-
-        <p><a href="#" id="login-form-toggle">{% trans "Use Two Factor Code instead?" %}</a></p>
+            <p><a href="#" id="login-form-toggle">{% trans "Use Two Factor Code instead?" %}</a></p>
+        </div>
     </form>
 </div>
 <!-- Import JS bundle from dist -->

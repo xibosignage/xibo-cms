@@ -40,7 +40,7 @@ $app->get('/tfa', ['\Xibo\Controller\Login','twoFactorAuthForm'])->setName('tfa'
 $app->get('/logout', ['\Xibo\Controller\Login','logout'])->setName('logout');
 
 // Ping pong route
-$app->get('/login/ping', ['\Xibo\Controller\Login','PingPong'])->setName('ping');
+$app->get('/login/ping', ['\Xibo\Controller\Login','pingPong'])->setName('ping');
 
 //
 // notification

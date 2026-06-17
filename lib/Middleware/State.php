@@ -177,6 +177,7 @@ class State implements Middleware
             '/login/forgotten',
             '/clock',
             '/about',
+            '/about/config',
             '/login/ping',
             '/rss/{psk}',
             '/sssp_config.xml',

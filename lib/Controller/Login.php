@@ -49,43 +49,21 @@ class Login extends Base
 {
     use LogoutTrait;
 
-    /** @var Session */
-    private $session;
+    private Messages $flash;
 
-    /** @var UserFactory */
-    private $userFactory;
-
-    /** @var \Stash\Interfaces\PoolInterface */
-    private $pool;
-    /**
-     * @var Messages
-     */
-    private $flash;
-
-    /**
-     * Set common dependencies.
-     * @param Session $session
-     * @param UserFactory $userFactory
-     * @param \Stash\Interfaces\PoolInterface $pool
-     */
-    public function __construct($session, $userFactory, $pool)
-    {
-        $this->session = $session;
-        $this->userFactory = $userFactory;
-        $this->pool = $pool;
+    public function __construct(
+        private readonly Session $session,
+        private readonly UserFactory $userFactory,
+        private readonly \Stash\Interfaces\PoolInterface $pool,
+    ) {
     }
 
-    /**
-     * Get Flash Message
-     *
-     * @return Messages
-     */
-    protected function getFlash()
+    protected function getFlash(): Messages
     {
         return $this->flash;
     }
 
-    public function setFlash(Messages $messages)
+    public function setFlash(Messages $messages): void
     {
         $this->flash = $messages;
     }
@@ -98,7 +76,7 @@ class Login extends Base
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function loginForm(Request $request, Response $response)
+    public function loginForm(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
     {
         // Sanitize the body
         $sanitizedRequestBody = $this->getSanitizer($request->getParams());
@@ -163,19 +141,58 @@ class Login extends Base
             }
         }
 
-        // Check to see if the password reminder functionality is enabled.
-        $passwordReminderEnabled = $this->getConfig()->getSetting('PASSWORD_REMINDER_ENABLED');
-        $mailFrom = $this->getConfig()->getSetting('mail_from');
+        $passwordReminderEnabled = $this->isPasswordReminderEnabled();
         $authCASEnabled = isset($this->getConfig()->casSettings);
+        $logoUrl = $this->getBrandLogoUrl();
 
-        // Template
-        $this->getState()->template = 'login';
+        // Legacy Twig fallback for ?legacy=1 (noscript / rollback path)
+        if ($sanitizedRequestBody->getString('legacy') === '1') {
+            $this->getState()->template = 'login-legacy';
+            $this->getState()->setData([
+                'passwordReminderEnabled' => $passwordReminderEnabled,
+                'authCASEnabled' => $authCASEnabled,
+                'logoUrl' => $logoUrl,
+                'version' => Environment::$WEBSITE_VERSION_NAME
+            ]);
+            return $this->render($request, $response);
+        }
+
+        // Build config blob for the React SPA shell
+        $loginConfig = [
+            'priorRoute' => $this->sanitizePriorRouteForOutput(
+                $sanitizedRequestBody->getString('priorRoute')
+            ),
+            'logoUrl'                => $logoUrl,
+            'passwordReminderEnabled' => $passwordReminderEnabled,
+            'authCASEnabled'          => $authCASEnabled,
+            'version'                 => Environment::$WEBSITE_VERSION_NAME,
+            'appName'                 => $this->getConfig()->getThemeConfig('app_name', 'Xibo'),
+            'supportUrl'              => $this->getConfig()->getThemeConfig(
+                'theme_url',
+                'https://xibosignage.com'
+            ),
+            'sourceUrl'               => $this->getConfig()->getThemeConfig(
+                'cms_source_url',
+                'https://github.com/xibosignage/xibo-cms'
+            ),
+            'removeLicenceFromLogin'  => (bool)$this->getConfig()->getThemeConfig(
+                'remove_licence_from_login',
+                false
+            ),
+        ];
+
+        $this->getState()->template = 'login-spa';
         $this->getState()->setData([
-            'passwordReminderEnabled' => (($passwordReminderEnabled === 'On' || $passwordReminderEnabled === 'On except Admin') && $mailFrom != ''),
-            'authCASEnabled' => $authCASEnabled,
-            'version' => Environment::$WEBSITE_VERSION_NAME
+            'loginConfigJson' => json_encode(
+                $loginConfig,
+                JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE
+            ),
+            'loginJsUrl'      => \Xibo\Helper\ViteManifest::getJsUrl('login.html'),
+            'loginCssUrl'     => \Xibo\Helper\ViteManifest::getCssUrl('login.html'),
+            'viteClientUrl'   => \Xibo\Helper\ViteManifest::getClientUrl(),
+            'viteRefreshUrl'  => \Xibo\Helper\ViteManifest::getRefreshUrl(),
         ]);
-       return $this->render($request, $response);
+        return $this->render($request, $response);
     }
 
     /**
@@ -188,7 +205,9 @@ class Login extends Base
      */
     public function login(Request $request, Response $response): Response
     {
-        $parsedRequest = $this->getSanitizer($request->getParsedBody());
+        $isJson = $this->isJsonRequest($request);
+        $body = $isJson ? (json_decode((string)$request->getBody(), true) ?? []) : ($request->getParsedBody() ?? []);
+        $parsedRequest = $this->getSanitizer($body);
         $routeParser = RouteContext::fromRequest($request)->getRouteParser();
 
         // Capture the prior route (if there is one)
@@ -226,25 +245,53 @@ class Login extends Base
                 // check if 2FA is enabled
                 if ($user->twoFactorTypeId != 0) {
                     $_SESSION['tfaUsername'] = $user->userName;
+
+                    if ($isJson) {
+                        return $this->jsonResponse($response, [
+                            'status'     => '2fa_required',
+                            'priorRoute' => $this->sanitizePriorRouteForOutput($priorRoute),
+                        ]);
+                    }
+
                     $this->getFlash()->addMessage('priorRoute', $priorRoute);
                     return $response->withRedirect($routeParser->urlFor('tfa'));
                 }
 
                 // We are logged in, so complete the login flow
                 $this->completeLoginFlow($user, $request);
+
+                if ($isJson) {
+                    return $this->jsonResponse($response, ['status' => 'ok']);
+                }
             } catch (NotFoundException) {
                 throw new AccessDeniedException(__('User not found'));
             }
 
             $redirect = $this->getRedirect($request, $priorRoute);
         } catch (AccessDeniedException $e) {
-            // Record one failure against the rate-limit counter so brute-forcers progress
-            // toward lockout. Doesn't apply to ExpiredException (legitimate session expiry).
-            $this->recordRateLimitHit($request, 'login', 900);
+            $isRateLimited = str_contains($e->getMessage(), 'Too many attempts');
+            if (!$isRateLimited) {
+                $this->recordRateLimitHit($request, 'login', 900);
+            }
             $this->getLog()->warning($e->getMessage());
+
+            if ($isJson) {
+                return $this->jsonResponse(
+                    $response,
+                    [
+                        'status' => $isRateLimited ? 'rate_limited' : 'error',
+                        'message' => __('Username or Password incorrect'),
+                    ],
+                    $isRateLimited ? 429 : 401
+                );
+            }
+
             $this->getFlash()->addMessage('login_message', __('Username or Password incorrect'));
             $this->getFlash()->addMessage('priorRoute', $priorRoute);
         } catch (ExpiredException $e) {
+            if ($isJson) {
+                return $this->jsonResponse($response, ['status' => 'error', 'message' => __('Session expired')], 401);
+            }
             $this->getFlash()->addMessage('priorRoute', $priorRoute);
         }
         $this->setNoOutput(true);
@@ -256,23 +303,27 @@ class Login extends Base
      * Forgotten password link requested
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return \Psr\Http\Message\ResponseInterface
      * @throws ConfigurationException
      * @throws \PHPMailer\PHPMailer\Exception
      * @throws \Twig\Error\LoaderError
      * @throws \Twig\Error\RuntimeError
      * @throws \Twig\Error\SyntaxError
      */
-    public function forgottenPassword(Request $request, Response $response)
+    public function forgottenPassword(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
     {
-        // Is this functionality enabled?
-        $passwordReminderEnabled = $this->getConfig()->getSetting('PASSWORD_REMINDER_ENABLED');
+        $isJson = $this->isJsonRequest($request);
         $mailFrom = $this->getConfig()->getSetting('mail_from');
 
-        $parsedRequest = $this->getSanitizer($request->getParsedBody());
+        if ($isJson) {
+            $jsonBody = json_decode((string)$request->getBody(), true) ?? [];
+            $parsedRequest = $this->getSanitizer($jsonBody);
+        } else {
+            $parsedRequest = $this->getSanitizer($request->getParsedBody());
+        }
         $routeParser = RouteContext::fromRequest($request)->getRouteParser();
 
-        if (!(($passwordReminderEnabled === 'On' || $passwordReminderEnabled === 'On except Admin') && $mailFrom != '')) {
+        if (!$this->isPasswordReminderEnabled()) {
             throw new ConfigurationException(__('This feature has been disabled by your administrator'));
         }
 
@@ -285,10 +336,11 @@ class Login extends Base
             // Constant-time pad on the throttle path so attackers can't distinguish
             // "rate-limited" from "user not found" via response timing.
             usleep(random_int(200000, 400000));
-            $this->getFlash()->addMessage(
-                'login_message',
-                __('A reminder email will been sent to this user if they exist'),
-            );
+            $message = __('A reminder email will been sent to this user if they exist');
+            if ($isJson) {
+                return $this->jsonResponse($response, ['status' => 'ok', 'message' => $message]);
+            }
+            $this->getFlash()->addMessage('login_message', $message);
             $this->setNoOutput(true);
             return $response->withRedirect($routeParser->urlFor('login'));
         }
@@ -403,6 +455,11 @@ class Login extends Base
             );
         }
 
+        $message = __('A reminder email will been sent to this user if they exist');
+        if ($isJson) {
+            return $this->jsonResponse($response, ['status' => 'ok', 'message' => $message]);
+        }
+
         $this->setNoOutput(true);
         return $response->withRedirect($routeParser->urlFor('login'));
     }
@@ -411,9 +468,9 @@ class Login extends Base
      * Log out
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return \Psr\Http\Message\ResponseInterface
      */
-    public function logout(Request $request, Response $response)
+    public function logout(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
     {
         $redirect = true;
 
@@ -434,11 +491,11 @@ class Login extends Base
      * Ping Pong
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return \Psr\Http\Message\ResponseInterface
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function PingPong(Request $request, Response $response)
+    public function pingPong(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
     {
         $parseRequest = $this->getSanitizer($request->getQueryParams());
         $this->session->refreshExpiry = ($parseRequest->getCheckbox('refreshSession') == 1);
@@ -467,11 +524,11 @@ class Login extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return \Psr\Http\Message\ResponseInterface
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function about(Request $request, Response $response)
+    public function about(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
     {
         $state = $this->getState();
 
@@ -481,32 +538,67 @@ class Login extends Base
             $state->template = 'about-page';
         }
 
-        // TODO: output source URL from settings.
         $state->setData([
             'version' => Environment::$WEBSITE_VERSION_NAME,
             'revision' => Environment::getGitCommit(),
             'playerVersion' => Environment::$PLAYER_SUPPORT,
             'isDevMode' => Environment::isDevMode(),
-            'sourceUrl' => 'https://github.com/xibosignage/xibo-cms',
+            'logoUrl' => $this->getBrandLogoUrl(),
+            'sourceUrl' => $this->getConfig()->getThemeConfig(
+                'cms_source_url',
+                'https://github.com/xibosignage/xibo-cms'
+            ),
+            'aboutText' => $this->getConfig()->getThemeConfig('about_text') ?? '',
         ]);
 
         return $this->render($request, $response);
     }
 
     /**
+     * Public JSON endpoint returning branding + version info for the About modal.
+     * No authentication required.
+     */
+    public function aboutConfig(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
+    {
+        $brandDir = rtrim($this->getConfig()->getSetting('LIBRARY_LOCATION'), '/') . '/brand';
+        $rootUri = $this->getConfig()->rootUri();
+        $logoFile = file_exists($brandDir . '/logo.svg') ? 'logo.svg' : 'logo.png';
+        $iconFile = file_exists($brandDir . '/logo-icon.svg') ? 'logo-icon.svg' : 'logo-icon.png';
+
+        $payload = [
+            'version'     => Environment::$WEBSITE_VERSION_NAME,
+            'revision'    => Environment::getGitCommit(),
+            'appName'     => $this->getConfig()->getThemeConfig('app_name', 'Xibo'),
+            'productName' => $this->getConfig()->getThemeConfig('theme_title', 'Xibo Digital Signage'),
+            'logoUrl'     => $rootUri . 'brand/' . $logoFile,
+            'logoIconUrl' => $rootUri . 'brand/' . $iconFile,
+            'supportUrl'  => $this->getConfig()->getThemeConfig('theme_url', 'https://xibosignage.com'),
+            'sourceUrl'   => $this->getConfig()->getThemeConfig(
+                'cms_source_url',
+                'https://github.com/xibosignage/xibo-cms'
+            ),
+            'aboutText'   => $this->getConfig()->getThemeConfig('about_text') ?? '',
+        ];
+
+        $response->getBody()->write(json_encode($payload));
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    /**
      * Generate an email body
-     * @param $subject
-     * @param $body
+     * @param string $subject
+     * @param string $body
      * @return string
      * @throws \Twig\Error\LoaderError
      * @throws \Twig\Error\RuntimeError
      * @throws \Twig\Error\SyntaxError
      */
-    private function generateEmailBody($subject, $body)
+    private function generateEmailBody(string $subject, string $body): string
     {
         return $this->renderTemplateToString('email-template', [
             'config' => $this->getConfig(),
-            'subject' => $subject, 'body' => $body
+            'subject' => $subject,
+            'body' => $body,
         ]);
     }
 
@@ -571,7 +663,7 @@ class Login extends Base
      * 2FA Auth required
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return \Psr\Http\Message\ResponseInterface
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
@@ -582,7 +674,7 @@ class Login extends Base
      * @throws \Twig\Error\SyntaxError
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function twoFactorAuthForm(Request $request, Response $response)
+    public function twoFactorAuthForm(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
     {
         if (!isset($_SESSION['tfaUsername'])) {
             $this->getFlash()->addMessage('login_message', __('Session has expired, please log in again'));
@@ -594,7 +686,6 @@ class Login extends Base
 
         // if our user has email two factor enabled, we need to send the email with code now
         if ($user->twoFactorTypeId === 1) {
-
             if ($user->email == '') {
                 throw new NotFoundException(__('No email'));
             }
@@ -610,7 +701,10 @@ class Login extends Base
             }
 
             if ($mailFrom == '') {
-                throw new InvalidArgumentException(__('Sending email address in CMS Settings is not configured'), 'mail_from');
+                throw new InvalidArgumentException(
+                    __('Sending email address in CMS Settings is not configured'),
+                    'mail_from'
+                );
             }
 
             $tfa = new TwoFactorAuth($issuer);
@@ -651,13 +745,20 @@ class Login extends Base
 
             // Body
             $mail->isHTML(true);
-            $mail->Body = $this->generateEmailBody($mail->Subject,
-                '<p>' . __('You are receiving this email because two factor email authorisation is enabled in your CMS user account. If you did not make this request, please report this email to your administrator immediately.') . '</p>' . '<p>' . $code . '</p>');
+            $mail->Body = $this->generateEmailBody(
+                $mail->Subject,
+                '<p>'
+                . __('You are receiving this email because two factor email authorisation is enabled'
+                    . ' in your CMS user account. If you did not make this request, please report'
+                    . ' this email to your administrator immediately.')
+                . '</p>'
+                . '<p>' . $code . '</p>'
+            );
 
             if (!$mail->send()) {
                 $message = __('Unable to send two factor code to email address associated with this user');
             } else {
-                $message =  __('Two factor code email has been sent to your email address');
+                $message = __('Two factor code email has been sent to your email address');
 
                 // Audit Log
                 $this->getLog()->audit('User', $user->userId, 'Two Factor Code email sent', [
@@ -670,7 +771,7 @@ class Login extends Base
         $this->getState()->template = 'tfa';
 
         // the flash message do not work well here - need to reload the page to see the message, hence the below
-        $this->getState()->setData(['message' => $message]);
+        $this->getState()->setData(['message' => $message, 'logoUrl' => $this->getBrandLogoUrl()]);
 
         return $this->render($request, $response);
     }
@@ -684,17 +785,51 @@ class Login extends Base
      */
     public function twoFactorAuthValidate(Request $request, Response $response): Response
     {
+        $isJson = $this->isJsonRequest($request);
+
+        // Guard: ensure the 2FA session bridge is present before proceeding
+        if (!isset($_SESSION['tfaUsername'])) {
+            if ($isJson) {
+                return $this->jsonResponse(
+                    $response,
+                    ['status' => 'error', 'message' => __('Session has expired, please log in again')],
+                    401
+                );
+            }
+            $this->getFlash()->addMessage('login_message', __('Session has expired, please log in again'));
+            return $response->withRedirect($this->urlFor($request, 'login'));
+        }
+
         // Brute-force protection on the TOTP / recovery-code submission. Matches the
         // bare-login bucket (5 / 15 min). Separate bucket so a failed 2FA attempt
         // doesn't bleed over into the password path and vice versa.
-        $this->enforceRateLimit($request, 'twofactor', 5, 900);
+        try {
+            $this->enforceRateLimit($request, 'twofactor', 5, 900);
+        } catch (AccessDeniedException $e) {
+            if ($isJson) {
+                return $this->jsonResponse($response, ['status' => 'rate_limited', 'message' => $e->getMessage()], 429);
+            }
+            $this->getFlash()->addMessage('login_message', __('Too many attempts. Please wait and try again.'));
+            return $response->withRedirect($this->urlFor($request, 'login'));
+        }
 
         $user = $this->userFactory->getByName($_SESSION['tfaUsername']);
         $result = false;
         $updatedCodes = [];
-        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (isset($_POST['code'])) {
+        // Parse body: JSON or form-encoded
+        if ($isJson) {
+            $jsonBody = json_decode((string)$request->getBody(), true) ?? [];
+            $sanitizedParams = $this->getSanitizer($jsonBody);
+            $hasCode     = array_key_exists('code', $jsonBody);
+            $hasRecovery = array_key_exists('recoveryCode', $jsonBody);
+        } else {
+            $sanitizedParams = $this->getSanitizer($request->getParams());
+            $hasCode     = isset($_POST['code']);
+            $hasRecovery = isset($_POST['recoveryCode']);
+        }
+
+        if ($hasCode) {
             $issuerSettings = $this->getConfig()->getSetting('TWOFACTOR_ISSUER');
             $appName = $this->getConfig()->getThemeConfig('app_name');
 
@@ -711,7 +846,7 @@ class Login extends Base
             } else {
                 $result = $tfa->verifyCode($user->twoFactorSecret, $sanitizedParams->getString('code'), 3);
             }
-        } elseif (isset($_POST['recoveryCode'])) {
+        } elseif ($hasRecovery) {
             // get the array of recovery codes, go through them and try to match provided code
             $codes = $user->twoFactorRecoveryCodes;
 
@@ -738,17 +873,29 @@ class Login extends Base
             // We are logged in at this point
             $this->completeLoginFlow($user, $request);
 
-            $this->setNoOutput(true);
-
             //unset the session tfaUsername
             unset($_SESSION['tfaUsername']);
 
+            if ($isJson) {
+                return $this->jsonResponse($response, ['status' => 'ok']);
+            }
+
+            $this->setNoOutput(true);
             return $response->withRedirect($this->getRedirect($request, $sanitizedParams->getString('priorRoute')));
         } else {
             // Record one failure against the bucket so brute-forcers progress toward the wall.
             $this->recordRateLimitHit($request, 'twofactor', 900);
 
             $this->getLog()->error('Authentication code incorrect, redirecting to login page');
+
+            if ($isJson) {
+                return $this->jsonResponse(
+                    $response,
+                    ['status' => 'error', 'message' => __('Authentication code incorrect')],
+                    401
+                );
+            }
+
             $this->getFlash()->addMessage('login_message', __('Authentication code incorrect'));
             return $response->withRedirect($this->urlFor($request, 'login'));
         }
@@ -812,5 +959,65 @@ class Login extends Base
         }
 
         return $redirectTo;
+    }
+
+    /**
+     * Detect whether the current request expects a JSON response.
+     */
+    private function isJsonRequest(Request $request): bool
+    {
+        return str_contains($request->getHeaderLine('Accept'), 'application/json');
+    }
+
+    /**
+     * Sanitize a priorRoute value before surfacing it to React via JSON.
+     * Strips host, scheme, and /login prefixes to prevent open redirects.
+     */
+    private function sanitizePriorRouteForOutput(?string $raw): string
+    {
+        if (empty($raw)) {
+            return '';
+        }
+        $parsed = parse_url($raw);
+        if ($parsed === false || !empty($parsed['host'])) {
+            return '';
+        }
+        $path = $parsed['path'] ?? '';
+        if ($path === '' || $path === '/' || str_starts_with($path, '/login')) {
+            return '';
+        }
+        $safe = $path;
+        if (!empty($parsed['query'])) {
+            $safe .= '?' . $parsed['query'];
+        }
+        if (!empty($parsed['fragment'])) {
+            $safe .= '#' . $parsed['fragment'];
+        }
+        return $safe;
+    }
+
+    private function getBrandLogoUrl(): string
+    {
+        $brandDir = rtrim($this->getConfig()->getSetting('LIBRARY_LOCATION'), '/') . '/brand';
+        return $this->getConfig()->rootUri() . 'brand/'
+            . (file_exists($brandDir . '/logo.svg') ? 'logo.svg' : 'logo.png');
+    }
+
+    private function isPasswordReminderEnabled(): bool
+    {
+        $setting = $this->getConfig()->getSetting('PASSWORD_REMINDER_ENABLED');
+        $mailFrom = $this->getConfig()->getSetting('mail_from');
+        return ($setting === 'On' || $setting === 'On except Admin') && $mailFrom !== '';
+    }
+
+    /**
+     * Write a JSON payload to the PSR-7 response body.
+     * Consistent with the pattern used in aboutConfig().
+     */
+    private function jsonResponse(Response $response, array $data, int $status = 200): Response
+    {
+        $this->setNoOutput(true);
+        $response->getBody()->write(json_encode($data));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus($status);
     }
 }

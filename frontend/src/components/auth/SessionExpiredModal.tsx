@@ -98,7 +98,7 @@ export function SessionExpiredModal() {
       label: t('Log Out'),
       onClick: () => {
         setIsOpen(false);
-        window.location.href = '/login';
+        window.location.href = '/logout';
       },
       variant: 'secondary',
     },

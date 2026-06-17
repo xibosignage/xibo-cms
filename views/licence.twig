@@ -1,12 +1,11 @@
+{% if aboutText %}
+{{ aboutText | raw }}
+{% else %}
 <h2>Xibo <small> - Simple. Intuitive. Impactful. Secure.</small></h2>
 <p>Xibo Digital Signage - <a target="_blank"  href="https://xibosignage.com" title="Xibo Website">xibosignage.com</a>.<br/>
 
     Copyright &copy 2006-{{ 'now' | date('Y') }} Xibo Signage Ltd and the
     <a target="_blank" href="https://github.com/orgs/xibosignage/people" title="Xibo Developers">Xibo Developers</a>.</p>
-
-<p>
-    Version {{ version }}<br/><span class="badge badge-info">SHA:{{ revision }}</span>
-</p>
 
 <h2>Licence</h2>
 <p>Xibo is free software: you can redistribute it and/or modify
@@ -59,3 +58,4 @@
 
 <h2>Commercial</h2>
 <p>Xibo is supported and maintained by <a target="_blank"  href="https://xibosignage.com" title="Xibo Commercial Sponsor">Xibo Signage Ltd</a>.</p>
+{% endif %}

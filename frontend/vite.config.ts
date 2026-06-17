@@ -82,7 +82,10 @@ export default defineConfig(({ mode }) => ({
         changeOrigin: true,
         secure: false,
       },
-      '^/(?!prototype|api|authorize|swagger.json).*': {
+      // Proxy everything that isn't a Vite-internal path or an existing proxy rule.
+      // @vite, @fs, @id, src/, node_modules/ are Vite's own paths and must NOT be
+      // forwarded to PHP — Vite handles them before the proxy in its middleware stack.
+      '^/(?!prototype|api|authorize|swagger.json|@vite|@fs|@id|src|node_modules).*': {
         target: 'http://localhost',
         changeOrigin: true,
         secure: false,
@@ -90,15 +93,24 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
+    manifest: true,
     minify: process.env.NODE_ENV !== 'debug',
     outDir: path.resolve(__dirname, 'dist'),
     emptyOutDir: true,
     chunkSizeWarningLimit: 1000,
     sourcemap: process.env.NODE_ENV === 'debug',
     rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        'login-main': path.resolve(__dirname, 'login.html'),
+      },
       output: {
+        // Shared React runtime — loaded by both main app and login SPA.
+        // Static object form: only named packages go into the chunk; all other
+        // deps are auto-chunked by Rollup so login doesn't inherit the main
+        // app's heavy vendor modules (TanStack, Router, i18n, etc.).
         manualChunks: {
-          'react-core': ['react', 'react-dom', 'react-router-dom'],
+          'react-core': ['react', 'react-dom', 'scheduler'],
         },
       },
     },

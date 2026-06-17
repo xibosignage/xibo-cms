@@ -1,0 +1,219 @@
+/* Minimal styles for login SPA — keeps bundle independent of main app's Tailwind */
+
+.btn-brand {
+  background-color: var(--brand-primary, #3f7fff);
+  border: 1px solid var(--brand-primary, #3f7fff);
+  color: #fff;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-brand:hover,
+.btn-brand:focus {
+  background-color: var(--brand-accent, #2563d4);
+  border-color: var(--brand-accent, #2563d4);
+  outline: none;
+}
+
+.btn-brand:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Button styled as a plain text link */
+.btn-link {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: #2563eb;
+  cursor: pointer;
+  font-size: inherit;
+  text-decoration: none;
+}
+.btn-link:hover { text-decoration: underline; }
+
+.btn-link-muted {
+  color: #6c757d;
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  padding: 7px 9px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #495057;
+  background-color: #fff;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--brand-primary, #3f7fff);
+  box-shadow: 0 0 0 2px rgba(63, 127, 255, 0.25);
+}
+
+.mb-3 {
+  margin-bottom: 12px;
+}
+
+.mt-1 { margin-top: 4px; }
+.mt-3 { margin-top: 12px; }
+
+.text-center { text-align: center; }
+.text-sm { font-size: 0.875rem; }
+.text-gray-600 { color: #6c757d; }
+.text-gray-500 { color: #868e96; }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* About modal — used on the login page */
+.login-about-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.login-about-card {
+  background: #fff;
+  border-radius: 8px;
+  max-width: 640px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.login-about-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  flex-shrink: 0;
+}
+
+.login-about-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  color: #9ca3af;
+  padding: 0;
+}
+
+.login-about-close:hover { color: #374151; }
+
+.login-about-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+  color: #374151;
+}
+
+.login-about-body section {
+  margin-bottom: 20px;
+}
+
+.login-about-body h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 8px 0;
+}
+
+.login-about-body h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 16px 0 6px 0;
+}
+
+.login-about-body p {
+  margin: 0 0 8px 0;
+  line-height: 1.55;
+}
+
+.login-about-body a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.login-about-body a:hover { text-decoration: underline; }
+
+.login-about-body ul {
+  list-style: disc;
+  padding-left: 20px;
+  margin: 0;
+}
+
+.login-about-body li { margin-bottom: 4px; }
+
+.login-about-version-badge {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 8px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 0.75rem;
+  border-radius: 4px;
+}
+
+.login-about-footer-bar {
+  padding: 12px 20px;
+  border-top: 1px solid #e5e7eb;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.login-about-spinner {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+.login-about-spinner-inner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #e0e0e0;
+  border-top-color: #3f7fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes login-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-view-enter {
+  animation: login-fade-in 180ms ease-out;
+}

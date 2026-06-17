@@ -19,6 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export function logout(redirectUrl: string = '/login') {
+export function logout(redirectUrl: string = '/logout') {
   window.location.href = redirectUrl;
 }
