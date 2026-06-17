@@ -113,6 +113,7 @@ class ModuleTemplateFactory extends BaseFactory
     public function getByDataType(string $dataType): array
     {
         $templates = [];
+
         foreach ($this->load() as $template) {
             if ($template->dataType === $dataType) {
                 $templates[] = $template;
@@ -192,15 +193,17 @@ class ModuleTemplateFactory extends BaseFactory
 
         if ($ownership === null) {
             return $templates;
-        } else {
-            $ownedBy = [];
-            foreach ($templates as $template) {
-                if ($ownership === $template->ownership) {
-                    $ownedBy[] = $template;
-                }
-            }
-            return $ownedBy;
         }
+
+        $ownedBy = [];
+
+        foreach ($templates as $template) {
+            if ($ownership === $template->ownership) {
+                $ownedBy[] = $template;
+            }
+        }
+
+        return $ownedBy;
     }
 
     /**
@@ -291,10 +294,6 @@ class ModuleTemplateFactory extends BaseFactory
     {
         $this->getLog()->debug('load: Loading user templates');
 
-        if (empty($sortOrder)) {
-            $sortOrder = ['id'];
-        }
-
         $templates = [];
         $params = [];
 
@@ -343,13 +342,35 @@ class ModuleTemplateFactory extends BaseFactory
             );
         }
 
-        $order = '';
-        if (is_array($sortOrder) && !empty($sortOrder)) {
-            $order .= ' ORDER BY ' . implode(',', $sortOrder);
+        if ($filter->getString('keyword') != null) {
+            // Fulltext search
+            $body .= $this->buildSearchQuery(
+                $filter->getString('keyword'),
+                $params,
+                ['module_templates.templateId'],
+                ['module_templates.id']
+            );
         }
+
+        // Sorting?
+        $allowedColumns = [
+            'id',
+            'templateId',
+            'dataType',
+            'groupsWithPermissions',
+        ];
+
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['id ASC']
+        );
+
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         // Paging
         $limit = '';
+
         if ($filterBy !== null && $filter->getInt('start') !== null && $filter->getInt('length') !== null) {
             $limit .= ' LIMIT ' .
                 $filter->getInt('start', ['default' => 0]) . ', ' .
@@ -585,6 +606,7 @@ class ModuleTemplateFactory extends BaseFactory
             // do we have options?
             if (!empty($property['options'])) {
                 $options = $property['options'];
+
                 if (!is_array($options)) {
                     $options = json_decode($options, true);
                 }
@@ -593,20 +615,25 @@ class ModuleTemplateFactory extends BaseFactory
                 foreach ($options as $option) {
                     $optionNode = $newPropertiesXml->createElement('option', $option['title']);
                     $optionNode->setAttribute('name', $option['name']);
+
                     if (!empty($option['set'])) {
                         $optionNode->setAttribute('set', $option['set']);
                     }
+
                     if (!empty($option['image'])) {
                         $optionNode->setAttribute('image', $option['image']);
                     }
+
                     $optionsNode->appendChild($optionNode);
                 }
+
                 $propertyNode->appendChild($optionsNode);
             }
 
             // do we have visibility?
             if (!empty($property['visibility'])) {
                 $visibility = $property['visibility'];
+
                 if (!is_array($visibility)) {
                     $visibility = json_decode($visibility, true);
                 }
@@ -617,20 +644,24 @@ class ModuleTemplateFactory extends BaseFactory
                     $testNode = $newPropertiesXml->createElement('test');
                     $testNode->setAttribute('type', $testElement['type']);
                     $testNode->setAttribute('message', $testElement['message']);
+
                     foreach ($testElement['conditions'] as $condition) {
                         $conditionNode = $newPropertiesXml->createElement('condition', $condition['value']);
                         $conditionNode->setAttribute('field', $condition['field']);
                         $conditionNode->setAttribute('type', $condition['type']);
                         $testNode->appendChild($conditionNode);
                     }
+
                     $visibilityNode->appendChild($testNode);
                 }
+
                 $propertyNode->appendChild($visibilityNode);
             }
 
             // do we have validation rules?
             if (!empty($property['validation'])) {
                 $validation = $property['validation'];
+
                 if (!is_array($validation)) {
                     $validation = json_decode($property['validation'], true);
                 }
@@ -654,19 +685,23 @@ class ModuleTemplateFactory extends BaseFactory
                         $conditionNode->setAttribute('type', $condition['type']);
                         $ruleTestNode->appendChild($conditionNode);
                     }
+
                     $ruleNode->appendChild($ruleTestNode);
                 }
+
                 $propertyNode->appendChild($ruleNode);
             }
 
             // do we have player compatibility?
             if (!empty($property['playerCompatibility'])) {
                 $playerCompat = $property['playerCompatibility'];
+
                 if (!is_array($playerCompat)) {
                     $playerCompat = json_decode($property['playerCompatibility'], true);
                 }
 
                 $playerCompatibilityNode = $newPropertiesXml->createElement('playerCompatibility');
+
                 foreach ($playerCompat as $player => $value) {
                     $playerCompatibilityNode->setAttribute($player, $value);
                 }

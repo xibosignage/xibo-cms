@@ -118,3 +118,27 @@ $app->get('/report/available', ['\Xibo\Controller\Stats', 'availableReports'])
 $app->get('/stats/export/count', ['\Xibo\Controller\Stats', 'exportStatsCount'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['proof-of-play']))
     ->setName('stats.export.count');
+
+//
+// Developer
+//
+$app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
+    $group->get('/developer/template/datatypes', ['\Xibo\Controller\Developer', 'getAvailableDataTypes'])
+        ->setName('developer.templates.datatypes.search');
+    $group->get('/developer/template', ['\Xibo\Controller\Developer', 'templateGrid'])
+        ->setName('developer.templates.search');
+    $group->get('/developer/template/{id}', ['\Xibo\Controller\Developer', 'searchById'])
+        ->setName('developer.templates.search.id');
+    $group->post('/developer/template', ['\Xibo\Controller\Developer', 'templateAdd'])
+        ->setName('developer.templates.add');
+    $group->put('/developer/template/{id}', ['\Xibo\Controller\Developer', 'templateEdit'])
+        ->setName('developer.templates.edit');
+    $group->delete('/developer/template/{id}', ['\Xibo\Controller\Developer', 'templateDelete'])
+        ->setName('developer.templates.delete');
+    $group->get('/developer/template/{id}/export', ['\Xibo\Controller\Developer', 'templateExport'])
+        ->setName('developer.templates.export');
+    $group->post('/developer/template/import', ['\Xibo\Controller\Developer', 'templateImport'])
+        ->setName('developer.templates.import');
+    $group->post('/developer/template/{id}/copy', ['\Xibo\Controller\Developer', 'templateCopy'])
+        ->setName('developer.templates.copy');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['developer.edit']));
