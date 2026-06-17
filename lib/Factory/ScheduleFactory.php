@@ -787,6 +787,10 @@ class ScheduleFactory extends BaseFactory
                     'maxPlaysPerHour',
                     'modifiedBy',
                     'dataSetId',
+                    'recurrenceDetail',
+                    'displayOrder',
+                    'shareOfVoice',
+                    'layoutDuration',
                 ]
             ]);
         }

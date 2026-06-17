@@ -31,12 +31,6 @@
 {% block pageContent %}
     <div id="data-connector-builder"
          data-data-set-id="{{ dataSet.dataSetId }}">
-        <div class="back-button">
-            <a id="backBtn" class="btn btn-primary" href="{{ url_for("dataset.view") }}">
-                <i class="fa fa-angle-left"></i>
-                <span>{{ "Back"|trans }}</span>
-            </a>
-        </div>
 
         <div class="widget mt-3">
             <div class="widget-body">
@@ -165,7 +159,7 @@
           let criteria = {};
 
           // Set up a channel which will broadcast data
-          const channel = new BroadcastChannel('xiboDC');
+          const channel = new BroadcastChannel('xiboPreview');
 
           // Set our script params from local storage if we have them
           $scriptParams.val(localStorage.getItem('dataSetRealtimeTestParams'));

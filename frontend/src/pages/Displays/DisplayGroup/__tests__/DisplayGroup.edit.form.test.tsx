@@ -53,11 +53,6 @@ const mockUser: User = {
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
-
 vi.mock('@/services/displayGroupApi', () => ({
   updateDisplayGroup: vi.fn(),
   createDisplayGroup: vi.fn(),
@@ -254,6 +249,7 @@ describe('DisplayGroup - edit form fields', () => {
   test('Failed save keeps the modal open and shows the error', async () => {
     const user = userEvent.setup();
     vi.mocked(updateDisplayGroup).mockRejectedValueOnce({
+      isAxiosError: true,
       message: 'Request failed with status code 422',
       response: { data: { message: 'Display group name already exists' } },
     });

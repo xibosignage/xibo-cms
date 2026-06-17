@@ -24,6 +24,7 @@ namespace Xibo\XTR;
 
 use Carbon\Carbon;
 use GuzzleHttp\Client;
+use Xibo\Helper\Guzzle\SafeClient;
 use Xibo\Helper\Environment;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -289,7 +290,7 @@ class AnonymousUsageTask implements TaskInterface
         $this->getLogger()->debug('run: sending stats ' . json_encode($data));
 
         try {
-            (new Client())->post(
+            SafeClient::getSafeClient()->post(
                 $this->url,
                 $this->getConfig()->getGuzzleProxy([
                     'json' => $data,

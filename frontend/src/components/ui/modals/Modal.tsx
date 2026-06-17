@@ -19,8 +19,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { CircleX, type LucideIcon } from 'lucide-react';
+import { CircleX, type LucideIcon, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
 import type { ButtonProps } from '../Button';
@@ -46,12 +47,15 @@ interface ModalProps {
   title?: string;
   children: React.ReactNode;
   actions?: ModalAction[];
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   closeOnOverlay?: boolean;
   className?: string;
+  contentClassName?: string;
   scrollable?: boolean;
   isPending?: boolean;
   error?: string;
+  variant?: 'standard' | 'tabbed' | 'confirmation';
+  showCloseButton?: boolean;
 }
 
 export default function Modal({
@@ -62,11 +66,15 @@ export default function Modal({
   actions,
   size = 'md',
   className,
+  contentClassName,
   closeOnOverlay,
   scrollable = true,
   isPending = false,
   error,
+  variant = 'standard',
+  showCloseButton = false,
 }: ModalProps) {
+  const { t } = useTranslation();
   useKeydown('Escape', onClose, isOpen);
 
   const titleId = title ? `modal-title-${title.replace(/\s+/g, '-').toLowerCase()}` : undefined;
@@ -79,10 +87,16 @@ export default function Modal({
     sm: 'max-w-lg',
     md: 'max-w-2xl',
     lg: 'max-w-4xl',
+    xl: 'max-w-300',
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div
+      className={twMerge(
+        'fixed inset-0 z-50 flex justify-center p-4',
+        variant === 'confirmation' ? 'items-center' : 'items-start pt-[5vh]',
+      )}
+    >
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-xs"
         onClick={closeOnOverlay ? onClose : () => {}}
@@ -92,7 +106,8 @@ export default function Modal({
         open
         aria-labelledby={titleId}
         className={twMerge(
-          'relative flex flex-col w-full bg-white rounded-xl overflow-hidden outline-none max-h-[90vh] shadow-lg',
+          'relative flex flex-col w-full bg-white rounded-xl overflow-hidden outline-none shadow-lg',
+          variant === 'tabbed' ? 'h-[90vh]' : 'max-h-[90vh]',
           sizeClasses[size],
           className,
         )}
@@ -103,11 +118,23 @@ export default function Modal({
         )}
 
         {/* Header */}
-        {title && (
-          <div className="shrink-0 p-8 pb-3">
-            <h2 id={titleId} className="text-lg font-semibold truncate">
-              {title}
-            </h2>
+        {(title || showCloseButton) && (
+          <div className="shrink-0 flex items-start justify-between align-middle p-8 pb-3">
+            {title && (
+              <h2 id={titleId} className="text-lg font-semibold truncate">
+                {title}
+              </h2>
+            )}
+            {showCloseButton && (
+              <button
+                type="button"
+                aria-label={t('Close')}
+                onClick={onClose}
+                className="size-6 shrink-0 text-gray-500 cursor-pointer hover:text-gray-600 transition-colors"
+              >
+                <X className="w-4 h-4" aria-hidden="true" />
+              </button>
+            )}
           </div>
         )}
 
@@ -116,6 +143,7 @@ export default function Modal({
           className={twMerge(
             'flex-1 min-h-0 w-full flex flex-col',
             scrollable ? 'overflow-y-auto' : 'overflow-hidden',
+            contentClassName,
           )}
         >
           {children}

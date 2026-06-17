@@ -27,6 +27,7 @@ interface DurationInputProps {
   value: number;
   onChange: (seconds: number) => void;
   error?: string;
+  optional?: boolean;
 }
 
 function formatSeconds(seconds: number): string {
@@ -45,7 +46,12 @@ function parseTimeToSeconds(value: string): number {
   return h * 3600 + m * 60 + s;
 }
 
-export default function DurationInput({ value, onChange, error }: DurationInputProps) {
+export default function DurationInput({
+  value,
+  onChange,
+  error,
+  optional = false,
+}: DurationInputProps) {
   const { t } = useTranslation();
   const [displayValue, setDisplayValue] = useState(formatSeconds(value));
   const STEP = 1;
@@ -70,7 +76,10 @@ export default function DurationInput({ value, onChange, error }: DurationInputP
 
   return (
     <div className="flex flex-col justify-end relative">
-      <label className="text-sm font-semibold text-gray-500">{t('Duration')}</label>
+      <label className="flex items-center justify-between text-sm font-semibold text-gray-500">
+        <span>{t('Duration')}</span>
+        {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
+      </label>
 
       <div className="relative flex">
         <input

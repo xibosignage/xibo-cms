@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -35,7 +35,7 @@ class TaskFactory extends BaseFactory
      * Create empty
      * @return Task
      */
-    public function create()
+    public function create(): Task
     {
         return new Task($this->getStore(), $this->getLog(), $this->getDispatcher());
     }
@@ -46,12 +46,13 @@ class TaskFactory extends BaseFactory
      * @return Task
      * @throws NotFoundException if the task cannot be resolved from the provided route
      */
-    public function getById($taskId)
+    public function getById(int $taskId): Task
     {
         $tasks = $this->query(null, array('taskId' => $taskId));
 
-        if (count($tasks) <= 0)
+        if (count($tasks) <= 0) {
             throw new NotFoundException();
+        }
 
         return $tasks[0];
     }
@@ -62,12 +63,13 @@ class TaskFactory extends BaseFactory
      * @return Task
      * @throws NotFoundException if the task cannot be resolved from the provided route
      */
-    public function getByName($task)
+    public function getByName(string $task): Task
     {
         $tasks = $this->query(null, array('name' => $task));
 
-        if (count($tasks) <= 0)
+        if (count($tasks) <= 0) {
             throw new NotFoundException();
+        }
 
         return $tasks[0];
     }
@@ -78,27 +80,24 @@ class TaskFactory extends BaseFactory
      * @return Task
      * @throws NotFoundException if the task cannot be resolved from the provided route
      */
-    public function getByClass($class)
+    public function getByClass(string $class): Task
     {
         $tasks = $this->query(null, array('class' => $class));
 
-        if (count($tasks) <= 0)
+        if (count($tasks) <= 0) {
             throw new NotFoundException();
+        }
 
         return $tasks[0];
     }
 
     /**
-     * @param null $sortOrder
+     * @param array|null $sortOrder
      * @param array $filterBy
      * @return array
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query(?array $sortOrder = null, array $filterBy = []): array
     {
-        if ($sortOrder == null) {
-            $sortOrder = ['name'];
-        }
-
         $sanitizedFilter = $this->getSanitizer($filterBy);
         $entries = [];
         $params = [];
@@ -126,28 +125,56 @@ class TaskFactory extends BaseFactory
             $body .= ' AND `taskId` = :taskId ';
         }
 
-        // Sorting?
-        $body .= 'ORDER BY ' . implode(',', $sortOrder);
+        // Sorting
+        $allowedColumns = [
+            'taskId',
+            'name',
+            'isActive',
+            'status',
+            'runNow',
+            'lastRunDt',
+            'lastRunStatus',
+            'lastRunDuration',
+        ];
+
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['name ASC']
+        );
+
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         // Paging
         $limit = '';
-        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+
+        if ($sanitizedFilter->hasParam('start')  && $sanitizedFilter->hasParam('length')) {
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' .
+                $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
-        $sql = $select . $body . $limit;
+        $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $task = $this->create()->hydrate($row, [
                 'intProperties' => [
-                    'status', 'lastRunStatus', 'nextRunDt', 'lastRunDt', 'lastRunStartDt', 'lastRunExitCode', 'runNow', 'isActive', 'pid'
+                    'status',
+                    'lastRunStatus',
+                    'nextRunDt',
+                    'lastRunDt',
+                    'lastRunStartDt',
+                    'lastRunExitCode',
+                    'runNow',
+                    'isActive',
+                    'pid'
                 ]
             ]);
 
-            if ($task->options != null)
+            if ($task->options != null) {
                 $task->options = json_decode($task->options, true);
-            else
+            } else {
                 $task->options = [];
+            }
 
             $entries[] = $task;
         }

@@ -269,7 +269,7 @@ class ReportScheduleTask implements TaskInterface
                 $emailTemplate,
                 [
                     'header' => $report->description,
-                    'logo' => $this->config->uri('img/xibologo.png', true),
+                    'logo' => rtrim($this->config->getSetting('LIBRARY_LOCATION'), '/') . '/brand/xibologo.png',
                     'title' => $savedReport->saveAs,
                     'metadata' => $savedReportData->metadata,
                     'tableData' => $tableData ?? null,
@@ -295,7 +295,7 @@ class ReportScheduleTask implements TaskInterface
                 ]);
                 $mpdf->setFooter('Page {PAGENO}') ;
                 $mpdf->SetDisplayMode('fullpage');
-                $stylesheet =  file_get_contents($this->config->uri('css/email-report.css', true));
+                $stylesheet =  file_get_contents(PROJECT_ROOT . '/web/css/email-report.css');
                 $mpdf->WriteHTML($stylesheet, 1);
                 $mpdf->WriteHTML($body);
                 $mpdf->Output(

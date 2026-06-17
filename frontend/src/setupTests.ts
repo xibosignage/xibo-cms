@@ -2,6 +2,15 @@ import '@testing-library/jest-dom';
 import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query';
 import { beforeAll, vi } from 'vitest';
 
+// ---------------------
+// Some shared UI components (e.g. FilterInputs) import `t` directly from
+// 'i18next' rather than via useTranslation. Without this mock the function
+// returns undefined in tests (i18next is not initialised).
+vi.mock('i18next', () => {
+  const t = (key: string) => key;
+  return { default: { t, language: 'en', isInitialized: true }, t };
+});
+
 interface SystemError extends Error {
   code?: string;
 }

@@ -19,9 +19,10 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import type { ColumnDef } from '@tanstack/react-table';
 import { ArrowLeft, ArrowRight, CalendarClock, Minus, Plus, Tablet } from 'lucide-react';
-import { useEffect, useState, useTransition } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useEffect, useRef, useState, useTransition } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
 
 import Button from '../Button';
 import GeoScheduleMap from '../GeoScheduleMap';
@@ -33,6 +34,8 @@ import DatePickerInput from '../forms/DatePickerInput';
 import NumberInput from '../forms/NumberInput';
 import SelectDropdown from '../forms/SelectDropdown';
 import TextInput from '../forms/TextInput';
+import { DataTable } from '../table/DataTable';
+import { TextCell } from '../table/cells';
 
 import Modal, { type ModalAction } from './Modal';
 
@@ -45,12 +48,12 @@ import {
   type OptionalTab,
   type ScheduleFormErrors,
   type SelectOption,
-  EVENT_TYPE_OPTIONS,
-  CONDITION_OPTIONS,
-  CRITERIA_TYPE_OPTIONS,
-  RECURRENCE_TYPE_OPTIONS,
-  REMINDER_TYPE_OPTIONS,
-  REMINDER_OPTION_OPTIONS,
+  getEventTypeOptions,
+  getConditionOptions,
+  getCriteriaTypeOptions,
+  getRecurrenceTypeOptions,
+  getReminderTypeOptions,
+  getReminderOptionOptions,
   WEEKDAYS,
   EMPTY_CRITERION,
   EMPTY_REMINDER,
@@ -62,6 +65,8 @@ import {
   getPrefilledOption,
   getStepLabels,
   buildSteps,
+  getCriteriaMetricOptions,
+  getCriteriaMetricConfig,
 } from '@/pages/Schedule/utils/scheduleEventDraft';
 import { getScheduleEventSchema } from '@/schema/scheduleEvent';
 import { fetchCampaigns } from '@/services/campaignApi';
@@ -73,8 +78,9 @@ import { fetchLayouts, fetchLayoutCodes } from '@/services/layoutsApi';
 import { fetchMedia } from '@/services/mediaApi';
 import { fetchPlaylist } from '@/services/playlistApi';
 import { fetchResolution } from '@/services/resolutionApi';
-import { fetchSyncGroups } from '@/services/syncGroupApi';
+import { fetchSyncGroups, fetchSyncGroupDisplays } from '@/services/syncGroupApi';
 import { EventTypeId, type Event } from '@/types/event';
+import type { SyncGroupDisplay } from '@/types/syncGroup';
 import { hasFeature } from '@/utils/permissions';
 
 const DROPDOWN_PAGE_SIZE = 10;
@@ -90,6 +96,8 @@ interface ScheduleEventModalProps {
   contentId?: number;
   contentName?: string;
   event?: Event;
+  displaySpecificGroupIds?: number[];
+  displayGroupIds?: number[];
 }
 
 export default function ScheduleEventModal({
@@ -101,6 +109,8 @@ export default function ScheduleEventModal({
   contentId,
   contentName,
   event,
+  displaySpecificGroupIds,
+  displayGroupIds,
 }: ScheduleEventModalProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
@@ -124,7 +134,14 @@ export default function ScheduleEventModal({
     setMaxReachedStep((prev) => Math.max(prev, step));
   };
   const [draft, setDraft] = useState<ScheduleEventDraft>(() =>
-    isEditMode ? createDraftFromEvent(event) : createInitialDraft(prefilledEventTypeId, contentId),
+    isEditMode
+      ? createDraftFromEvent(event)
+      : createInitialDraft(
+          prefilledEventTypeId,
+          contentId,
+          displaySpecificGroupIds,
+          displayGroupIds,
+        ),
   );
   const [optionalTab, setOptionalTab] = useState<OptionalTab>('general');
 
@@ -146,9 +163,44 @@ export default function ScheduleEventModal({
   const [alwaysDayPartId, setAlwaysDayPartId] = useState<string>('');
   const [customDayPartId, setCustomDayPartId] = useState<string>('');
 
+  // Sync group per-display layout state
+  const [syncDisplays, setSyncDisplays] = useState<SyncGroupDisplay[]>([]);
+  const [syncLayoutOptions, setSyncLayoutOptions] = useState<SelectOption[]>([]);
+  const [isLoadingSyncDisplays, setIsLoadingSyncDisplays] = useState(false);
+
   const [isPending, startTransition] = useTransition();
   const [apiError, setApiError] = useState<string | undefined>();
   const [formErrors, setFormErrors] = useState<ScheduleFormErrors>({});
+
+  const [contentDebouncedSearch, setContentDebouncedSearch] = useState('');
+  const contentSearchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const handleContentSearch = (term: string) => {
+    clearTimeout(contentSearchTimerRef.current);
+    contentSearchTimerRef.current = setTimeout(() => {
+      setContentDebouncedSearch(term);
+    }, 300);
+  };
+
+  const [commandDebouncedSearch, setCommandDebouncedSearch] = useState('');
+  const commandSearchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const handleCommandSearch = (term: string) => {
+    clearTimeout(commandSearchTimerRef.current);
+    commandSearchTimerRef.current = setTimeout(() => {
+      setCommandDebouncedSearch(term);
+    }, 300);
+  };
+
+  const [daypartDebouncedSearch, setDaypartDebouncedSearch] = useState('');
+  const daypartSearchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const handleDaypartSearch = (term: string) => {
+    clearTimeout(daypartSearchTimerRef.current);
+    daypartSearchTimerRef.current = setTimeout(() => {
+      setDaypartDebouncedSearch(term);
+    }, 300);
+  };
 
   const isMediaType = draft.eventTypeId === EventTypeId.Media;
   const isPlaylistType = draft.eventTypeId === EventTypeId.Playlist;
@@ -222,34 +274,59 @@ export default function ScheduleEventModal({
           : true;
 
   useEffect(() => {
-    if (!isOpen) return;
-
-    setPagination((prev) => ({ ...prev, daypart: { ...prev.daypart, isLoading: true } }));
-    fetchDaypart({ start: 0, length: DROPDOWN_PAGE_SIZE })
-      .then(({ rows, totalCount }) => {
-        setDaypartOptions(rows.map((dp) => ({ value: String(dp.dayPartId), label: dp.name })));
-        setPagination((prev) => ({ ...prev, daypart: { ...prev.daypart, totalCount } }));
-
-        const always = rows.find((dp) => dp.isAlways === 1);
-        const custom = rows.find((dp) => dp.isCustom === 1);
-        if (always) {
-          setAlwaysDayPartId(String(always.dayPartId));
-          setDraft((prev) =>
-            prev.dayPartId === '' ? { ...prev, dayPartId: String(always.dayPartId) } : prev,
-          );
-        }
-        if (custom) setCustomDayPartId(String(custom.dayPartId));
-      })
-      .finally(() => {
-        setPagination((prev) => ({ ...prev, daypart: { ...prev.daypart, isLoading: false } }));
-      });
-
+    if (!isOpen) {
+      return;
+    }
     fetchResolution({ start: 0, length: 100 }).then(({ rows }) => {
       setResolutionOptions(
         rows.map((r) => ({ value: String(r.resolutionId), label: r.resolution })),
       );
     });
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let cancelled = false;
+    setPagination((prev) => ({ ...prev, daypart: { ...prev.daypart, isLoading: true } }));
+    setDaypartOptions([]);
+
+    fetchDaypart({
+      start: 0,
+      length: DROPDOWN_PAGE_SIZE,
+      name: daypartDebouncedSearch || undefined,
+    })
+      .then(({ rows, totalCount }) => {
+        if (cancelled) {
+          return;
+        }
+        setDaypartOptions(rows.map((dp) => ({ value: String(dp.dayPartId), label: dp.name })));
+        setPagination((prev) => ({ ...prev, daypart: { ...prev.daypart, totalCount } }));
+
+        if (!daypartDebouncedSearch) {
+          const always = rows.find((dp) => dp.isAlways === 1);
+          const custom = rows.find((dp) => dp.isCustom === 1);
+          if (always) {
+            setAlwaysDayPartId(String(always.dayPartId));
+            setDraft((prev) =>
+              prev.dayPartId === '' ? { ...prev, dayPartId: String(always.dayPartId) } : prev,
+            );
+          }
+          if (custom) {
+            setCustomDayPartId(String(custom.dayPartId));
+          }
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setPagination((prev) => ({ ...prev, daypart: { ...prev.daypart, isLoading: false } }));
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, daypartDebouncedSearch]);
 
   // Fetch enriched event details in edit mode — the grid row doesn't carry geoLocation,
   // mediaId, playlistId, or other fields only returned by GET /schedule/{id}.
@@ -290,19 +367,28 @@ export default function ScheduleEventModal({
   const fetchContentPage = async (
     eventType: EventTypeId,
     start: number,
+    search?: string,
   ): Promise<{ options: SelectOption[]; totalCount: number }> => {
     switch (eventType) {
       case EventTypeId.Layout:
       case EventTypeId.Overlay:
       case EventTypeId.Interrupt: {
-        const { rows, totalCount } = await fetchLayouts({ start, length: DROPDOWN_PAGE_SIZE });
+        const { rows, totalCount } = await fetchLayouts({
+          start,
+          length: DROPDOWN_PAGE_SIZE,
+          ...(search ? { layout: search } : {}),
+        });
         return {
           options: rows.map((l) => ({ value: String(l.campaignId), label: l.layout })),
           totalCount,
         };
       }
       case EventTypeId.Command: {
-        const { rows, totalCount } = await fetchCommands({ start, length: DROPDOWN_PAGE_SIZE });
+        const { rows, totalCount } = await fetchCommands({
+          start,
+          length: DROPDOWN_PAGE_SIZE,
+          ...(search ? { command: search } : {}),
+        });
         return {
           options: rows.map((c) => ({ value: String(c.commandId), label: c.command })),
           totalCount,
@@ -312,6 +398,7 @@ export default function ScheduleEventModal({
         const { rows, totalCount } = await fetchCampaigns({
           start,
           length: DROPDOWN_PAGE_SIZE,
+          ...(search ? { name: search } : {}),
         });
         return {
           options: rows.map((c) => ({ value: String(c.campaignId), label: c.campaign })),
@@ -319,7 +406,11 @@ export default function ScheduleEventModal({
         };
       }
       case EventTypeId.Media: {
-        const { rows, totalCount } = await fetchMedia({ start, length: DROPDOWN_PAGE_SIZE });
+        const { rows, totalCount } = await fetchMedia({
+          start,
+          length: DROPDOWN_PAGE_SIZE,
+          ...(search ? { media: search } : {}),
+        });
         return {
           options: rows
             .filter((m) => m.released === 1)
@@ -328,14 +419,22 @@ export default function ScheduleEventModal({
         };
       }
       case EventTypeId.Playlist: {
-        const { rows, totalCount } = await fetchPlaylist({ start, length: DROPDOWN_PAGE_SIZE });
+        const { rows, totalCount } = await fetchPlaylist({
+          start,
+          length: DROPDOWN_PAGE_SIZE,
+          ...(search ? { name: search } : {}),
+        });
         return {
           options: rows.map((p) => ({ value: String(p.playlistId), label: p.name })),
           totalCount,
         };
       }
       case EventTypeId.Sync: {
-        const { rows, totalCount } = await fetchSyncGroups({ start, length: DROPDOWN_PAGE_SIZE });
+        const { rows, totalCount } = await fetchSyncGroups({
+          start,
+          length: DROPDOWN_PAGE_SIZE,
+          ...(search ? { name: search } : {}),
+        });
         return {
           options: rows.map((sg) => ({ value: String(sg.syncGroupId), label: sg.name })),
           totalCount,
@@ -346,6 +445,7 @@ export default function ScheduleEventModal({
           start,
           length: DROPDOWN_PAGE_SIZE,
           isRealTime: 1,
+          ...(search ? { dataSet: search } : {}),
         });
         return {
           options: rows.map((ds) => ({ value: String(ds.dataSetId), label: ds.dataSet })),
@@ -370,13 +470,13 @@ export default function ScheduleEventModal({
 
     let cancelled = false;
     setIsLoadingContent(true);
-    setContentOptions([]);
+    // Keep stale options visible during refetch to avoid a blank-state flicker.
     setPagination((prev) => ({
       ...prev,
       content: { totalCount: 0, isLoading: false, isLoadingMore: false },
     }));
 
-    fetchContentPage(draft.eventTypeId, 0)
+    fetchContentPage(draft.eventTypeId, 0, contentDebouncedSearch || undefined)
       .then(({ options, totalCount }) => {
         if (!cancelled) {
           setContentOptions(options);
@@ -392,7 +492,7 @@ export default function ScheduleEventModal({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, draft.eventTypeId]);
+  }, [isOpen, draft.eventTypeId, contentDebouncedSearch]);
 
   type PaginationKey = keyof typeof pagination;
 
@@ -417,11 +517,15 @@ export default function ScheduleEventModal({
   const hasMoreCommands = commandOptions.length < pagination.command.totalCount;
 
   const loadMoreContent = () => {
-    if (!draft.eventTypeId) return;
+    if (!draft.eventTypeId || isLoadingContent) return;
     loadMore(
       'content',
       () =>
-        fetchContentPage(draft.eventTypeId!, contentOptions.length).then(({ options }) => options),
+        fetchContentPage(
+          draft.eventTypeId!,
+          contentOptions.length,
+          contentDebouncedSearch || undefined,
+        ).then(({ options }) => options),
       setContentOptions,
     );
   };
@@ -430,9 +534,11 @@ export default function ScheduleEventModal({
     loadMore(
       'daypart',
       () =>
-        fetchDaypart({ start: daypartOptions.length, length: DROPDOWN_PAGE_SIZE }).then(
-          ({ rows }) => rows.map((dp) => ({ value: String(dp.dayPartId), label: dp.name })),
-        ),
+        fetchDaypart({
+          start: daypartOptions.length,
+          length: DROPDOWN_PAGE_SIZE,
+          name: daypartDebouncedSearch || undefined,
+        }).then(({ rows }) => rows.map((dp) => ({ value: String(dp.dayPartId), label: dp.name }))),
       setDaypartOptions,
     );
   };
@@ -441,9 +547,11 @@ export default function ScheduleEventModal({
     loadMore(
       'command',
       () =>
-        fetchCommands({ start: commandOptions.length, length: DROPDOWN_PAGE_SIZE }).then(
-          ({ rows }) => rows.map((c) => ({ value: String(c.commandId), label: c.command })),
-        ),
+        fetchCommands({
+          start: commandOptions.length,
+          length: DROPDOWN_PAGE_SIZE,
+          command: commandDebouncedSearch || undefined,
+        }).then(({ rows }) => rows.map((c) => ({ value: String(c.commandId), label: c.command }))),
       setCommandOptions,
     );
   };
@@ -458,7 +566,6 @@ export default function ScheduleEventModal({
     setPagination((prev) => ({
       ...prev,
       layoutCode: { ...prev.layoutCode, isLoading: true },
-      command: { ...prev.command, isLoading: true },
     }));
 
     fetchLayoutCodes()
@@ -480,19 +587,89 @@ export default function ScheduleEventModal({
           layoutCode: { ...prev.layoutCode, isLoading: false },
         }));
       });
+  }, [isOpen, draft.eventTypeId]);
 
-    fetchCommands({ start: 0, length: DROPDOWN_PAGE_SIZE })
+  useEffect(() => {
+    if (!isOpen || draft.eventTypeId !== EventTypeId.Action) {
+      return;
+    }
+
+    let cancelled = false;
+    setPagination((prev) => ({ ...prev, command: { ...prev.command, isLoading: true } }));
+    setCommandOptions([]);
+
+    fetchCommands({
+      start: 0,
+      length: DROPDOWN_PAGE_SIZE,
+      command: commandDebouncedSearch || undefined,
+    })
       .then(({ rows: commands, totalCount }) => {
+        if (cancelled) {
+          return;
+        }
         setCommandOptions(commands.map((c) => ({ value: String(c.commandId), label: c.command })));
         setPagination((prev) => ({ ...prev, command: { ...prev.command, totalCount } }));
       })
       .catch(() => {
-        notify.error(t('Failed to load commands.'));
+        if (!cancelled) {
+          notify.error(t('Failed to load commands.'));
+        }
       })
       .finally(() => {
-        setPagination((prev) => ({ ...prev, command: { ...prev.command, isLoading: false } }));
+        if (!cancelled) {
+          setPagination((prev) => ({ ...prev, command: { ...prev.command, isLoading: false } }));
+        }
       });
-  }, [isOpen, draft.eventTypeId]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, draft.eventTypeId, commandDebouncedSearch]);
+
+  // Fetch displays for the selected sync group
+  useEffect(() => {
+    if (!isOpen || !isSyncType || !draft.syncGroupId) {
+      setSyncDisplays([]);
+      setSyncLayoutOptions([]);
+      return;
+    }
+
+    let cancelled = false;
+    setIsLoadingSyncDisplays(true);
+
+    Promise.all([
+      fetchSyncGroupDisplays(draft.syncGroupId, isEditMode ? event?.eventId : undefined),
+      fetchLayouts({ start: 0, length: 100 }),
+    ])
+      .then(([displays, { rows: layouts }]) => {
+        if (cancelled) return;
+        setSyncDisplays(displays);
+        setSyncLayoutOptions(layouts.map((l) => ({ value: String(l.layoutId), label: l.layout })));
+        // Pre-populate syncDisplayLayouts from fetched data (edit mode)
+        const layoutMap: Record<number, number | null> = {};
+        displays.forEach((d) => {
+          layoutMap[d.displayId] = d.layoutId ?? null;
+        });
+        setDraft((prev) => ({
+          ...prev,
+          syncDisplayLayouts: { ...layoutMap, ...prev.syncDisplayLayouts },
+        }));
+      })
+      .catch(() => {
+        if (!cancelled) {
+          notify.error(t('Failed to load sync group displays.'));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoadingSyncDisplays(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, isSyncType, draft.syncGroupId]);
 
   const updateDraft = <K extends keyof ScheduleEventDraft>(
     key: K,
@@ -706,9 +883,15 @@ export default function ScheduleEventModal({
           ...(!isCustomDaypart && !isAlwaysDaypart && draft.fromDt ? { fromDt: draft.fromDt } : {}),
 
           ...(draft.name ? { name: draft.name } : {}),
-          ...(draft.resolutionId ? { resolutionId: Number(draft.resolutionId) } : {}),
-          ...(draft.layoutDuration ? { layoutDuration: draft.layoutDuration } : {}),
-          ...(draft.backgroundColor ? { backgroundColor: draft.backgroundColor } : {}),
+          ...((isMediaType || isPlaylistType) && draft.resolutionId
+            ? { resolutionId: Number(draft.resolutionId) }
+            : {}),
+          ...((isMediaType || isPlaylistType) && draft.layoutDuration
+            ? { layoutDuration: draft.layoutDuration }
+            : {}),
+          ...((isMediaType || isPlaylistType) && draft.backgroundColor
+            ? { backgroundColor: draft.backgroundColor }
+            : {}),
           displayOrder: draft.displayOrder,
           isPriority: draft.isPriority,
           maxPlaysPerHour: draft.maxPlaysPerHour,
@@ -766,14 +949,54 @@ export default function ScheduleEventModal({
     setDraft(
       isEditMode
         ? createDraftFromEvent(event)
-        : createInitialDraft(prefilledEventTypeId, contentId),
+        : createInitialDraft(
+            prefilledEventTypeId,
+            contentId,
+            displaySpecificGroupIds,
+            displayGroupIds,
+          ),
     );
     setOptionalTab('general');
     setShowDisplayBanner(false);
+    setSyncDisplays([]);
+    setSyncLayoutOptions([]);
     setFormErrors({});
     setApiError(undefined);
     onClose();
   };
+
+  const syncDisplayColumns: ColumnDef<SyncGroupDisplay>[] = [
+    {
+      accessorKey: 'display',
+      header: t('Display'),
+      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+    },
+    {
+      id: 'layout',
+      header: t('Layout'),
+      cell: ({ row }) => (
+        <SelectDropdown
+          value={
+            draft.syncDisplayLayouts[row.original.displayId]
+              ? String(draft.syncDisplayLayouts[row.original.displayId])
+              : ''
+          }
+          options={syncLayoutOptions}
+          onSelect={(value) => {
+            setDraft((prev) => ({
+              ...prev,
+              syncDisplayLayouts: {
+                ...prev.syncDisplayLayouts,
+                [row.original.displayId]: Number(value),
+              },
+            }));
+          }}
+          placeholder={t('Select Layout')}
+          searchable
+        />
+      ),
+    },
+  ];
 
   const actions: ModalAction[] = (() => {
     const result: ModalAction[] = [
@@ -839,6 +1062,7 @@ export default function ScheduleEventModal({
 
   return (
     <Modal
+      variant="tabbed"
       isOpen={isOpen}
       onClose={handleClose}
       title={isEditMode ? t('Edit Event') : t('Schedule Event')}
@@ -847,7 +1071,6 @@ export default function ScheduleEventModal({
       actions={actions}
       isPending={isPending}
       error={apiError}
-      className="min-h-[90vh]"
     >
       <div className="flex flex-col flex-1 min-h-0 max-h-full">
         {/* Stepper */}
@@ -859,25 +1082,30 @@ export default function ScheduleEventModal({
         {currentStep === displayStepIndex && !isEditMode && hasDisplays && showDisplayBanner && (
           <div className="shrink-0 mx-8 mt-4">
             <InfoBanner type="success">
-              {t("You're all set! Click")} <strong>{t('Finish')}</strong>{' '}
-              {t("to create an 'Always Schedule', or")} <strong>{t('Next')}</strong>{' '}
-              {t('to choose times.')}
+              <Trans
+                i18nKey="You're all set! Click <strong>Finish</strong> to create an 'Always Schedule', or <strong>Next</strong> to choose times."
+                components={{ strong: <strong /> }}
+              />
             </InfoBanner>
           </div>
         )}
         {currentStep === timeStepIndex && !isEditMode && (
           <div className="shrink-0 mx-8 mt-4">
             <InfoBanner type="success">
-              {t('Click')} <strong>{t('Finish')}</strong> {t('to complete schedule or click')}{' '}
-              <strong>{t('Next')}</strong> {t('to customized settings.')}
+              <Trans
+                i18nKey="Click <strong>Finish</strong> to complete schedule or click <strong>Next</strong> to customize settings."
+                components={{ strong: <strong /> }}
+              />
             </InfoBanner>
           </div>
         )}
         {currentStep === optionalStepIndex && !isEditMode && (
           <div className="shrink-0 mx-8 mt-4">
             <InfoBanner type="success">
-              {t("You're all set! Simply click")} <strong>{t('Finish')}</strong>{' '}
-              {t('to complete schedule or optional criteria.')}
+              <Trans
+                i18nKey="You're all set! Simply click <strong>Finish</strong> to complete schedule or optional criteria."
+                components={{ strong: <strong /> }}
+              />
             </InfoBanner>
           </div>
         )}
@@ -890,7 +1118,7 @@ export default function ScheduleEventModal({
               <SelectDropdown
                 label={t('Event Type')}
                 value={draft.eventTypeId ? String(draft.eventTypeId) : ''}
-                options={EVENT_TYPE_OPTIONS}
+                options={getEventTypeOptions(t)}
                 onSelect={(value) => {
                   const newType = Number(value) as EventTypeId;
                   setDraft((prev) => ({
@@ -909,6 +1137,8 @@ export default function ScheduleEventModal({
                     actionLayoutCode: '',
                     shareOfVoice: 0,
                   }));
+                  clearTimeout(contentSearchTimerRef.current);
+                  setContentDebouncedSearch('');
                   setContentOptions([]);
                 }}
                 placeholder={t('Select Event Type')}
@@ -920,6 +1150,7 @@ export default function ScheduleEventModal({
                   label={contentField.label}
                   value={getContentValue(draft)}
                   options={mergedContentOptions}
+                  onSearch={handleContentSearch}
                   onSelect={(value) => {
                     const typeId = draft.eventTypeId;
                     if (typeId === EventTypeId.Media) updateDraft('mediaId', Number(value));
@@ -972,7 +1203,30 @@ export default function ScheduleEventModal({
                   </div>
                 )}
 
-              {/* TODO: Sync per-display layout selection — deferred to next sprint */}
+              {/* Sync Group: per-display layout selection table */}
+              {isSyncType && draft.syncGroupId && (
+                <div className="space-y-2">
+                  <DataTable
+                    columns={syncDisplayColumns}
+                    data={syncDisplays}
+                    pageCount={1}
+                    pagination={{ pageIndex: 0, pageSize: syncDisplays.length || 10 }}
+                    onPaginationChange={() => {}}
+                    sorting={[]}
+                    onSortingChange={() => {}}
+                    globalFilter=""
+                    onGlobalFilterChange={() => {}}
+                    rowSelection={{}}
+                    onRowSelectionChange={() => {}}
+                    loading={isLoadingSyncDisplays}
+                    enableSelection={false}
+                    hideToolbar
+                  />
+                  {formErrors.syncDisplayLayouts && (
+                    <p className="text-xs text-red-600 ml-2">{formErrors.syncDisplayLayouts}</p>
+                  )}
+                </div>
+              )}
 
               {/* Data Connector: Parameters field */}
               {isDataConnectorType && draft.dataSetId && (
@@ -1034,6 +1288,7 @@ export default function ScheduleEventModal({
                       onSelect={(value) => updateDraft('commandId', Number(value))}
                       placeholder={t('Select Command')}
                       searchable
+                      onSearch={handleCommandSearch}
                       isLoading={pagination.command.isLoading}
                       onLoadMore={loadMoreCommands}
                       hasMore={hasMoreCommands}
@@ -1070,8 +1325,10 @@ export default function ScheduleEventModal({
                   <p className="text-xs text-red-600 ml-2 mt-1">{formErrors.displayGroupIds}</p>
                 ) : (
                   <span className="text-xs text-gray-400">
-                    {t('Please select one or more')} <strong>{t('Displays/Groups')}</strong>{' '}
-                    {t('for this event to be shown on.')}
+                    <Trans
+                      i18nKey="Please select one or more <strong>Displays/Groups</strong> for this event to be shown on."
+                      components={{ strong: <strong /> }}
+                    />
                   </span>
                 )}
               </div>
@@ -1092,6 +1349,8 @@ export default function ScheduleEventModal({
                   helpText={t(
                     'Select how this event recurs. Choose Always for continuous playback or Custom to define specific times.',
                   )}
+                  searchable
+                  onSearch={handleDaypartSearch}
                   isLoading={pagination.daypart.isLoading}
                   onLoadMore={loadMoreDayparts}
                   hasMore={hasMoreDayparts}
@@ -1100,134 +1359,138 @@ export default function ScheduleEventModal({
                 />
               )}
 
-              {/* Interrupt: Share of Voice */}
-              {isInterruptType && (
-                <div className="grid grid-cols-2 gap-4">
-                  <NumberInput
-                    name="shareOfVoice"
-                    label={t('Share of Voice')}
-                    value={draft.shareOfVoice}
-                    onChange={(num) => updateDraft('shareOfVoice', num)}
-                    helpText={t(
-                      'The amount of time this Layout should be shown, in seconds per hour.',
-                    )}
-                    error={formErrors.shareOfVoice}
-                  />
-                  <div className="flex flex-col gap-1">
-                    <label className="text-sm font-semibold text-gray-500">
-                      {t('As a percentage')}
-                    </label>
-                    <input
-                      type="text"
-                      readOnly
-                      value={((draft.shareOfVoice / 3600) * 100).toFixed(2)}
-                      className="h-11.25 rounded-lg border border-gray-200 px-3 text-sm bg-gray-50 text-gray-500"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Named daypart: Start Time only (date, no time picker) */}
-              {isNamedDaypart && (
-                <DatePickerInput
-                  label={t('Start Time')}
-                  value={draft.fromDt}
-                  onChange={(value) => updateDraft('fromDt', value)}
-                  helpText={t('Select the start time for this event.')}
-                  showTimePicker={false}
-                />
-              )}
-
-              {/* Custom daypart + Command: Start Time only (no End Time) */}
-              {isCommandEvent && !draft.useRelativeTime && (
-                <DatePickerInput
-                  label={t('Start Time')}
-                  value={draft.fromDt}
-                  onChange={(value) => updateDraft('fromDt', value)}
-                  error={formErrors.fromDt}
-                />
-              )}
-
-              {/* Custom daypart (non-Command): Start + End Time (or relative time) */}
-              {isCustomDaypart && !isCommandEvent && !draft.useRelativeTime && (
-                <div className="grid grid-cols-2 gap-4">
-                  <DatePickerInput
-                    label={t('Start Time')}
-                    value={draft.fromDt}
-                    onChange={(value) => updateDraft('fromDt', value)}
-                    error={formErrors.fromDt}
-                  />
-                  <DatePickerInput
-                    label={t('End Time')}
-                    value={draft.toDt}
-                    onChange={(value) => updateDraft('toDt', value)}
-                    error={formErrors.toDt}
-                  />
-                </div>
-              )}
-
-              {/* Use Relative Time — for Custom daypart (Command included) */}
-              {isCustomDaypart && (
-                <div className="bg-gray-50 py-3">
-                  <Checkbox
-                    id="useRelativeTime"
-                    checked={draft.useRelativeTime}
-                    onChange={(e) => updateDraft('useRelativeTime', e.target.checked)}
-                    title={t('Use Relative Time')}
-                    label={t('Duration-based offsets')}
-                    className="px-3 py-2.5"
-                  />
-
-                  {/* Relative time fields */}
-                  {draft.useRelativeTime && (
-                    <div className="flex flex-col px-3 gap-2.5">
-                      {(draft.relativeHours > 0 ||
-                        draft.relativeMinutes > 0 ||
-                        draft.relativeSeconds > 0) && (
-                        <div className="flex items-center gap-2 text-sm  bg-gray-100 rounded-lg p-3">
-                          <CalendarClock className="h-3.5 w-3.5 text-gray-500" />
-                          <span className="font-medium text-sm text-gray-500">
-                            {t('Event Schedule:')}
-                          </span>
-                          <span className="text-gray-800">
-                            {(() => {
-                              const now = new Date();
-                              const end = new Date(now);
-                              end.setHours(end.getHours() + draft.relativeHours);
-                              end.setMinutes(end.getMinutes() + draft.relativeMinutes);
-                              end.setSeconds(end.getSeconds() + draft.relativeSeconds);
-                              return `${now.toLocaleString()} - ${end.toLocaleString()}`;
-                            })()}
-                          </span>
-                        </div>
-                      )}
-                      <p className="text-xs text-gray-400">
-                        {t("Total duration for this event in each Display's local time zone.")}
-                      </p>
-                      <div className="grid grid-cols-3 gap-3">
-                        <NumberInput
-                          name="relativeHours"
-                          label={t('Hours')}
-                          value={draft.relativeHours}
-                          onChange={(num) => updateDraft('relativeHours', num)}
-                          error={formErrors.relativeHours}
-                        />
-                        <NumberInput
-                          name="relativeMinutes"
-                          label={t('Minutes')}
-                          value={draft.relativeMinutes}
-                          onChange={(num) => updateDraft('relativeMinutes', num)}
-                        />
-                        <NumberInput
-                          name="relativeSeconds"
-                          label={t('Seconds')}
-                          value={draft.relativeSeconds}
-                          onChange={(num) => updateDraft('relativeSeconds', num)}
+              {!pagination.daypart.isLoading && (
+                <>
+                  {/* Interrupt: Share of Voice */}
+                  {isInterruptType && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <NumberInput
+                        name="shareOfVoice"
+                        label={t('Share of Voice')}
+                        value={draft.shareOfVoice}
+                        onChange={(num) => updateDraft('shareOfVoice', num)}
+                        helpText={t(
+                          'The amount of time this Layout should be shown, in seconds per hour.',
+                        )}
+                        error={formErrors.shareOfVoice}
+                      />
+                      <div className="flex flex-col gap-1">
+                        <label className="text-sm font-semibold text-gray-500">
+                          {t('As a percentage')}
+                        </label>
+                        <input
+                          type="text"
+                          readOnly
+                          value={((draft.shareOfVoice / 3600) * 100).toFixed(2)}
+                          className="h-11.25 rounded-lg border border-gray-200 px-3 text-sm bg-gray-50 text-gray-500"
                         />
                       </div>
                     </div>
                   )}
-                </div>
+
+                  {/* Named daypart: Start Time only (date, no time picker) */}
+                  {isNamedDaypart && (
+                    <DatePickerInput
+                      label={t('Start Time')}
+                      value={draft.fromDt}
+                      onChange={(value) => updateDraft('fromDt', value)}
+                      helpText={t('Select the start time for this event.')}
+                      showTimePicker={false}
+                    />
+                  )}
+
+                  {/* Custom daypart + Command: Start Time only (no End Time) */}
+                  {isCommandEvent && !draft.useRelativeTime && (
+                    <DatePickerInput
+                      label={t('Start Time')}
+                      value={draft.fromDt}
+                      onChange={(value) => updateDraft('fromDt', value)}
+                      error={formErrors.fromDt}
+                    />
+                  )}
+
+                  {/* Custom daypart (non-Command): Start + End Time (or relative time) */}
+                  {isCustomDaypart && !isCommandEvent && !draft.useRelativeTime && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <DatePickerInput
+                        label={t('Start Time')}
+                        value={draft.fromDt}
+                        onChange={(value) => updateDraft('fromDt', value)}
+                        error={formErrors.fromDt}
+                      />
+                      <DatePickerInput
+                        label={t('End Time')}
+                        value={draft.toDt}
+                        onChange={(value) => updateDraft('toDt', value)}
+                        error={formErrors.toDt}
+                      />
+                    </div>
+                  )}
+
+                  {/* Use Relative Time — for Custom daypart (Command included) */}
+                  {isCustomDaypart && (
+                    <div className="bg-gray-50 py-3">
+                      <Checkbox
+                        id="useRelativeTime"
+                        checked={draft.useRelativeTime}
+                        onChange={(e) => updateDraft('useRelativeTime', e.target.checked)}
+                        title={t('Use Relative Time')}
+                        label={t('Duration-based offsets')}
+                        className="px-3 py-2.5"
+                      />
+
+                      {/* Relative time fields */}
+                      {draft.useRelativeTime && (
+                        <div className="flex flex-col px-3 gap-2.5">
+                          {(draft.relativeHours > 0 ||
+                            draft.relativeMinutes > 0 ||
+                            draft.relativeSeconds > 0) && (
+                            <div className="flex items-center gap-2 text-sm  bg-gray-100 rounded-lg p-3">
+                              <CalendarClock className="h-3.5 w-3.5 text-gray-500" />
+                              <span className="font-medium text-sm text-gray-500">
+                                {t('Event Schedule:')}
+                              </span>
+                              <span className="text-gray-800">
+                                {(() => {
+                                  const now = new Date();
+                                  const end = new Date(now);
+                                  end.setHours(end.getHours() + draft.relativeHours);
+                                  end.setMinutes(end.getMinutes() + draft.relativeMinutes);
+                                  end.setSeconds(end.getSeconds() + draft.relativeSeconds);
+                                  return `${now.toLocaleString()} - ${end.toLocaleString()}`;
+                                })()}
+                              </span>
+                            </div>
+                          )}
+                          <p className="text-xs text-gray-400">
+                            {t("Total duration for this event in each Display's local time zone.")}
+                          </p>
+                          <div className="grid grid-cols-3 gap-3">
+                            <NumberInput
+                              name="relativeHours"
+                              label={t('Hours')}
+                              value={draft.relativeHours}
+                              onChange={(num) => updateDraft('relativeHours', num)}
+                              error={formErrors.relativeHours}
+                            />
+                            <NumberInput
+                              name="relativeMinutes"
+                              label={t('Minutes')}
+                              value={draft.relativeMinutes}
+                              onChange={(num) => updateDraft('relativeMinutes', num)}
+                            />
+                            <NumberInput
+                              name="relativeSeconds"
+                              label={t('Seconds')}
+                              value={draft.relativeSeconds}
+                              onChange={(num) => updateDraft('relativeSeconds', num)}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -1397,7 +1660,7 @@ export default function ScheduleEventModal({
                   <SelectDropdown
                     label={t('Repeats')}
                     value={draft.recurrenceType}
-                    options={RECURRENCE_TYPE_OPTIONS}
+                    options={getRecurrenceTypeOptions(t)}
                     onSelect={(value) => updateDraft('recurrenceType', value)}
                     placeholder={t('None')}
                     helpText={t('Select the type of Repeat required for this Event.')}
@@ -1500,12 +1763,12 @@ export default function ScheduleEventModal({
                       />
                       <SelectDropdown
                         value={String(reminder.type)}
-                        options={REMINDER_TYPE_OPTIONS}
+                        options={getReminderTypeOptions(t)}
                         onSelect={(value) => updateReminder(index, 'type', Number(value))}
                       />
                       <SelectDropdown
                         value={String(reminder.option)}
-                        options={REMINDER_OPTION_OPTIONS}
+                        options={getReminderOptionOptions(t)}
                         onSelect={(value) => updateReminder(index, 'option', Number(value))}
                       />
                       <Checkbox
@@ -1588,56 +1851,139 @@ export default function ScheduleEventModal({
                     </div>
 
                     {/* Criteria rows */}
-                    {draft.criteria.map((criterion, index) => (
-                      <div
-                        key={index}
-                        className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-center mb-2.5"
-                      >
-                        <SelectDropdown
-                          value={criterion.type}
-                          options={CRITERIA_TYPE_OPTIONS}
-                          onSelect={(value) => updateCriterion(index, 'type', value)}
-                          placeholder={t('Select Type')}
-                          className="w-full"
-                        />
-                        <TextInput
-                          name={`metric-${index}`}
-                          value={criterion.metric}
-                          placeholder={t('Enter Metric')}
-                          onChange={(value) => updateCriterion(index, 'metric', value)}
-                          className="w-full"
-                        />
-                        <SelectDropdown
-                          value={criterion.condition}
-                          options={CONDITION_OPTIONS}
-                          onSelect={(value) => updateCriterion(index, 'condition', value)}
-                          placeholder={t('Is set')}
-                          className="w-full"
-                        />
-                        <TextInput
-                          name={`value-${index}`}
-                          value={criterion.value}
-                          placeholder={t('Enter Value')}
-                          onChange={(value) => updateCriterion(index, 'value', value)}
-                          className="w-full"
-                        />
-                        <button
-                          type="button"
-                          className="flex items-center justify-center size-9 rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-100"
-                          onClick={() =>
-                            index === draft.criteria.length - 1
-                              ? addCriterion()
-                              : removeCriterion(index)
-                          }
+                    {draft.criteria.map((criterion, index) => {
+                      const isCustomType = criterion.type === 'custom' || !criterion.type;
+                      const metricOptions = getCriteriaMetricOptions(criterion.type, t);
+                      const metricConfig = getCriteriaMetricConfig(
+                        criterion.type,
+                        criterion.metric,
+                        t,
+                      );
+                      const conditionOptions = metricConfig?.conditions ?? getConditionOptions(t);
+                      const valueOptions = metricConfig?.values;
+                      const valueInputType = metricConfig?.inputType ?? 'text';
+
+                      return (
+                        <div
+                          key={index}
+                          className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-center mb-2.5"
                         >
-                          {index === draft.criteria.length - 1 ? (
-                            <Plus size={16} />
+                          <SelectDropdown
+                            value={criterion.type}
+                            options={getCriteriaTypeOptions(t)}
+                            onSelect={(value) => {
+                              setDraft((prev) => {
+                                const isCustom = value === 'custom';
+                                const firstMetricId = isCustom
+                                  ? ''
+                                  : (getCriteriaMetricOptions(value, t)[0]?.value ?? '');
+                                const firstMetric = isCustom
+                                  ? null
+                                  : getCriteriaMetricConfig(value, firstMetricId, t);
+                                const criteria = prev.criteria.map((c, i) =>
+                                  i === index
+                                    ? {
+                                        ...c,
+                                        type: value,
+                                        metric: firstMetricId,
+                                        condition: firstMetric?.conditions[0]?.value ?? 'set',
+                                        value: firstMetric?.values?.[0]?.value ?? '',
+                                      }
+                                    : c,
+                                );
+                                return { ...prev, criteria };
+                              });
+                            }}
+                            placeholder={t('Select Type')}
+                            className="w-full"
+                          />
+                          {isCustomType ? (
+                            <TextInput
+                              name={`metric-${index}`}
+                              value={criterion.metric}
+                              placeholder={t('Enter Metric')}
+                              onChange={(value) => updateCriterion(index, 'metric', value)}
+                              className="w-full"
+                            />
                           ) : (
-                            <Minus size={16} />
+                            <SelectDropdown
+                              value={criterion.metric}
+                              options={metricOptions}
+                              onSelect={(value) => {
+                                setDraft((prev) => {
+                                  const newMetricConfig = getCriteriaMetricConfig(
+                                    criterion.type,
+                                    value,
+                                    t,
+                                  );
+                                  const criteria = prev.criteria.map((c, i) =>
+                                    i === index
+                                      ? {
+                                          ...c,
+                                          metric: value,
+                                          condition: newMetricConfig?.conditions[0]?.value ?? 'set',
+                                          value: newMetricConfig?.values?.[0]?.value ?? '',
+                                        }
+                                      : c,
+                                  );
+                                  return { ...prev, criteria };
+                                });
+                              }}
+                              placeholder={t('Select Metric')}
+                              className="w-full"
+                            />
                           )}
-                        </button>
-                      </div>
-                    ))}
+                          <SelectDropdown
+                            value={criterion.condition}
+                            options={conditionOptions}
+                            onSelect={(value) => updateCriterion(index, 'condition', value)}
+                            placeholder={t('Is set')}
+                            className="w-full"
+                          />
+                          {valueInputType === 'dropdown' && valueOptions ? (
+                            <SelectDropdown
+                              value={criterion.value}
+                              options={valueOptions}
+                              onSelect={(value) => updateCriterion(index, 'value', value)}
+                              placeholder={t('Select Value')}
+                              className="w-full"
+                            />
+                          ) : valueInputType === 'number' ? (
+                            <TextInput
+                              name={`value-${index}`}
+                              value={criterion.value}
+                              placeholder={t('Enter Value')}
+                              onChange={(value) => updateCriterion(index, 'value', value)}
+                              className="w-full"
+                              type="number"
+                            />
+                          ) : (
+                            <TextInput
+                              name={`value-${index}`}
+                              value={criterion.value}
+                              placeholder={t('Enter Value')}
+                              onChange={(value) => updateCriterion(index, 'value', value)}
+                              className="w-full"
+                            />
+                          )}
+                          <button
+                            type="button"
+                            className="flex items-center justify-center size-9 rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-100"
+                            onClick={() =>
+                              index === draft.criteria.length - 1
+                                ? addCriterion()
+                                : removeCriterion(index)
+                            }
+                          >
+                            {index === draft.criteria.length - 1 ? (
+                              <Plus size={16} />
+                            ) : (
+                              <Minus size={16} />
+                            )}
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

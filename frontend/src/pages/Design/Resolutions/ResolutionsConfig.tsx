@@ -45,11 +45,10 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<ResolutionFilt
     label: t('Enabled?'),
     name: 'enabled',
     className: '',
-    shouldTranslateOptions: true,
-    showAllOption: true,
     options: [
-      { label: 'Yes', value: 1 },
-      { label: 'No', value: 0 },
+      { label: t('All'), value: '' },
+      { label: t('Yes'), value: 1 },
+      { label: t('No'), value: 0 },
     ],
   },
 ];
@@ -122,9 +121,9 @@ export const getResolutionColumns = (props: ResolutionActionsProps): ColumnDef<R
     {
       id: 'tableActions',
       header: '',
-      size: 80,
-      minSize: 80,
-      maxSize: 80,
+      size: 110,
+      minSize: 110,
+      maxSize: 110,
       enableHiding: false,
       enableResizing: false,
       cell: ({ row }) => (

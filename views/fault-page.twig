@@ -82,6 +82,10 @@
                                 <p class="alert alert-info">{% trans "The CMS may not be working as expected because MySQL BINLOG format is set to STATEMENT. This can effect sessions and should be set to ROW or MIXED." %}</p>
                             {% endif %}
 
+                            {% if binLogCheckError %}
+                                <p class="alert alert-warning">{% trans "The CMS could not check MySQL BINLOG configuration because the MySQL server's performance_schema tables are missing or incomplete. This usually means mysql_upgrade has not been run after a MySQL upgrade. Please run mysql_upgrade on the database server to resolve this." %}</p>
+                            {% endif %}
+
                             <p class="narrow text-center">{% trans "Before reporting a fault it would be appreciated if you follow the steps. Click start " %}</p>
 
                             <form class="form-horizontal text-center" id="home_form" name="home_form" role="form">

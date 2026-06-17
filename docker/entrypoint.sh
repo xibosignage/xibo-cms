@@ -105,6 +105,24 @@ chmod 600 /var/www/cms/library/certs/private.key
 chmod 660 /var/www/cms/library/certs/public.key
 chown -R www-data.www-data /var/www/cms/library/certs
 
+# Populate default brand assets (runs in both dev and prod mode).
+# Source is /brand/ — ADD docker/ / in the Dockerfile maps docker/ to the container root.
+# Per-file copy: skip files already present so a WL brand folder is not overwritten on restart.
+mkdir -p /var/www/cms/library/brand/layouts
+for f in logo.svg logo-icon.svg favicon.ico theme.css xibologo.png 192x192.png 512x512.png; do
+  if [ ! -f "/var/www/cms/library/brand/$f" ]; then
+    cp "/brand/$f" "/var/www/cms/library/brand/$f"
+  fi
+done
+if [ ! -f "/var/www/cms/library/brand/config.json" ]; then
+  for f in default-layout.zip full-screen.zip l-shape-left.zip l-shape-right.zip; do
+    if [ ! -f "/var/www/cms/library/brand/layouts/$f" ]; then
+      cp "/brand/layouts/$f" "/var/www/cms/library/brand/layouts/$f"
+    fi
+  done
+fi
+chown -R www-data.www-data /var/www/cms/library/brand
+
 # Check if there's a database file to import
 if [ -f "/var/www/backup/import.sql" ] && [ "$CMS_DEV_MODE" == "false" ]
 then
@@ -310,7 +328,6 @@ then
     mkdir -p /var/www/cms/library/temp
     chown www-data:www-data -R /var/www/cms/library
     chown www-data:www-data -R /var/www/cms/custom
-    chown www-data:www-data -R /var/www/cms/web/theme/custom
     chown www-data:www-data -R /var/www/cms/web/userscripts
     chown www-data:www-data -R /var/www/cms/ca-certs
 
@@ -318,10 +335,10 @@ then
     # this must not be done in DEV mode, as it modifies the .htaccess file, which might then be committed by accident
     if [ ! "$CMS_ALIAS" == "none" ]
     then
-        # Replace the web alias without changing the chromeos alias
+        # Replace the web alias only — preserve the /chromeos and /brand aliases
         echo "Setting up CMS alias"
         /bin/sed -i \
-          "/Alias.*\/chromeos/! s|.*Alias.*$|Alias $CMS_ALIAS /var/www/cms/web|" \
+          "/Alias.*\/\(chromeos\|brand\)/! s|.*Alias.*$|Alias $CMS_ALIAS /var/www/cms/web|" \
           /etc/apache2/sites-enabled/000-default.conf
 
         echo "Settings up htaccess"

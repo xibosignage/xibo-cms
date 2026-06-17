@@ -23,6 +23,7 @@ namespace Xibo\Controller;
 
 use Carbon\Carbon;
 use GuzzleHttp\Client;
+use Xibo\Helper\Guzzle\SafeClient;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManagerStatic as Img;
 use OpenApi\Attributes as OA;
@@ -39,6 +40,7 @@ use Xibo\Entity\SearchResults;
 use Xibo\Event\LibraryProviderEvent;
 use Xibo\Event\LibraryProviderImportEvent;
 use Xibo\Event\LibraryProviderListEvent;
+use Xibo\Event\FolderTouchEvent;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\MediaFullLoadEvent;
 use Xibo\Factory\DisplayFactory;
@@ -785,6 +787,7 @@ class Library extends Base
 
         // Delete
         $media->delete();
+        $this->touchFolder($media->folderId);
 
         // Return
         $this->getState()->hydrate([
@@ -990,6 +993,8 @@ class Library extends Base
         // Hand off to the Upload Handler provided by jquery-file-upload
         new XiboUploadHandler($libraryFolder . 'temp/', $this->getLog()->getLoggerInterface(), $options);
 
+        $this->touchFolder($folderId);
+
         // Explicitly set the Content-Type header to application/json
         $response = $response->withHeader('Content-Type', 'application/json');
 
@@ -1099,7 +1104,9 @@ class Library extends Base
         $media->folderId = $sanitizedParams->getInt('folderId', ['default' => $media->folderId]);
         $media->orientation = $sanitizedParams->getString('orientation', ['default' => $media->orientation]);
 
-        if ($media->hasPropertyChanged('folderId')) {
+        $folderChanged = $media->hasPropertyChanged('folderId');
+        $oldFolderId = $folderChanged ? $media->getOriginalValue('folderId') : null;
+        if ($folderChanged) {
             if ($media->folderId === 1) {
                 $this->checkRootFolderAllowSave();
             }
@@ -1134,6 +1141,10 @@ class Library extends Base
         }
 
         $media->save();
+
+        if ($folderChanged) {
+            $this->touchFolder($media->folderId, $oldFolderId);
+        }
 
         // Return
         $this->getState()->hydrate([
@@ -1315,7 +1326,7 @@ class Library extends Base
 
             // Output a 1px image if we're not allowed to see the media.
             if (!$this->getUser()->checkViewable($media) && $request->getAttribute('authedViaToken') !== true) {
-                echo Img::make($this->getConfig()->uri('img/1x1.png', true))->encode();
+                echo Img::make(PROJECT_ROOT . '/web/img/1x1.png')->encode();
                 return $this->render($request, $response->withHeader('Content-Type', 'image/png'));
             }
 
@@ -1325,14 +1336,14 @@ class Library extends Base
                     $params,
                     $media->storedAs,
                     $response,
-                    $this->getConfig()->uri('img/error.png', true),
+                    PROJECT_ROOT . '/web/img/error.png',
                 );
             } else if ($module->type === 'video') {
                 $response = $downloader->imagePreview(
                     $params,
                     $media->mediaId . '_videocover.png',
                     $response,
-                    $this->getConfig()->uri('img/1x1.png', true),
+                    PROJECT_ROOT . '/web/img/1x1.png',
                 );
             } else {
                 $response = $downloader->download($media, $request, $response, $media->getMimeType());
@@ -1413,7 +1424,7 @@ class Library extends Base
         // Permissions.
         if (!$this->getUser()->checkViewable($media) && $request->getAttribute('authedViaToken') !== true) {
             // Output a 1px image if we're not allowed to see the media.
-            echo Img::make($this->getConfig()->uri('img/1x1.png', true))->encode();
+            echo Img::make(PROJECT_ROOT . '/web/img/1x1.png')->encode();
             return $this->render($request, $response);
         }
 
@@ -1428,7 +1439,7 @@ class Library extends Base
         $response = $downloader->thumbnail(
             $media,
             $response,
-            $this->getConfig()->uri('img/error.png', true)
+            PROJECT_ROOT . '/web/img/error.png'
         );
 
         return $this->render($request, $response);
@@ -1783,11 +1794,25 @@ class Library extends Base
             ], $sanitizedParams)
         );
 
-        if (!$this->isApi($request)) {
-            // We need to generate preview URLs, base URL doesn't chagen between layouts
-            $baseUrl = (new HttpsDetect())->getBaseUrl($request);
+        // We need to generate preview URLs, base URL doesn't change between layouts
+        $baseUrl = (new HttpsDetect())->getBaseUrl($request);
 
-            foreach ($layouts as $layout) {
+        foreach ($layouts as $layout) {
+            // Preview JWT
+            $jwt = $this->jwtService->generateJwt(
+                'Preview',
+                'layout',
+                $layout->layoutId,
+                '/preview/layout/preview/' . $layout->layoutId,
+                3600,
+            )->toString();
+
+            $layout->setUnmatchedProperty(
+                'previewUrl',
+                $baseUrl . '/preview/layout/preview/' . $layout->layoutId . '?jwt=' . $jwt,
+            );
+
+            if (!$this->isApi($request) && !$this->isJson($request)) {
                 $layout->includeProperty('buttons');
 
                 // Add some buttons for this row
@@ -1801,17 +1826,7 @@ class Library extends Base
                     );
                 }
 
-                // Preview
-                // generate a JWT
-                $jwt = $this->jwtService->generateJwt(
-                    'Preview',
-                    'layout',
-                    $layout->layoutId,
-                    '/preview/layout/preview/' . $layout->layoutId,
-                    3600,
-                )->toString();
-
-                // Add it as a button
+                // Add preview as a button for legacy web UI
                 $layout->buttons[] = [
                     'id' => 'layout_button_preview',
                     'external' => true,
@@ -2130,7 +2145,7 @@ class Library extends Base
         }
 
         // if we were provided with optional Media name set it here, otherwise get it from download info
-        $name = empty($optionalName) ? htmlspecialchars($downloadInfo['filename']) : $optionalName;
+        $name = empty($optionalName) ? htmlspecialchars($downloadInfo['filename']) : basename($optionalName);
 
         // double check that provided Module Type and Extension are valid
         if (!Str::contains($module->getSetting('validExtensions'), $ext)) {
@@ -2298,6 +2313,7 @@ class Library extends Base
             $this->checkRootFolderAllowSave();
         }
 
+        $oldFolderId = $media->folderId;
         $media->folderId = $folderId;
         $folder = $this->folderFactory->getById($media->folderId);
         $media->permissionsFolderId = ($folder->getPermissionFolderId() == null)
@@ -2305,6 +2321,8 @@ class Library extends Base
             : $folder->getPermissionFolderId();
 
         $media->save(['saveTags' => false]);
+
+        $this->touchFolder($media->folderId, $oldFolderId);
 
         if ($media->parentId != 0) {
             $this->updateMediaRevision($media, $folderId);
@@ -2431,7 +2449,7 @@ class Library extends Base
                             $filePath = $libraryLocation . $media->getId() . '_' . $media->mediaType . 'cover.png';
 
                             // Expect a quick download.
-                            $client = new Client($this->getConfig()->getGuzzleProxy(['timeout' => 20]));
+                            $client = SafeClient::getSafeClient($this->getConfig()->getGuzzleProxy(['timeout' => 20]));
                             $client->request(
                                 'GET',
                                 $import->searchResult->videoThumbnailUrl,
@@ -2631,5 +2649,13 @@ class Library extends Base
 
         // User permissions
         $media->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($media));
+    }
+
+    private function touchFolder(int $folderId, ?int $oldFolderId = null): void
+    {
+        $this->getDispatcher()->dispatch(
+            new FolderTouchEvent($folderId, $oldFolderId),
+            FolderTouchEvent::$NAME
+        );
     }
 }

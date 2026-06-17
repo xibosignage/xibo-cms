@@ -51,12 +51,14 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import { fetchContextButtons } from '@/services/folderApi';
 import type { Playlist } from '@/types/playlist';
+import { hasFeature } from '@/utils/permissions';
 
 export default function Playlist() {
   const { t } = useTranslation();
   const { user } = useUserContext();
   const queryClient = useQueryClient();
   const canViewFolders = usePermissions()?.canViewFolders;
+  const canSchedule = hasFeature(user, 'schedule.add');
   const homeFolderId = user?.homeFolderId ?? 1;
   const location = useLocation();
   const layoutId = location.state?.layoutId;
@@ -142,10 +144,10 @@ export default function Playlist() {
     enabled: isHydrated,
   });
 
+  const effectiveFolderId = selectedFolderId ?? homeFolderId;
   const { data: folderPerms } = useQuery({
-    queryKey: ['folderPermissions', selectedFolderId],
-    queryFn: () => fetchContextButtons(selectedFolderId as number),
-    enabled: selectedFolderId !== null,
+    queryKey: ['folderPermissions', effectiveFolderId],
+    queryFn: () => fetchContextButtons(effectiveFolderId),
     staleTime: 1000 * 60 * 5,
   });
 
@@ -209,9 +211,11 @@ export default function Playlist() {
     deleteError,
     setDeleteError,
     isCloning,
+    isUpdatingStats,
     confirmDelete,
     handleConfirmClone,
     handleConfirmMove,
+    handleConfirmEnableStats,
   } = usePlaylistActions({
     t,
     handleRefresh,
@@ -237,6 +241,10 @@ export default function Playlist() {
       setSelectedPlaylistId(null);
       openModal('edit');
     }
+  };
+
+  const handleOpenTimeline = (playlistId: number) => {
+    window.open(`/playlist/designer/${playlistId}`, '_blank');
   };
 
   const handleResetFilters = () => {
@@ -267,7 +275,16 @@ export default function Playlist() {
       openModal('share');
     },
     copyPlaylist: openCopyModal,
-    openScheduleModal,
+    openScheduleModal: canSchedule ? openScheduleModal : undefined,
+    openTimeline: handleOpenTimeline,
+    openEnableStatsModal: (playlistId) => {
+      setSelectedPlaylistId(playlistId);
+      openModal('enableStats');
+    },
+    openUsageReportModal: (playlistId) => {
+      setSelectedPlaylistId(playlistId);
+      openModal('usageReport');
+    },
   });
 
   const getAllSelectedItems = (): Playlist[] => {
@@ -428,10 +445,12 @@ export default function Playlist() {
           deleteError,
           isDeleting,
           isCloning,
+          isUpdatingStats,
         }}
         selection={{
           selectedPlaylist,
           selectedPlaylistId,
+          defaultFolderId: effectiveFolderId,
           itemsToDelete,
           itemsToMove,
           existingNames,
@@ -445,6 +464,8 @@ export default function Playlist() {
           handleConfirmMove: (folderId) => {
             handleConfirmMove(itemsToMove, folderId);
           },
+          handleConfirmEnableStats: (value) =>
+            selectedPlaylist && handleConfirmEnableStats(selectedPlaylist, value),
         }}
         folderActions={folderActions}
       />

@@ -21,7 +21,6 @@
 
 import { screen, fireEvent, waitFor, within, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import { useLayoutData } from '../hooks/useLayoutData';
@@ -35,10 +34,6 @@ import { testQueryClient } from '@/setupTests';
 // -----------------------------------------------------------------------------
 
 // 3rd-party
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
 
 // Services
 vi.mock('@/services/folderApi', () => ({
@@ -71,8 +66,6 @@ vi.mock('../hooks/useLayoutFilterOptions', () => ({
           { label: 'No', value: 0 },
           { label: 'Yes', value: 1 },
         ],
-        shouldTranslateOptions: false,
-        showAllOption: false,
       },
     ],
     isLoading: false,
@@ -165,11 +158,9 @@ describe('Layouts page - pagination', () => {
     const retiredLabel = screen.getByText('Retired');
     const retiredContainer = retiredLabel.closest('div')!;
     await act(async () => {
-      fireEvent.click(within(retiredContainer).getByRole('button'));
+      fireEvent.click(within(retiredContainer).getByRole('combobox'));
     });
-    await act(async () => {
-      fireEvent.click(within(retiredContainer).getByText('Yes'));
-    });
+    fireEvent.click(await screen.findByRole('option', { name: 'Yes' }));
 
     await waitFor(() => {
       expect(useLayoutData).toHaveBeenLastCalledWith(

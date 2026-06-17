@@ -31,12 +31,16 @@ export interface FetchDisplaysRequest {
   start: number;
   length: number;
   keyword?: string;
+  displayId?: number;
+  display?: string;
+  tags?: string;
   mediaInventoryStatus?: number | string;
   loggedIn?: number | string;
   authorised?: number | string;
   xmrRegistered?: number | string;
   clientType?: string;
   displayGroupId?: number | string;
+  displayGroupIds?: number[];
   displayProfileId?: number | string;
   orientation?: string;
   commercialLicence?: number | string;
@@ -155,21 +159,57 @@ export async function updateDisplay(
         }
       } else if (key === 'timers') {
         try {
-          const parsed = JSON.parse(value) as Record<string, { on?: string; off?: string }>;
-          const entries = Object.entries(parsed).filter(([day]) => day !== '');
-          if (entries.length > 0) {
-            entries.forEach(([day, times], i) => {
-              params.append(`timers[${i}][day]`, day);
-              params.append(`timers[${i}][on]`, times.on ?? '');
-              params.append(`timers[${i}][off]`, times.off ?? '');
+          const parsed = JSON.parse(value) as unknown;
+          if (Array.isArray(parsed)) {
+            // Hisense format: flat array of indexed rules
+            (
+              parsed as Array<{
+                index: number;
+                dayScope: number;
+                time: string;
+                manualWeeks?: number[];
+              }>
+            ).forEach((rule, i) => {
+              params.append(`timers[${i}][index]`, String(rule.index));
+              params.append(`timers[${i}][type]`, String(rule.dayScope));
+              params.append(`timers[${i}][time]`, rule.time);
+              if (rule.manualWeeks) {
+                rule.manualWeeks.forEach((day, j) => {
+                  params.append(`timers[${i}][manualWeeks][${j}]`, String(day));
+                });
+              }
             });
           } else {
-            params.append('timers[0][day]', '');
-            params.append('timers[0][on]', '');
-            params.append('timers[0][off]', '');
+            // LG/SSSP format: day-keyed object
+            const entries = Object.entries(
+              parsed as Record<string, { on?: string; off?: string }>,
+            ).filter(([day]) => day !== '');
+            if (entries.length > 0) {
+              entries.forEach(([day, times], i) => {
+                params.append(`timers[${i}][day]`, day);
+                params.append(`timers[${i}][on]`, times.on ?? '');
+                params.append(`timers[${i}][off]`, times.off ?? '');
+              });
+            } else {
+              params.append('timers[0][day]', '');
+              params.append('timers[0][on]', '');
+              params.append('timers[0][off]', '');
+            }
           }
         } catch {
           params.append(key, value);
+        }
+      } else if (key === 'hisensePictureOptions') {
+        // Decompose grouped hisense picture JSON into individual params
+        try {
+          const parsed = JSON.parse(value) as Record<string, number>;
+          Object.entries(parsed).forEach(([prop, val]) => {
+            if (prop !== '') {
+              params.append(prop, String(val));
+            }
+          });
+        } catch (e) {
+          console.warn('Failed to parse hisensePictureOptions override JSON:', e);
         }
       } else if (key === 'lockOptions') {
         try {
@@ -285,6 +325,27 @@ export async function requestScreenShot(displayId: number | string): Promise<voi
   await http.put(`/display/requestscreenshot/${displayId}`, null, {
     headers: { 'X-Requested-With': 'XMLHttpRequest' },
   });
+}
+
+export async function fetchDisplayScreenshotBlob(
+  displayId: number | string,
+  signal?: AbortSignal,
+): Promise<Blob> {
+  const response = await http.get(`/display/screenshot/${displayId}`, {
+    responseType: 'blob',
+    signal,
+  });
+  return response.data;
+}
+
+export type DisplayStatusWindow = Record<string, string | number> | string | unknown[];
+
+export async function fetchDisplayStatusWindow(
+  displayId: number | string,
+  signal?: AbortSignal,
+): Promise<DisplayStatusWindow> {
+  const response = await http.get(`/display/status/${displayId}`, { signal });
+  return response.data;
 }
 
 export async function collectNow(displayGroupId: number | string): Promise<void> {

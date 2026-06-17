@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { isAxiosError } from 'axios';
 import { useEffect, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -34,6 +35,7 @@ import type { Tag } from '@/types/tag';
 
 interface AddCampaignModalProps {
   isOpen?: boolean;
+  defaultFolderId?: number;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -68,23 +70,27 @@ const DEFAULT_DRAFT: CampaignDraft = {
 
 export default function AddCampaignModal({
   isOpen = true,
+  defaultFolderId,
   onClose,
   onSuccess,
 }: AddCampaignModalProps) {
   const { t } = useTranslation();
   const [isPending, startTransition] = useTransition();
 
-  const [draft, setDraft] = useState<CampaignDraft>(DEFAULT_DRAFT);
+  const [draft, setDraft] = useState<CampaignDraft>(() => ({
+    ...DEFAULT_DRAFT,
+    folderId: defaultFolderId ?? null,
+  }));
   const [formErrors, setFormErrors] = useState<CampaignFormErrors>({});
   const [apiError, setApiError] = useState<string | undefined>();
 
   useEffect(() => {
     if (!isOpen) {
-      setDraft(DEFAULT_DRAFT);
+      setDraft({ ...DEFAULT_DRAFT, folderId: defaultFolderId ?? null });
       setFormErrors({});
       setApiError(undefined);
     }
-  }, [isOpen]);
+  }, [isOpen, defaultFolderId]);
 
   const handleSave = () => {
     setFormErrors({});
@@ -105,6 +111,7 @@ export default function AddCampaignModal({
         });
 
         setFormErrors(mappedErrors);
+        setApiError(t('Please fix the highlighted errors before saving.'));
         return;
       }
 
@@ -141,10 +148,8 @@ export default function AddCampaignModal({
       } catch (err: unknown) {
         console.error('Failed to create campaign:', err);
 
-        const apiErr = err as { response?: { data?: { message?: string } } };
-
-        if (apiErr.response?.data?.message) {
-          setApiError(apiErr.response.data.message);
+        if (isAxiosError(err) && err.response?.data?.message) {
+          setApiError(err.response.data.message);
         } else if (err instanceof Error) {
           setApiError(err.message);
         } else {
@@ -197,8 +202,8 @@ export default function AddCampaignModal({
             label={t('Type')}
             value={draft.type}
             options={[
-              { label: 'Layout list', value: 'list' },
-              { label: 'Ad Campaign', value: 'ad' },
+              { label: t('Layout list'), value: 'list' },
+              { label: t('Ad Campaign'), value: 'ad' },
             ]}
             onSelect={(val) =>
               setDraft((prev) => ({
@@ -299,8 +304,8 @@ export default function AddCampaignModal({
                   label={t('List play order')}
                   value={draft.listPlayOrder}
                   options={[
-                    { label: 'Round-robin', value: 'round' },
-                    { label: 'Block', value: 'block' },
+                    { label: t('Round-robin'), value: 'round' },
+                    { label: t('Block'), value: 'block' },
                   ]}
                   onSelect={(val) =>
                     setDraft((prev) => ({

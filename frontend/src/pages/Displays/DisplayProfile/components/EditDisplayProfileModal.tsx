@@ -19,11 +19,18 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { isAxiosError } from 'axios';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AndroidFields } from './fields/AndroidFields';
 import { ChromeOsFields } from './fields/ChromeOsFields';
+import {
+  getHisensePictureSliderIndex,
+  HISENSE_PICTURE_KEYS,
+  HisenseFields,
+} from './fields/HisenseFields';
+import type { HisensePictureRow, HisenseTimerRule } from './fields/HisenseFields';
 import { getPictureSliderIndex, LgSsspFields } from './fields/LgSsspFields';
 import type { LockOptionsState, PictureOptionRow, TimerRow } from './fields/LgSsspFields';
 import { LinuxFields } from './fields/LinuxFields';
@@ -47,8 +54,10 @@ type ConfigValue = string | number | null;
 type FlatConfig = Record<string, ConfigValue>;
 
 function getApiErrorMessage(err: unknown, fallback: string): string {
-  const e = err as { response?: { data?: { message?: string } } };
-  return e.response?.data?.message ?? (err instanceof Error ? err.message : fallback);
+  return (
+    (isAxiosError(err) && err.response?.data?.message) ||
+    (err instanceof Error ? err.message : fallback)
+  );
 }
 
 interface EditDraft {
@@ -122,6 +131,11 @@ export default function EditDisplayProfileModal({
     keylockRemote: '',
   });
 
+  const [hisenseTimerRules, setHisenseTimerRules] = useState<HisenseTimerRule[]>([]);
+  const [hisensePictureRows, setHisensePictureRows] = useState<HisensePictureRow[]>([
+    { id: 0, property: '', value: 0 },
+  ]);
+
   const [dayparts, setDayparts] = useState<Daypart[]>([]);
   const [daypartsTotalCount, setDaypartsTotalCount] = useState(0);
   const [isLoadingMoreDayparts, setIsLoadingMoreDayparts] = useState(false);
@@ -133,6 +147,20 @@ export default function EditDisplayProfileModal({
   const playerVersionsPageRef = useRef(0);
   const playerVersionTypeRef = useRef<string | null>(null);
 
+  const [daypartSearch, setDaypartSearch] = useState('');
+  const daypartSearchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const handleDaypartSearch = (term: string) => {
+    clearTimeout(daypartSearchTimerRef.current);
+    daypartSearchTimerRef.current = setTimeout(() => setDaypartSearch(term), 300);
+  };
+
+  const [playerVersionSearch, setPlayerVersionSearch] = useState('');
+  const playerVersionSearchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const handlePlayerVersionSearch = (term: string) => {
+    clearTimeout(playerVersionSearchTimerRef.current);
+    playerVersionSearchTimerRef.current = setTimeout(() => setPlayerVersionSearch(term), 300);
+  };
+
   useEffect(() => {
     if (!isOpen || !data) {
       return;
@@ -142,13 +170,9 @@ export default function EditDisplayProfileModal({
     setApiError(undefined);
     setNameError(undefined);
     setIsLoading(true);
+    setDaypartSearch('');
+    setPlayerVersionSearch('');
 
-    setDayparts([]);
-    setDaypartsTotalCount(0);
-    daypartsPageRef.current = 0;
-    setPlayerVersions([]);
-    setPlayerVersionsTotalCount(0);
-    playerVersionsPageRef.current = 0;
     setTimerRows([{ id: 0, day: '', on: '', off: '' }]);
     setPictureOptionRows([{ id: 0, property: '', value: 0 }]);
     setLockOptionsState({
@@ -157,8 +181,11 @@ export default function EditDisplayProfileModal({
       keylockLocal: '',
       keylockRemote: '',
     });
+    setHisenseTimerRules([]);
+    setHisensePictureRows([{ id: 0, property: '', value: 0 }]);
 
     const isLgSsspType = data.type === 'lg' || data.type === 'sssp';
+    const isHisenseType = data.type === 'hisense';
 
     const profilePromise = fetchDisplayProfileById(data.displayProfileId).then((full) => {
       setConfigDefaults(defaultsToFlat(full.configDefault));
@@ -235,41 +262,126 @@ export default function EditDisplayProfileModal({
         }
         setLockOptionsState(parsedLock);
       }
+
+      if (isHisenseType) {
+        const flatConfig = configArrayToFlat(full.config);
+
+        const timersJson = flatConfig['timers'];
+        if (timersJson && typeof timersJson === 'string') {
+          try {
+            const parsed = JSON.parse(timersJson) as Array<{
+              index: number;
+              type: number;
+              hour: number;
+              minute: number;
+              manualWeeks?: number[];
+            }>;
+            const hydratedRules: HisenseTimerRule[] = parsed.map((entry, i) => ({
+              id: i,
+              index: entry.index,
+              dayScope: entry.type,
+              time: `${String(entry.hour).padStart(2, '0')}:${String(entry.minute).padStart(2, '0')}`,
+              manualWeeks: entry.manualWeeks ?? [],
+            }));
+            setHisenseTimerRules(hydratedRules);
+          } catch (e) {
+            console.warn('Failed to parse hisense timers config', e);
+          }
+        }
+
+        const parsedPicRows: HisensePictureRow[] = [];
+        HISENSE_PICTURE_KEYS.forEach((key, i) => {
+          const v = flatConfig[key];
+          if (v !== undefined && v !== null && v !== '') {
+            parsedPicRows.push({
+              id: i,
+              property: key,
+              value: getHisensePictureSliderIndex(key, v as string | number),
+            });
+          }
+        });
+        setHisensePictureRows(
+          parsedPicRows.length > 0 ? parsedPicRows : [{ id: 0, property: '', value: 0 }],
+        );
+      }
     });
 
-    const daypartPromise = fetchDaypart({ start: 0, length: PAGE_SIZE, isAlways: 0, isCustom: 0 })
-      .then((res) => {
-        setDayparts(res.rows);
-        setDaypartsTotalCount(res.totalCount);
-        daypartsPageRef.current = 1;
-      })
-      .catch(() => setDayparts([]));
-
-    const playerVersionType =
-      data.type === 'chromeOS'
-        ? 'chromeOS'
-        : data.type === 'android' || data.type === 'lg' || data.type === 'sssp'
-          ? data.type
-          : null;
-
-    playerVersionTypeRef.current = playerVersionType;
-
-    const playerVersionPromise = playerVersionType
-      ? fetchPlayerSoftware({ playerType: playerVersionType, start: 0, length: PAGE_SIZE })
-          .then((res) => {
-            setPlayerVersions(res.rows);
-            setPlayerVersionsTotalCount(res.totalCount);
-            playerVersionsPageRef.current = 1;
-          })
-          .catch(() => setPlayerVersions([]))
-      : Promise.resolve();
-
-    Promise.all([profilePromise, daypartPromise, playerVersionPromise])
+    profilePromise
       .catch((err: unknown) => {
         setApiError(getApiErrorMessage(err, t('Failed to load profile settings.')));
       })
       .finally(() => setIsLoading(false));
   }, [isOpen, data, t]);
+
+  useEffect(() => {
+    if (!isOpen || !data) {
+      return;
+    }
+    let cancelled = false;
+    setDayparts([]);
+    daypartsPageRef.current = 0;
+    setDaypartsTotalCount(0);
+    fetchDaypart({
+      start: 0,
+      length: PAGE_SIZE,
+      isAlways: 0,
+      isCustom: 0,
+      name: daypartSearch || undefined,
+    })
+      .then((res) => {
+        if (cancelled) {
+          return;
+        }
+        setDayparts(res.rows);
+        setDaypartsTotalCount(res.totalCount);
+        daypartsPageRef.current = 1;
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, data?.displayProfileId, daypartSearch]);
+
+  useEffect(() => {
+    if (!isOpen || !data) {
+      return;
+    }
+    const playerVersionType =
+      data.type === 'chromeOS'
+        ? 'chromeOS'
+        : data.type === 'android' ||
+            data.type === 'lg' ||
+            data.type === 'sssp' ||
+            data.type === 'hisense'
+          ? data.type
+          : null;
+    if (!playerVersionType) {
+      return;
+    }
+    playerVersionTypeRef.current = playerVersionType;
+    let cancelled = false;
+    setPlayerVersions([]);
+    setPlayerVersionsTotalCount(0);
+    playerVersionsPageRef.current = 0;
+    fetchPlayerSoftware({
+      playerType: playerVersionType,
+      start: 0,
+      length: PAGE_SIZE,
+      keyword: playerVersionSearch || undefined,
+    })
+      .then((res) => {
+        if (cancelled) {
+          return;
+        }
+        setPlayerVersions(res.rows);
+        setPlayerVersionsTotalCount(res.totalCount);
+        playerVersionsPageRef.current = 1;
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, data?.displayProfileId, playerVersionSearch]);
 
   const handleLoadMoreDayparts = () => {
     if (isLoadingMoreDayparts || dayparts.length >= daypartsTotalCount) {
@@ -281,6 +393,7 @@ export default function EditDisplayProfileModal({
       length: PAGE_SIZE,
       isAlways: 0,
       isCustom: 0,
+      name: daypartSearch || undefined,
     })
       .then((res) => {
         setDayparts((prev) => [...prev, ...res.rows]);
@@ -305,6 +418,7 @@ export default function EditDisplayProfileModal({
       playerType: playerVersionType,
       start: playerVersionsPageRef.current * PAGE_SIZE,
       length: PAGE_SIZE,
+      keyword: playerVersionSearch || undefined,
     })
       .then((res) => {
         setPlayerVersions((prev) => [...prev, ...res.rows]);
@@ -340,7 +454,7 @@ export default function EditDisplayProfileModal({
       const result = schema.safeParse({ name: draft.name, isDefault: draft.isDefault });
 
       if (!result.success) {
-        setApiError(undefined);
+        setApiError(t('Please fix the highlighted errors before saving.'));
         setNameError(result.error.flatten().fieldErrors.name?.[0]);
         return;
       }
@@ -348,9 +462,16 @@ export default function EditDisplayProfileModal({
       setNameError(undefined);
       const checkboxFields = CHECKBOX_FIELDS_BY_TYPE[data.type] ?? new Set();
       const isLgSsspType = data.type === 'lg' || data.type === 'sssp';
-      const skipKeys = isLgSsspType
-        ? new Set(['timers', 'pictureOptions', 'lockOptions'])
-        : new Set<string>();
+      const isHisenseType = data.type === 'hisense';
+      const skipKeys =
+        isLgSsspType || isHisenseType
+          ? new Set([
+              'timers',
+              'pictureOptions',
+              'lockOptions',
+              ...(isHisenseType ? HISENSE_PICTURE_KEYS : []),
+            ])
+          : new Set<string>();
 
       const configPayload: Record<string, string | number | null> = {};
       for (const [key, value] of Object.entries(draft.config)) {
@@ -392,6 +513,27 @@ export default function EditDisplayProfileModal({
               .map(({ property, value }) => ({ property, value })),
             lockOptions: lockOptionsState,
           }),
+          ...(isHisenseType && {
+            hisenseTimers: hisenseTimerRules
+              .filter((r) => r.dayScope !== 0)
+              .map(({ index, dayScope, time, manualWeeks }) => ({
+                index,
+                dayScope,
+                time,
+                manualWeeks,
+              })),
+            hisensePictureControls: (() => {
+              const active = new Map(
+                hisensePictureRows
+                  .filter((r) => r.property !== '')
+                  .map((r) => [r.property, r.value]),
+              );
+              return HISENSE_PICTURE_KEYS.map((property) => ({
+                property,
+                value: active.get(property) ?? null,
+              }));
+            })(),
+          }),
         });
         onSave({ ...data, ...updated });
         onClose();
@@ -404,14 +546,15 @@ export default function EditDisplayProfileModal({
   const tab = (t: ActiveTab) => tabClass(activeTab, t);
 
   const isLgSssp = data?.type === 'lg' || data?.type === 'sssp';
+  const isHisense = data?.type === 'hisense';
   const hasNetworkTab =
-    data?.type === 'android' || data?.type === 'windows' || data?.type === 'linux';
+    data?.type === 'android' || data?.type === 'windows' || data?.type === 'linux' || isHisense;
   const hasLocationTab =
-    data?.type === 'android' || data?.type === 'windows' || data?.type === 'linux';
+    data?.type === 'android' || data?.type === 'windows' || data?.type === 'linux' || isHisense;
   const hasTroubleshootingTab =
-    data?.type === 'android' || data?.type === 'windows' || data?.type === 'linux';
-  const hasTimersTab = isLgSssp;
-  const hasPictureOptionsTab = isLgSssp;
+    data?.type === 'android' || data?.type === 'windows' || data?.type === 'linux' || isHisense;
+  const hasTimersTab = isLgSssp || isHisense;
+  const hasPictureOptionsTab = isLgSssp || isHisense;
   const hasLockSettingsTab = isLgSssp;
   const hasAdvancedTab =
     data?.type === 'android' ||
@@ -419,7 +562,8 @@ export default function EditDisplayProfileModal({
     data?.type === 'windows' ||
     data?.type === 'linux' ||
     data?.type === 'lg' ||
-    data?.type === 'sssp';
+    data?.type === 'sssp' ||
+    isHisense;
 
   const fieldProps = {
     str,
@@ -434,10 +578,12 @@ export default function EditDisplayProfileModal({
     daypartsHasMore: dayparts.length < daypartsTotalCount,
     onLoadMoreDayparts: handleLoadMoreDayparts,
     isLoadingMoreDayparts,
+    onSearchDayparts: handleDaypartSearch,
     playerVersions,
     playerVersionsHasMore: playerVersions.length < playerVersionsTotalCount,
     onLoadMorePlayerVersions: handleLoadMorePlayerVersions,
     isLoadingMorePlayerVersions,
+    onSearchPlayerVersions: handlePlayerVersionSearch,
     timerRows,
     onTimerRowsChange: setTimerRows,
     pictureOptionRows,
@@ -459,6 +605,16 @@ export default function EditDisplayProfileModal({
         return <LgSsspFields {...fieldProps} playerType={data?.type} />;
       case 'chromeOS':
         return <ChromeOsFields {...fieldProps} />;
+      case 'hisense':
+        return (
+          <HisenseFields
+            {...fieldProps}
+            hisenseTimerRules={hisenseTimerRules}
+            onHisenseTimerRulesChange={setHisenseTimerRules}
+            hisensePictureRows={hisensePictureRows}
+            onHisensePictureRowsChange={setHisensePictureRows}
+          />
+        );
       default:
         return null;
     }
@@ -468,6 +624,7 @@ export default function EditDisplayProfileModal({
 
   return (
     <Modal
+      variant="tabbed"
       title={title}
       onClose={onClose}
       isOpen={isOpen}
@@ -482,6 +639,7 @@ export default function EditDisplayProfileModal({
           disabled: isPending || isLoading,
         },
       ]}
+      size={isHisense ? 'lg' : 'md'}
     >
       <div className="flex flex-col h-full overflow-y-hidden overflow-x-visible px-4">
         <nav className="flex px-4 overflow-x-auto shrink-0" aria-label="Tabs">

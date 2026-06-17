@@ -23,6 +23,7 @@
 namespace Xibo\Entity;
 
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Widget\Definition\Sql;
 
 /**
  * Class TagLinkTrait
@@ -83,6 +84,9 @@ trait TagLinkTrait
      */
     public function linkTagToEntity($table, $column, $entityId, $tagId, $value)
     {
+        $table = Sql::validateIdentifier($table, 'table');
+        $column = Sql::validateIdentifier($column, 'column');
+
         $this->getLog()->debug(sprintf('Linking %s %d, to tagId %d', $column, $entityId, $tagId));
 
         $this->getStore()->update('INSERT INTO `' . $table .'` (`tagId`, `'.$column.'`, `value`) VALUES (:tagId, :entityId, :value) ON DUPLICATE KEY UPDATE '.$column.' = :entityId, `value` = :value', [
@@ -97,6 +101,9 @@ trait TagLinkTrait
      */
     public function unlinkTagFromEntity($table, $column, $entityId, $tagId)
     {
+        $table = Sql::validateIdentifier($table, 'table');
+        $column = Sql::validateIdentifier($column, 'column');
+
         $this->getLog()->debug(sprintf('Unlinking %s %d, from tagId %d', $column, $entityId, $tagId));
 
         $this->getStore()->update('DELETE FROM `'.$table.'` WHERE tagId = :tagId AND `'.$column.'` = :entityId', [
@@ -110,6 +117,9 @@ trait TagLinkTrait
      */
     public function unlinkAllTagsFromEntity($table, $column, $entityId)
     {
+        $table = Sql::validateIdentifier($table, 'table');
+        $column = Sql::validateIdentifier($column, 'column');
+
         $this->getLog()->debug(sprintf('Unlinking all Tags from %s %d', $column, $entityId));
 
         $this->getStore()->update('DELETE FROM `'.$table.'` WHERE `'.$column.'` = :entityId', [

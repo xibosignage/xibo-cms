@@ -27,7 +27,7 @@ import { useState } from 'react';
 
 import { notify } from '@/components/ui/Notification';
 import { selectFolder } from '@/services/folderApi';
-import { cloneMedia, deleteMedia } from '@/services/mediaApi';
+import { cloneMedia, deleteMedia, updateMedia } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
 import type { Tag } from '@/types/tag';
 
@@ -49,6 +49,7 @@ export function useMediaActions({
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isCloning, setIsCloning] = useState(false);
+  const [isUpdatingStats, setIsUpdatingStats] = useState(false);
 
   const confirmDelete = async (
     itemsToDelete: Media[],
@@ -88,13 +89,6 @@ export function useMediaActions({
       setRowSelection({});
       handleRefresh();
       closeModal();
-    } catch (error) {
-      console.error(error);
-      const message =
-        isAxiosError(error) && error.response?.data?.message
-          ? error.response.data.message
-          : t('Some selected items could not be deleted.');
-      setDeleteError(message);
     } finally {
       setIsDeleting(false);
     }
@@ -168,13 +162,40 @@ export function useMediaActions({
     }
   };
 
+  const handleConfirmEnableStats = async (media: Media, value: string) => {
+    if (isUpdatingStats) {
+      return;
+    }
+
+    try {
+      setIsUpdatingStats(true);
+
+      await updateMedia(media.mediaId, {
+        name: media.name,
+        duration: media.duration,
+        enableStat: value,
+      });
+
+      notify.success(t('Stats collection updated'));
+      handleRefresh();
+      closeModal();
+    } catch (error) {
+      console.error(error);
+      notify.error(t('Failed to update stats collection'));
+    } finally {
+      setIsUpdatingStats(false);
+    }
+  };
+
   return {
     isDeleting,
     deleteError,
     setDeleteError,
     isCloning,
+    isUpdatingStats,
     confirmDelete,
     handleConfirmClone,
     handleConfirmMove,
+    handleConfirmEnableStats,
   };
 }

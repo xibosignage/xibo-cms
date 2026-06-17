@@ -50,11 +50,6 @@ import type { User } from '@/types/user';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
-
 vi.mock('i18next', () => {
   const t = (key: string) => key;
   return { default: { t, language: 'en', isInitialized: true }, t };
@@ -85,8 +80,6 @@ vi.mock('../hooks/usePlaylistFilterOptions', () => ({
           { label: 'Today', value: 'today' },
           { label: 'Last 7 days', value: '7d' },
         ],
-        shouldTranslateOptions: true,
-        showAllOption: false,
       },
     ],
     isLoading: false,
@@ -327,8 +320,8 @@ describe('Playlists page - search and pagination', () => {
 
     const lastModLabel = screen.getByText('Last Modified');
     const lastModContainer = lastModLabel.closest('div')!;
-    fireEvent.click(within(lastModContainer).getByRole('button'));
-    fireEvent.click(within(lastModContainer).getByText('Today'));
+    fireEvent.click(within(lastModContainer).getByRole('combobox'));
+    fireEvent.click(await screen.findByRole('option', { name: 'Today' }));
 
     await waitFor(() => {
       expect(usePlaylistData).toHaveBeenLastCalledWith(
@@ -353,8 +346,8 @@ describe('Playlists page - search and pagination', () => {
     // Select Last Modified = Today to set a non-default filter value.
     const lastModLabel = screen.getByText('Last Modified');
     const lastModContainer = lastModLabel.closest('div')!;
-    fireEvent.click(within(lastModContainer).getByRole('button'));
-    fireEvent.click(within(lastModContainer).getByText('Today'));
+    fireEvent.click(within(lastModContainer).getByRole('combobox'));
+    fireEvent.click(await screen.findByRole('option', { name: 'Today' }));
 
     // Now reset - the filter values should return to the initial empty state.
     fireEvent.click(screen.getByRole('button', { name: 'Reset' }));

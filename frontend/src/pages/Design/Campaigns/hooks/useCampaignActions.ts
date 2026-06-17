@@ -88,15 +88,6 @@ export function useCampaignActions({
       setRowSelection({});
       handleRefresh();
       closeModal();
-    } catch (error) {
-      console.error(error);
-
-      const message =
-        isAxiosError(error) && error.response?.data?.message
-          ? error.response.data.message
-          : t('Some campaigns could not be deleted.');
-
-      setDeleteError(message);
     } finally {
       setIsDeleting(false);
     }

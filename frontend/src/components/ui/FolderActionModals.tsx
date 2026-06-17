@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 import ShareModal from './modals/ShareModal';
 
@@ -116,7 +116,11 @@ export default function FolderActionModals({ folderActions }: FolderActionModals
         >
           <div className="p-8 pt-0 flex flex-col gap-4 overflow-visible">
             <div className="text-sm text-gray-600">
-              {t('Move')} <strong>{activeFolder?.text}</strong> {t('to')}:
+              <Trans
+                i18nKey="Move <strong>{{name}}</strong> to:"
+                values={{ name: activeFolder?.text }}
+                components={{ strong: <strong /> }}
+              />
             </div>
             <SelectFolder
               selectedId={formState.moveTargetId}
@@ -161,7 +165,11 @@ export default function FolderActionModals({ folderActions }: FolderActionModals
         >
           <div className="p-8 pt-0 flex flex-col gap-4">
             <div className="text-sm text-gray-600 bg-red-100 p-4 py-8 rounded-lg overflow-hidden">
-              {t('Delete')} <strong>"{activeFolder?.text}"</strong>?
+              <Trans
+                i18nKey='Delete <strong>"{{name}}"</strong>?'
+                values={{ name: activeFolder?.text }}
+                components={{ strong: <strong /> }}
+              />
             </div>
           </div>
         </Modal>

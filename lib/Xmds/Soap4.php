@@ -27,6 +27,7 @@ use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
 use Xibo\Event\XmdsDependencyRequestEvent;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\LibraryFile;
 use Xibo\Helper\Random;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
@@ -398,7 +399,7 @@ class Soap4 extends Soap
                     throw new NotFoundException(__('File not found'));
                 }
 
-                $path = $libraryLocation . $path;
+                $path = LibraryFile::resolve($libraryLocation, $path);
 
                 $f = fopen($path, 'r');
                 if (!$f) {
@@ -444,12 +445,13 @@ class Soap4 extends Soap
                 $media = $this->mediaFactory->getById($fileId);
                 $this->getLog()->debug(json_encode($media));
 
-                if (!file_exists($libraryLocation . $media->storedAs)) {
+                $mediaPath = LibraryFile::resolve($libraryLocation, $media->storedAs);
+                if (!file_exists($mediaPath)) {
                     throw new NotFoundException(__('Media exists but file missing from library.'));
                 }
 
                 // Return the Chunk size specified
-                $f = fopen($libraryLocation . $media->storedAs, 'r');
+                $f = fopen($mediaPath, 'r');
 
                 if (!$f) {
                     throw new NotFoundException(__('Unable to get file pointer'));
@@ -774,7 +776,10 @@ class Soap4 extends Soap
         $this->getLog()->debug('Received Screen shot');
 
         // Open this displays screen shot file and save this.
-        $location = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'screenshots/' . $this->display->displayId . '_screenshot.' . $screenShotFmt;
+        $location = LibraryFile::resolve(
+            $this->getConfig()->getSetting('LIBRARY_LOCATION'),
+            'screenshots/' . $this->display->displayId . '_screenshot.' . $screenShotFmt
+        );
 
         foreach (array('imagick', 'gd') as $imgDriver) {
             Img::configure(array('driver' => $imgDriver));

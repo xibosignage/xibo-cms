@@ -20,7 +20,6 @@
  */
 
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
-import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import { useTemplateActions } from '../hooks/useTemplateActions';
@@ -41,11 +40,6 @@ import { testQueryClient } from '@/setupTests';
 // =============================================================================
 // Module mocks
 // =============================================================================
-
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
 
 vi.mock('@/services/folderApi');
 vi.mock('@/services/templatesApi');
@@ -241,16 +235,16 @@ describe('Templates page - row actions', () => {
       expect(screen.queryByRole('button', { name: 'Publish' })).not.toBeInTheDocument();
     });
 
-    // When implemented: clicking Publish on a Draft template should open a dialog.
-    test.fails('Publish modal opens for a Draft template', async () => {
+    // Clicking Publish on a Draft template should open a dialog.
+    test('Publish modal opens for a Draft template', async () => {
       renderTemplatesPage();
       await openDropdownAction('Publish', mockDraftTemplate.layout);
 
       expect(await screen.findByRole('dialog')).toBeInTheDocument();
     });
 
-    // When implemented: confirming should call confirmPublish with the layoutId and publish options.
-    test.fails('Publish calls confirmPublish with layoutId and { type: "now" }', async () => {
+    // Confirming should call confirmPublish with the layoutId and publish options.
+    test('Publish calls confirmPublish with layoutId and { type: "now" }', async () => {
       const confirmPublish = vi.fn();
       vi.mocked(useTemplateActions).mockReturnValue({
         ...defaultTemplateActions(),
@@ -266,8 +260,8 @@ describe('Templates page - row actions', () => {
       expect(confirmPublish).toHaveBeenCalledWith(mockDraftTemplate.layoutId, { type: 'now' });
     });
 
-    // When implemented: Cancel must close the dialog without publishing.
-    test.fails('Cancel closes the Publish modal', async () => {
+    // Cancel must close the dialog without publishing.
+    test('Cancel closes the Publish modal', async () => {
       renderTemplatesPage();
       await openDropdownAction('Publish', mockDraftTemplate.layout);
 
@@ -301,9 +295,8 @@ describe('Templates page - row actions', () => {
       expect(screen.queryByRole('button', { name: 'Discard' })).not.toBeInTheDocument();
     });
 
-    // When implemented: the dialog should show the draft template name so the
-    // user knows what they are about to discard.
-    test.fails('Discard modal shows the draft template name', async () => {
+    // The dialog shows the draft template name so the user knows what they are about to discard.
+    test('Discard modal shows the draft template name', async () => {
       renderTemplatesPage();
       await openDropdownAction('Discard', mockDraftTemplate.layout);
 
@@ -311,8 +304,8 @@ describe('Templates page - row actions', () => {
       expect(within(dialog).getByText(mockDraftTemplate.layout)).toBeInTheDocument();
     });
 
-    // When implemented: confirming should call handleConfirmDiscard with the layoutId.
-    test.fails('Discard calls handleConfirmDiscard with the layoutId', async () => {
+    // Confirming should call handleConfirmDiscard with the layoutId.
+    test('Discard calls handleConfirmDiscard with the layoutId', async () => {
       const handleConfirmDiscard = vi.fn();
       vi.mocked(useTemplateActions).mockReturnValue({
         ...defaultTemplateActions(),
@@ -328,8 +321,8 @@ describe('Templates page - row actions', () => {
       expect(handleConfirmDiscard).toHaveBeenCalledWith(mockDraftTemplate.layoutId);
     });
 
-    // When implemented: Cancel must close the dialog without discarding.
-    test.fails('Cancel closes the Discard modal', async () => {
+    // Cancel must close the dialog without discarding.
+    test('Cancel closes the Discard modal', async () => {
       renderTemplatesPage();
       await openDropdownAction('Discard', mockDraftTemplate.layout);
 

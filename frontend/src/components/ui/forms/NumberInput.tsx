@@ -24,7 +24,7 @@ import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
 interface NumberInputProps {
-  name: string;
+  name?: string;
   value: number | undefined;
   label?: string;
   placeholder?: string;
@@ -34,6 +34,9 @@ interface NumberInputProps {
   className?: string;
   disabled?: boolean;
   min?: number;
+  max?: number;
+  step?: number | string;
+  optional?: boolean;
 }
 
 export default function NumberInput({
@@ -46,45 +49,63 @@ export default function NumberInput({
   helpText,
   error,
   disabled = false,
-  min = 0,
+  min,
+  max,
+  step,
+  optional = false,
 }: NumberInputProps) {
   const { t } = useTranslation();
   const generatedId = useId();
+  const isInline = !label && !helpText && !error;
+
+  const input = (
+    <input
+      id={generatedId}
+      type="number"
+      name={name}
+      value={value ?? ''}
+      disabled={disabled}
+      min={min}
+      max={max}
+      step={step}
+      onChange={(e) => {
+        const numericValue = e.target.valueAsNumber;
+
+        if (!Number.isNaN(numericValue)) {
+          const clamped = min != null ? Math.max(min, numericValue) : numericValue;
+          onChange(max != null ? Math.min(max, clamped) : clamped);
+        } else {
+          onChange(0);
+        }
+      }}
+      placeholder={placeholder || t('Add text')}
+      className={twMerge(
+        'h-11.25 px-3 rounded-lg text-sm font-normal text-gray-800 placeholder:text-gray-500 border-gray-200',
+        'hover:border-gray-400',
+        'focus:border-xibo-blue-600 focus:ring-xibo-blue-600/25 focus:ring-1',
+        'disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-300 disabled:pointer-events-none',
+        error && 'border-red-500! ',
+        className,
+      )}
+    />
+  );
+
+  if (isInline) {
+    return input;
+  }
 
   return (
     <div className="flex flex-col gap-1 w-full">
       {label && (
-        <label htmlFor={generatedId} className="text-sm font-semibold text-gray-500 leading-4.5">
-          {!label ? t('Text') : label}
+        <label
+          htmlFor={generatedId}
+          className="flex items-center justify-between text-sm font-semibold text-gray-500 leading-4.5"
+        >
+          <span>{label}</span>
+          {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
         </label>
       )}
-      <input
-        id={generatedId}
-        type="number"
-        name={name}
-        value={value}
-        disabled={disabled}
-        min={min}
-        onChange={(e) => {
-          const numericValue = e.target.valueAsNumber;
-
-          if (!Number.isNaN(numericValue)) {
-            onChange(min != null ? Math.max(min, numericValue) : numericValue);
-          } else {
-            onChange(min ?? 0);
-          }
-        }}
-        placeholder={placeholder || t('Add text')}
-        className={twMerge(
-          'h-11.25 px-3 rounded-lg text-sm font-normal text-gray-800 placeholder:text-gray-500 border-gray-200',
-          'hover:border-gray-400',
-          'focus:border-xibo-blue-600 focus:ring-xibo-blue-600/25 focus:ring-1',
-          'disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-300 disabled:pointer-events-none',
-          error && 'border-red-500! ',
-          className,
-        )}
-      />
-
+      {input}
       {error ? (
         <p className="text-xs text-red-600 ml-2 mt-1">{error}</p>
       ) : helpText ? (

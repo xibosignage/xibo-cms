@@ -20,7 +20,6 @@
  */
 
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import { useTemplateActions } from '../hooks/useTemplateActions';
@@ -42,10 +41,6 @@ import { testQueryClient } from '@/setupTests';
 // =============================================================================
 
 // 3rd-party
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
 
 // Services
 vi.mock('@/services/folderApi');
@@ -173,6 +168,7 @@ describe('Templates page - edit form fields', () => {
   // ---------------------------------------------------------------------------
   test('Failed save keeps the modal open', async () => {
     vi.mocked(updateTemplate).mockRejectedValueOnce({
+      isAxiosError: true,
       response: { data: { message: 'Template name already exists' } },
     });
 

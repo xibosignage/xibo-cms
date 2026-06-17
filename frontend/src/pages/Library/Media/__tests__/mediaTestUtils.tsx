@@ -112,6 +112,8 @@ export const mockArchiveFolder: Folder = {
   ownerId: 0,
   ownerName: '',
   children: [],
+  createdDt: null,
+  modifiedDt: null,
 };
 
 export const mockDesignFolder: Folder = {
@@ -123,6 +125,8 @@ export const mockDesignFolder: Folder = {
   ownerId: 0,
   ownerName: '',
   children: [],
+  createdDt: null,
+  modifiedDt: null,
 };
 
 // -----------------------------------------------------------------------------

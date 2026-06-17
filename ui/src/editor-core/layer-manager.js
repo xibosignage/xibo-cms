@@ -635,15 +635,21 @@ LayerManager.prototype.saveSort = function({
   if (type === 'main') {
     const regionToBeSaved = [];
     let layoutSaving = null;
-    lD.viewer.layerManager.DOMObject
-      .find('.layer-manager-body > .sortable-main')
+    // When no background is present, offset all layers by 1 so regions
+    // start at 1 instead of 0 (layer 0 is reserved for the background)
+    const $sortableItems = lD.viewer.layerManager.DOMObject
+      .find('.layer-manager-body > .sortable-main');
+    const hasBackground = $sortableItems
+      .filter('[data-type="layoutBackground"]').length > 0;
+    const layerOffset = hasBackground ? 0 : 1;
+    $sortableItems
       .each((idx, target) => {
         const $target = $(target);
         const targetType = $target.data('type');
         const targetId = (targetType === 'staticWidget') ?
           $target.data('itemAuxId'):
           $target.data('itemId');
-        const newLayer = idx;
+        const newLayer = idx + layerOffset;
         let updateOnViewer = '';
 
         if (targetType === 'layoutBackground') {
@@ -1136,6 +1142,35 @@ LayerManager.prototype.updateObjectLayer = function(
 
     // Update layer manager
     lD.viewer.layerManager.render();
+  }
+};
+
+/**
+ * Shift all regions/canvas whose zIndex is at or below bgLayer up so they
+ * sit above the background. Called when a background image is first added.
+ * @param {number} bgLayer - The backgroundzIndex of the newly added background
+ */
+LayerManager.prototype.adjustLayersForBackground = function(bgLayer) {
+  const allRegions = [
+    ...Object.values(lD.layout.regions),
+    ...(!$.isEmptyObject(lD.layout.canvas) ? [lD.layout.canvas] : []),
+  ].sort((a, b) => a.zIndex - b.zIndex);
+
+  let prevLayer = bgLayer;
+  const regionsToSave = [];
+
+  allRegions.forEach((region) => {
+    if (region.zIndex <= prevLayer) {
+      region.zIndex = prevLayer + 1;
+      prevLayer = region.zIndex;
+      regionsToSave.push(region);
+    } else {
+      prevLayer = region.zIndex;
+    }
+  });
+
+  if (regionsToSave.length > 0) {
+    lD.layout.saveMultipleRegions(regionsToSave);
   }
 };
 

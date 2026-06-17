@@ -1,0 +1,90 @@
+{#
+/**
+ * Copyright (C) 2026 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block title %}{{ "Playlist Editor"|trans }} | {% endblock %}
+
+{% set hideNavigation = "1" %}
+
+{% block pageContent %}
+
+    {# Mirrors the DOM structure that playlist-form-timeline.twig provides when
+       loaded into a Bootstrap modal, which pE.loadEditor() depends on:
+       - #editor-container  (close-button lookup + external playlist message)
+       - .editor-modal      (help-pane reparenting + close-button lookup)
+       - .editor-modal-header .modal-header--left  (help-pane anchor)
+       - .container-designer  (toolbar, properties-panel, topbar lookups)
+       - .editor-top-bar      (populated by topbar template in pE.loadEditor)
+    #}
+    <div id="editor-container">
+        <div class="modal editor-modal">
+            <div class="modal-dialog editor-modal-dialog">
+                <div class="modal-content editor-modal-content">
+
+                    <div class="modal-header editor-modal-header">
+                        <div class="modal-header--left"></div>
+                        <div>
+                            <button type="button" class="close editor-modal-close pl-2">
+                                <i class="fa fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="modal-body editor-modal-body container-designer">
+                        <div class="editor-top-bar"></div>
+                        <div id="playlist-editor" playlist-id="{{ playlist.playlistId }}"></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading-overlay">
+        <i class="fa fa-spinner fa-spin loading-icon"></i>
+    </div>
+
+{% endblock %}
+
+    {% block javaScript %}
+        {% include "editorTranslations.twig" %}
+        {% include "editorVars.twig" %}
+
+        <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+        <script src="{{ theme.rootUri() }}dist/codeEditor.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+        <script src="{{ theme.rootUri() }}dist/wysiwygEditor.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+        <script src="{{ theme.rootUri() }}dist/editorCommon.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+        <script type="text/javascript" nonce="{{ cspNonce }}">
+            $(document).ready(function() {
+                pE.loadEditor();
+
+                const _originalClose = pE.close.bind(pE);
+                pE.close = function() {
+                    _originalClose();
+                    window.close();
+                };
+            });
+        </script>
+    {% endblock %}

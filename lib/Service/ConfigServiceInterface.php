@@ -75,6 +75,12 @@ interface ConfigServiceInterface
     public function changeSetting($setting, $value, $userChange = 0);
 
     /**
+     * Get all settings with metadata (value, userSee, userChange)
+     * @return array
+     */
+    public function getAllSettingsWithMeta();
+
+    /**
      * Is the provided setting visible
      * @param string $setting
      * @return bool
@@ -182,4 +188,11 @@ interface ConfigServiceInterface
      * @return array
      */
     public function getConnectorSettings(string $connector): array;
+
+    /**
+     * Get the operator-supplied Host-header allow-list (comma-separated). Empty when unset.
+     * Deployment-time only — sourced from web/settings.php, not the DB.
+     * @return string
+     */
+    public function getWhitelistHosts(): string;
 }

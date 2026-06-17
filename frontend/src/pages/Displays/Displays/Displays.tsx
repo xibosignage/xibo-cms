@@ -33,6 +33,7 @@ import {
   type DisplayFilterInput,
 } from './DisplaysConfig';
 import DisplayMap from './components/DisplayMap';
+import DisplayScreenshotPreviewer from './components/DisplayScreenshotPreviewer';
 import { DisplayModals } from './components/DisplaysModals';
 import { useDisplaysActions } from './hooks/useDisplaysActions';
 import { useDisplaysData } from './hooks/useDisplaysData';
@@ -40,6 +41,7 @@ import { useDisplaysFilterOptions } from './hooks/useDisplaysFilterOptions';
 
 import Button from '@/components/ui/Button';
 import FilterInputs from '@/components/ui/FilterInputs';
+import FolderActionModals from '@/components/ui/FolderActionModals';
 import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import FolderSidebar from '@/components/ui/FolderSidebar';
 import TabNav from '@/components/ui/TabNav';
@@ -51,12 +53,14 @@ import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import type { Display } from '@/types/display';
+import { hasFeature } from '@/utils/permissions';
 
 export default function Displays() {
   const { t } = useTranslation();
   const { user } = useUserContext();
   const queryClient = useQueryClient();
   const canViewFolders = usePermissions()?.canViewFolders;
+  const canSchedule = hasFeature(user, 'schedule.add');
   const homeFolderId = user?.homeFolderId ?? 1;
 
   const {
@@ -157,6 +161,7 @@ export default function Displays() {
   const [selectedDisplayId, setSelectedDisplayId] = useState<number | null>(null);
   const [actionDisplay, setActionDisplay] = useState<Display | null>(null);
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
+  const [previewDisplay, setPreviewDisplay] = useState<Display | null>(null);
 
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
@@ -323,6 +328,8 @@ export default function Displays() {
     onAssignFiles: (display) => openActionModal(display, 'assignMedia'),
     onSendCommand: (display) => openActionModal(display, 'sendCommand'),
     onJumpToScheduledLayouts: handleJumpToScheduledLayouts,
+    onSchedule: canSchedule ? (display) => openActionModal(display, 'schedule') : undefined,
+    onPreviewScreenshot: (display) => setPreviewDisplay(display),
   });
 
   const getAllSelectedItems = (): Display[] => {
@@ -423,6 +430,7 @@ export default function Displays() {
               </div>
               <input
                 name="search"
+                aria-label={t('Search displays')}
                 value={globalFilter}
                 disabled={!isHydrated}
                 onChange={(e) => {
@@ -514,6 +522,15 @@ export default function Displays() {
         </div>
       </div>
 
+      <DisplayScreenshotPreviewer
+        display={previewDisplay}
+        onClose={() => setPreviewDisplay(null)}
+        onRequestScreenshot={(display) => {
+          setPreviewDisplay(null);
+          openActionModal(display, 'requestScreenShot');
+        }}
+      />
+
       <DisplayModals
         actions={{
           activeModal,
@@ -557,6 +574,7 @@ export default function Displays() {
           confirmBulkMoveCms,
         }}
       />
+      {canViewFolders && <FolderActionModals folderActions={folderActions} />}
     </section>
   );
 }

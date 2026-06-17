@@ -34,11 +34,6 @@ import { testQueryClient } from '@/setupTests';
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
-
 vi.mock('@/services/displayProfileApi');
 vi.mock('@/components/ui/modals/Modal');
 
@@ -161,6 +156,7 @@ describe('DisplayProfile - edit form fields', () => {
   // ---------------------------------------------------------------------------
   test('Failed save keeps the modal open and shows the error', async () => {
     vi.mocked(updateDisplayProfile).mockRejectedValueOnce({
+      isAxiosError: true,
       response: { data: { message: 'Display profile name already exists' } },
     });
 

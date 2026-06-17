@@ -21,7 +21,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { Filter, FilterX, Plus, Search } from 'lucide-react';
+import { Filter, FilterX, Plus, Search, Upload } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
@@ -48,12 +48,14 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import { fetchContextButtons } from '@/services/folderApi';
 import type { Layout } from '@/types/layout';
+import { hasFeature } from '@/utils/permissions';
 
 export default function Layouts() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { user } = useUserContext();
   const canViewFolders = usePermissions()?.canViewFolders;
+  const canSchedule = hasFeature(user, 'schedule.add');
   const homeFolderId = user?.homeFolderId ?? 1;
 
   const {
@@ -140,10 +142,10 @@ export default function Layouts() {
     enabled: isHydrated,
   });
 
+  const effectiveFolderId = selectedFolderId ?? homeFolderId;
   const { data: folderPerms } = useQuery({
-    queryKey: ['folderPermissions', selectedFolderId],
-    queryFn: () => fetchContextButtons(selectedFolderId as number),
-    enabled: selectedFolderId !== null,
+    queryKey: ['folderPermissions', effectiveFolderId],
+    queryFn: () => fetchContextButtons(effectiveFolderId),
     staleTime: 1000 * 60 * 5,
   });
 
@@ -232,6 +234,7 @@ export default function Layouts() {
     closeModal,
     setRowSelection,
     setItemsToMove,
+    timezone: user?.settings?.defaultTimezone ?? 'UTC',
   });
 
   const handleResetFilters = () => {
@@ -340,7 +343,8 @@ export default function Layouts() {
     openTemplateModal,
     openRetireModal,
     openEnableStatsModal,
-    openScheduleModal,
+    openScheduleModal: canSchedule ? openScheduleModal : undefined,
+    showDescriptionId: filterInputs.showDescriptionId,
   });
 
   const getAllSelectedItems = (): Layout[] => {
@@ -391,13 +395,21 @@ export default function Layouts() {
           <TabNav activeTab="Layouts" navigation={libraryTabs} />
           <div className="flex items-center gap-2 md:mb-0">
             <Button
+              variant="secondary"
+              onClick={() => openModal('import')}
+              disabled={!canAddToFolder || !isHydrated}
+              leftIcon={Upload}
+            >
+              {t('Import')}
+            </Button>
+            <Button
               variant="primary"
               className="font-semibold"
               onClick={handleCreateLayout}
               disabled={!canAddToFolder || !isHydrated}
               leftIcon={Plus}
             >
-              {t('New Layout')}
+              {t('Add Layout')}
             </Button>
           </div>
         </div>

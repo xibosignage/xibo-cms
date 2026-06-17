@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -553,6 +553,15 @@ class Developer extends Base
             // load the xml from uploaded file
             $xml = new \DOMDocument();
             $xml->load($filePath);
+
+            // User-imported templates are not permitted to declare <asset> nodes — assets are a
+            // mechanism for shipped/custom modules to reference files on disk, not a content surface.
+            if ($xml->getElementsByTagName('asset')->length > 0) {
+                throw new InvalidArgumentException(
+                    __('Imported templates may not declare <asset> nodes'),
+                    'xml'
+                );
+            }
 
             // Add the Template
             $moduleTemplate = $this->moduleTemplateFactory->createUserTemplate($xml->saveXML());

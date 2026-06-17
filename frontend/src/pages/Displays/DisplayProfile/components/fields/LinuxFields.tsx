@@ -40,6 +40,7 @@ export interface LinuxFieldProps {
   daypartsHasMore?: boolean;
   onLoadMoreDayparts?: () => void;
   isLoadingMoreDayparts?: boolean;
+  onSearchDayparts?: (term: string) => void;
 }
 
 export function LinuxFields({
@@ -55,6 +56,7 @@ export function LinuxFields({
   daypartsHasMore,
   onLoadMoreDayparts,
   isLoadingMoreDayparts,
+  onSearchDayparts,
 }: LinuxFieldProps) {
   const metaMap = getFieldMetaForType('linux', t);
   const fieldsForTab = Object.entries(metaMap).filter(([, meta]) => meta.tab === tab);
@@ -90,6 +92,7 @@ export function LinuxFields({
     daypartsHasMore,
     onLoadMoreDayparts,
     isLoadingMoreDayparts,
+    onSearchDayparts,
   };
 
   return (

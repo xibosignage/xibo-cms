@@ -70,6 +70,11 @@ class Preview extends Base
             throw new AccessDeniedException();
         }
 
+        // Is this token for layout access?
+        if (!$token->isPermittedFor('layout')) {
+            throw new AccessDeniedException();
+        }
+
         // Get the layout
         if ($sanitizedParams->getInt('findByCode') === 1) {
             $this->getlog()->debug('show: findByCode: ' . $id);
@@ -94,17 +99,16 @@ class Preview extends Base
                 throw new AccessDeniedException();
             }
         } else {
-            $layout = $this->layoutFactory->getById($id);
+            // Preview of either published or draft layout
+            $this->getlog()->debug('show: getById: ' . $id);
 
-            // Check the token allows access to this layout.
-            if (!$token->isPermittedFor('layout') || !$token->isIdentifiedBy($layout->layoutId)) {
+            // If the token isn't for this layout
+            if (!$token->isIdentifiedBy($id)) {
                 throw new AccessDeniedException();
             }
-        }
 
-        // Do we want to preview the draft version of this Layout?
-        if ($sanitizedParams->getCheckbox('isPreviewDraft') && $layout->hasDraft()) {
-            $layout = $this->layoutFactory->getByParentId($layout->layoutId);
+            // Authed, load the layout
+            $layout = $this->layoutFactory->getById($id);
         }
 
         $this->getState()->template = 'layout-renderer';
@@ -122,7 +126,7 @@ class Preview extends Base
                     time() + 3600,
                     $this->getConfig()->getApiKeyDetails()['encryptionKey'],
                 ),
-                'loaderUrl' => $this->getConfig()->uri('img/loader.gif'),
+                'loaderUrl' => $this->getConfig()->rootUri() . 'img/loader.gif',
                 // We can use layout.preview here because this route is inside the Preview end point
                 'layoutPreviewUrl' => $this->urlFor($request, 'layout.preview', ['id' => '[layoutCode]']),
             ],
@@ -166,10 +170,10 @@ class Preview extends Base
                 throw new AccessDeniedException();
             }
 
-            echo file_get_contents($layout->xlfToDisk([
+            $response->getBody()->write(file_get_contents($layout->xlfToDisk([
                 'notify' => false,
                 'collectNow' => false,
-            ]));
+            ])));
 
             $this->setNoOutput();
         } finally {

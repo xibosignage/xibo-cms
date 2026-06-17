@@ -49,6 +49,7 @@ import {
   ActionsCell,
   MediaCell,
   TagsCell,
+  DescriptionCell,
 } from '@/components/ui/table/cells';
 import { getCommonFormOptions } from '@/config/commonForms';
 import type { Layout } from '@/types/layout';
@@ -57,21 +58,45 @@ import type { Tag } from '@/types/tag';
 import { formatDuration } from '@/utils/formatters';
 
 export interface LayoutFilterInput {
+  campaignId?: number | null;
+  name?: string;
+  tags?: Tag[];
+  code?: string;
   ownerId?: string;
   ownerUserGroupId?: string;
-  retired?: string;
   orientation?: string;
+  retired?: string;
+  layoutStatusId?: number | null;
+  showDescriptionId?: number | null;
+  mediaLike?: string;
+  layoutId?: number | null;
   lastModified?: string;
   activeDisplayGroupId?: number;
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: boolean;
+  logicalOperator?: 'OR' | 'AND';
+  exactTags?: boolean;
 }
 
 export const LAYOUT_INITIAL_FILTER_STATE: LayoutFilterInput = {
+  campaignId: null,
+  name: '',
+  tags: [],
+  code: '',
   ownerId: '',
   ownerUserGroupId: '',
-  retired: '',
   orientation: '',
+  retired: '',
+  layoutStatusId: null,
+  showDescriptionId: null,
+  mediaLike: '',
+  layoutId: null,
   lastModified: '',
   activeDisplayGroupId: undefined,
+  logicalOperatorName: 'OR',
+  useRegexForName: false,
+  logicalOperator: 'OR',
+  exactTags: false,
 };
 
 export type ModalType =
@@ -81,6 +106,7 @@ export type ModalType =
   | 'discard'
   | 'campaign'
   | 'export'
+  | 'import'
   | 'template'
   | 'retire'
   | 'enableStats'
@@ -89,45 +115,109 @@ export type ModalType =
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<LayoutFilterInput>[] => [
   {
-    label: 'Owner',
+    label: t('ID'),
+    placeholder: ' ',
+    name: 'campaignId',
+    type: 'number',
+  },
+  {
+    label: t('Name'),
+    name: 'name',
+    type: 'text',
+    className: '',
+    placeholder: ' ',
+    showAndOr: true,
+    andOrKey: 'logicalOperatorName',
+    showRegex: true,
+    regexKey: 'useRegexForName',
+  },
+  {
+    label: t('Tags'),
+    name: 'tags',
+    type: 'tags',
+    placeholder: ' ',
+    className: '',
+    showAndOr: true,
+    andOrKey: 'logicalOperator',
+    showExactTags: true,
+    exactTagsKey: 'exactTags',
+  },
+  {
+    label: t('Code'),
+    placeholder: ' ',
+    name: 'code',
+    type: 'text',
+  },
+  {
+    label: t('Display Group'),
+    name: 'activeDisplayGroupId',
+    className: '',
+    options: [],
+  },
+  {
+    label: t('Owner'),
     name: 'ownerId',
     className: '',
-    shouldTranslateOptions: false,
-    showAllOption: false,
-    options: [{ label: 'Select Owner', value: null }],
+    options: [{ label: t('Select Owner'), value: null }],
   },
   {
-    label: 'User Group',
+    label: t('Owner User Group'),
     name: 'ownerUserGroupId',
     className: '',
-
-    shouldTranslateOptions: false,
-    showAllOption: false,
-    options: [{ label: 'Select Group', value: null }],
+    options: [{ label: t('Select Group'), value: null }],
   },
   {
-    label: 'Retired',
+    label: t('Orientation'),
+    name: 'orientation',
+    className: '',
+    options: [
+      { label: t('Portrait'), value: 'portrait' },
+      { label: t('Landscape'), value: 'landscape' },
+    ],
+  },
+  {
+    label: t('Retired'),
     name: 'retired',
     className: '',
-    shouldTranslateOptions: false,
-    showAllOption: false,
     options: getCommonFormOptions(t).retired,
   },
   {
-    label: 'Orientation',
-    name: 'orientation',
+    label: t('Show'),
+    name: 'layoutStatusId',
     className: '',
-    shouldTranslateOptions: false,
-    showAllOption: false,
-    options: getCommonFormOptions(t).orientation,
+    options: [
+      { label: t('Only Used'), value: 2 },
+      { label: t('Only Unused'), value: 3 },
+    ],
   },
   {
-    label: 'Last Modified',
+    label: t('Description'),
+    name: 'showDescriptionId',
+    className: '',
+    options: [
+      { label: t('1st line'), value: 2 },
+      { label: t('Widget List'), value: 3 },
+    ],
+  },
+  {
+    label: t('Media'),
+    name: 'mediaLike',
+    type: 'text',
+    className: '',
+    placeholder: ' ',
+  },
+  {
+    label: t('Layout ID'),
+    name: 'layoutId',
+    type: 'number',
+    className: '',
+    placeholder: ' ',
+  },
+  {
+    label: t('Last Modified'),
     name: 'lastModified',
     className: '',
-    shouldTranslateOptions: true,
-    showAllOption: false,
-    allowCustomRange: true,
+    type: 'date-range',
     options: getCommonFormOptions(t).lastModifiedFilter,
   },
 ];
@@ -154,6 +244,7 @@ export interface LayoutActionsProps {
   openRetireModal?: (layout: Layout) => void;
   openEnableStatsModal?: (layout: Layout) => void;
   openScheduleModal?: (layout: Layout) => void;
+  showDescriptionId?: number | null;
 }
 
 export const getLayoutItemActions = ({
@@ -181,7 +272,6 @@ export const getLayoutItemActions = ({
   return (layout: Layout) => {
     const actions: ActionItem[] = [];
 
-    // TODO: Set all true for now. Add userPermission to layout data
     const canEdit = layout.userPermissions?.edit ?? 1;
     const canDelete = layout.userPermissions?.delete ?? 1;
     const canShare = layout.userPermissions?.modifyPermissions ?? 1;
@@ -337,7 +427,7 @@ export const getLayoutItemActions = ({
 };
 
 export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[] => {
-  const { t } = props;
+  const { t, showDescriptionId } = props;
   const getActions = getLayoutItemActions(props);
 
   return [
@@ -395,11 +485,11 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
       accessorKey: 'description',
       header: t('Description'),
       size: 200,
-      cell: (info) => (
-        <TextCell weight="normal" className="text-xs" truncate>
-          {info.getValue<string>()}
-        </TextCell>
-      ),
+      cell: (info) => {
+        const row = info.row.original;
+        const value = row.descriptionFormatted ?? info.getValue<string>();
+        return <DescriptionCell value={value} isHtml={showDescriptionId === 3} />;
+      },
       enableSorting: false,
     },
     {
@@ -440,17 +530,18 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
     },
 
     {
-      accessorKey: 'valid',
+      id: 'valid',
       header: t('Valid?'),
       size: 100,
-      cell: (info) => <CheckMarkCell active={info.getValue<number>() === 1} />,
+      accessorFn: (row) => (row as Layout).status,
+      cell: (info) => <CheckMarkCell active={info.getValue<number>() <= 2} />,
     },
 
     {
-      accessorKey: 'status',
+      accessorKey: 'enableStat',
       header: t('Stats?'),
       size: 100,
-      cell: (info) => <CheckMarkCell active={info.getValue<number>() === 1} />,
+      cell: (info) => <CheckMarkCell active={info.getValue<boolean>()} />,
     },
 
     {
@@ -474,9 +565,9 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
     {
       id: 'tableActions',
       header: '',
-      size: 120,
-      minSize: 120,
-      maxSize: 120,
+      size: 110,
+      minSize: 110,
+      maxSize: 110,
       enableHiding: false,
       enableResizing: false,
       cell: (info) => {

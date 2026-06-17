@@ -13,14 +13,6 @@
     <input name="{{ name }}" type="hidden" id="{{ name }}" value="{{ value }}" />
 {% endmacro %}
 
-{% macro raw(text, groupClass) %}
-    <div class="row">
-        <div class="col-sm-12 {{ groupClass }}">
-            {{ text|raw }}
-        </div>
-    </div>
-{% endmacro %}
-
 {% macro message(message, groupClass, messageStyleClass) %}
     <div class="row">
         <div class="{% if messageStyleClass %}{{messageStyleClass}}{% endif %} col-sm-12 {{ groupClass }}">

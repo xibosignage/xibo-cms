@@ -27,6 +27,7 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Display;
 use Xibo\Event\DisplayGroupLoadEvent;
+use Xibo\Event\FolderTouchEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayFactory;
@@ -510,6 +511,8 @@ class DisplayGroup extends Base
         $displayGroup->userId = $this->getUser()->userId;
         $displayGroup->save();
 
+        $this->touchFolder($displayGroup->folderId);
+
         // Return
         $this->getState()->hydrate([
             'httpState' => 201,
@@ -642,7 +645,9 @@ class DisplayGroup extends Base
         $displayGroup->ref4 = $parsedRequestParams->getString('ref4');
         $displayGroup->ref5 = $parsedRequestParams->getString('ref5');
 
-        if ($displayGroup->hasPropertyChanged('folderId')) {
+        $folderChanged = $displayGroup->hasPropertyChanged('folderId');
+        $oldFolderId = $folderChanged ? $displayGroup->getOriginalValue('folderId') : null;
+        if ($folderChanged) {
             if ($displayGroup->folderId === 1) {
                 $this->checkRootFolderAllowSave();
             }
@@ -695,6 +700,10 @@ class DisplayGroup extends Base
 
         $displayGroup->save();
 
+        if ($folderChanged) {
+            $this->touchFolder($displayGroup->folderId, $oldFolderId);
+        }
+
         // Return
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $displayGroup->displayGroup),
@@ -746,6 +755,7 @@ class DisplayGroup extends Base
 
         $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
         $displayGroup->delete();
+        $this->touchFolder($displayGroup->folderId);
 
         // Return
         $this->getState()->hydrate([
@@ -2286,6 +2296,7 @@ class DisplayGroup extends Base
             $folderId = $this->getUser()->homeFolderId;
         }
 
+        $oldFolderId = $displayGroup->folderId;
         $folder = $this->folderFactory->getById($folderId, 0);
         $displayGroup->folderId = $folder->id;
         $displayGroup->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
@@ -2296,6 +2307,8 @@ class DisplayGroup extends Base
             'manageDisplayLinks' => false,
             'manageDynamicDisplayLinks' => false,
         ]);
+
+        $this->touchFolder($displayGroup->folderId, $oldFolderId);
 
         // Return
         $this->getState()->hydrate([
@@ -2418,8 +2431,17 @@ class DisplayGroup extends Base
      * @throws NotFoundException
      * @throws PlayerActionException
      */
-    public function pushCriteriaUpdate(Request $request, Response $response, int $displayGroupId): Response|ResponseInterface
-    {
+    public function pushCriteriaUpdate(
+        Request $request,
+        Response $response,
+        int $displayGroupId
+    ): Response|ResponseInterface {
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+        if (!$this->getUser()->checkEditable($displayGroup)) {
+            throw new AccessDeniedException();
+        }
+
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Get criteria updates
@@ -2631,5 +2653,13 @@ class DisplayGroup extends Base
             'displayIdMember' => $parsedQueryParams->getInt('displayIdMember'),
             'keyword' => $parsedQueryParams->getString('keyword'),
         ], $parsedQueryParams);
+    }
+
+    private function touchFolder(int $folderId, ?int $oldFolderId = null): void
+    {
+        $this->getDispatcher()->dispatch(
+            new FolderTouchEvent($folderId, $oldFolderId),
+            FolderTouchEvent::$NAME
+        );
     }
 }

@@ -40,10 +40,6 @@ import { testQueryClient } from '@/setupTests';
 // -----------------------------------------------------------------------------
 
 // 3rd-party
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
 
 vi.mock('i18next', () => {
   const t = (key: string) => key;
@@ -81,8 +77,6 @@ vi.mock('../hooks/useLayoutFilterOptions', () => ({
           { label: 'No', value: 0 },
           { label: 'Yes', value: 1 },
         ],
-        shouldTranslateOptions: false,
-        showAllOption: false,
       },
       {
         label: 'Orientation',
@@ -92,8 +86,6 @@ vi.mock('../hooks/useLayoutFilterOptions', () => ({
           { label: 'Landscape', value: 'landscape' },
           { label: 'Square', value: 'square' },
         ],
-        shouldTranslateOptions: false,
-        showAllOption: false,
       },
       {
         label: 'Last Modified',
@@ -103,8 +95,6 @@ vi.mock('../hooks/useLayoutFilterOptions', () => ({
           { label: 'Today', value: 'today' },
           { label: 'Last 7 days', value: '7d' },
         ],
-        shouldTranslateOptions: true,
-        showAllOption: false,
       },
     ],
     isLoading: false,
@@ -270,17 +260,15 @@ describe('Layouts page - search and pagination', () => {
       fireEvent.click(await screen.findByRole('button', { name: 'Filters' }));
     });
 
-    // Open the Retired SelectFilter dropdown via its toggle button.
+    // Open the Retired SelectDropdown via its combobox toggle.
     const retiredLabel = screen.getByText('Retired');
     const retiredContainer = retiredLabel.closest('div')!;
     await act(async () => {
-      fireEvent.click(within(retiredContainer).getByRole('button'));
+      fireEvent.click(within(retiredContainer).getByRole('combobox'));
     });
 
-    // Click the "Yes" option inside the Retired container.
-    await act(async () => {
-      fireEvent.click(within(retiredContainer).getByText('Yes'));
-    });
+    // Options render in a FloatingPortal outside the container, so query from screen.
+    fireEvent.click(await screen.findByRole('option', { name: 'Yes' }));
 
     await waitFor(() => {
       expect(useLayoutData).toHaveBeenLastCalledWith(
@@ -305,11 +293,9 @@ describe('Layouts page - search and pagination', () => {
     const orientationLabel = screen.getByText('Orientation');
     const orientationContainer = orientationLabel.closest('div')!;
     await act(async () => {
-      fireEvent.click(within(orientationContainer).getByRole('button'));
+      fireEvent.click(within(orientationContainer).getByRole('combobox'));
     });
-    await act(async () => {
-      fireEvent.click(within(orientationContainer).getByText('Landscape'));
-    });
+    fireEvent.click(await screen.findByRole('option', { name: 'Landscape' }));
 
     await waitFor(() => {
       expect(useLayoutData).toHaveBeenLastCalledWith(
@@ -334,11 +320,9 @@ describe('Layouts page - search and pagination', () => {
     const lastModLabel = screen.getByText('Last Modified');
     const lastModContainer = lastModLabel.closest('div')!;
     await act(async () => {
-      fireEvent.click(within(lastModContainer).getByRole('button'));
+      fireEvent.click(within(lastModContainer).getByRole('combobox'));
     });
-    await act(async () => {
-      fireEvent.click(within(lastModContainer).getByText('Today'));
-    });
+    fireEvent.click(await screen.findByRole('option', { name: 'Today' }));
 
     await waitFor(() => {
       expect(useLayoutData).toHaveBeenLastCalledWith(
@@ -366,11 +350,9 @@ describe('Layouts page - search and pagination', () => {
     const retiredLabel = screen.getByText('Retired');
     const retiredContainer = retiredLabel.closest('div')!;
     await act(async () => {
-      fireEvent.click(within(retiredContainer).getByRole('button'));
+      fireEvent.click(within(retiredContainer).getByRole('combobox'));
     });
-    await act(async () => {
-      fireEvent.click(within(retiredContainer).getByText('Yes'));
-    });
+    fireEvent.click(await screen.findByRole('option', { name: 'Yes' }));
 
     // Now reset - the filter values should return to the initial empty state.
     await act(async () => {

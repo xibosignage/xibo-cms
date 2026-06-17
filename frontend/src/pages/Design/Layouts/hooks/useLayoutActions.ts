@@ -40,6 +40,7 @@ import {
   publishLayout,
 } from '@/services/layoutsApi';
 import type { Layout } from '@/types/layout';
+import { formatDateTime } from '@/utils/date';
 
 interface UsePlaylistActionsProps {
   t: TFunction;
@@ -47,6 +48,7 @@ interface UsePlaylistActionsProps {
   closeModal: () => void;
   setRowSelection: Dispatch<SetStateAction<RowSelectionState>>;
   setItemsToMove: (items: Layout[]) => void;
+  timezone: string;
 }
 
 export function useLayoutActions({
@@ -55,6 +57,7 @@ export function useLayoutActions({
   closeModal,
   setRowSelection,
   setItemsToMove,
+  timezone,
 }: UsePlaylistActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -94,13 +97,6 @@ export function useLayoutActions({
       setRowSelection({});
       handleRefresh();
       closeModal();
-    } catch (error) {
-      console.error(error);
-      const message =
-        isAxiosError(error) && error.response?.data?.message
-          ? error.response.data.message
-          : t('Some selected items could not be deleted.');
-      setDeleteError(message);
     } finally {
       setIsDeleting(false);
     }
@@ -239,7 +235,7 @@ export function useLayoutActions({
 
       await publishLayout(layoutId, {
         publishNow: value.type === 'now' ? 1 : 0,
-        publishDate: value.type === 'scheduled' ? value.date.toISOString() : undefined,
+        publishDate: value.type === 'scheduled' ? formatDateTime(value.date, timezone) : undefined,
       });
 
       notify.success(t('Layout published successfully'));
@@ -249,8 +245,8 @@ export function useLayoutActions({
       closeModal();
     } catch (error) {
       console.error(error);
-      const apiErr = error as { response?: { data?: { message?: string } } };
-      const message = apiErr.response?.data?.message ?? t('Failed to publish layout');
+      const message =
+        (isAxiosError(error) && error.response?.data?.message) || t('Failed to publish layout');
       notify.error(message);
     } finally {
       setIsPublishing(false);
@@ -304,9 +300,6 @@ export function useLayoutActions({
       a.click();
 
       window.URL.revokeObjectURL(url);
-
-      const text = await blob.text();
-      console.log('TEXT RESPONSE:', text);
 
       notify.success(t('Layout exported successfully'));
       closeModal();

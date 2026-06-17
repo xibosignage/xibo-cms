@@ -38,11 +38,6 @@ import type { DisplayGroup } from '@/types/displayGroup';
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
-
 vi.mock('@/services/displayGroupApi');
 vi.mock('@/services/displaysApi', () => ({
   fetchDisplays: vi.fn().mockResolvedValue({ rows: [], totalCount: 0 }),

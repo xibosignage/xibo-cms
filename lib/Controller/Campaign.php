@@ -25,6 +25,7 @@ use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Event\FolderTouchEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
@@ -537,7 +538,9 @@ class Campaign extends Base
         }
 
         // All done, save.
-        $campaign->save();
+        $campaign->save(['audit' => true]);
+
+        $this->touchFolder($campaign->folderId);
 
         // Return
         $this->getState()->hydrate([
@@ -713,7 +716,9 @@ class Campaign extends Base
         $campaign->folderId = $parsedRequestParams->getInt('folderId', ['default' => $campaign->folderId]);
         $campaign->modifiedBy = $this->getUser()->getId();
 
-        if ($campaign->hasPropertyChanged('folderId')) {
+        $folderChanged = $campaign->hasPropertyChanged('folderId');
+        $oldFolderId = $folderChanged ? $campaign->getOriginalValue('folderId') : null;
+        if ($folderChanged) {
             if ($campaign->folderId === 1) {
                 $this->checkRootFolderAllowSave();
             }
@@ -802,7 +807,11 @@ class Campaign extends Base
         }
 
         // Save the campaign.
-        $campaign->save();
+        $campaign->save(['audit' => true]);
+
+        if ($folderChanged) {
+            $this->touchFolder($campaign->folderId, $oldFolderId);
+        }
 
         // Return
         $this->getState()->hydrate([
@@ -851,6 +860,7 @@ class Campaign extends Base
         }
 
         $campaign->delete();
+        $this->touchFolder($campaign->folderId);
 
         // Return
         $this->getState()->hydrate([
@@ -972,6 +982,17 @@ class Campaign extends Base
         );
         $campaign->save(['validate' => false, 'saveTags' => false]);
 
+        // Audit
+        $this->getLog()->audit(
+            'Campaign',
+            $campaign->campaignId,
+            'Assigned Layout',
+            [
+                'layoutId' => $layout->layoutId,
+                'name' => $layout->layout,
+            ],
+        );
+
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
@@ -1079,6 +1100,16 @@ class Campaign extends Base
 
         $campaign->unassignLayout($layoutId, $displayOrder);
         $campaign->save(['validate' => false]);
+
+        // Audit
+        $this->getLog()->audit(
+            'Campaign',
+            $campaign->campaignId,
+            'Unassigned Layout',
+            [
+                'layoutId' => $layoutId,
+            ],
+        );
 
         return $this->render($request, $response);
     }
@@ -1254,6 +1285,7 @@ class Campaign extends Base
             $this->checkRootFolderAllowSave();
         }
 
+        $oldFolderId = $campaign->folderId;
         $campaign->folderId = $folderId;
         $folder = $this->folderFactory->getById($campaign->folderId);
         $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null)
@@ -1283,6 +1315,8 @@ class Campaign extends Base
             'collectNow' => false,
             'saveTags' => false
         ]);
+
+        $this->touchFolder($campaign->folderId, $oldFolderId);
 
         // Return
         $this->getState()->hydrate([
@@ -1363,6 +1397,14 @@ class Campaign extends Base
         $campaign->setUnmatchedProperty(
             'userPermissions',
             $this->getUser()->getPermission($campaign)
+        );
+    }
+
+    private function touchFolder(int $folderId, ?int $oldFolderId = null): void
+    {
+        $this->getDispatcher()->dispatch(
+            new FolderTouchEvent($folderId, $oldFolderId),
+            FolderTouchEvent::$NAME
         );
     }
 }

@@ -26,11 +26,14 @@ export interface FetchDisplayProfileRequest {
   start: number;
   length: number;
   keyword?: string;
+  displayProfile?: string;
   type?: DisplayProfileType;
   embed?: string;
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;
+  useRegexForName?: number;
+  logicalOperatorName?: 'OR' | 'AND';
 }
 
 export interface FetchDisplayProfileResponse {
@@ -108,6 +111,18 @@ export interface LockOptionsPayload {
   keylockRemote: string;
 }
 
+export interface HisenseTimerEntry {
+  index: number;
+  dayScope: number;
+  time: string;
+  manualWeeks: number[];
+}
+
+export interface HisensePictureControlEntry {
+  property: string;
+  value: number | null;
+}
+
 export interface UpdateDisplayProfileRequest {
   name: string;
   isDefault: number;
@@ -115,6 +130,8 @@ export interface UpdateDisplayProfileRequest {
   timers?: TimerEntry[];
   pictureControls?: PictureControlEntry[];
   lockOptions?: LockOptionsPayload;
+  hisenseTimers?: HisenseTimerEntry[];
+  hisensePictureControls?: HisensePictureControlEntry[];
 }
 
 export async function updateDisplayProfile(
@@ -158,6 +175,23 @@ export async function updateDisplayProfile(
     if (data.lockOptions.keylockRemote) {
       params.append('keylockRemote', data.lockOptions.keylockRemote);
     }
+  }
+
+  if (data.hisenseTimers !== undefined) {
+    data.hisenseTimers.forEach((timer, i) => {
+      params.append(`timers[${i}][index]`, String(timer.index));
+      params.append(`timers[${i}][type]`, String(timer.dayScope));
+      params.append(`timers[${i}][time]`, timer.time);
+      timer.manualWeeks.forEach((day, j) => {
+        params.append(`timers[${i}][manualWeeks][${j}]`, String(day));
+      });
+    });
+  }
+
+  if (data.hisensePictureControls !== undefined) {
+    data.hisensePictureControls.forEach((ctrl) => {
+      params.append(ctrl.property, ctrl.value !== null ? String(ctrl.value) : '');
+    });
   }
 
   const response = await http.put(`/displayprofile/${displayProfileId}`, params.toString(), {

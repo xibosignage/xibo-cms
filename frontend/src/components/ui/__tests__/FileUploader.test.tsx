@@ -31,20 +31,6 @@ import type { UploadItem } from '@/hooks/useUploadQueue';
 // Mocks
 // -----------------------------------------------------------------------------
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    // t() returns the key, but also replaces {{placeholders}} if options are provided
-    t: (key: string, opts?: Record<string, unknown>) =>
-      opts
-        ? Object.entries(opts).reduce(
-            (str, [k, v]) => str.replace(new RegExp(`{{${k}}}`, 'g'), String(v)),
-            key,
-          )
-        : key,
-    i18n: { changeLanguage: vi.fn() },
-  }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-}));
 vi.mock('react-dropzone', async (importOriginal) => {
   const actual = await importOriginal();
   return {
@@ -151,7 +137,7 @@ describe('FileUploader component', () => {
   test('Upload button stays disabled when folder is locked even if a URL is typed', () => {
     renderUploader([], { disabled: true });
 
-    const urlInput = screen.getByPlaceholderText('https://www.exampleurl.com/funnycat4364');
+    const urlInput = screen.getByPlaceholderText('https://www.example.com/example');
     fireEvent.change(urlInput, { target: { value: 'https://example.com/file.mp4' } });
 
     expect(screen.getByRole('button', { name: 'Upload' })).toBeDisabled();
@@ -314,7 +300,7 @@ describe('FileUploader component', () => {
   test('clicking Upload sends the URL to onUrlUpload and clears the input', () => {
     const spies = renderUploader();
 
-    const urlInput = screen.getByPlaceholderText('https://www.exampleurl.com/funnycat4364');
+    const urlInput = screen.getByPlaceholderText('https://www.example.com/example');
     fireEvent.change(urlInput, { target: { value: 'https://example.com/file.mp4' } });
     fireEvent.click(screen.getByRole('button', { name: 'Upload' }));
 

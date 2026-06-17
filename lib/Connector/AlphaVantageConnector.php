@@ -64,6 +64,12 @@ class AlphaVantageConnector implements ConnectorInterface
         return 'Get Currencies and Stocks data';
     }
 
+    public function getFormDescriptionHtml(): string
+    {
+        return __('Alpha Vantage provides enterprise-grade financial market data'
+            . ' through a set of powerful and developer-friendly data APIs and spreadsheets.');
+    }
+
     public function getThumbnail(): string
     {
         return '';
@@ -87,6 +93,42 @@ class AlphaVantageConnector implements ConnectorInterface
             $settings['cachePeriod'] = $params->getInt('cachePeriod');
         }
         return $settings;
+    }
+
+    public function getSettingsFields(): array
+    {
+        $providerOnly = $this->isProviderSetting('apiKey');
+        return [
+            [
+                'name'         => 'apiKey',
+                'type'         => 'text',
+                'label'        => __('API Key'),
+                'helpText'     => __('Enter your Alpha Vantage API key.'),
+                'required'     => false,
+                'providerOnly' => $providerOnly,
+            ],
+            [
+                'name'         => 'isPaidPlan',
+                'type'         => 'checkbox',
+                'label'        => __('Paid plan?'),
+                'helpText'     => __(
+                    'Is the above key on a paid plan?'
+                    . ' You may want to use a paid plan for real time FX rates.'
+                ),
+                'providerOnly' => $providerOnly,
+            ],
+            [
+                'name'         => 'cachePeriod',
+                'type'         => 'number',
+                'label'        => __('Cache Period'),
+                'helpText'     => __(
+                    'This module uses 3rd party data.'
+                    . ' Please enter the number of seconds you would like to cache results.'
+                ),
+                'default'      => 3600,
+                'providerOnly' => $providerOnly,
+            ],
+        ];
     }
 
     /**

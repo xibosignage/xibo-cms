@@ -27,6 +27,7 @@ interface TextInputProps {
   name: string;
   value?: string;
   label?: string;
+  labelExtra?: React.ReactNode;
   placeholder?: string;
   helpText?: string;
   error?: string;
@@ -40,6 +41,7 @@ interface TextInputProps {
   multiline?: boolean;
   rows?: number;
   type?: React.HTMLInputTypeAttribute;
+  optional?: boolean;
 }
 
 export default function TextInput({
@@ -50,6 +52,7 @@ export default function TextInput({
   labelClassName,
   wrapperClassName,
   label,
+  labelExtra,
   placeholder,
   helpText,
   error,
@@ -59,6 +62,7 @@ export default function TextInput({
   multiline = false,
   rows,
   type,
+  optional = false,
 }: TextInputProps) {
   const { t } = useTranslation();
   const generatedId = useId();
@@ -68,9 +72,16 @@ export default function TextInput({
       {label && (
         <label
           htmlFor={generatedId}
-          className={twMerge('text-sm font-semibold text-gray-500 leading-4.5', labelClassName)}
+          className={twMerge(
+            'flex items-center justify-between text-sm font-semibold text-gray-500 leading-4.5',
+            labelClassName,
+          )}
         >
-          {label}
+          <span className="inline-flex items-center gap-1.5">
+            {label}
+            {labelExtra}
+          </span>
+          {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
         </label>
       )}
       <div
@@ -96,7 +107,7 @@ export default function TextInput({
             onChange={(e) => onChange && onChange(e.target.value)}
             placeholder={placeholder || t('Add text')}
             className={twMerge(
-              'flex-1 p-3 text-sm font-normal text-gray-800 placeholder:text-gray-500',
+              'flex-1 min-w-0 p-3 text-sm font-normal text-gray-800 placeholder:text-gray-500',
               'bg-transparent border-none outline-none focus:ring-0 resize-none',
               className,
             )}
@@ -111,7 +122,7 @@ export default function TextInput({
             placeholder={placeholder || t('Add text')}
             type={type || 'text'}
             className={twMerge(
-              'flex-1 p-3 text-sm font-normal text-gray-800 placeholder:text-gray-500',
+              'flex-1 min-w-0 p-3 text-sm font-normal text-gray-800 placeholder:text-gray-500',
               'bg-transparent border-none outline-none focus:ring-0',
               className,
             )}

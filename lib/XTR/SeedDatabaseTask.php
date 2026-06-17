@@ -907,7 +907,7 @@ class SeedDatabaseTask implements TaskInterface
         if (count($commands) <= 0) {
             // Create a user - user name `Simple User`
             try {
-                $command = $this->commandFactory->create();
+                $command = $this->commandFactory->createEmpty();
                 $command->command = $commandName;
                 $command->description = 'a command to test schedule';
                 $command->code = 'TIMEZONE';

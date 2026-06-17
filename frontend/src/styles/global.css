@@ -35,36 +35,53 @@ body,
   height: 100%;
 }
 
-/* Custom colours */
+/* Typography */
 @theme {
   --font-sans:
     'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
     'Segoe UI Symbol', 'Noto Color Emoji';
+}
 
-  --color-xibo-blue-50: #e1f0ff;
-  --color-xibo-blue-100: #bcd5ff;
-  --color-xibo-blue-200: #9ebfff;
-  --color-xibo-blue-300: #80a9ff;
-  --color-xibo-blue-400: #6194ff;
-  --color-xibo-blue-500: #3f7fff;
-  --color-xibo-blue-600: #0e70f6;
-  --color-xibo-blue-700: #0059d3;
-  --color-xibo-blue-800: #00368e;
-  --color-xibo-blue-900: #02266c;
-  --color-xibo-blue-950: #001338;
+/* Brand tokens — the two override points for white-label themes.
+   Overriding --brand-primary and --brand-accent in a custom theme.css
+   automatically recolours every palette shade via oklch. */
+:root {
+  --brand-primary: #0e70f6;
+  --brand-accent: #eb7857;
+}
 
-  --color-xibo-burnt-sienna-50: #ffe7d0;
-  --color-xibo-burnt-sienna-100: #ffcaaa;
-  --color-xibo-burnt-sienna-200: #fbb193;
-  --color-xibo-burnt-sienna-300: #fb9879;
-  --color-xibo-burnt-sienna-400: #f38869;
-  --color-xibo-burnt-sienna-500: #eb7857;
-  --color-xibo-burnt-sienna-600: #d46647;
-  --color-xibo-burnt-sienna-700: #bb5235;
-  --color-xibo-burnt-sienna-800: #9b3a21;
-  --color-xibo-burnt-sienna-900: #7a2510;
-  --color-xibo-burnt-sienna-950: #581400;
+/* Colour palette — all shades are derived from the brand tokens so that
+   changing --brand-primary or --brand-accent cascades through every
+   Tailwind utility automatically. Lightness and chroma are fixed per shade;
+   only the hue follows the brand token. */
+@theme inline {
+  /* Primary colour scale */
+  --color-xibo-blue-50: oklch(from var(--brand-primary) 0.948 0.026 h);
+  --color-xibo-blue-100: oklch(from var(--brand-primary) 0.869 0.064 h);
+  --color-xibo-blue-200: oklch(from var(--brand-primary) 0.804 0.098 h);
+  --color-xibo-blue-300: oklch(from var(--brand-primary) 0.741 0.133 h);
+  --color-xibo-blue-400: oklch(from var(--brand-primary) 0.681 0.167 h);
+  --color-xibo-blue-500: oklch(from var(--brand-primary) 0.625 0.202 h);
+  --color-xibo-blue-600: oklch(from var(--brand-primary) 0.577 0.217 h);
+  --color-xibo-blue-700: oklch(from var(--brand-primary) 0.500 0.202 h);
+  --color-xibo-blue-800: oklch(from var(--brand-primary) 0.366 0.155 h);
+  --color-xibo-blue-900: oklch(from var(--brand-primary) 0.299 0.128 h);
+  --color-xibo-blue-950: oklch(from var(--brand-primary) 0.199 0.078 h);
 
+  /* Accent colour scale */
+  --color-xibo-burnt-sienna-50: oklch(from var(--brand-accent) 0.941 0.040 calc(h + 29.2));
+  --color-xibo-burnt-sienna-100: oklch(from var(--brand-accent) 0.878 0.074 calc(h + 15.7));
+  --color-xibo-burnt-sienna-200: oklch(from var(--brand-accent) 0.823 0.096 calc(h + 6.1));
+  --color-xibo-burnt-sienna-300: oklch(from var(--brand-accent) 0.775 0.127 calc(h + 1.3));
+  --color-xibo-burnt-sienna-400: oklch(from var(--brand-accent) 0.737 0.138 h);
+  --color-xibo-burnt-sienna-500: oklch(from var(--brand-accent) 0.698 0.150 h);
+  --color-xibo-burnt-sienna-600: oklch(from var(--brand-accent) 0.637 0.146 h);
+  --color-xibo-burnt-sienna-700: oklch(from var(--brand-accent) 0.568 0.143 h);
+  --color-xibo-burnt-sienna-800: oklch(from var(--brand-accent) 0.481 0.135 calc(h - 1.5));
+  --color-xibo-burnt-sienna-900: oklch(from var(--brand-accent) 0.394 0.122 calc(h - 2.1));
+  --color-xibo-burnt-sienna-950: oklch(from var(--brand-accent) 0.307 0.103 h);
+
+  /* Neutral colours — not tied to brand tokens */
   --color-xibo-black: #000;
   --color-xibo-grey: #484848;
   --color-xibo-seasalt: #f7f7f7;

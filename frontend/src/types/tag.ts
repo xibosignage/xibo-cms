@@ -20,7 +20,17 @@
  */
 
 export interface Tag {
-  tag: string;
   tagId: number;
+  tag: string;
+  isSystem?: number;
+  isRequired?: number;
+  options?: string | null;
   value: string | number;
+}
+
+export interface TagUsageEntry {
+  entityId: number;
+  type: string;
+  name: string;
+  value: string | null;
 }

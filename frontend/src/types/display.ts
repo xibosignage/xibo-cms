@@ -80,12 +80,14 @@ export interface Display {
   latitude: number | null;
   longitude: number | null;
   clientType: string | null;
+  displayProfileType?: string | null;
   clientVersion: string | null;
   clientCode: number | null;
   displayProfileId: number | null;
   displayProfile: string | null;
   currentLayoutId: number | null;
   screenShotRequested: number;
+  thumbnail: string;
   storageAvailableSpace: number | null;
   storageTotalSpace: number | null;
   displayGroupId: number;
