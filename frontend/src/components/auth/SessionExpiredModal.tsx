@@ -20,7 +20,7 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
-import { ExternalLink, Lock, RefreshCw, AlertCircle } from 'lucide-react';
+import { Lock, RefreshCw, AlertCircle } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -105,10 +105,10 @@ export function SessionExpiredModal() {
     {
       label: t('Log In'),
       onClick: () => {
-        window.open('/login', '_blank');
+        const currentPath = window.location.pathname + window.location.search;
+        window.location.href = '/login?priorRoute=' + encodeURIComponent(currentPath);
       },
       disabled: isChecking,
-      rightIcon: ExternalLink,
     },
   ];
 

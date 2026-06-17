@@ -145,18 +145,6 @@ class Login extends Base
         $authCASEnabled = isset($this->getConfig()->casSettings);
         $logoUrl = $this->getBrandLogoUrl();
 
-        // Legacy Twig fallback for ?legacy=1 (noscript / rollback path)
-        if ($sanitizedRequestBody->getString('legacy') === '1') {
-            $this->getState()->template = 'login-legacy';
-            $this->getState()->setData([
-                'passwordReminderEnabled' => $passwordReminderEnabled,
-                'authCASEnabled' => $authCASEnabled,
-                'logoUrl' => $logoUrl,
-                'version' => Environment::$WEBSITE_VERSION_NAME
-            ]);
-            return $this->render($request, $response);
-        }
-
         // Build config blob for the React SPA shell
         $loginConfig = [
             'priorRoute' => $this->sanitizePriorRouteForOutput(
@@ -247,6 +235,9 @@ class Login extends Base
                     $_SESSION['tfaUsername'] = $user->userName;
 
                     if ($isJson) {
+                        if ($user->twoFactorTypeId === 1) {
+                            $this->sendTwoFactorEmail($user, $request);
+                        }
                         return $this->jsonResponse($response, [
                             'status'     => '2fa_required',
                             'priorRoute' => $this->sanitizePriorRouteForOutput($priorRoute),
@@ -254,7 +245,7 @@ class Login extends Base
                     }
 
                     $this->getFlash()->addMessage('priorRoute', $priorRoute);
-                    return $response->withRedirect($routeParser->urlFor('tfa'));
+                    return $response->withRedirect($routeParser->urlFor('login'));
                 }
 
                 // We are logged in, so complete the login flow
@@ -504,56 +495,6 @@ class Login extends Base
         return $this->render($request, $response);
     }
 
-    #[OA\Get(
-        path: '/about',
-        operationId: 'about',
-        description: 'Information about this API, such as Version code, etc',
-        summary: 'About',
-        tags: ['misc']
-    )]
-    #[OA\Response(
-        response: 200,
-        description: 'successful response',
-        content: new OA\JsonContent(
-            type: 'object',
-            additionalProperties: new OA\AdditionalProperties(type: 'string')
-        )
-    )]
-    /**
-     * Shows information about Xibo
-     *
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function about(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
-    {
-        $state = $this->getState();
-
-        if ($request->isXhr() || $this->isApi($request)) {
-            $state->template = 'about-text';
-        } else {
-            $state->template = 'about-page';
-        }
-
-        $state->setData([
-            'version' => Environment::$WEBSITE_VERSION_NAME,
-            'revision' => Environment::getGitCommit(),
-            'playerVersion' => Environment::$PLAYER_SUPPORT,
-            'isDevMode' => Environment::isDevMode(),
-            'logoUrl' => $this->getBrandLogoUrl(),
-            'sourceUrl' => $this->getConfig()->getThemeConfig(
-                'cms_source_url',
-                'https://github.com/xibosignage/xibo-cms'
-            ),
-            'aboutText' => $this->getConfig()->getThemeConfig('about_text') ?? '',
-        ]);
-
-        return $this->render($request, $response);
-    }
-
     /**
      * Public JSON endpoint returning branding + version info for the About modal.
      * No authentication required.
@@ -674,108 +615,6 @@ class Login extends Base
      * @throws \Twig\Error\SyntaxError
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function twoFactorAuthForm(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
-    {
-        if (!isset($_SESSION['tfaUsername'])) {
-            $this->getFlash()->addMessage('login_message', __('Session has expired, please log in again'));
-            return $response->withRedirect($this->urlFor($request, 'login'));
-        }
-
-        $user = $this->userFactory->getByName($_SESSION['tfaUsername']);
-        $message = '';
-
-        // if our user has email two factor enabled, we need to send the email with code now
-        if ($user->twoFactorTypeId === 1) {
-            if ($user->email == '') {
-                throw new NotFoundException(__('No email'));
-            }
-
-            $mailFrom = $this->getConfig()->getSetting('mail_from');
-            $issuerSettings = $this->getConfig()->getSetting('TWOFACTOR_ISSUER');
-            $appName = $this->getConfig()->getThemeConfig('app_name');
-
-            if ($issuerSettings !== '') {
-                $issuer = $issuerSettings;
-            } else {
-                $issuer = $appName;
-            }
-
-            if ($mailFrom == '') {
-                throw new InvalidArgumentException(
-                    __('Sending email address in CMS Settings is not configured'),
-                    'mail_from'
-                );
-            }
-
-            $tfa = new TwoFactorAuth($issuer);
-
-            // Nonce parts (nonce isn't ever stored, only the hash of it is stored, it only exists in the email)
-            $action = 'user-tfa-email-auth' . Random::generateString(10);
-            $nonce = Random::generateString(20);
-
-            // Create a nonce for this user and store it somewhere
-            $cache = $this->pool->getItem('/nonce/' . $action);
-
-            $cache->set([
-                'action' => $action,
-                'hash' => password_hash($nonce, PASSWORD_DEFAULT),
-                'userId' => $user->userId
-            ]);
-            $cache->expiresAfter(1800); // 30 minutes?
-
-            // Save cache
-            $this->pool->save($cache);
-
-            // Make a link
-            $code = $tfa->getCode($user->twoFactorSecret);
-
-            // Send the mail
-            $mail = new \PHPMailer\PHPMailer\PHPMailer();
-            $mail->CharSet = 'UTF-8';
-            $mail->Encoding = 'base64';
-            $mail->From = $mailFrom;
-            $msgFromName = $this->getConfig()->getSetting('mail_from_name');
-
-            if ($msgFromName != null) {
-                $mail->FromName = $msgFromName;
-            }
-
-            $mail->Subject = __('Two Factor Authentication');
-            $mail->addAddress($user->email);
-
-            // Body
-            $mail->isHTML(true);
-            $mail->Body = $this->generateEmailBody(
-                $mail->Subject,
-                '<p>'
-                . __('You are receiving this email because two factor email authorisation is enabled'
-                    . ' in your CMS user account. If you did not make this request, please report'
-                    . ' this email to your administrator immediately.')
-                . '</p>'
-                . '<p>' . $code . '</p>'
-            );
-
-            if (!$mail->send()) {
-                $message = __('Unable to send two factor code to email address associated with this user');
-            } else {
-                $message = __('Two factor code email has been sent to your email address');
-
-                // Audit Log
-                $this->getLog()->audit('User', $user->userId, 'Two Factor Code email sent', [
-                    'UserAgent' => $request->getHeader('User-Agent')
-                ]);
-            }
-        }
-
-        // Template
-        $this->getState()->template = 'tfa';
-
-        // the flash message do not work well here - need to reload the page to see the message, hence the below
-        $this->getState()->setData(['message' => $message, 'logoUrl' => $this->getBrandLogoUrl()]);
-
-        return $this->render($request, $response);
-    }
-
     /**
      * @param Request $request
      * @param Response $response
@@ -1008,6 +847,74 @@ class Login extends Base
         $setting = $this->getConfig()->getSetting('PASSWORD_REMINDER_ENABLED');
         $mailFrom = $this->getConfig()->getSetting('mail_from');
         return ($setting === 'On' || $setting === 'On except Admin') && $mailFrom !== '';
+    }
+
+    /**
+     * Send the email 2FA code to the user's email address.
+     * Called when email 2FA (typeId=1) is required during login.
+     *
+     * @throws NotFoundException if the user has no email address configured
+     * @throws InvalidArgumentException if mail_from is not configured
+     * @throws GeneralException if the email fails to send
+     */
+    private function sendTwoFactorEmail(User $user, Request $request): void
+    {
+        if ($user->email == '') {
+            throw new NotFoundException(__('No email'));
+        }
+
+        $issuerSettings = $this->getConfig()->getSetting('TWOFACTOR_ISSUER');
+        $appName = $this->getConfig()->getThemeConfig('app_name');
+        $issuer = ($issuerSettings !== '') ? $issuerSettings : $appName;
+
+        $tfa = new TwoFactorAuth($issuer);
+        $code = $tfa->getCode($user->twoFactorSecret);
+
+        // Dev mode: log the code instead of emailing it
+        if (Environment::isDevMode()) {
+            $this->getLog()->info('DEV MODE — 2FA email code for ' . $user->userName . ': ' . $code);
+            return;
+        }
+
+        $mailFrom = $this->getConfig()->getSetting('mail_from');
+        if ($mailFrom == '') {
+            throw new InvalidArgumentException(
+                __('Sending email address in CMS Settings is not configured'),
+                'mail_from'
+            );
+        }
+
+        $mail = new \PHPMailer\PHPMailer\PHPMailer();
+        $mail->CharSet = 'UTF-8';
+        $mail->Encoding = 'base64';
+        $mail->From = $mailFrom;
+        $msgFromName = $this->getConfig()->getSetting('mail_from_name');
+        if ($msgFromName != null) {
+            $mail->FromName = $msgFromName;
+        }
+
+        $mail->Subject = __('Two Factor Authentication');
+        $mail->addAddress($user->email);
+        $mail->isHTML(true);
+        $mail->Body = $this->generateEmailBody(
+            $mail->Subject,
+            '<p>'
+            . __('You are receiving this email because two factor email authorisation is enabled'
+                . ' in your CMS user account. If you did not make this request, please report'
+                . ' this email to your administrator immediately.')
+            . '</p>'
+            . '<p>' . $code . '</p>'
+        );
+
+        if (!$mail->send()) {
+            throw new GeneralException(
+                __('Unable to send two factor code to email address associated with this user')
+            );
+        }
+
+        $this->getLog()->audit('User', $user->userId, 'Two Factor Code email sent', [
+            'UserAgent' => $request->getHeader('User-Agent')
+        ]);
     }
 
     /**

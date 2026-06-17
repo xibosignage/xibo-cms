@@ -45,12 +45,5 @@
         <script type="module" src="{{ viteClientUrl }}" nonce="{{ cspNonce }}"></script>
     {% endif %}
     <script type="module" src="{{ loginJsUrl }}" nonce="{{ cspNonce }}"></script>
-
-    <noscript>
-        <meta http-equiv="refresh" content="0; url=/login?legacy=1"/>
-        <p style="font-family:sans-serif;text-align:center;padding:40px">
-            JavaScript is required. <a href="/login?legacy=1">Use the basic login page</a>.
-        </p>
-    </noscript>
 </body>
 </html>

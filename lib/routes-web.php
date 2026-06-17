@@ -34,7 +34,6 @@ $app->get('/login', ['\Xibo\Controller\Login', 'loginForm'])->setName('login');
 // Login Requests
 $app->post('/login', ['\Xibo\Controller\Login','login']);
 $app->post('/login/forgotten', ['\Xibo\Controller\Login','forgottenPassword'])->setName('login.forgotten');
-$app->get('/tfa', ['\Xibo\Controller\Login','twoFactorAuthForm'])->setName('tfa');
 
 // Logout Request
 $app->get('/logout', ['\Xibo\Controller\Login','logout'])->setName('logout');
@@ -275,11 +274,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 $app->get('/fault/view', ['\Xibo\Controller\Fault','displayPage'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['fault.view']))
     ->setName('fault.view');
-
-//
-// license
-//
-$app->get('/license/view', ['\Xibo\Controller\Login','about'])->setName('license.view');
 
 //
 // Reporting

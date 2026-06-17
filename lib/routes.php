@@ -32,7 +32,6 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
 /**
  * Misc
  */
-$app->get('/about', ['\Xibo\Controller\Login', 'About'])->setName('about');
 $app->get('/about/config', ['\Xibo\Controller\Login', 'aboutConfig']);
 $app->get('/clock', ['\Xibo\Controller\Clock', 'clock'])->setName('clock');
 $app->post('/tfa', ['\Xibo\Controller\Login' , 'twoFactorAuthValidate'])->setName('tfa.auth.validate');
