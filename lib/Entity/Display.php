@@ -568,10 +568,10 @@ class Display implements \JsonSerializable
         $log,
         $dispatcher,
         private readonly ConfigServiceInterface $config,
-        private readonly DisplayGroupFactory $displayGroupFactory,
-        private readonly DisplayProfileFactory $displayProfileFactory,
-        private readonly DisplayFactory $displayFactory,
-        private readonly FolderFactory $folderFactory
+        private readonly ?DisplayGroupFactory $displayGroupFactory,
+        private readonly ?DisplayProfileFactory $displayProfileFactory,
+        private readonly ?DisplayFactory $displayFactory,
+        private readonly ?FolderFactory $folderFactory
     ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
         $this->excludeProperty('mediaInventoryXml');

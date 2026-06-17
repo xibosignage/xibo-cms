@@ -154,7 +154,7 @@
             <li class="sidebar-title"><a>{% trans "Advanced" %}</a></li>
 
             {% if currentUser.featureEnabled("log.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("log.view") }}">{% trans "Log" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/advanced/log">{% trans "Log" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("sessions.view") %}
