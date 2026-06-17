@@ -19,8 +19,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 namespace Xibo\Controller;
 
+use DOMDocument;
+use DOMElement;
+use DOMException;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -31,234 +35,107 @@ use Xibo\Service\MediaService;
 use Xibo\Service\UploadService;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
-use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
- * Class Module
+ * Class Developer
  * @package Xibo\Controller
  */
 class Developer extends Base
 {
     public function __construct(
         private readonly ModuleFactory $moduleFactory,
-        private readonly ModuleTemplateFactory $moduleTemplateFactory
+        private readonly ModuleTemplateFactory $moduleTemplateFactory,
     ) {
     }
 
     /**
-     * Display the module templates page
+     * Show Module templates in a grid
      * @param Request $request
      * @param Response $response
-     * @return \Slim\Http\Response
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function displayTemplatePage(Request $request, Response $response): Response
-    {
-        $this->getState()->template = 'developer-template-page';
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Show Module templates in a grid
-     * @param \Slim\Http\ServerRequest $request
-     * @param \Slim\Http\Response $response
-     * @return \Slim\Http\Response
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @return Response
+     * @throws GeneralException
      */
     public function templateGrid(Request $request, Response $response): Response
     {
         $params = $this->getSanitizer($request->getParams());
 
+        $templateSortQuery = $this->gridRenderSort(
+            $params,
+            $this->isJson($request),
+            'id'
+        );
+
+        $templateFilterQuery = $this->getTemplateFilterQuery($params);
+
         $templates = $this->moduleTemplateFactory->loadUserTemplates(
-            $this->gridRenderSort($params),
-            $this->gridRenderFilter(
-                [
-                    'id' => $params->getInt('id'),
-                    'templateId' => $params->getString('templateId'),
-                    'dataType' => $params->getString('dataType'),
-                ],
-                $params
-            )
+            $templateSortQuery,
+            $templateFilterQuery
         );
 
         foreach ($templates as $template) {
-            if ($this->isApi($request)) {
-                break;
-            }
-
-            $template->includeProperty('buttons');
-
-            if ($this->getUser()->checkEditable($template) &&
-                $this->getUser()->featureEnabled('developer.edit')
-            ) {
-                // Edit button
-                $template->buttons[] = [
-                    'id' => 'template_button_edit',
-                    'url' => $this->urlFor($request, 'developer.templates.view.edit', ['id' => $template->id]),
-                    'text' => __('Edit'),
-                    'class' => 'XiboRedirectButton',
-                ];
-
-                $template->buttons[] = [
-                    'id' => 'template_button_export',
-                    'linkType' => '_self', 'external' => true,
-                    'url' => $this->urlFor($request, 'developer.templates.export', ['id' => $template->id]),
-                    'text' => __('Export XML'),
-                ];
-
-                $template->buttons[] = [
-                    'id' => 'template_button_copy',
-                    'url' => $this->urlFor($request, 'developer.templates.form.copy', ['id' => $template->id]),
-                    'text' => __('Copy'),
-                ];
-            }
-
-            if ($this->getUser()->featureEnabled('developer.edit') &&
-                $this->getUser()->checkPermissionsModifyable($template)
-            ) {
-                $template->buttons[] = ['divider' => true];
-                // Permissions for Module Template
-                $template->buttons[] = [
-                    'id' => 'template_button_permissions',
-                    'url' => $this->urlFor(
-                        $request,
-                        'user.permissions.form',
-                        ['entity' => 'ModuleTemplate', 'id' => $template->id]
-                    ),
-                    'text' => __('Share'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'user.permissions.multi',
-                                ['entity' => 'ModuleTemplate', 'id' => $template->id]
-                            )
-                        ],
-                        ['name' => 'commit-method', 'value' => 'post'],
-                        ['name' => 'id', 'value' => 'template_button_permissions'],
-                        ['name' => 'text', 'value' => __('Share')],
-                        ['name' => 'rowtitle', 'value' => $template->templateId],
-                        ['name' => 'sort-group', 'value' => 2],
-                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        [
-                            'name' => 'custom-handler-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'user.permissions.multi.form',
-                                ['entity' => 'ModuleTemplate']
-                            )
-                        ],
-                        ['name' => 'content-id-name', 'value' => 'id']
-                    ]
-                ];
-            }
-
-            if ($this->getUser()->checkDeleteable($template) &&
-                $this->getUser()->featureEnabled('developer.delete')
-            ) {
-                $template->buttons[] = ['divider' => true];
-                // Delete button
-                $template->buttons[] = [
-                    'id' => 'template_button_delete',
-                    'url' => $this->urlFor($request, 'developer.templates.form.delete', ['id' => $template->id]),
-                    'text' => __('Delete'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'developer.templates.delete',
-                                ['id' => $template->id]
-                            )
-                        ],
-                        ['name' => 'commit-method', 'value' => 'delete'],
-                        ['name' => 'id', 'value' => 'template_button_delete'],
-                        ['name' => 'text', 'value' => __('Delete')],
-                        ['name' => 'sort-group', 'value' => 1],
-                        ['name' => 'rowtitle', 'value' => $template->templateId]
-                    ]
-                ];
-            }
+            $template->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($template));
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->moduleTemplateFactory->countLast();
-        $this->getState()->setData($templates);
+        $draw  = $params->getInt('draw');
+        $total = $this->moduleTemplateFactory->countLast();
 
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $total)
+            ->withJson([
+                'draw'            => $draw,
+                'recordsTotal'    => $total,
+                'recordsFiltered' => $total,
+                'data'            => $templates,
+            ]);
     }
 
     /**
-     * Shows an add form for a module template
+     * Get the Template object specified by the provided template ID
      * @param Request $request
      * @param Response $response
-     * @return \Slim\Http\Response
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @param int $id
+     * @return Response|ResponseInterface
+     * @throws GeneralException
+     * @throws NotFoundException
      */
-    public function templateAddForm(Request $request, Response $response): Response
-    {
-        $this->getState()->template = 'developer-template-form-add';
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Display the module template page
-     * @param Request $request
-     * @param Response $response
-     * @param mixed $id The template ID to edit.
-     * @return \Slim\Http\Response
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function displayTemplateEditPage(Request $request, Response $response, $id): Response
+    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $template = $this->moduleTemplateFactory->getUserTemplateById($id);
-        if ($template->ownership !== 'user') {
+
+        if (!$this->getUser()->checkEditable($template)) {
             throw new AccessDeniedException();
         }
 
-        $this->getState()->template = 'developer-template-edit-page';
-        $this->getState()->setData([
-            'template' => $template,
-            'propertiesJSON' => json_encode($template->properties),
-        ]);
+        $template->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($template));
 
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson(['data' => $template]);
     }
 
     /**
      * Add a module template
      * @param Request $request
      * @param Response $response
-     * @return \Slim\Http\Response
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @return Response
+     * @throws GeneralException|DOMException
      */
     public function templateAdd(Request $request, Response $response): Response
     {
         // When adding a template we just save the XML
         $params = $this->getSanitizer($request->getParams());
 
-        $templateId = $params->getString('templateId', ['throw' => function () {
-            throw new InvalidArgumentException(__('Please supply a unique template ID'), 'templateId');
-        }]);
-        $title = $params->getString('title', ['throw' => function () {
-            throw new InvalidArgumentException(__('Please supply a title'), 'title');
-        }]);
-        $dataType = $params->getString('dataType', ['throw' => function () {
-            throw new InvalidArgumentException(__('Please supply a data type'), 'dataType');
-        }]);
-        $showIn = $params->getString('showIn', ['throw' => function () {
-            throw new InvalidArgumentException(
-                __('Please select relevant editor which should show this Template'),
-                'showIn'
-            );
-        }]);
+        [
+            'templateId' => $templateId,
+            'title' => $title,
+            'dataType' => $dataType,
+            'showIn' => $showIn
+        ]
+            = $this->validateTemplateParams($params);
 
         // do we have a template selected?
         if (!empty($params->getString('copyTemplateId'))) {
@@ -269,7 +146,7 @@ class Developer extends Base
             );
 
             // get the template xml and load to document.
-            $xml = new \DOMDocument();
+            $xml = new DOMDocument();
             $xml->loadXML($copyTemplate->getXml());
 
             // get template node, make adjustments from the form
@@ -296,43 +173,31 @@ class Developer extends Base
         $template->ownerId = $this->getUser()->userId;
         $template->save();
 
-        $this->getState()->hydrate([
-            'httpState' => 201,
-            'message' => __('Added'),
-            'id' => $template->id,
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(201)
+            ->withJson(['data' => $template]);
     }
 
     /**
      * Edit a module template
      * @param Request $request
      * @param Response $response
-     * @param $id
+     * @param int $id
      * @return Response
-     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws GeneralException|DOMException
      */
-    public function templateEdit(Request $request, Response $response, $id): Response
+    public function templateEdit(Request $request, Response $response, int $id): Response
     {
         $template = $this->moduleTemplateFactory->getUserTemplateById($id);
 
         $params = $this->getSanitizer($request->getParams());
-        $templateId = $params->getString('templateId', ['throw' => function () {
-            throw new InvalidArgumentException(__('Please supply a unique template ID'), 'templateId');
-        }]);
-        $title = $params->getString('title', ['throw' => function () {
-            throw new InvalidArgumentException(__('Please supply a title'), 'title');
-        }]);
-        $dataType = $params->getString('dataType', ['throw' => function () {
-            throw new InvalidArgumentException(__('Please supply a data type'), 'dataType');
-        }]);
-        $showIn = $params->getString('showIn', ['throw' => function () {
-            throw new InvalidArgumentException(
-                __('Please select relevant editor which should show this Template'),
-                'showIn'
-            );
-        }]);
+        [
+            'templateId' => $templateId,
+            'title' => $title,
+            'dataType' => $dataType,
+            'showIn' => $showIn
+        ]
+            = $this->validateTemplateParams($params);
 
         $template->dataType = $dataType;
         $template->isEnabled = $params->getCheckbox('enabled');
@@ -360,6 +225,7 @@ class Developer extends Base
 
         // Stencil nodes.
         $stencilNodes = $document->getElementsByTagName('stencil');
+
         if ($stencilNodes->count() <= 0) {
             $stencilNode = $document->createElement('stencil');
             $document->documentElement->appendChild($stencilNode);
@@ -400,34 +266,31 @@ class Developer extends Base
             $template->invalidate();
         }
 
-        $this->getState()->hydrate([
-            'message' => sprintf(__('Edited %s'), $template->title),
-            'id' => $template->id,
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson(['data' => $template]);
     }
 
     /**
      * Helper function to set a node.
-     * @param \DOMDocument $document
+     * @param DOMDocument $document
      * @param string $node
      * @param string $value
      * @param bool $cdata
-     * @param \DOMElement|null $childNode
+     * @param DOMElement|null $childNode
      * @return void
-     * @throws \DOMException
+     * @throws DOMException
      */
     private function setNode(
-        \DOMDocument $document,
+        DOMDocument $document,
         string $node,
         string $value,
         bool $cdata = true,
-        ?\DOMElement $childNode = null
+        ?DOMElement $childNode = null
     ): void {
         $addTo = $childNode ?? $document->documentElement;
-
         $nodes = $addTo->getElementsByTagName($node);
+
         if ($nodes->count() <= 0) {
             if ($cdata) {
                 $element = $document->createElement($node);
@@ -439,8 +302,9 @@ class Developer extends Base
 
             $addTo->appendChild($element);
         } else {
-            /** @var \DOMElement $element */
+            /** @var DOMElement $element */
             $element = $nodes[0];
+
             if ($cdata) {
                 $cdata = $document->createCDATASection($value);
                 $element->textContent = $value;
@@ -457,7 +321,11 @@ class Developer extends Base
         }
     }
 
-    public function getAvailableDataTypes(Request $request, Response $response)
+    /**
+     * Return all available data types
+     * @throws GeneralException
+     */
+    public function getAvailableDataTypes(Request $request, Response $response): Response|ResponseInterface
     {
         $params = $this->getSanitizer($request->getParams());
         $dataTypes = $this->moduleFactory->getAllDataTypes();
@@ -470,25 +338,22 @@ class Developer extends Base
             }
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = 0;
-        $this->getState()->setData($dataTypes);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson(['data' => $dataTypes]);
     }
 
     /**
      * Export module template
      * @param Request $request
      * @param Response $response
-     * @param $id
+     * @param int $id
      * @return ResponseInterface|Response
      * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws NotFoundException
      */
-    public function templateExport(Request $request, Response $response, $id): Response|ResponseInterface
+    public function templateExport(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $template = $this->moduleTemplateFactory->getUserTemplateById($id);
 
@@ -500,14 +365,12 @@ class Developer extends Base
 
         $template->getDocument()->save($tempFileName);
 
-        $this->setNoOutput(true);
-
-        return $this->render($request, SendFile::decorateResponse(
+        return SendFile::decorateResponse(
             $response,
             $this->getConfig()->getSetting('SENDFILE_MODE'),
             $tempFileName,
             $template->templateId . '.xml'
-        )->withHeader('Content-Type', 'text/xml;charset=utf-8'));
+        )->withHeader('Content-Type', 'text/xml;charset=utf-8');
     }
 
     /**
@@ -515,7 +378,6 @@ class Developer extends Base
      * @param Request $request
      * @param Response $response
      * @return ResponseInterface|Response
-     * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws ConfigurationException
      */
@@ -551,7 +413,7 @@ class Developer extends Base
             $filePath = $libraryFolder . 'temp/' . $file->fileName;
 
             // load the xml from uploaded file
-            $xml = new \DOMDocument();
+            $xml = new DOMDocument();
             $xml->load($filePath);
 
             // User-imported templates are not permitted to declare <asset> nodes — assets are a
@@ -576,52 +438,21 @@ class Developer extends Base
 
         $uploadHandler->post();
 
-        $this->setNoOutput(true);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Show module template copy form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return Response|ResponseInterface
-     * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     */
-    public function templateCopyForm(Request $request, Response $response, $id): Response|ResponseInterface
-    {
-        $moduleTemplate = $this->moduleTemplateFactory->getUserTemplateById($id);
-
-        if (!$this->getUser()->checkViewable($moduleTemplate)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'developer-template-form-copy';
-        $this->getState()->setData([
-            'template' => $moduleTemplate,
-        ]);
-
-        return $this->render($request, $response);
+        return $response->withStatus(200)->withJson(['success' => true]);
     }
 
     /**
      * Copy module template
      * @param Request $request
      * @param Response $response
-     * @param $id
+     * @param int $id
      * @return Response|ResponseInterface
      * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function templateCopy(Request $request, Response $response, $id): Response|ResponseInterface
+    public function templateCopy(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $moduleTemplate = $this->moduleTemplateFactory->getUserTemplateById($id);
 
@@ -635,58 +466,23 @@ class Developer extends Base
         $newTemplate->templateId = $params->getString('templateId');
         $newTemplate->save();
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 201,
-            'message' => sprintf(__('Copied as %s'), $newTemplate->templateId),
-            'id' => $newTemplate->id,
-            'data' => $newTemplate
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Show module template delete form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return Response|ResponseInterface
-     * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     */
-    public function templateDeleteForm(Request $request, Response $response, $id): Response|ResponseInterface
-    {
-        $moduleTemplate = $this->moduleTemplateFactory->getUserTemplateById($id);
-
-        if (!$this->getUser()->checkDeleteable($moduleTemplate)) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'developer-template-form-delete';
-        $this->getState()->setData([
-            'template' => $moduleTemplate,
-        ]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(201)
+            ->withJson(['data' => $newTemplate]);
     }
 
     /**
      * Delete module template
      * @param Request $request
      * @param Response $response
-     * @param $id
+     * @param int $id
      * @return Response|ResponseInterface
      * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function templateDelete(Request $request, Response $response, $id): Response|ResponseInterface
+    public function templateDelete(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $moduleTemplate = $this->moduleTemplateFactory->getUserTemplateById($id);
 
@@ -696,12 +492,55 @@ class Developer extends Base
 
         $moduleTemplate->delete();
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Deleted %s'), $moduleTemplate->templateId)
-        ]);
+        return $response->withStatus(204);
+    }
 
-        return $this->render($request, $response);
+    /**
+     * Validate the required input field
+     * @param $params
+     * @param string $field
+     * @param string $message
+     * @return string
+     */
+    private function requireString($params, string $field, string $message): string
+    {
+        return $params->getString($field, ['throw' => function () use ($field, $message) {
+            throw new InvalidArgumentException($message, $field);
+        }]);
+    }
+
+    /**
+     * Validate the required template params
+     * @param $params
+     * @return array
+     */
+    private function validateTemplateParams($params): array
+    {
+        return [
+            'templateId' => $this->requireString($params, 'templateId', __('Please supply a unique template ID')),
+            'title' => $this->requireString($params, 'title', __('Please supply a title')),
+            'dataType' => $this->requireString($params, 'dataType', __('Please supply a data type')),
+            'showIn' => $this->requireString(
+                $params,
+                'showIn',
+                __('Please select relevant editor which should show this Template')
+            ),
+        ];
+    }
+
+    /**
+     * Get the template filter sort query
+     * @param $params
+     * @return array
+     */
+    private function getTemplateFilterQuery($params): array
+    {
+        return $this->gridRenderFilter([
+            'id' => $params->getInt('id'),
+            'templateId' => $params->getString('templateId'),
+            'dataType' => $params->getString('dataType'),
+            'keyword' => $params->getString('keyword')
+            ], $params
+        );
     }
 }

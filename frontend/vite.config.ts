@@ -24,12 +24,27 @@ import path from 'node:path';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
+
+// Vite plugin: redirect react-dom imports that originate from @dnd-kit/* to a
+// shim that provides the unstable_batchedUpdates no-op removed in React 19.
+function dndKitReact19Compat(): Plugin {
+  return {
+    name: 'dnd-kit-react19-compat',
+    resolveId(source, importer) {
+      if (source === 'react-dom' && importer?.includes('@dnd-kit')) {
+        return path.resolve(__dirname, 'src/shims/react-dom-dnd-compat.ts');
+      }
+      return null;
+    },
+  };
+}
 
 export default defineConfig(({ mode }) => ({
   base: '/prototype/',
   plugins: [
+    dndKitReact19Compat(),
     react({
       babel: {
         plugins: [['babel-plugin-react-compiler']],
