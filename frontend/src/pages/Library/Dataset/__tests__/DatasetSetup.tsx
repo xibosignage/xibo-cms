@@ -29,19 +29,6 @@ import { vi } from 'vitest';
 import type { DatasetDataConnectorSource } from '@/services/datasetApi';
 import type { Dataset } from '@/types/dataset';
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (str: string, opts?: Record<string, unknown>) => {
-      if (!opts) return str;
-      return Object.entries(opts).reduce(
-        (acc, [k, v]) => acc.replace(new RegExp(`{{${k}}}`, 'g'), String(v)),
-        str,
-      );
-    },
-    i18n: { changeLanguage: () => new Promise(() => {}) },
-  }),
-}));
-
 vi.mock('@/components/ui/Notification', () => ({
   notify: {
     success: vi.fn(),
