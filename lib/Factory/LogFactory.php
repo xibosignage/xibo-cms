@@ -188,16 +188,6 @@ class LogFactory extends BaseFactory
             $params['logId'] = $parsedFilter->getInt('logId');
         }
 
-        if ($parsedFilter->getString('keyword') != null) {
-            // Fulltext search
-            $body .= $this->buildSearchQuery(
-                $parsedFilter->getString('keyword'),
-                $params,
-                ['log.runNo', 'log.channel', 'log.type', 'log.page', 'log.message'],
-                ['log.logId']
-            );
-        }
-
         // Sorting?
         $allowedColumns = [
             'logId',

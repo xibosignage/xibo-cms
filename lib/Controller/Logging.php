@@ -171,7 +171,6 @@ class Logging extends Base
             'display' => $parsedQueryParams->getString('display'),
             'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
             'displayGroupId' => $parsedQueryParams->getInt('displayGroupId'),
-            'keyword' => $parsedQueryParams->getString('keyword')
         ], $parsedQueryParams);
     }
 }
