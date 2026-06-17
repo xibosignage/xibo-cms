@@ -33,7 +33,6 @@ use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
-use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -105,14 +104,11 @@ class Logging extends Base
      * @param Response $response
      * @param int $id
      * @return ResponseInterface|Response
-     * @throws InvalidArgumentException
      * @throws NotFoundException
      */
     public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         $log = $this->logFactory->getById($id);
-
-        $log->setUnmatchedProperty('userPermissions', $this->getUser()->getPermission($log));
 
         return $response
             ->withStatus(200)
