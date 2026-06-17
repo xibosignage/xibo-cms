@@ -476,7 +476,27 @@ export const APP_ROUTES: AppRoute[] = [
     path: 'developer',
     labelKey: 'Developer',
     icon: CodeXml,
-    externalURL: '/developer/template/view',
     feature: 'developer.edit',
+    subLinks: [
+      {
+        path: 'template',
+        labelKey: 'Module Templates',
+        lazy: () =>
+          import('@/pages/Developer/ModuleTemplates/ModuleTemplates').then((m) => ({
+            Component: m.default,
+          })),
+        feature: 'developer.edit',
+      },
+      {
+        path: 'template/:id/edit',
+        labelKey: 'Edit Module Template',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Developer/ModuleTemplates/ModuleTemplateEdit').then((m) => ({
+            Component: m.default,
+          })),
+        feature: 'developer.edit',
+      },
+    ],
   },
 ];
