@@ -103,6 +103,8 @@
     "minimatch": "^10.2.1",
     "@eslint/eslintrc": {
       "ajv": "^6.12.6"
-    }
+    },
+    "@babel/core": "^7.29.6",
+    "esbuild": "^0.28.1"
   }
 }
