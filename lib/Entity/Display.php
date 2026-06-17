@@ -45,7 +45,7 @@ use Xibo\Support\Exception\NotFoundException;
  * @package Xibo\Entity
  */
 #[OA\Schema]
-class Display implements \JsonSerializable
+class Display implements \JsonSerializable, XmrTargetInterface
 {
     public static $STATUS_DONE = 1;
     public static $STATUS_DOWNLOADING = 2;
@@ -53,6 +53,7 @@ class Display implements \JsonSerializable
 
     use EntityTrait;
     use TagLinkTrait;
+    use XmrClientTrait;
 
     /**
      * @var int
@@ -701,17 +702,6 @@ class Display implements \JsonSerializable
     public function isPwa(): bool
     {
         return $this->clientType === 'chromeOS';
-    }
-
-    /**
-     * @return bool true is this display supports WebSocket XMR
-     */
-    public function isWebSocketXmrSupported(): bool
-    {
-        return $this->clientType === 'chromeOS'
-            || ($this->clientType === 'linux' && $this->clientCode >= 400)
-            || ($this->clientType === 'windows' && $this->clientCode >= 407)
-            || ($this->clientType === 'android' && $this->clientCode >= 408);
     }
 
     /**
