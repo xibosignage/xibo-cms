@@ -35,8 +35,6 @@ use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\DeadlockException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -59,488 +57,488 @@ class Display implements \JsonSerializable
     /**
      * @var int
      */
-    #[OA\Property(description: "The ID of this Display")]
+    #[OA\Property(description: 'The ID of this Display')]
     public $displayId;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The Display Type ID of this Display")]
+    #[OA\Property(description: 'The Display Type ID of this Display')]
     public $displayTypeId;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The Venue ID of this Display")]
+    #[OA\Property(description: 'The Venue ID of this Display')]
     public $venueId;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The Location Address of this Display")]
+    #[OA\Property(description: 'The Location Address of this Display')]
     public $address;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "Is this Display mobile?")]
+    #[OA\Property(description: 'Is this Display mobile?')]
     public $isMobile;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The Languages supported in this display location")]
+    #[OA\Property(description: 'The Languages supported in this display location')]
     public $languages;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The type of this Display")]
+    #[OA\Property(description: 'The type of this Display')]
     public $displayType;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The screen size of this Display")]
+    #[OA\Property(description: 'The screen size of this Display')]
     public $screenSize;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "Is this Display Outdoor?")]
+    #[OA\Property(description: 'Is this Display Outdoor?')]
     public $isOutdoor;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The custom ID (an Id of any external system) of this Display")]
+    #[OA\Property(description: 'The custom ID (an Id of any external system) of this Display')]
     public $customId;
 
     /**
      * @var double
      */
-    #[OA\Property(description: "The Cost Per Play of this Display")]
+    #[OA\Property(description: 'The Cost Per Play of this Display')]
     public $costPerPlay;
 
     /**
      * @var double
      */
-    #[OA\Property(description: "The Impressions Per Play of this Display")]
+    #[OA\Property(description: 'The Impressions Per Play of this Display')]
     public $impressionsPerPlay;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "Optional Reference 1")]
+    #[OA\Property(description: 'Optional Reference 1')]
     public $ref1;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "Optional Reference 2")]
+    #[OA\Property(description: 'Optional Reference 2')]
     public $ref2;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "Optional Reference 3")]
+    #[OA\Property(description: 'Optional Reference 3')]
     public $ref3;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "Optional Reference 4")]
+    #[OA\Property(description: 'Optional Reference 4')]
     public $ref4;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "Optional Reference 5")]
+    #[OA\Property(description: 'Optional Reference 5')]
     public $ref5;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "Flag indicating whether this Display is recording Auditing Information from XMDS")]
+    #[OA\Property(description: 'Flag indicating whether this Display is recording Auditing Information from XMDS')]
     public $auditingUntil;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The Name of this Display")]
+    #[OA\Property(description: 'The Name of this Display')]
     public $display;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The Description of this Display")]
+    #[OA\Property(description: 'The Description of this Display')]
     public $description;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The ID of the Default Layout")]
+    #[OA\Property(description: 'The ID of the Default Layout')]
     public $defaultLayoutId = 4;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The Display Unique Identifier also called hardware key")]
+    #[OA\Property(description: 'The Display Unique Identifier also called hardware key')]
     public $license;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "A flag indicating whether this Display is licensed or not")]
+    #[OA\Property(description: 'A flag indicating whether this Display is licensed or not')]
     public $licensed;
     private $currentlyLicensed;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "A flag indicating whether this Display is currently logged in")]
+    #[OA\Property(description: 'A flag indicating whether this Display is currently logged in')]
     public $loggedIn;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "A timestamp in CMS time for the last time the Display accessed XMDS")]
+    #[OA\Property(description: 'A timestamp in CMS time for the last time the Display accessed XMDS')]
     public $lastAccessed;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "A flag indicating whether the default layout is interleaved with the Schedule")]
+    #[OA\Property(description: 'A flag indicating whether the default layout is interleaved with the Schedule')]
     public $incSchedule;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "A flag indicating whether the Display will send email alerts.")]
+    #[OA\Property(description: 'A flag indicating whether the Display will send email alerts.')]
     public $emailAlert;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "A timeout in seconds for the Display to send email alerts.")]
+    #[OA\Property(description: 'A timeout in seconds for the Display to send email alerts.')]
     public $alertTimeout;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The MAC Address of the Display")]
+    #[OA\Property(description: 'The MAC Address of the Display')]
     public $clientAddress;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The media inventory status of the Display")]
+    #[OA\Property(description: 'The media inventory status of the Display')]
     public $mediaInventoryStatus;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The current Mac Address of the Player")]
+    #[OA\Property(description: 'The current Mac Address of the Player')]
     public $macAddress;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "A timestamp indicating the last time the Mac Address changed")]
+    #[OA\Property(description: 'A timestamp indicating the last time the Mac Address changed')]
     public $lastChanged;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "A count of Mac Address changes")]
+    #[OA\Property(description: 'A count of Mac Address changes')]
     public $numberOfMacAddressChanges;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "A timestamp indicating the last time a WOL command was sent")]
+    #[OA\Property(description: 'A timestamp indicating the last time a WOL command was sent')]
     public $lastWakeOnLanCommandSent;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "A flag indicating whether Wake On Lan is enabled")]
+    #[OA\Property(description: 'A flag indicating whether Wake On Lan is enabled')]
     public $wakeOnLanEnabled;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "A h:i string indicating the time to send a WOL command")]
+    #[OA\Property(description: 'A h:i string indicating the time to send a WOL command')]
     public $wakeOnLanTime;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The broad cast address for this Display")]
+    #[OA\Property(description: 'The broad cast address for this Display')]
     public $broadCastAddress;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The secureOn WOL settings for this display.")]
+    #[OA\Property(description: 'The secureOn WOL settings for this display.')]
     public $secureOn;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The CIDR WOL settings for this display")]
+    #[OA\Property(description: 'The CIDR WOL settings for this display')]
     public $cidr;
 
     /**
      * @var double
      */
-    #[OA\Property(description: "The display Latitude")]
+    #[OA\Property(description: 'The display Latitude')]
     public $latitude;
 
     /**
      * @var double
      */
-    #[OA\Property(description: "The display longitude")]
+    #[OA\Property(description: 'The display longitude')]
     public $longitude;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "A string representing the player type")]
+    #[OA\Property(description: 'A string representing the player type')]
     public $clientType;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "A string representing the player version")]
+    #[OA\Property(description: 'A string representing the player version')]
     public $clientVersion;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "A number representing the Player version code")]
+    #[OA\Property(description: 'A number representing the Player version code')]
     public $clientCode;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The display settings profile ID for this Display")]
+    #[OA\Property(description: 'The display settings profile ID for this Display')]
     public $displayProfileId;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The current layout ID reported via XMDS")]
+    #[OA\Property(description: 'The current layout ID reported via XMDS')]
     public $currentLayoutId;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "A flag indicating that a screen shot should be taken by the Player")]
+    #[OA\Property(description: 'A flag indicating that a screen shot should be taken by the Player')]
     public $screenShotRequested;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The number of bytes of storage available on the device.")]
+    #[OA\Property(description: 'The number of bytes of storage available on the device.')]
     public $storageAvailableSpace;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The number of bytes of storage in total on the device")]
+    #[OA\Property(description: 'The number of bytes of storage in total on the device')]
     public $storageTotalSpace;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The ID of the Display Group for this Device")]
+    #[OA\Property(description: 'The ID of the Display Group for this Device')]
     public $displayGroupId;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The current layout")]
+    #[OA\Property(description: 'The current layout')]
     public $currentLayout;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The default layout")]
+    #[OA\Property(description: 'The default layout')]
     public $defaultLayout;
 
     /**
      * @var DisplayGroup[]
      */
-    #[OA\Property(description: "The Display Groups this Display belongs to")]
+    #[OA\Property(description: 'The Display Groups this Display belongs to')]
     public $displayGroups = [];
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The Player Subscription Channel")]
+    #[OA\Property(description: 'The Player Subscription Channel')]
     public $xmrChannel;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The Player Public Key")]
+    #[OA\Property(description: 'The Player Public Key')]
     public $xmrPubKey;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The last command success, 0 = failure, 1 = success, 2 = unknown")]
+    #[OA\Property(description: 'The last command success, 0 = failure, 1 = success, 2 = unknown')]
     public $lastCommandSuccess = 0;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The Device Name for the device hardware associated with this Display")]
+    #[OA\Property(description: 'The Device Name for the device hardware associated with this Display')]
     public $deviceName;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The Display Timezone, or empty to use the CMS timezone")]
+    #[OA\Property(description: 'The Display Timezone, or empty to use the CMS timezone')]
     public $timeZone;
 
     /**
      * @var TagLink[]
      */
-    #[OA\Property(description: "Tags associated with this Display, array of TagLink objects")]
+    #[OA\Property(description: 'Tags associated with this Display, array of TagLink objects')]
     public $tags = [];
 
     /**
      * @var string|array
      */
-    #[OA\Property(description: "The configuration options that will overwrite Display Profile Config")]
+    #[OA\Property(description: 'The configuration options that will overwrite Display Profile Config')]
     public $overrideConfig = [];
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The display bandwidth limit")]
+    #[OA\Property(description: 'The display bandwidth limit')]
     public $bandwidthLimit;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The new CMS Address")]
+    #[OA\Property(description: 'The new CMS Address')]
     public $newCmsAddress;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The new CMS Key")]
+    #[OA\Property(description: 'The new CMS Key')]
     public $newCmsKey;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The orientation of the Display, either landscape or portrait")]
+    #[OA\Property(description: 'The orientation of the Display, either landscape or portrait')]
     public $orientation;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The resolution of the Display expressed as a string in the format WxH")]
+    #[OA\Property(description: 'The resolution of the Display expressed as a string in the format WxH')]
     public $resolution;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "Status of the commercial licence for this Display. 0 - Not licensed, 1 - licensed, 2 - trial licence, 3 - not applicable")]
+    #[OA\Property(description: 'Status of the commercial licence for this Display. 0 - Not licensed, 1 - licensed, 2 - trial licence, 3 - not applicable')] //phpcs:ignore
     public $commercialLicence;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The TeamViewer serial number for this Display")]
+    #[OA\Property(description: 'The TeamViewer serial number for this Display')]
     public $teamViewerSerial;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The Webkey serial number for this Display")]
+    #[OA\Property(description: 'The Webkey serial number for this Display')]
     public $webkeySerial;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "A comma separated list of groups/users with permissions to this Display")]
+    #[OA\Property(description: 'A comma separated list of groups/users with permissions to this Display')]
     public $groupsWithPermissions;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The datetime this entity was created")]
+    #[OA\Property(description: 'The datetime this entity was created')]
     public $createdDt;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The datetime this entity was last modified")]
+    #[OA\Property(description: 'The datetime this entity was last modified')]
     public $modifiedDt;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The id of the Folder this Display belongs to")]
+    #[OA\Property(description: 'The id of the Folder this Display belongs to')]
     public $folderId;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The id of the Folder responsible for providing permissions for this Display")]
+    #[OA\Property(description: 'The id of the Folder responsible for providing permissions for this Display')]
     public $permissionsFolderId;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The count of Player reported faults")]
+    #[OA\Property(description: 'The count of Player reported faults')]
     public $countFaults;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "LAN IP Address, if available on the Player")]
+    #[OA\Property(description: 'LAN IP Address, if available on the Player')]
     public $lanIpAddress;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The Display Group ID this Display is synced to")]
+    #[OA\Property(description: 'The Display Group ID this Display is synced to')]
     public $syncGroupId;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The OS version of the Display")]
+    #[OA\Property(description: 'The OS version of the Display')]
     public $osVersion;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The SDK version of the Display")]
+    #[OA\Property(description: 'The SDK version of the Display')]
     public $osSdk;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The manufacturer of the Display")]
+    #[OA\Property(description: 'The manufacturer of the Display')]
     public $manufacturer;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The brand of the Display")]
+    #[OA\Property(description: 'The brand of the Display')]
     public $brand;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The model of the Display")]
+    #[OA\Property(description: 'The model of the Display')]
     public $model;
 
     /** @var array The configuration from the Display Profile  */
@@ -562,56 +560,23 @@ class Display implements \JsonSerializable
 
     public static $saveOptionsMinimum = ['validate' => false, 'audit' => false, 'setModifiedDt' => false];
 
-    /**
-     * @var ConfigServiceInterface
-     */
-    private $config;
-
-    /**
-     * @var DisplayGroupFactory
-     */
-    private $displayGroupFactory;
-
-    /**
-     * @var DisplayProfileFactory
-     */
-    private $displayProfileFactory;
-
-    /**
-     * @var DisplayFactory
-     */
-    private $displayFactory;
-
-    /**
-     * @var LayoutFactory
-     */
+    /** @var LayoutFactory */
     private $layoutFactory;
 
-    /** @var FolderFactory */
-    private $folderFactory;
-
-    /**
-     * Entity constructor.
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
-     * @param ConfigServiceInterface $config
-     * @param DisplayGroupFactory $displayGroupFactory
-     * @param DisplayProfileFactory $displayProfileFactory
-     * @param DisplayFactory $displayFactory
-     */
-    public function __construct($store, $log, $dispatcher, $config, $displayGroupFactory, $displayProfileFactory, $displayFactory, $folderFactory)
-    {
+    public function __construct(
+        $store,
+        $log,
+        $dispatcher,
+        private readonly ConfigServiceInterface $config,
+        private readonly ?DisplayGroupFactory $displayGroupFactory,
+        private readonly ?DisplayProfileFactory $displayProfileFactory,
+        private readonly ?DisplayFactory $displayFactory,
+        private readonly ?FolderFactory $folderFactory
+    ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
         $this->excludeProperty('mediaInventoryXml');
         $this->setPermissionsClass('Xibo\Entity\DisplayGroup');
         $this->setCanChangeOwner(false);
-
-        $this->config = $config;
-        $this->displayGroupFactory = $displayGroupFactory;
-        $this->displayProfileFactory = $displayProfileFactory;
-        $this->displayFactory = $displayFactory;
-        $this->folderFactory = $folderFactory;
     }
 
     /**
@@ -654,6 +619,45 @@ class Display implements \JsonSerializable
         return self::getCachePrefix() . $this->displayId;
     }
 
+    public function isHisensePlayer(): bool
+    {
+        return strcasecmp($this->manufacturer ?? '', 'hisense') === 0
+            && (str_starts_with($this->model ?? '', 'DM') || str_starts_with($this->model ?? '', 'WH'));
+    }
+
+    /**
+     * Assigns the correct Hisense display profile to this display when it is a Hisense player.
+     * Migrates displays on a custom Android profile to a cloned Hisense profile automatically.
+     * Resets the cached display profile so the next getSettings() call uses the new profile.
+     */
+    public function assignHisenseProfile(): void
+    {
+        if (!$this->isHisensePlayer()) {
+            return;
+        }
+
+        if ($this->displayProfileId === null || $this->displayProfileId === 0) {
+            try {
+                $profile = $this->displayProfileFactory->getDefaultByType('hisense');
+                $this->displayProfileId = $profile->displayProfileId;
+                $this->_displayProfile = null;
+            } catch (NotFoundException $e) {
+                $this->getLog()->error('assignHisenseProfile: no default Hisense profile found');
+            }
+        } else {
+            try {
+                $current = $this->displayProfileFactory->getById($this->displayProfileId);
+                if ($current->type === 'android') {
+                    $hisenseProfile = $this->displayProfileFactory->getOrCreateHisenseClone($current);
+                    $this->displayProfileId = $hisenseProfile->displayProfileId;
+                    $this->_displayProfile = null;
+                }
+            } catch (NotFoundException $e) {
+                $this->getLog()->error('assignHisenseProfile: profile id=' . $this->displayProfileId . ' not found');
+            }
+        }
+    }
+
     /**
      * @return \Xibo\Entity\DisplayProfile
      * @throws \Xibo\Support\Exception\NotFoundException
@@ -663,8 +667,8 @@ class Display implements \JsonSerializable
         if ($this->_displayProfile === null) {
             try {
                 if ($this->displayProfileId == 0) {
-                    // Load the default profile
-                    $displayProfile = $this->displayProfileFactory->getDefaultByType($this->clientType);
+                    $type = $this->isHisensePlayer() ? 'hisense' : $this->clientType;
+                    $displayProfile = $this->displayProfileFactory->getDefaultByType($type);
                 } else {
                     // Load the specified profile
                     $displayProfile = $this->displayProfileFactory->getById($this->displayProfileId);
@@ -686,7 +690,7 @@ class Display implements \JsonSerializable
     /**
      * @return array
      */
-    public function getLanguages()
+    public function getLanguages(): array
     {
         return empty($this->languages) ? [] : explode(',', $this->languages);
     }
@@ -760,7 +764,7 @@ class Display implements \JsonSerializable
     /**
      * Set the Media Status to Incomplete
      */
-    public function notify()
+    public function notify(): void
     {
         $this->getLog()->debug($this->display . ' requests notify');
 
@@ -771,7 +775,7 @@ class Display implements \JsonSerializable
      * Validate the Object as it stands
      * @throws InvalidArgumentException
      */
-    public function validate()
+    public function validate(): void
     {
         if (!v::stringType()->notEmpty()->validate($this->display)) {
             throw new InvalidArgumentException(__('Can not have a display without a name'), 'name');
@@ -867,21 +871,39 @@ class Display implements \JsonSerializable
     }
 
     /**
-     * Check if there is display slot available, returns true when there are display slots available, return false if there are no display slots available
+     * Check if there is display slot available,
+     * returns true when there are display slots available,
+     * return false if there are no display slots available
      * @return boolean
      */
-    public function isDisplaySlotAvailable()
+    public function isDisplaySlotAvailable(): bool
     {
         $maxDisplays = $this->config->GetSetting('MAX_LICENSED_DISPLAYS');
 
         // Check the number of licensed displays
         if ($maxDisplays > 0) {
-            $this->getLog()->debug(sprintf('Testing authorised displays against %d maximum. Currently authorised = %d, authorised = %d.', $maxDisplays, $this->currentlyLicensed, $this->licensed));
+            $this->getLog()->debug(
+                sprintf(
+                    'Testing authorised displays against %d maximum. Currently authorised = %d, authorised = %d.',
+                    $maxDisplays,
+                    $this->currentlyLicensed,
+                    $this->licensed
+                )
+            );
 
             if ($this->currentlyLicensed != $this->licensed && $this->licensed == 1) {
-                $countLicensed = $this->getStore()->select('SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed = 1', []);
+                $countLicensed = $this->getStore()->select(
+                    'SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed = 1',
+                    []
+                );
 
-                $this->getLog()->debug(sprintf('There are %d authorised displays and we the maximum is %d', $countLicensed[0]['CountLicensed'], $maxDisplays));
+                $this->getLog()->debug(
+                    sprintf(
+                        'There are %d authorised displays and we the maximum is %d',
+                        $countLicensed[0]['CountLicensed'],
+                        $maxDisplays
+                    )
+                );
 
                 if (intval($countLicensed[0]['CountLicensed']) + 1 > $maxDisplays) {
                     return false;
@@ -896,10 +918,11 @@ class Display implements \JsonSerializable
      * Load
      * @throws NotFoundException
      */
-    public function load()
+    public function load(): void
     {
-        if ($this->loaded)
+        if ($this->loaded) {
             return;
+        }
 
         // Load this displays group membership
         $this->displayGroups = $this->displayGroupFactory->getByDisplayId($this->displayId);
@@ -910,13 +933,16 @@ class Display implements \JsonSerializable
     /**
      * Save the media inventory status
      */
-    public function saveMediaInventoryStatus()
+    public function saveMediaInventoryStatus(): void
     {
         try {
-            $this->getStore()->updateWithDeadlockLoop('UPDATE `display` SET mediaInventoryStatus = :mediaInventoryStatus WHERE displayId = :displayId', [
-                'mediaInventoryStatus' => $this->mediaInventoryStatus,
-                'displayId' => $this->displayId
-            ]);
+            $this->getStore()->updateWithDeadlockLoop(
+                'UPDATE `display` SET mediaInventoryStatus = :mediaInventoryStatus WHERE displayId = :displayId',
+                [
+                    'mediaInventoryStatus' => $this->mediaInventoryStatus,
+                    'displayId' => $this->displayId
+                ]
+            );
         } catch (DeadlockException $deadlockException) {
             $this->getLog()->error('Media Inventory Status save failed due to deadlock');
         }
@@ -927,7 +953,7 @@ class Display implements \JsonSerializable
      * @param array $options
      * @throws GeneralException
      */
-    public function save($options = [])
+    public function save($options = []): void
     {
         $options = array_merge([
             'validate' => true,
@@ -1024,10 +1050,23 @@ class Display implements \JsonSerializable
      */
     private function add()
     {
-        $this->displayId = $this->getStore()->insert('
-            INSERT INTO display (display, auditingUntil, defaultlayoutid, license, licensed, lastAccessed, inc_schedule, email_alert, alert_timeout, clientAddress, xmrChannel, xmrPubKey, lastCommandSuccess, macAddress, lastChanged, lastWakeOnLanCommandSent, client_type, client_version, client_code, overrideConfig, newCmsAddress, newCmsKey, commercialLicence, lanIpAddress, syncGroupId, osVersion, osSdk, manufacturer, brand, model)
-              VALUES (:display, :auditingUntil, :defaultlayoutid, :license, :licensed, :lastAccessed, :inc_schedule, :email_alert, :alert_timeout, :clientAddress, :xmrChannel, :xmrPubKey, :lastCommandSuccess, :macAddress, :lastChanged, :lastWakeOnLanCommandSent, :clientType, :clientVersion, :clientCode, :overrideConfig, :newCmsAddress, :newCmsKey, :commercialLicence, :lanIpAddress, :syncGroupId, :osVersion, :osSdk, :manufacturer, :brand, :model)
-        ', [
+        $this->displayId = $this->getStore()->insert(
+            'INSERT INTO display (
+                display, auditingUntil, defaultlayoutid, license, licensed,
+                lastAccessed, inc_schedule, email_alert, alert_timeout, clientAddress,
+                xmrChannel, xmrPubKey, lastCommandSuccess, macAddress, lastChanged,
+                lastWakeOnLanCommandSent, client_type, client_version, client_code,
+                overrideConfig, newCmsAddress, newCmsKey, commercialLicence,
+                lanIpAddress, syncGroupId, osVersion, osSdk, manufacturer, brand, model
+            ) VALUES (
+                :display, :auditingUntil, :defaultlayoutid, :license, :licensed,
+                :lastAccessed, :inc_schedule, :email_alert, :alert_timeout, :clientAddress,
+                :xmrChannel, :xmrPubKey, :lastCommandSuccess, :macAddress, :lastChanged,
+                :lastWakeOnLanCommandSent, :clientType, :clientVersion, :clientCode,
+                :overrideConfig, :newCmsAddress, :newCmsKey, :commercialLicence,
+                :lanIpAddress, :syncGroupId, :osVersion, :osSdk, :manufacturer, :brand, :model
+            )',
+            [
             'display' => $this->display,
             'auditingUntil' => 0,
             'defaultlayoutid' => $this->defaultLayoutId,
@@ -1043,7 +1082,9 @@ class Display implements \JsonSerializable
             'lastCommandSuccess' => $this->lastCommandSuccess,
             'macAddress' => $this->macAddress,
             'lastChanged' => ($this->lastChanged === null) ? 0 : $this->lastChanged,
-            'lastWakeOnLanCommandSent' => ($this->lastWakeOnLanCommandSent === null) ? 0 : $this->lastWakeOnLanCommandSent,
+            'lastWakeOnLanCommandSent' => ($this->lastWakeOnLanCommandSent === null)
+                ? 0
+                : $this->lastWakeOnLanCommandSent,
             'clientType' => $this->clientType,
             'clientVersion' => $this->clientVersion,
             'clientCode' => $this->clientCode,
@@ -1058,7 +1099,8 @@ class Display implements \JsonSerializable
             'manufacturer' => $this->manufacturer,
             'brand' => $this->brand,
             'model' => $this->model,
-        ]);
+            ]
+        );
 
 
         $displayGroup = $this->displayGroupFactory->create();
@@ -1471,8 +1513,7 @@ class Display implements \JsonSerializable
 
             try {
                 $this->currentLayout = $layoutFactory->getById($this->currentLayoutId)->layout;
-            }
-            catch (NotFoundException $notFoundException) {
+            } catch (NotFoundException $notFoundException) {
                 // This is ok
             }
         } else {

@@ -25,6 +25,12 @@ import { useTranslation } from 'react-i18next';
 
 import { AndroidFields } from './fields/AndroidFields';
 import { ChromeOsFields } from './fields/ChromeOsFields';
+import {
+  getHisensePictureSliderIndex,
+  HISENSE_PICTURE_KEYS,
+  HisenseFields,
+} from './fields/HisenseFields';
+import type { HisensePictureRow, HisenseTimerRule } from './fields/HisenseFields';
 import { getPictureSliderIndex, LgSsspFields } from './fields/LgSsspFields';
 import type { LockOptionsState, PictureOptionRow, TimerRow } from './fields/LgSsspFields';
 import { LinuxFields } from './fields/LinuxFields';
@@ -125,6 +131,11 @@ export default function EditDisplayProfileModal({
     keylockRemote: '',
   });
 
+  const [hisenseTimerRules, setHisenseTimerRules] = useState<HisenseTimerRule[]>([]);
+  const [hisensePictureRows, setHisensePictureRows] = useState<HisensePictureRow[]>([
+    { id: 0, property: '', value: 0 },
+  ]);
+
   const [dayparts, setDayparts] = useState<Daypart[]>([]);
   const [daypartsTotalCount, setDaypartsTotalCount] = useState(0);
   const [isLoadingMoreDayparts, setIsLoadingMoreDayparts] = useState(false);
@@ -170,8 +181,11 @@ export default function EditDisplayProfileModal({
       keylockLocal: '',
       keylockRemote: '',
     });
+    setHisenseTimerRules([]);
+    setHisensePictureRows([{ id: 0, property: '', value: 0 }]);
 
     const isLgSsspType = data.type === 'lg' || data.type === 'sssp';
+    const isHisenseType = data.type === 'hisense';
 
     const profilePromise = fetchDisplayProfileById(data.displayProfileId).then((full) => {
       setConfigDefaults(defaultsToFlat(full.configDefault));
@@ -248,6 +262,48 @@ export default function EditDisplayProfileModal({
         }
         setLockOptionsState(parsedLock);
       }
+
+      if (isHisenseType) {
+        const flatConfig = configArrayToFlat(full.config);
+
+        const timersJson = flatConfig['timers'];
+        if (timersJson && typeof timersJson === 'string') {
+          try {
+            const parsed = JSON.parse(timersJson) as Array<{
+              index: number;
+              type: number;
+              hour: number;
+              minute: number;
+              manualWeeks?: number[];
+            }>;
+            const hydratedRules: HisenseTimerRule[] = parsed.map((entry, i) => ({
+              id: i,
+              index: entry.index,
+              dayScope: entry.type,
+              time: `${String(entry.hour).padStart(2, '0')}:${String(entry.minute).padStart(2, '0')}`,
+              manualWeeks: entry.manualWeeks ?? [],
+            }));
+            setHisenseTimerRules(hydratedRules);
+          } catch (e) {
+            console.warn('Failed to parse hisense timers config', e);
+          }
+        }
+
+        const parsedPicRows: HisensePictureRow[] = [];
+        HISENSE_PICTURE_KEYS.forEach((key, i) => {
+          const v = flatConfig[key];
+          if (v !== undefined && v !== null && v !== '') {
+            parsedPicRows.push({
+              id: i,
+              property: key,
+              value: getHisensePictureSliderIndex(key, v as string | number),
+            });
+          }
+        });
+        setHisensePictureRows(
+          parsedPicRows.length > 0 ? parsedPicRows : [{ id: 0, property: '', value: 0 }],
+        );
+      }
     });
 
     profilePromise
@@ -293,7 +349,10 @@ export default function EditDisplayProfileModal({
     const playerVersionType =
       data.type === 'chromeOS'
         ? 'chromeOS'
-        : data.type === 'android' || data.type === 'lg' || data.type === 'sssp'
+        : data.type === 'android' ||
+            data.type === 'lg' ||
+            data.type === 'sssp' ||
+            data.type === 'hisense'
           ? data.type
           : null;
     if (!playerVersionType) {
@@ -403,9 +462,16 @@ export default function EditDisplayProfileModal({
       setNameError(undefined);
       const checkboxFields = CHECKBOX_FIELDS_BY_TYPE[data.type] ?? new Set();
       const isLgSsspType = data.type === 'lg' || data.type === 'sssp';
-      const skipKeys = isLgSsspType
-        ? new Set(['timers', 'pictureOptions', 'lockOptions'])
-        : new Set<string>();
+      const isHisenseType = data.type === 'hisense';
+      const skipKeys =
+        isLgSsspType || isHisenseType
+          ? new Set([
+              'timers',
+              'pictureOptions',
+              'lockOptions',
+              ...(isHisenseType ? HISENSE_PICTURE_KEYS : []),
+            ])
+          : new Set<string>();
 
       const configPayload: Record<string, string | number | null> = {};
       for (const [key, value] of Object.entries(draft.config)) {
@@ -447,6 +513,27 @@ export default function EditDisplayProfileModal({
               .map(({ property, value }) => ({ property, value })),
             lockOptions: lockOptionsState,
           }),
+          ...(isHisenseType && {
+            hisenseTimers: hisenseTimerRules
+              .filter((r) => r.dayScope !== 0)
+              .map(({ index, dayScope, time, manualWeeks }) => ({
+                index,
+                dayScope,
+                time,
+                manualWeeks,
+              })),
+            hisensePictureControls: (() => {
+              const active = new Map(
+                hisensePictureRows
+                  .filter((r) => r.property !== '')
+                  .map((r) => [r.property, r.value]),
+              );
+              return HISENSE_PICTURE_KEYS.map((property) => ({
+                property,
+                value: active.get(property) ?? null,
+              }));
+            })(),
+          }),
         });
         onSave({ ...data, ...updated });
         onClose();
@@ -459,14 +546,15 @@ export default function EditDisplayProfileModal({
   const tab = (t: ActiveTab) => tabClass(activeTab, t);
 
   const isLgSssp = data?.type === 'lg' || data?.type === 'sssp';
+  const isHisense = data?.type === 'hisense';
   const hasNetworkTab =
-    data?.type === 'android' || data?.type === 'windows' || data?.type === 'linux';
+    data?.type === 'android' || data?.type === 'windows' || data?.type === 'linux' || isHisense;
   const hasLocationTab =
-    data?.type === 'android' || data?.type === 'windows' || data?.type === 'linux';
+    data?.type === 'android' || data?.type === 'windows' || data?.type === 'linux' || isHisense;
   const hasTroubleshootingTab =
-    data?.type === 'android' || data?.type === 'windows' || data?.type === 'linux';
-  const hasTimersTab = isLgSssp;
-  const hasPictureOptionsTab = isLgSssp;
+    data?.type === 'android' || data?.type === 'windows' || data?.type === 'linux' || isHisense;
+  const hasTimersTab = isLgSssp || isHisense;
+  const hasPictureOptionsTab = isLgSssp || isHisense;
   const hasLockSettingsTab = isLgSssp;
   const hasAdvancedTab =
     data?.type === 'android' ||
@@ -474,7 +562,8 @@ export default function EditDisplayProfileModal({
     data?.type === 'windows' ||
     data?.type === 'linux' ||
     data?.type === 'lg' ||
-    data?.type === 'sssp';
+    data?.type === 'sssp' ||
+    isHisense;
 
   const fieldProps = {
     str,
@@ -516,6 +605,16 @@ export default function EditDisplayProfileModal({
         return <LgSsspFields {...fieldProps} playerType={data?.type} />;
       case 'chromeOS':
         return <ChromeOsFields {...fieldProps} />;
+      case 'hisense':
+        return (
+          <HisenseFields
+            {...fieldProps}
+            hisenseTimerRules={hisenseTimerRules}
+            onHisenseTimerRulesChange={setHisenseTimerRules}
+            hisensePictureRows={hisensePictureRows}
+            onHisensePictureRowsChange={setHisensePictureRows}
+          />
+        );
       default:
         return null;
     }
@@ -540,6 +639,7 @@ export default function EditDisplayProfileModal({
           disabled: isPending || isLoading,
         },
       ]}
+      size={isHisense ? 'lg' : 'md'}
     >
       <div className="flex flex-col h-full overflow-y-hidden overflow-x-visible px-4">
         <nav className="flex px-4 overflow-x-auto shrink-0" aria-label="Tabs">

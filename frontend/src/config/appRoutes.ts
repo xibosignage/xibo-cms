@@ -445,7 +445,7 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'log',
         labelKey: 'Log',
-        externalURL: '/log/view',
+        lazy: () => import('@/pages/Advanced/Logs/Logs').then((m) => ({ Component: m.default })),
         feature: 'log.view',
       },
       {
