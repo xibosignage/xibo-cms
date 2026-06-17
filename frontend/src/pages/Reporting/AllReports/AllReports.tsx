@@ -89,14 +89,6 @@ function buildStaticCards(
         icon: Download,
         onClick: onOpenExportModal,
       },
-      {
-        key: 'ssp-activity',
-        description: t('SSP Activity Report'),
-        type: 'Report',
-        typeLabel: t('View {{type}}', { type: t('Report') }),
-        icon: FileBarChart2,
-        onClick: () => console.log('SSP Activity Report - not yet implemented'),
-      },
     ],
   };
 }

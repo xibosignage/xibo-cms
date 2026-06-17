@@ -21,19 +21,53 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
+import type { TFunction } from 'i18next';
+import { useTranslation } from 'react-i18next';
 
+import { useUserContext } from '@/context/UserContext';
 import { fetchReports } from '@/services/reportApi';
-import type { ReportsByCategory } from '@/types/report';
+import type { Report, ReportsByCategory } from '@/types/report';
+import { UserType } from '@/types/user';
 
 const reportsQueryKeys = {
   all: ['reports'] as const,
   list: () => [...reportsQueryKeys.all, 'list'] as const,
 };
 
+const SSP_REPORT_CATEGORY = 'Proof of Play';
+
+function withSspActivityReport(data: ReportsByCategory, t: TFunction): ReportsByCategory {
+  const sspReport: Report = {
+    name: 'ssp-activity',
+    description: t('SSP Activity Report'),
+    type: 'Report',
+    output_type: 'both',
+    color: '',
+    lucide_icon: 'FileBarChart2',
+    sort_order: 99,
+    hidden: 0,
+    category: SSP_REPORT_CATEGORY,
+    feature: 'report.view',
+    adminOnly: 1,
+    prototype_url: '/prototype/reporting/ssp-activity',
+  };
+
+  const existing = data[SSP_REPORT_CATEGORY] ?? [];
+  if (existing.some((report) => report.name === sspReport.name)) {
+    return data;
+  }
+  return { ...data, [SSP_REPORT_CATEGORY]: [...existing, sspReport] };
+}
+
 export const useAllReportsData = (enabled: boolean) => {
-  return useQuery<ReportsByCategory>({
+  const { t } = useTranslation();
+  const { user } = useUserContext();
+  const isSuperAdmin = user?.userTypeId === UserType.SuperAdmin;
+
+  return useQuery<ReportsByCategory, Error, ReportsByCategory>({
     queryKey: reportsQueryKeys.list(),
     queryFn: ({ signal }) => fetchReports(signal),
+    select: (data) => (isSuperAdmin ? withSspActivityReport(data, t) : data),
     staleTime: 60_000,
     enabled,
     throwOnError: (error: unknown) => isAxiosError(error) && (error.response?.status ?? 0) >= 500,

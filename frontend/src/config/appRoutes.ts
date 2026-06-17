@@ -509,6 +509,16 @@ export const APP_ROUTES: AppRoute[] = [
           })),
         validator: canAccessReport('admin', true),
       },
+      {
+        path: 'ssp-activity',
+        labelKey: 'SSP Activity Report',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Reporting/Reports/SspActivity/SspActivity').then((m) => ({
+            Component: m.default,
+          })),
+        validator: canAccessReport('report.view', true),
+      },
     ],
   },
   {
