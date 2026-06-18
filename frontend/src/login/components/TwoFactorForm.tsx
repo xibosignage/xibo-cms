@@ -8,7 +8,7 @@ import { SubmitButton } from './SubmitButton';
 
 interface Props {
   mode: 'code' | 'recovery';
-  onSuccess: (priorRoute: string) => void;
+  onSuccess: (priorRoute: string, passwordChangeRequired?: boolean) => void;
   onSwitchMode: (mode: 'code' | 'recovery') => void;
   onBack: () => void;
 }
@@ -32,7 +32,7 @@ export function TwoFactorForm({ mode, onSuccess, onSwitchMode, onBack }: Props) 
         mode === 'code' ? await submitTwoFactor(value) : await submitRecoveryCode(value);
 
       if (res.status === 'ok') {
-        onSuccess(res.priorRoute ?? '');
+        onSuccess(res.priorRoute ?? '', res.isPasswordChangeRequired);
       } else if (res.status === 'rate_limited') {
         setRateLimited(true);
         setError(res.message ?? 'Too many attempts. Please wait before trying again.');

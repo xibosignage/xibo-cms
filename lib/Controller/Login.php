@@ -226,7 +226,10 @@ class Login extends Base
 
                 // We are logged in, so complete the login flow
                 $this->completeLoginFlow($user, $request);
-                return $response->withJson(['status' => 'ok']);
+                return $response->withJson([
+                    'status' => 'ok',
+                    'isPasswordChangeRequired' => $user->isPasswordChangeRequired === 1,
+                ]);
             } catch (NotFoundException) {
                 throw new AccessDeniedException(__('User not found'));
             }
@@ -616,7 +619,10 @@ class Login extends Base
             //unset the session tfaUsername
             unset($_SESSION['tfaUsername']);
 
-            return $response->withJson(['status' => 'ok']);
+            return $response->withJson([
+                'status' => 'ok',
+                'isPasswordChangeRequired' => $user->isPasswordChangeRequired === 1,
+            ]);
         } else {
             // Record one failure against the bucket so brute-forcers progress toward the wall.
             $this->recordRateLimitHit($request, 'twofactor', 900);

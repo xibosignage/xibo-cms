@@ -17,6 +17,7 @@ export interface LoginResponse {
   status: 'ok' | '2fa_required' | 'error' | 'rate_limited';
   message?: string;
   priorRoute?: string;
+  isPasswordChangeRequired?: boolean;
 }
 
 export interface ForgotResponse {

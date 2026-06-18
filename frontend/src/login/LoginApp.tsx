@@ -32,6 +32,8 @@ import { getSafeRedirectUrl } from './utils';
 
 const config = window.__LOGIN_CONFIG__;
 
+const FORCE_CHANGE_PASSWORD_PATH = '/prototype/user/force-change-password';
+
 // Module-level so the React Compiler doesn't flag it as a mutation inside the component.
 function navigateTo(url: string) {
   window.location.assign(url);
@@ -43,12 +45,28 @@ export function LoginApp() {
   const [priorRoute, setPriorRoute] = useState(config.priorRoute);
   const [showAbout, setShowAbout] = useState(false);
 
-  function handleLoginSuccess(route: string) {
-    navigateTo(getSafeRedirectUrl(route || priorRoute));
+  function handleLoginSuccess(route: string, passwordChangeRequired?: boolean) {
+    const destination = route || priorRoute;
+    if (passwordChangeRequired) {
+      const target = destination
+        ? `${FORCE_CHANGE_PASSWORD_PATH}?priorRoute=${encodeURIComponent(destination)}`
+        : FORCE_CHANGE_PASSWORD_PATH;
+      navigateTo(target);
+    } else {
+      navigateTo(getSafeRedirectUrl(destination));
+    }
   }
 
-  function handleTfaSuccess(route: string) {
-    navigateTo(getSafeRedirectUrl(route || priorRoute));
+  function handleTfaSuccess(route: string, passwordChangeRequired?: boolean) {
+    const destination = route || priorRoute;
+    if (passwordChangeRequired) {
+      const target = destination
+        ? `${FORCE_CHANGE_PASSWORD_PATH}?priorRoute=${encodeURIComponent(destination)}`
+        : FORCE_CHANGE_PASSWORD_PATH;
+      navigateTo(target);
+    } else {
+      navigateTo(getSafeRedirectUrl(destination));
+    }
   }
 
   function handleTfaRequired(route: string) {

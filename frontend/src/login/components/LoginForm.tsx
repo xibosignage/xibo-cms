@@ -7,7 +7,7 @@ import { ErrorBanner } from './ErrorBanner';
 import { SubmitButton } from './SubmitButton';
 
 interface Props {
-  onSuccess: (priorRoute: string) => void;
+  onSuccess: (priorRoute: string, passwordChangeRequired?: boolean) => void;
   onTfa: (priorRoute: string) => void;
   onForgot: () => void;
   passwordReminderEnabled: boolean;
@@ -39,7 +39,7 @@ export function LoginForm({
     try {
       const res: LoginResponse = await submitLogin(username, password);
       if (res.status === 'ok') {
-        onSuccess(res.priorRoute ?? '');
+        onSuccess(res.priorRoute ?? '', res.isPasswordChangeRequired);
       } else if (res.status === '2fa_required') {
         onTfa(res.priorRoute ?? '');
       } else if (res.status === 'rate_limited') {
