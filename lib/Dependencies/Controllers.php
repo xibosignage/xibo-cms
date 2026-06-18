@@ -289,9 +289,6 @@ class Controllers
                     $c->get('pool')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
-                if ($c->has('flash')) {
-                    $controller->setFlash($c->get('flash'));
-                }
                 return $controller;
             },
             '\Xibo\Controller\Maintenance' => function (ContainerInterface $c) {

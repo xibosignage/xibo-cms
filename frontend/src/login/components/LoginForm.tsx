@@ -12,6 +12,7 @@ interface Props {
   onForgot: () => void;
   passwordReminderEnabled: boolean;
   authCASEnabled: boolean;
+  initialError?: string;
 }
 
 export function LoginForm({
@@ -20,10 +21,11 @@ export function LoginForm({
   onForgot,
   passwordReminderEnabled,
   authCASEnabled,
+  initialError = '',
 }: Props) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState(initialError);
   const [loading, setLoading] = useState(false);
   const [rateLimited, setRateLimited] = useState(false);
 

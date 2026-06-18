@@ -67,6 +67,7 @@ export function LoginApp() {
             onForgot={() => setView('forgot')}
             passwordReminderEnabled={config.passwordReminderEnabled}
             authCASEnabled={config.authCASEnabled}
+            initialError={config.loginError}
           />
         );
 

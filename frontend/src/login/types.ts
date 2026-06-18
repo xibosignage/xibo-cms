@@ -2,6 +2,7 @@ export type LoginView = 'login' | 'tfa' | 'recovery' | 'forgot' | 'forgotSent';
 
 export interface LoginConfig {
   priorRoute: string;
+  loginError?: string;
   logoUrl: string;
   passwordReminderEnabled: boolean;
   authCASEnabled: boolean;

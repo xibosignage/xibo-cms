@@ -21,9 +21,7 @@
  */
 namespace Xibo\Controller;
 
-use OpenApi\Attributes as OA;
 use RobThree\Auth\TwoFactorAuth;
-use Slim\Flash\Messages;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
@@ -49,23 +47,11 @@ class Login extends Base
 {
     use LogoutTrait;
 
-    private Messages $flash;
-
     public function __construct(
         private readonly Session $session,
         private readonly UserFactory $userFactory,
         private readonly \Stash\Interfaces\PoolInterface $pool,
     ) {
-    }
-
-    protected function getFlash(): Messages
-    {
-        return $this->flash;
-    }
-
-    public function setFlash(Messages $messages): void
-    {
-        $this->flash = $messages;
     }
 
     /**
@@ -83,6 +69,7 @@ class Login extends Base
 
         // Check to see if the user has provided a special token
         $nonce = $sanitizedRequestBody->getString('nonce');
+        $loginError = '';
 
         if ($nonce != '') {
             // We have a nonce provided, so validate that in preference to showing the form.
@@ -95,10 +82,10 @@ class Login extends Base
 
             if ($cache->isMiss()) {
                 $this->getLog()->error('Expired nonce used.');
-                $this->getFlash()->addMessageNow('login_message', __('This link has expired.'));
+                $loginError = __('This link has expired.');
             } else if (!password_verify($nonce[1], $validated['hash'])) {
                 $this->getLog()->error('Invalid nonce used.');
-                $this->getFlash()->addMessageNow('login_message', __('This link has expired.'));
+                $loginError = __('This link has expired.');
             } else {
                 // We're valid.
                 $this->pool->deleteItem('/nonce/' . $nonce[0]);
@@ -136,7 +123,7 @@ class Login extends Base
                     return $response->withRedirect($this->urlFor($request, 'home'));
                 } catch (NotFoundException $notFoundException) {
                     $this->getLog()->error('Valid nonce for non-existing user');
-                    $this->getFlash()->addMessageNow('login_message', __('This link has expired.'));
+                    $loginError = __('This link has expired.');
                 }
             }
         }
@@ -150,7 +137,8 @@ class Login extends Base
             'priorRoute' => $this->sanitizePriorRouteForOutput(
                 $sanitizedRequestBody->getString('priorRoute')
             ),
-            'logoUrl'                => $logoUrl,
+            'loginError'              => $loginError,
+            'logoUrl'                 => $logoUrl,
             'passwordReminderEnabled' => $passwordReminderEnabled,
             'authCASEnabled'          => $authCASEnabled,
             'version'                 => Environment::$WEBSITE_VERSION_NAME,
@@ -187,21 +175,14 @@ class Login extends Base
      * Login
      * @param Request $request
      * @param Response $response
-     * @return \Slim\Http\Response
+     * @return \Psr\Http\Message\ResponseInterface
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
-    public function login(Request $request, Response $response): Response
+    public function login(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
     {
-        $isJson = $this->isJsonRequest($request);
-        $body = $isJson ? (json_decode((string)$request->getBody(), true) ?? []) : ($request->getParsedBody() ?? []);
-        $parsedRequest = $this->getSanitizer($body);
-        $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-
-        // Capture the prior route (if there is one)
-        $redirect = $this->urlFor($request, 'login');
+        $parsedRequest = $this->getSanitizer($request->getParams());
         $priorRoute = $parsedRequest->getString('priorRoute');
-
         try {
             // Per-IP rate limit: 5 failed login attempts per 15 minutes.
             // Checked before the user lookup so attackers cannot enumerate usernames freely.
@@ -234,31 +215,21 @@ class Login extends Base
                 if ($user->twoFactorTypeId != 0) {
                     $_SESSION['tfaUsername'] = $user->userName;
 
-                    if ($isJson) {
-                        if ($user->twoFactorTypeId === 1) {
-                            $this->sendTwoFactorEmail($user, $request);
-                        }
-                        return $this->jsonResponse($response, [
-                            'status'     => '2fa_required',
-                            'priorRoute' => $this->sanitizePriorRouteForOutput($priorRoute),
-                        ]);
+                    if ($user->twoFactorTypeId === 1) {
+                        $this->sendTwoFactorEmail($user, $request);
                     }
-
-                    $this->getFlash()->addMessage('priorRoute', $priorRoute);
-                    return $response->withRedirect($routeParser->urlFor('login'));
+                    return $response->withJson([
+                        'status'     => '2fa_required',
+                        'priorRoute' => $this->sanitizePriorRouteForOutput($priorRoute),
+                    ]);
                 }
 
                 // We are logged in, so complete the login flow
                 $this->completeLoginFlow($user, $request);
-
-                if ($isJson) {
-                    return $this->jsonResponse($response, ['status' => 'ok']);
-                }
+                return $response->withJson(['status' => 'ok']);
             } catch (NotFoundException) {
                 throw new AccessDeniedException(__('User not found'));
             }
-
-            $redirect = $this->getRedirect($request, $priorRoute);
         } catch (AccessDeniedException $e) {
             $isRateLimited = str_contains($e->getMessage(), 'Too many attempts');
             if (!$isRateLimited) {
@@ -266,28 +237,16 @@ class Login extends Base
             }
             $this->getLog()->warning($e->getMessage());
 
-            if ($isJson) {
-                return $this->jsonResponse(
-                    $response,
-                    [
-                        'status' => $isRateLimited ? 'rate_limited' : 'error',
-                        'message' => __('Username or Password incorrect'),
-                    ],
-                    $isRateLimited ? 429 : 401
-                );
-            }
-
-            $this->getFlash()->addMessage('login_message', __('Username or Password incorrect'));
-            $this->getFlash()->addMessage('priorRoute', $priorRoute);
-        } catch (ExpiredException $e) {
-            if ($isJson) {
-                return $this->jsonResponse($response, ['status' => 'error', 'message' => __('Session expired')], 401);
-            }
-            $this->getFlash()->addMessage('priorRoute', $priorRoute);
+            return $response->withJson(
+                [
+                    'status' => $isRateLimited ? 'rate_limited' : 'error',
+                    'message' => __('Username or Password incorrect'),
+                ],
+                $isRateLimited ? 429 : 401
+            );
+        } catch (ExpiredException) {
+            return $response->withJson(['status' => 'error', 'message' => __('Session expired')], 401);
         }
-        $this->setNoOutput(true);
-        $this->getLog()->debug('Redirect to ' . $redirect);
-        return $response->withRedirect($redirect);
     }
 
     /**
@@ -303,16 +262,8 @@ class Login extends Base
      */
     public function forgottenPassword(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
     {
-        $isJson = $this->isJsonRequest($request);
         $mailFrom = $this->getConfig()->getSetting('mail_from');
-
-        if ($isJson) {
-            $jsonBody = json_decode((string)$request->getBody(), true) ?? [];
-            $parsedRequest = $this->getSanitizer($jsonBody);
-        } else {
-            $parsedRequest = $this->getSanitizer($request->getParsedBody());
-        }
-        $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+        $parsedRequest = $this->getSanitizer($request->getParams());
 
         if (!$this->isPasswordReminderEnabled()) {
             throw new ConfigurationException(__('This feature has been disabled by your administrator'));
@@ -327,13 +278,10 @@ class Login extends Base
             // Constant-time pad on the throttle path so attackers can't distinguish
             // "rate-limited" from "user not found" via response timing.
             usleep(random_int(200000, 400000));
-            $message = __('A reminder email will been sent to this user if they exist');
-            if ($isJson) {
-                return $this->jsonResponse($response, ['status' => 'ok', 'message' => $message]);
-            }
-            $this->getFlash()->addMessage('login_message', $message);
-            $this->setNoOutput(true);
-            return $response->withRedirect($routeParser->urlFor('login'));
+            return $response->withJson([
+                'status' => 'ok',
+                'message' => __('A reminder email will been sent to this user if they exist'),
+            ]);
         }
         $this->recordRateLimitHit($request, 'pwreset', 3600);
 
@@ -346,7 +294,6 @@ class Login extends Base
         // Check to see if the provided username is valid, and if so, record a nonce and send them a link
         try {
             // Get our user
-            /* @var User $user */
             $user = $this->userFactory->getByName($username);
 
             // Does this user have an email address associated to their user record?
@@ -375,6 +322,7 @@ class Login extends Base
 
             // Make a link. Pass config so WHITELIST_HOSTS (if set) defeats Host-header
             // injection into the reset link sent off-system to the user's email.
+            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
             $link = ((new HttpsDetect($this->getConfig()))->getRootUrl())
                 . $routeParser->urlFor('login') . '?nonce=' . $action . '::' . $nonce;
 
@@ -423,11 +371,6 @@ class Login extends Base
 
             if (!$mail->send()) {
                 throw new ConfigurationException('Unable to send password reminder to ' . $user->email);
-            } else {
-                $this->getFlash()->addMessage(
-                    'login_message',
-                    __('A reminder email will been sent to this user if they exist'),
-                );
             }
 
             // Audit Log
@@ -440,19 +383,12 @@ class Login extends Base
             // padding here, the response-time delta lets an attacker enumerate which
             // usernames exist despite the identical flash message. Pad to 200-400ms.
             usleep(random_int(200000, 400000));
-            $this->getFlash()->addMessage(
-                'login_message',
-                __('A reminder email will been sent to this user if they exist'),
-            );
         }
 
-        $message = __('A reminder email will been sent to this user if they exist');
-        if ($isJson) {
-            return $this->jsonResponse($response, ['status' => 'ok', 'message' => $message]);
-        }
-
-        $this->setNoOutput(true);
-        return $response->withRedirect($routeParser->urlFor('login'));
+        return $response->withJson([
+            'status' => 'ok',
+            'message' => __('A reminder email will been sent to this user if they exist'),
+        ]);
     }
 
     /**
@@ -521,8 +457,7 @@ class Login extends Base
             'aboutText'   => $this->getConfig()->getThemeConfig('about_text') ?? '',
         ];
 
-        $response->getBody()->write(json_encode($payload));
-        return $response->withHeader('Content-Type', 'application/json');
+        return $response->withJson($payload);
     }
 
     /**
@@ -601,42 +536,20 @@ class Login extends Base
     }
 
     /**
-     * 2FA Auth required
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     * @throws \PHPMailer\PHPMailer\Exception
-     * @throws \RobThree\Auth\TwoFactorAuthException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @return \Slim\Http\Response
      * @throws \RobThree\Auth\TwoFactorAuthException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function twoFactorAuthValidate(Request $request, Response $response): Response
+    public function twoFactorAuthValidate(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
     {
-        $isJson = $this->isJsonRequest($request);
-
         // Guard: ensure the 2FA session bridge is present before proceeding
         if (!isset($_SESSION['tfaUsername'])) {
-            if ($isJson) {
-                return $this->jsonResponse(
-                    $response,
-                    ['status' => 'error', 'message' => __('Session has expired, please log in again')],
-                    401
-                );
-            }
-            $this->getFlash()->addMessage('login_message', __('Session has expired, please log in again'));
-            return $response->withRedirect($this->urlFor($request, 'login'));
+            return $response->withJson(
+                ['status' => 'error', 'message' => __('Session has expired, please log in again')],
+                401
+            );
         }
 
         // Brute-force protection on the TOTP / recovery-code submission. Matches the
@@ -645,28 +558,16 @@ class Login extends Base
         try {
             $this->enforceRateLimit($request, 'twofactor', 5, 900);
         } catch (AccessDeniedException $e) {
-            if ($isJson) {
-                return $this->jsonResponse($response, ['status' => 'rate_limited', 'message' => $e->getMessage()], 429);
-            }
-            $this->getFlash()->addMessage('login_message', __('Too many attempts. Please wait and try again.'));
-            return $response->withRedirect($this->urlFor($request, 'login'));
+            return $response->withJson(['status' => 'rate_limited', 'message' => $e->getMessage()], 429);
         }
 
         $user = $this->userFactory->getByName($_SESSION['tfaUsername']);
         $result = false;
         $updatedCodes = [];
 
-        // Parse body: JSON or form-encoded
-        if ($isJson) {
-            $jsonBody = json_decode((string)$request->getBody(), true) ?? [];
-            $sanitizedParams = $this->getSanitizer($jsonBody);
-            $hasCode     = array_key_exists('code', $jsonBody);
-            $hasRecovery = array_key_exists('recoveryCode', $jsonBody);
-        } else {
-            $sanitizedParams = $this->getSanitizer($request->getParams());
-            $hasCode     = isset($_POST['code']);
-            $hasRecovery = isset($_POST['recoveryCode']);
-        }
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $hasCode     = $sanitizedParams->hasParam('code');
+        $hasRecovery = $sanitizedParams->hasParam('recoveryCode');
 
         if ($hasCode) {
             $issuerSettings = $this->getConfig()->getSetting('TWOFACTOR_ISSUER');
@@ -715,28 +616,17 @@ class Login extends Base
             //unset the session tfaUsername
             unset($_SESSION['tfaUsername']);
 
-            if ($isJson) {
-                return $this->jsonResponse($response, ['status' => 'ok']);
-            }
-
-            $this->setNoOutput(true);
-            return $response->withRedirect($this->getRedirect($request, $sanitizedParams->getString('priorRoute')));
+            return $response->withJson(['status' => 'ok']);
         } else {
             // Record one failure against the bucket so brute-forcers progress toward the wall.
             $this->recordRateLimitHit($request, 'twofactor', 900);
 
             $this->getLog()->error('Authentication code incorrect, redirecting to login page');
 
-            if ($isJson) {
-                return $this->jsonResponse(
-                    $response,
-                    ['status' => 'error', 'message' => __('Authentication code incorrect')],
-                    401
-                );
-            }
-
-            $this->getFlash()->addMessage('login_message', __('Authentication code incorrect'));
-            return $response->withRedirect($this->urlFor($request, 'login'));
+            return $response->withJson(
+                ['status' => 'error', 'message' => __('Authentication code incorrect')],
+                401
+            );
         }
     }
 
@@ -766,46 +656,6 @@ class Login extends Base
         $this->getLog()->audit('User', $user->userId, 'Login Granted', [
                 'UserAgent' => $request->getHeader('User-Agent')
         ]);
-    }
-
-    /**
-     * Get a redirect link from the given request and prior route
-     *  validate the prior route by only taking its path
-     * @param \Slim\Http\ServerRequest $request
-     * @param string|null $priorRoute
-     * @return string
-     */
-    private function getRedirect(Request $request, ?string $priorRoute): string
-    {
-        $home = $this->urlFor($request, 'home');
-
-        // Parse the prior route
-        $parsedPriorRoute = parse_url($priorRoute);
-        if (!$parsedPriorRoute) {
-            $priorRoute = $home;
-        } else {
-            $priorRoute = $parsedPriorRoute['path'];
-        }
-
-        // Certain routes always lead home
-        if ($priorRoute == ''
-            || $priorRoute == '/'
-            || str_contains($priorRoute, $this->urlFor($request, 'login'))
-        ) {
-            $redirectTo = $home;
-        } else {
-            $redirectTo = $priorRoute;
-        }
-
-        return $redirectTo;
-    }
-
-    /**
-     * Detect whether the current request expects a JSON response.
-     */
-    private function isJsonRequest(Request $request): bool
-    {
-        return str_contains($request->getHeaderLine('Accept'), 'application/json');
     }
 
     /**
@@ -915,16 +765,5 @@ class Login extends Base
         $this->getLog()->audit('User', $user->userId, 'Two Factor Code email sent', [
             'UserAgent' => $request->getHeader('User-Agent')
         ]);
-    }
-
-    /**
-     * Write a JSON payload to the PSR-7 response body.
-     * Consistent with the pattern used in aboutConfig().
-     */
-    private function jsonResponse(Response $response, array $data, int $status = 200): Response
-    {
-        $this->setNoOutput(true);
-        $response->getBody()->write(json_encode($data));
-        return $response->withHeader('Content-Type', 'application/json')->withStatus($status);
     }
 }
