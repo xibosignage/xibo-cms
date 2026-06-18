@@ -29,7 +29,7 @@ export function LoginForm({
   const [loading, setLoading] = useState(false);
   const [rateLimited, setRateLimited] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
     if (rateLimited) return;
 

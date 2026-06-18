@@ -20,7 +20,7 @@ export function TwoFactorForm({ mode, onSuccess, onSwitchMode, onBack }: Props) 
   const [rateLimited, setRateLimited] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
     if (rateLimited) return;
 
