@@ -120,9 +120,9 @@ export default defineConfig(({ mode }) => ({
       },
       output: {
         // Shared React runtime — loaded by both main app and login SPA.
-        // Static object form: only named packages go into the chunk; all other
-        // deps are auto-chunked by Rollup so login doesn't inherit the main
-        // app's heavy vendor modules (TanStack, Router, i18n, etc.).
+        // Only core React packages go into this chunk; all other deps are
+        // auto-chunked by Rollup so the login SPA doesn't inherit the main
+        // app's heavy vendor modules (TanStack, i18n, etc.).
         manualChunks: (id: string) => {
           if (
             /\/node_modules\/(react|react-dom|react-router|react-router-dom|scheduler)\//.test(id)
