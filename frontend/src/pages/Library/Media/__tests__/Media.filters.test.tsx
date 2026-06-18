@@ -360,7 +360,10 @@ describe('Reset Behavior', () => {
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Reset' })).toBeInTheDocument();
     });
-  });
+    // Bumped from the 5s default: this test passes in ~3s in isolation but races on
+    // JSDOM under the full parallel suite and intermittently exceeds 5s. See the
+    // frontend-testing notes on JSDOM contention before removing this.
+  }, 20_000);
 });
 
 // ---------------------------------------------------------------------------
