@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 
 import { submitRecoveryCode, submitTwoFactor } from '../api';
+import { t } from '../i18n';
 import type { LoginResponse } from '../types';
 
 import { ErrorBanner } from './ErrorBanner';
@@ -35,14 +36,14 @@ export function TwoFactorForm({ mode, onSuccess, onSwitchMode, onBack }: Props) 
         onSuccess(res.priorRoute ?? '', res.isPasswordChangeRequired);
       } else if (res.status === 'rate_limited') {
         setRateLimited(true);
-        setError(res.message ?? 'Too many attempts. Please wait before trying again.');
+        setError(res.message ?? t('rateLimitError'));
       } else {
-        setError(res.message ?? 'Authentication code incorrect.');
+        setError(res.message ?? t('tfaInvalidCode'));
         setValue('');
         inputRef.current?.focus();
       }
     } catch {
-      setError('An unexpected error occurred. Please try again.');
+      setError(t('unexpectedError'));
     } finally {
       setLoading(false);
     }
@@ -53,9 +54,7 @@ export function TwoFactorForm({ mode, onSuccess, onSwitchMode, onBack }: Props) 
   return (
     <form onSubmit={handleSubmit} noValidate>
       <p className="mb-3 text-sm text-gray-600">
-        {isCode
-          ? 'Please provide your Two Factor Authorisation Code'
-          : 'Please provide your Two Factor Recovery Code'}
+        {isCode ? t('tfaPrompt') : t('tfaRecoveryPrompt')}
       </p>
 
       <input
@@ -63,7 +62,7 @@ export function TwoFactorForm({ mode, onSuccess, onSwitchMode, onBack }: Props) 
         type="text"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder={isCode ? 'Code' : 'Recovery Code'}
+        placeholder={isCode ? t('tfaCode') : t('tfaRecoveryCode')}
         autoFocus
         autoComplete="one-time-code"
         required
@@ -72,7 +71,7 @@ export function TwoFactorForm({ mode, onSuccess, onSwitchMode, onBack }: Props) 
 
       {error && <ErrorBanner message={error} />}
 
-      <SubmitButton label="Verify" loading={loading} disabled={rateLimited} />
+      <SubmitButton label={t('tfaVerifyButton')} loading={loading} disabled={rateLimited} />
 
       <p className="mt-3 text-center text-sm">
         <button
@@ -84,13 +83,13 @@ export function TwoFactorForm({ mode, onSuccess, onSwitchMode, onBack }: Props) 
           }}
           className="btn-link"
         >
-          {isCode ? 'Use Recovery Code instead?' : 'Use Two Factor Code instead?'}
+          {isCode ? t('tfaSwitchToRecovery') : t('tfaSwitchToCode')}
         </button>
       </p>
 
       <p className="mt-1 text-center text-sm">
         <button type="button" onClick={onBack} className="btn-link btn-link-muted">
-          Back to login
+          {t('backToLogin')}
         </button>
       </p>
     </form>

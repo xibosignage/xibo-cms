@@ -23,6 +23,7 @@ import { useState } from 'react';
 import { useLoaderData, useSearchParams } from 'react-router-dom';
 
 import http from '@/lib/api';
+import { getSafeRedirectUrl } from '@/login/utils';
 import type { User } from '@/types/user';
 
 export default function ForceChangePassword() {
@@ -48,8 +49,8 @@ export default function ForceChangePassword() {
         newPassword,
         retypeNewPassword: confirmPassword,
       });
-      const priorRoute = searchParams.get('priorRoute');
-      window.location.assign(priorRoute || '/');
+      const priorRoute = searchParams.get('priorRoute') ?? undefined;
+      window.location.assign(getSafeRedirectUrl(priorRoute));
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||

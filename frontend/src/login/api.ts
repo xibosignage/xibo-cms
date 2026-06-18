@@ -1,4 +1,5 @@
 import type { ForgotResponse, LoginResponse } from './types';
+import { publicPath } from './utils';
 
 function getCsrfToken(): string {
   return document.querySelector<HTMLMetaElement>('meta[name="token"]')?.content ?? '';
@@ -20,21 +21,21 @@ async function postJson<T>(url: string, body: Record<string, string>): Promise<T
     throw new Error(`Unexpected HTTP ${res.status}`);
   }
 
-  return res.json() as Promise<T>;
+  return (await res.json()) as T;
 }
 
 export function submitLogin(username: string, password: string): Promise<LoginResponse> {
-  return postJson<LoginResponse>('/login', { username, password });
+  return postJson<LoginResponse>(`${publicPath}login`, { username, password });
 }
 
 export function submitTwoFactor(code: string): Promise<LoginResponse> {
-  return postJson<LoginResponse>('/tfa', { code });
+  return postJson<LoginResponse>(`${publicPath}tfa`, { code });
 }
 
 export function submitRecoveryCode(recoveryCode: string): Promise<LoginResponse> {
-  return postJson<LoginResponse>('/tfa', { recoveryCode });
+  return postJson<LoginResponse>(`${publicPath}tfa`, { recoveryCode });
 }
 
 export function submitForgotPassword(username: string): Promise<ForgotResponse> {
-  return postJson<ForgotResponse>('/login/forgotten', { username });
+  return postJson<ForgotResponse>(`${publicPath}login/forgotten`, { username });
 }

@@ -155,6 +155,41 @@ class Login extends Base
                 'remove_licence_from_login',
                 false
             ),
+            'i18n' => [
+                // Common
+                'username'             => __('Username'),
+                'password'             => __('Password'),
+                'loginButton'          => __('Login'),
+                'backToLogin'          => __('Back to login'),
+                'loginInstead'         => __('Login instead?'),
+                'unexpectedError'      => __('An unexpected error occurred. Please try again.'),
+                'rateLimitError'       => __('Too many attempts. Please wait before trying again.'),
+                // Login form
+                'loginPrompt'          => __('Please provide your credentials'),
+                'forgotPasswordLink'   => __('Forgotten your password?'),
+                'invalidCredentials'   => __('Username or password incorrect.'),
+                'casPrompt'            => __('Connect with the Central Authentication Server'),
+                'casLoginButton'       => __('CAS Login'),
+                // Two-factor
+                'tfaPrompt'            => __('Please provide your Two Factor Authorisation Code'),
+                'tfaRecoveryPrompt'    => __('Please provide your Two Factor Recovery Code'),
+                'tfaCode'              => __('Code'),
+                'tfaRecoveryCode'      => __('Recovery Code'),
+                'tfaVerifyButton'      => __('Verify'),
+                'tfaSwitchToRecovery'  => __('Use Recovery Code instead?'),
+                'tfaSwitchToCode'      => __('Use Two Factor Code instead?'),
+                'tfaInvalidCode'       => __('Authentication code incorrect.'),
+                // Forgot password
+                'forgotPrompt'         => __('Please provide your username and we will send a password reset link.'),
+                'forgotSendButton'     => __('Send Reset'),
+                'forgotSentMessage'    =>
+                    __('A reminder email will be sent to the associated email address if this user exists.'),
+                'forgotSentReturnLink' => __('Return to login'),
+                // Footer
+                'versionLabel'         => __('Version'),
+                'sourceLabel'          => __('Source'),
+                'aboutLabel'           => __('About'),
+            ],
         ];
 
         $this->getState()->template = 'login-spa';

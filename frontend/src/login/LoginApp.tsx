@@ -27,12 +27,14 @@ import { LoginAboutModal } from './components/LoginAboutModal';
 import { LoginCard } from './components/LoginCard';
 import { LoginForm } from './components/LoginForm';
 import { TwoFactorForm } from './components/TwoFactorForm';
+import { t } from './i18n';
 import type { LoginView } from './types';
-import { getSafeRedirectUrl } from './utils';
+import { getSafeRedirectUrl, publicPath } from './utils';
 
 const config = window.__LOGIN_CONFIG__;
 
-const FORCE_CHANGE_PASSWORD_PATH = '/prototype/user/force-change-password';
+// Module-level so publicPath is evaluated once after DOM is ready.
+const FORCE_CHANGE_PASSWORD_PATH = `${publicPath}prototype/user/force-change-password`;
 
 // Module-level so the React Compiler doesn't flag it as a mutation inside the component.
 function navigateTo(url: string) {
@@ -136,12 +138,12 @@ export function LoginApp() {
       {showAbout && <LoginAboutModal onClose={() => setShowAbout(false)} />}
 
       <p className="text-center" style={{ color: '#6c757d', fontSize: 12, marginTop: 8 }}>
-        Version {config.version}
+        {t('versionLabel')} {config.version}
         {!config.removeLicenceFromLogin && config.sourceUrl && (
           <>
             {' | '}
             <a href={config.sourceUrl} style={{ color: '#6c757d' }}>
-              Source
+              {t('sourceLabel')}
             </a>
           </>
         )}
@@ -159,7 +161,7 @@ export function LoginApp() {
                 padding: 0,
               }}
             >
-              About
+              {t('aboutLabel')}
             </button>
           </>
         )}

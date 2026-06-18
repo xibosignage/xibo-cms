@@ -11,6 +11,7 @@ export interface LoginConfig {
   supportUrl: string;
   sourceUrl: string;
   removeLicenceFromLogin: boolean;
+  i18n: Record<string, string>;
 }
 
 export interface LoginResponse {

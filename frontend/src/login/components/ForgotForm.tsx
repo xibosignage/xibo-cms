@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { submitForgotPassword } from '../api';
+import { t } from '../i18n';
 
 import { ErrorBanner } from './ErrorBanner';
 import { SubmitButton } from './SubmitButton';
@@ -26,7 +27,7 @@ export function ForgotForm({ onSent, onBack }: Props) {
       await submitForgotPassword(username);
       onSent();
     } catch {
-      setError('An unexpected error occurred. Please try again.');
+      setError(t('unexpectedError'));
     } finally {
       setLoading(false);
     }
@@ -34,15 +35,13 @@ export function ForgotForm({ onSent, onBack }: Props) {
 
   return (
     <form onSubmit={handleSubmit} noValidate>
-      <p className="mb-3 text-sm text-gray-600">
-        Please provide your username and we will send a password reset link.
-      </p>
+      <p className="mb-3 text-sm text-gray-600">{t('forgotPrompt')}</p>
 
       <input
         type="text"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
-        placeholder="Username"
+        placeholder={t('username')}
         autoComplete="username"
         autoFocus
         required
@@ -51,11 +50,11 @@ export function ForgotForm({ onSent, onBack }: Props) {
 
       {error && <ErrorBanner message={error} />}
 
-      <SubmitButton label="Send Reset" loading={loading} />
+      <SubmitButton label={t('forgotSendButton')} loading={loading} />
 
       <p className="mt-3 text-center text-sm">
         <button type="button" onClick={onBack} className="btn-link btn-link-muted">
-          Login instead?
+          {t('loginInstead')}
         </button>
       </p>
     </form>

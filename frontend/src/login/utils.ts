@@ -1,3 +1,8 @@
+// Root URI injected by PHP via <meta name="public-path"> in login-spa.twig.
+// e.g. '/' for a root install, '/cms/' for a subfolder install.
+export const publicPath: string =
+  document.querySelector<HTMLMetaElement>('meta[name="public-path"]')?.content ?? '/';
+
 /**
  * Validates a priorRoute value before navigation. Mirrors PHP's
  * sanitizePriorRouteForOutput() + getRedirect() logic on the client side.
@@ -5,7 +10,7 @@
  */
 export function getSafeRedirectUrl(
   priorRoute: string | undefined,
-  fallback = '/prototype/',
+  fallback = `${publicPath}prototype/`,
 ): string {
   if (!priorRoute) return fallback;
 
@@ -15,7 +20,10 @@ export function getSafeRedirectUrl(
     if (resolved.origin !== window.location.origin) return fallback;
 
     const path = resolved.pathname;
-    if (path === '' || path === '/' || path.startsWith('/login')) return fallback;
+    const loginPath = `${publicPath}login`;
+    if (path === '' || path === '/' || path === publicPath || path.startsWith(loginPath)) {
+      return fallback;
+    }
 
     let safe = path;
     if (resolved.search) safe += resolved.search;

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { submitLogin } from '../api';
+import { t } from '../i18n';
 import type { LoginResponse } from '../types';
 
 import { ErrorBanner } from './ErrorBanner';
@@ -44,12 +45,12 @@ export function LoginForm({
         onTfa(res.priorRoute ?? '');
       } else if (res.status === 'rate_limited') {
         setRateLimited(true);
-        setError(res.message ?? 'Too many attempts. Please wait before trying again.');
+        setError(res.message ?? t('rateLimitError'));
       } else {
-        setError(res.message ?? 'Username or password incorrect.');
+        setError(res.message ?? t('invalidCredentials'));
       }
     } catch {
-      setError('An unexpected error occurred. Please try again.');
+      setError(t('unexpectedError'));
     } finally {
       setLoading(false);
     }
@@ -58,9 +59,9 @@ export function LoginForm({
   if (authCASEnabled) {
     return (
       <div className="text-center">
-        <p>Connect with the Central Authentication Server</p>
+        <p>{t('casPrompt')}</p>
         <form action="/cas/login" method="post">
-          <SubmitButton label="CAS Login" />
+          <SubmitButton label={t('casLoginButton')} />
         </form>
       </div>
     );
@@ -68,7 +69,7 @@ export function LoginForm({
 
   return (
     <form onSubmit={handleSubmit} noValidate>
-      <p className="mb-3 text-sm text-gray-600">Please provide your credentials</p>
+      <p className="mb-3 text-sm text-gray-600">{t('loginPrompt')}</p>
 
       <input
         id="username"
@@ -76,7 +77,7 @@ export function LoginForm({
         name="username"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
-        placeholder="Username"
+        placeholder={t('username')}
         autoComplete="username"
         autoFocus
         required
@@ -88,7 +89,7 @@ export function LoginForm({
         name="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        placeholder="Password"
+        placeholder={t('password')}
         autoComplete="current-password"
         required
         className="form-control mb-3"
@@ -96,12 +97,12 @@ export function LoginForm({
 
       {error && <ErrorBanner message={error} />}
 
-      <SubmitButton label="Login" loading={loading} disabled={rateLimited} />
+      <SubmitButton label={t('loginButton')} loading={loading} disabled={rateLimited} />
 
       {passwordReminderEnabled && (
         <p className="mt-3 text-center text-sm">
           <button type="button" onClick={onForgot} className="btn-link">
-            Forgotten your password?
+            {t('forgotPasswordLink')}
           </button>
         </p>
       )}
