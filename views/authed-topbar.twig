@@ -307,7 +307,7 @@
             <li class="nav-item">
         {% endif %}
             {% if currentUser.featureEnabled("log.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("log.view") }}">{% trans "Log" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/advanced/log">{% trans "Log" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("sessions.view") %}

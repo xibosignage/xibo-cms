@@ -308,7 +308,7 @@ class Handlers
         $logger = $container->get('logger');
 
         // Add a processor to our log handler
-        Log::addLogProcessorToLogger($logger, $request);
+        Log::addLogProcessorToLogger($logger, $request, $container->get('basePath'));
 
         // Handle logging the error.
         if ($logErrors && !self::handledError($exception)) {
