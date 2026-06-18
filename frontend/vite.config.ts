@@ -25,7 +25,6 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, type Plugin } from 'vite';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 // Vite plugin: redirect react-dom imports that originate from @dnd-kit/* to a
 // shim that provides the unstable_batchedUpdates no-op removed in React 19.
@@ -51,7 +50,6 @@ export default defineConfig(({ mode }) => ({
       },
     }),
     tailwindcss(),
-    tsconfigPaths(),
     visualizer({
       filename: 'stats.html',
       open: true,
@@ -60,6 +58,7 @@ export default defineConfig(({ mode }) => ({
     }),
   ],
   resolve: {
+    tsconfigPaths: true,
     alias: {
       '@': path.resolve(__dirname, 'src'),
     },
@@ -124,8 +123,13 @@ export default defineConfig(({ mode }) => ({
         // Static object form: only named packages go into the chunk; all other
         // deps are auto-chunked by Rollup so login doesn't inherit the main
         // app's heavy vendor modules (TanStack, Router, i18n, etc.).
-        manualChunks: {
-          'react-core': ['react', 'react-dom', 'scheduler'],
+        manualChunks: (id: string) => {
+          if (
+            /\/node_modules\/(react|react-dom|react-router|react-router-dom|scheduler)\//.test(id)
+          ) {
+            return 'react-core';
+          }
+          return undefined;
         },
       },
     },
