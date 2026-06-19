@@ -25,12 +25,12 @@ import type { TFunction } from 'i18next';
 import { MemoryRouter } from 'react-router-dom';
 import { vi, beforeEach, afterEach, describe, test, expect } from 'vitest';
 
-import Layouts from '../Layouts';
 import {
   getBaseFilterKeys,
   LAYOUT_INITIAL_FILTER_STATE,
   type LayoutFilterInput,
 } from '../LayoutConfig';
+import Layouts from '../Layouts';
 import { useLayoutData } from '../hooks/useLayoutData';
 import { useLayoutFilterOptions } from '../hooks/useLayoutFilterOptions';
 

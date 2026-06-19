@@ -40,6 +40,7 @@ import { useUserContext } from '@/context/UserContext';
 
 interface DatePickerInputProps {
   label: string;
+  labelExtra?: React.ReactNode;
   value?: string;
   onChange: (value: string) => void;
   helpText?: string;
@@ -52,6 +53,7 @@ interface DatePickerInputProps {
 
 export default function DatePickerInput({
   label,
+  labelExtra,
   value,
   onChange,
   helpText,
@@ -88,7 +90,10 @@ export default function DatePickerInput({
   return (
     <div className="flex flex-col gap-1.5 relative">
       <label className="flex items-center justify-between text-sm font-semibold text-gray-500">
-        <span>{label}</span>
+        <span className="flex items-center gap-0.5">
+          {label}
+          {labelExtra}
+        </span>
         {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
       </label>
 

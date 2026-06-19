@@ -109,10 +109,14 @@ class Actions implements Middleware
 
                 // User notifications
                 $notifications = array_merge($notifications, $factory->getMine());
+
+                /*
+                 * TODO: Remove this once the SPA migration is complete since the interrupt notification
+                 * is already being handled in the SPA separately
                 // If we aren't already in a notification interrupt, then check to see if we should be
                 if ($resource != '/drawer/notification/interrupt/{id}' && !$this->isAjax($request) && $container->get('session')->isExpired() != 1) {
                     foreach ($notifications as $notification) {
-                        /** @var UserNotification $notification */
+                        //@var UserNotification $notification
                         if ($notification->isInterrupt == 1 && $notification->read == 0 && $notification->userId > 0) {
                             $container->get('flash')->addMessage('interruptedUrl', $resource);
                             return $handler->handle($request)
@@ -124,6 +128,7 @@ class Actions implements Middleware
                         }
                     }
                 }
+                */
 
                 $container->get('view')->offsetSet('notifications', $notifications);
                 $container->get('view')->offsetSet('notificationCount', $factory->countMyUnread() + $extraNotifications);

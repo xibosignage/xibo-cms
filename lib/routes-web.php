@@ -47,7 +47,6 @@ $app->get('/login/ping', ['\Xibo\Controller\Login','PingPong'])->setName('ping')
 //
 $app->get('/drawer/notification/show/{id}', ['\Xibo\Controller\Notification','show'])->setName('notification.show');
 $app->get('/drawer/notification/interrupt/{id}', ['\Xibo\Controller\Notification','interrupt'])->setName('notification.interrupt');
-$app->get('/notification/export/{id}', ['\Xibo\Controller\Notification','exportAttachment'])->setName('notification.exportattachment');
 
 //
 // layouts

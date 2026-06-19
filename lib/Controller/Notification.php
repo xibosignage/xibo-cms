@@ -78,6 +78,12 @@ class Notification extends Base
         $notification->setRead(Carbon::now()->format('U'));
         $notification->save();
 
+        if ($this->isJson($request) || $this->isApi($request)) {
+            return $response
+                ->withStatus(200)
+                ->withJson($notification);
+        }
+
         $this->getState()->template = 'notification-interrupt';
         $this->getState()->setData(['notification' => $notification]);
 
@@ -105,12 +111,16 @@ class Notification extends Base
 
         if ($params->getCheckbox('multiSelect')) {
             return $response->withStatus(201);
-        } else {
-            $this->getState()->template = 'notification-form-show';
-            $this->getState()->setData(['notification' => $notification]);
-
-            return $this->render($request, $response);
+        } else if ($this->isJson($request) || $this->isApi($request)) {
+            return $response
+                ->withStatus(200)
+                ->withJson($notification);
         }
+
+        $this->getState()->template = 'notification-form-show';
+        $this->getState()->setData(['notification' => $notification]);
+
+        return $this->render($request, $response);
     }
 
     #[OA\Get(
@@ -209,6 +219,11 @@ class Notification extends Base
                     'loadDisplayGroups' => in_array('displayGroups', $embed),
                 ]);
             }
+
+            $notification->canEdit = $this->getUser()->checkEditable($notification)
+                && $this->getUser()->featureEnabled('notification.modify');
+            $notification->canDelete = $this->getUser()->checkDeleteable($notification)
+                && $this->getUser()->featureEnabled('notification.modify');
         }
 
         return $response
@@ -254,6 +269,83 @@ class Notification extends Base
             && $this->getUser()->featureEnabled('notification.modify');
 
         return $response->withStatus(200)->withJson($notification);
+    }
+
+    /**
+     * Mark notifications as read for the current user.
+     * @param Request $request
+     * @param Response $response
+     * @return Response|ResponseInterface
+     * @throws AccessDeniedException
+     */
+    public function markAllRead(Request $request, Response $response): Response|ResponseInterface
+    {
+        $params = $this->getSanitizer($request->getParams());
+        $notificationId = $params->getInt('notificationId');
+        $readDt = Carbon::now()->format('U');
+
+        if ($notificationId !== null) {
+            $notification = $this->userNotificationFactory->getByNotificationId($notificationId);
+            $notification->setRead($readDt);
+            $notification->save();
+        } else {
+            foreach ($this->userNotificationFactory->query(
+                null,
+                ['audienceId' => $this->getUser()->userId, 'read' => 0]
+            ) as $notification) {
+                $notification->setRead($readDt);
+                $notification->save();
+            }
+        }
+
+        return $response->withStatus(204);
+    }
+
+    /**
+     * Return unread interrupt notifications for the current user (SPA client-side interrupt mechanism).
+     * Only returns notifications the user is an audience member of.
+     * @param Request $request
+     * @param Response $response
+     * @return Response|ResponseInterface
+     */
+    public function getInterrupt(Request $request, Response $response): Response|ResponseInterface
+    {
+        $notifications = $this->userNotificationFactory->query(
+            ['releaseDt ASC'],
+            ['audienceId' => $this->getUser()->userId, 'isInterrupt' => 1, 'read' => 0]
+        );
+
+        return $response->withStatus(200)->withJson($notifications);
+    }
+
+    /**
+     * Return released notifications visible to the current user (audience), sorted by releaseDt DESC.
+     * Used by the notification badge and dropdown in the SPA.
+     * @param Request $request
+     * @param Response $response
+     * @return Response|ResponseInterface
+     * @throws NotFoundException
+     */
+    public function myNotifications(Request $request, Response $response): Response|ResponseInterface
+    {
+        $params = $this->getSanitizer($request->getQueryParams());
+
+        $filterBy = [
+            'audienceId'   => $this->getUser()->userId,
+            'start'        => $params->getInt('start'),
+            'length'       => $params->getInt('length'),
+        ];
+
+        $notifications = $this->userNotificationFactory->query(
+            ['releaseDt DESC'],
+            $filterBy
+        );
+
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $this->userNotificationFactory->countLast())
+            ->withHeader('X-Unread-Count', $this->userNotificationFactory->countMyUnread())
+            ->withJson($notifications);
     }
 
     /**
@@ -463,12 +555,17 @@ class Notification extends Base
         }
 
         $notification->subject = $sanitizedParams->getString('subject');
-        $notification->body = $request->getParam('body', '');
+        $notification->body = $sanitizedParams->getHtml('body');
         $notification->createDt = Carbon::now()->format('U');
-        $notification->releaseDt = $sanitizedParams->getDate('releaseDt')->format('U');
+        $notification->releaseDt = $sanitizedParams->getDate('releaseDt')?->format('U') ?? $notification->releaseDt;
         $notification->isInterrupt = $sanitizedParams->getCheckbox('isInterrupt');
         $notification->userId = $this->getUser()->userId;
         $notification->nonusers = $sanitizedParams->getString('nonusers');
+
+        if ($sanitizedParams->getCheckbox('clearAttachment')) {
+            $notification->filename = '';
+            $notification->originalFileName = '';
+        }
 
         // Capture existing assignments so the caller can re-save them without needing
         // view permission on groups originally added by another user. Mirrors Campaign::edit().
@@ -484,6 +581,8 @@ class Notification extends Base
         $this->assignAudienceFromParams($notification, $sanitizedParams, $originalDisplayGroupIds, $originalUserGroupIds);
 
         $notification->save();
+
+        $this->handleAttachmentUpload($notification, $sanitizedParams);
 
         return $response->withStatus(200)->withJson($notification);
     }

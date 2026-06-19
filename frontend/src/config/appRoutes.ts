@@ -499,4 +499,11 @@ export const APP_ROUTES: AppRoute[] = [
       },
     ],
   },
+  {
+    path: 'notification',
+    labelKey: 'Notification Centre',
+    hideFromMenu: true,
+    lazy: () => import('@/pages/Notification/Notification').then((m) => ({ Component: m.default })),
+    feature: 'notification.centre',
+  },
 ];

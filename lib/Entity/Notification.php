@@ -111,6 +111,12 @@ class Notification implements \JsonSerializable
     public $nonusers;
 
     /**
+     * @var int
+     */
+    #[OA\Property(description: 'Flag whether the current user has read this notification')]
+    public $read = 0;
+
+    /**
      * @var UserGroup[]
      */
     #[OA\Property(description: 'User Group Notifications associated with this notification')]
@@ -121,6 +127,18 @@ class Notification implements \JsonSerializable
      */
     #[OA\Property(description: 'Display Groups associated with this notification')]
     public $displayGroups = [];
+
+    /**
+     * @var bool
+     */
+    #[OA\Property(description: 'Flag indicating whether the current user can edit this notification')]
+    public $canEdit = false;
+
+    /**
+     * @var bool
+     */
+    #[OA\Property(description: 'Flag indicating whether the current user can delete this notification')]
+    public $canDelete = false;
 
     /** @var  UserGroupFactory */
     private $userGroupFactory;

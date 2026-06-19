@@ -109,6 +109,14 @@ $app->group('', function (RouteCollectorProxy $group) {
 })->add(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.playlist']));
 
 //
+// notification
+//
+$app->get('/notification/mynotifications', ['\Xibo\Controller\Notification', 'myNotifications'])->setName('notification.mynotifications');
+$app->get('/notification/interrupt', ['\Xibo\Controller\Notification', 'getInterrupt'])->setName('api.notification.interrupt');
+$app->put('/notification/markAllRead', ['\Xibo\Controller\Notification', 'markAllRead'])
+    ->setName('notification.markallread');
+
+//
 // Developer
 //
 $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
