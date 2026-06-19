@@ -163,14 +163,6 @@ $app->get('/user/form/homepages', ['\Xibo\Controller\User', 'homepages'])
     ->setName('user.homepages.search');
 
 //
-// log
-//
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/log/view', ['\Xibo\Controller\Logging', 'displayPage'])->setName('log.view');
-    $group->get('/log/delete', ['\Xibo\Controller\Logging', 'truncateForm'])->setName('log.truncate.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['log.view']));
-
-//
 // campaign
 //
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {

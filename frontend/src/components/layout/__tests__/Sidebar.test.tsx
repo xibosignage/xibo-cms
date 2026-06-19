@@ -158,10 +158,10 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
       expect(link).toBeVisible();
     });
 
-    // Developer is a top-level external link (no subLinks) — always visible, not expandable.
+    // Developer is now a submenu parent; its link targets the first child (Module Templates).
     expect(screen.getByRole('link', { name: /developer/i })).toHaveAttribute(
       'href',
-      '/developer/template/view',
+      '/developer/template',
     );
 
     // Displays > Display Settings and Administration > Settings are both React Router links.

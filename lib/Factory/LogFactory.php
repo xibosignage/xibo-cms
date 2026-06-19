@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,10 +23,10 @@
 
 namespace Xibo\Factory;
 
-
 use Carbon\Carbon;
 use Xibo\Entity\LogEntry;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class LogFactory
@@ -38,28 +38,40 @@ class LogFactory extends BaseFactory
      * Create Empty
      * @return LogEntry
      */
-    public function createEmpty()
+    public function createEmpty(): LogEntry
     {
         return new LogEntry($this->getStore(), $this->getLog(), $this->getDispatcher());
     }
 
     /**
+     * Get by Log ID
+     * @param $logId
+     * @return LogEntry
+     * @throws NotFoundException
+     */
+    public function getById($logId): LogEntry
+    {
+        $columns = $this->query(null, ['logId' => $logId]);
+
+        if (count($columns) <= 0) {
+            throw new NotFoundException();
+        }
+
+        return $columns[0];
+    }
+
+    /**
      * Query
-     * @param array $sortOrder
+     * @param array|null $sortOrder
      * @param array $filterBy
      * @return array[\Xibo\Entity\Log]
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query(?array $sortOrder = null, array $filterBy = []): array
     {
         $parsedFilter = $this->getSanitizer($filterBy);
 
-        if ($sortOrder == null) {
-            $sortOrder = ['logId DESC'];
-        }
-
         $entries = [];
         $params = [];
-        $order = '';
         $limit = '';
 
         $select = '
@@ -88,7 +100,6 @@ class LogFactory extends BaseFactory
         }
 
         $body .= ' WHERE 1 = 1 ';
-
 
         if ($parsedFilter->getInt('fromDt') !== null) {
             $body .= ' AND `logdate` > :fromDt ';
@@ -172,10 +183,31 @@ class LogFactory extends BaseFactory
             $params['sessionHistoryId'] = $parsedFilter->getInt('sessionHistoryId');
         }
 
-        // Sorting?
-        if (is_array($sortOrder)) {
-            $order = ' ORDER BY ' . implode(',', $sortOrder);
+        if ($parsedFilter->getInt('logId') !== null) {
+            $body .= ' AND `log`.`logId` = :logId ';
+            $params['logId'] = $parsedFilter->getInt('logId');
         }
+
+        // Sorting?
+        $allowedColumns = [
+            'logId',
+            'runNo',
+            'logDate',
+            'channel',
+            'function',
+            'type',
+            'display',
+            'page',
+            'message',
+        ];
+
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['logId DESC']
+        );
+
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         // Paging
         if ($filterBy !== null
@@ -187,8 +219,6 @@ class LogFactory extends BaseFactory
         }
 
         $sql = $select . $body . $order . $limit;
-
-
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row, ['htmlStringProperties' => ['message']]);
