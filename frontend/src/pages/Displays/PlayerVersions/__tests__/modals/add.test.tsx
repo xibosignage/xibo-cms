@@ -32,14 +32,6 @@ import { uploadPlayerVersion } from '@/services/playerVersionApi';
 // Module mocks
 // =============================================================================
 
-vi.mock('react-i18next', () => {
-  const t = (key: string) => key;
-  return {
-    useTranslation: () => ({ t, i18n: { changeLanguage: vi.fn() } }),
-    Trans: ({ children }: { children: React.ReactNode }) => children,
-  };
-});
-
 vi.mock('@/components/ui/modals/Modal');
 
 vi.mock('@/services/playerVersionApi', () => ({
@@ -165,7 +157,7 @@ describe('AddPlayerVersionModal', () => {
 
     act(() => capturedOnDrop?.([makeFile('a.apk'), makeFile('b.apk')]));
 
-    expect(await screen.findByText('All {{count}} items completed')).toBeInTheDocument();
+    expect(await screen.findByText('All 2 items completed')).toBeInTheDocument();
   });
 
   test('a mix of success and failure reports both counts', async () => {

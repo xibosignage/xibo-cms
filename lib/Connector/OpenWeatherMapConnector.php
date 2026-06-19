@@ -235,15 +235,30 @@ class OpenWeatherMapConnector implements ConnectorInterface
             $providedLon = $dataProvider->getDisplayLongitude();
         }
 
+        // Map Moment.js locale codes to OWM language codes where they differ
+        $owmLangMap = [
+            'nb'    => 'no',
+            'nn'    => 'no',
+            'zh-cn' => 'zh_cn',
+            'zh-tw' => 'zh_tw',
+        ];
+        $lang = $dataProvider->getProperty('lang', 'en');
+        $owmLang = $owmLangMap[$lang] ?? $lang;
+        $this->getLogger()->debug('getWeatherData: lang=' . $lang . ' owmLang=' . $owmLang);
+
         // Build the URL
         $url = '?lat=' . $providedLat
             . '&lon=' . $providedLon
             . '&units=' . $units
-            . '&lang=' . $dataProvider->getProperty('lang', 'en')
+            . '&lang=' . $owmLang
             . '&appid=[API_KEY]';
 
         // Cache expiry date
         $cacheExpire = Carbon::now()->addSeconds($this->getSetting('cachePeriod'));
+
+        $this->getLogger()->debug(
+            'getWeatherData: plan=' . (($this->getSetting('owmIsPaidPlan') ?? 0 == 1) ? 'paid' : 'free')
+        );
 
         if ($this->getSetting('owmIsPaidPlan') ?? 0 == 1) {
             // We build our data from multiple API calls
@@ -325,11 +340,16 @@ class OpenWeatherMapConnector implements ConnectorInterface
         $this->currentDay->location = $data['name'] ?? '';
         $this->processItemIntoDay($this->currentDay, $data['current'], $units, true);
 
-        $countForecast = 0;
+        $locationTz = new \DateTimeZone($this->timezone);
+        $currentDayDate = Carbon::createFromTimestamp($this->currentDay->time)
+            ->setTimezone($locationTz)
+            ->format('Y-m-d');
+        $this->getLogger()->debug('getWeatherData: currentDay date=' . $currentDayDate);
         // Process each day into a forecast
         foreach ($data['daily'] as $dayItem) {
-            // Skip first item as this is the currentDay
-            if ($countForecast++ === 0) {
+            // Skip any item that falls on the same date as currentDay
+            $dayDate = Carbon::createFromTimestamp($dayItem['dt'])->setTimezone($locationTz)->format('Y-m-d');
+            if ($dayDate === $currentDayDate) {
                 continue;
             }
 
@@ -362,6 +382,9 @@ class OpenWeatherMapConnector implements ConnectorInterface
             $this->currentDay->icon = str_replace('-night', '', $this->currentDay->icon);
             $this->currentDay->wicon = str_replace('-night', '', $this->currentDay->wicon);
         }
+
+        $firstDay = isset($forecasts[0]) ? date('Y-m-d', $forecasts[0]->time) : 'none';
+        $this->getLogger()->debug('getWeatherData: ' . count($forecasts) . ' forecast days, first=' . $firstDay);
 
         $dataProvider->addItem($this->currentDay);
 

@@ -525,6 +525,7 @@ $app->get('/stats/export', ['\Xibo\Controller\Stats','export'])
 // -------------
 $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/log', ['\Xibo\Controller\Logging', 'grid'])->setName('log.search');
+    $group->get('/log/{id}', ['\Xibo\Controller\Logging', 'searchById'])->setName('log.search.id');
     $group->delete('/log', ['\Xibo\Controller\Logging', 'truncate'])->setName('log.truncate');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['log.view']));
 

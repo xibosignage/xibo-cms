@@ -89,6 +89,24 @@ export const CHECKBOX_FIELDS_BY_TYPE: Record<DisplayProfileType, Set<string>> = 
     'isRecordGeoLocationOnProofOfPlay',
     'sendCurrentLayoutAsStatusUpdate',
   ]),
+  hisense: new Set([
+    'statsEnabled',
+    'isRecordGeoLocationOnProofOfPlay',
+    'forceHttps',
+    'restartWifiOnConnectionFailure',
+    'blacklistVideo',
+    'storeHtmlOnInternal',
+    'useSurfaceVideoView',
+    'startOnBoot',
+    'autoRestart',
+    'sendCurrentLayoutAsStatusUpdate',
+    'expireModifiedLayouts',
+    'timeSyncFromCms',
+    'webCacheEnabled',
+    'embeddedServerAllowWan',
+    'installWithLoadedLinkLibraries',
+    'isTouchEnabled',
+  ]),
 };
 
 export type FieldInputType =
@@ -96,6 +114,8 @@ export type FieldInputType =
   | 'datepicker'
   | 'daypart'
   | 'dropdown'
+  | 'hisense-picture-options'
+  | 'hisense-timers'
   | 'number'
   | 'player-version'
   | 'text'
@@ -821,6 +841,65 @@ function linuxMeta(t: TFunction): FieldMetaMap {
   };
 }
 
+function hisenseMeta(t: TFunction): FieldMetaMap {
+  return {
+    brightness: {
+      label: t('Brightness'),
+      tab: 'pictureOptions',
+      helpText: t('Set the screen brightness (0-100).'),
+      inputType: 'number',
+    },
+    contrast: {
+      label: t('Contrast'),
+      tab: 'pictureOptions',
+      helpText: t('Set the screen contrast (0-100).'),
+      inputType: 'number',
+    },
+    backlight: {
+      label: t('Backlight'),
+      tab: 'pictureOptions',
+      helpText: t('Set the backlight level (0-100).'),
+      inputType: 'number',
+    },
+    saturation: {
+      label: t('Saturation'),
+      tab: 'pictureOptions',
+      helpText: t('Set the colour saturation (0-100).'),
+      inputType: 'number',
+    },
+    gammaMode: {
+      label: t('Gamma Mode'),
+      tab: 'pictureOptions',
+      helpText: t('Set the gamma mode (0-2).'),
+      inputType: 'number',
+    },
+    dynamicContrast: {
+      label: t('Dynamic Contrast'),
+      tab: 'pictureOptions',
+      helpText: t('Set the dynamic contrast level (0-2).'),
+      inputType: 'number',
+    },
+    colourTemperature: {
+      label: t('Colour Temperature'),
+      tab: 'pictureOptions',
+      helpText: t('Set the colour temperature (0-100).'),
+      inputType: 'number',
+    },
+    hisensePictureOptions: {
+      label: t('Picture Options'),
+      tab: 'pictureOptions',
+      helpText: t('Configure picture settings including brightness, contrast, and colour options.'),
+      inputType: 'hisense-picture-options',
+    },
+    timers: {
+      label: t('Timers'),
+      tab: 'timers',
+      helpText: t('Configure on/off timers for this display.'),
+      inputType: 'hisense-timers',
+    },
+  };
+}
+
 export function getFieldMetaForType(
   clientType: string | null | undefined,
   t: TFunction,
@@ -830,6 +909,8 @@ export function getFieldMetaForType(
   switch (clientType) {
     case 'android':
       return { ...common, ...androidMeta(t) };
+    case 'hisense':
+      return { ...common, ...androidMeta(t), ...hisenseMeta(t) };
     case 'windows':
       return { ...common, ...windowsMeta(t) };
     case 'linux':

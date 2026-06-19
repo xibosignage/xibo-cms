@@ -307,7 +307,7 @@
             <li class="nav-item">
         {% endif %}
             {% if currentUser.featureEnabled("log.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("log.view") }}">{% trans "Log" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/advanced/log">{% trans "Log" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("sessions.view") %}
@@ -333,7 +333,7 @@
             <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% trans "Developer" %} <span class="caret"></span></a>
             <div class="dropdown-menu">
             {% if currentUser.featureEnabled("developer.edit") %}
-                <a class="dropdown-item" href="{{ url_for("developer.templates.view") }}">{% trans "Module Templates" %}</a>
+                <a class="dropdown-item" href="{{ theme.rootUri() }}prototype/developer/template">{% trans "Module Templates" %}</a>
             {% endif %}
             </div>
         </li>
