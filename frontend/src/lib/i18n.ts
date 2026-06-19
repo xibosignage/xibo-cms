@@ -28,8 +28,8 @@ function withBase(p: string) {
 }
 
 // Guard against HTML responses (404 rewrites)
-async function fetchJson(url: string) {
-  const res = await fetch(url, { cache: 'no-cache' });
+async function fetchJson(url: string, init?: RequestInit) {
+  const res = await fetch(url, { cache: 'no-cache', ...init });
   const text = await res.text();
   if (!res.ok || text.trim().startsWith('<!doctype') || text.trim().startsWith('<html')) {
     throw new Error(`Expected JSON but got HTML/HTTP ${res.status} at ${url}`);
@@ -37,20 +37,60 @@ async function fetchJson(url: string) {
   return JSON.parse(text);
 }
 
-// CHANGE THIS to match your generated filenames: 'en', 'en_GB', 'pt_PT', etc...
-// or "en" if your script outputs en.json
-const DEFAULT_LANG = 'en_GB';
+const FALLBACK_LANG = 'en_GB';
 
-const langUrl = withBase(`locale/langs/${DEFAULT_LANG}.json`);
-const translations = await fetchJson(langUrl);
+async function resolveLanguage() {
+  const apiBase = import.meta.env.VITE_API_BASE_URL || '/json';
+  try {
+    const me = await fetchJson(`${window.location.origin}${apiBase}/user/me`, {
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    });
+    return me?.settings?.translate?.locale || FALLBACK_LANG;
+  } catch {
+    return FALLBACK_LANG;
+  }
+}
+
+async function loadTranslations(lang: string) {
+  try {
+    return { lang, translations: await fetchJson(withBase(`locale/langs/${lang}.json`)) };
+  } catch {
+    if (lang === FALLBACK_LANG) {
+      throw new Error(`Missing translations for fallback language ${FALLBACK_LANG}`);
+    }
+    return {
+      lang: FALLBACK_LANG,
+      translations: await fetchJson(withBase(`locale/langs/${FALLBACK_LANG}.json`)),
+    };
+  }
+}
+
+const { lang, translations } = await loadTranslations(await resolveLanguage());
 
 void i18n.use(initReactI18next).init({
-  lng: DEFAULT_LANG,
-  fallbackLng: DEFAULT_LANG,
+  lng: lang,
+  fallbackLng: FALLBACK_LANG,
   interpolation: { escapeValue: false },
   resources: {
-    [DEFAULT_LANG]: { translation: translations },
+    [lang]: { translation: translations },
   },
 });
+
+export async function changeAppLanguage(target: string) {
+  const lang = target || FALLBACK_LANG;
+  if (!i18n.hasResourceBundle(lang, 'translation')) {
+    const loaded = await loadTranslations(lang);
+    i18n.addResourceBundle(loaded.lang, 'translation', loaded.translations, true, true);
+    await i18n.changeLanguage(loaded.lang);
+    return loaded.lang;
+  }
+  await i18n.changeLanguage(lang);
+  return lang;
+}
+
+export async function reloadAppLanguage() {
+  return changeAppLanguage(await resolveLanguage());
+}
 
 export default i18n;
