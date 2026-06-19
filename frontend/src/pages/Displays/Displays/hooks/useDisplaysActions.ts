@@ -126,10 +126,6 @@ export function useDisplaysActions({
     }
   };
 
-  const handleManage = (display: Display) => {
-    window.open(`/display/manage/${display.displayId}`, '_blank');
-  };
-
   const runAction = async (fn: () => Promise<unknown>, errorMessage: string) => {
     try {
       setIsActionPending(true);
@@ -281,7 +277,6 @@ export function useDisplaysActions({
     confirmDelete,
     confirmAuthorise,
     handleConfirmMove,
-    handleManage,
     isActionPending,
     actionError,
     setActionError,
