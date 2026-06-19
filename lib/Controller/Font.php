@@ -86,7 +86,7 @@ class Font extends Base
 
         $this->getState()->template = 'fonts-page';
         $this->getState()->setData([
-            'validExt' => implode('|', $this->getValidExtensions())
+            'validExt' => implode('|', $this->fontFactory->getValidExtensions())
         ]);
 
         return $this->render($request, $response);
