@@ -133,6 +133,16 @@ export const APP_ROUTES: AppRoute[] = [
         feature: 'campaign.view',
       },
       {
+        path: 'campaign/:id',
+        labelKey: 'Edit Campaign',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Design/Campaigns/CampaignEditor').then((m) => ({
+            Component: m.default,
+          })),
+        feature: 'ad.campaign',
+      },
+      {
         path: 'layout',
         labelKey: 'Layouts',
         lazy: () =>
