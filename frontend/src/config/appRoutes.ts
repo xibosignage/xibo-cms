@@ -519,6 +519,46 @@ export const APP_ROUTES: AppRoute[] = [
           })),
         validator: canAccessReport('report.view', true),
       },
+      {
+        path: 'api-requests',
+        labelKey: 'API Request History',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Reporting/Reports/ApiRequestsHistory/ApiRequestsHistory').then((m) => ({
+            Component: m.default,
+          })),
+        validator: canAccessReport('admin', true),
+      },
+      {
+        path: 'session-history',
+        labelKey: 'Session History',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Reporting/Reports/SessionHistory/SessionHistory').then((m) => ({
+            Component: m.default,
+          })),
+        validator: canAccessReport('admin', true),
+      },
+      {
+        path: 'proof-of-play',
+        labelKey: 'Proof of Play',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Reporting/Reports/ProofOfPlay/ProofOfPlay').then((m) => ({
+            Component: m.default,
+          })),
+        validator: canAccessReport('proof-of-play'),
+      },
+      {
+        path: 'display-alerts',
+        labelKey: 'Display Alerts',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Reporting/Reports/DisplayAlerts/DisplayAlerts').then((m) => ({
+            Component: m.default,
+          })),
+        validator: canAccessReport('displays.reporting'),
+      },
     ],
   },
   {

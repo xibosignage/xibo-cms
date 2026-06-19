@@ -262,7 +262,7 @@ class ApiRequests implements ReportInterface
 
                 // decode for grid view, leave as json for email/preview.
                 if (!$sanitizedParams->getCheckbox('scheduledReport')) {
-                    $auditRecord->objectAfter = json_decode($auditRecord->objectAfter);
+                    $auditRecord->objectAfter = json_decode($auditRecord->objectAfter ?? '');
                 }
 
                 $auditRecord->logDate = Carbon::createFromTimestamp($auditRecord->logDate)

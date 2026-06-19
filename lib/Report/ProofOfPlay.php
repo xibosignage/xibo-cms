@@ -271,7 +271,7 @@ class ProofOfPlay implements ReportInterface
     {
         $layoutIds = $sanitizedParams->getIntArray('layoutId', ['default' => []]);
         $mediaIds = $sanitizedParams->getIntArray('mediaId', ['default' => []]);
-        $type = strtolower($sanitizedParams->getString('type'));
+        $type = strtolower($sanitizedParams->getString('type') ?? '');
         $tags = $sanitizedParams->getString('tags');
         $tagsType = $sanitizedParams->getString('tagsType');
         $exactTags = $sanitizedParams->getCheckbox('exactTags');

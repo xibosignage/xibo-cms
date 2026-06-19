@@ -4,6 +4,7 @@
   "class": "\\Xibo\\Report\\DisplayAlerts",
   "type": "Report",
   "output_type": "table",
+  "prototype_url": "/prototype/reporting/display-alerts",
   "lucide_icon": "MonitorX",
   "sort_order": 5,
   "hidden": 0,
