@@ -279,11 +279,11 @@
         {% endif %}
 
             {% if currentUser.featureEnabled("report.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("report.view") }}">{% trans "All Reports" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/reporting/reports">{% trans "All Reports" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("report.scheduling") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("reportschedule.view") }}">{% trans "Report Schedules" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/reporting/schedules">{% trans "Report Schedules" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("report.saving") %}

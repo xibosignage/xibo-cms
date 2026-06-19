@@ -77,32 +77,3 @@ export interface SspPartner {
   description?: string;
   isWidgetSupported?: boolean;
 }
-
-export interface AudienceImpressionSource {
-  value: string;
-  name: string;
-}
-
-export interface AudienceOptions {
-  error?: boolean;
-  message?: string;
-  displays?: number;
-  impressionSource?: AudienceImpressionSource[];
-}
-
-export interface Dma {
-  _id: string;
-  name: string;
-  costPerPlay: number;
-  impressionsPerPlay: number;
-  impressionSource: string;
-  startDate?: string;
-  endDate?: string;
-  daysOfWeek?: number[];
-  startTime?: string;
-  endTime?: string;
-  geoFence?: object;
-  priority: number;
-  displays?: unknown[];
-  displayGroupId?: number;
-}

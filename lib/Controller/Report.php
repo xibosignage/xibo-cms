@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -22,13 +22,16 @@
 
 namespace Xibo\Controller;
 
+use Psr\Http\Message\ResponseInterface;
+use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\ReportResult;
 use Xibo\Service\ReportServiceInterface;
+use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
 
-/**
+/*
  * Class Report
  * @package Xibo\Controller
  */
@@ -55,11 +58,11 @@ class Report extends Base
      * @param Request $request
      * @param Response $response
      * @param $name
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return Response|ResponseInterface
      * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
-    public function getReportForm(Request $request, Response $response, $name)
+    public function getReportForm(Request $request, Response $response, $name): Response|ResponseInterface
     {
         $this->getLog()->debug('Get report name: '. $name);
 
@@ -67,25 +70,17 @@ class Report extends Base
         $className = $this->reportService->getReportClass($name);
 
         // Create the report object
-        $object = $this->reportService->createReportObject($className);
-        
-        // We assert the user so that we can use getUser in the report class
-        $object->setUser($this->getUser());
+        $object = $this->reportService->createReportObject($className)->setUser($this->getUser());
 
-        // Get the twig file template and required data of the report form
-        $form =  $object->getReportForm();
+        $form = $object->getReportForm();
 
-        // Show the twig
-        $this->getState()->template = $form->template;
-        $this->getState()->setData([
+        return $response->withJson([
             'reportName' => $form->reportName,
             'reportCategory' => $form->reportCategory,
             'reportAddBtnTitle' => $form->reportAddBtnTitle,
             'availableReports' => $this->reportService->listReports(),
-            'defaults' => $form->defaults
+            'defaults' => $form->defaults,
         ]);
-
-        return $this->render($request, $response);
     }
 
     /**
@@ -110,7 +105,7 @@ class Report extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Return data to build chart/table
-        $result =  $object->getResults($sanitizedParams);
+        $result = $object->getResults($sanitizedParams, $this->isJson($request));
 
         //
         // Output Results

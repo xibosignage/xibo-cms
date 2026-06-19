@@ -22,7 +22,11 @@
 import type { AppRoute } from '@/config/appRoutes';
 
 export function isRouteActive(route: AppRoute, pathname: string): boolean {
-  if (pathname === `/${route.path}`) return true;
+  // Match the parent by its path prefix so child pages that are hidden from the menu
+  // (hideFromMenu, e.g. individual report pages) still mark their section as active.
+  if (pathname === `/${route.path}` || pathname.startsWith(`/${route.path}/`)) {
+    return true;
+  }
 
   return (
     route.subLinks?.some(

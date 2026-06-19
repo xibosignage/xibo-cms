@@ -455,8 +455,6 @@ class Controllers
                     $c->get('reportService'),
                     $c->get('reportScheduleFactory'),
                     $c->get('savedReportFactory'),
-                    $c->get('mediaFactory'),
-                    $c->get('userFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;

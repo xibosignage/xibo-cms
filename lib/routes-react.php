@@ -109,6 +109,17 @@ $app->group('', function (RouteCollectorProxy $group) {
 })->add(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.playlist']));
 
 //
+// Reports
+//
+$app->get('/report/available', ['\Xibo\Controller\Stats', 'availableReports'])
+    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['report.view']))
+    ->setName('report.available');
+
+$app->get('/stats/export/count', ['\Xibo\Controller\Stats', 'exportStatsCount'])
+    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['proof-of-play']))
+    ->setName('stats.export.count');
+
+//
 // Developer
 //
 $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {

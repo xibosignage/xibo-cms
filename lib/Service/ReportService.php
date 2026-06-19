@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -28,7 +28,6 @@ use Slim\Http\ServerRequest as Request;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\ReportResult;
-use Xibo\Event\ConnectorReportEvent;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Report\ReportInterface;
@@ -145,16 +144,6 @@ class ReportService implements ReportServiceInterface
 
         $this->log->debug('Reports found in total: '.count($reports));
 
-        // Get reports that are allowed by connectors
-        $event = new ConnectorReportEvent();
-        $this->getDispatcher()->dispatch($event, ConnectorReportEvent::$NAME);
-        $connectorReports = $event->getReports();
-
-        // Merge built in reports and connector reports
-        if (count($connectorReports) > 0) {
-            $reports = array_merge($reports, $connectorReports);
-        }
-
         foreach ($reports as $k => $report) {
             usort($report, function ($a, $b) {
 
@@ -232,21 +221,6 @@ class ReportService implements ReportServiceInterface
             ->setFactories($this->container);
 
         return $object;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getReportScheduleFormData($reportName, Request $request)
-    {
-        $this->log->debug('Populate form title and hidden fields');
-
-        $className = $this->getReportClass($reportName);
-
-        $object = $this->createReportObject($className);
-
-        // Populate form title and hidden fields
-        return $object->getReportScheduleFormData($this->sanitizer->getSanitizer($request->getParams()));
     }
 
     /**
@@ -398,19 +372,6 @@ class ReportService implements ReportServiceInterface
 
         // Set Report Schedule form data
         return $object->getReportEmailTemplate();
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getSavedReportTemplate($reportName)
-    {
-        $className = $this->getReportClass($reportName);
-
-        $object = $this->createReportObject($className);
-
-        // Set Report Schedule form data
-        return $object->getSavedReportTemplate();
     }
 
     /**

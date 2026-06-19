@@ -93,11 +93,6 @@ class XiboSspConnector implements ConnectorInterface
         return 'xibo-ssp-connector-form-settings';
     }
 
-    public function getSettingsFormJavaScript(): string
-    {
-        return 'xibo-ssp-connector-form-javascript';
-    }
-
     public function getEnabledLabel(): string
     {
         return __('Enable/Disable');
@@ -464,8 +459,9 @@ class XiboSspConnector implements ConnectorInterface
             'default' => Carbon::now()->startOfHour()
         ]);
 
+        // copy() so the default doesn't mutate $fromDt
         $toDt = $params->getDate('activityToDt', [
-            'default' => $fromDt->addHour()
+            'default' => $fromDt->copy()->addHour()
         ]);
 
         if ($params->getInt('displayId') == null) {
