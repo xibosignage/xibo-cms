@@ -4,6 +4,7 @@
   "class": "\\Xibo\\Report\\SessionHistory",
   "type": "Report",
   "output_type": "table",
+  "prototype_url": "/prototype/reporting/session-history",
   "lucide_icon": "FileCog",
   "sort_order": 5,
   "hidden": 0,

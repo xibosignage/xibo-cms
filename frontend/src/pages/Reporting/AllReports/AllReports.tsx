@@ -19,10 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { TFunction } from 'i18next';
 import {
   CalendarClock,
-  Download,
   FileBarChart,
   FileBarChart2,
   FileClock,
@@ -43,7 +41,6 @@ import { useNavigate } from 'react-router-dom';
 
 import { INITIAL_FILTER_STATE, getFilterKeys } from './AllReportsConfig';
 import type { ReportFilterInput } from './AllReportsConfig';
-import ExportStatisticsModal from './ExportStatisticsModal';
 import { useAllReportsData } from './hooks/useAllReportsData';
 
 import Button from '@/components/ui/Button';
@@ -65,33 +62,6 @@ const LUCIDE_ICON_MAP: Record<string, LucideIcon> = {
   MonitorX,
   PlayCircle,
 };
-
-interface StaticCard {
-  key: string;
-  description: string;
-  type: string;
-  typeLabel: string;
-  icon: LucideIcon;
-  onClick: () => void;
-}
-
-function buildStaticCards(
-  t: TFunction,
-  onOpenExportModal: () => void,
-): Record<string, StaticCard[]> {
-  return {
-    'Proof of Play': [
-      {
-        key: 'export-statistics',
-        description: t('Export Statistics'),
-        type: 'Export',
-        typeLabel: t('Export'),
-        icon: Download,
-        onClick: onOpenExportModal,
-      },
-    ],
-  };
-}
 
 function ReportCardBase({
   icon: Icon,
@@ -157,17 +127,6 @@ function ReportCard({ report }: { report: Report }) {
   );
 }
 
-function StaticReportCard({ card }: { card: StaticCard }) {
-  return (
-    <ReportCardBase
-      icon={card.icon}
-      description={card.description}
-      typeLabel={card.typeLabel}
-      onClick={card.onClick}
-    />
-  );
-}
-
 export default function AllReports() {
   const { t } = useTranslation();
   const tabs = useFilteredTabs('reporting');
@@ -187,10 +146,8 @@ export default function AllReports() {
   const { data, isLoading, isError } = useAllReportsData(isHydrated);
 
   const [openFilter, setOpenFilter] = useState(false);
-  const [showExportModal, setShowExportModal] = useState(false);
 
   const filterOptions = getFilterKeys(t);
-  const allStaticCards = buildStaticCards(t, () => setShowExportModal(true));
 
   function handleResetFilters() {
     setFilterInputs(INITIAL_FILTER_STATE);
@@ -253,19 +210,7 @@ export default function AllReports() {
                 visibleReports = visibleReports.filter((r) => r.type === filterInputs.actionType);
               }
 
-              let categoryStaticCards = allStaticCards[category] ?? [];
-              if (nameQuery) {
-                categoryStaticCards = categoryStaticCards.filter((c) =>
-                  c.description.toLowerCase().includes(nameQuery),
-                );
-              }
-              if (filterInputs.actionType) {
-                categoryStaticCards = categoryStaticCards.filter(
-                  (c) => c.type === filterInputs.actionType,
-                );
-              }
-
-              if (visibleReports.length === 0 && categoryStaticCards.length === 0) {
+              if (visibleReports.length === 0) {
                 return null;
               }
 
@@ -276,9 +221,6 @@ export default function AllReports() {
                     {visibleReports.map((report) => (
                       <ReportCard key={report.name} report={report} />
                     ))}
-                    {categoryStaticCards.map((card) => (
-                      <StaticReportCard key={card.key} card={card} />
-                    ))}
                   </div>
                   <div className="bg-gray-200 h-px mt-2"></div>
                 </div>
@@ -287,8 +229,6 @@ export default function AllReports() {
           </div>
         )}
       </div>
-
-      <ExportStatisticsModal isOpen={showExportModal} onClose={() => setShowExportModal(false)} />
     </section>
   );
 }
