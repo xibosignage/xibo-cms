@@ -122,7 +122,7 @@ export const getNotificationItemActions = ({
       actions.push({
         label: t('Delete'),
         icon: Trash2,
-        onClick: () => onDelete(notification.notificationId),
+        onClick: () => onDelete(notification.notificationId!),
         variant: 'danger' as const,
       });
     }

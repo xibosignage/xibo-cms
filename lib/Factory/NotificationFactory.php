@@ -97,16 +97,17 @@ class NotificationFactory extends BaseFactory
     }
 
     /**
-     * Get by Id
+     * Get by ID
      * @param int $notificationId
+     * @param bool $disableUserCheck
      * @return Notification
      * @throws NotFoundException
      */
-    public function getById(int $notificationId): Notification
+    public function getById(int $notificationId, bool $disableUserCheck = true): Notification
     {
         $notifications = $this->query(null, [
             'notificationId' => $notificationId,
-            'disableUserCheck' => 1,
+            'disableUserCheck' => $disableUserCheck ? 1 : 0,
         ]);
 
         if (count($notifications) <= 0) {

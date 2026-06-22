@@ -56,7 +56,7 @@ export default function ShowNotificationModal({
   };
 
   useEffect(() => {
-    markAllNotificationsRead(notification.notificationId)
+    markAllNotificationsRead(notification.notificationId ?? undefined)
       .then(() => queryClient.invalidateQueries({ queryKey: notificationQueryKeys.all }))
       .catch(() => {});
   }, [notification.notificationId, queryClient]);
@@ -121,7 +121,7 @@ export default function ShowNotificationModal({
 
         {hasAttachment && (
           <a
-            href={`/notification/export/${notification.notificationId}`}
+            href={`/json/notification/export/${notification.notificationId}`}
             className="text-xibo-blue-600 hover:text-xibo-blue-800 underline text-sm text-left"
           >
             {notification.originalFileName}

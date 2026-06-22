@@ -52,7 +52,7 @@ export function useNotificationActions({
     try {
       setIsDeleting(true);
       const results = await Promise.allSettled(
-        itemsToDelete.map((item) => deleteNotification(item.notificationId)),
+        itemsToDelete.map((item) => deleteNotification(item.notificationId!)),
       );
 
       const failed = results.filter((r) => r.status === 'rejected');

@@ -111,10 +111,14 @@ $app->group('', function (RouteCollectorProxy $group) {
 //
 // notification
 //
-$app->get('/notification/mynotifications', ['\Xibo\Controller\Notification', 'myNotifications'])->setName('notification.mynotifications');
-$app->get('/notification/interrupt', ['\Xibo\Controller\Notification', 'getInterrupt'])->setName('api.notification.interrupt');
-$app->put('/notification/markAllRead', ['\Xibo\Controller\Notification', 'markAllRead'])
-    ->setName('notification.markallread');
+$app->get('/notification/mynotifications', ['\Xibo\Controller\Notification', 'myNotifications'])
+    ->setName('notification.mynotifications');
+$app->get('/notification/interrupt', ['\Xibo\Controller\Notification', 'getInterrupt'])
+    ->setName('notification.interrupt.list');
+$app->put('/notification/markAsRead', ['\Xibo\Controller\Notification', 'markAsRead'])
+    ->setName('notification.markAsRead');
+$app->get('/notification/export/{id}', ['\Xibo\Controller\Notification', 'exportAttachment'])
+    ->setName('notification.exportattachment');
 
 //
 // Reports

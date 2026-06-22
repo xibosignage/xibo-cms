@@ -123,7 +123,7 @@ export async function markAllNotificationsRead(notificationId?: number): Promise
     notificationId != null
       ? new URLSearchParams({ notificationId: String(notificationId) }).toString()
       : null;
-  await http.put('/notification/markAllRead', body, {
+  await http.put('/notification/markAsRead', body, {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
       'X-Requested-With': 'XMLHttpRequest',

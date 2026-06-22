@@ -20,7 +20,7 @@
  */
 
 export interface Notification {
-  notificationId: number;
+  notificationId: number | null;
   subject: string;
   type: string;
   releaseDt: number | string;

@@ -31,11 +31,12 @@ import {
   useInteractions,
 } from '@floating-ui/react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Bell } from 'lucide-react';
+import { AlertTriangle, Bell } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
+import InfoBanner from '@/components/ui/InfoBanner';
 import { useUserContext } from '@/context/UserContext';
 import ShowNotificationModal from '@/pages/Notification/components/ShowNotificationModal';
 import {
@@ -102,6 +103,17 @@ function SectionLabel({ label }: { label: string }) {
   );
 }
 
+function SystemNotificationItem({ notification }: { notification: Notification }) {
+  return (
+    <div className="w-full px-3 py-2 flex items-start gap-2 mb-1 rounded-lg bg-amber-50 border border-amber-200">
+      <div className="flex-shrink-0 mt-0.5">
+        <AlertTriangle size={14} className="text-amber-600" />
+      </div>
+      <p className="text-xs text-amber-800 leading-snug mt-0.5">{notification.subject}</p>
+    </div>
+  );
+}
+
 export default function NotificationDropdown() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -111,10 +123,14 @@ export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const [isMarkingRead, setIsMarkingRead] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
-    onOpenChange: setIsOpen,
+    onOpenChange: (open) => {
+      setIsOpen(open);
+      if (open) setSaveError(null);
+    },
     placement: 'bottom-end',
     whileElementsMounted: autoUpdate,
     middleware: [offset(8), flip(), shift({ padding: 8 })],
@@ -131,41 +147,54 @@ export default function NotificationDropdown() {
   const notifications = data?.rows ?? [];
   const unreadCount = data?.unreadCount ?? 0;
 
+  const systemNotifs = notifications.filter((n) => n.notificationId === null);
+  const regularNotifs = notifications.filter((n) => n.notificationId !== null);
+
   const byReleaseDtDesc = (a: Notification, b: Notification) =>
     Number(b.releaseDt) - Number(a.releaseDt);
 
   const { todayStart, yesterdayStart } = getDateBoundaries();
-  const todayNotifs = notifications
+  const todayNotifs = regularNotifs
     .filter((n) => Number(n.releaseDt) >= todayStart)
     .sort(byReleaseDtDesc);
-  const yesterdayNotifs = notifications
+  const yesterdayNotifs = regularNotifs
     .filter((n) => Number(n.releaseDt) >= yesterdayStart && Number(n.releaseDt) < todayStart)
     .sort(byReleaseDtDesc);
-  const olderNotifs = notifications
+  const olderNotifs = regularNotifs
     .filter((n) => Number(n.releaseDt) < yesterdayStart)
     .sort(byReleaseDtDesc);
 
   const handleMarkAllAsRead = async () => {
     if (unreadCount === 0 || isMarkingRead) return;
 
+    const previousData = queryClient.getQueriesData<{
+      rows: Notification[];
+      totalCount: number;
+      unreadCount: number;
+    }>({ queryKey: notificationQueryKeys.all });
+
     queryClient.setQueriesData<{ rows: Notification[]; totalCount: number; unreadCount: number }>(
       { queryKey: notificationQueryKeys.all },
       (old) => {
         if (!old?.rows) return old;
+        const remainingUnread = old.rows.filter((n) => n.notificationId === null).length;
         return {
           ...old,
-          rows: old.rows.map((n) => (!n.read ? { ...n, read: 1 } : n)),
-          unreadCount: 0,
+          rows: old.rows.map((n) => (n.notificationId !== null && !n.read ? { ...n, read: 1 } : n)),
+          unreadCount: remainingUnread,
         };
       },
     );
 
     setIsMarkingRead(true);
+    setSaveError(null);
+
     try {
       await markAllNotificationsRead();
       queryClient.invalidateQueries({ queryKey: notificationQueryKeys.all });
     } catch {
-      console.error('Error updating the notifications');
+      previousData.forEach(([queryKey, data]) => queryClient.setQueryData(queryKey, data));
+      setSaveError(t('Error updating the notifications. Please try again.'));
     } finally {
       setIsMarkingRead(false);
     }
@@ -244,53 +273,71 @@ export default function NotificationDropdown() {
 
             {/* Body — matches UserMenu p-2 content area */}
             <div className="max-h-80 overflow-y-auto p-2">
+              {saveError && (
+                <div role="alert">
+                  <InfoBanner type="danger" className="w-full mb-2">
+                    {saveError}
+                  </InfoBanner>
+                </div>
+              )}
               {isFetching && notifications.length === 0 ? (
                 <div className="flex items-center justify-center py-8">
                   <p className="text-sm text-gray-400">{t('Loading...')}</p>
                 </div>
-              ) : notifications.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 gap-2">
-                  <Bell size={24} className="text-gray-300" />
-                  <p className="text-sm text-gray-400">{t('No notifications')}</p>
-                </div>
               ) : (
                 <>
-                  {todayNotifs.length > 0 && (
-                    <>
-                      <SectionLabel label={t('Today')} />
-                      {todayNotifs.map((n) => (
-                        <NotificationItem
-                          key={n.notificationId}
-                          notification={n}
-                          onClick={handleNotificationClick}
-                        />
+                  {systemNotifs.length > 0 && (
+                    <div className="mb-1">
+                      {systemNotifs.map((n, i) => (
+                        <SystemNotificationItem key={`system-${i}`} notification={n} />
                       ))}
-                    </>
+                    </div>
                   )}
-                  {yesterdayNotifs.length > 0 && (
+                  {regularNotifs.length === 0 && systemNotifs.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-8 gap-2">
+                      <Bell size={24} className="text-gray-300" />
+                      <p className="text-sm text-gray-400">{t('No notifications')}</p>
+                    </div>
+                  ) : regularNotifs.length === 0 ? null : (
                     <>
-                      <hr className="border-gray-300 my-2" />
-                      <SectionLabel label={t('Yesterday')} />
-                      {yesterdayNotifs.map((n) => (
-                        <NotificationItem
-                          key={n.notificationId}
-                          notification={n}
-                          onClick={handleNotificationClick}
-                        />
-                      ))}
-                    </>
-                  )}
-                  {olderNotifs.length > 0 && (
-                    <>
-                      <hr className="border-gray-300 my-2" />
-                      <SectionLabel label={t('Older')} />
-                      {olderNotifs.map((n) => (
-                        <NotificationItem
-                          key={n.notificationId}
-                          notification={n}
-                          onClick={handleNotificationClick}
-                        />
-                      ))}
+                      {todayNotifs.length > 0 && (
+                        <>
+                          <SectionLabel label={t('Today')} />
+                          {todayNotifs.map((n) => (
+                            <NotificationItem
+                              key={n.notificationId}
+                              notification={n}
+                              onClick={handleNotificationClick}
+                            />
+                          ))}
+                        </>
+                      )}
+                      {yesterdayNotifs.length > 0 && (
+                        <>
+                          <hr className="border-gray-300 my-2" />
+                          <SectionLabel label={t('Yesterday')} />
+                          {yesterdayNotifs.map((n) => (
+                            <NotificationItem
+                              key={n.notificationId}
+                              notification={n}
+                              onClick={handleNotificationClick}
+                            />
+                          ))}
+                        </>
+                      )}
+                      {olderNotifs.length > 0 && (
+                        <>
+                          <hr className="border-gray-300 my-2" />
+                          <SectionLabel label={t('Older')} />
+                          {olderNotifs.map((n) => (
+                            <NotificationItem
+                              key={n.notificationId}
+                              notification={n}
+                              onClick={handleNotificationClick}
+                            />
+                          ))}
+                        </>
+                      )}
                     </>
                   )}
                 </>

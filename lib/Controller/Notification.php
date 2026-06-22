@@ -34,6 +34,7 @@ use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserNotificationFactory;
 use Xibo\Helper\AttachmentUploadHandler;
+use Xibo\Helper\Environment;
 use Xibo\Helper\SendFile;
 use Xibo\Service\DisplayNotifyService;
 use Xibo\Service\MediaService;
@@ -78,16 +79,9 @@ class Notification extends Base
         $notification->setRead(Carbon::now()->format('U'));
         $notification->save();
 
-        if ($this->isJson($request) || $this->isApi($request)) {
-            return $response
-                ->withStatus(200)
-                ->withJson($notification);
-        }
-
-        $this->getState()->template = 'notification-interrupt';
-        $this->getState()->setData(['notification' => $notification]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson($notification);
     }
 
     /**
@@ -102,25 +96,15 @@ class Notification extends Base
      */
     public function show(Request $request, Response $response, $id): Response|ResponseInterface
     {
-        $params = $this->getSanitizer($request->getParams());
         $notification = $this->userNotificationFactory->getByNotificationId($id);
 
         // Mark it as read
         $notification->setRead(Carbon::now()->format('U'));
         $notification->save();
 
-        if ($params->getCheckbox('multiSelect')) {
-            return $response->withStatus(201);
-        } else if ($this->isJson($request) || $this->isApi($request)) {
-            return $response
-                ->withStatus(200)
-                ->withJson($notification);
-        }
-
-        $this->getState()->template = 'notification-form-show';
-        $this->getState()->setData(['notification' => $notification]);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withJson($notification);
     }
 
     #[OA\Get(
@@ -260,7 +244,7 @@ class Notification extends Base
      */
     public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
     {
-        $notification = $this->notificationFactory->getById($id);
+        $notification = $this->notificationFactory->getById($id, false);
         $notification->load();
 
         $notification->canEdit = $this->getUser()->checkEditable($notification)
@@ -278,7 +262,7 @@ class Notification extends Base
      * @return Response|ResponseInterface
      * @throws AccessDeniedException
      */
-    public function markAllRead(Request $request, Response $response): Response|ResponseInterface
+    public function markAsRead(Request $request, Response $response): Response|ResponseInterface
     {
         $params = $this->getSanitizer($request->getParams());
         $notificationId = $params->getInt('notificationId');
@@ -289,13 +273,7 @@ class Notification extends Base
             $notification->setRead($readDt);
             $notification->save();
         } else {
-            foreach ($this->userNotificationFactory->query(
-                null,
-                ['audienceId' => $this->getUser()->userId, 'read' => 0]
-            ) as $notification) {
-                $notification->setRead($readDt);
-                $notification->save();
-            }
+            $this->userNotificationFactory->markAllAsRead($readDt);
         }
 
         return $response->withStatus(204);
@@ -341,11 +319,13 @@ class Notification extends Base
             $filterBy
         );
 
+        $systemNotifications = $this->buildSystemNotifications($request);
+
         return $response
             ->withStatus(200)
-            ->withHeader('X-Total-Count', $this->userNotificationFactory->countLast())
-            ->withHeader('X-Unread-Count', $this->userNotificationFactory->countMyUnread())
-            ->withJson($notifications);
+            ->withHeader('X-Total-Count', $this->userNotificationFactory->countLast() + count($systemNotifications))
+            ->withHeader('X-Unread-Count', $this->userNotificationFactory->countMyUnread() + count($systemNotifications))
+            ->withJson(array_merge($systemNotifications, $notifications));
     }
 
     /**
@@ -658,6 +638,55 @@ class Notification extends Base
             $this->getConfig()->getSetting('SENDFILE_MODE'),
             $fileName
         ));
+    }
+
+    /**
+     * Build system notifications for the current request context.
+     * These are never stored in the database; they reflect live environment state.
+     * @param Request $request
+     * @return array
+     */
+    private function buildSystemNotifications(Request $request): array
+    {
+        $notifications = [];
+
+        // TODO: Might need further updates for the SPA
+
+        if (Environment::isDevMode()) {
+            $notifications[] = $this->buildSystemNotification(__('CMS is running in DEV mode'));
+        } elseif ($this->getUser()->userTypeId === 1) {
+            if (file_exists(PROJECT_ROOT . '/web/install/index.php')) {
+                $notifications[] = $this->buildSystemNotification(
+                    __('Installation files should be removed — web/install/index.php still exists')
+                );
+            }
+            if (!Environment::checkUrl($request->getUri())) {
+                $notifications[] = $this->buildSystemNotification(
+                    __('CMS URL configuration warning — /web/ should not appear in the URL')
+                );
+            }
+        }
+
+        return $notifications;
+    }
+
+    /**
+     * Build system notification object
+     */
+    private function buildSystemNotification(string $subject): object
+    {
+        return (object) [
+            'notificationId' => null,
+            'subject'        => $subject,
+            'body'           => '',
+            'type'           => 'system',
+            'isSystem'       => 1,
+            'isInterrupt'    => 0,
+            'read'           => 0,
+            'readDt'         => null,
+            'releaseDt'      => Carbon::now()->format('U'),
+            'userId'         => $this->getUser()->userId,
+        ];
     }
 
     /**

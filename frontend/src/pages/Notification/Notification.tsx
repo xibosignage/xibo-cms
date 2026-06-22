@@ -102,7 +102,7 @@ export default function NotificationCentre() {
   const error = isError && queryError instanceof Error ? queryError.message : '';
   const notificationList = data ?? [];
 
-  const getRowId = (row: Notification) => row.notificationId.toString();
+  const getRowId = (row: Notification) => row.notificationId!.toString();
 
   const handleRowSelectionChange = (
     updaterOrValue: RowSelectionState | ((old: RowSelectionState) => RowSelectionState),

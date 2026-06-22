@@ -90,6 +90,15 @@ class UserNotificationFactory extends BaseFactory
     }
 
     /**
+     * Mark all unread notifications as read for the current user in a single bulk UPDATE.
+     * @param int $readDt Unix timestamp
+     */
+    public function markAllAsRead(int $readDt): void
+    {
+        $this->createEmpty()->markAllAsRead($this->getUser()->userId, $readDt);
+    }
+
+    /**
      * Get my notifications
      * @param int $length
      * @return UserNotification[]
