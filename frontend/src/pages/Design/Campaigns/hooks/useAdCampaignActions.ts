@@ -84,5 +84,30 @@ export function useAdCampaignActions({ campaignId, t }: UseAdCampaignActionsArgs
     onError: (err) => notify.error(getErrorMessage(err, t('Failed to remove layout'))),
   });
 
-  return { saveGeneral, assignLayout, removeLayout };
+  const editAssignment = useMutation({
+    mutationFn: async ({
+      displayOrder,
+      next,
+      original,
+    }: {
+      displayOrder: number;
+      next: AssignAdLayoutPayload;
+      original: AssignAdLayoutPayload;
+    }) => {
+      await removeLayoutAssignment(campaignId, original.layoutId, displayOrder);
+      try {
+        await assignLayoutToAdCampaign(campaignId, next);
+      } catch (err) {
+        await assignLayoutToAdCampaign(campaignId, original).catch(() => {});
+        throw err;
+      }
+    },
+    onSuccess: () => {
+      notify.success(t('Layout updated'));
+      invalidate();
+    },
+    onError: (err) => notify.error(getErrorMessage(err, t('Failed to update layout'))),
+  });
+
+  return { saveGeneral, assignLayout, removeLayout, editAssignment };
 }

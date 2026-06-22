@@ -212,7 +212,10 @@ export default function CampaignEditor() {
   const defaultLng = Number(user?.settings?.DEFAULT_LONG ?? DEFAULT_LNG_FALLBACK);
 
   const { data: campaign, isLoading, isError } = useAdCampaignData(campaignId);
-  const { saveGeneral, assignLayout, removeLayout } = useAdCampaignActions({ campaignId, t });
+  const { saveGeneral, assignLayout, removeLayout, editAssignment } = useAdCampaignActions({
+    campaignId,
+    t,
+  });
 
   const [activeTab, setActiveTab] = useState<EditorTab>('general');
   const [draft, setDraft] = useState<GeneralDraft | null>(null);
@@ -418,23 +421,36 @@ export default function CampaignEditor() {
     });
   };
 
-  const handleSaveAssignment = async (values: LayoutAssignmentValues) => {
+  const handleSaveAssignment = (values: LayoutAssignmentValues) => {
     if (!modalLayout) {
       return;
     }
-    if (modalLayout.displayOrder != null) {
-      await removeLayout.mutateAsync({
-        layoutId: modalLayout.layoutId,
-        displayOrder: modalLayout.displayOrder,
-      });
-    }
-    await assignLayout.mutateAsync({
+    const next = {
       layoutId: modalLayout.layoutId,
       daysOfWeek: values.daysOfWeek,
       dayPartId: values.dayPartId,
       geoFence: values.geoFence || undefined,
-    });
-    setModalLayout(null);
+    };
+
+    const onSuccess = () => setModalLayout(null);
+
+    if (modalLayout.displayOrder != null) {
+      editAssignment.mutate(
+        {
+          displayOrder: modalLayout.displayOrder,
+          next,
+          original: {
+            layoutId: modalLayout.layoutId,
+            daysOfWeek: modalLayout.initialValues?.daysOfWeek,
+            dayPartId: modalLayout.initialValues?.dayPartId,
+            geoFence: modalLayout.initialValues?.geoFence || undefined,
+          },
+        },
+        { onSuccess },
+      );
+    } else {
+      assignLayout.mutate(next, { onSuccess });
+    }
   };
 
   const layoutColumns = getLayoutColumns(t, handleEditAssignment, (row) =>
@@ -707,7 +723,7 @@ export default function CampaignEditor() {
           isOpen
           layoutName={modalLayout.name}
           initialValues={modalLayout.initialValues}
-          isSaving={assignLayout.isPending || removeLayout.isPending}
+          isSaving={assignLayout.isPending || removeLayout.isPending || editAssignment.isPending}
           defaultLat={defaultLat}
           defaultLng={defaultLng}
           onClose={() => setModalLayout(null)}
