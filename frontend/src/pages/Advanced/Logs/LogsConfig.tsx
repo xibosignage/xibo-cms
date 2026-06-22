@@ -26,6 +26,12 @@ import type { FilterConfigItem } from '@/components/ui/FilterInputs';
 import { TextCell } from '@/components/ui/table/cells';
 import type { LogEntry } from '@/types/log';
 
+function decodeHtmlEntities(encoded: string): string {
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = encoded;
+  return textarea.value;
+}
+
 export interface LogsFilterInput {
   fromDt?: string;
   seconds?: string;
@@ -210,6 +216,6 @@ export const getLogsColumns = (t: TFunction): ColumnDef<LogEntry>[] => [
     accessorKey: 'message',
     header: t('Message'),
     size: 300,
-    cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+    cell: (info) => <TextCell>{decodeHtmlEntities(info.getValue<string>())}</TextCell>,
   },
 ];

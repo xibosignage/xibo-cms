@@ -282,6 +282,7 @@ type FilterInputsProps<T> = {
   options: FilterConfigItem<T>[];
   onChange: (name: keyof T & string, value: FilterValue) => void;
   onReset?: () => void;
+  onApply?: () => void;
 };
 
 export default function FilterInputs<T>({
@@ -290,6 +291,7 @@ export default function FilterInputs<T>({
   values,
   onChange,
   onReset,
+  onApply,
 }: FilterInputsProps<T>) {
   const { t } = useTranslation();
   return (
@@ -304,7 +306,7 @@ export default function FilterInputs<T>({
         }
       `}
     >
-      <div className="relative bg-slate-50 p-5 pt-7 grid grid-cols-[repeat(auto-fit,minmax(15rem,1fr))] gap-4 items-end">
+      <div className="relative bg-slate-50 p-5 pt-7 flex flex-col gap-4">
         {onReset && (
           <Button
             variant="tertiary"
@@ -314,6 +316,7 @@ export default function FilterInputs<T>({
             {t('Reset')}
           </Button>
         )}
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(15rem,1fr))] gap-4 items-end">
         {options.map((filter) => {
           const filterType = filter.type || 'select';
 
@@ -491,6 +494,14 @@ export default function FilterInputs<T>({
 
           return <SelectDropdown key={filter.name} {...sharedProps} onSearch={filter.onSearch} />;
         })}
+        </div>
+        {onApply && (
+          <div className="flex justify-end">
+            <Button variant="secondary" className="font-semibold h-11.25" onClick={onApply}>
+              {t('Apply Filter')}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
