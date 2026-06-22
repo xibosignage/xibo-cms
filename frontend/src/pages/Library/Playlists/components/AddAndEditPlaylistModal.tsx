@@ -90,6 +90,38 @@ const DEFAULT_DRAFT: PlaylistDraft = {
 
 type PlaylistFormErrors = Partial<Record<keyof PlaylistDraft, string>>;
 
+const ENABLE_STAT_VALUES = ['On', 'Off', 'Inherit'] as const;
+
+const normalizeEnableStat = (value?: string): (typeof ENABLE_STAT_VALUES)[number] =>
+  ENABLE_STAT_VALUES.find((option) => option.toLowerCase() === (value ?? '').toLowerCase()) ??
+  'Inherit';
+
+const parseFilterTags = (value?: string): Tag[] =>
+  (value ?? '')
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .map((entry) => {
+      const [tag, rawValue] = entry.split('|');
+      return { tag: (tag ?? '').trim(), value: rawValue?.trim() ?? '', tagId: 0 };
+    });
+
+const buildDraftFromPlaylist = (data: Playlist): PlaylistDraft => ({
+  ...DEFAULT_DRAFT,
+  name: data.name,
+  folderId: data.folderId != null ? Number(data.folderId) : null,
+  tags: (data.tags ?? []).map((tag) => ({ ...tag })),
+  enableStat: normalizeEnableStat(data.enableStat),
+  isDynamic: Boolean(data.isDynamic),
+  filterMediaName: data.filterMediaName || '',
+  logicalOperatorName: data.filterMediaNameLogicalOperator || 'OR',
+  filterMediaTag: parseFilterTags(data.filterMediaTags),
+  exactTags: Boolean(data.filterExactTags),
+  logicalOperator: data.filterMediaTagsLogicalOperator || 'OR',
+  filterFolderId: data.filterFolderId != null ? Number(data.filterFolderId) : null,
+  maxNumberOfItems: Number(data.maxNumberOfItems) || 0,
+});
+
 export default function AddAndEditPlaylistModal({
   type,
   isOpen = true,
@@ -105,21 +137,7 @@ export default function AddAndEditPlaylistModal({
 
   const [draft, setDraft] = useState<PlaylistDraft>(() => {
     if (type === 'edit' && data) {
-      return {
-        ...DEFAULT_DRAFT,
-        name: data.name,
-        folderId: data.folderId != null ? Number(data.folderId) : null,
-        tags: data.tags.map((t) => ({ ...t })),
-        enableStat: data.enableStat || 'Inherit',
-        isDynamic: data.isDynamic,
-        filterMediaName: data.filterMediaName || '',
-        logicalOperatorName: data.logicalOperatorName || 'OR',
-        filterMediaTag: data.filterMediaTag ? data.filterMediaTag.map((t) => ({ ...t })) : [],
-        exactTags: data.exactTags || false,
-        logicalOperator: data.logicalOperator || 'OR',
-        filterFolderId: data.filterFolderId != null ? Number(data.filterFolderId) : null,
-        maxNumberOfItems: Number(data.maxNumberOfItems) || 0,
-      };
+      return buildDraftFromPlaylist(data);
     }
     return { ...DEFAULT_DRAFT, folderId: defaultFolderId ?? null };
   });
@@ -154,21 +172,7 @@ export default function AddAndEditPlaylistModal({
 
   useEffect(() => {
     if (type === 'edit' && data) {
-      setDraft({
-        ...DEFAULT_DRAFT,
-        name: data.name,
-        folderId: data.folderId != null ? Number(data.folderId) : null,
-        tags: data.tags.map((t) => ({ ...t })),
-        enableStat: data.enableStat || 'Inherit',
-        isDynamic: data.isDynamic,
-        filterMediaName: data.filterMediaName || '',
-        logicalOperatorName: data.logicalOperatorName || 'OR',
-        filterMediaTag: data.filterMediaTag ? data.filterMediaTag.map((t) => ({ ...t })) : [],
-        exactTags: data.exactTags || false,
-        logicalOperator: data.logicalOperator || 'OR',
-        filterFolderId: data.filterFolderId != null ? Number(data.filterFolderId) : null,
-        maxNumberOfItems: Number(data.maxNumberOfItems) || 0,
-      });
+      setDraft(buildDraftFromPlaylist(data));
     } else {
       setDraft({ ...DEFAULT_DRAFT, folderId: defaultFolderId ?? null });
     }
@@ -213,7 +217,9 @@ export default function AddAndEditPlaylistModal({
           ...(draft.isDynamic && {
             filterMediaName: draft.filterMediaName,
             logicalOperatorName: draft.logicalOperatorName,
-            filterMediaTag: draft.filterMediaTag.map((t) => t.tag).join(','),
+            filterMediaTag: draft.filterMediaTag
+              .map((t) => (t.value != null && t.value !== '' ? `${t.tag}|${t.value}` : t.tag))
+              .join(','),
             exactTags: draft.exactTags,
             logicalOperator: draft.logicalOperator,
             filterFolderId: draft.filterFolderId,
@@ -360,9 +366,9 @@ export default function AddAndEditPlaylistModal({
 
           {/* Enable Stats */}
           <SelectDropdown
-            label="Enable Playlist Stats Collection?"
+            label={t('Enable Playlist Stats Collection?')}
             value={draft.enableStat}
-            placeholder="Inherit"
+            placeholder={t('Inherit')}
             options={getCommonFormOptions(t).inherit}
             onSelect={(value) => {
               setDraft((prev) => ({ ...prev, enableStat: value }));
