@@ -111,12 +111,6 @@ class Notification implements \JsonSerializable
     public $nonusers;
 
     /**
-     * @var int
-     */
-    #[OA\Property(description: 'Flag whether the current user has read this notification')]
-    public $read = 0;
-
-    /**
      * @var UserGroup[]
      */
     #[OA\Property(description: 'User Group Notifications associated with this notification')]
