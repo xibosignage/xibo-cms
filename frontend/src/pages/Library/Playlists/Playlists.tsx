@@ -341,7 +341,7 @@ export default function Playlist() {
               onClick={() => openAddEditModal(null)}
               leftIcon={Plus}
             >
-              {t('New Playlist')}
+              {t('Add Playlist')}
             </Button>
           </div>
         </div>

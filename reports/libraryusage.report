@@ -4,11 +4,11 @@
   "class": "\\Xibo\\Report\\LibraryUsage",
   "type": "Report",
   "output_type": "both",
-  "color":"green",
-  "fa_icon": "fa-th",
+  "lucide_icon": "HardDrive",
   "sort_order": 3,
   "hidden": 0,
   "category": "Library",
   "feature": "admin",
-  "adminOnly": 1
+  "adminOnly": 1,
+  "prototype_url": "/prototype/reporting/library-usage"
 }

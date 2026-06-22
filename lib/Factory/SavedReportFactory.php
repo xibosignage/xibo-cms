@@ -62,7 +62,7 @@ class SavedReportFactory extends BaseFactory
      * Create Empty
      * @return SavedReport
      */
-    public function createEmpty()
+    public function createEmpty(): SavedReport
     {
         return new SavedReport(
             $this->getStore(),
@@ -80,6 +80,9 @@ class SavedReportFactory extends BaseFactory
      * @param int $reportScheduleId
      * @param int $generatedOn
      * @param int $userId
+     * @param $fileName
+     * @param $size
+     * @param $md5
      * @return SavedReport
      */
     public function create(
@@ -89,7 +92,7 @@ class SavedReportFactory extends BaseFactory
         $userId,
         $fileName,
         $size,
-        $md5)
+        $md5): SavedReport
     {
         $savedReport = $this->createEmpty();
         $savedReport->saveAs = $saveAs;
@@ -105,12 +108,12 @@ class SavedReportFactory extends BaseFactory
     }
 
     /**
-     * Get by Version Id
+     * Get by Version ID
      * @param int $savedReportId
      * @return SavedReport
      * @throws NotFoundException
      */
-    public function getById($savedReportId)
+    public function getById(int $savedReportId): SavedReport
     {
         $savedReports = $this->query(null, array('disableUserCheck' => 1, 'savedReportId' => $savedReportId));
 
@@ -126,23 +129,19 @@ class SavedReportFactory extends BaseFactory
      * @return SavedReport[]
      * @throws NotFoundException
      */
-    public function getByOwnerId($ownerId)
+    public function getByOwnerId($ownerId): array
     {
         return $this->query(null, ['disableUserCheck' => 1, 'userId' => $ownerId]);
     }
 
     /**
-     * @param null $sortOrder
+     * @param array|null $sortOrder
      * @param array $filterBy
      * @return SavedReport[]
      * @throws NotFoundException
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query(?array $sortOrder = null, array $filterBy = []): array
     {
-        if ($sortOrder === null) {
-            $sortOrder = ['generatedOn DESC'];
-        }
-        
         $sanitizedFilter = $this->getSanitizer($filterBy);
         $params = [];
         $entries = [];
@@ -217,7 +216,8 @@ class SavedReportFactory extends BaseFactory
 
         // User Group filter
         if ($sanitizedFilter->getInt('ownerUserGroupId', ['default' => 0]) != 0) {
-            $body .= ' AND `saved_report`.userId IN (SELECT DISTINCT userId FROM `lkusergroup` WHERE groupId =  :ownerUserGroupId) ';
+            $body .= ' AND `saved_report`.userId IN (SELECT DISTINCT userId FROM `lkusergroup` 
+                WHERE groupId =  :ownerUserGroupId) ';
             $params['ownerUserGroupId'] = $sanitizedFilter->getInt('ownerUserGroupId', ['default' => 0]);
         }
 
@@ -226,25 +226,55 @@ class SavedReportFactory extends BaseFactory
             $params['currentUserId'] = $this->getUser()->userId;
         }
 
+        if ($sanitizedFilter->getString('keyword') != null) {
+            $body .= $this->buildSearchQuery(
+                $sanitizedFilter->getString('keyword'),
+                $params,
+                ['saved_report.saveAs'],
+                ['saved_report.savedReportId']
+            );
+        }
+
         // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\SavedReport', $body, $params, '`saved_report`.savedReportId', '`saved_report`.userId', $filterBy);
+        $this->viewPermissionSql(
+            'Xibo\Entity\SavedReport',
+            $body,
+            $params,
+            '`saved_report`.savedReportId',
+            '`saved_report`.userId',
+            $filterBy
+        );
 
         // Sorting?
-        $order = '';
-        if (is_array($sortOrder)) {
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
-        }
+        $allowedColumns = [
+            'reportScheduleName',
+            'saveAs',
+            'reportName',
+            'generatedOn',
+            'owner',
+        ];
+
+        $sortOrder = $this->buildSortQuery(
+            $sortOrder,
+            $allowedColumns,
+            defaultSort: ['generatedOn DESC']
+        );
+
+        $order = !empty($sortOrder) ? ' ORDER BY ' . implode(', ', $sortOrder) : '';
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null &&
+            $sanitizedFilter->getInt('length') !== null
+        ) {
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' .
+                $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $version = $this->createEmpty()->hydrate($row, [
+            $entries[] = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
                     'reportScheduleId', 'generatedOn', 'schemaVersion', 'size'
                 ]
@@ -265,6 +295,7 @@ class SavedReportFactory extends BaseFactory
      */
     public function getSizeAndCount()
     {
-        return $this->getStore()->select('SELECT IFNULL(SUM(size), 0) AS SumSize, COUNT(*) AS totalCount FROM `saved_report`', [])[0];
+        return $this->getStore()->select('SELECT IFNULL(SUM(size), 0) AS SumSize, COUNT(*) 
+            AS totalCount FROM `saved_report`', [])[0];
     }
 }

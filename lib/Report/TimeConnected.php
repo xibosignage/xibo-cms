@@ -43,20 +43,9 @@ class TimeConnected implements ReportInterface
 {
     use ReportDefaultTrait;
 
-    /**
-     * @var DisplayFactory
-     */
-    private $displayFactory;
-
-    /**
-     * @var DisplayGroupFactory
-     */
-    private $displayGroupFactory;
-
-    /**
-     * @var ReportServiceInterface
-     */
-    private $reportService;
+    private readonly DisplayFactory $displayFactory;
+    private readonly DisplayGroupFactory $displayGroupFactory;
+    private readonly ReportServiceInterface $reportService;
 
     /** @inheritdoc */
     public function setFactories(ContainerInterface $container)
@@ -69,19 +58,13 @@ class TimeConnected implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportEmailTemplate()
+    public function getReportEmailTemplate(): string
     {
         return 'timeconnected-email-template.twig';
     }
 
     /** @inheritdoc */
-    public function getSavedReportTemplate()
-    {
-        return 'timeconnected-report-preview';
-    }
-
-    /** @inheritdoc */
-    public function getReportForm()
+    public function getReportForm(): ReportForm
     {
         $groups = [];
         $displays = [];
@@ -97,7 +80,6 @@ class TimeConnected implements ReportInterface
         }
 
         return new ReportForm(
-            'timeconnected-report-form',
             'timeconnected',
             'Display',
             [
@@ -111,33 +93,7 @@ class TimeConnected implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
-    {
-        $data['hiddenFields'] = '{}';
-        $data['reportName'] = 'timeconnected';
-
-        $groups = [];
-        $displays = [];
-        foreach ($this->displayGroupFactory->query(['displayGroup'], ['isDisplaySpecific' => -1]) as $displayGroup) {
-            /* @var \Xibo\Entity\DisplayGroup $displayGroup */
-
-            if ($displayGroup->isDisplaySpecific == 1) {
-                $displays[] = $displayGroup;
-            } else {
-                $groups[] = $displayGroup;
-            }
-        }
-        $data['displays'] = $displays;
-        $data['displayGroups'] = $groups;
-
-        return [
-            'template' => 'timeconnected-schedule-form-add',
-            'data' => $data
-        ];
-    }
-
-    /** @inheritdoc */
-    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams)
+    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams): array
     {
         $filter = $sanitizedParams->getString('filter');
         $groupByFilter = $sanitizedParams->getString('groupByFilter');
@@ -177,19 +133,19 @@ class TimeConnected implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function generateSavedReportName(SanitizerInterface $sanitizedParams)
+    public function generateSavedReportName(SanitizerInterface $sanitizedParams): string
     {
         return sprintf(__('%s report for Display', ucfirst($sanitizedParams->getString('filter'))));
     }
 
     /** @inheritdoc */
-    public function restructureSavedReportOldJson($result)
+    public function restructureSavedReportOldJson($json): array
     {
-        return $result;
+        return $json;
     }
 
     /** @inheritdoc */
-    public function getSavedReportResults($json, $savedReport)
+    public function getSavedReportResults($json, $savedReport): ReportResult
     {
         $metadata = [
             'periodStart' => $json['metadata']['periodStart'],
@@ -209,7 +165,7 @@ class TimeConnected implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getResults(SanitizerInterface $sanitizedParams)
+    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false): ReportResult
     {
         // Get an array of display id this user has access to.
         $displayIds = $this->getDisplayIdFilter($sanitizedParams);
@@ -223,6 +179,11 @@ class TimeConnected implements ReportInterface
         $now = Carbon::now();
 
         switch ($reportFilter) {
+            case 'today':
+                $fromDt = $now->copy()->startOfDay();
+                $toDt = $now->copy()->endOfDay();
+                break;
+
             case 'yesterday':
                 $fromDt = $now->copy()->startOfDay()->subDay();
                 $toDt = $now->copy()->startOfDay();
@@ -263,15 +224,17 @@ class TimeConnected implements ReportInterface
         //
         // Output Results
         // --------------
-        if ($this->getUser()->isSuperAdmin()) {
-            $sql = 'SELECT displayId, display FROM display WHERE 1 = 1';
-            if (count($displayIds) > 0) {
-                $sql .= ' AND displayId IN (' . implode(',', $displayIds) . ')';
-            }
+        // The displayIds have already been permission-filtered by getDisplayIdFilter (a non-super
+        // admin with no viewable displays throws there), so it is safe to build the query for any
+        // user. A super admin with no filter gets every display (empty IN clause is skipped).
+        $sql = 'SELECT displayId, display, lastAccessed FROM display WHERE 1 = 1';
+        if (count($displayIds) > 0) {
+            $sql .= ' AND displayId IN (' . implode(',', $displayIds) . ')';
         }
 
         $timeConnected = [];
         $displays = [];
+        $displayMeta = [];
         $i = 0;
         $key = 0;
         foreach ($this->store->select($sql, []) as $row) {
@@ -280,6 +243,13 @@ class TimeConnected implements ReportInterface
 
             // Set the display name for the displays in this row.
             $displays[$key][$displayId] = $displayName;
+
+            // lastAccessed drives the "Last seen" value shown against each row.
+            $displayMeta[$displayId] = [
+                'lastAccessed' => !empty($row['lastAccessed'])
+                    ? Carbon::createFromTimestamp($row['lastAccessed'])->format(DateFormatHelper::getSystemFormat())
+                    : null,
+            ];
 
             // Go through each period
             foreach ($result['periods'] as $resPeriods) {
@@ -315,12 +285,13 @@ class TimeConnected implements ReportInterface
         // This will get saved to a json file when schedule runs
         return new ReportResult(
             [
-                'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
-                'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+                'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
+                'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
             ],
             [
                 'timeConnected' => $timeConnected,
-                'displays' => $displays
+                'displays' => $displays,
+                'displayMeta' => $displayMeta
             ]
         );
     }

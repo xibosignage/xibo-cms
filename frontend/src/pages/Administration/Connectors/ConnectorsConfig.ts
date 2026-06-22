@@ -24,7 +24,6 @@ import type { TFunction } from 'i18next';
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
 
 export const SSP_CLASS = '\\Xibo\\Connector\\XiboSspConnector';
-export const AUDIENCE_CLASS = '\\Xibo\\Connector\\XiboAudienceReportingConnector';
 export const DASHBOARD_CLASS = '\\Xibo\\Connector\\XiboDashboardConnector';
 
 export interface ConnectorFilterInput {

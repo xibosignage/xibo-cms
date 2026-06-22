@@ -4,9 +4,9 @@
   "version": "5.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "build:debug": "tsc -b && vite build --mode debug",
+    "dev": "npm run i18n:convert && vite",
+    "build": "npm run i18n:convert && tsc -b && vite build",
+    "build:debug": "npm run i18n:convert && tsc -b && vite build --mode debug",
     "preview": "vite preview --port 5000",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",

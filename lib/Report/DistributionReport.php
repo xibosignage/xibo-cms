@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -50,44 +50,17 @@ class DistributionReport implements ReportInterface
     use ReportDefaultTrait;
     use SummaryDistributionCommonTrait;
 
-    /**
-     * @var DisplayFactory
-     */
-    private $displayFactory;
+    private readonly DisplayFactory $displayFactory;
+    private readonly MediaFactory $mediaFactory;
+    private readonly LayoutFactory $layoutFactory;
+    private readonly SavedReportFactory $savedReportFactory;
+    private readonly DisplayGroupFactory $displayGroupFactory;
+    private readonly ReportServiceInterface $reportService;
+    private readonly SanitizerService $sanitizer;
 
-    /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
+    private string $table = 'stat';
 
-    /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
-
-    /**
-     * @var SavedReportFactory
-     */
-    private $savedReportFactory;
-
-    /**
-     * @var DisplayGroupFactory
-     */
-    private $displayGroupFactory;
-
-    /**
-     * @var ReportServiceInterface
-     */
-    private $reportService;
-
-    /**
-     * @var SanitizerService
-     */
-    private $sanitizer;
-
-    private $table = 'stat';
-
-    private $periodTable = 'period';
+    private string $periodTable = 'period';
 
     /** @inheritdoc */
     public function setFactories(ContainerInterface $container)
@@ -104,28 +77,21 @@ class DistributionReport implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportChartScript($results)
+    public function getReportChartScript($results): bool|string
     {
         return json_encode($results->chart);
     }
 
     /** @inheritdoc */
-    public function getReportEmailTemplate()
+    public function getReportEmailTemplate(): string
     {
         return 'distribution-email-template.twig';
     }
 
     /** @inheritdoc */
-    public function getSavedReportTemplate()
-    {
-        return 'distribution-report-preview';
-    }
-
-    /** @inheritdoc */
-    public function getReportForm()
+    public function getReportForm(): ReportForm
     {
         return new ReportForm(
-            'distribution-report-form',
             'distributionReport',
             'Proof of Play',
             [
@@ -137,29 +103,7 @@ class DistributionReport implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
-    {
-        $type = $sanitizedParams->getString('type');
-
-        $formParams = $this->getReportScheduleFormTitle($sanitizedParams);
-
-        $data = [];
-        $data['formTitle'] = $formParams['title'];
-        $data['hiddenFields'] = json_encode([
-            'type' => $type,
-            'selectedId' => $formParams['selectedId'],
-            'eventTag' => $eventTag ?? null
-        ]);
-        $data['reportName'] = 'distributionReport';
-
-        return [
-            'template' => 'distribution-schedule-form-add',
-            'data' => $data
-        ];
-    }
-
-    /** @inheritdoc */
-    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams)
+    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams): array
     {
         $filter = $sanitizedParams->getString('filter');
         $groupByFilter = $sanitizedParams->getString('groupByFilter');
@@ -218,7 +162,7 @@ class DistributionReport implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function generateSavedReportName(SanitizerInterface $sanitizedParams)
+    public function generateSavedReportName(SanitizerInterface $sanitizedParams): string
     {
         $type = $sanitizedParams->getString('type');
         $filter = $sanitizedParams->getString('filter');
@@ -260,7 +204,7 @@ class DistributionReport implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getSavedReportResults($json, $savedReport)
+    public function getSavedReportResults($json, $savedReport): ReportResult
     {
         $metadata = [ 'periodStart' => $json['metadata']['periodStart'],
             'periodEnd' => $json['metadata']['periodEnd'],
@@ -279,7 +223,7 @@ class DistributionReport implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getResults(SanitizerInterface $sanitizedParams)
+    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false): ReportResult
     {
         $type = strtolower($sanitizedParams->getString('type'));
         $layoutId = $sanitizedParams->getInt('layoutId');
@@ -498,9 +442,25 @@ class DistributionReport implements ReportInterface
             ]
         ];
 
+        // Resolve a human-readable subject (e.g. the Layout name) for the chosen type
+        $subject = '';
+        try {
+            if ($type === 'layout' && !empty($layoutId)) {
+                $subject = $this->layoutFactory->getById($layoutId)->layout;
+            } elseif ($type === 'media' && !empty($mediaId)) {
+                $subject = $this->mediaFactory->getById($mediaId)->name;
+            } elseif ($type === 'event') {
+                $subject = $eventTag;
+            }
+        } catch (NotFoundException $e) {
+            $subject = '';
+        }
+
         $metadata =   [
             'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
             'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
+            'type' => $type,
+            'subject' => $subject,
         ];
 
         // Total records
@@ -1244,7 +1204,10 @@ class DistributionReport implements ReportInterface
                 }
             }
 
-            $this->getLog()->debug('Period start: ' . $fromDt->format(DateFormatHelper::getSystemFormat()) . ' Period end: ' . $toDt->format(DateFormatHelper::getSystemFormat()));
+            $this->getLog()->debug(
+                'Period start: ' . $fromDt->format(DateFormatHelper::getSystemFormat()) .
+                ' Period end: ' . $toDt->format(DateFormatHelper::getSystemFormat())
+            );
 
             return [
                 'result' => $resultArray,
