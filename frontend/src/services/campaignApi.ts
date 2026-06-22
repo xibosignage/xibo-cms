@@ -193,3 +193,116 @@ export async function fetchCampaignById(campaignId: number): Promise<Campaign> {
   const response = await http.get(`/campaign/${campaignId}`);
   return response.data;
 }
+
+export async function fetchAdCampaign(campaignId: number): Promise<Campaign> {
+  const response = await http.get(`/campaign/${campaignId}`, {
+    params: { embed: 'layouts,tags' },
+  });
+  return response.data;
+}
+
+export interface UpdateAdCampaignPayload {
+  name: string;
+  folderId?: number | null;
+  tags?: string;
+  startDt?: string;
+  endDt?: string;
+  targetType?: string;
+  target?: number;
+  displayGroupIds?: number[];
+  ref1?: string;
+  ref2?: string;
+  ref3?: string;
+  ref4?: string;
+  ref5?: string;
+}
+
+export async function updateAdCampaign(
+  campaignId: number,
+  payload: UpdateAdCampaignPayload,
+): Promise<Campaign> {
+  const params = new URLSearchParams();
+  params.append('name', payload.name);
+  if (payload.folderId != null) {
+    params.append('folderId', String(payload.folderId));
+  }
+  if (payload.tags !== undefined) {
+    params.append('tags', payload.tags);
+  }
+  if (payload.startDt) {
+    params.append('startDt', payload.startDt);
+  }
+  if (payload.endDt) {
+    params.append('endDt', payload.endDt);
+  }
+  if (payload.targetType) {
+    params.append('targetType', payload.targetType);
+  }
+  if (payload.target != null) {
+    params.append('target', String(payload.target));
+  }
+  (payload.displayGroupIds ?? []).forEach((id) => params.append('displayGroupIds[]', String(id)));
+  if (payload.ref1 !== undefined) {
+    params.append('ref1', payload.ref1);
+  }
+  if (payload.ref2 !== undefined) {
+    params.append('ref2', payload.ref2);
+  }
+  if (payload.ref3 !== undefined) {
+    params.append('ref3', payload.ref3);
+  }
+  if (payload.ref4 !== undefined) {
+    params.append('ref4', payload.ref4);
+  }
+  if (payload.ref5 !== undefined) {
+    params.append('ref5', payload.ref5);
+  }
+
+  const { data } = await http.put(`/campaign/${campaignId}`, params.toString(), {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+  return data;
+}
+
+export interface AssignAdLayoutPayload {
+  layoutId: number;
+  daysOfWeek?: number[];
+  dayPartId?: number | null;
+  geoFence?: string;
+}
+
+export async function assignLayoutToAdCampaign(
+  campaignId: number,
+  payload: AssignAdLayoutPayload,
+): Promise<void> {
+  const params = new URLSearchParams();
+  params.append('layoutId', String(payload.layoutId));
+  (payload.daysOfWeek ?? []).forEach((d) => params.append('daysOfWeek[]', String(d)));
+  if (payload.dayPartId != null) {
+    params.append('dayPartId', String(payload.dayPartId));
+  }
+  if (payload.geoFence) {
+    params.append('geoFence', payload.geoFence);
+  }
+
+  await http.post(`/campaign/layout/assign/${campaignId}`, params.toString(), {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+}
+
+export async function removeLayoutAssignment(
+  campaignId: number,
+  layoutId: number,
+  displayOrder?: number,
+): Promise<void> {
+  const params = new URLSearchParams();
+  params.append('layoutId', String(layoutId));
+  if (displayOrder != null) {
+    params.append('displayOrder', String(displayOrder));
+  }
+
+  await http.delete(`/campaign/layout/remove/${campaignId}`, {
+    data: params,
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+}
