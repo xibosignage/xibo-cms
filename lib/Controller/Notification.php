@@ -36,6 +36,7 @@ use Xibo\Factory\UserNotificationFactory;
 use Xibo\Helper\AttachmentUploadHandler;
 use Xibo\Helper\Environment;
 use Xibo\Helper\SendFile;
+use Xibo\Helper\Session;
 use Xibo\Service\DisplayNotifyService;
 use Xibo\Service\MediaService;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -58,6 +59,7 @@ class Notification extends Base
         private readonly DisplayGroupFactory $displayGroupFactory,
         private readonly UserGroupFactory $userGroupFactory,
         private readonly DisplayNotifyService $displayNotifyService,
+        private readonly Session $session,
     ) {
     }
 
@@ -319,13 +321,20 @@ class Notification extends Base
             $filterBy
         );
 
-        $systemNotifications = $this->buildSystemNotifications($request);
+        $environmentNotifications = [];
+
+        if ($this->getUser()->userId != null
+            && $this->session->isExpired() == 0
+            && $this->getUser()->featureEnabled('drawer')
+        ) {
+            $environmentNotifications = $this->buildEnvironmentNotifications($request);
+        }
 
         return $response
             ->withStatus(200)
-            ->withHeader('X-Total-Count', $this->userNotificationFactory->countLast() + count($systemNotifications))
-            ->withHeader('X-Unread-Count', $this->userNotificationFactory->countMyUnread() + count($systemNotifications))
-            ->withJson(array_merge($systemNotifications, $notifications));
+            ->withHeader('X-Total-Count', $this->userNotificationFactory->countLast() + count($environmentNotifications))
+            ->withHeader('X-Unread-Count', $this->userNotificationFactory->countMyUnread() + count($environmentNotifications))
+            ->withJson(array_merge($environmentNotifications, $notifications));
     }
 
     /**
@@ -641,27 +650,25 @@ class Notification extends Base
     }
 
     /**
-     * Build system notifications for the current request context.
+     * Build environment notifications for the current request context.
      * These are never stored in the database; they reflect live environment state.
      * @param Request $request
      * @return array
      */
-    private function buildSystemNotifications(Request $request): array
+    private function buildEnvironmentNotifications(Request $request): array
     {
         $notifications = [];
 
-        // TODO: Might need further updates for the SPA
-
         if (Environment::isDevMode()) {
-            $notifications[] = $this->buildSystemNotification(__('CMS is running in DEV mode'));
+            $notifications[] = $this->buildEnvironmentNotification(__('CMS is running in DEV mode'));
         } elseif ($this->getUser()->userTypeId === 1) {
             if (file_exists(PROJECT_ROOT . '/web/install/index.php')) {
-                $notifications[] = $this->buildSystemNotification(
+                $notifications[] = $this->buildEnvironmentNotification(
                     __('Installation files should be removed — web/install/index.php still exists')
                 );
             }
             if (!Environment::checkUrl($request->getUri())) {
-                $notifications[] = $this->buildSystemNotification(
+                $notifications[] = $this->buildEnvironmentNotification(
                     __('CMS URL configuration warning — /web/ should not appear in the URL')
                 );
             }
@@ -671,9 +678,9 @@ class Notification extends Base
     }
 
     /**
-     * Build system notification object
+     * Build environment notification object
      */
-    private function buildSystemNotification(string $subject): object
+    private function buildEnvironmentNotification(string $subject): object
     {
         return (object) [
             'notificationId' => null,
