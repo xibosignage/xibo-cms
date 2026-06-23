@@ -31,3 +31,7 @@ dist-ssr
 # TypeScript
 *.tsbuildinfo
 
+# Generated from /locale/*.mo by `npm run i18n:convert` (runs in dev/build)
+public/locale/langs/
+public/locale/available.json
+

@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2019 Xibo Signage Ltd
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -27,7 +27,7 @@ use Xibo\Entity\ReportForm;
 use Xibo\Entity\ReportResult;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
-/**
+/*
  * Interface ReportInterface
  * @package Xibo\Report
  */
@@ -68,24 +68,11 @@ interface ReportInterface
     public function getReportEmailTemplate();
 
     /**
-     * Return the twig file name of the saved report preview template
-     * @return string
-     */
-    public function getSavedReportTemplate();
-
-    /**
      * Return the twig file name of the report form
      * Load the report form
      * @return ReportForm
      */
     public function getReportForm();
-
-    /**
-     * Populate form title and hidden fields
-     * @param SanitizerInterface $sanitizedParams
-     * @return array
-     */
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams);
 
     /**
      * Set Report Schedule form data
@@ -120,8 +107,9 @@ interface ReportInterface
      * Get results when on demand report runs and
      * This result will get saved to a json if schedule report runs
      * @param SanitizerInterface $sanitizedParams
+     * @param bool $isJson true for React/JSON API requests (sortBy/sortDir params), false for DataTables
      * @return ReportResult
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function getResults(SanitizerInterface $sanitizedParams);
+    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false);
 }

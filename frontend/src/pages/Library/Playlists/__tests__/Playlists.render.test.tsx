@@ -27,7 +27,7 @@
 // TDD contracts:
 //   - Search placeholder:        'Search playlist...'
 //   - Filters button label:      'Filters'
-//   - New Playlist button label: 'New Playlist'
+//   - Add Playlist button label: 'Add Playlist'
 //   - Duration format:           formatDuration(30) === '00:00:30'
 //   - Error alert role:          role="alert" containing the error message
 // =============================================================================
@@ -102,12 +102,12 @@ describe('Playlists page - rendering', () => {
   });
 
   // -------------------------------------------------------------------------
-  // New Playlist button is present (may be disabled until folderPerms resolve).
+  // Add Playlist button is present (may be disabled until folderPerms resolve).
   // -------------------------------------------------------------------------
-  test('renders the New Playlist button', async () => {
+  test('renders the Add Playlist button', async () => {
     renderPlaylistsPage();
 
-    expect(await screen.findByRole('button', { name: 'New Playlist' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Add Playlist' })).toBeInTheDocument();
   });
 
   // -------------------------------------------------------------------------

@@ -47,6 +47,10 @@ RUN npm install
 # Copy ui folder
 COPY ./frontend .
 
+# Copy the gettext .mo files — convertMoToJson.ts (run via the build script) reads
+# them from ../../locale to generate the React language packs.
+COPY locale /app/locale
+
 # Build
 RUN npm run build
 

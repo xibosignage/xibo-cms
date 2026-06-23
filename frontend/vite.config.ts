@@ -24,19 +24,32 @@ import path from 'node:path';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { defineConfig } from 'vite';
-import tsconfigPaths from 'vite-tsconfig-paths';
+import { defineConfig, type Plugin } from 'vite';
+
+// Vite plugin: redirect react-dom imports that originate from @dnd-kit/* to a
+// shim that provides the unstable_batchedUpdates no-op removed in React 19.
+function dndKitReact19Compat(): Plugin {
+  return {
+    name: 'dnd-kit-react19-compat',
+    resolveId(source, importer) {
+      if (source === 'react-dom' && importer?.includes('@dnd-kit')) {
+        return path.resolve(__dirname, 'src/shims/react-dom-dnd-compat.ts');
+      }
+      return null;
+    },
+  };
+}
 
 export default defineConfig(({ mode }) => ({
   base: '/prototype/',
   plugins: [
+    dndKitReact19Compat(),
     react({
       babel: {
         plugins: [['babel-plugin-react-compiler']],
       },
     }),
     tailwindcss(),
-    tsconfigPaths(),
     visualizer({
       filename: 'stats.html',
       open: true,
@@ -45,6 +58,7 @@ export default defineConfig(({ mode }) => ({
     }),
   ],
   resolve: {
+    tsconfigPaths: true,
     alias: {
       '@': path.resolve(__dirname, 'src'),
     },
@@ -97,8 +111,13 @@ export default defineConfig(({ mode }) => ({
     sourcemap: process.env.NODE_ENV === 'debug',
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-core': ['react', 'react-dom', 'react-router-dom'],
+        manualChunks: (id: string) => {
+          if (
+            /\/node_modules\/(react|react-dom|react-router|react-router-dom|scheduler)\//.test(id)
+          ) {
+            return 'react-core';
+          }
+          return undefined;
         },
       },
     },

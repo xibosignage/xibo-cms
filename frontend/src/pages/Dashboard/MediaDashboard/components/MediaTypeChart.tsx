@@ -20,11 +20,10 @@
  */
 
 import { Loader2 } from 'lucide-react';
-import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { TooltipContentProps } from 'recharts';
 import { Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 
+import { makePieTooltip, usePieTooltip } from '@/components/ui/charts/pieTooltip';
 import { formatFileSize } from '@/utils/formatters';
 
 const TYPE_COLORS: Record<string, string> = {
@@ -56,26 +55,10 @@ interface MediaTypeChartProps {
   isLoading: boolean;
 }
 
-function CustomTooltip({ active, payload }: TooltipContentProps) {
-  if (!active || !payload?.length) return null;
-  const entry = payload[0]?.payload as ChartItem | undefined;
-  if (!entry) return null;
-
-  const total = (payload[0]?.payload as { total?: number })?.total ?? 1;
-  const percentage = total > 0 ? ((entry.value / total) * 100).toFixed(1) : '0';
-
-  return (
-    <div className="-translate-x-1/2">
-      <div className="flex items-center gap-2 rounded-lg bg-gray-800 px-3 py-2 text-sm text-white shadow-lg">
-        <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: entry.fill }} />
-        <span>
-          {entry.name}: {percentage}%
-        </span>
-      </div>
-      <div className="mx-auto h-0 w-0 border-x-[6px] border-x-transparent border-t-[6px] border-t-gray-800" />
-    </div>
-  );
-}
+const TooltipContent = makePieTooltip<ChartItem & { total: number }>((entry) => {
+  const pct = entry.total > 0 ? ((entry.value / entry.total) * 100).toFixed(1) : '0';
+  return { color: entry.fill, text: `${entry.name}: ${pct}%` };
+});
 
 export function buildChartItems(
   types: { title: string; count: number; size: number }[],
@@ -107,15 +90,7 @@ export default function MediaTypeChart({
   const { t } = useTranslation();
   const total = items.reduce((sum, item) => sum + item.value, 0);
   const chartData = items.map((item) => ({ ...item, total }));
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    const rect = containerRef.current?.getBoundingClientRect();
-    if (rect) {
-      setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top - 40 });
-    }
-  };
+  const { active, onMouseMove, onMouseLeave } = usePieTooltip();
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-5">
@@ -127,7 +102,7 @@ export default function MediaTypeChart({
         </div>
       ) : (
         <div className="flex items-center gap-5">
-          <div ref={containerRef} className="relative shrink-0" onMouseMove={handleMouseMove}>
+          <div className="relative shrink-0" onMouseMove={onMouseMove} onMouseLeave={onMouseLeave}>
             <ResponsiveContainer width={200} height={200}>
               <PieChart accessibilityLayer={false}>
                 <Pie
@@ -140,6 +115,7 @@ export default function MediaTypeChart({
                   paddingAngle={total > 0 ? 1 : 0}
                   stroke="none"
                   className="outline-none"
+                  isAnimationActive={false}
                 />
                 <text
                   x="50%"
@@ -159,7 +135,7 @@ export default function MediaTypeChart({
                 >
                   {centerLabel}
                 </text>
-                <Tooltip content={CustomTooltip} position={mousePos} />
+                <Tooltip content={TooltipContent} active={active} isAnimationActive={false} />
               </PieChart>
             </ResponsiveContainer>
           </div>

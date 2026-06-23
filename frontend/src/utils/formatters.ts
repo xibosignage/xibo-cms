@@ -42,6 +42,20 @@ export function formatFileSizeIEC(bytes: number): string {
   return `${parseFloat((bytes / Math.pow(1024, i)).toFixed(2))} ${units[i]}`;
 }
 
+export function formatDurationText(totalSeconds: number, t: TFunction): string {
+  if (typeof totalSeconds !== 'number' || totalSeconds < 0) return '-';
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = Math.floor(totalSeconds % 60);
+  return t('{{days}}day {{hours}}hr {{minutes}}min {{seconds}}sec', {
+    days,
+    hours,
+    minutes,
+    seconds,
+  });
+}
+
 export function formatRelativeDate(dateStr: string, t: TFunction): string {
   const date = new Date(dateStr);
   const now = new Date();

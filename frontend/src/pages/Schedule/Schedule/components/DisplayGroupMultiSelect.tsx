@@ -63,6 +63,7 @@ interface DisplayGroupMultiSelectProps {
   disabled?: boolean;
   className?: string;
   triggerClassName?: string;
+  helpText?: string;
 }
 
 export function DisplayGroupMultiSelect({
@@ -72,6 +73,7 @@ export function DisplayGroupMultiSelect({
   disabled = false,
   className,
   triggerClassName,
+  helpText,
 }: DisplayGroupMultiSelectProps) {
   const { t } = useTranslation();
 
@@ -402,7 +404,7 @@ export function DisplayGroupMultiSelect({
   const isLoading = isLoadingDisplays || isLoadingGroups;
 
   return (
-    <div className={twMerge('relative flex-1 flex', className)}>
+    <div className={twMerge('relative flex-1 flex flex-col gap-1', className)}>
       <div
         ref={refs.setReference}
         {...getReferenceProps()}
@@ -486,6 +488,8 @@ export function DisplayGroupMultiSelect({
           <ChevronDown size={14} />
         </span>
       </div>
+
+      {helpText && <span className="text-xs text-gray-400">{helpText}</span>}
 
       <FloatingPortal>
         {isOpen && (

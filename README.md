@@ -201,7 +201,11 @@ for i in *.po; do msgfmt "$i" -o $(echo $i | sed s/po/mo/); done
 
 Move the resulting `mo` files into your `locale` folder.
 
-Convert `mo` files to `json`
+The React language packs (`frontend/public/locale/langs/*.json`) are generated from the
+`locale/*.mo` files and are **not** committed, they are build artifacts. `npm run dev` and
+`npm run build` regenerate them automatically, so you normally don't need to do anything. To
+regenerate them manually (e.g. after adding new `mo` files):
+
   ```bash
   cd frontend
   npm run i18n:convert

@@ -136,11 +136,11 @@
             <li class="sidebar-title"><a>{% trans "Reporting" %}</a></li>
 
             {% if currentUser.featureEnabled("report.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("report.view") }}">{% trans "All Reports" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/reporting/reports">{% trans "All Reports" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("report.scheduling") %}
-                <li class="sidebar-list"><a href="{{ url_for("reportschedule.view") }}">{% trans "Report Schedules" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/reporting/schedules">{% trans "Report Schedules" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("report.saving") %}
@@ -175,7 +175,7 @@
             <li class="sidebar-title"><a>{% trans "Developer" %}</a></li>
 
             {% if currentUser.featureEnabled("developer.edit") %}
-                <li class="sidebar-list"><a href="{{ url_for("developer.templates.view") }}">{% trans "Module Templates" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/developer/template">{% trans "Module Templates" %}</a></li>
             {% endif %}
         {% endif %}
     </ul>

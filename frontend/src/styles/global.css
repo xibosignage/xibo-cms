@@ -94,6 +94,88 @@ body,
   }
 }
 
+/* ── Tiptap rich-text editor content ─────────────────────────────────────
+   Tailwind v4 preflight resets browser defaults (headings inherit font-size,
+   lists lose bullets, etc.). These rules restore them inside the editor only.
+   Scoped to [class~="tiptap"] so nothing bleeds outside the editor div.    */
+[class~="tiptap"] {
+  strong, b { font-weight: 700; }
+  em, i     { font-style: italic; }
+  u         { text-decoration: underline; }
+  s, del    { text-decoration: line-through; }
+
+  h1 { font-size: 2em;    font-weight: 700; margin-block: 0.67em; }
+  h2 { font-size: 1.5em;  font-weight: 700; margin-block: 0.75em; }
+  h3 { font-size: 1.25em; font-weight: 700; margin-block: 0.83em; }
+
+  ul { list-style-type: disc;    padding-inline-start: 1.5em; margin-block: 0.5em; }
+  ol { list-style-type: decimal; padding-inline-start: 1.5em; margin-block: 0.5em; }
+  li { margin-block: 0.25em; }
+  li > p { margin: 0; }
+
+  blockquote {
+    border-left: 3px solid var(--color-xibo-blue-300, #93b4fe);
+    padding-left: 1em;
+    color: #6b7280;
+    margin-block: 0.75em;
+    font-style: italic;
+  }
+
+  a {
+    color: var(--color-xibo-blue-600);
+    text-decoration: underline;
+  }
+
+  sub { vertical-align: sub;   font-size: 0.75em; }
+  sup { vertical-align: super; font-size: 0.75em; }
+
+  p { margin-block: 0.25em; }
+  p:first-child { margin-block-start: 0; }
+  p:last-child  { margin-block-end: 0; }
+
+  /* Placeholder */
+  p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    color: #9ca3af;
+    pointer-events: none;
+    height: 0;
+  }
+
+  /* Table */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed;
+    margin-block: 0.75em;
+    overflow: hidden;
+  }
+
+  td, th {
+    border: 1px solid #d1d5db;
+    padding: 0.4em 0.6em;
+    vertical-align: top;
+    position: relative;
+    min-width: 2em;
+    box-sizing: border-box;
+  }
+
+  th {
+    background-color: #f3f4f6;
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .selectedCell::after {
+    background: rgba(59, 130, 246, 0.15);
+    content: '';
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+    z-index: 2;
+  }
+}
+
 @layer base {
   body {
     @apply font-sans;

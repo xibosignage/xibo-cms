@@ -28,6 +28,7 @@ import TopNav from '@/components/layout/TopNav';
 import { BrandingProvider } from '@/context/BrandingContext';
 import { UserProvider } from '@/context/UserContext';
 import { usePreline } from '@/hooks/usePreline';
+import NotificationInterruptCheck from '@/pages/Notification/components/NotificationInterruptCheck';
 import type { User } from '@/types/user';
 
 export default function RootLayout() {
@@ -79,6 +80,7 @@ export default function RootLayout() {
           </div>
 
           <SessionExpiredModal />
+          <NotificationInterruptCheck />
         </div>
       </UserProvider>
     </BrandingProvider>

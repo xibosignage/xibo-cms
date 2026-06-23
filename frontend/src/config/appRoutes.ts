@@ -59,6 +59,11 @@ export interface AppRoute {
 
 const isSuperAdmin = (user: User) => user.userTypeId === UserType.SuperAdmin;
 
+const canAccessReport =
+  (feature: string, adminOnly = false) =>
+  (user: User) =>
+    (isSuperAdmin(user) || !!user.features?.[feature]) && (!adminOnly || isSuperAdmin(user));
+
 const canViewUsers = (user: User) => {
   const hasFeature = user.features?.['users.view'];
   const isAdmin =
@@ -131,6 +136,16 @@ export const APP_ROUTES: AppRoute[] = [
         lazy: () =>
           import('@/pages/Design/Campaigns/Campaigns').then((m) => ({ Component: m.default })),
         feature: 'campaign.view',
+      },
+      {
+        path: 'campaign/:id',
+        labelKey: 'Edit Campaign',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Design/Campaigns/CampaignEditor').then((m) => ({
+            Component: m.default,
+          })),
+        feature: 'ad.campaign',
       },
       {
         path: 'layout',
@@ -420,20 +435,139 @@ export const APP_ROUTES: AppRoute[] = [
       {
         path: 'all-reports',
         labelKey: 'All Reports',
-        externalURL: '/report/view',
+        lazy: () =>
+          import('@/pages/Reporting/AllReports/AllReports').then((m) => ({ Component: m.default })),
         feature: 'report.view',
       },
       {
         path: 'report-schedules',
         labelKey: 'Report Schedules',
-        externalURL: '/report/reportschedule/view',
+        lazy: () =>
+          import('@/pages/Reporting/ReportSchedules/ReportSchedules').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'report.scheduling',
       },
       {
         path: 'saved-reports',
         labelKey: 'Saved Reports',
-        externalURL: '/report/savedreport/view',
+        lazy: () =>
+          import('@/pages/Reporting/SavedReports/SavedReports').then((m) => ({
+            Component: m.default,
+          })),
         feature: 'report.saving',
+      },
+      {
+        path: 'time-connected',
+        labelKey: 'Time Connected',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Reporting/Reports/TimeConnected/TimeConnected').then((m) => ({
+            Component: m.default,
+          })),
+        validator: canAccessReport('displays.reporting'),
+      },
+      {
+        path: 'bandwidth',
+        labelKey: 'Display Statistics: Bandwidth',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Reporting/Reports/Bandwidth/Bandwidth').then((m) => ({
+            Component: m.default,
+          })),
+        validator: canAccessReport('displays.reporting'),
+      },
+      {
+        path: 'time-connected-summary',
+        labelKey: 'Time Connected Summary',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Reporting/Reports/TimeDisconnectedSummary/TimeDisconnectedSummary').then(
+            (m) => ({
+              Component: m.default,
+            }),
+          ),
+        validator: canAccessReport('displays.reporting'),
+      },
+      {
+        path: 'summary',
+        labelKey: 'Summary by Layout, Media or Event',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Reporting/Reports/Summary/Summary').then((m) => ({
+            Component: m.default,
+          })),
+        validator: canAccessReport('proof-of-play'),
+      },
+      {
+        path: 'distribution',
+        labelKey: 'Distribution by Layout, Media or Event',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Reporting/Reports/Distribution/Distribution').then((m) => ({
+            Component: m.default,
+          })),
+        validator: canAccessReport('proof-of-play'),
+      },
+      {
+        path: 'library-usage',
+        labelKey: 'Library Usage',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Reporting/Reports/LibraryUsage/LibraryUsage').then((m) => ({
+            Component: m.default,
+          })),
+        validator: canAccessReport('admin', true),
+      },
+      {
+        path: 'ssp-activity',
+        labelKey: 'SSP Activity Report',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Reporting/Reports/SspActivity/SspActivity').then((m) => ({
+            Component: m.default,
+          })),
+        validator: canAccessReport('report.view', true),
+      },
+      {
+        path: 'api-requests',
+        labelKey: 'API Request History',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Reporting/Reports/ApiRequestsHistory/ApiRequestsHistory').then((m) => ({
+            Component: m.default,
+          })),
+        validator: canAccessReport('admin', true),
+      },
+      {
+        path: 'session-history',
+        labelKey: 'Session History',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Reporting/Reports/SessionHistory/SessionHistory').then((m) => ({
+            Component: m.default,
+          })),
+        validator: canAccessReport('admin', true),
+      },
+      {
+        path: 'proof-of-play',
+        labelKey: 'Proof of Play',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Reporting/Reports/ProofOfPlay/ProofOfPlay').then((m) => ({
+            Component: m.default,
+          })),
+        validator: canAccessReport('proof-of-play'),
+      },
+      {
+        path: 'display-alerts',
+        labelKey: 'Display Alerts',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Reporting/Reports/DisplayAlerts/DisplayAlerts').then((m) => ({
+            Component: m.default,
+          })),
+        validator: canAccessReport('displays.reporting'),
       },
     ],
   },
@@ -476,7 +610,34 @@ export const APP_ROUTES: AppRoute[] = [
     path: 'developer',
     labelKey: 'Developer',
     icon: CodeXml,
-    externalURL: '/developer/template/view',
     feature: 'developer.edit',
+    subLinks: [
+      {
+        path: 'template',
+        labelKey: 'Module Templates',
+        lazy: () =>
+          import('@/pages/Developer/ModuleTemplates/ModuleTemplates').then((m) => ({
+            Component: m.default,
+          })),
+        feature: 'developer.edit',
+      },
+      {
+        path: 'template/:id/edit',
+        labelKey: 'Edit Module Template',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Developer/ModuleTemplates/ModuleTemplateEdit').then((m) => ({
+            Component: m.default,
+          })),
+        feature: 'developer.edit',
+      },
+    ],
+  },
+  {
+    path: 'notification',
+    labelKey: 'Notification Centre',
+    hideFromMenu: true,
+    lazy: () => import('@/pages/Notification/Notification').then((m) => ({ Component: m.default })),
+    feature: 'notification.centre',
   },
 ];

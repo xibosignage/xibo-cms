@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -22,19 +22,13 @@
 
 namespace Xibo\Entity;
 
-/**
+/*
 * Class ReportForm
 * @package Xibo\Entity
 *
 */
 class ReportForm
 {
-    /**
-     * On demand report form template
-     * @var string
-     */
-    public $template;
-
     /**
      * Report name is the string that is defined in .report file
      * @var string
@@ -61,20 +55,17 @@ class ReportForm
 
     /**
      * ReportForm constructor.
-     * @param string $template
      * @param string $reportName
      * @param string $reportCategory
      * @param array $defaults
      * @param string|null $reportAddBtnTitle
      */
     public function __construct(
-        string $template,
         string $reportName,
         string $reportCategory,
         array $defaults = [],
         string $reportAddBtnTitle = 'Schedule'
     ) {
-        $this->template = $template;
         $this->reportName = $reportName;
         $this->reportCategory = $reportCategory;
         $this->defaults = $defaults;

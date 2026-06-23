@@ -51,7 +51,7 @@ interface DataTableOptionsProps<TData> {
   availableViewModes?: ViewMode[];
 }
 
-const getToggleButtonStyle = (active: boolean) => {
+export const getToggleButtonStyle = (active: boolean) => {
   return active ? 'text-xibo-blue-800 bg-gray-100' : 'text-xibo-blue-600 bg-transparent';
 };
 

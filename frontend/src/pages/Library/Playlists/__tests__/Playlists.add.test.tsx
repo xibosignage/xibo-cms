@@ -21,7 +21,7 @@
 
 // =============================================================================
 // Test type: Page integration test
-// Tests the Add Playlist flow: opening the modal via the "New Playlist" button,
+// Tests the Add Playlist flow: opening the modal via the "Add Playlist" button,
 // form validation, cancel, and successful creation.
 //
 // Uses the real AddAndEditPlaylistModal (SelectFolder and useMediaData stubbed).
@@ -85,11 +85,11 @@ vi.mock('@/components/ui/modals/MoveModal', () => ({ default: () => null }));
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-// Waits for the New Playlist button to be enabled, clicks it, and returns the
+// Waits for the Add Playlist button to be enabled, clicks it, and returns the
 // Add Playlist dialog. The button is disabled until fetchContextButtons resolves
 // (folderApi mock returns { create: true } by default).
 const openAddModal = async () => {
-  const button = await screen.findByRole('button', { name: 'New Playlist' });
+  const button = await screen.findByRole('button', { name: 'Add Playlist' });
   await waitFor(() => expect(button).not.toBeDisabled());
   fireEvent.click(button);
   return screen.findByRole('dialog', { name: 'Add Playlist' });
@@ -106,9 +106,9 @@ describe('Playlists page - add playlist', () => {
   });
 
   // -------------------------------------------------------------------------
-  // Clicking New Playlist opens the Add Playlist modal.
+  // Clicking Add Playlist opens the Add Playlist modal.
   // -------------------------------------------------------------------------
-  test('clicking New Playlist opens the Add Playlist modal', async () => {
+  test('clicking Add Playlist opens the Add Playlist modal', async () => {
     renderPlaylistsPage();
 
     const dialog = await openAddModal();

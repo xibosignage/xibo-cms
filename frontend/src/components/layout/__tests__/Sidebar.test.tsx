@@ -142,7 +142,7 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
       { group: 'Library', name: 'Media', href: '/library/media' }, // React Router
       { group: 'Displays', name: 'Commands', href: '/displays/commands' }, // React Router
       { group: 'Administration', name: 'Tags', href: '/administration/tags' }, // React Router
-      { group: 'Reporting', name: 'All Reports', href: '/report/view' }, // external
+      { group: 'Reporting', name: 'All Reports', href: '/reporting/all-reports' }, // React Router
       { group: 'Advanced', name: 'Sessions', href: '/advanced/sessions' }, // React Router
     ];
 
@@ -158,10 +158,10 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
       expect(link).toBeVisible();
     });
 
-    // Developer is a top-level external link (no subLinks) — always visible, not expandable.
+    // Developer is now a submenu parent; its link targets the first child (Module Templates).
     expect(screen.getByRole('link', { name: /developer/i })).toHaveAttribute(
       'href',
-      '/developer/template/view',
+      '/developer/template',
     );
 
     // Displays > Display Settings and Administration > Settings are both React Router links.

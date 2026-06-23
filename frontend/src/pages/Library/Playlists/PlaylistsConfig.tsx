@@ -24,6 +24,7 @@ import type { TFunction } from 'i18next';
 import {
   BarChartHorizontalBig,
   CalendarClock,
+  Clock,
   CopyCheck,
   Edit,
   FolderInput,
@@ -45,6 +46,7 @@ import { getCommonFormOptions } from '@/config/commonForms';
 import type { Playlist } from '@/types/playlist';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
+import { formatDateTime } from '@/utils/date';
 import { formatDuration } from '@/utils/formatters';
 
 export interface PlaylistFilterInput {
@@ -158,74 +160,86 @@ export const getPlaylistItemActions = ({
   openEnableStatsModal,
   openUsageReportModal,
 }: PlaylistActionsProps): ((playlist: Playlist) => ActionItem[]) => {
-  return (playlist: Playlist) => [
-    // Quick Actions
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => openAddEditModal(playlist),
-      isQuickAction: true,
-      variant: 'primary' as const,
-    },
-    {
-      label: t('Timeline'),
-      icon: BarChartHorizontalBig,
-      onClick: () => openTimeline && openTimeline(playlist.playlistId),
-      isQuickAction: true,
-    },
+  return (playlist: Playlist) => {
+    const isDynamic = Boolean(playlist.isDynamic);
 
-    // Dropdown Menu Actions
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => openAddEditModal(playlist),
-    },
-    {
-      label: t('Make a Copy'),
-      icon: CopyCheck,
-      onClick: () => copyPlaylist && copyPlaylist(playlist.playlistId),
-    },
-    {
-      label: t('Move'),
-      icon: FolderInput,
-      onClick: () => openMoveModal && openMoveModal(playlist),
-    },
-    {
-      label: t('Share'),
-      icon: UserPlus2,
-      onClick: () => openShareModal && openShareModal(playlist.playlistId),
-    },
-    ...(openScheduleModal
-      ? [
-          {
-            label: t('Schedule'),
-            icon: CalendarClock,
-            onClick: () => openScheduleModal(playlist),
-          },
-        ]
-      : []),
-    {
-      label: t('Timeline'),
-      icon: BarChartHorizontalBig,
-      onClick: () => openTimeline && openTimeline(playlist.playlistId),
-    },
-    { isSeparator: true },
-    {
-      label: t('Enable Stats Collection'),
-      onClick: () => openEnableStatsModal && openEnableStatsModal(playlist.playlistId),
-    },
-    {
-      label: t('Usage Report'),
-      onClick: () => openUsageReportModal && openUsageReportModal(playlist.playlistId),
-    },
-    { isSeparator: true },
-    {
-      label: t('Delete'),
-      icon: Trash2,
-      onClick: () => onDelete(playlist.playlistId),
-      variant: 'danger' as const,
-    },
-  ];
+    return [
+      // Quick Actions
+      {
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => openAddEditModal(playlist),
+        isQuickAction: true,
+        variant: 'primary' as const,
+      },
+      ...(!isDynamic
+        ? [
+            {
+              label: t('Timeline'),
+              icon: BarChartHorizontalBig,
+              onClick: () => openTimeline && openTimeline(playlist.playlistId),
+              isQuickAction: true,
+            },
+          ]
+        : []),
+
+      // Dropdown Menu Actions
+      {
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => openAddEditModal(playlist),
+      },
+      {
+        label: t('Make a Copy'),
+        icon: CopyCheck,
+        onClick: () => copyPlaylist && copyPlaylist(playlist.playlistId),
+      },
+      {
+        label: t('Move'),
+        icon: FolderInput,
+        onClick: () => openMoveModal && openMoveModal(playlist),
+      },
+      {
+        label: t('Share'),
+        icon: UserPlus2,
+        onClick: () => openShareModal && openShareModal(playlist.playlistId),
+      },
+      ...(openScheduleModal
+        ? [
+            {
+              label: t('Schedule'),
+              icon: CalendarClock,
+              onClick: () => openScheduleModal(playlist),
+            },
+          ]
+        : []),
+      ...(!isDynamic
+        ? [
+            {
+              label: t('Timeline'),
+              icon: BarChartHorizontalBig,
+              onClick: () => openTimeline && openTimeline(playlist.playlistId),
+            },
+          ]
+        : []),
+      { isSeparator: true },
+      {
+        label: t('Enable Stats Collection'),
+        onClick: () => openEnableStatsModal && openEnableStatsModal(playlist.playlistId),
+      },
+      {
+        label: t('Usage Report'),
+        onClick: () => openUsageReportModal && openUsageReportModal(playlist.playlistId),
+      },
+      { isSeparator: true },
+      {
+        label: t('Delete'),
+        icon: Trash2,
+        onClick: () => onDelete(playlist.playlistId),
+        variant: 'danger' as const,
+      },
+    ];
+  };
 };
 
 export const getPlaylistColumns = (props: PlaylistActionsProps): ColumnDef<Playlist>[] => {
@@ -265,7 +279,39 @@ export const getPlaylistColumns = (props: PlaylistActionsProps): ColumnDef<Playl
       header: t('Duration'),
       size: 140,
       cell: (info) => {
-        return <TextCell>{formatDuration(info.getValue<number>())}</TextCell>;
+        const duration = info.getValue<number>();
+        const requiresDurationUpdate = info.row.original.requiresDurationUpdate;
+
+        if (requiresDurationUpdate === 1) {
+          return (
+            <TextCell>
+              <span
+                title={t(
+                  'Changes have been made and we are recalculating this Playlist’s duration',
+                )}
+              >
+                <Clock className="size-4 text-gray-500" />
+              </span>
+            </TextCell>
+          );
+        }
+
+        if (requiresDurationUpdate) {
+          return (
+            <TextCell>
+              {formatDuration(duration)}
+              <span
+                title={t('This duration will be updated at {{date}}', {
+                  date: formatDateTime(new Date(requiresDurationUpdate * 1000)),
+                })}
+              >
+                <Clock className="size-4 text-gray-500" />
+              </span>
+            </TextCell>
+          );
+        }
+
+        return <TextCell>{formatDuration(duration)}</TextCell>;
       },
     },
     {
@@ -288,7 +334,7 @@ export const getPlaylistColumns = (props: PlaylistActionsProps): ColumnDef<Playl
       accessorKey: 'isDynamic',
       header: t('Dynamic'),
       size: 100,
-      cell: (info) => <CheckMarkCell active={info.getValue() === 1} />,
+      cell: (info) => <CheckMarkCell active={Boolean(info.getValue())} />,
     },
     {
       accessorKey: 'enableStat',
@@ -299,7 +345,7 @@ export const getPlaylistColumns = (props: PlaylistActionsProps): ColumnDef<Playl
         if (value === 'Inherit') {
           return <StatusCell label={info.getValue() as string} type="neutral" />;
         } else {
-          return <CheckMarkCell active={info.getValue() === 'on'} />;
+          return <CheckMarkCell active={String(value).toLowerCase() === 'on'} />;
         }
       },
     },
