@@ -637,6 +637,9 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
   const allOccurrences = [];
   const deepClone = (obj) => JSON.parse(JSON.stringify(obj));
 
+  // Use CMS timezone
+  const momentTz = (ts) => moment.tz ? moment.tz(ts, timezone) : moment(ts);
+
   const generateRecurrences = (sourceEv) => {
     if (!sourceEv.recurrenceType || !sourceEv.recurrenceDetail) {
       return [];
@@ -646,10 +649,10 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
     const interval = parseInt(sourceEv.recurrenceDetail, 10);
     if (interval <= 0) return [];
 
-    const originalStart = moment(sourceEv.fromDt * 1000);
+    const originalStart = momentTz(sourceEv.fromDt * 1000);
     const duration = moment.duration((sourceEv.toDt - sourceEv.fromDt) * 1000);
     const rangeEnd = sourceEv.recurrenceRange ?
-      moment(sourceEv.recurrenceRange * 1000) :
+      momentTz(sourceEv.recurrenceRange * 1000) :
       moment('9999-12-31'); // Infinity
 
     const unitMap =
@@ -675,9 +678,11 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
       if (!isBlocked) {
         const clone = deepClone(sourceEv);
         clone.fromDt = startUnix;
-        clone.displayFromDt = moment(startUnix * 1000).format(systemDateFormat);
+        clone.displayFromDt =
+          momentTz(startUnix * 1000).format(systemDateFormat);
         clone.toDt = endUnix;
-        clone.displayToDt = moment(endUnix * 1000).format(systemDateFormat);
+        clone.displayToDt =
+          momentTz(endUnix * 1000).format(systemDateFormat);
 
         if (isHighFrequency) {
           clone.isHighFrequency = true;
@@ -693,8 +698,8 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
       let currentDayIter = originalStart.clone().startOf('day');
 
       // Find the first valid day
-      if (currentDayIter.isBefore(moment(viewStartMs).startOf('day'))) {
-        currentDayIter = moment(viewStartMs).startOf('day');
+      if (currentDayIter.isBefore(momentTz(viewStartMs).startOf('day'))) {
+        currentDayIter = momentTz(viewStartMs).startOf('day');
       }
 
       // Loop day by day
@@ -774,17 +779,21 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
       const isComplexWeekly = sourceEv.recurrenceType === 'Week' &&
         hasRepeatsOn;
 
-      // If it's not a complex week recurrence, add first day
-      if (!isComplexWeekly) {
-        const sTime = currentMoment.unix();
-        const eTime = currentMoment.clone().add(duration).unix();
+      // Always add the original (first) occurrence, regardless of recurrence
+      // type. The server emits the original event unconditionally, so the
+      // calendar must too. For complex weekly recurrences the loop below only
+      // adds occurrences strictly after originalStart (occStart.isAfter), which
+      // skips the original when it falls on a selected repeat-on day - so it
+      // must be added here. Adding it here does not duplicate, because the loop
+      // excludes the equal occurrence.
+      const firstStart = currentMoment.unix();
+      const firstEnd = currentMoment.clone().add(duration).unix();
 
-        if (
-          currentMoment.isBefore(rangeEnd) &&
-          (sTime * 1000) < viewEndMs && (eTime * 1000) > viewStartMs
-        ) {
-          addIfValid(sTime, eTime);
-        }
+      if (
+        currentMoment.isBefore(rangeEnd) &&
+        (firstStart * 1000) < viewEndMs && (firstEnd * 1000) > viewStartMs
+      ) {
+        addIfValid(firstStart, firstEnd);
       }
 
       while (
@@ -940,13 +949,13 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
       url: eventUrl,
       start: startMs,
       end: endMs,
-      sameDay: moment(startMs).isSame(moment(endMs), 'day'),
+      sameDay: momentTz(startMs).isSame(momentTz(endMs), 'day'),
       editable: rawEv.isEditable,
       event: rawEv,
       scheduleEvent: {
         // Format with default format to match calendar.js
-        fromDt: moment(startMs).format('YYYY-MM-DD HH:mm:ss'),
-        toDt: moment(endMs).format('YYYY-MM-DD HH:mm:ss'),
+        fromDt: momentTz(startMs).format('YYYY-MM-DD HH:mm:ss'),
+        toDt: momentTz(endMs).format('YYYY-MM-DD HH:mm:ss'),
       },
       recurringEvent: rawEv.recurringEvent,
     };
@@ -962,7 +971,7 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
   // Group events by day
   const groupedEvents = new Map();
   filteredOccurrences.forEach((ev) => {
-    const dayKey = moment(ev.fromDt * 1000).startOf('day')
+    const dayKey = momentTz(ev.fromDt * 1000).startOf('day')
       .format(jsDateOnlyFormat);
     // Group by the original eventId and the day
     const groupKey = `${ev.eventId}-${dayKey}`;
@@ -1586,10 +1595,16 @@ window.setupScheduleForm = function(dialog) {
     $(dialog).find('.modal-footer .modal-footer-right').prepend($button);
 
     // Update the date/times for this event in the correct format.
+    // Render in the CMS timezone (matching the calendar and the rest of the
+    // app); without this the labels show the viewer's browser-local time.
+    const toCmsDisplay = function(unix) {
+      const m = moment(unix, 'X');
+      return ((m.tz && timezone) ? m.tz(timezone) : m).format(jsDateFormat);
+    };
     $scheduleEditForm.find('#instanceStartDate').html(
-      moment($scheduleEditForm.data().eventStart, 'X').format(jsDateFormat));
+      toCmsDisplay($scheduleEditForm.data().eventStart));
     $scheduleEditForm.find('#instanceEndDate').html(
-      moment($scheduleEditForm.data().eventEnd, 'X').format(jsDateFormat));
+      toCmsDisplay($scheduleEditForm.data().eventEnd));
 
     // Add a button for deleting single recurring event
     $button = $('<button>').addClass('btn btn-primary')
