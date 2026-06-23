@@ -1,6 +1,7 @@
 export type LoginView = 'login' | 'tfa' | 'recovery' | 'forgot' | 'forgotSent';
 
 export interface LoginConfig {
+  upgradeInProgress?: boolean;
   priorRoute: string;
   loginError?: string;
   logoUrl: string;

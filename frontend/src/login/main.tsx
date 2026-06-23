@@ -1,8 +1,30 @@
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import './styles.css';
 import { LoginApp } from './LoginApp';
+import { UpgradePendingView } from './components/UpgradePendingView';
 
 // Guard: if window.__LOGIN_CONFIG__ is absent the page was not served by PHP
 // (e.g. Vite served login.html directly at /prototype/login). Redirect to the
@@ -12,9 +34,10 @@ if (!window.__LOGIN_CONFIG__) {
 } else {
   const root = document.getElementById('login-root');
   if (root) {
+    const Component = window.__LOGIN_CONFIG__.upgradeInProgress ? UpgradePendingView : LoginApp;
     createRoot(root).render(
       <React.StrictMode>
-        <LoginApp />
+        <Component />
       </React.StrictMode>,
     );
   }
