@@ -229,27 +229,6 @@ $app->get('/stats/data/bandwidth', ['\Xibo\Controller\Stats','bandwidthData'])
     ->setName('stats.bandwidth.data');
 
 //
-// Commands
-//
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/command/view', ['\Xibo\Controller\Command','displayPage'])->setName('command.view');
-    $group->get('/command/form/add', ['\Xibo\Controller\Command','addForm'])->setName('command.add.form');
-    $group->get('/command/form/edit/{id}', ['\Xibo\Controller\Command','editForm'])->setName('command.edit.form');
-    $group->get('/command/form/delete/{id}', ['\Xibo\Controller\Command','deleteForm'])->setName('command.delete.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['command.view']));
-
-//
-// Tasks
-//
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/task/view', ['\Xibo\Controller\Task','displayPage'])->setName('task.view');
-    $group->get('/task/form/add', ['\Xibo\Controller\Task','addForm'])->setName('task.add.form');
-    $group->get('/task/form/edit/{id}', ['\Xibo\Controller\Task','editForm'])->setName('task.edit.form');
-    $group->get('/task/form/delete/{id}', ['\Xibo\Controller\Task','deleteForm'])->setName('task.delete.form');
-    $group->get('/task/form/runNow/{id}', ['\Xibo\Controller\Task','runNowForm'])->setName('task.runNow.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['task.view']));
-
-//
 // Saved reports
 //
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
