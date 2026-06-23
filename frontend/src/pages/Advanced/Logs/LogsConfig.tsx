@@ -27,6 +27,9 @@ import { TextCell } from '@/components/ui/table/cells';
 import type { LogEntry } from '@/types/log';
 
 function decodeHtmlEntities(encoded: string): string {
+  if (!encoded) {
+    return '';
+  }
   const textarea = document.createElement('textarea');
   textarea.innerHTML = encoded;
   return textarea.value;
