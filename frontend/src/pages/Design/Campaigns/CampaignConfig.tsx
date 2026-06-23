@@ -138,6 +138,7 @@ interface CampaignActionsProps {
   t: TFunction;
   onDelete?: (id: number) => void;
   openEditModal?: (campaign: Campaign) => void;
+  openAdEditor?: (campaign: Campaign) => void;
   openShareModal?: (id: number) => void;
   openMoveModal?: (row: Campaign | Campaign[]) => void;
   openCopyModal?: (campaign: Campaign) => void;
@@ -381,23 +382,28 @@ export const getCampaignItemActions = ({
   t,
   onDelete,
   openEditModal,
+  openAdEditor,
   openShareModal,
   openMoveModal,
   openCopyModal,
   onSchedule,
 }: CampaignActionsProps): ((campaign: Campaign) => ActionItem[]) => {
+  const editCampaign = (campaign: Campaign) => {
+    if (campaign.type === 'ad') {
+      openAdEditor?.(campaign);
+    } else {
+      openEditModal?.(campaign);
+    }
+  };
+
   return (campaign: Campaign) => [
-    ...(campaign.type !== 'ad'
-      ? [
-          {
-            label: t('Edit'),
-            icon: Edit,
-            onClick: () => openEditModal && openEditModal(campaign),
-            isQuickAction: true,
-            variant: 'primary' as const,
-          },
-        ]
-      : []),
+    {
+      label: t('Edit'),
+      icon: Edit,
+      onClick: () => editCampaign(campaign),
+      isQuickAction: true,
+      variant: 'primary' as const,
+    },
     {
       label: t('Schedule'),
       icon: CalendarClock,
@@ -409,15 +415,11 @@ export const getCampaignItemActions = ({
       onClick: () => {},
     },
     { isSeparator: true },
-    ...(campaign.type !== 'ad'
-      ? [
-          {
-            label: t('Edit'),
-            icon: Edit,
-            onClick: () => openEditModal && openEditModal(campaign),
-          },
-        ]
-      : []),
+    {
+      label: t('Edit'),
+      icon: Edit,
+      onClick: () => editCampaign(campaign),
+    },
     {
       label: t('Make a Copy'),
       icon: CopyCheck,

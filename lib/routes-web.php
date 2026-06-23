@@ -46,22 +46,6 @@ $app->get('/login/ping', ['\Xibo\Controller\Login','pingPong'])->setName('ping')
 //
 $app->get('/drawer/notification/show/{id}', ['\Xibo\Controller\Notification','show'])->setName('notification.show');
 $app->get('/drawer/notification/interrupt/{id}', ['\Xibo\Controller\Notification','interrupt'])->setName('notification.interrupt');
-$app->get('/notification/export/{id}', ['\Xibo\Controller\Notification','exportAttachment'])->setName('notification.exportattachment');
-
-$app->get('/notification/view', ['\Xibo\Controller\Notification','displayPage'])
-    ->add(new FeatureAuth($app->getContainer(), ['notification.centre']))
-    ->setName('notification.view');
-
-$app->get('/notification/form/add', ['\Xibo\Controller\Notification', 'addForm'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['notification.add']))
-    ->setName('notification.add.form');
-
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/notification/form/edit/{id}', ['\Xibo\Controller\Notification', 'editForm'])
-        ->setName('notification.edit.form');
-    $group->get('/notification/form/delete/{id}', ['\Xibo\Controller\Notification', 'deleteForm'])
-        ->setName('notification.delete.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['notification.modify']));
 
 //
 // layouts
@@ -245,28 +229,33 @@ $app->get('/stats/data/bandwidth', ['\Xibo\Controller\Stats','bandwidthData'])
     ->setName('stats.bandwidth.data');
 
 //
-// Report Schedule
+// Commands
 //
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/report/reportschedule/view', ['\Xibo\Controller\ScheduleReport','displayReportSchedulePage'])->setName('reportschedule.view');
-    $group->get('/report/reportschedule/form/add', ['\Xibo\Controller\ScheduleReport','addReportScheduleForm'])->setName('reportschedule.add.form');
-    $group->get('/report/reportschedule/form/edit/{id}', ['\Xibo\Controller\ScheduleReport','editReportScheduleForm'])->setName('reportschedule.edit.form');
-    $group->get('/report/reportschedule/form/delete/{id}', ['\Xibo\Controller\ScheduleReport','deleteReportScheduleForm'])->setName('reportschedule.delete.form');
-    $group->get('/report/reportschedule/form/deleteall/{id}', ['\Xibo\Controller\ScheduleReport','deleteAllSavedReportReportScheduleForm'])->setName('reportschedule.deleteall.form');
-    $group->get('/report/reportschedule/form/toggleactive/{id}', ['\Xibo\Controller\ScheduleReport','toggleActiveReportScheduleForm'])->setName('reportschedule.toggleactive.form');
-    $group->get('/report/reportschedule/form/reset/{id}', ['\Xibo\Controller\ScheduleReport','resetReportScheduleForm'])->setName('reportschedule.reset.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['report.scheduling']));
+    $group->get('/command/view', ['\Xibo\Controller\Command','displayPage'])->setName('command.view');
+    $group->get('/command/form/add', ['\Xibo\Controller\Command','addForm'])->setName('command.add.form');
+    $group->get('/command/form/edit/{id}', ['\Xibo\Controller\Command','editForm'])->setName('command.edit.form');
+    $group->get('/command/form/delete/{id}', ['\Xibo\Controller\Command','deleteForm'])->setName('command.delete.form');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['command.view']));
+
+//
+// Tasks
+//
+$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
+    $group->get('/task/view', ['\Xibo\Controller\Task','displayPage'])->setName('task.view');
+    $group->get('/task/form/add', ['\Xibo\Controller\Task','addForm'])->setName('task.add.form');
+    $group->get('/task/form/edit/{id}', ['\Xibo\Controller\Task','editForm'])->setName('task.edit.form');
+    $group->get('/task/form/delete/{id}', ['\Xibo\Controller\Task','deleteForm'])->setName('task.delete.form');
+    $group->get('/task/form/runNow/{id}', ['\Xibo\Controller\Task','runNowForm'])->setName('task.runNow.form');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['task.view']));
 
 //
 // Saved reports
 //
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/report/savedreport/view', ['\Xibo\Controller\SavedReport','displaySavedReportPage'])->setName('savedreport.view');
     $group->get('/report/savedreport/{id}/report/{name}/open', ['\Xibo\Controller\SavedReport','savedReportOpen'])->setName('savedreport.open');
     $group->get('/report/savedreport/{id}/report/{name}/export', ['\Xibo\Controller\SavedReport','savedReportExport'])->setName('savedreport.export');
-    $group->get('/report/savedreport/form/delete/{id}', ['\Xibo\Controller\SavedReport','deleteSavedReportForm'])->setName('savedreport.delete.form');
     $group->get('/report/savedreport/{id}/report/{name}/convert', ['\Xibo\Controller\OldReport','savedReportConvert'])->setName('savedreport.convert');
-    $group->get('/report/savedreport/form/convert/{id}', ['\Xibo\Controller\OldReport','convertSavedReportForm'])->setName('savedreport.convert.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['report.saving']));
 
 //

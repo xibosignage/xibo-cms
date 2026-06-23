@@ -38,12 +38,19 @@ export enum UserType {
 
 export type UserFeatures = Record<string, boolean>;
 
+export interface TranslateConfig {
+  locale: string;
+  jsLocale: string;
+  jsShortLocale: string;
+}
+
 export interface UserSettings {
   defaultTimezone?: string;
   defaultLanguage?: string;
   DATE_FORMAT_JS?: string;
   TIME_FORMAT_JS?: string;
   homeFolder?: string;
+  translate?: TranslateConfig;
   [key: string]: string | number | boolean | object | null | undefined;
 }
 

@@ -142,7 +142,7 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
       { group: 'Library', name: 'Media', href: '/library/media' }, // React Router
       { group: 'Displays', name: 'Commands', href: '/displays/commands' }, // React Router
       { group: 'Administration', name: 'Tags', href: '/administration/tags' }, // React Router
-      { group: 'Reporting', name: 'All Reports', href: '/report/view' }, // external
+      { group: 'Reporting', name: 'All Reports', href: '/reporting/all-reports' }, // React Router
       { group: 'Advanced', name: 'Sessions', href: '/advanced/sessions' }, // React Router
     ];
 

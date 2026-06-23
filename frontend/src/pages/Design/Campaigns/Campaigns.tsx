@@ -24,7 +24,7 @@ import type { RowSelectionState } from '@tanstack/react-table';
 import { Search, Filter, FilterX, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import type { CampaignFilterInput, ModalType } from './CampaignConfig';
 import { CAMPAIGN_INITIAL_FILTER_STATE, getBulkActions, getCampaignColumn } from './CampaignConfig';
@@ -57,6 +57,7 @@ export default function Campaigns() {
   const homeFolderId = user?.homeFolderId ?? 1;
 
   const location = useLocation();
+  const navigate = useNavigate();
   const locationLayoutId = location.state?.layoutId;
 
   const {
@@ -233,6 +234,10 @@ export default function Campaigns() {
     openModal('edit');
   };
 
+  const openAdEditor = (campaign: Campaign) => {
+    navigate(`/design/campaign/${campaign.campaignId}`);
+  };
+
   const openCopyModal = (campaign: Campaign) => {
     setSelectedCampaignId(campaign.campaignId);
     openModal('copy');
@@ -267,6 +272,7 @@ export default function Campaigns() {
     t,
     onDelete: handleDelete,
     openEditModal,
+    openAdEditor,
     openCopyModal,
     openMoveModal,
     openShareModal,

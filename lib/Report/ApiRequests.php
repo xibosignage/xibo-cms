@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -40,14 +40,9 @@ class ApiRequests implements ReportInterface
 {
     use ReportDefaultTrait, DataTablesDotNetTrait;
 
-    /** @var LogFactory */
-    private $logFactory;
-
-    /** @var AuditLogFactory */
-    private $auditLogFactory;
-
-    /** @var ApplicationRequestsFactory */
-    private $apiRequestsFactory;
+    private readonly LogFactory $logFactory;
+    private readonly AuditLogFactory $auditLogFactory;
+    private readonly ApplicationRequestsFactory $apiRequestsFactory;
 
     /** @inheritdoc */
     public function setFactories(ContainerInterface $container)
@@ -60,22 +55,15 @@ class ApiRequests implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportEmailTemplate()
+    public function getReportEmailTemplate(): string
     {
         return 'apirequests-email-template.twig';
-    }
-
-    /** @inheritdoc */
-    public function getSavedReportTemplate()
-    {
-        return 'apirequests-report-preview';
     }
 
     /** @inheritdoc */
     public function getReportForm(): ReportForm
     {
         return new ReportForm(
-            'apirequests-report-form',
             'apirequests',
             'Audit',
             [
@@ -83,18 +71,6 @@ class ApiRequests implements ReportInterface
                 'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             ]
         );
-    }
-
-    /** @inheritdoc */
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams): array
-    {
-        $data = [];
-        $data['reportName'] = 'apirequests';
-
-        return [
-            'template' => 'apirequests-schedule-form-add',
-            'data' => $data
-        ];
     }
 
     /** @inheritdoc */
@@ -142,13 +118,13 @@ class ApiRequests implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function restructureSavedReportOldJson($json)
+    public function restructureSavedReportOldJson($json): array
     {
         return $json;
     }
 
     /** @inheritdoc */
-    public function getSavedReportResults($json, $savedReport)
+    public function getSavedReportResults($json, $savedReport): ReportResult
     {
         $metadata = [
             'periodStart' => $json['metadata']['periodStart'],
@@ -168,7 +144,7 @@ class ApiRequests implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getResults(SanitizerInterface $sanitizedParams)
+    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false): ReportResult
     {
         if (!$this->getUser()->isSuperAdmin()) {
             throw new AccessDeniedException();
@@ -218,10 +194,8 @@ class ApiRequests implements ReportInterface
         $type = $sanitizedParams->getString('type');
 
         $metadata = [
-            'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))
-                ->format(DateFormatHelper::getSystemFormat()),
-            'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))
-                ->format(DateFormatHelper::getSystemFormat()),
+            'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
+            'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
             'logType' => $type,
         ];
 
@@ -248,11 +222,11 @@ class ApiRequests implements ReportInterface
              `application_requests_history`.startTime,
              `oauth_clients`.name AS applicationName
                 FROM `auditlog`
-                    INNER JOIN `user` 
+                    INNER JOIN `user`
                         ON `user`.`userId` = `auditlog`.`userId`
-                    INNER JOIN `application_requests_history` 
+                    INNER JOIN `application_requests_history`
                         ON `application_requests_history`.`requestId` = `auditlog`.`requestId`
-                    INNER JOIN `oauth_clients` 
+                    INNER JOIN `oauth_clients`
                         ON `oauth_clients`.id = `application_requests_history`.applicationId
              WHERE `auditlog`.logDate BETWEEN :fromDt AND :toDt
              ';
@@ -267,39 +241,28 @@ class ApiRequests implements ReportInterface
                 $params['requestId'] = $sanitizedParams->getInt('requestId');
             }
 
-            // Sorting?
-            $sortOrder = $this->gridRenderSort($sanitizedParams);
-
-            if (is_array($sortOrder)) {
-                $sql .= ' ORDER BY ' . implode(',', $sortOrder);
+            $keyword = $sanitizedParams->getString('keyword');
+            if ($keyword !== null) {
+                $sql .= ' AND (`auditlog`.`message` LIKE :keyword
+                          OR `auditlog`.`entity` LIKE :keyword
+                          OR `user`.`userName` LIKE :keyword
+                          OR `oauth_clients`.`name` LIKE :keyword)';
+                $params['keyword'] = '%' . $keyword . '%';
             }
+
+            $sql .= $this->buildOrderBy('audit', $sanitizedParams, $isJson);
 
             $rows = [];
             foreach ($this->store->select($sql, $params) as $row) {
                 $auditRecord = $this->auditLogFactory->create()->hydrate($row);
-                $auditRecord->setUnmatchedProperty(
-                    'applicationId',
-                    $row['applicationId']
-                );
-
-                $auditRecord->setUnmatchedProperty(
-                    'applicationName',
-                    $row['applicationName']
-                );
-
-                $auditRecord->setUnmatchedProperty(
-                    'url',
-                    $row['url']
-                );
-
-                $auditRecord->setUnmatchedProperty(
-                    'method',
-                    $row['method']
-                );
+                $auditRecord->setUnmatchedProperty('applicationId', $row['applicationId']);
+                $auditRecord->setUnmatchedProperty('applicationName', $row['applicationName']);
+                $auditRecord->setUnmatchedProperty('url', $row['url']);
+                $auditRecord->setUnmatchedProperty('method', $row['method']);
 
                 // decode for grid view, leave as json for email/preview.
                 if (!$sanitizedParams->getCheckbox('scheduledReport')) {
-                    $auditRecord->objectAfter = json_decode($auditRecord->objectAfter);
+                    $auditRecord->objectAfter = json_decode($auditRecord->objectAfter ?? '');
                 }
 
                 $auditRecord->logDate = Carbon::createFromTimestamp($auditRecord->logDate)
@@ -313,7 +276,7 @@ class ApiRequests implements ReportInterface
                 $rows,
                 count($rows),
             );
-        } else if ($type === 'debug') {
+        } elseif ($type === 'debug') {
             $params = [
                 'fromDt' => $fromDt->format(DateFormatHelper::getSystemFormat()),
                 'toDt' => $toDt->format(DateFormatHelper::getSystemFormat()),
@@ -341,7 +304,7 @@ class ApiRequests implements ReportInterface
                         ON `user`.`userId` = `log`.`userId`
                     INNER JOIN `application_requests_history`
                         ON `application_requests_history`.`requestId` = `log`.`requestId`
-                    INNER JOIN `oauth_clients` 
+                    INNER JOIN `oauth_clients`
                         ON `oauth_clients`.id = `application_requests_history`.applicationId
              WHERE `log`.logDate BETWEEN :fromDt AND :toDt
              ';
@@ -356,35 +319,24 @@ class ApiRequests implements ReportInterface
                 $params['requestId'] = $sanitizedParams->getInt('requestId');
             }
 
-            // Sorting?
-            $sortOrder = $this->gridRenderSort($sanitizedParams);
-
-            if (is_array($sortOrder)) {
-                $sql .= ' ORDER BY ' . implode(',', $sortOrder);
+            $keyword = $sanitizedParams->getString('keyword');
+            if ($keyword !== null) {
+                $sql .= ' AND (`log`.`message` LIKE :keyword
+                          OR `log`.`page` LIKE :keyword
+                          OR `user`.`userName` LIKE :keyword
+                          OR `oauth_clients`.`name` LIKE :keyword)';
+                $params['keyword'] = '%' . $keyword . '%';
             }
+
+            $sql .= $this->buildOrderBy('debug', $sanitizedParams, $isJson);
 
             $rows = [];
             foreach ($this->store->select($sql, $params) as $row) {
                 $logRecord = $this->logFactory->createEmpty()->hydrate($row, ['htmlStringProperties' => ['message']]);
-                $logRecord->setUnmatchedProperty(
-                    'applicationId',
-                    $row['applicationId']
-                );
-
-                $logRecord->setUnmatchedProperty(
-                    'applicationName',
-                    $row['applicationName']
-                );
-
-                $logRecord->setUnmatchedProperty(
-                    'url',
-                    $row['url']
-                );
-
-                $logRecord->setUnmatchedProperty(
-                    'method',
-                    $row['method']
-                );
+                $logRecord->setUnmatchedProperty('applicationId', $row['applicationId']);
+                $logRecord->setUnmatchedProperty('applicationName', $row['applicationName']);
+                $logRecord->setUnmatchedProperty('url', $row['url']);
+                $logRecord->setUnmatchedProperty('method', $row['method']);
 
                 $rows[] = $logRecord;
             }
@@ -412,7 +364,7 @@ class ApiRequests implements ReportInterface
                 FROM `application_requests_history`
                     INNER JOIN `user`
                         ON `user`.`userId` = `application_requests_history`.`userId`
-                    INNER JOIN `oauth_clients` 
+                    INNER JOIN `oauth_clients`
                         ON `oauth_clients`.id = `application_requests_history`.applicationId
              WHERE `application_requests_history`.startTime BETWEEN :fromDt AND :toDt
              ';
@@ -422,27 +374,26 @@ class ApiRequests implements ReportInterface
                 $params['userId'] = $sanitizedParams->getInt('userId');
             }
 
-            // Sorting?
-            $sortOrder = $this->gridRenderSort($sanitizedParams);
-
-            if (is_array($sortOrder)) {
-                $sql .= ' ORDER BY ' . implode(',', $sortOrder);
+            $keyword = $sanitizedParams->getString('keyword');
+            if ($keyword !== null) {
+                $sql .= ' AND (`application_requests_history`.`url` LIKE :keyword
+                          OR `oauth_clients`.`name` LIKE :keyword
+                          OR `user`.`userName` LIKE :keyword)';
+                $params['keyword'] = '%' . $keyword . '%';
             }
+
+            $sql .= $this->buildOrderBy('requests', $sanitizedParams, $isJson);
 
             $rows = [];
 
             foreach ($this->store->select($sql, $params) as $row) {
                 $apiRequestRecord = $this->apiRequestsFactory->createEmpty()->hydrate($row);
 
-                $apiRequestRecord->setUnmatchedProperty(
-                    'userName',
-                    $row['userName']
-                );
+                $apiRequestRecord->startTime = Carbon::parse($row['startTime'])
+                    ->format(DateFormatHelper::getSystemFormat());
 
-                $apiRequestRecord->setUnmatchedProperty(
-                    'applicationName',
-                    $row['applicationName']
-                );
+                $apiRequestRecord->setUnmatchedProperty('userName', $row['userName']);
+                $apiRequestRecord->setUnmatchedProperty('applicationName', $row['applicationName']);
 
                 $rows[] = $apiRequestRecord;
             }
@@ -453,5 +404,39 @@ class ApiRequests implements ReportInterface
                 count($rows),
             );
         }
+    }
+
+    private function buildOrderBy(string $type, SanitizerInterface $sanitizedParams, bool $isJson): string
+    {
+        [$defaultSortBy, $allowedColumns, $defaultSort] = match ($type) {
+            'audit' => [
+                'logDate',
+                [
+                    'logId', 'logDate', 'userName', 'message', 'entity', 'entityId',
+                    'userId', 'ipAddress', 'requestId', 'applicationId', 'url', 'method',
+                    'startTime', 'applicationName',
+                ],
+                ['logDate DESC'],
+            ],
+            'debug' => [
+                'logDate',
+                [
+                    'logId', 'logDate', 'runNo', 'channel', 'page', 'function', 'type',
+                    'message', 'userId', 'requestId', 'userName', 'applicationId', 'url',
+                    'method', 'startTime', 'applicationName',
+                ],
+                ['logDate DESC'],
+            ],
+            default => [
+                'startTime',
+                ['applicationId', 'requestId', 'userId', 'url', 'method', 'startTime', 'applicationName', 'userName'],
+                ['startTime DESC'],
+            ],
+        };
+
+        $sortOrder = $this->gridRenderSort($sanitizedParams, $isJson, $defaultSortBy);
+        $order = $this->apiRequestsFactory->buildSortQuery($sortOrder, $allowedColumns, defaultSort: $defaultSort);
+
+        return !empty($order) ? ' ORDER BY ' . implode(', ', $order) : '';
     }
 }

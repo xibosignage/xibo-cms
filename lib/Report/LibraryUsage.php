@@ -1,4 +1,24 @@
 <?php
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 namespace Xibo\Report;
 
@@ -33,64 +53,13 @@ class LibraryUsage implements ReportInterface
 {
     use ReportDefaultTrait, DataTablesDotNetTrait;
 
-    /**
-     * @var DisplayFactory
-     */
-    private $displayFactory;
-
-    /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
-
-    /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
-
-    /**
-     * @var SavedReportFactory
-     */
-    private $savedReportFactory;
-
-    /**
-     * @var UserFactory
-     */
-    private $userFactory;
-
-    /**
-     * @var UserGroupFactory
-     */
-    private $userGroupFactory;
-
-    /**
-     * @var DisplayGroupFactory
-     */
-    private $displayGroupFactory;
-
-    /**
-     * @var ReportServiceInterface
-     */
-    private $reportService;
-
-    /**
-     * @var ConfigServiceInterface
-     */
-    private $configService;
-
-    /**
-     * @var SanitizerService
-     */
-    private $sanitizer;
-
-    /**
-     * @var ApplicationState
-     */
-    private $state;
-    /**
-     * @var EventDispatcherInterface
-     */
-    private $dispatcher;
+    private readonly MediaFactory $mediaFactory;
+    private readonly UserFactory $userFactory;
+    private readonly UserGroupFactory $userGroupFactory;
+    private readonly ReportServiceInterface $reportService;
+    private readonly ConfigServiceInterface $configService;
+    private readonly SanitizerService $sanitizer;
+    private readonly EventDispatcherInterface $dispatcher;
 
     /** @inheritdoc */
     public function setFactories(ContainerInterface $container)
@@ -112,25 +81,19 @@ class LibraryUsage implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportChartScript($results)
+    public function getReportChartScript($results): bool|string
     {
         return json_encode($results->chart);
     }
 
     /** @inheritdoc */
-    public function getReportEmailTemplate()
+    public function getReportEmailTemplate(): string
     {
         return 'libraryusage-email-template.twig';
     }
 
     /** @inheritdoc */
-    public function getSavedReportTemplate()
-    {
-        return 'libraryusage-report-preview';
-    }
-
-    /** @inheritdoc */
-    public function getReportForm()
+    public function getReportForm(): ReportForm
     {
         $data = [];
 
@@ -223,7 +186,6 @@ class LibraryUsage implements ReportInterface
         $data['availableReports'] = $this->reportService->listReports();
 
         return new ReportForm(
-            'libraryusage-report-form',
             'libraryusage',
             'Library',
             $data
@@ -231,24 +193,7 @@ class LibraryUsage implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
-    {
-        $data = [];
-        $data['reportName'] = 'libraryusage';
-        
-        // Note: getReportScheduleFormData is only run by the web UI and therefore the logged-in users permissions
-        // are checked here
-        $data['users'] = $this->userFactory->query();
-        $data['groups'] = $this->userGroupFactory->query();
-
-        return [
-            'template' => 'libraryusage-schedule-form-add',
-            'data' => $data
-        ];
-    }
-
-    /** @inheritdoc */
-    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams)
+    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams): array
     {
         $filter = $sanitizedParams->getString('filter');
 
@@ -286,19 +231,19 @@ class LibraryUsage implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function generateSavedReportName(SanitizerInterface $sanitizedParams)
+    public function generateSavedReportName(SanitizerInterface $sanitizedParams): string
     {
         return sprintf(__('%s library usage report', ucfirst($sanitizedParams->getString('filter'))));
     }
 
     /** @inheritdoc */
-    public function restructureSavedReportOldJson($result)
+    public function restructureSavedReportOldJson($json): array
     {
-        return $result;
+        return $json;
     }
 
     /** @inheritdoc */
-    public function getSavedReportResults($json, $savedReport)
+    public function getSavedReportResults($json, $savedReport): ReportResult
     {
         $metadata = [
             'periodStart' => $json['metadata']['periodStart'],
@@ -318,7 +263,7 @@ class LibraryUsage implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getResults(SanitizerInterface $sanitizedParams)
+    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false): ReportResult
     {
         $filter = [
             'userId' => $sanitizedParams->getInt('userId'),

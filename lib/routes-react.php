@@ -109,6 +109,29 @@ $app->group('', function (RouteCollectorProxy $group) {
 })->add(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.playlist']));
 
 //
+// notification
+//
+$app->get('/notification/mynotifications', ['\Xibo\Controller\Notification', 'myNotifications'])
+    ->setName('notification.mynotifications');
+$app->get('/notification/interrupt', ['\Xibo\Controller\Notification', 'getInterrupt'])
+    ->setName('notification.interrupt.list');
+$app->put('/notification/markAsRead', ['\Xibo\Controller\Notification', 'markAsRead'])
+    ->setName('notification.markAsRead');
+$app->get('/notification/export/{id}', ['\Xibo\Controller\Notification', 'exportAttachment'])
+    ->setName('notification.exportattachment');
+
+//
+// Reports
+//
+$app->get('/report/available', ['\Xibo\Controller\Stats', 'availableReports'])
+    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['report.view']))
+    ->setName('report.available');
+
+$app->get('/stats/export/count', ['\Xibo\Controller\Stats', 'exportStatsCount'])
+    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['proof-of-play']))
+    ->setName('stats.export.count');
+
+//
 // Developer
 //
 $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {

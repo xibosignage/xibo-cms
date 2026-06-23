@@ -334,7 +334,9 @@ describe('Campaigns page - grid rendering', () => {
     expect(editButtons.length).toBeGreaterThan(0);
   });
 
-  test('Edit action is NOT present for an ad campaign', async () => {
+  test('Edit action IS present for an ad campaign (opens the full-page editor)', async () => {
+    // Ad campaigns are edited in the dedicated /design/campaign/:id editor, but the
+    // Edit action is still surfaced in the grid (quick-action + dropdown).
     mockCampaignData(SINGLE_AD_CAMPAIGN);
     await act(async () => {
       renderPage();
@@ -344,7 +346,8 @@ describe('Campaigns page - grid rendering', () => {
     fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
 
     await screen.findByRole('button', { name: 'Make a Copy' });
-    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+    const editButtons = await screen.findAllByRole('button', { name: 'Edit' });
+    expect(editButtons.length).toBeGreaterThan(0);
   });
 
   // ---------------------------------------------------------------------------

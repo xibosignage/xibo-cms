@@ -61,19 +61,26 @@ export default function SidebarMenu({
   useEffect(() => {
     // Find the parent menu that contains the active link
     const activeParent = visibleRoutes.find((route) => {
-      return route.subLinks?.some((sub) => {
-        // Check if an external URL
-        if (sub.externalURL) {
-          return (
-            location.pathname === sub.externalURL ||
-            location.pathname.startsWith(`${sub.externalURL}/`)
-          );
-        }
+      if (!route.subLinks?.length) {
+        return false;
+      }
 
-        // React route
-        const fullPath = `/${route.path}/${sub.path}`;
-        return location.pathname === fullPath || location.pathname.startsWith(`${fullPath}/`);
-      });
+      // Any route under this parent's path keeps it open, including child pages that are
+      // hidden from the menu (hideFromMenu, e.g. individual report pages).
+      if (
+        location.pathname === `/${route.path}` ||
+        location.pathname.startsWith(`/${route.path}/`)
+      ) {
+        return true;
+      }
+
+      // External-URL sublinks live outside the parent path, so match them directly.
+      return route.subLinks.some(
+        (sub) =>
+          sub.externalURL &&
+          (location.pathname === sub.externalURL ||
+            location.pathname.startsWith(`${sub.externalURL}/`)),
+      );
     });
 
     // If we found a matching parent, expand it

@@ -33,16 +33,17 @@ export interface Playlist {
   valid: boolean;
   tags: Tag[];
   duration: number;
+  requiresDurationUpdate?: number;
   enableStat: string;
   retired: boolean;
   expires: number;
   updateInLayouts: boolean;
-  isDynamic: boolean;
+  isDynamic: boolean | number;
   filterMediaName: string;
-  logicalOperatorName: 'OR' | 'AND';
-  filterMediaTag: Tag[];
-  exactTags: boolean;
-  logicalOperator: 'OR' | 'AND';
+  filterMediaNameLogicalOperator?: 'OR' | 'AND';
+  filterMediaTags?: string;
+  filterExactTags?: number;
+  filterMediaTagsLogicalOperator?: 'OR' | 'AND';
   filterFolderId: number | null;
   maxNumberOfItems: number;
 }

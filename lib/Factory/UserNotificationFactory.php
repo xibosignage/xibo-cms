@@ -39,7 +39,7 @@ class UserNotificationFactory extends BaseFactory
      * @param User $user
      * @param UserFactory $userFactory
      */
-    public function __construct(User $user, $userFactory)
+    public function __construct(User $user, UserFactory $userFactory)
     {
         $this->setAclDependencies($user, $userFactory);
     }
@@ -87,6 +87,15 @@ class UserNotificationFactory extends BaseFactory
         }
 
         return $notifications[0];
+    }
+
+    /**
+     * Mark all unread notifications as read for the current user in a single bulk UPDATE.
+     * @param int $readDt Unix timestamp
+     */
+    public function markAllAsRead(int $readDt): void
+    {
+        $this->createEmpty()->markAllAsRead($this->getUser()->userId, $readDt);
     }
 
     /**
@@ -168,28 +177,31 @@ class UserNotificationFactory extends BaseFactory
 
         // Scope the join to the requesting user so that other users' lknotificationuser rows
         // are not inadvertently returned when the creator condition (notification.userId) also matches.
-        if ($parsedBody->getInt('userId') !== null) {
+        if ($parsedBody->getInt('audienceId') === null && $parsedBody->getInt('userId') !== null) {
             $body .= ' AND `lknotificationuser`.userId = :userId';
-            $params['userId'] = $parsedBody->getInt('userId');
         }
 
         $body .= '
                 LEFT OUTER JOIN `user`
                     ON `user`.userId = `lknotificationuser`.userId
-         ';
+                 WHERE `notification`.releaseDt < :now ';
 
-        $body .= ' WHERE `notification`.releaseDt < :now ';
+        if ($parsedBody->getInt('audienceId') !== null) {
+            $body .= ' AND `lknotificationuser`.userId = :audienceId ';
+            $params['audienceId'] = $parsedBody->getInt('audienceId');
+        } elseif ($parsedBody->getInt('userId') !== null) {
+            $body .= ' AND (`lknotificationuser`.userId = :userId OR `notification`.userId = :userId) ';
+            $params['userId'] = $parsedBody->getInt('userId');
+        }
 
         if ($parsedBody->getInt('notificationId') !== null) {
             $body .= ' AND `notification`.notificationId = :notificationId ';
             $params['notificationId'] = $parsedBody->getInt('notificationId');
         }
 
-        if ($parsedBody->getInt('userId') !== null) {
-            // lknotificationuser.notificationId IS NOT NULL means the scoped join succeeded
-            // (the user has a real user-notification record). The OR covers the creator case.
-            $body .= ' AND (`lknotificationuser`.notificationId IS NOT NULL OR `notification`.userId = :userId2) ';
-            $params['userId2'] = $parsedBody->getInt('userId');
+        if ($parsedBody->getInt('isInterrupt') !== null) {
+            $body .= ' AND `notification`.isInterrupt = :isInterrupt ';
+            $params['isInterrupt'] = $parsedBody->getInt('isInterrupt');
         }
 
         if ($parsedBody->getInt('read') !== null) {
@@ -224,7 +236,9 @@ class UserNotificationFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row);
+            $entries[] = $this->createEmpty()->hydrate($row, [
+                'intProperties' => ['read', 'isInterrupt', 'isSystem'],
+            ]);
         }
 
         // Paging
