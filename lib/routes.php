@@ -68,16 +68,17 @@ $app->group('', function (RouteCollectorProxy $group) {
  * Notification
  */
 $app->get('/notification', ['\Xibo\Controller\Notification','grid'])->setName('notification.search');
+$app->get('/notification/{id}', ['\Xibo\Controller\Notification', 'searchById'])->setName('notification.search.id');
 
 $app->post('/notification', ['\Xibo\Controller\Notification','add'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['notification.add']))
     ->setName('notification.add');
 
-$app->group('', function(RouteCollectorProxy $group) {
-    //$app->map(['HEAD'], '/notification/attachment', ['\Xibo\Controller\Notification','addAttachment']);
-    $group->post('/notification/attachment', ['\Xibo\Controller\Notification', 'addAttachment'])
-        ->setName('notification.addattachment');
+$app->post('/notification/attachment', ['\Xibo\Controller\Notification', 'addAttachment'])
+    ->addMiddleware(new FeatureAuth($app->getContainer(), ['notification.add', 'notification.modify']))
+    ->setName('notification.addattachment');
 
+$app->group('', function(RouteCollectorProxy $group) {
     $group->put('/notification/{id}', ['\Xibo\Controller\Notification', 'edit'])->setName('notification.edit');
     $group->delete('/notification/{id}', ['\Xibo\Controller\Notification', 'delete'])->setName('notification.delete');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['notification.modify']));

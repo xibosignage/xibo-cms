@@ -47,22 +47,6 @@ $app->get('/login/ping', ['\Xibo\Controller\Login','PingPong'])->setName('ping')
 //
 $app->get('/drawer/notification/show/{id}', ['\Xibo\Controller\Notification','show'])->setName('notification.show');
 $app->get('/drawer/notification/interrupt/{id}', ['\Xibo\Controller\Notification','interrupt'])->setName('notification.interrupt');
-$app->get('/notification/export/{id}', ['\Xibo\Controller\Notification','exportAttachment'])->setName('notification.exportattachment');
-
-$app->get('/notification/view', ['\Xibo\Controller\Notification','displayPage'])
-    ->add(new FeatureAuth($app->getContainer(), ['notification.centre']))
-    ->setName('notification.view');
-
-$app->get('/notification/form/add', ['\Xibo\Controller\Notification', 'addForm'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['notification.add']))
-    ->setName('notification.add.form');
-
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/notification/form/edit/{id}', ['\Xibo\Controller\Notification', 'editForm'])
-        ->setName('notification.edit.form');
-    $group->get('/notification/form/delete/{id}', ['\Xibo\Controller\Notification', 'deleteForm'])
-        ->setName('notification.delete.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['notification.modify']));
 
 //
 // layouts

@@ -199,4 +199,23 @@ class UserNotification implements \JsonSerializable
             default => 'isCustomNotification',
         };
     }
+
+    /**
+     * Mark all unread notifications as read for the given user in a single bulk UPDATE.
+     * @param int $userId
+     * @param int $readDt Unix timestamp
+     */
+    public function markAllAsRead(int $userId, int $readDt): void
+    {
+        $this->getStore()->update('
+            UPDATE `lknotificationuser`
+               SET `read` = 1,
+                   `readDt` = :readDt
+             WHERE `userId` = :userId
+               AND `read` = 0
+        ', [
+            'readDt' => $readDt,
+            'userId' => $userId,
+        ]);
+    }
 }

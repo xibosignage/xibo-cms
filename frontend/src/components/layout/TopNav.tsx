@@ -19,10 +19,11 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { Bell, Menu } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { matchPath } from 'react-router-dom';
 
+import NotificationDropdown from './NotificationDropdown';
 import UserMenu from './UserMenu/UserMenu';
 
 import { APP_ROUTES } from '@/config/appRoutes';
@@ -72,14 +73,8 @@ export default function TopNav({ pathName, onToggleMobileDrawer: onToggleSidebar
           <div className="flex align-middle font-semibold text-[16px]">{t(pageTitle)}</div>
         </div>
         <div className="center gap-x-2">
-          <div className="center gap-x-3 relative h-9.5 w-9.5">
-            <button>
-              <Bell size={16} className="text-xibo-blue-600" />
-            </button>
-            {/* TODO: Update real badge data */}
-            <div className="w-4.5 h-4.5 bg-xibo-blue-600 rounded-full text-[10px] text-white absolute top-0 right-0 flex items-center justify-center">
-              2
-            </div>
+          <div className="h-9.5 w-9.5 center flex">
+            <NotificationDropdown />
           </div>
           <div className="h-9.5 w-9.5 center flex">
             <UserMenu />
