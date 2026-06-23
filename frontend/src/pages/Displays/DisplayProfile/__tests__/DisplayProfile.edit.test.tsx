@@ -23,12 +23,9 @@ import { screen, fireEvent, act } from '@testing-library/react';
 import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-import {
-  SINGLE_DISPLAY_PROFILE,
-  mockDisplayProfile,
-  mockFetchDisplayProfile,
-  renderDisplayProfilePage,
-} from './displayProfileTestUtils';
+import { SINGLE_DISPLAY_PROFILE, mockDisplayProfile } from './fixtures/displayProfile';
+import { renderDisplayProfilePage } from './helpers/renderDisplayProfilePage';
+import { mockFetchDisplayProfile } from './mocks/displayProfileApi';
 
 import { fetchDisplayProfile } from '@/services/displayProfileApi';
 import { testQueryClient } from '@/setupTests';
@@ -45,9 +42,6 @@ vi.mock('@/services/userApi', () => ({
 }));
 vi.mock('@/components/ui/modals/Modal');
 
-// EditDisplayProfileModal stub — replaces the real form with a minimal dialog.
-// These tests only check that the page opens the modal and updates the table
-// row on save. For form field tests see DisplayProfile.edit.form.test.tsx.
 vi.mock('../components/EditDisplayProfileModal', () => ({
   default: ({
     isOpen = true,
@@ -76,6 +70,10 @@ const updatedProfile = { ...mockDisplayProfile, name: 'Android Profile - Edited'
 // =============================================================================
 // Tests
 // =============================================================================
+
+// Full-page render + interaction can exceed the 5s default under parallel
+// JSDOM contention (each test still runs in ~1s in isolation).
+vi.setConfig({ testTimeout: 20_000 });
 
 describe('DisplayProfile page - edit', () => {
   beforeEach(() => {
