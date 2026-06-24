@@ -325,7 +325,9 @@ describe('Reset Behavior', () => {
       const args = vi.mocked(useMediaData).mock.calls.slice(-1)[0]?.[0];
       expect(args?.advancedFilters?.mediaId).toBeNull();
     });
-  });
+    // Bumped from the 5s default: involves openFilterPanel + fake/real timer
+    // switching + two waitFor calls; races on JSDOM under the full parallel suite.
+  }, 20_000);
 
   // S14
   test('clicking Reset resets pagination to page 0', async () => {
