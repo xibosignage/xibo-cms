@@ -122,6 +122,18 @@ class Notification implements \JsonSerializable
     #[OA\Property(description: 'Display Groups associated with this notification')]
     public $displayGroups = [];
 
+    /**
+     * @var bool
+     */
+    #[OA\Property(description: 'Flag indicating whether the current user can edit this notification')]
+    public $canEdit = false;
+
+    /**
+     * @var bool
+     */
+    #[OA\Property(description: 'Flag indicating whether the current user can delete this notification')]
+    public $canDelete = false;
+
     /** @var  UserGroupFactory */
     private $userGroupFactory;
 

@@ -142,7 +142,7 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
       { group: 'Library', name: 'Media', href: '/library/media' }, // React Router
       { group: 'Displays', name: 'Commands', href: '/displays/commands' }, // React Router
       { group: 'Administration', name: 'Tags', href: '/administration/tags' }, // React Router
-      { group: 'Reporting', name: 'All Reports', href: '/report/view' }, // external
+      { group: 'Reporting', name: 'All Reports', href: '/reporting/all-reports' }, // React Router
       { group: 'Advanced', name: 'Sessions', href: '/advanced/sessions' }, // React Router
     ];
 
@@ -173,7 +173,10 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
       'href',
       '/administration/settings',
     );
-  });
+    // Heavy synchronous test: renders the full sidebar then clicks through 7 menu
+    // groups, re-rendering and re-querying the whole DOM each time (~2.5s in isolation).
+    // The 5s default flakes under parallel-suite JSDOM/CPU contention, so bump it.
+  }, 20_000);
 
   it('should try to close when the hamburger button is clicked', () => {
     render(

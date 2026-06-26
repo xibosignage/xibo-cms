@@ -6,9 +6,21 @@ import { beforeAll, vi } from 'vitest';
 // Some shared UI components (e.g. FilterInputs) import `t` directly from
 // 'i18next' rather than via useTranslation. Without this mock the function
 // returns undefined in tests (i18next is not initialised).
+// The mock is also chainable (use/init) and exposes the runtime language methods so
+// that importing src/lib/i18n.ts (now reachable via Settings.tsx) doesn't blow up.
 vi.mock('i18next', () => {
   const t = (key: string) => key;
-  return { default: { t, language: 'en', isInitialized: true }, t };
+  const i18n = {
+    t,
+    language: 'en',
+    isInitialized: true,
+    use: () => i18n,
+    init: () => Promise.resolve(t),
+    hasResourceBundle: () => true,
+    addResourceBundle: () => i18n,
+    changeLanguage: () => Promise.resolve(t),
+  };
+  return { default: i18n, t };
 });
 
 interface SystemError extends Error {
@@ -22,6 +34,7 @@ interface SystemError extends Error {
 global.fetch = vi.fn().mockResolvedValue({
   ok: true,
   json: async () => ({}),
+  text: async () => '{}',
 });
 
 // -------------------

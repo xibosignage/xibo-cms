@@ -282,6 +282,7 @@ type FilterInputsProps<T> = {
   options: FilterConfigItem<T>[];
   onChange: (name: keyof T & string, value: FilterValue) => void;
   onReset?: () => void;
+  onApply?: () => void;
 };
 
 export default function FilterInputs<T>({
@@ -290,6 +291,7 @@ export default function FilterInputs<T>({
   values,
   onChange,
   onReset,
+  onApply,
 }: FilterInputsProps<T>) {
   const { t } = useTranslation();
   return (
@@ -304,7 +306,7 @@ export default function FilterInputs<T>({
         }
       `}
     >
-      <div className="relative bg-slate-50 p-5 pt-7 grid grid-cols-[repeat(auto-fit,minmax(15rem,1fr))] gap-4 items-end">
+      <div className="relative bg-slate-50 p-5 pt-7 flex flex-col gap-4">
         {onReset && (
           <Button
             variant="tertiary"
@@ -314,183 +316,192 @@ export default function FilterInputs<T>({
             {t('Reset')}
           </Button>
         )}
-        {options.map((filter) => {
-          const filterType = filter.type || 'select';
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(15rem,1fr))] gap-4 items-end">
+          {options.map((filter) => {
+            const filterType = filter.type || 'select';
 
-          if (filterType === 'text' || filterType === 'number') {
-            const hasControls = filterType === 'text' && (filter.showAndOr || filter.showRegex);
+            if (filterType === 'text' || filterType === 'number') {
+              const hasControls = filterType === 'text' && (filter.showAndOr || filter.showRegex);
 
-            if (hasControls) {
+              if (hasControls) {
+                return (
+                  <DebouncedTextWithControls
+                    key={filter.name}
+                    name={filter.name}
+                    label={filter.label}
+                    placeholder={filter.placeholder}
+                    externalValue={values[filter.name] as string}
+                    onChange={(name, val) => onChange(name as keyof T & string, val)}
+                    showAndOr={filter.showAndOr}
+                    andOr={
+                      filter.andOrKey ? ((values[filter.andOrKey] as 'AND' | 'OR') ?? 'OR') : 'OR'
+                    }
+                    onAndOrChange={(val) => {
+                      if (filter.andOrKey) {
+                        onChange(filter.andOrKey, val);
+                      }
+                    }}
+                    showRegex={filter.showRegex}
+                    isRegex={
+                      filter.regexKey ? ((values[filter.regexKey] as boolean) ?? false) : false
+                    }
+                    onRegexChange={(val) => {
+                      if (filter.regexKey) {
+                        onChange(filter.regexKey, val);
+                      }
+                    }}
+                  />
+                );
+              }
+
               return (
-                <DebouncedTextWithControls
+                <DebouncedInputFilter
                   key={filter.name}
-                  name={filter.name}
                   label={filter.label}
                   placeholder={filter.placeholder}
-                  externalValue={values[filter.name] as string}
+                  name={filter.name}
+                  type={filterType}
+                  externalValue={values[filter.name] as string | number}
                   onChange={(name, val) => onChange(name as keyof T & string, val)}
-                  showAndOr={filter.showAndOr}
-                  andOr={
-                    filter.andOrKey ? ((values[filter.andOrKey] as 'AND' | 'OR') ?? 'OR') : 'OR'
-                  }
-                  onAndOrChange={(val) => {
-                    if (filter.andOrKey) {
-                      onChange(filter.andOrKey, val);
-                    }
-                  }}
-                  showRegex={filter.showRegex}
-                  isRegex={
-                    filter.regexKey ? ((values[filter.regexKey] as boolean) ?? false) : false
-                  }
-                  onRegexChange={(val) => {
-                    if (filter.regexKey) {
-                      onChange(filter.regexKey, val);
-                    }
-                  }}
+                  className={filter.className}
                 />
               );
             }
 
-            return (
-              <DebouncedInputFilter
-                key={filter.name}
-                label={filter.label}
-                placeholder={filter.placeholder}
-                name={filter.name}
-                type={filterType}
-                externalValue={values[filter.name] as string | number}
-                onChange={(name, val) => onChange(name as keyof T & string, val)}
-                className={filter.className}
-              />
-            );
-          }
+            if (filterType === 'tags') {
+              const andOr = filter.andOrKey
+                ? ((values[filter.andOrKey] as 'AND' | 'OR') ?? 'OR')
+                : 'OR';
+              const exactTags = filter.exactTagsKey
+                ? ((values[filter.exactTagsKey] as boolean) ?? false)
+                : false;
 
-          if (filterType === 'tags') {
-            const andOr = filter.andOrKey
-              ? ((values[filter.andOrKey] as 'AND' | 'OR') ?? 'OR')
-              : 'OR';
-            const exactTags = filter.exactTagsKey
-              ? ((values[filter.exactTagsKey] as boolean) ?? false)
-              : false;
+              const prefix = filter.showAndOr ? (
+                <AndOrButton
+                  value={andOr}
+                  onChange={(val) => filter.andOrKey && onChange(filter.andOrKey, val)}
+                />
+              ) : undefined;
 
-            const prefix = filter.showAndOr ? (
-              <AndOrButton
-                value={andOr}
-                onChange={(val) => filter.andOrKey && onChange(filter.andOrKey, val)}
-              />
-            ) : undefined;
+              const suffix = filter.showExactTags ? (
+                <div
+                  className="px-3 py-2 flex items-center cursor-pointer justify-center"
+                  onClick={() => filter.exactTagsKey && onChange(filter.exactTagsKey, !exactTags)}
+                  title={t('Match exact characters only')}
+                >
+                  <Button
+                    variant="tertiary"
+                    leftIcon={Equal}
+                    className={twMerge(
+                      'p-1.5',
+                      exactTags
+                        ? 'bg-xibo-blue-600 text-white hover:bg-xibo-blue-700 hover:text-white'
+                        : 'text-xibo-blue-600 hover:text-xibo-blue-800',
+                    )}
+                  ></Button>
+                </div>
+              ) : undefined;
 
-            const suffix = filter.showExactTags ? (
-              <div
-                className="px-3 py-2 flex items-center cursor-pointer justify-center"
-                onClick={() => filter.exactTagsKey && onChange(filter.exactTagsKey, !exactTags)}
-                title={t('Match exact characters only')}
-              >
-                <Button
-                  variant="tertiary"
-                  leftIcon={Equal}
-                  className={twMerge(
-                    'p-1.5',
-                    exactTags
-                      ? 'bg-xibo-blue-600 text-white hover:bg-xibo-blue-700 hover:text-white'
-                      : 'text-xibo-blue-600 hover:text-xibo-blue-800',
-                  )}
-                ></Button>
-              </div>
-            ) : undefined;
+              return (
+                <TagInput
+                  key={filter.name}
+                  label={filter.label}
+                  value={(values[filter.name] as Tag[]) || []}
+                  onChange={(tags) => onChange(filter.name, tags)}
+                  className={filter.className}
+                  placeholder={filter.placeholder}
+                  prefix={prefix}
+                  suffix={suffix}
+                />
+              );
+            }
 
-            return (
-              <TagInput
-                key={filter.name}
-                label={filter.label}
-                value={(values[filter.name] as Tag[]) || []}
-                onChange={(tags) => onChange(filter.name, tags)}
-                className={filter.className}
-                placeholder={filter.placeholder}
-                prefix={prefix}
-                suffix={suffix}
-              />
-            );
-          }
+            if (filterType === 'date') {
+              return (
+                <DateFilter
+                  key={filter.name}
+                  label={filter.label}
+                  name={filter.name}
+                  value={(values[filter.name] as string) ?? ''}
+                  onChange={(name, val) => onChange(name as keyof T & string, val)}
+                  isJalali={filter.isJalali}
+                  className={filter.className}
+                />
+              );
+            }
 
-          if (filterType === 'date') {
-            return (
-              <DateFilter
-                key={filter.name}
-                label={filter.label}
-                name={filter.name}
-                value={(values[filter.name] as string) ?? ''}
-                onChange={(name, val) => onChange(name as keyof T & string, val)}
-                isJalali={filter.isJalali}
-                className={filter.className}
-              />
-            );
-          }
+            if (filterType === 'date-range') {
+              return (
+                <DateRangeFilter
+                  key={filter.name}
+                  label={filter.label}
+                  name={filter.name}
+                  value={(values[filter.name] as string) ?? ''}
+                  options={filter.options ?? []}
+                  onChange={(name, val) => onChange(name as keyof T & string, val)}
+                  isJalali={filter.isJalali}
+                  className={filter.className}
+                />
+              );
+            }
 
-          if (filterType === 'date-range') {
-            return (
-              <DateRangeFilter
-                key={filter.name}
-                label={filter.label}
-                name={filter.name}
-                value={(values[filter.name] as string) ?? ''}
-                options={filter.options ?? []}
-                onChange={(name, val) => onChange(name as keyof T & string, val)}
-                isJalali={filter.isJalali}
-                className={filter.className}
-              />
-            );
-          }
+            const allOpts = filter.options ?? [];
+            const clearOpt = allOpts.find((o) => o.value === null || o.value === '');
+            const realOpts = allOpts.filter((o) => o.value !== null && o.value !== '');
+            const placeholder = clearOpt?.label ?? filter.placeholder ?? t('All');
 
-          const allOpts = filter.options ?? [];
-          const clearOpt = allOpts.find((o) => o.value === null || o.value === '');
-          const realOpts = allOpts.filter((o) => o.value !== null && o.value !== '');
-          const placeholder = clearOpt?.label ?? filter.placeholder ?? t('All');
+            const selectOptions: SelectOption[] = realOpts.map((o) => ({
+              label: o.label,
+              value: String(o.value),
+            }));
 
-          const selectOptions: SelectOption[] = realOpts.map((o) => ({
-            label: o.label,
-            value: String(o.value),
-          }));
+            const raw = values[filter.name];
+            const currentStr = raw != null && raw !== '' ? String(raw) : '';
 
-          const raw = values[filter.name];
-          const currentStr = raw != null && raw !== '' ? String(raw) : '';
+            const sharedProps = {
+              label: filter.label,
+              value: currentStr,
+              initialLabel: filter.initialLabel,
+              resolveLabel: filter.resolveLabel,
+              options: selectOptions,
+              searchable: true as const,
+              clearable: true as const,
+              placeholder,
+              onSelect: (val: string) => {
+                if (!val) {
+                  onChange(filter.name, null);
+                } else {
+                  const orig = realOpts.find((o) => String(o.value) === val);
+                  onChange(filter.name, orig !== undefined ? orig.value : val);
+                }
+              },
+              isLoading: filter.isLoading,
+              className: `w-full md:w-auto md:flex-1 min-w-0 ${filter.className ?? ''}`,
+            };
 
-          const sharedProps = {
-            label: filter.label,
-            value: currentStr,
-            initialLabel: filter.initialLabel,
-            resolveLabel: filter.resolveLabel,
-            options: selectOptions,
-            searchable: true as const,
-            clearable: true as const,
-            placeholder,
-            onSelect: (val: string) => {
-              if (!val) {
-                onChange(filter.name, null);
-              } else {
-                const orig = realOpts.find((o) => String(o.value) === val);
-                onChange(filter.name, orig !== undefined ? orig.value : val);
-              }
-            },
-            isLoading: filter.isLoading,
-            className: `w-full md:w-auto md:flex-1 min-w-0 ${filter.className ?? ''}`,
-          };
+            if (filter.onLoadMore && filter.onSearch) {
+              return (
+                <SelectDropdown
+                  key={filter.name}
+                  {...sharedProps}
+                  onLoadMore={filter.onLoadMore}
+                  hasMore={filter.hasMore ?? false}
+                  isLoadingMore={filter.isLoadingMore ?? false}
+                  onSearch={filter.onSearch}
+                />
+              );
+            }
 
-          if (filter.onLoadMore && filter.onSearch) {
-            return (
-              <SelectDropdown
-                key={filter.name}
-                {...sharedProps}
-                onLoadMore={filter.onLoadMore}
-                hasMore={filter.hasMore ?? false}
-                isLoadingMore={filter.isLoadingMore ?? false}
-                onSearch={filter.onSearch}
-              />
-            );
-          }
-
-          return <SelectDropdown key={filter.name} {...sharedProps} onSearch={filter.onSearch} />;
-        })}
+            return <SelectDropdown key={filter.name} {...sharedProps} onSearch={filter.onSearch} />;
+          })}
+        </div>
+        {onApply && (
+          <div className="flex justify-end">
+            <Button variant="secondary" className="font-semibold h-11.25" onClick={onApply}>
+              {t('Apply Filter')}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

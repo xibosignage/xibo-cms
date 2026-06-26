@@ -45,6 +45,7 @@ import { notify } from '@/components/ui/Notification';
 import TabNav from '@/components/ui/TabNav';
 import type { TabNavItem } from '@/components/ui/TabNav';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
+import { reloadAppLanguage } from '@/lib/i18n';
 import { updateSettings } from '@/services/settingsApi';
 
 export default function Settings() {
@@ -71,6 +72,7 @@ export default function Settings() {
         await updateSettings(formValues);
         notify.success(t('Settings Updated'));
         queryClient.invalidateQueries({ queryKey: settingsQueryKeys.all });
+        await reloadAppLanguage();
       } catch (err: unknown) {
         const message =
           (isAxiosError(err) && err.response?.data?.message) ||

@@ -416,7 +416,7 @@ export default function Events() {
           </div>
         )}
 
-        <div className="min-h-0 flex flex-col flex-1">
+        <div className={`min-h-0 flex flex-col ${viewMode === 'calendar' && 'flex-1'}`}>
           {!isHydrated ? (
             <div className="flex-1 flex items-center justify-center bg-gray-50 animate-pulse rounded-lg border border-gray-200">
               <span className="text-gray-400 font-medium">

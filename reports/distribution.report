@@ -1,14 +1,14 @@
 {
   "name": "distributionReport",
-  "description": "Chart: Distribution by Layout, Media or Event",
+  "description": "Distribution by Layout, Media or Event",
   "class": "\\Xibo\\Report\\DistributionReport",
   "type": "Chart",
   "output_type": "both",
-  "color":"green",
-  "fa_icon": "fa-bar-chart",
+  "lucide_icon": "FileBarChart2",
   "sort_order": 3,
   "hidden": 0,
   "category": "Proof of Play",
   "feature": "proof-of-play",
-  "adminOnly": 0
+  "adminOnly": 0,
+  "prototype_url": "/prototype/reporting/distribution"
 }

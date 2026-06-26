@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -48,39 +48,15 @@ class SummaryReport implements ReportInterface
     use ReportDefaultTrait;
     use SummaryDistributionCommonTrait;
 
-    /**
-     * @var DisplayFactory
-     */
-    private $displayFactory;
+    private readonly DisplayFactory $displayFactory;
+    private readonly MediaFactory $mediaFactory;
+    private readonly LayoutFactory $layoutFactory;
+    private readonly ReportServiceInterface $reportService;
+    private readonly SanitizerService $sanitizer;
 
-    /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
+    private string $table = 'stat';
 
-    /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
-
-    /**
-     * @var SavedReportFactory
-     */
-    private $savedReportFactory;
-
-    /**
-     * @var ReportServiceInterface
-     */
-    private $reportService;
-
-    /**
-     * @var SanitizerService
-     */
-    private $sanitizer;
-
-    private $table = 'stat';
-
-    private $periodTable = 'period';
+    private string $periodTable = 'period';
 
     /** @inheritDoc */
     public function setFactories(ContainerInterface $container)
@@ -95,28 +71,21 @@ class SummaryReport implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportChartScript($results)
+    public function getReportChartScript($results): bool|string
     {
         return json_encode($results->chart);
     }
 
     /** @inheritdoc */
-    public function getReportEmailTemplate()
+    public function getReportEmailTemplate(): string
     {
         return 'summary-email-template.twig';
     }
 
     /** @inheritdoc */
-    public function getSavedReportTemplate()
-    {
-        return 'summary-report-preview';
-    }
-
-    /** @inheritdoc */
-    public function getReportForm()
+    public function getReportForm(): ReportForm
     {
         return new ReportForm(
-            'summary-report-form',
             'summaryReport',
             'Proof of Play',
             [
@@ -128,35 +97,7 @@ class SummaryReport implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
-    {
-        $type = $sanitizedParams->getString('type');
-        $formParams = $this->getReportScheduleFormTitle($sanitizedParams);
-
-        $data = ['filters' => []];
-        $data['filters'][] = ['name'=> 'Daily', 'filter'=> 'daily'];
-        $data['filters'][] = ['name'=> 'Weekly', 'filter'=> 'weekly'];
-        $data['filters'][] = ['name'=> 'Monthly', 'filter'=> 'monthly'];
-        $data['filters'][] = ['name'=> 'Yearly', 'filter'=> 'yearly'];
-
-        $data['formTitle'] = $formParams['title'];
-
-        $data['hiddenFields'] = json_encode([
-            'type' => $type,
-            'selectedId' => $formParams['selectedId'],
-            'eventTag' => $eventTag ?? null
-        ]);
-
-        $data['reportName'] = 'summaryReport';
-
-        return [
-            'template' => 'summary-report-schedule-form-add',
-            'data' => $data
-        ];
-    }
-
-    /** @inheritdoc */
-    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams)
+    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams): array
     {
         $filter = $sanitizedParams->getString('filter');
         $displayId = $sanitizedParams->getInt('displayId');
@@ -212,7 +153,7 @@ class SummaryReport implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function generateSavedReportName(SanitizerInterface $sanitizedParams)
+    public function generateSavedReportName(SanitizerInterface $sanitizedParams): string
     {
         $type = $sanitizedParams->getString('type');
         $filter = $sanitizedParams->getString('filter');
@@ -243,11 +184,13 @@ class SummaryReport implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getSavedReportResults($json, $savedReport)
+    public function getSavedReportResults($json, $savedReport): ReportResult
     {
         $metadata = [
             'periodStart' => $json['metadata']['periodStart'],
             'periodEnd' => $json['metadata']['periodEnd'],
+            'type' => $json['metadata']['type'] ?? '',
+            'subject' => $json['metadata']['subject'] ?? '',
             'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
                 ->format(DateFormatHelper::getSystemFormat()),
             'title' => $savedReport->saveAs,
@@ -263,7 +206,7 @@ class SummaryReport implements ReportInterface
     }
 
     /** @inheritDoc */
-    public function getResults(SanitizerInterface $sanitizedParams)
+    public function getResults(SanitizerInterface $sanitizedParams, bool $isJson = false): ReportResult
     {
         $type = strtolower($sanitizedParams->getString('type'));
         $layoutId = $sanitizedParams->getInt('layoutId');
@@ -490,9 +433,25 @@ class SummaryReport implements ReportInterface
             ]
         ];
 
+        // Resolve a human-readable subject (e.g. the Layout name) for the chosen type
+        $subject = '';
+        try {
+            if ($type === 'layout' && !empty($layoutId)) {
+                $subject = $this->layoutFactory->getById($layoutId)->layout;
+            } elseif ($type === 'media' && !empty($mediaId)) {
+                $subject = $this->mediaFactory->getById($mediaId)->name;
+            } elseif ($type === 'event') {
+                $subject = $eventTag;
+            }
+        } catch (NotFoundException $e) {
+            $subject = '';
+        }
+
         $metadata =   [
             'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
             'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
+            'type' => $type,
+            'subject' => $subject,
         ];
 
         // Total records

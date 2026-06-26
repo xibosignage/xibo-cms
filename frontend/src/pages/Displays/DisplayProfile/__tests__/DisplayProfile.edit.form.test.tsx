@@ -25,7 +25,7 @@ import type React from 'react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import DisplayProfileBaseForm from './DisplayProfileBaseForm.test-helper';
-import { mockDisplayProfile } from './displayProfileTestUtils';
+import { mockDisplayProfile } from './fixtures/displayProfile';
 
 import { fetchDisplayProfileById, updateDisplayProfile } from '@/services/displayProfileApi';
 import { testQueryClient } from '@/setupTests';
