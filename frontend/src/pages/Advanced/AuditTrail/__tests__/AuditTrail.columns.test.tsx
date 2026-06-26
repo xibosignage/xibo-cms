@@ -156,7 +156,8 @@ describe('getAuditTrailColumns', () => {
     const columns = getAuditTrailColumns(t);
     const objectAfterCol = columns.find((c) => (c as { id?: string }).id === 'objectAfter')!;
     type AccessorFn = (row: AuditLog) => unknown;
-    const fn = objectAfterCol.accessorFn as AccessorFn;
+    type ColWithAccessorFn = { accessorFn?: AccessorFn };
+    const fn = (objectAfterCol as ColWithAccessorFn).accessorFn as AccessorFn;
 
     const row = {
       logId: 1,
@@ -175,7 +176,8 @@ describe('getAuditTrailColumns', () => {
     const columns = getAuditTrailColumns(t);
     const objectAfterCol = columns.find((c) => (c as { id?: string }).id === 'objectAfter')!;
     type AccessorFn = (row: AuditLog) => unknown;
-    const fn = objectAfterCol.accessorFn as AccessorFn;
+    type ColWithAccessorFn = { accessorFn?: AccessorFn };
+    const fn = (objectAfterCol as ColWithAccessorFn).accessorFn as AccessorFn;
 
     const row = {
       logId: 1,
@@ -194,7 +196,8 @@ describe('getAuditTrailColumns', () => {
     const columns = getAuditTrailColumns(t);
     const objectAfterCol = columns.find((c) => (c as { id?: string }).id === 'objectAfter')!;
     type AccessorFn = (row: AuditLog) => unknown;
-    const fn = objectAfterCol.accessorFn as AccessorFn;
+    type ColWithAccessorFn = { accessorFn?: AccessorFn };
+    const fn = (objectAfterCol as ColWithAccessorFn).accessorFn as AccessorFn;
 
     const obj = { name: 'My Layout', status: 1 };
     const row = {
