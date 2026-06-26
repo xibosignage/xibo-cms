@@ -21,7 +21,7 @@
  */
 namespace Xibo\Service;
 
-use Xibo\Entity\Display;
+use Xibo\Entity\XmrTargetInterface;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\XMR\PlayerAction;
 
@@ -37,7 +37,7 @@ interface PlayerActionServiceInterface
     public function __construct(ConfigServiceInterface $config, LogServiceInterface $log, bool $triggerPlayerActions);
 
     /**
-     * @param Display[]|Display $displays
+     * @param XmrTargetInterface[]|XmrTargetInterface $displays
      * @param PlayerAction $action
      * @throws GeneralException
      */
