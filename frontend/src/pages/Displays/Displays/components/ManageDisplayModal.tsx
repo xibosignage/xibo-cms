@@ -84,7 +84,10 @@ function DependenciesTable({ data }: { data: ManageDependency[] }) {
       </thead>
       <tbody>
         {data.map((dep) => (
-          <tr key={`${dep.path}-${dep.fileType}`} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
+          <tr
+            key={`${dep.path}-${dep.fileType}`}
+            className="border-b border-gray-100 last:border-0 hover:bg-gray-50"
+          >
             <td className="px-3 py-2 text-gray-700 break-all">{dep.path}</td>
             <td className="px-3 py-2 text-gray-500">{dep.fileType}</td>
             <td className="px-3 py-2 text-gray-500 text-right">{dep.bytesRequested}</td>
@@ -115,7 +118,10 @@ function LayoutsTable({ data }: { data: ManageLayout[] }) {
       </thead>
       <tbody>
         {data.map((layout) => (
-          <tr key={layout.itemId} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
+          <tr
+            key={layout.itemId}
+            className="border-b border-gray-100 last:border-0 hover:bg-gray-50"
+          >
             <td className="px-3 py-2 text-gray-500">{layout.itemId}</td>
             <td className="px-3 py-2 text-gray-700">{layout.layout}</td>
             <td className="px-3 py-2 text-gray-500 text-right">{layout.size}</td>
@@ -213,7 +219,10 @@ function WidgetDataTable({ data }: { data: ManageWidgetData[] }) {
       </thead>
       <tbody>
         {data.map((wd) => (
-          <tr key={`${wd.widgetId}-${wd.widgetType}`} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
+          <tr
+            key={`${wd.widgetId}-${wd.widgetType}`}
+            className="border-b border-gray-100 last:border-0 hover:bg-gray-50"
+          >
             <td className="px-3 py-2 text-gray-500">{wd.widgetId}</td>
             <td className="px-3 py-2 text-gray-700">{wd.widgetName || wd.widgetType}</td>
             <td className="px-3 py-2 text-gray-500 text-right">{wd.bytesRequested}</td>
@@ -292,7 +301,7 @@ function BandwidthSection({
               type="date"
               className="ml-2 rounded border border-gray-300 px-2 py-1 text-sm"
               value={fromDt.split(' ')[0] || fromDt}
-              onChange={(e) => setFromDt(e.target.value)}
+              onChange={(e) => setFromDt(e.target.value || defaults.fromDate)}
             />
           </label>
           <label className="text-sm text-gray-600">
@@ -301,7 +310,7 @@ function BandwidthSection({
               type="date"
               className="ml-2 rounded border border-gray-300 px-2 py-1 text-sm"
               value={toDt.split(' ')[0] || toDt}
-              onChange={(e) => setToDt(e.target.value)}
+              onChange={(e) => setToDt(e.target.value || defaults.toDate)}
             />
           </label>
         </div>
@@ -404,7 +413,7 @@ export default function ManageDisplayModal({ display, onClose }: ManageDisplayMo
       showCloseButton
       size="xl"
       actions={[{ label: t('Close'), onClick: onClose, variant: 'secondary' }]}
-      error={error ?? faultsError ?? undefined}
+      error={error ?? undefined}
     >
       <div className="p-6 space-y-6">
         {isLoading && (
@@ -443,6 +452,8 @@ export default function ManageDisplayModal({ display, onClose }: ManageDisplayMo
                 <div className="flex items-center justify-center py-6">
                   <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
                 </div>
+              ) : faultsError ? (
+                <p className="px-4 py-3 text-sm text-red-600">{faultsError}</p>
               ) : (
                 <FaultsTable data={faults} />
               )}
