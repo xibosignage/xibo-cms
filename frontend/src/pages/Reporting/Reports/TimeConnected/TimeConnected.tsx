@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { ArrowLeft, Loader2, Plus } from 'lucide-react';
+import { ArrowLeft, Filter, FilterX, Loader2, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -44,6 +44,7 @@ export default function TimeConnected() {
 
   const [submittedFilter, setSubmittedFilter] = useState<TimeConnectedFilter | null>(null);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(true);
 
   const { filterInputs, setFilterInputs, isHydrated, pagination, setPagination } = useTableState<
     Partial<TimeConnectedFilter>
@@ -68,6 +69,7 @@ export default function TimeConnected() {
   const handleApply = () => {
     setSubmittedFilter({ ...filter });
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    setFiltersOpen(false);
   };
 
   const handleRefresh = () => {
@@ -85,9 +87,20 @@ export default function TimeConnected() {
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5 overflow-y-auto">
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="" navigation={reportingTabs} />
-          <Button variant="primary" leftIcon={Plus} onClick={() => setScheduleModalOpen(true)}>
-            {t('Schedule')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="primary" leftIcon={Plus} onClick={() => setScheduleModalOpen(true)}>
+              {t('Schedule')}
+            </Button>
+            <Button
+              leftIcon={filtersOpen ? FilterX : Filter}
+              variant="secondary"
+              disabled={!isHydrated}
+              onClick={() => setFiltersOpen((prev) => !prev)}
+              removeTextOnMobile
+            >
+              {t('Filters')}
+            </Button>
+          </div>
         </div>
 
         <div className="flex items-center justify-between">
@@ -108,12 +121,14 @@ export default function TimeConnected() {
           </div>
         ) : (
           <>
-            <TimeConnectedFilters
-              filter={filter}
-              onFilterChange={handleFilterChange}
-              onApply={handleApply}
-              isLoading={isLoading}
-            />
+            {filtersOpen && (
+              <TimeConnectedFilters
+                filter={filter}
+                onFilterChange={handleFilterChange}
+                onApply={handleApply}
+                isLoading={isLoading}
+              />
+            )}
 
             {submittedFilter !== null ? (
               <TimeConnectedResults

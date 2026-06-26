@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Filter, FilterX, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -41,6 +41,7 @@ export default function SspActivity() {
   const reportingTabs = useFilteredTabs('reporting');
 
   const [submittedFilter, setSubmittedFilter] = useState<SspActivityFilter | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(true);
 
   const { filterInputs, setFilterInputs, isHydrated } = useTableState<Partial<SspActivityFilter>>(
     'ssp_activity_report_page',
@@ -75,6 +76,7 @@ export default function SspActivity() {
       return;
     }
     setSubmittedFilter({ ...filter });
+    setFiltersOpen(false);
   };
 
   const handleRefresh = () => {
@@ -94,6 +96,15 @@ export default function SspActivity() {
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="" navigation={reportingTabs} />
+          <Button
+            leftIcon={filtersOpen ? FilterX : Filter}
+            variant="secondary"
+            disabled={!isHydrated || connectorMissing}
+            onClick={() => setFiltersOpen((prev) => !prev)}
+            removeTextOnMobile
+          >
+            {t('Filters')}
+          </Button>
         </div>
 
         <div className="flex items-center justify-between">
@@ -123,14 +134,16 @@ export default function SspActivity() {
           </div>
         ) : (
           <>
-            <SspActivityFilters
-              filter={filter}
-              onFilterChange={handleFilterChange}
-              onApply={handleApply}
-              isLoading={isFetching}
-              partnerOptions={partnerOptions}
-              partnersLoading={partnersLoading}
-            />
+            {filtersOpen && (
+              <SspActivityFilters
+                filter={filter}
+                onFilterChange={handleFilterChange}
+                onApply={handleApply}
+                isLoading={isFetching}
+                partnerOptions={partnerOptions}
+                partnersLoading={partnersLoading}
+              />
+            )}
 
             {submittedFilter !== null ? (
               <SspActivityResults
