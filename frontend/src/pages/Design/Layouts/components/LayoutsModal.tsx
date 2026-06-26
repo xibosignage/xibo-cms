@@ -229,7 +229,11 @@ export function LayoutModals({
       )}
 
       {isModalOpen('enableStats') && selection.selectedLayout && (
-        <EnableStatsLayoutModal layout={selection.selectedLayout} onClose={actions.closeModal} />
+        <EnableStatsLayoutModal
+          layout={selection.selectedLayout}
+          onClose={actions.closeModal}
+          onSuccess={() => actions.handleRefresh()}
+        />
       )}
 
       {isModalOpen('schedule') && selection.selectedLayout && (
