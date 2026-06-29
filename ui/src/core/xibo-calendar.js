@@ -779,17 +779,21 @@ function generateCalendarEvents(scheduleEvents, viewStartMs, viewEndMs) {
       const isComplexWeekly = sourceEv.recurrenceType === 'Week' &&
         hasRepeatsOn;
 
-      // If it's not a complex week recurrence, add first day
-      if (!isComplexWeekly) {
-        const sTime = currentMoment.unix();
-        const eTime = currentMoment.clone().add(duration).unix();
+      // Always add the original (first) occurrence, regardless of recurrence
+      // type. The server emits the original event unconditionally, so the
+      // calendar must too. For complex weekly recurrences the loop below only
+      // adds occurrences strictly after originalStart (occStart.isAfter), which
+      // skips the original when it falls on a selected repeat-on day - so it
+      // must be added here. Adding it here does not duplicate, because the loop
+      // excludes the equal occurrence.
+      const firstStart = currentMoment.unix();
+      const firstEnd = currentMoment.clone().add(duration).unix();
 
-        if (
-          currentMoment.isBefore(rangeEnd) &&
-          (sTime * 1000) < viewEndMs && (eTime * 1000) > viewStartMs
-        ) {
-          addIfValid(sTime, eTime);
-        }
+      if (
+        currentMoment.isBefore(rangeEnd) &&
+        (firstStart * 1000) < viewEndMs && (firstEnd * 1000) > viewStartMs
+      ) {
+        addIfValid(firstStart, firstEnd);
       }
 
       while (
