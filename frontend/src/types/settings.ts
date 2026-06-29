@@ -52,6 +52,7 @@ export interface SettingsData {
     } | null;
   };
   elevateLogUntil: string | null;
+  phoneticKey: string;
 }
 
 export type SettingsFormValues = Record<string, string>;
