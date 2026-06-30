@@ -411,13 +411,16 @@ class SyncGroup implements \JsonSerializable
             $display = $this->displayFactory->getById($displayId);
 
             if (empty($display->syncGroupId)) {
-                $this->getStore()->update('UPDATE `display` SET `display`.syncGroupId = :syncGroupId WHERE `display`.displayId = :displayId', [
-                    'syncGroupId' => $this->syncGroupId,
-                    'displayId' => $display->displayId
-                ]);
+                $this->getStore()->update(
+                    'UPDATE `display` SET `display`.syncGroupId = :syncGroupId WHERE `display`.displayId = :displayId',
+                    [
+                        'syncGroupId' => $this->syncGroupId,
+                        'displayId' => $display->displayId
+                    ]
+                );
 
                 $display->notify();
-            } else if (!empty($display->syncGroupId) && $display->syncGroupId !== $this->syncGroupId) {
+            } else if ($display->syncGroupId !== $this->syncGroupId) {
                 throw new InvalidArgumentException(
                     sprintf(
                         __('Display %s already belongs to a different sync group ID %d'),
@@ -440,15 +443,23 @@ class SyncGroup implements \JsonSerializable
             $display = $this->displayFactory->getById($displayId);
 
             if ($display->syncGroupId === $this->syncGroupId) {
-                $this->getStore()->update('UPDATE `display` SET `display`.syncGroupId = NULL WHERE `display`.displayId = :displayId', [
-                    'displayId' => $this->displayId
-                ]);
+                $this->getStore()->update(
+                    'UPDATE `display` SET `display`.syncGroupId = NULL WHERE `display`.displayId = :displayId',
+                    [
+                        'displayId' => $display->displayId
+                    ]
+                );
 
-                $this->getStore()->update(' DELETE FROM `schedule_sync` WHERE `schedule_sync`.displayId = :displayId
-                    AND `schedule_sync`.eventId IN (SELECT eventId FROM schedule WHERE schedule.syncGroupId = :syncGroupId)', [
-                    'displayId' => $this->displayId,
-                    'syncGroupId' => $this->syncGroupId
-                ]);
+                $this->getStore()->update(
+                    'DELETE FROM `schedule_sync` WHERE `schedule_sync`.displayId = :displayId
+                              AND `schedule_sync`.eventId IN (
+                                SELECT eventId FROM schedule WHERE schedule.syncGroupId = :syncGroupId
+                              )',
+                    [
+                        'displayId' => $display->displayId,
+                        'syncGroupId' => $this->syncGroupId
+                    ]
+                );
             }
 
             $display->notify();

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2025 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,10 +23,9 @@
 
 namespace Xibo\Service;
 
-use GuzzleHttp\Client;
-use Xibo\Helper\Guzzle\SafeClient;
 use GuzzleHttp\Exception\GuzzleException;
-use Xibo\Entity\Display;
+use Xibo\Entity\XmrTargetInterface;
+use Xibo\Helper\Guzzle\SafeClient;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\XMR\PlayerAction;
@@ -87,7 +86,7 @@ class PlayerActionService implements PlayerActionServiceInterface
 
         // Send a message to all displays
         foreach ($displays as $display) {
-            /* @var Display $display */
+            /* @var XmrTargetInterface $display */
             $isEncrypt = false;
 
             if ($display->xmrChannel == '') {
