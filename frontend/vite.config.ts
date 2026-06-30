@@ -68,17 +68,8 @@ export default defineConfig(({ mode }) => ({
     environment: 'jsdom',
     setupFiles: './src/setupTests.ts',
     include: ['**/*.test.{js,jsx,ts,tsx}'],
-    // Render-heavy tests pass in ~1-2s alone but get CPU-starved under the full
-    // parallel suite on a single CI runner and can exceed the 5s default. Raise the
-    // global budget so the whole class of JSDOM-contention timeouts stops, instead
-    // of hand-bumping individual tests. 15s matches the value already used ad-hoc on
-    // the Displays/DisplayProfile filter tests.
     testTimeout: 15_000,
     hookTimeout: 15_000,
-    // In CI only, retry a test once: a contention straggler passes on the less-loaded
-    // retry, but a genuinely broken test fails both attempts. Stays 0 locally so
-    // developers see real failures immediately. (process.env is used elsewhere in
-    // this file for NODE_ENV; GitHub Actions sets CI=true automatically.)
     retry: process.env.CI ? 1 : 0,
     alias: {
       'react-i18next': path.resolve(__dirname, '__mocks__/react-i18next.tsx'),
