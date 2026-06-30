@@ -80,10 +80,6 @@ const waitForPageReady = () => screen.findByText(mockDisplayProfile.name);
 // Tests — DisplayProfile page filters
 // =============================================================================
 
-// Full-page render + interaction can exceed the 5s default under parallel
-// JSDOM contention (each test still runs in ~1s in isolation).
-vi.setConfig({ testTimeout: 20_000 });
-
 describe('DisplayProfile page - filters', () => {
   beforeEach(() => {
     testQueryClient.clear();

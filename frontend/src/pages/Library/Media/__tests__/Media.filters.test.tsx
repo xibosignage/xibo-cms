@@ -325,9 +325,7 @@ describe('Reset Behavior', () => {
       const args = vi.mocked(useMediaData).mock.calls.slice(-1)[0]?.[0];
       expect(args?.advancedFilters?.mediaId).toBeNull();
     });
-    // Bumped from the 5s default: involves openFilterPanel + fake/real timer
-    // switching + two waitFor calls; races on JSDOM under the full parallel suite.
-  }, 20_000);
+  });
 
   // S14
   test('clicking Reset resets pagination to page 0', async () => {
@@ -362,10 +360,7 @@ describe('Reset Behavior', () => {
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Reset' })).toBeInTheDocument();
     });
-    // Bumped from the 5s default: this test passes in ~3s in isolation but races on
-    // JSDOM under the full parallel suite and intermittently exceeds 5s. See the
-    // frontend-testing notes on JSDOM contention before removing this.
-  }, 20_000);
+  });
 });
 
 // ---------------------------------------------------------------------------

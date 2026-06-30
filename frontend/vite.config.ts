@@ -68,6 +68,9 @@ export default defineConfig(({ mode }) => ({
     environment: 'jsdom',
     setupFiles: './src/setupTests.ts',
     include: ['**/*.test.{js,jsx,ts,tsx}'],
+    testTimeout: 15_000,
+    hookTimeout: 15_000,
+    retry: process.env.CI ? 1 : 0,
     alias: {
       'react-i18next': path.resolve(__dirname, '__mocks__/react-i18next.tsx'),
     },
