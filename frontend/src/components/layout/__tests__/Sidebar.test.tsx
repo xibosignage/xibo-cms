@@ -86,7 +86,6 @@ const superAdminUser = {
   },
 };
 
-
 describe('Sidebar Menu (The Navigation Bar)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
