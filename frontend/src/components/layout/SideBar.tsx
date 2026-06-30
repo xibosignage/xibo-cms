@@ -47,7 +47,7 @@ export default function SidebarMenu({
   const { t } = useTranslation();
   const { user } = useUserContext();
   const location = useLocation();
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [openMenus, setOpenMenus] = useState<Set<string>>(new Set());
 
   const visibleRoutes = !user
     ? []
@@ -83,14 +83,25 @@ export default function SidebarMenu({
       );
     });
 
-    // If we found a matching parent, expand it
+    // If we found a matching parent, add it to the open set without closing others
     if (activeParent) {
-      setOpenMenu(activeParent.path);
+      setOpenMenus((prev) => {
+        if (prev.has(activeParent.path)) return prev;
+        return new Set([...prev, activeParent.path]);
+      });
     }
   }, [location.pathname, visibleRoutes]);
 
   const toggleMenu = (path: string) => {
-    setOpenMenu((prev) => (prev === path ? null : path));
+    setOpenMenus((prev) => {
+      const next = new Set(prev);
+      if (next.has(path)) {
+        next.delete(path);
+      } else {
+        next.add(path);
+      }
+      return next;
+    });
   };
 
   return (
@@ -104,7 +115,7 @@ export default function SidebarMenu({
       <div className={`flex flex-col gap-y-2 ${isCollapsed ? 'items-center' : 'items-start'}`}>
         {visibleRoutes.map((route, index) => {
           const label = !isCollapsed ? t(route.labelKey) : null;
-          const isOpen = openMenu === route.path;
+          const isOpen = openMenus.has(route.path);
           const isActive = isRouteActive(route, location.pathname);
           return (
             <div
