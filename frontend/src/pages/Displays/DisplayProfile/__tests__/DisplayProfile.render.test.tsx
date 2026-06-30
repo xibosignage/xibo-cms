@@ -52,10 +52,6 @@ vi.mock('../hooks/useDisplayProfileFilterOptions', () => ({
 // Tests — DisplayProfile page default state
 // =============================================================================
 
-// Full-page render + interaction can exceed the 5s default under parallel
-// JSDOM contention (each test still runs in ~1s in isolation).
-vi.setConfig({ testTimeout: 20_000 });
-
 describe('DisplayProfile page - render', () => {
   beforeEach(() => {
     testQueryClient.clear();

@@ -95,7 +95,7 @@ describe('Commands page - share wiring', () => {
     // Routing: the Share action opens ONLY the Share modal — not Delete/Edit.
     expect(screen.getAllByRole('dialog')).toHaveLength(1);
     expect(screen.queryByText('Delete Command?')).not.toBeInTheDocument();
-  }, 20_000);
+  });
 
   test('"Share Selected" opens the Share modal for the selected commands', async () => {
     const user = userEvent.setup();
