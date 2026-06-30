@@ -73,6 +73,7 @@ import { fetchCampaigns } from '@/services/campaignApi';
 import { fetchCommands } from '@/services/commandApi';
 import { fetchDataset } from '@/services/datasetApi';
 import { fetchDaypart } from '@/services/daypartApi';
+import type { Daypart } from '@/types/daypart';
 import { createEvent, fetchEventById, updateEvent } from '@/services/eventApi';
 import { fetchLayouts, fetchLayoutCodes } from '@/services/layoutsApi';
 import { fetchMedia } from '@/services/mediaApi';
@@ -300,7 +301,9 @@ export default function ScheduleEventModal({
         if (cancelled) {
           return;
         }
-        setDaypartOptions(rows.map((dp) => ({ value: String(dp.dayPartId), label: dp.name })));
+        const sortWeight = (dp: Daypart) => (dp.isAlways === 1 ? 0 : dp.isCustom === 1 ? 1 : 2);
+        const sorted = [...rows].sort((a, b) => sortWeight(a) - sortWeight(b));
+        setDaypartOptions(sorted.map((dp) => ({ value: String(dp.dayPartId), label: dp.name })));
         setPagination((prev) => ({ ...prev, daypart: { ...prev.daypart, totalCount } }));
 
         if (!daypartDebouncedSearch) {
