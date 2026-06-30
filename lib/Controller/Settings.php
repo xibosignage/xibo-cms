@@ -152,6 +152,7 @@ class Settings extends Base
                 'defaultTransitionOut' => $defaultTransitionOut,
             ],
             'elevateLogUntil' => $elevateLogUntil,
+            'phoneticKey' => $this->getConfig()->getPhoneticKey(),
         ]);
     }
 

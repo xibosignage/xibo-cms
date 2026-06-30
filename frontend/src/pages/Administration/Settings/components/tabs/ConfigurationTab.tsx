@@ -33,6 +33,7 @@ export default function ConfigurationTab({
   updateField,
   isVisible,
   isEditable,
+  phoneticKey,
 }: SettingsTabProps) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
@@ -64,9 +65,7 @@ export default function ConfigurationTab({
           <TextInput
             name="SERVER_KEY"
             label={t('CMS Secret Key')}
-            helpText={t(
-              'Mike · uniform · lima · Bravo · kilo · X-Ray · Tango · tango | Enter this key into each player to authenticate it with this CMS.',
-            )}
+            helpText={`${phoneticKey} | ${t('Enter this key into each player to authenticate it with this CMS.')}`}
             value={formValues.SERVER_KEY ?? ''}
             onChange={(v) => updateField('SERVER_KEY', v)}
             disabled={!isEditable('SERVER_KEY')}

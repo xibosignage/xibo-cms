@@ -171,10 +171,7 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
       'href',
       '/administration/settings',
     );
-    // Heavy synchronous test: renders the full sidebar then clicks through 7 menu
-    // groups, re-rendering and re-querying the whole DOM each time (~2.5s in isolation).
-    // The 5s default flakes under parallel-suite JSDOM/CPU contention, so bump it.
-  }, 20_000);
+  });
 
   it('should hide the text labels when collapsed', () => {
     render(

@@ -119,7 +119,7 @@ describe('Sync Groups page - edit sync group wiring', () => {
 
     const dialog = await screen.findByRole('dialog', { name: /stub edit sync group/i });
     expect(within(dialog).getByTestId('bound-name')).toHaveTextContent(mockSyncGroup.name);
-  }, 20_000);
+  });
 
   // ---------------------------------------------------------------------------
   // After a successful edit save the page calls handleRefresh, which forces
@@ -137,5 +137,5 @@ describe('Sync Groups page - edit sync group wiring', () => {
     await waitFor(() => {
       expect(vi.mocked(fetchSyncGroups).mock.calls.length).toBeGreaterThan(initialCallCount);
     });
-  }, 20_000);
+  });
 });
