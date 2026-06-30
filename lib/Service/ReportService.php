@@ -38,6 +38,7 @@ use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class ReportScheduleService
+ *
  * @package Xibo\Service
  */
 class ReportService implements ReportServiceInterface
@@ -116,7 +117,7 @@ class ReportService implements ReportServiceInterface
     {
         $reports = [];
 
-        $files = array_merge(glob(PROJECT_ROOT . '/reports/*.report'), glob(PROJECT_ROOT . '/custom/*.report'));
+        $files = glob(PROJECT_ROOT . '/reports/*.report');
 
         foreach ($files as $file) {
             $config = json_decode(file_get_contents($file));

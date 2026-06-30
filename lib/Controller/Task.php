@@ -42,6 +42,7 @@ use Xibo\XTR\TaskInterface;
 
 /**
  * Class Task
+ *
  * @package Xibo\Controller
  */
 class Task extends Base
@@ -54,11 +55,12 @@ class Task extends Base
 
     /**
      * Set common dependencies.
-     * @param StorageServiceInterface $store
+     *
+     * @param StorageServiceInterface  $store
      * @param TimeSeriesStoreInterface $timeSeriesStore
-     * @param PoolInterface $pool
-     * @param TaskFactory $taskFactory
-     * @param ContainerInterface $container
+     * @param PoolInterface            $pool
+     * @param TaskFactory              $taskFactory
+     * @param ContainerInterface       $container
      */
     public function __construct(
         StorageServiceInterface $store,
@@ -76,8 +78,9 @@ class Task extends Base
 
     /**
      * Grid
-     * @param Request $request
-     * @param Response $response
+     *
+     * @param  Request  $request
+     * @param  Response $response
      * @return ResponseInterface|Response
      * @throws ControllerNotImplemented
      * @throws GeneralException
@@ -109,9 +112,10 @@ class Task extends Base
 
     /**
      * Search by ID
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
+     *
+     * @param  Request  $request
+     * @param  Response $response
+     * @param  int      $id
      * @return ResponseInterface|Response
      * @throws InvalidArgumentException
      * @throws NotFoundException
@@ -130,8 +134,9 @@ class Task extends Base
 
     /**
      * Add
-     * @param Request $request
-     * @param Response $response
+     *
+     * @param  Request  $request
+     * @param  Response $response
      * @return ResponseInterface|Response
      * @throws NotFoundException
      * @throws ControllerNotImplemented
@@ -163,9 +168,9 @@ class Task extends Base
     }
 
     /**
-     * @param Request $request
-     * @param Response $response
-     * @param $id
+     * @param  Request  $request
+     * @param  Response $response
+     * @param  $id
      * @return ResponseInterface|Response
      * @throws NotFoundException
      * @throws ControllerNotImplemented
@@ -207,9 +212,9 @@ class Task extends Base
     }
 
     /**
-     * @param Request $request
-     * @param Response $response
-     * @param $id
+     * @param  Request  $request
+     * @param  Response $response
+     * @param  $id
      * @return ResponseInterface|Response
      * @throws NotFoundException
      * @throws GeneralException
@@ -227,9 +232,9 @@ class Task extends Base
     }
 
     /**
-     * @param Request $request
-     * @param Response $response
-     * @param $id
+     * @param  Request  $request
+     * @param  Response $response
+     * @param  $id
      * @return ResponseInterface|Response
      * @throws NotFoundException
      * @throws ControllerNotImplemented
@@ -250,9 +255,9 @@ class Task extends Base
     }
 
     /**
-     * @param Request $request
-     * @param Response $response
-     * @param $id
+     * @param  Request  $request
+     * @param  Response $response
+     * @param  $id
      * @return ResponseInterface|Response
      * @throws NotFoundException
      * @throws ControllerNotImplemented
@@ -269,8 +274,10 @@ class Task extends Base
         }
 
         // Set to running
-        $this->getLog()->debug('run: Running Task ' . $task->name
-            . ' [' . $task->taskId . '], Class = ' . $task->class);
+        $this->getLog()->debug(
+            'run: Running Task ' . $task->name
+            . ' [' . $task->taskId . '], Class = ' . $task->class
+        );
 
         // Run
         $task->setStarted();
@@ -335,8 +342,10 @@ class Task extends Base
         // Finished
         $task->setFinished();
 
-        $this->getLog()->debug('run: Finished Task ' . $task->name . ' [' . $task->taskId . '] Run Dt: '
-            . Carbon::now()->format(DateFormatHelper::getSystemFormat()));
+        $this->getLog()->debug(
+            'run: Finished Task ' . $task->name . ' [' . $task->taskId . '] Run Dt: '
+            . Carbon::now()->format(DateFormatHelper::getSystemFormat())
+        );
 
         $this->setNoOutput();
 
@@ -347,8 +356,9 @@ class Task extends Base
      * Poll for tasks to run
      *  continue polling until there aren't anymore to run
      *  allow for multiple polls to run at the same time
-     * @param Request $request
-     * @param Response $response
+     *
+     * @param  Request  $request
+     * @param  Response $response
      * @return ResponseInterface|Response
      * @throws ControllerNotImplemented
      * @throws GeneralException
@@ -394,15 +404,19 @@ class Task extends Base
                 try {
                     $cron = new CronExpression($task['schedule']);
                 } catch (\Exception $e) {
-                    $this->getLog()->info('run: CRON syntax error for taskId  ' . $taskId
-                        . ', e: ' . $e->getMessage());
+                    $this->getLog()->info(
+                        'run: CRON syntax error for taskId  ' . $taskId
+                        . ', e: ' . $e->getMessage()
+                    );
 
                     // Try and take the first X characters instead.
                     try {
-                        $cron = new CronExpression(substr(
-                            $task['schedule'],
-                            0,
-                            strlen($task['schedule']) - 2)
+                        $cron = new CronExpression(
+                            substr(
+                                $task['schedule'],
+                                0,
+                                strlen($task['schedule']) - 2
+                            )
                         );
                     } catch (\Exception) {
                         $this->getLog()->error('run: cannot fix CRON syntax error  ' . $taskId);
@@ -423,8 +437,10 @@ class Task extends Base
                     } catch (\Exception $exception) {
                         // The only thing which can fail inside run is core code,
                         // so it is reasonable here to disable the task.
-                        $this->getLog()->error('poll: Task run error for taskId ' . $taskId
-                            . '. E = ' . $exception->getMessage());
+                        $this->getLog()->error(
+                            'poll: Task run error for taskId ' . $taskId
+                            . '. E = ' . $exception->getMessage()
+                        );
                         $this->getLog()->debug($exception->getTraceAsString());
 
                         // Set to error and disable.
@@ -484,24 +500,22 @@ class Task extends Base
 
     /**
      * Returns the task list
-     * @param Request $request
-     * @param Response $response
+     *
+     * @param  Request  $request
+     * @param  Response $response
      * @return ResponseInterface|Response
      */
     public function getTaskList(Request $request, Response $response): Response|ResponseInterface
     {
-        // Provide a list of possible task classes by searching for .task file in /tasks and /custom
+        // Provide a list of possible task classes by searching for .task file in /tasks
         $data = ['tasksAvailable' => []];
 
         // Do we have any modules to install?!
         if ($this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') != 1 &&
             $this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') != 'Checked'
         ) {
-            // Get a list of matching files in the modules folder
-            $files = array_merge(
-                glob(PROJECT_ROOT . '/tasks/*.task'),
-                glob(PROJECT_ROOT . '/custom/*.task')
-            );
+            // Get a list of matching files in the tasks folder
+            $files = glob(PROJECT_ROOT . '/tasks/*.task');
 
             // Add to the list of available tasks
             foreach ($files as $file) {
@@ -519,7 +533,8 @@ class Task extends Base
 
     /**
      * Decorate the task properties
-     * @param $task
+     *
+     * @param  $task
      * @return void
      * @throws InvalidArgumentException
      */
