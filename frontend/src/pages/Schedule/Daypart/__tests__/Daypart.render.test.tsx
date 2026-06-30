@@ -164,7 +164,7 @@ describe('Dayparting page - render', () => {
     await user.click(screen.getByRole('button', { name: /more actions/i }));
 
     expect(await screen.findByRole('button', { name: /^share$/i })).toBeInTheDocument();
-  }, 20_000);
+  });
 
   // A special daypart (isAlways) cannot be edited or deleted — only shared —
   // so neither the Edit nor the Delete quick action renders.

@@ -191,7 +191,7 @@ describe('AddAndEditDaypartModal - exceptions tab', () => {
     }
 
     expect(screen.getByRole('button', { name: /add exception/i })).toBeDisabled();
-  }, 20_000);
+  });
 
   test('exceptions are serialised into the three parallel payload arrays on save', async () => {
     const user = userEvent.setup();

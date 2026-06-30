@@ -110,11 +110,10 @@ describe('Sync Groups page - single delete', () => {
     expect(await screen.findByText('Delete Sync Group?')).toBeInTheDocument();
     // The body wraps the name in a <strong>; match by partial text.
     expect(screen.getByText(mockSyncGroup.name, { selector: 'strong' })).toBeInTheDocument();
-  }, 20_000);
+  });
 
   // ---------------------------------------------------------------------------
   // Cancel closes the modal without calling deleteSyncGroup.
-  // Timeout bumped for the same row-menu portal reason as above.
   // ---------------------------------------------------------------------------
   test('clicking Cancel closes the modal without deleting', async () => {
     const user = userEvent.setup();
@@ -125,7 +124,7 @@ describe('Sync Groups page - single delete', () => {
 
     expect(screen.queryByText('Delete Sync Group?')).not.toBeInTheDocument();
     expect(deleteSyncGroup).not.toHaveBeenCalled();
-  }, 20_000);
+  });
 
   // ---------------------------------------------------------------------------
   // Confirming the delete calls deleteSyncGroup with the row's id and closes
@@ -145,7 +144,7 @@ describe('Sync Groups page - single delete', () => {
     await waitFor(() => {
       expect(screen.queryByText('Delete Sync Group?')).not.toBeInTheDocument();
     });
-  }, 20_000);
+  });
 
   // ---------------------------------------------------------------------------
   // While the delete request is in flight the action button reads "Deleting…"
@@ -168,7 +167,7 @@ describe('Sync Groups page - single delete', () => {
 
     // Resolve so the test doesn't leak a pending promise.
     resolveDelete();
-  }, 20_000);
+  });
 
   // ---------------------------------------------------------------------------
   // A failed delete sets deleteError on the actions hook, which is forwarded
@@ -187,7 +186,7 @@ describe('Sync Groups page - single delete', () => {
 
     expect(await screen.findByText('Cannot delete — group is in use.')).toBeInTheDocument();
     expect(screen.getByText('Delete Sync Group?')).toBeInTheDocument();
-  }, 20_000);
+  });
 
   // ---------------------------------------------------------------------------
   // Repeats the singular-heading assertion for clarity, paired with the
@@ -201,7 +200,7 @@ describe('Sync Groups page - single delete', () => {
 
     expect(await screen.findByText('Delete Sync Group?')).toBeInTheDocument();
     expect(screen.queryByText('Delete Sync Groups?')).not.toBeInTheDocument();
-  }, 20_000);
+  });
 });
 
 // =============================================================================
