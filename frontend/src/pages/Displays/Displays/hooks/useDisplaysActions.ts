@@ -109,7 +109,7 @@ export function useDisplaysActions({
       const movePromises = itemsToMove.map((item) =>
         selectFolder({
           folderId: newFolderId,
-          targetId: item.displayId,
+          targetId: item.displayGroupId,
           targetType: 'displaygroup',
         }),
       );

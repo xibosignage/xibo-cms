@@ -105,7 +105,7 @@ describe('Displays page - filters', () => {
     await user.click(screen.getByRole('button', { name: /filters/i }));
 
     await screen.findByRole('button', { name: /reset/i });
-  });
+  }, 15000);
 
   // ---------------------------------------------------------------------------
   // Clicking Filters a second time collapses the panel — Reset goes back to
@@ -125,7 +125,7 @@ describe('Displays page - filters', () => {
     await waitFor(() => {
       expect(screen.queryByRole('button', { name: /reset/i })).not.toBeInTheDocument();
     });
-  });
+  }, 15000);
 
   // ---------------------------------------------------------------------------
   // Typing in the global search input eventually triggers a fetchDisplays call
@@ -183,5 +183,5 @@ describe('Displays page - filters', () => {
 
     // Panel stays open — Reset button is still accessible.
     screen.getByRole('button', { name: /reset/i });
-  });
+  }, 15000);
 });

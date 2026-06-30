@@ -342,11 +342,11 @@ export const getPlaylistColumns = (props: PlaylistActionsProps): ColumnDef<Playl
       size: 100,
       cell: (info) => {
         const value = info.getValue();
-        if (value === 'Inherit') {
-          return <StatusCell label={info.getValue() as string} type="neutral" />;
-        } else {
-          return <CheckMarkCell active={String(value).toLowerCase() === 'on'} />;
+        if (!value || value === 'Inherit') {
+          return <StatusCell label={value ? (value as string) : 'Inherit'} type="neutral" />;
         }
+
+        return <CheckMarkCell active={String(value).toLowerCase() === 'on'} />;
       },
     },
     {

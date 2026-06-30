@@ -26,6 +26,7 @@ namespace Xibo\Service;
 use Carbon\Carbon;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Display;
+use Xibo\Entity\DisplayXmrTarget;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\DeadlockException;
@@ -163,23 +164,14 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         );
 
         foreach ($displays as $row) {
-            // TOOD: this should be improved
-            $display = new Display(
-                $this->store,
-                $this->log,
-                null,
-                $this->config,
-                null,
-                null,
-                null,
-                null,
+            $display = new DisplayXmrTarget(
+                displayId: intval($row['displayId']),
+                xmrChannel: $row['xmrChannel'],
+                xmrPubKey: $row['xmrPubKey'],
+                display: $row['display'],
+                clientType: $row['clientType'],
+                clientCode: intval($row['client_code']),
             );
-            $display->displayId = intval($row['displayId']);
-            $display->xmrChannel = $row['xmrChannel'];
-            $display->xmrPubKey = $row['xmrPubKey'];
-            $display->display = $row['display'];
-            $display->clientType = $row['clientType'];
-            $display->clientCode = intval($row['client_code']);
 
             try {
                 $this->playerActionService->sendAction($display, new CollectNowAction());
