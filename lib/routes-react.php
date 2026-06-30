@@ -109,6 +109,16 @@ $app->group('', function (RouteCollectorProxy $group) {
 })->add(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.playlist']));
 
 //
+// Display Manage
+//
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->get('/display/manage/{id}', ['\Xibo\Controller\Display', 'displayManage'])
+        ->setName('display.manage.json');
+    $group->get('/stats/data/bandwidth', ['\Xibo\Controller\Stats', 'bandwidthData'])
+        ->setName('stats.bandwidth.data.json');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['displays.view']));
+
+//
 // notification
 //
 $app->get('/notification/mynotifications', ['\Xibo\Controller\Notification', 'myNotifications'])

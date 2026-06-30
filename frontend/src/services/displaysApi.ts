@@ -24,6 +24,7 @@ import axios from 'axios';
 import http from '@/lib/api';
 import type { Display } from '@/types/display';
 import type { DisplayGroup } from '@/types/displayGroup';
+import type { BandwidthResponse, DisplayManageData, PlayerFault } from '@/types/displayManage';
 import type { Layout } from '@/types/layout';
 import type { Media } from '@/types/media';
 
@@ -515,4 +516,28 @@ export async function assignDisplayGroups(
       'X-Requested-With': 'XMLHttpRequest',
     },
   });
+}
+
+export async function fetchDisplayManageData(
+  displayId: number,
+  signal?: AbortSignal,
+): Promise<DisplayManageData> {
+  const response = await http.get(`/display/manage/${displayId}`, { signal });
+  return response.data;
+}
+
+export async function fetchPlayerFaults(
+  displayId: number,
+  signal?: AbortSignal,
+): Promise<PlayerFault[]> {
+  const response = await http.get(`/display/faults/${displayId}`, { signal });
+  return response.data;
+}
+
+export async function fetchBandwidthData(
+  params: { displayId: number; fromDt: string; toDt: string },
+  signal?: AbortSignal,
+): Promise<BandwidthResponse> {
+  const response = await http.get('/stats/data/bandwidth', { params, signal });
+  return response.data;
 }
