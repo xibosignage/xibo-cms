@@ -29,6 +29,7 @@ import {
   useDismiss,
   useInteractions,
   FloatingPortal,
+  safePolygon,
 } from '@floating-ui/react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -55,7 +56,11 @@ export function SidebarPopup({ route, isCollapsed, children }: SidebarPopupProps
     middleware: [flip(), shift()],
   });
 
-  const hover = useHover(context, { enabled: isCollapsed });
+  const hover = useHover(context, {
+    enabled: isCollapsed,
+    handleClose: safePolygon({ buffer: 1 }),
+    delay: { close: 150 },
+  });
   const focus = useFocus(context, { enabled: isCollapsed });
   const dismiss = useDismiss(context);
   const { getReferenceProps, getFloatingProps } = useInteractions([hover, focus, dismiss]);
