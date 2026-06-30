@@ -81,11 +81,13 @@ export default function MediaInput({
       flip(),
       shift(),
       size({
-        apply({ rects, elements }) {
+        apply({ rects, availableHeight, elements }) {
           Object.assign(elements.floating.style, {
             width: `${rects.reference.width}px`,
+            maxHeight: `${availableHeight}px`,
           });
         },
+        padding: 8,
       }),
     ],
   });
@@ -255,7 +257,7 @@ export default function MediaInput({
               </div>
             </div>
 
-            <div className="max-h-60 overflow-y-auto p-2">
+            <div className="overflow-y-auto flex-1 min-h-0 p-2">
               {isLoading && mediaItems.length === 0 ? (
                 <div className="flex justify-center items-center py-4">
                   <Loader2 className="h-5 w-5 text-gray-400 animate-spin" />

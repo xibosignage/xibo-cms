@@ -99,11 +99,13 @@ export default function MultiSelectDropdown({
       flip(),
       shift(),
       size({
-        apply({ rects, elements }) {
+        apply({ rects, availableHeight, elements }) {
           Object.assign(elements.floating.style, {
             width: `${rects.reference.width}px`,
+            maxHeight: `${availableHeight}px`,
           });
         },
+        padding: 8,
       }),
     ],
   });
@@ -272,7 +274,7 @@ export default function MultiSelectDropdown({
               id={`${id}-listbox`}
               role="listbox"
               aria-multiselectable="true"
-              className="flex flex-col p-2 text-sm overflow-y-auto max-h-75"
+              className="flex flex-col p-2 text-sm overflow-y-auto flex-1 min-h-0"
             >
               {(() => {
                 const allChecked = options.length > 0 && value.length === options.length;
