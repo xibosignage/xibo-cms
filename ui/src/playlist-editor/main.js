@@ -1411,6 +1411,9 @@ pE.handleKeyInputs = function() {
         handler.metaKey
       );
 
+      const typingInField = $(handler.target).is(
+        'input, textarea, select, [contenteditable="true"]');
+
       if ($(handler.target).is($('body'))) {
         // Delete
         if (
@@ -1421,15 +1424,16 @@ pE.handleKeyInputs = function() {
         ) {
           pE.deleteSelectedObject();
         }
+      }
 
-        // Undo
-        if (
-          handler.code == 'KeyZ' &&
-          controlOrCommandPressed &&
-          allowInputs
-        ) {
-          pE.undoLastAction();
-        }
+      if (
+        handler.code == 'KeyZ' &&
+        controlOrCommandPressed &&
+        allowInputs &&
+        !typingInField
+      ) {
+        handler.preventDefault();
+        pE.undoLastAction();
       }
     });
 };

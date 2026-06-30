@@ -5975,6 +5975,9 @@ lD.handleInputs = function() {
         handler.metaKey
       );
 
+      const typingInField = $(handler.target).is(
+        'input, textarea, select, [contenteditable="true"]');
+
       if ($(handler.target).is($('body'))) {
         // Delete ( Del or Backspace )
         if (
@@ -5995,15 +5998,6 @@ lD.handleInputs = function() {
           }, 500);
         }
 
-        // Undo ( Ctrl + Z )
-        if (
-          handler.code == 'KeyZ' &&
-          controlOrCommandPressed &&
-          allowInputs
-        ) {
-          lD.undoLastAction();
-        }
-
         // Duplicate selected object ( Shift + D )
         if (
           handler.code == 'KeyD' &&
@@ -6012,6 +6006,16 @@ lD.handleInputs = function() {
         ) {
           lD.duplicateSelectedObject();
         }
+      }
+
+      if (
+        handler.code == 'KeyZ' &&
+        controlOrCommandPressed &&
+        allowInputs &&
+        !typingInField
+      ) {
+        handler.preventDefault();
+        lD.undoLastAction();
       }
     });
 };

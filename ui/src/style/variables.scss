@@ -1,35 +1,37 @@
 // Global SASS variables 
 
 // COLOURS
-$xibo-color-primary: #1775F6;
+// Primary aligned to the React app palette (--brand-primary #0e70f6 ⇒ xibo-blue-600).
+// Variant hexes are the oklch-derived xibo-blue scale used in frontend/src/styles/global.css.
+$xibo-color-primary: #0e70f6;       // xibo-blue-600
 $xibo-color-secondary: #121A5E;
 $xibo-color-tertiary: #15D5CB;
-$xibo-color-accent: #EB7857;
+$xibo-color-accent: #EB7857;        // matches React --brand-accent
 
-//  Variants
-$xibo-color-primary-d60: #0E4694;
-$xibo-color-primary-d40: #125ABF;
-$xibo-color-primary-l60: #74ACFA;
-$xibo-color-primary-l30: #B9D6FC;
-$xibo-color-primary-l20: #dcedff;
-$xibo-color-primary-l10: #E8F1FE;
-$xibo-color-primary-l5: #F3F8FF;
+//  Variants (light → dark, mapped to the xibo-blue scale)
+$xibo-color-primary-d60: #00378e;   // xibo-blue-800
+$xibo-color-primary-d40: #0059d3;   // xibo-blue-700
+$xibo-color-primary-l60: #77acfe;   // xibo-blue-300
+$xibo-color-primary-l30: #99c1fe;   // xibo-blue-200
+$xibo-color-primary-l20: #d5e6ff;   // light tint (≈ original brightness, new hue)
+$xibo-color-primary-l10: #e4efff;   // xibo-blue-50
+$xibo-color-primary-l5: #f0f6ff;    // slightly lighter than xibo-blue-50
 
-//  Neutral
+//  Neutral (retuned toward the React/Tailwind grey scale)
 $xibo-color-neutral-0: #fff;
-$xibo-color-neutral-100: #FCFCFC;
-$xibo-color-neutral-300: #E9E9E9;
-$xibo-color-neutral-500: #CECECE;
-$xibo-color-neutral-600: #CCC;
-$xibo-color-neutral-700: #898989;
-$xibo-color-neutral-900: #333333;
+$xibo-color-neutral-100: #f9fafb;   // gray-50
+$xibo-color-neutral-300: #e5e7eb;   // gray-200
+$xibo-color-neutral-500: #d1d5db;   // gray-300
+$xibo-color-neutral-600: #d1d5db;   // gray-300
+$xibo-color-neutral-700: #828998;   // cool grey, lightness-matched to original #898989
+$xibo-color-neutral-900: #1f2937;   // gray-800
 $xibo-color-neutral-1000: #000000;
 
-// Semantic
-$xibo-color-semantic-error: #BF5555;
-$xibo-color-semantic-success: #3E9A42;
-$xibo-color-semantic-warning: #D4D74E;
-$xibo-color-semantic-info: #5593BF;
+// Semantic (React/Tailwind equivalents)
+$xibo-color-semantic-error: #dc2626;    // red-600
+$xibo-color-semantic-success: #0d9488;  // teal-600
+$xibo-color-semantic-warning: #fdc533;  // amber, lightness-matched to original #D4D74E
+$xibo-color-semantic-info: #4087fc;     // blue, lightness-matched to original #5593BF
 
 // Overlay
 $xibo-color-overlay: rgba(0, 0, 0, 0.6);

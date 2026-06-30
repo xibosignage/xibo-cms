@@ -179,7 +179,7 @@ export function useLayoutActions({
         throw new Error('Invalid layout response');
       }
 
-      window.open(`/layout/designer/${newLayout.layoutId}`, '_blank', 'noopener,noreferrer');
+      navigate(`/design/layout/${newLayout.layoutId}/editor`);
     } catch (error) {
       console.error(error);
       notify.error(t('Failed to create layout'));
@@ -187,7 +187,7 @@ export function useLayoutActions({
   };
 
   const handleOpenLayout = (layoutId: number) => {
-    window.open(`/layout/designer/${layoutId}`, '_blank');
+    navigate(`/design/layout/${layoutId}/editor`);
   };
 
   const handleCheckoutLayout = async (layoutId: number) => {
@@ -196,9 +196,9 @@ export function useLayoutActions({
     try {
       await checkoutLayout(layoutId);
 
-      window.open(`/layout/designer/${layoutId}`, '_blank');
-
       notify.success(t('Layout checked out successfully'));
+
+      navigate(`/design/layout/${layoutId}/editor`);
     } catch (error) {
       console.error(error);
       notify.error(t('Failed to checkout layout'));
