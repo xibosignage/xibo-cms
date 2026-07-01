@@ -332,8 +332,14 @@ class Notification extends Base
 
         return $response
             ->withStatus(200)
-            ->withHeader('X-Total-Count', $this->userNotificationFactory->countLast() + count($environmentNotifications))
-            ->withHeader('X-Unread-Count', $this->userNotificationFactory->countMyUnread() + count($environmentNotifications))
+            ->withHeader(
+                'X-Total-Count',
+                $this->userNotificationFactory->countLast() + count($environmentNotifications)
+            )
+            ->withHeader(
+                'X-Unread-Count',
+                $this->userNotificationFactory->countMyUnread() + count($environmentNotifications)
+            )
             ->withJson(array_merge($environmentNotifications, $notifications));
     }
 
@@ -567,7 +573,12 @@ class Notification extends Base
             $notification->userGroups ?? []
         );
 
-        $this->assignAudienceFromParams($notification, $sanitizedParams, $originalDisplayGroupIds, $originalUserGroupIds);
+        $this->assignAudienceFromParams(
+            $notification,
+            $sanitizedParams,
+            $originalDisplayGroupIds,
+            $originalUserGroupIds
+        );
 
         $notification->save();
 
@@ -662,11 +673,6 @@ class Notification extends Base
         if (Environment::isDevMode()) {
             $notifications[] = $this->buildEnvironmentNotification(__('CMS is running in DEV mode'));
         } elseif ($this->getUser()->userTypeId === 1) {
-            if (file_exists(PROJECT_ROOT . '/web/install/index.php')) {
-                $notifications[] = $this->buildEnvironmentNotification(
-                    __('Installation files should be removed — web/install/index.php still exists')
-                );
-            }
             if (!Environment::checkUrl($request->getUri())) {
                 $notifications[] = $this->buildEnvironmentNotification(
                     __('CMS URL configuration warning — /web/ should not appear in the URL')

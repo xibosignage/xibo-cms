@@ -96,7 +96,6 @@ class ContainerFactory
                 $basePath = str_replace('/api/authorize', '', $basePath);
                 $basePath = str_replace('/api', '', $basePath);
                 $basePath = str_replace('/maintenance', '', $basePath);
-                $basePath = str_replace('/install', '', $basePath);
                 $basePath = str_replace('/preview', '', $basePath);
 
                 // Handle an empty (we always have our root with reference to `/`
