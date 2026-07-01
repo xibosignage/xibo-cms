@@ -96,7 +96,7 @@ describe('Dayparting page - row share', () => {
     // Only the Share modal opens — not the Edit or Delete modal.
     expect(screen.queryByRole('dialog', { name: /edit daypart/i })).not.toBeInTheDocument();
     expect(screen.queryByText('Delete Daypart?')).not.toBeInTheDocument();
-  }, 20_000);
+  });
 });
 
 // =============================================================================

@@ -459,7 +459,7 @@ class Stats extends Base
         }
 
         // Decide what our units are going to be, based on the size
-        $base = floor(log($maxSize) / log(1024));
+        $base = ($maxSize > 0) ? (int)floor(log($maxSize) / log(1024)) : 0;
 
         $labels = [];
         $data = [];
@@ -479,12 +479,19 @@ class Stats extends Base
         // Set up some suffixes
         $suffixes = array('bytes', 'k', 'M', 'G', 'T');
 
-        $this->getState()->extra = [
+        $bandwidthResult = [
             'labels' => $labels,
             'data' => $data,
             'backgroundColor' => $backgroundColor,
             'postUnits' => ($suffixes[$base] ?? '')
         ];
+
+        if ($this->isJson($request)) {
+            $this->getState()->template = '';
+            $this->getState()->setData($bandwidthResult);
+        } else {
+            $this->getState()->extra = $bandwidthResult;
+        }
 
         return $this->render($request, $response);
     }

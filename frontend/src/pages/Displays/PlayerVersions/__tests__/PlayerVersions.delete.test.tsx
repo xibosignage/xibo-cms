@@ -95,7 +95,7 @@ describe('Player Versions page - single delete', () => {
     ).toBeInTheDocument();
     // Routing: the Delete action opens ONLY the Delete modal — not the Edit modal.
     expect(screen.getAllByRole('dialog')).toHaveLength(1);
-  }, 20_000);
+  });
 
   test('clicking Cancel closes the modal without deleting', async () => {
     const user = userEvent.setup();
@@ -106,7 +106,7 @@ describe('Player Versions page - single delete', () => {
 
     expect(screen.queryByText('Delete Player Version?')).not.toBeInTheDocument();
     expect(deletePlayerVersion).not.toHaveBeenCalled();
-  }, 20_000);
+  });
 
   test('clicking Yes, Delete removes the version and closes the modal', async () => {
     const user = userEvent.setup();
@@ -122,7 +122,7 @@ describe('Player Versions page - single delete', () => {
     await waitFor(() => {
       expect(screen.queryByText('Delete Player Version?')).not.toBeInTheDocument();
     });
-  }, 20_000);
+  });
 
   test('the table refreshes after a successful delete', async () => {
     const user = userEvent.setup();
@@ -138,7 +138,7 @@ describe('Player Versions page - single delete', () => {
         fetchCountBeforeDelete,
       );
     });
-  }, 20_000);
+  });
 
   test('Delete button shows "Deleting…" while the request is in progress', async () => {
     const user = userEvent.setup();
@@ -156,7 +156,7 @@ describe('Player Versions page - single delete', () => {
     expect(await screen.findByRole('button', { name: /deleting/i })).toBeDisabled();
 
     resolveDelete();
-  }, 20_000);
+  });
 
   test('a failed delete keeps the modal open and shows the error', async () => {
     const user = userEvent.setup();
@@ -171,7 +171,7 @@ describe('Player Versions page - single delete', () => {
 
     expect(await screen.findByText('Cannot delete — version is in use.')).toBeInTheDocument();
     expect(screen.getByText('Delete Player Version?')).toBeInTheDocument();
-  }, 20_000);
+  });
 
   test('single item: heading is singular', async () => {
     const user = userEvent.setup();
@@ -181,7 +181,7 @@ describe('Player Versions page - single delete', () => {
 
     expect(await screen.findByText('Delete Player Version?')).toBeInTheDocument();
     expect(screen.queryByText('Delete Player Versions?')).not.toBeInTheDocument();
-  }, 20_000);
+  });
 });
 
 // =============================================================================

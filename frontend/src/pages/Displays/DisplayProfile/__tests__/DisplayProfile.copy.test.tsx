@@ -51,12 +51,6 @@ vi.mock('../components/CopyDisplayProfileModal', () => ({
   ),
 }));
 
-// Every test here drives the slow path: lazy page render → open the row's
-// floating actions menu → portal-rendered menu item → modal. Under parallel
-// JSDOM contention that can exceed the 5s default, so the whole file gets a
-// generous timeout. Each test still completes in ~1s in isolation.
-vi.setConfig({ testTimeout: 20_000 });
-
 // =============================================================================
 // Tests — Copy Display Profile wiring
 // =============================================================================

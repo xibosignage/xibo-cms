@@ -19,56 +19,44 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { ChevronLeftSquare, ChevronRightSquare, X } from 'lucide-react';
+import { X } from 'lucide-react';
 
 import { useBranding } from '@/context/BrandingContext';
 
 interface Props {
   isCollapsed: boolean;
-  toggleSidebar: () => void;
+  contentHidden: boolean;
   closeMobileDrawer?: () => void;
 }
 
-export function SidebarHeader({ isCollapsed, toggleSidebar, closeMobileDrawer }: Props) {
+export function SidebarHeader({ isCollapsed, contentHidden, closeMobileDrawer }: Props) {
   const { logoUrl, faviconUrl, appName } = useBranding();
 
+  const showLogo = !contentHidden;
+
   return (
-    <>
-      {isCollapsed && (
+    <div className={`flex items-center h-10 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
+      {showLogo ? (
+        <div className="flex items-center animate-fade-in">
+          <img
+            src={logoUrl}
+            alt={appName}
+            className="w-[77.287px] h-10 object-contain object-left"
+          />
+        </div>
+      ) : (
         <div className="flex justify-center">
-          <img src={faviconUrl} alt={appName} className="w-11 h-10" />
+          <img src={faviconUrl} alt={appName} className="w-11 h-10 object-contain" />
         </div>
       )}
 
-      <div
-        className={`flex items-center ${
-          isCollapsed ? 'justify-center absolute top-5 -right-3' : 'justify-between'
-        }`}
+      <button
+        onClick={closeMobileDrawer}
+        className="md:hidden flex w-9.5 h-9.5 items-center
+          text-xibo-blue-100 justify-center rounded-lg hover:bg-white/10"
       >
-        {!isCollapsed && (
-          <div className="flex gap-2 items-end">
-            <img src={logoUrl} alt={appName} className="w-[77.287px] h-auto" />
-          </div>
-        )}
-
-        <button
-          onClick={toggleSidebar}
-          className={`md:flex hidden items-center justify-center rounded-lg
-            bg-xibo-blue-800 text-xibo-white z-10 transition-colors
-            hover:bg-white/10 cursor-pointer
-            ${isCollapsed ? 'w-6 h-6 hover:bg-xibo-blue-800' : 'w-9.5 h-9.5'}
-          `}
-        >
-          {isCollapsed ? <ChevronRightSquare size={16} /> : <ChevronLeftSquare size={16} />}
-        </button>
-        <button
-          onClick={closeMobileDrawer}
-          className="md:hidden flex w-9.5 h-9.5 items-center
-            text-xibo-blue-100 justify-center rounded-lg hover:bg-white/10"
-        >
-          <X size={16} />
-        </button>
-      </div>
-    </>
+        <X size={16} />
+      </button>
+    </div>
   );
 }

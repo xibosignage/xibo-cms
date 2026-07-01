@@ -56,66 +56,57 @@ describe('Logs Page - Filters', () => {
   // FilterInputs renders its children in the DOM at all times but hides them with
   // aria-hidden when closed. getByRole respects aria-hidden, so the Apply Filter
   // button is only accessible when the panel is open.
+  // The panel starts open by default; the Filters button toggles it closed/open.
 
-  it('the Apply Filter action is not accessible before the Filters panel is opened', () => {
+  it('the Apply Filter action is accessible when the page loads', () => {
     renderWithProviders(<Logs />);
-
-    expect(screen.queryByRole('button', { name: /apply filter/i })).not.toBeInTheDocument();
-  });
-
-  it('the Apply Filter action is accessible after the Filters button is clicked', async () => {
-    const { user } = renderWithProviders(<Logs />);
-
-    await user.click(screen.getByRole('button', { name: /filters/i }));
 
     expect(screen.getByRole('button', { name: /apply filter/i })).toBeInTheDocument();
   });
 
-  it('the Apply Filter action is hidden again after Filters is clicked a second time', async () => {
+  it('the Apply Filter action is not accessible after the Filters button is clicked', async () => {
     const { user } = renderWithProviders(<Logs />);
 
-    await user.click(screen.getByRole('button', { name: /filters/i })); // open
-    await user.click(screen.getByRole('button', { name: /filters/i })); // close
+    await user.click(screen.getByRole('button', { name: /filters/i }));
 
     expect(screen.queryByRole('button', { name: /apply filter/i })).not.toBeInTheDocument();
   });
 
-  it('shows the From Date label when the filter panel is open', async () => {
+  it('the Apply Filter action is accessible again after Filters is clicked a second time', async () => {
     const { user } = renderWithProviders(<Logs />);
 
-    await user.click(screen.getByRole('button', { name: /filters/i }));
+    await user.click(screen.getByRole('button', { name: /filters/i })); // close
+    await user.click(screen.getByRole('button', { name: /filters/i })); // open
+
+    expect(screen.getByRole('button', { name: /apply filter/i })).toBeInTheDocument();
+  });
+
+  it('shows the From Date label when the page loads', () => {
+    renderWithProviders(<Logs />);
 
     expect(screen.getByText('From Date')).toBeInTheDocument();
   });
 
-  it('shows the Duration Back label when the filter panel is open', async () => {
-    const { user } = renderWithProviders(<Logs />);
-
-    await user.click(screen.getByRole('button', { name: /filters/i }));
+  it('shows the Duration Back label when the page loads', () => {
+    renderWithProviders(<Logs />);
 
     expect(screen.getByText('Duration Back')).toBeInTheDocument();
   });
 
-  it('shows the Level label when the filter panel is open', async () => {
-    const { user } = renderWithProviders(<Logs />);
-
-    await user.click(screen.getByRole('button', { name: /filters/i }));
+  it('shows the Level label when the page loads', () => {
+    renderWithProviders(<Logs />);
 
     expect(screen.getByText('Level')).toBeInTheDocument();
   });
 
-  it('shows the Run No label when the filter panel is open', async () => {
-    const { user } = renderWithProviders(<Logs />);
-
-    await user.click(screen.getByRole('button', { name: /filters/i }));
+  it('shows the Run No label when the page loads', () => {
+    renderWithProviders(<Logs />);
 
     expect(screen.getByText('Run No')).toBeInTheDocument();
   });
 
-  it('shows the Display label when the filter panel is open', async () => {
-    const { user } = renderWithProviders(<Logs />);
-
-    await user.click(screen.getByRole('button', { name: /filters/i }));
+  it('shows the Display label when the page loads', () => {
+    renderWithProviders(<Logs />);
 
     expect(screen.getByText('Display')).toBeInTheDocument();
   });
@@ -123,7 +114,6 @@ describe('Logs Page - Filters', () => {
   it('resets pagination to page 0 when Apply Filter is clicked', async () => {
     const { user } = renderWithProviders(<Logs />);
 
-    await user.click(screen.getByRole('button', { name: /filters/i }));
     await user.click(screen.getByRole('button', { name: /apply filter/i }));
 
     expect(defaultTableState.setPagination).toHaveBeenCalled();
@@ -136,7 +126,6 @@ describe('Logs Page - Filters', () => {
       screen.getByText('Set your filters above and click Apply Filter to view logs.'),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /filters/i }));
     await user.click(screen.getByRole('button', { name: /apply filter/i }));
 
     expect(
@@ -144,10 +133,17 @@ describe('Logs Page - Filters', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('closes the filter panel after Apply Filter is clicked', async () => {
+    const { user } = renderWithProviders(<Logs />);
+
+    await user.click(screen.getByRole('button', { name: /apply filter/i }));
+
+    expect(screen.queryByRole('button', { name: /apply filter/i })).not.toBeInTheDocument();
+  });
+
   it('calls setFilterInputs when Reset is clicked', async () => {
     const { user } = renderWithProviders(<Logs />);
 
-    await user.click(screen.getByRole('button', { name: /filters/i }));
     await user.click(screen.getByRole('button', { name: /reset/i }));
 
     expect(defaultTableState.setFilterInputs).toHaveBeenCalled();
@@ -156,7 +152,6 @@ describe('Logs Page - Filters', () => {
   it('resets pagination when Reset is clicked', async () => {
     const { user } = renderWithProviders(<Logs />);
 
-    await user.click(screen.getByRole('button', { name: /filters/i }));
     await user.click(screen.getByRole('button', { name: /reset/i }));
 
     expect(defaultTableState.setPagination).toHaveBeenCalled();

@@ -73,10 +73,6 @@ vi.mock('../components/AddDisplayProfileModal', () => ({
 // Tests — Add Display Profile wiring
 // =============================================================================
 
-// Full-page render + interaction can exceed the 5s default under parallel
-// JSDOM contention (each test still runs in ~1s in isolation).
-vi.setConfig({ testTimeout: 20_000 });
-
 describe('DisplayProfile page - add wiring', () => {
   beforeEach(() => {
     testQueryClient.clear();
