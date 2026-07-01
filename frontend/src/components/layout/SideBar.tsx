@@ -45,7 +45,7 @@ export default function SidebarMenu({ isCollapsed, closeMobileDrawer }: SidebarM
   const { t } = useTranslation();
   const { user } = useUserContext();
   const location = useLocation();
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [openMenus, setOpenMenus] = useState<Set<string>>(new Set());
 
   // Hides text labels, logo, chevrons, and sublinks.
   // On collapse: hides immediately. On expand: delays until container finishes animating.
@@ -94,14 +94,21 @@ export default function SidebarMenu({ isCollapsed, closeMobileDrawer }: SidebarM
       );
     });
 
-    // If we found a matching parent, expand it
     if (activeParent) {
-      setOpenMenu(activeParent.path);
+      setOpenMenus((prev) => new Set([...prev, activeParent.path]));
     }
   }, [location.pathname, visibleRoutes]);
 
   const toggleMenu = (path: string) => {
-    setOpenMenu((prev) => (prev === path ? null : path));
+    setOpenMenus((prev) => {
+      const next = new Set(prev);
+      if (next.has(path)) {
+        next.delete(path);
+      } else {
+        next.add(path);
+      }
+      return next;
+    });
   };
 
   return (
@@ -119,7 +126,7 @@ export default function SidebarMenu({ isCollapsed, closeMobileDrawer }: SidebarM
       >
         {visibleRoutes.map((route, index) => {
           const label = !contentHidden ? t(route.labelKey) : null;
-          const isOpen = openMenu === route.path;
+          const isOpen = openMenus.has(route.path);
           const isActive = isRouteActive(route, location.pathname);
           return (
             <div
