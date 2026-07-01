@@ -38,6 +38,7 @@ import { useNavigate } from 'react-router-dom';
 
 import InfoBanner from '@/components/ui/InfoBanner';
 import { useUserContext } from '@/context/UserContext';
+import { useDismissOnIframeFocus } from '@/hooks/useDismissOnIframeFocus';
 import ShowNotificationModal from '@/pages/Notification/components/ShowNotificationModal';
 import {
   notificationQueryKeys,
@@ -139,6 +140,8 @@ export default function NotificationDropdown() {
   const click = useClick(context);
   const dismiss = useDismiss(context);
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
+
+  useDismissOnIframeFocus(isOpen, () => setIsOpen(false));
 
   const { data, isFetching } = useNotificationInbox();
 

@@ -25,6 +25,8 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import type { NavigateFunction } from 'react-router-dom';
 
+import EditorChrome from '@/components/editor/EditorChrome';
+
 interface EditorHostProps {
   id: string;
   editorBasePath: string;
@@ -34,6 +36,7 @@ interface EditorHostProps {
   title: string;
   forwardQuery?: string;
   readySelector?: string;
+  showChrome?: boolean;
 }
 
 const READY_TIMEOUT_MS = 8000;
@@ -63,6 +66,7 @@ export default function EditorHost({
   title,
   forwardQuery,
   readySelector,
+  showChrome,
 }: EditorHostProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -152,6 +156,8 @@ export default function EditorHost({
           <span className="text-sm font-medium text-gray-500">{t('Loading editor…')}</span>
         </div>
       )}
+
+      {!loading && showChrome && <EditorChrome />}
 
       <iframe
         ref={iframeRef}
