@@ -102,7 +102,7 @@ export default function Welcome() {
           </p>
           <div className="flex gap-2 mt-5">
             <a
-              href="https://xibosignage.com/docs"
+              href="http://docs.xibosignage.com"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"

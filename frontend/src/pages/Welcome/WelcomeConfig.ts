@@ -176,10 +176,10 @@ export const RESOURCE_CARDS: ResourceCard[] = [
     icon: BookOpen,
     links: [
       { labelKey: 'User Manual', url: 'https://xibosignage.com/docs' },
-      { labelKey: 'Admin', url: 'https://xibosignage.com/docs/setup', superAdminOnly: true },
+      { labelKey: 'Admin', url: 'http://docs.xibosignage.com/', superAdminOnly: true },
       {
         labelKey: 'Developer',
-        url: 'https://xibosignage.com/docs/developer',
+        url: 'http://docs.xibosignage.com/',
         superAdminOnly: true,
       },
     ],
@@ -198,9 +198,6 @@ export const RESOURCE_CARDS: ResourceCard[] = [
     iconName: 'help',
     icon: CircleHelp,
     xiboOnly: true,
-    links: [
-      { labelKey: 'Help Centre', url: 'https://xibosignage.com/install-upgrade#install' },
-      { labelKey: 'Community', url: 'https://community.xibo.org.uk' },
-    ],
+    links: [{ labelKey: 'Help Centre', url: 'https://xibosignage.com/install-upgrade#install' }],
   },
 ];
