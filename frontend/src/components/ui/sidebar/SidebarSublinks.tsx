@@ -27,16 +27,16 @@ import type { AppRoute } from '@/config/appRoutes';
 interface SidebarSubLinksProps {
   route: AppRoute;
   isOpen: boolean;
-  isCollapsed: boolean;
+  contentHidden: boolean;
 }
 
-export function SidebarSubLinks({ route, isOpen, isCollapsed }: SidebarSubLinksProps) {
+export function SidebarSubLinks({ route, isOpen, contentHidden }: SidebarSubLinksProps) {
   const { t } = useTranslation();
   const location = useLocation();
 
   return (
     <>
-      {!isCollapsed && route.subLinks && (
+      {!contentHidden && route.subLinks && (
         <div
           className={`overflow-hidden transition-all duration-500 ease-in-out w-full ${
             isOpen ? 'max-h-200 opacity-100' : 'max-h-0 opacity-0'

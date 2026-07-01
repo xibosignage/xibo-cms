@@ -94,6 +94,9 @@ vi.mock('@/components/ui/modals/ScheduleEventModal', () => ({
 vi.mock('../../components/ManageGroupMembershipModal', () => ({
   default: () => <div role="dialog" aria-label="Manage Membership" />,
 }));
+vi.mock('../../components/ManageDisplayModal', () => ({
+  default: () => <div role="dialog" aria-label="Manage Display" />,
+}));
 
 // =============================================================================
 // Helpers
@@ -132,7 +135,6 @@ describe('Displays page — row action wiring', () => {
     testQueryClient.clear();
     vi.clearAllMocks();
     mockFetchDisplays(SINGLE_DISPLAY);
-    vi.spyOn(window, 'open').mockReturnValue(null);
   });
 
   // ---------------------------------------------------------------------------
@@ -188,16 +190,16 @@ describe('Displays page — row action wiring', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // Manage — opens the display management page in a new browser tab
+  // Manage — opens the ManageDisplayModal
   // ---------------------------------------------------------------------------
-  test('clicking Manage opens the display management page in a new tab', async () => {
+  test('clicking Manage opens the Manage Display modal', async () => {
     const user = userEvent.setup();
     renderDisplaysPage();
 
     await openMoreActions(user);
     await user.click(screen.getByRole('button', { name: /^manage$/i }));
 
-    expect(window.open).toHaveBeenCalledWith(`/display/manage/${mockDisplay.displayId}`, '_blank');
+    await screen.findByRole('dialog', { name: /manage display/i });
   });
 
   // ---------------------------------------------------------------------------

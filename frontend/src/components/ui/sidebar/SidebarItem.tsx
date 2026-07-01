@@ -27,6 +27,7 @@ import type { AppRoute } from '@/config/appRoutes';
 interface SidebarItemProps {
   route: AppRoute;
   isCollapsed: boolean;
+  contentHidden: boolean;
   isOpen: boolean;
   isActive: boolean;
   label: string | null;
@@ -72,6 +73,7 @@ function getTarget(route: AppRoute) {
 export function SidebarItem({
   route,
   isCollapsed,
+  contentHidden,
   isOpen,
   isActive,
   label,
@@ -103,7 +105,7 @@ export function SidebarItem({
   const content = (
     <>
       {route.icon && <route.icon width={20} height={20} className={isCollapsed ? '' : 'mr-2'} />}
-      {!isCollapsed && <span className="flex-1">{label}</span>}
+      {!contentHidden && <span className="flex-1 animate-fade-in">{label}</span>}
     </>
   );
 
@@ -125,7 +127,7 @@ export function SidebarItem({
         </NavLink>
       )}
 
-      {!isCollapsed && route.subLinks && (
+      {!contentHidden && route.subLinks && (
         <button
           onClick={(e) => {
             e.preventDefault();

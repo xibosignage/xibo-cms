@@ -88,7 +88,7 @@ describe('Commands page - single delete', () => {
     expect(screen.getByText(mockCommand.command, { selector: 'strong' })).toBeInTheDocument();
     // Routing: the Delete action opens ONLY the Delete modal — not Share/Edit.
     expect(screen.queryByRole('dialog', { name: /share command/i })).not.toBeInTheDocument();
-  }, 20_000);
+  });
 
   test('clicking Cancel closes the modal without deleting', async () => {
     const user = userEvent.setup();
@@ -99,7 +99,7 @@ describe('Commands page - single delete', () => {
 
     expect(screen.queryByText('Delete Command?')).not.toBeInTheDocument();
     expect(deleteCommand).not.toHaveBeenCalled();
-  }, 20_000);
+  });
 
   test('clicking Yes, Delete removes the command and closes the modal', async () => {
     const user = userEvent.setup();
@@ -115,7 +115,7 @@ describe('Commands page - single delete', () => {
     await waitFor(() => {
       expect(screen.queryByText('Delete Command?')).not.toBeInTheDocument();
     });
-  }, 20_000);
+  });
 
   test('Delete button shows "Deleting…" while the request is in progress', async () => {
     const user = userEvent.setup();
@@ -134,7 +134,7 @@ describe('Commands page - single delete', () => {
 
     // Resolve so the test doesn't leak a pending promise.
     resolveDelete();
-  }, 20_000);
+  });
 
   test('a failed delete keeps the modal open and shows the error', async () => {
     const user = userEvent.setup();
@@ -149,7 +149,7 @@ describe('Commands page - single delete', () => {
 
     expect(await screen.findByText('Cannot delete — command is in use.')).toBeInTheDocument();
     expect(screen.getByText('Delete Command?')).toBeInTheDocument();
-  }, 20_000);
+  });
 
   test('single item: heading is singular', async () => {
     const user = userEvent.setup();
@@ -159,7 +159,7 @@ describe('Commands page - single delete', () => {
 
     expect(await screen.findByText('Delete Command?')).toBeInTheDocument();
     expect(screen.queryByText('Delete Commands?')).not.toBeInTheDocument();
-  }, 20_000);
+  });
 });
 
 // =============================================================================

@@ -37,6 +37,7 @@ import AssignMediaModal from './AssignMediaModal';
 import CollectNowModal from './CollectNowModal';
 import DeleteDisplayModal from './DeleteDisplayModal';
 import EditDisplayModal from './EditDisplayModal';
+import ManageDisplayModal from './ManageDisplayModal';
 import ManageGroupMembershipModal from './ManageGroupMembershipModal';
 import SendCommandModal from './SendCommandModal';
 import SetBandwidthModal from './SetBandwidthModal';
@@ -116,6 +117,10 @@ export function DisplayModals({ actions, selection, handlers }: DisplayModalsPro
   return (
     <>
       {isModalOpen('add') && <AddDisplayModal onClose={actions.closeModal} />}
+
+      {isModalOpen('manage') && display && (
+        <ManageDisplayModal display={display} onClose={actions.closeModal} />
+      )}
 
       {isModalOpen('edit') && (
         <EditDisplayModal

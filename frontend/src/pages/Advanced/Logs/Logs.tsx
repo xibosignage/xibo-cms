@@ -76,7 +76,7 @@ export default function Logs() {
   });
 
   const [submittedFilter, setSubmittedFilter] = useState<LogsFilterInput | null>(null);
-  const [openFilter, setOpenFilter] = useState(false);
+  const [openFilter, setOpenFilter] = useState(true);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
 
   const closeModal = () => setActiveModal(null);
@@ -100,6 +100,7 @@ export default function Logs() {
   const handleApply = () => {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
     setSubmittedFilter({ ...filterInputs });
+    setOpenFilter(false);
   };
 
   const handleRefresh = () => {

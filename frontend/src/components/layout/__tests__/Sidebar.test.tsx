@@ -86,8 +86,6 @@ const superAdminUser = {
   },
 };
 
-const mockToggleSidebar = vi.fn();
-
 describe('Sidebar Menu (The Navigation Bar)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -98,7 +96,7 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       <UserProvider initialUser={superAdminUser as any}>
         <MemoryRouter>
-          <SidebarMenu isCollapsed={false} toggleSidebar={mockToggleSidebar} />
+          <SidebarMenu isCollapsed={false} />
         </MemoryRouter>
       </UserProvider>,
     );
@@ -127,7 +125,7 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       <UserProvider initialUser={superAdminUser as any}>
         <MemoryRouter>
-          <SidebarMenu isCollapsed={false} toggleSidebar={mockToggleSidebar} />
+          <SidebarMenu isCollapsed={false} />
         </MemoryRouter>
       </UserProvider>,
     );
@@ -173,27 +171,6 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
       'href',
       '/administration/settings',
     );
-    // Heavy synchronous test: renders the full sidebar then clicks through 7 menu
-    // groups, re-rendering and re-querying the whole DOM each time (~2.5s in isolation).
-    // The 5s default flakes under parallel-suite JSDOM/CPU contention, so bump it.
-  }, 20_000);
-
-  it('should try to close when the hamburger button is clicked', () => {
-    render(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      <UserProvider initialUser={superAdminUser as any}>
-        <MemoryRouter>
-          <SidebarMenu isCollapsed={false} toggleSidebar={mockToggleSidebar} />
-        </MemoryRouter>
-      </UserProvider>,
-    );
-
-    const buttons = screen.getAllByRole('button');
-    const toggleButton = buttons[0];
-
-    fireEvent.click(toggleButton!);
-
-    expect(mockToggleSidebar).toHaveBeenCalledTimes(1);
   });
 
   it('should hide the text labels when collapsed', () => {
@@ -201,7 +178,7 @@ describe('Sidebar Menu (The Navigation Bar)', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       <UserProvider initialUser={superAdminUser as any}>
         <MemoryRouter>
-          <SidebarMenu isCollapsed={true} toggleSidebar={mockToggleSidebar} />
+          <SidebarMenu isCollapsed={true} />
         </MemoryRouter>
       </UserProvider>,
     );
