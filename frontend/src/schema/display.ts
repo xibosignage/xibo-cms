@@ -27,7 +27,7 @@ export const getEditDisplaySchema = (t: TFunction) =>
     display: z
       .string()
       .min(1, t('Name is required'))
-      .max(254, t('Name must be 254 characters or less')),
+      .max(50, t('Name cannot exceed 50 characters')),
     description: z.string().max(254, t('Description must be 254 characters or less')).optional(),
     latitude: z
       .number()
@@ -40,10 +40,15 @@ export const getEditDisplaySchema = (t: TFunction) =>
       .max(180, t('Longitude must be between -180 and 180'))
       .optional(),
     bandwidthLimit: z.number().int().min(0, t('Bandwidth limit must be 0 or greater')).optional(),
-    costPerPlay: z.number().min(0, t('Cost per play must be 0 or greater')).optional(),
+    screenSize: z.number().min(0, t('Value must be greater than or equal to 0.')).optional(),
+    costPerPlay: z.number().min(0, t('Value must be greater than or equal to 0.')).optional(),
     impressionsPerPlay: z
       .number()
-      .min(0, t('Impressions per play must be 0 or greater'))
+      .min(0, t('Value must be greater than or equal to 0.'))
+      .optional(),
+    wakeOnLanTime: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):[0-5]\d$/, t('Please enter a valid time format (e.g., HH:MM).'))
       .optional(),
   });
 
