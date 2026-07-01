@@ -24,6 +24,7 @@ import { isAxiosError } from 'axios';
 import type { TFunction } from 'i18next';
 import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { notify } from '@/components/ui/Notification';
 import type { PublishValue } from '@/components/ui/forms/PublishDateSelect';
@@ -61,6 +62,7 @@ export function useTemplateActions({
   const [isPublishing, setIsPublishing] = useState(false);
   const [isDiscarding, setIsDiscarding] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const navigate = useNavigate();
 
   const confirmDelete = async (itemsToDelete: Template[]) => {
     if (itemsToDelete.length === 0 || isDeleting) {
@@ -263,7 +265,7 @@ export function useTemplateActions({
   };
 
   const handleAlterTemplate = (layoutId: number) => {
-    window.open(`/layout/designer/${layoutId}?isTemplateEditor=1`, '_blank');
+    navigate(`/design/layout/${layoutId}/editor?isTemplateEditor=1`);
   };
 
   return {

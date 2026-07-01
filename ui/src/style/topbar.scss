@@ -133,11 +133,9 @@
     .layout-action-menu {
         margin: 0;
         padding: 0;
-        // Fix position for now
         position: fixed;
         top: 0;
-        right: 114px;
-        // Fix position for now
+        right: 12px;
 
         #layoutJumpListContainer {
             min-width: 120px;

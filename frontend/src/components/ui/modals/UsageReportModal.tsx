@@ -24,6 +24,8 @@ import type { TFunction } from 'i18next';
 import { Palette, Eye } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation, useNavigate } from 'react-router-dom';
+import type { NavigateFunction } from 'react-router-dom';
 
 import DatePickerInput from '@/components/ui/forms/DatePickerInput';
 import Modal from '@/components/ui/modals/Modal';
@@ -74,7 +76,11 @@ const getDisplaysColumns = (t: TFunction): ColumnDef<Display>[] => [
   },
 ];
 
-const getLayoutsColumns = (t: TFunction): ColumnDef<Layout>[] => [
+const getLayoutsColumns = (
+  t: TFunction,
+  navigate: NavigateFunction,
+  from: string,
+): ColumnDef<Layout>[] => [
   {
     accessorKey: 'layoutId',
     header: t('ID'),
@@ -117,7 +123,8 @@ const getLayoutsColumns = (t: TFunction): ColumnDef<Layout>[] => [
                     label: t('Design'),
                     icon: Palette,
                     isQuickAction: true,
-                    onClick: () => window.open(`/layout/designer/${row.layoutId}`, '_blank'),
+                    onClick: () =>
+                      navigate(`/design/layout/${row.layoutId}/editor`, { state: { from } }),
                   } as const,
                 ]
               : []),
@@ -147,6 +154,8 @@ export default function UsageReportModal({
   onClose,
 }: UsageReportModalProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [activeTab, setActiveTab] = useState<Tab>('displays');
 
@@ -236,7 +245,7 @@ export default function UsageReportModal({
   }, [entityId, entityType, activeTab]);
 
   const displaysColumns = getDisplaysColumns(t);
-  const layoutsColumns = getLayoutsColumns(t);
+  const layoutsColumns = getLayoutsColumns(t, navigate, `${location.pathname}${location.search}`);
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'displays', label: t('Displays') },

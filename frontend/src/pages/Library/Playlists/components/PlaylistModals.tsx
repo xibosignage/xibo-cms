@@ -61,6 +61,7 @@ interface PlaylistModalsProps {
     handleConfirmMove: (folderId: number) => void;
     handleConfirmEnableStats: (value: string) => void;
   };
+  openTimeline: (playlistId: number) => void;
   folderActions: ReturnType<typeof useFolderActions>;
 }
 
@@ -68,6 +69,7 @@ export function PlaylistModals({
   actions,
   selection,
   handlers,
+  openTimeline,
   folderActions,
 }: PlaylistModalsProps) {
   const { t } = useTranslation();
@@ -83,8 +85,12 @@ export function PlaylistModals({
             actions.closeModal();
           }}
           data={selection.selectedPlaylist}
-          onSave={() => {
+          onSave={(saved) => {
             actions.handleRefresh();
+            // After creating a new (non-dynamic) playlist, jump to the Timeline editor
+            if (!selection.selectedPlaylistId && !saved.isDynamic) {
+              openTimeline(saved.playlistId);
+            }
           }}
         />
       )}
