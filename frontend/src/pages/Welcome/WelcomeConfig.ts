@@ -176,10 +176,10 @@ export const RESOURCE_CARDS: ResourceCard[] = [
     icon: BookOpen,
     links: [
       { labelKey: 'User Manual', url: 'https://xibosignage.com/docs' },
-      { labelKey: 'Admin', url: 'http://docs.xibosignage.com/', superAdminOnly: true },
+      { labelKey: 'Admin', url: 'https://docs.xibosignage.com/', superAdminOnly: true },
       {
         labelKey: 'Developer',
-        url: 'http://docs.xibosignage.com/',
+        url: 'https://docs.xibosignage.com/',
         superAdminOnly: true,
       },
     ],
