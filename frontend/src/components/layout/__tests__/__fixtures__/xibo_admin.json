@@ -74,7 +74,6 @@
     "display.syncView": true,
     "display.syncAdd": true,
     "display.syncModify": true,
-    "fault.view": true,
     "log.view": true,
     "session.view": true,
     "auditlog.view": true,

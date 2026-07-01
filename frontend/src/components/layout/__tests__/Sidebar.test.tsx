@@ -81,7 +81,6 @@ const superAdminUser = {
     'log.view': true,
     'session.view': true,
     'auditlog.view': true,
-    'fault.view': true,
     'developer.edit': true,
   },
 };

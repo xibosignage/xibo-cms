@@ -322,7 +322,7 @@ describe('SidebarMenu — Permissions', () => {
       }
     });
 
-    // log.view grants Log but not Sessions, Audit Trail, or Report Fault
+    // log.view grants Log but not Sessions or Audit Trail
     test('Display Manager sees only Log under Advanced', () => {
       renderSidebar({ user: displayManagerUser });
       fireEvent.click(getChevronButton('Advanced'));
@@ -330,7 +330,7 @@ describe('SidebarMenu — Permissions', () => {
       const logVisible = getVisibleByText('Log');
       expect(logVisible.length).toBeGreaterThanOrEqual(1);
 
-      for (const label of ['Sessions', 'Audit Trail', 'Report Fault']) {
+      for (const label of ['Sessions', 'Audit Trail']) {
         const visible = getVisibleByText(label);
         expect(visible).toHaveLength(0);
       }

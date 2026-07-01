@@ -426,7 +426,6 @@ export const getFeatureDefinitions = (t: TFunction): FeatureDefinition[] => [
   { feature: 'report.saving', group: 'reporting', title: t('Page which shows all Saved Reports') },
 
   // Troubleshooting
-  { feature: 'fault.view', group: 'troubleshooting', title: t('Access to Report Fault wizard') },
   {
     feature: 'log.view',
     group: 'troubleshooting',

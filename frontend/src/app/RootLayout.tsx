@@ -48,7 +48,7 @@ export default function RootLayout() {
           {/* Desktop Sidebar Drawer */}
           <div className="relative md:block hidden flex-none">
             <aside
-              className={`h-full bg-xibo-blue-800 dark:bg-orange-300 transition-[width] duration-300 ease-in-out overflow-hidden whitespace-nowrap will-change-[width]
+              className={`h-full bg-xibo-blue-800 dark:bg-orange-300 transition-[width] duration-300 ease-in-out overflow-clip whitespace-nowrap will-change-[width]
             ${isCollapsed ? 'w-21' : 'w-60'}
           `}
             >
