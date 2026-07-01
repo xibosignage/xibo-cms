@@ -384,11 +384,13 @@ export function DisplayGroupMultiSelect({
       flip(),
       shift(),
       size({
-        apply({ rects, elements }) {
+        apply({ rects, availableHeight, elements }) {
           Object.assign(elements.floating.style, {
             minWidth: `${rects.reference.width}px`,
+            maxHeight: `${availableHeight}px`,
           });
         },
+        padding: 8,
       }),
     ],
   });
@@ -514,7 +516,7 @@ export function DisplayGroupMultiSelect({
 
             <div
               ref={scrollContainerRef}
-              className="flex flex-col p-2 text-sm overflow-y-auto max-h-96"
+              className="flex flex-col p-2 text-sm overflow-y-auto flex-1 min-h-0"
             >
               {isLoading ? (
                 <p className="text-sm text-gray-400 text-center py-2">{t('Loading…')}</p>

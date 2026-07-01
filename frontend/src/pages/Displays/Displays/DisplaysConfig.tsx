@@ -87,6 +87,7 @@ export type ModalType =
   | BaseModalType
   | 'add'
   | 'edit'
+  | 'manage'
   | 'authorise'
   | 'checkLicence'
   | 'requestScreenShot'

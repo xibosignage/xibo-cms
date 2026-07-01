@@ -109,7 +109,7 @@ export function useDisplaysActions({
       const movePromises = itemsToMove.map((item) =>
         selectFolder({
           folderId: newFolderId,
-          targetId: item.displayId,
+          targetId: item.displayGroupId,
           targetType: 'displaygroup',
         }),
       );
@@ -124,10 +124,6 @@ export function useDisplaysActions({
           : t('Failed to move one or more displays.'),
       );
     }
-  };
-
-  const handleManage = (display: Display) => {
-    window.open(`/display/manage/${display.displayId}`, '_blank');
   };
 
   const runAction = async (fn: () => Promise<unknown>, errorMessage: string) => {
@@ -281,7 +277,6 @@ export function useDisplaysActions({
     confirmDelete,
     confirmAuthorise,
     handleConfirmMove,
-    handleManage,
     isActionPending,
     actionError,
     setActionError,

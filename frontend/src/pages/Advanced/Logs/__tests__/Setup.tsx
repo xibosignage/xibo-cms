@@ -1,0 +1,78 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import type { ReactElement } from 'react';
+import React from 'react';
+import { MemoryRouter } from 'react-router-dom';
+import { vi } from 'vitest';
+
+import type { LogEntry } from '@/types/log';
+
+// --- Module Mocks ---
+
+vi.mock('@/services/logApi', () => ({
+  fetchLogs: vi.fn(),
+  truncateLogs: vi.fn(),
+}));
+
+vi.mock('@/hooks/useFilteredTabs', () => ({
+  useFilteredTabs: vi.fn(() => [{ name: 'Log', path: '/advanced/log' }]),
+}));
+
+// Mock ResizeObserver used by DataTable column resizing
+global.ResizeObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
+
+// --- Mock Data ---
+
+export const createMockLogEntry = (overrides?: Partial<LogEntry>): LogEntry => ({
+  logId: 1,
+  runNo: 'run-001',
+  logDate: '2024-01-01 10:00:00',
+  channel: 'WEB',
+  page: '/layout',
+  function: 'GET',
+  message: 'Test log message',
+  displayId: 0,
+  type: 'INFO',
+  display: '',
+  sessionHistoryId: 1,
+  userId: 1,
+  ...overrides,
+});
+
+export const mockLogsList: LogEntry[] = [
+  createMockLogEntry({ logId: 1, type: 'INFO', message: 'Info log message', channel: 'WEB' }),
+  createMockLogEntry({ logId: 2, type: 'ERROR', message: 'Error log message', function: 'POST' }),
+  createMockLogEntry({
+    logId: 3,
+    type: 'DEBUG',
+    message: 'Debug log message',
+    display: 'Screen 1',
+  }),
+];
+
+// --- Render Helpers ---
+
+export const createTestQueryClient = (): QueryClient =>
+  new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
+export function renderWithProviders(ui: ReactElement) {
+  const queryClient = createTestQueryClient();
+  const user = userEvent.setup();
+
+  const Wrapper = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>{children}</MemoryRouter>
+    </QueryClientProvider>
+  );
+
+  return {
+    user,
+    queryClient,
+    ...render(ui, { wrapper: Wrapper }),
+  };
+}

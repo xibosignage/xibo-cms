@@ -210,6 +210,7 @@ export default function Tags() {
               </div>
               <input
                 name="search"
+                aria-label={t('Search tags')}
                 value={globalFilter}
                 disabled={!isHydrated}
                 onChange={(e) => {

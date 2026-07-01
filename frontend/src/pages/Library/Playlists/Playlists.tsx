@@ -33,6 +33,7 @@ import {
   INITIAL_FILTER_STATE,
   type PlaylistFilterInput,
 } from './PlaylistsConfig';
+import PlaylistEditorOverlay from './components/PlaylistEditorOverlay';
 import { PlaylistModals } from './components/PlaylistModals';
 import { usePlaylistActions } from './hooks/usePlaylistActions';
 import { usePlaylistData } from './hooks/usePlaylistData';
@@ -126,6 +127,7 @@ export default function Playlist() {
   const [itemsToMove, setItemsToMove] = useState<Playlist[]>([]);
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<number | null>(null);
+  const [timelinePlaylistId, setTimelinePlaylistId] = useState<number | null>(null);
 
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
@@ -244,7 +246,7 @@ export default function Playlist() {
   };
 
   const handleOpenTimeline = (playlistId: number) => {
-    window.open(`/playlist/designer/${playlistId}`, '_blank');
+    setTimelinePlaylistId(playlistId);
   };
 
   const handleResetFilters = () => {
@@ -467,8 +469,19 @@ export default function Playlist() {
           handleConfirmEnableStats: (value) =>
             selectedPlaylist && handleConfirmEnableStats(selectedPlaylist, value),
         }}
+        openTimeline={handleOpenTimeline}
         folderActions={folderActions}
       />
+
+      {timelinePlaylistId != null && (
+        <PlaylistEditorOverlay
+          playlistId={timelinePlaylistId}
+          onClose={() => {
+            setTimelinePlaylistId(null);
+            handleRefresh();
+          }}
+        />
+      )}
     </section>
   );
 }

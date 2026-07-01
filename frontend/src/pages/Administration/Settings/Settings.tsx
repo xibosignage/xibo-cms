@@ -97,6 +97,7 @@ export default function Settings() {
       defaultTransitionOut: null,
     },
     elevateLogUntil: data?.elevateLogUntil ?? null,
+    phoneticKey: data?.phoneticKey ?? '',
   };
 
   return (

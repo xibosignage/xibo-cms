@@ -46,6 +46,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { useTranslation } from 'react-i18next';
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { twMerge } from 'tailwind-merge';
 
 import { agendaQueryKeys, useAgendaData } from '../hooks/useAgendaData';
@@ -519,6 +520,8 @@ interface BreadcrumbPanelProps {
 
 function BreadcrumbPanel({ row, data, selectedGroupId, onEdit }: BreadcrumbPanelProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const location = useLocation();
   const event = data.events.find(
     (ev) => ev.layoutId === row.layoutId && ev.eventId === row.eventId,
   );
@@ -556,14 +559,17 @@ function BreadcrumbPanel({ row, data, selectedGroupId, onEdit }: BreadcrumbPanel
   return (
     <div className="rounded-lg px-4 py-3 text-sm text-gray-500 font-semibold flex flex-wrap items-center gap-y-1">
       {showLayoutLink ? (
-        <a
-          href={`/layout/designer/${layout.layoutId}`}
+        <button
+          type="button"
+          onClick={() =>
+            navigate(`/design/layout/${layout.layoutId}/editor`, {
+              state: { from: `${location.pathname}${location.search}` },
+            })
+          }
           className="px-3 py-2 text-xibo-blue-600 cursor-pointer hover:underline"
-          target="_blank"
-          rel="noreferrer"
         >
           {layoutName}
-        </a>
+        </button>
       ) : (
         <span className="px-3 py-2">{layoutName}</span>
       )}

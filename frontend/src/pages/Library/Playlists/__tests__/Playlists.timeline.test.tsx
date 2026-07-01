@@ -41,6 +41,12 @@ import type { Playlist } from '@/types/playlist';
 // Module mocks
 // =============================================================================
 
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual = await importOriginal();
+  return { ...(actual as object), useNavigate: () => mockNavigate };
+});
+
 vi.mock('@/services/folderApi');
 vi.mock('@/services/playlistApi');
 vi.mock('@/services/userApi', () => ({
@@ -115,7 +121,6 @@ describe('Playlists page - Timeline action', () => {
     vi.clearAllMocks();
     vi.mocked(usePlaylistActions).mockReturnValue(defaultPlaylistActions());
     mockFetchPlaylists(SINGLE_PLAYLIST);
-    vi.spyOn(window, 'open').mockImplementation(() => null);
   });
 
   // ---------------------------------------------------------------------------
@@ -130,14 +135,14 @@ describe('Playlists page - Timeline action', () => {
     expect(screen.getByTitle('Timeline')).toBeInTheDocument();
   });
 
-  test('Clicking the quick action Timeline button calls window.open with the designer URL and _blank target', async () => {
+  test('Clicking the quick action Timeline button opens the playlist editor overlay', async () => {
     renderPlaylistsPage();
 
     await screen.findByText(mockPlaylist.name);
     fireEvent.click(screen.getByTitle('Timeline'));
 
-    expect(window.open).toHaveBeenCalledOnce();
-    expect(window.open).toHaveBeenCalledWith('/playlist/designer/101', '_blank');
+    const frame = await screen.findByTitle('Playlist Editor');
+    expect(frame.getAttribute('src')).toContain('/playlist/designer/101');
   });
 
   test('Clicking the quick action Timeline button does not open any modal dialog', async () => {
@@ -164,13 +169,13 @@ describe('Playlists page - Timeline action', () => {
     expect(timelineButtons.length).toBeGreaterThanOrEqual(2);
   });
 
-  test('Clicking the dropdown Timeline item calls window.open with the designer URL', async () => {
+  test('Clicking the dropdown Timeline item opens the playlist editor overlay', async () => {
     renderPlaylistsPage();
 
     await openDropdownTimeline();
 
-    expect(window.open).toHaveBeenCalledOnce();
-    expect(window.open).toHaveBeenCalledWith('/playlist/designer/101', '_blank');
+    const frame = await screen.findByTitle('Playlist Editor');
+    expect(frame.getAttribute('src')).toContain('/playlist/designer/101');
   });
 
   test('Clicking the dropdown Timeline item does not open any modal dialog', async () => {
@@ -182,22 +187,20 @@ describe('Playlists page - Timeline action', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // Section 3 — URL Construction
+  // Section 3 — Editor target
   // ---------------------------------------------------------------------------
 
-  test('Timeline URL includes the correct playlistId from the row', async () => {
+  test('Timeline overlay targets the correct playlistId from the row', async () => {
     renderPlaylistsPage();
 
     await screen.findByText(mockPlaylist.name);
     fireEvent.click(screen.getByTitle('Timeline'));
 
-    expect(window.open).toHaveBeenCalledWith(
-      `/playlist/designer/${mockPlaylist.playlistId}`,
-      '_blank',
-    );
+    const frame = await screen.findByTitle('Playlist Editor');
+    expect(frame.getAttribute('src')).toContain(`/playlist/designer/${mockPlaylist.playlistId}`);
   });
 
-  test('Different playlists produce different timeline URLs', async () => {
+  test('Different playlists produce different timeline targets', async () => {
     mockFetchPlaylists(TWO_PLAYLISTS);
     renderPlaylistsPage();
 
@@ -205,7 +208,8 @@ describe('Playlists page - Timeline action', () => {
     const secondRow = screen.getByText('Second Playlist').closest('tr') as HTMLElement;
     fireEvent.click(within(secondRow).getByTitle('Timeline'));
 
-    expect(window.open).toHaveBeenCalledWith('/playlist/designer/202', '_blank');
+    const frame = await screen.findByTitle('Playlist Editor');
+    expect(frame.getAttribute('src')).toContain('/playlist/designer/202');
   });
 
   // ---------------------------------------------------------------------------

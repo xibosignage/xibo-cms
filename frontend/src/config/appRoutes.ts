@@ -598,12 +598,6 @@ export const APP_ROUTES: AppRoute[] = [
           })),
         feature: 'auditlog.view',
       },
-      {
-        path: 'report-fault',
-        labelKey: 'Report Fault',
-        externalURL: '/fault/view',
-        feature: 'fault.view',
-      },
     ],
   },
   {

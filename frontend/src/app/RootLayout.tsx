@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { ChevronLeftSquare, ChevronRightSquare } from 'lucide-react';
 import { useState } from 'react';
 import { Outlet, useLocation, useLoaderData } from 'react-router-dom';
 
@@ -45,13 +46,23 @@ export default function RootLayout() {
       <UserProvider initialUser={user}>
         <div className="flex h-screen w-full overflow-hidden bg-gray-50 dark:bg-neutral-900">
           {/* Desktop Sidebar Drawer */}
-          <aside
-            className={`flex-none bg-xibo-blue-800 dark:bg-orange-300 transition-[width] duration-300 ease-in-out md:block hidden relative
-          ${isCollapsed ? 'w-21' : 'w-60'}
-        `}
-          >
-            <SideBar isCollapsed={isCollapsed} toggleSidebar={() => setIsCollapsed(!isCollapsed)} />
-          </aside>
+          <div className="relative md:block hidden flex-none">
+            <aside
+              className={`h-full bg-xibo-blue-800 dark:bg-orange-300 transition-[width] duration-300 ease-in-out overflow-clip whitespace-nowrap will-change-[width]
+            ${isCollapsed ? 'w-21' : 'w-60'}
+          `}
+            >
+              <SideBar isCollapsed={isCollapsed} />
+            </aside>
+            {/* Toggle button */}
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              className="absolute top-5 -right-3 z-10 md:flex hidden items-center justify-center w-6 h-6 rounded-lg bg-xibo-blue-800 dark:bg-orange-300 text-xibo-white dark:text-black transition-colors hover:bg-xibo-blue-700 dark:hover:bg-orange-400 cursor-pointer"
+            >
+              {isCollapsed ? <ChevronRightSquare size={16} /> : <ChevronLeftSquare size={16} />}
+            </button>
+          </div>
           {/* Mobile drawer */}
           <div
             className={`
@@ -64,12 +75,11 @@ export default function RootLayout() {
           >
             <SideBar
               isCollapsed={false}
-              toggleSidebar={() => setIsCollapsed(!isCollapsed)}
               closeMobileDrawer={() => setOpenMobileDrawer(!openMobileDrawer)}
             />
           </div>
 
-          <div className="flex-1 flex flex-col min-w-0">
+          <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out">
             <TopNav
               pathName={pathname}
               onToggleMobileDrawer={() => setOpenMobileDrawer(!openMobileDrawer)}

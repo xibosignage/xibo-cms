@@ -30,6 +30,7 @@ export interface SettingsTabProps {
   options: SettingsData['options'];
   relatedEntities: SettingsData['relatedEntities'];
   elevateLogUntil: string | null;
+  phoneticKey: string;
 }
 
 export type DateFormatRow = { category: string } | { char: string; desc: string; example: string };

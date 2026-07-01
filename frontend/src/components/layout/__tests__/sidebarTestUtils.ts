@@ -157,13 +157,11 @@ export const displayManagerUser = createDisplayManager();
 
 export function renderSidebar({
   isCollapsed = false,
-  toggleSidebar = vi.fn(),
   closeMobileDrawer = vi.fn(),
   initialRoute = '/',
   user = superAdminUser,
 }: {
   isCollapsed?: boolean;
-  toggleSidebar?: () => void;
   closeMobileDrawer?: () => void;
   initialRoute?: string;
   user?: User;
@@ -177,7 +175,6 @@ export function renderSidebar({
         { initialEntries: [initialRoute] },
         createElement(SidebarMenu, {
           isCollapsed,
-          toggleSidebar,
           closeMobileDrawer,
         }),
       ),

@@ -89,6 +89,15 @@ export const router = createBrowserRouter(
         })),
     },
     {
+      path: 'design/layout/:id/editor',
+      loader: requireAuthLoader,
+      hydrateFallbackElement: <></>,
+      lazy: () =>
+        import('@/pages/Design/Layouts/LayoutEditorHost').then((m) => ({
+          Component: m.default,
+        })),
+    },
+    {
       path: 'login',
       loader: () => {
         // Force to go to server login page

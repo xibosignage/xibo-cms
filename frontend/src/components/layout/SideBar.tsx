@@ -33,21 +33,32 @@ import { useUserContext } from '@/context/UserContext';
 import { filterRoutesByUser } from '@/utils/permissions';
 import { isRouteActive } from '@/utils/sidebar';
 
+// Must match the aside's transition duration in RootLayout (duration-300).
+const SIDEBAR_TRANSITION_MS = 300;
+
 interface SidebarMenuProps {
   isCollapsed: boolean;
-  toggleSidebar: () => void;
   closeMobileDrawer?: () => void;
 }
 
-export default function SidebarMenu({
-  isCollapsed,
-  toggleSidebar,
-  closeMobileDrawer,
-}: SidebarMenuProps) {
+export default function SidebarMenu({ isCollapsed, closeMobileDrawer }: SidebarMenuProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
   const location = useLocation();
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [openMenus, setOpenMenus] = useState<Set<string>>(new Set());
+
+  // Hides text labels, logo, chevrons, and sublinks.
+  // On collapse: hides immediately. On expand: delays until container finishes animating.
+  const [contentHidden, setContentHidden] = useState(isCollapsed);
+
+  useEffect(() => {
+    if (isCollapsed) {
+      setContentHidden(true);
+    } else {
+      const timer = setTimeout(() => setContentHidden(false), SIDEBAR_TRANSITION_MS);
+      return () => clearTimeout(timer);
+    }
+  }, [isCollapsed]);
 
   const visibleRoutes = !user
     ? []
@@ -83,46 +94,58 @@ export default function SidebarMenu({
       );
     });
 
-    // If we found a matching parent, expand it
     if (activeParent) {
-      setOpenMenu(activeParent.path);
+      setOpenMenus((prev) => new Set([...prev, activeParent.path]));
     }
   }, [location.pathname, visibleRoutes]);
 
   const toggleMenu = (path: string) => {
-    setOpenMenu((prev) => (prev === path ? null : path));
+    setOpenMenus((prev) => {
+      const next = new Set(prev);
+      if (next.has(path)) {
+        next.delete(path);
+      } else {
+        next.add(path);
+      }
+      return next;
+    });
   };
 
   return (
-    <div className={`flex flex-col gap-5 py-5  ${isCollapsed ? 'px-0' : 'p-5'}`}>
-      <SidebarHeader
-        isCollapsed={isCollapsed}
-        toggleSidebar={toggleSidebar}
-        closeMobileDrawer={closeMobileDrawer}
-      />
-      {/* Routes */}
-      <div className={`flex flex-col gap-y-2 ${isCollapsed ? 'items-center' : 'items-start'}`}>
+    <div className={`flex flex-col h-full py-5`}>
+      <div className="flex-none mb-5 px-5">
+        <SidebarHeader
+          isCollapsed={isCollapsed}
+          contentHidden={contentHidden}
+          closeMobileDrawer={closeMobileDrawer}
+        />
+      </div>
+      {/* Routes — scrollable */}
+      <div
+        className={`flex-1 overflow-y-auto overflow-x-hidden flex flex-col gap-y-2 ${isCollapsed ? 'items-center p-0' : 'items-start px-5'}`}
+      >
         {visibleRoutes.map((route, index) => {
-          const label = !isCollapsed ? t(route.labelKey) : null;
-          const isOpen = openMenu === route.path;
+          const label = !contentHidden ? t(route.labelKey) : null;
+          const isOpen = openMenus.has(route.path);
           const isActive = isRouteActive(route, location.pathname);
           return (
             <div
               key={`${route.labelKey}-${index}`}
-              className="relative group flex flex-col w-full items-center overflow-visible"
+              className="relative flex flex-col w-full items-center overflow-visible"
             >
-              <SidebarItem
-                route={route}
-                isCollapsed={isCollapsed}
-                isOpen={isOpen}
-                isActive={isActive}
-                label={label}
-                toggleMenu={toggleMenu}
-              />
-              {/* Popup Hover */}
-              <SidebarPopup route={route} isCollapsed={isCollapsed} />
+              <SidebarPopup route={route} isCollapsed={isCollapsed}>
+                <SidebarItem
+                  route={route}
+                  isCollapsed={isCollapsed}
+                  contentHidden={contentHidden}
+                  isOpen={isOpen}
+                  isActive={isActive}
+                  label={label}
+                  toggleMenu={toggleMenu}
+                />
+              </SidebarPopup>
               {/* Sublinks */}
-              <SidebarSubLinks isCollapsed={isCollapsed} isOpen={isOpen} route={route} />
+              <SidebarSubLinks contentHidden={contentHidden} isOpen={isOpen} route={route} />
             </div>
           );
         })}

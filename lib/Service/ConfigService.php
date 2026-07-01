@@ -879,6 +879,6 @@ class ConfigService implements ConfigServiceInterface
 
     public function getPhoneticKey()
     {
-        return NatoAlphabet::convertToNato($this->getSetting('SERVER_KEY'));
+        return str_replace(' ', ' · ', NatoAlphabet::convertToNato($this->getSetting('SERVER_KEY')));
     }
 }

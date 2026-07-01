@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { ArrowLeft, Loader2, Plus } from 'lucide-react';
+import { ArrowLeft, Filter, FilterX, Loader2, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -47,6 +47,7 @@ export default function StatsReportPage({ config }: StatsReportPageProps) {
 
   const [submittedFilter, setSubmittedFilter] = useState<StatsFilter | null>(null);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(true);
 
   const {
     pagination,
@@ -86,6 +87,7 @@ export default function StatsReportPage({ config }: StatsReportPageProps) {
     }
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
     setSubmittedFilter({ ...filter });
+    setFiltersOpen(false);
   };
 
   const handleRefresh = () => {
@@ -103,9 +105,20 @@ export default function StatsReportPage({ config }: StatsReportPageProps) {
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="" navigation={reportingTabs} />
-          <Button variant="primary" leftIcon={Plus} onClick={() => setScheduleModalOpen(true)}>
-            {t('Schedule')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="primary" leftIcon={Plus} onClick={() => setScheduleModalOpen(true)}>
+              {t('Schedule')}
+            </Button>
+            <Button
+              leftIcon={filtersOpen ? FilterX : Filter}
+              variant="secondary"
+              disabled={!isHydrated}
+              onClick={() => setFiltersOpen((prev) => !prev)}
+              removeTextOnMobile
+            >
+              {t('Filters')}
+            </Button>
+          </div>
         </div>
 
         <div className="flex items-center justify-between">
@@ -126,14 +139,16 @@ export default function StatsReportPage({ config }: StatsReportPageProps) {
           </div>
         ) : (
           <>
-            <StatsReportFilters
-              config={config}
-              filter={filter}
-              onFilterChange={handleFilterChange}
-              onApply={handleApply}
-              isLoading={isFetching}
-              applyDisabled={!itemSelected}
-            />
+            {filtersOpen && (
+              <StatsReportFilters
+                config={config}
+                filter={filter}
+                onFilterChange={handleFilterChange}
+                onApply={handleApply}
+                isLoading={isFetching}
+                applyDisabled={!itemSelected}
+              />
+            )}
 
             {submittedFilter !== null ? (
               <StatsReportResults
