@@ -206,8 +206,11 @@ class DistributionReport implements ReportInterface
     /** @inheritdoc */
     public function getSavedReportResults($json, $savedReport): ReportResult
     {
-        $metadata = [ 'periodStart' => $json['metadata']['periodStart'],
+        $metadata = [
+            'periodStart' => $json['metadata']['periodStart'],
             'periodEnd' => $json['metadata']['periodEnd'],
+            'type' => $json['metadata']['type'] ?? '',
+            'subject' => $json['metadata']['subject'] ?? '',
             'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
                 ->format(DateFormatHelper::getSystemFormat()),
             'title' => $savedReport->saveAs,
@@ -530,8 +533,8 @@ class DistributionReport implements ReportInterface
                     periods.start,
                     periods.end,
                     stat.count AS numberOfPlays,
-                    LEAST(stat.duration, LEAST(periods.end, statEnd, :toDt) 
-                                             - GREATEST(periods.start, statStart, :fromDt)) AS actualDiff
+                    LEAST(stat.duration, GREATEST(0, LEAST(periods.end, statEnd, :toDt)
+                                             - GREATEST(periods.start, statStart, :fromDt))) AS actualDiff
                  FROM `' . $periods . '` AS periods
                     LEFT OUTER JOIN (
                         SELECT 

@@ -51,3 +51,8 @@ export const TYPE_OPTIONS = [
   { value: 'audit', label: 'Audit' },
   { value: 'debug', label: 'Debug' },
 ];
+
+export const SCHEDULE_TYPE_OPTIONS = [
+  { value: 'audit', label: 'Audit' },
+  { value: 'debug', label: 'Debug' },
+];

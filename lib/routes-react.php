@@ -137,6 +137,15 @@ $app->get('/report/available', ['\Xibo\Controller\Stats', 'availableReports'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['report.view']))
     ->setName('report.available');
 
+//
+// Saved reports
+//
+$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
+    $group->get('/report/savedreport/{id}/report/{name}/open', ['\Xibo\Controller\SavedReport','savedReportOpen'])->setName('savedreport.open');
+    $group->get('/report/savedreport/{id}/report/{name}/export', ['\Xibo\Controller\SavedReport','savedReportExport'])->setName('savedreport.export');
+    $group->get('/report/savedreport/{id}/report/{name}/convert', ['\Xibo\Controller\SavedReport','savedReportConvert'])->setName('savedreport.convert');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['report.saving']));
+
 $app->get('/stats/export/count', ['\Xibo\Controller\Stats', 'exportStatsCount'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['proof-of-play']))
     ->setName('stats.export.count');

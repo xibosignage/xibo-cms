@@ -1,6 +1,6 @@
 {#
-/**
- * Copyright (C) 2024 Xibo Signage Ltd
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -28,6 +28,63 @@
     </div>
     <p></p>
 
+    {% if metadata.type == 'audit' %}
+    <table class="saved-report-table">
+        <tr>
+            <th>{% trans "Date" %}</th>
+            <th>{% trans "User Name" %}</th>
+            <th>{% trans "User ID" %}</th>
+            <th>{% trans "IP Address" %}</th>
+            <th>{% trans "Session ID" %}</th>
+            <th>{% trans "Entity" %}</th>
+            <th>{% trans "Entity ID" %}</th>
+            <th>{% trans "Message" %}</th>
+            <th>{% trans "Object" %}</th>
+        </tr>
+        {% for item in tableData %}
+            <tr>
+                <td>{{ item.logDate }}</td>
+                <td>{{ item.userName }}</td>
+                <td>{{ item.userId }}</td>
+                <td>{{ item.ipAddress }}</td>
+                <td>{{ item.sessionHistoryId }}</td>
+                <td>{{ item.entity }}</td>
+                <td>{{ item.entityId }}</td>
+                <td>{{ item.message }}</td>
+                <td>{{ item.objectAfter }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    {% elseif metadata.type == 'debug' %}
+    <table class="saved-report-table">
+        <tr>
+            <th>{% trans "Date" %}</th>
+            <th>{% trans "UserName" %}</th>
+            <th>{% trans "User ID" %}</th>
+            <th>{% trans "IP Address" %}</th>
+            <th>{% trans "Session ID" %}</th>
+            <th>{% trans "Channel" %}</th>
+            <th>{% trans "Function" %}</th>
+            <th>{% trans "Level" %}</th>
+            <th>{% trans "Page" %}</th>
+            <th>{% trans "Details" %}</th>
+        </tr>
+        {% for item in tableData %}
+            <tr>
+                <td>{{ item.logDate }}</td>
+                <td>{{ item.userName }}</td>
+                <td>{{ item.userId }}</td>
+                <td>{{ item.ipAddress }}</td>
+                <td>{{ item.sessionHistoryId }}</td>
+                <td>{{ item.channel }}</td>
+                <td>{{ item.function }}</td>
+                <td>{{ item.type }}</td>
+                <td>{{ item.page }}</td>
+                <td>{{ item.message }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    {% else %}
     <table class="saved-report-table">
         <tr>
             <th>{% trans "Date" %}</th>
@@ -50,6 +107,7 @@
             </tr>
         {% endfor %}
     </table>
+    {% endif %}
     <br/>
     <span>{{ placeholder }}</span>
     <img src="{{ src|raw }}" >

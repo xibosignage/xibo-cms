@@ -297,7 +297,8 @@ class TimeDisconnectedSummary implements ReportInterface
 
             $entry = [];
             $entry['timeDisconnected'] =  round($sanitizedRow->getDouble('duration') / $divisor, 2);
-            $entry['timeConnected'] =  round($sanitizedRow->getDouble('filter') / $divisor - $entry['timeDisconnected'], 2);
+            // Set a minimum value to remove the negative value from the chart/table
+            $entry['timeConnected'] =  round(max(0, $sanitizedRow->getDouble('filter') / $divisor - $entry['timeDisconnected']), 2);
             $disconnectedDisplays[$sanitizedRow->getInt(('displayId'))] = $entry;
         }
 
