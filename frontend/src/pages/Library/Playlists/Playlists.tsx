@@ -46,6 +46,7 @@ import FolderSidebar from '@/components/ui/FolderSidebar';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useUserContext } from '@/context/UserContext';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -56,6 +57,7 @@ import { hasFeature } from '@/utils/permissions';
 
 export default function Playlist() {
   const { t } = useTranslation();
+  const { formatDateTime } = useDateFormatter();
   const { user } = useUserContext();
   const queryClient = useQueryClient();
   const canViewFolders = usePermissions()?.canViewFolders;
@@ -266,6 +268,7 @@ export default function Playlist() {
 
   const columns = getPlaylistColumns({
     t,
+    formatDateTime,
     onDelete: handleDelete,
     openAddEditModal,
     openMoveModal: (playlist) => {

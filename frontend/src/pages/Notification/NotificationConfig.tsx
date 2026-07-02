@@ -29,6 +29,7 @@ import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkAct
 import { TextCell, ActionsCell, CheckMarkCell } from '@/components/ui/table/cells';
 import type { Notification } from '@/types/notification';
 import type { ActionItem, BaseModalType } from '@/types/table';
+import type { DateLike } from '@/utils/date';
 
 export interface NotificationFilterInput {
   read: number | null;
@@ -80,7 +81,7 @@ export interface NotificationActionsProps {
   onDelete: (id: number) => void;
   onView: (row: Notification) => void;
   onEdit: (row: Notification) => void;
-  timeZone?: string;
+  formatDateTime: (value: DateLike) => string;
 }
 
 export const getNotificationItemActions = ({
@@ -131,18 +132,22 @@ export const getNotificationItemActions = ({
   };
 };
 
-const formatReleaseDt = (value: number | string | null | undefined, timeZone?: string): string => {
-  if (value === null || value === undefined || value === '') return '';
-  const ts = Number(value);
-  if (isNaN(ts) || ts === 0) return String(value);
-  return new Date(ts * 1000).toLocaleString(undefined, timeZone ? { timeZone } : undefined);
-};
-
 export const getNotificationColumns = (
   props: NotificationActionsProps,
 ): ColumnDef<Notification>[] => {
-  const { t, timeZone, onView } = props;
+  const { t, formatDateTime, onView } = props;
   const getActions = getNotificationItemActions(props);
+
+  const formatReleaseDt = (value: number | string | null | undefined): string => {
+    if (value === null || value === undefined || value === '') {
+      return '';
+    }
+    const ts = Number(value);
+    if (isNaN(ts) || ts === 0) {
+      return String(value);
+    }
+    return formatDateTime(new Date(ts * 1000));
+  };
 
   return [
     {
@@ -188,9 +193,7 @@ export const getNotificationColumns = (
       header: t('Date'),
       size: 140,
       enableSorting: true,
-      cell: (info) => (
-        <TextCell>{formatReleaseDt(info.getValue<number | string>(), timeZone)}</TextCell>
-      ),
+      cell: (info) => <TextCell>{formatReleaseDt(info.getValue<number | string>())}</TextCell>,
     },
     {
       accessorKey: 'isInterrupt',

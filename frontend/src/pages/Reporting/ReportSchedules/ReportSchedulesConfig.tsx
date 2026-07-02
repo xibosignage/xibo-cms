@@ -29,7 +29,7 @@ import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkAct
 import { ActionsCell, StatusCell, TextCell } from '@/components/ui/table/cells';
 import type { ReportSchedule } from '@/types/reportSchedule';
 import type { ActionItem } from '@/types/table';
-import { formatDateTime } from '@/utils/date';
+import { type DateLike, formatCmsDateTime } from '@/utils/date';
 
 export interface ReportScheduleFilterInput {
   reportScheduleId: number | null;
@@ -53,7 +53,7 @@ export const INITIAL_FILTER_STATE: ReportScheduleFilterInput = {
   onlyMySchedules: '',
 };
 
-function formatUnixTimestamp(ts: number): string {
+function formatUnixTimestamp(ts: number, formatDateTime: (value: DateLike) => string): string {
   if (!ts) {
     return '';
   }
@@ -100,6 +100,7 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<ReportSchedule
 export interface ReportScheduleActionsProps {
   t: TFunction;
   reportDescriptionMap: Record<string, string>;
+  formatDateTime?: (value: DateLike) => string;
   onDelete: (id: number) => void;
   openEditModal: (row: ReportSchedule) => void;
   openResetModal: (row: ReportSchedule) => void;
@@ -164,6 +165,7 @@ export const getReportScheduleColumns = (
   props: ReportScheduleActionsProps,
 ): ColumnDef<ReportSchedule>[] => {
   const { t, reportDescriptionMap } = props;
+  const formatDateTime = props.formatDateTime ?? ((value: DateLike) => formatCmsDateTime(value));
   const getActions = getReportScheduleItemActions(props);
 
   return [
@@ -205,7 +207,9 @@ export const getReportScheduleColumns = (
       accessorKey: 'lastRunDt',
       header: t('Last Run'),
       size: 160,
-      cell: (info) => <TextCell>{formatUnixTimestamp(info.getValue<number>())}</TextCell>,
+      cell: (info) => (
+        <TextCell>{formatUnixTimestamp(info.getValue<number>(), formatDateTime)}</TextCell>
+      ),
     },
     {
       id: 'nextRunDt',
@@ -213,25 +217,33 @@ export const getReportScheduleColumns = (
       header: t('Next Run'),
       size: 160,
       enableSorting: false,
-      cell: (info) => <TextCell>{formatUnixTimestamp(info.getValue<number>())}</TextCell>,
+      cell: (info) => (
+        <TextCell>{formatUnixTimestamp(info.getValue<number>(), formatDateTime)}</TextCell>
+      ),
     },
     {
       accessorKey: 'previousRunDt',
       header: t('Previous Run'),
       size: 160,
-      cell: (info) => <TextCell>{formatUnixTimestamp(info.getValue<number>())}</TextCell>,
+      cell: (info) => (
+        <TextCell>{formatUnixTimestamp(info.getValue<number>(), formatDateTime)}</TextCell>
+      ),
     },
     {
       accessorKey: 'fromDt',
       header: t('Start Time'),
       size: 160,
-      cell: (info) => <TextCell>{formatUnixTimestamp(info.getValue<number>())}</TextCell>,
+      cell: (info) => (
+        <TextCell>{formatUnixTimestamp(info.getValue<number>(), formatDateTime)}</TextCell>
+      ),
     },
     {
       accessorKey: 'toDt',
       header: t('End Time'),
       size: 160,
-      cell: (info) => <TextCell>{formatUnixTimestamp(info.getValue<number>())}</TextCell>,
+      cell: (info) => (
+        <TextCell>{formatUnixTimestamp(info.getValue<number>(), formatDateTime)}</TextCell>
+      ),
     },
     {
       accessorKey: 'message',
@@ -243,7 +255,9 @@ export const getReportScheduleColumns = (
       accessorKey: 'createdDt',
       header: t('Created'),
       size: 160,
-      cell: (info) => <TextCell>{formatUnixTimestamp(info.getValue<number>())}</TextCell>,
+      cell: (info) => (
+        <TextCell>{formatUnixTimestamp(info.getValue<number>(), formatDateTime)}</TextCell>
+      ),
     },
     {
       accessorKey: 'isActive',

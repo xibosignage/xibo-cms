@@ -24,6 +24,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { fetchDisplayStatusWindow, type DisplayStatusWindow } from '@/services/displaysApi';
 import type { Display } from '@/types/display';
 
@@ -32,13 +33,6 @@ type DisplayInfoPanelProps = {
   onClose: () => void;
   display: Display | null | undefined;
 };
-
-function formatTimestamp(ts: number | null): string {
-  if (ts === null) {
-    return '-';
-  }
-  return new Date(ts * 1000).toLocaleString();
-}
 
 function StatusWindowContent({ data }: { data: DisplayStatusWindow }) {
   if (typeof data === 'string') {
@@ -72,6 +66,14 @@ export default function DisplayInfoPanel({
   display,
 }: DisplayInfoPanelProps) {
   const { t } = useTranslation();
+  const { formatDateTime } = useDateFormatter();
+
+  const formatTimestamp = (ts: number | null): string => {
+    if (ts === null) {
+      return '-';
+    }
+    return formatDateTime(new Date(Number(ts) * 1000));
+  };
 
   const [statusWindow, setStatusWindow] = useState<DisplayStatusWindow | null>(null);
 

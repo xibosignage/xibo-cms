@@ -37,12 +37,14 @@ import Button from '@/components/ui/Button';
 import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import type { Task } from '@/types/task';
 
 export default function Tasks() {
   const { t } = useTranslation();
+  const { formatDateTime } = useDateFormatter();
   const queryClient = useQueryClient();
 
   const {
@@ -162,6 +164,7 @@ export default function Tasks() {
 
   const columns = getTaskColumns({
     t,
+    formatDateTime,
     onDelete: handleDelete,
     onEdit: handleEdit,
     onRunNow: handleRunNow,

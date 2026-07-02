@@ -39,11 +39,13 @@ import Button from '@/components/ui/Button';
 import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 
 export default function AuditTrail() {
   const { t } = useTranslation();
+  const { formatDateTime } = useDateFormatter();
   const queryClient = useQueryClient();
 
   const {
@@ -108,7 +110,7 @@ export default function AuditTrail() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
-  const columns = getAuditTrailColumns(t);
+  const columns = getAuditTrailColumns(t, formatDateTime);
   const { filterOptions } = useAuditTrailFilterOptions(t);
   const advancedTabs = useFilteredTabs('advanced');
 

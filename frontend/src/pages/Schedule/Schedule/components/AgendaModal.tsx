@@ -57,6 +57,7 @@ import Modal from '@/components/ui/modals/Modal';
 import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import { StatusCell } from '@/components/ui/table/cells/StatusCell';
 import { useUserContext } from '@/context/UserContext';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { usePreline } from '@/hooks/usePreline';
 import type {
   AgendaLayout,
@@ -64,7 +65,6 @@ import type {
   FetchAgendaEventsResponse,
 } from '@/services/eventApi';
 import type { Event } from '@/types/event';
-import { formatDateTime } from '@/utils/date';
 
 interface AgendaModalProps {
   date: DateTimeType;
@@ -1170,7 +1170,7 @@ function DisplayGroupScroller({
 export function AgendaModal({ date, displayGroups, onClose }: AgendaModalProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
-  const timezone = user?.settings?.defaultTimezone ?? 'UTC';
+  const { formatDateTime } = useDateFormatter();
   const defaultLat = Number(user?.settings?.DEFAULT_LAT ?? DEFAULT_LAT_FALLBACK);
   const defaultLng = Number(user?.settings?.DEFAULT_LONG ?? DEFAULT_LNG_FALLBACK);
 
@@ -1202,7 +1202,7 @@ export function AgendaModal({ date, displayGroups, onClose }: AgendaModalProps) 
 
   const { data, isFetching, isError } = useAgendaData(queryParams, selectedGroupId !== null);
 
-  const formatDt = (ts: number) => formatDateTime(new Date(ts * 1000), timezone);
+  const formatDt = (ts: number) => formatDateTime(new Date(ts * 1000));
 
   const handleRowClick = (row: SelectedRow) => {
     const isSame =

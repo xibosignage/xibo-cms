@@ -46,7 +46,7 @@ import { getCommonFormOptions } from '@/config/commonForms';
 import type { Playlist } from '@/types/playlist';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
-import { formatDateTime } from '@/utils/date';
+import type { DateLike } from '@/utils/date';
 import { formatDuration } from '@/utils/formatters';
 
 export interface PlaylistFilterInput {
@@ -137,6 +137,7 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<PlaylistFilter
 
 export interface PlaylistActionsProps {
   t: TFunction;
+  formatDateTime: (value: DateLike) => string;
   onDelete: (id: number) => void;
   openAddEditModal: (row: Playlist) => void;
   openShareModal?: (id: number) => void;
@@ -243,7 +244,7 @@ export const getPlaylistItemActions = ({
 };
 
 export const getPlaylistColumns = (props: PlaylistActionsProps): ColumnDef<Playlist>[] => {
-  const { t } = props;
+  const { t, formatDateTime } = props;
   const getActions = getPlaylistItemActions(props);
   return [
     {
@@ -353,13 +354,13 @@ export const getPlaylistColumns = (props: PlaylistActionsProps): ColumnDef<Playl
       accessorKey: 'createdDt',
       header: t('Created'),
       size: 160,
-      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+      cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
     },
     {
       accessorKey: 'modifiedDt',
       header: t('Modified'),
       size: 160,
-      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+      cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
     },
     {
       id: 'tableActions',

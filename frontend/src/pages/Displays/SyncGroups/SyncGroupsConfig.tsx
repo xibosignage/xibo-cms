@@ -29,6 +29,7 @@ import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkAct
 import { TextCell, ActionsCell } from '@/components/ui/table/cells';
 import type { SyncGroup } from '@/types/syncGroup';
 import type { ActionItem, BaseModalType } from '@/types/table';
+import type { DateLike } from '@/utils/date';
 
 export interface SyncGroupsFilterInput {
   syncGroupId?: number | null;
@@ -79,6 +80,7 @@ export interface SyncGroupActionsProps {
   onDelete: (id: number) => void;
   openEditModal: (row: SyncGroup) => void;
   openMembersModal: (row: SyncGroup) => void;
+  formatDateTime: (value: DateLike) => string;
 }
 
 export const getSyncGroupItemActions = ({
@@ -119,7 +121,7 @@ export const getSyncGroupItemActions = ({
 };
 
 export const getSyncGroupColumns = (props: SyncGroupActionsProps): ColumnDef<SyncGroup>[] => {
-  const { t } = props;
+  const { t, formatDateTime } = props;
   const getActions = getSyncGroupItemActions(props);
   return [
     {
@@ -139,13 +141,13 @@ export const getSyncGroupColumns = (props: SyncGroupActionsProps): ColumnDef<Syn
       accessorKey: 'createdDt',
       header: t('Created Date'),
       size: 180,
-      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+      cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
     },
     {
       accessorKey: 'modifiedDt',
       header: t('Modified Date'),
       size: 180,
-      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+      cell: (info) => <TextCell>{formatDateTime(info.getValue<string | null>())}</TextCell>,
     },
     {
       accessorKey: 'owner',

@@ -29,7 +29,7 @@ import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkAct
 import { ActionsCell, TextCell } from '@/components/ui/table/cells';
 import type { SavedReport } from '@/types/savedReport';
 import type { ActionItem } from '@/types/table';
-import { formatDateTime } from '@/utils/date';
+import { type DateLike, formatCmsDateTime } from '@/utils/date';
 
 export interface SavedReportFilterInput {
   saveAs: string;
@@ -51,7 +51,7 @@ export const INITIAL_FILTER_STATE: SavedReportFilterInput = {
   onlyMyReports: '',
 };
 
-function formatUnixTimestamp(ts: number): string {
+function formatUnixTimestamp(ts: number, formatDateTime: (value: DateLike) => string): string {
   if (!ts) {
     return '';
   }
@@ -92,6 +92,7 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<SavedReportFil
 export interface SavedReportActionsProps {
   t: TFunction;
   reportDescriptionMap: Record<string, string>;
+  formatDateTime?: (value: DateLike) => string;
   onDelete: (id: number) => void;
   onGoToSchedule: (report: SavedReport) => void;
 }
@@ -152,6 +153,7 @@ export const getSavedReportItemActions = (
 
 export const getSavedReportColumns = (props: SavedReportActionsProps): ColumnDef<SavedReport>[] => {
   const { t, reportDescriptionMap } = props;
+  const formatDateTime = props.formatDateTime ?? ((value: DateLike) => formatCmsDateTime(value));
   const getActions = getSavedReportItemActions(props);
 
   return [
@@ -181,7 +183,9 @@ export const getSavedReportColumns = (props: SavedReportActionsProps): ColumnDef
       accessorKey: 'generatedOn',
       header: t('Generated On'),
       size: 160,
-      cell: (info) => <TextCell>{formatUnixTimestamp(info.getValue<number>())}</TextCell>,
+      cell: (info) => (
+        <TextCell>{formatUnixTimestamp(info.getValue<number>(), formatDateTime)}</TextCell>
+      ),
     },
     {
       accessorKey: 'owner',
