@@ -138,6 +138,7 @@ $timeline-step-height: 22px;
     .editor-modal-content {
         background: $playlist-editor-main-background-color;
         height: 100%;
+        overflow: hidden;
     }
 
     .editor-modal-header {
@@ -291,10 +292,9 @@ $timeline-step-height: 22px;
 #playlist-editor {
     @include border-radius(4px);
     width: 100%;
-    height: 100%;
+    height: calc(100% - 50px);
     background-color: $xibo-color-neutral-0;
     border: 2px solid $playlist-editor-timeline-fg-color;
-    margin-bottom: 10px;
     position: relative;
 
     /* width */

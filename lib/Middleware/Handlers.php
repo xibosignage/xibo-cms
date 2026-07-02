@@ -222,8 +222,45 @@ class Handlers
                     // Decide which error page we should load
                     $exceptionClass = 'error-' . strtolower(str_replace('\\', '-', get_class($exception)));
 
-                    // Override the page for an Upgrade Pending Exception
+                    // Upgrade pending: serve through the React login shell for visual consistency.
+                    // Fall back to the legacy Twig page if Vite assets are not built yet.
                     if ($exception instanceof UpgradePendingException) {
+                        $loginJsUrl = \Xibo\Helper\ViteManifest::getJsUrl('login.html');
+                        if ($loginJsUrl !== null) {
+                            $brandDir = rtrim($configService->getSetting('LIBRARY_LOCATION'), '/') . '/brand';
+                            $upgradeConfig = [
+                                'upgradeInProgress' => true,
+                                'logoUrl'    => $configService->rootUri() . 'brand/'
+                                    . (file_exists($brandDir . '/logo.svg') ? 'logo.svg' : 'logo.png'),
+                                'supportUrl' => $configService->getThemeConfig('theme_url', 'https://xibosignage.com'),
+                                'version'    => Environment::$WEBSITE_VERSION_NAME,
+                                'appName'    => $configService->getThemeConfig('app_name', 'Xibo'),
+                                'i18n'       => [
+                                    'upgradeMessage' => __(
+                                        'The CMS is temporarily off-line as an upgrade is in progress.'
+                                        . ' Please check with your system administrator for updates'
+                                        . ' or refresh your page in a few minutes.'
+                                    ),
+                                    'upgradeTitle' => __('Upgrade In Progress'),
+                                ],
+                            ];
+                            $upgradeParams = array_merge($viewParams, [
+                                'csrfToken'       => '',
+                                'loginConfigJson' => json_encode(
+                                    $upgradeConfig,
+                                    JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+                                ),
+                                'loginJsUrl'      => $loginJsUrl,
+                                'loginCssUrl'     => \Xibo\Helper\ViteManifest::getCssUrl('login.html'),
+                                'viteClientUrl'   => \Xibo\Helper\ViteManifest::getClientUrl(),
+                                'viteRefreshUrl'  => \Xibo\Helper\ViteManifest::getRefreshUrl(),
+                            ]);
+                            try {
+                                return $twig->render($response, 'login-spa.twig', $upgradeParams)->withStatus(503);
+                            } catch (\Exception) {
+                                // Fall through to the legacy Twig fallback below
+                            }
+                        }
                         $exceptionClass = 'upgrade-in-progress-page';
                     }
 

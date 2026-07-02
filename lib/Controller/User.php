@@ -1696,7 +1696,7 @@ class User extends Base
         $permissions = $this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $id);
 
         // Get the provided permissions
-        $groupIds = $sanitizedParams->getArray('groupIds');
+        $groupIds = $sanitizedParams->getArray('groupIds', ['default' => []]);
 
         // Run the update
         $this->updatePermissions($permissions, $groupIds);

@@ -27,17 +27,10 @@
 {% block title %}{{ "Playlist Editor"|trans }} | {% endblock %}
 
 {% set hideNavigation = "1" %}
+{% set forceHide = true %}
 
 {% block pageContent %}
 
-    {# Mirrors the DOM structure that playlist-form-timeline.twig provides when
-       loaded into a Bootstrap modal, which pE.loadEditor() depends on:
-       - #editor-container  (close-button lookup + external playlist message)
-       - .editor-modal      (help-pane reparenting + close-button lookup)
-       - .editor-modal-header .modal-header--left  (help-pane anchor)
-       - .container-designer  (toolbar, properties-panel, topbar lookups)
-       - .editor-top-bar      (populated by topbar template in pE.loadEditor)
-    #}
     <div id="editor-container">
         <div class="modal editor-modal">
             <div class="modal-dialog editor-modal-dialog">
@@ -83,7 +76,14 @@
                 const _originalClose = pE.close.bind(pE);
                 pE.close = function() {
                     _originalClose();
-                    window.close();
+                    if (window.parent !== window) {
+                        window.parent.postMessage(
+                            {type: 'xibo:editor-exit'},
+                            window.location.origin
+                        );
+                    } else {
+                        window.close();
+                    }
                 };
             });
         </script>

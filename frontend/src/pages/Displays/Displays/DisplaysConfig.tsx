@@ -747,8 +747,18 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
     {
       accessorKey: 'clientVersion',
       header: t('Version'),
-      size: 110,
-      cell: (info) => <TextCell>{info.getValue<string | null>() ?? ''}</TextCell>,
+      size: 180,
+      cell: (info) => {
+        const { clientType, clientVersion, clientCode } = info.row.original;
+        const typeAndVersion = [getClientTypeLabel(t, clientType), clientVersion]
+          .filter(Boolean)
+          .join(' ');
+        const value =
+          clientCode != null && typeAndVersion !== ''
+            ? `${typeAndVersion}-${clientCode}`
+            : typeAndVersion;
+        return <TextCell>{value}</TextCell>;
+      },
     },
     {
       accessorKey: 'isPlayerSupported',

@@ -41,6 +41,7 @@ import PreferencesModal from './PreferencesModal';
 import ProfileEditModal from './ProfileEditModal';
 
 import { useUserContext } from '@/context/UserContext';
+import { useDismissOnIframeFocus } from '@/hooks/useDismissOnIframeFocus';
 
 // Expand the modal types
 type ActiveModal = 'preferences' | 'applications' | 'profile' | 'about' | null;
@@ -72,6 +73,8 @@ export default function UserMenu() {
   const click = useClick(context);
   const dismiss = useDismiss(context);
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
+
+  useDismissOnIframeFocus(isOpen, () => setIsOpen(false));
 
   const openModal = (modal: ActiveModal) => {
     setActiveModal(modal);

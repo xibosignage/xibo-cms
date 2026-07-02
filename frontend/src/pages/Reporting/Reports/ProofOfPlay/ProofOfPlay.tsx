@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { ArrowLeft, Download, Loader2, Plus } from 'lucide-react';
+import { ArrowLeft, Download, Filter, FilterX, Loader2, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -46,6 +46,7 @@ export default function ProofOfPlay() {
   const [submittedFilter, setSubmittedFilter] = useState<ProofOfPlayFilter | null>(null);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(true);
 
   const {
     pagination,
@@ -84,6 +85,7 @@ export default function ProofOfPlay() {
   const handleApply = () => {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
     setSubmittedFilter({ ...filter });
+    setFiltersOpen(false);
   };
 
   const handleRefresh = () => {
@@ -112,6 +114,15 @@ export default function ProofOfPlay() {
             <Button variant="primary" leftIcon={Plus} onClick={() => setScheduleModalOpen(true)}>
               {t('Schedule')}
             </Button>
+            <Button
+              leftIcon={filtersOpen ? FilterX : Filter}
+              variant="secondary"
+              disabled={!isHydrated}
+              onClick={() => setFiltersOpen((prev) => !prev)}
+              removeTextOnMobile
+            >
+              {t('Filters')}
+            </Button>
           </div>
         </div>
 
@@ -136,12 +147,14 @@ export default function ProofOfPlay() {
           </div>
         ) : (
           <>
-            <ProofOfPlayFilters
-              filter={filter}
-              onFilterChange={handleFilterChange}
-              onApply={handleApply}
-              isLoading={isFetching}
-            />
+            {filtersOpen && (
+              <ProofOfPlayFilters
+                filter={filter}
+                onFilterChange={handleFilterChange}
+                onApply={handleApply}
+                isLoading={isFetching}
+              />
+            )}
 
             {submittedFilter !== null ? (
               <ProofOfPlayResults

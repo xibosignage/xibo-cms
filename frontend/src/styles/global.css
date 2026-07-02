@@ -101,6 +101,60 @@ body,
   .animate-fade-in {
     animation: fade-in 200ms ease-in;
   }
+
+  .custom-scrollbar {
+    --scrollbar-size: 12px;
+    scrollbar-gutter: stable both-edges;
+  }
+
+  .custom-scrollbar-inset {
+    padding-inline: calc(1.25rem - var(--scrollbar-size, 0px));
+  }
+
+  @supports not selector(::-webkit-scrollbar) {
+    .custom-scrollbar {
+      scrollbar-width: auto;
+      scrollbar-color: var(--color-xibo-blue-300) var(--color-xibo-blue-900);
+    }
+    .dark .custom-scrollbar {
+      scrollbar-color: var(--color-xibo-burnt-sienna-800)
+        var(--color-xibo-burnt-sienna-200);
+    }
+    .custom-scrollbar-inset {
+      padding-inline: 1.25rem;
+    }
+  }
+  .custom-scrollbar::-webkit-scrollbar {
+    width: var(--scrollbar-size);
+    height: var(--scrollbar-size);
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: color-mix(in srgb, var(--color-xibo-blue-500) 70%, transparent);
+    border: 4px solid transparent;
+    background-clip: padding-box;
+    border-radius: 9999px;
+    transition:
+      border-width 150ms ease,
+      background-color 150ms ease;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    border-width: 1px;
+    background-color: var(--color-xibo-blue-400);
+  }
+
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: color-mix(
+      in srgb,
+      var(--color-xibo-burnt-sienna-700) 70%,
+      transparent
+    );
+  }
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-xibo-burnt-sienna-600);
+  }
 }
 
 /* ── Tiptap rich-text editor content ─────────────────────────────────────

@@ -31,6 +31,7 @@
         <link rel="shortcut icon" href="{{ theme.rootUri() }}brand/favicon.ico" />
 
         <script src="{{ theme.rootUri() }}dist/style.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+        <link href="{{ theme.rootUri() }}brand/theme.css" rel="stylesheet" media="screen">
 
         <!-- Copyright 2006-2023 Xibo Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
         <style type="text/css">
@@ -67,7 +68,7 @@
     <body>
         <div class="container">
             <div class="{% block contentClass %}form-signin text-center{% endblock %}">
-                {% block header %}<p><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="{{ theme.rootUri() }}brand/xibologo.png" alt="Logo"></a></p>{% endblock %}
+                {% block header %}<p><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="{{ theme.rootUri() }}brand/logo.svg" alt="Logo"></a></p>{% endblock %}
 
                 {% block content %}{% endblock %}
             </div>
