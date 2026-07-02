@@ -23,6 +23,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { SessionHistoryFilter } from '../SessionHistoryConfig';
+import { SCHEDULE_TYPE_OPTIONS } from '../SessionHistoryConfig';
 
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import ReportScheduleModalShell from '@/pages/Reporting/Reports/shared/ReportScheduleModalShell';
@@ -44,11 +45,18 @@ export default function AddScheduleModal({
   const { t } = useTranslation();
 
   const [userId, setUserId] = useState<number | null>(currentFilter.userId);
+
+  // In v4.4, we only have two options - audit and debug. When the current filter is set in the table,
+  // we set it to audit by default
+  const [type, setType] = useState<'audit' | 'debug'>(
+    currentFilter.type === 'sessions' ? 'audit' : currentFilter.type,
+  );
   const userSelect = useUserOptions(isOpen);
 
   useEffect(() => {
     if (isOpen) {
       setUserId(currentFilter.userId);
+      setType(currentFilter.type === 'sessions' ? 'audit' : currentFilter.type);
     }
   }, [isOpen]);
 
@@ -69,9 +77,18 @@ export default function AddScheduleModal({
         toDt: draft.toDt || undefined,
         sendEmail: draft.sendEmail,
         nonusers: draft.nonusers,
-        hiddenFields: { type: currentFilter.type },
+        hiddenFields: { type },
       })}
     >
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-semibold text-gray-500 leading-5">{t('Type')}</label>
+        <SelectDropdown
+          value={type}
+          options={SCHEDULE_TYPE_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }))}
+          onSelect={(val) => setType((val as 'audit' | 'debug') || 'audit')}
+        />
+      </div>
+
       <div className="flex flex-col gap-1">
         <label className="text-sm font-semibold text-gray-500 leading-5">{t('User')}</label>
         <SelectDropdown

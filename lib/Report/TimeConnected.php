@@ -264,7 +264,8 @@ class TimeConnected implements ReportInterface
 
                 foreach ($result['result'] as $res) {
                     if ($res['displayId'] == $displayId && $res['customLabel'] == $resPeriods['customLabel']) {
-                        $timeConnected[$key][$temp][$displayId]['percent'] =  100 - round($res['percent'], 2);
+                        // Remove the negative value from the chart/table
+                        $timeConnected[$key][$temp][$displayId]['percent'] = max(0, 100 - round($res['percent'], 2));
                         $timeConnected[$key][$temp][$displayId]['label'] = $resPeriods['customLabel'];
                     } else {
                         continue;

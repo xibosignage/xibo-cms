@@ -22,6 +22,14 @@
 import http from '@/lib/api';
 import type { SavedReport } from '@/types/savedReport';
 
+export interface SavedReportData {
+  recordsTotal: number;
+  chart: unknown;
+  table: Record<string, unknown>[] | null;
+  metadata: Record<string, unknown> | null;
+  error: string | null;
+}
+
 export interface FetchSavedReportsRequest {
   start?: number;
   length?: number;
@@ -61,4 +69,14 @@ export async function fetchSavedReports(
 
 export async function deleteSavedReport(id: number): Promise<void> {
   await http.delete(`/report/savedreport/${id}`);
+}
+
+export async function fetchSavedReportData(
+  savedReportId: number,
+  reportName: string,
+): Promise<SavedReportData> {
+  const response = await http.get<SavedReportData>(
+    `/report/savedreport/${savedReportId}/report/${reportName}/open`,
+  );
+  return response.data;
 }

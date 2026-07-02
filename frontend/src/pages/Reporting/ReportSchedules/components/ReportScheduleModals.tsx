@@ -21,6 +21,7 @@
 
 import type { ModalType } from '../ReportSchedulesConfig';
 
+import DeleteAllSavedReportsModal from './DeleteAllSavedReportsModal';
 import DeleteReportScheduleModal from './DeleteReportScheduleModal';
 import EditReportScheduleModal from './EditReportScheduleModal';
 import ResetReportScheduleModal from './ResetReportScheduleModal';
@@ -43,6 +44,10 @@ export interface ReportScheduleModalsProps {
   isResetting: boolean;
   resetError: string | null;
   confirmReset: (schedule: ReportSchedule) => void;
+  scheduleForDeleteAll: ReportSchedule | null;
+  isDeletingAllSaved: boolean;
+  deleteAllSavedError: string | null;
+  confirmDeleteAllSaved: () => void;
 }
 
 export function ReportScheduleModals({
@@ -60,6 +65,10 @@ export function ReportScheduleModals({
   isResetting,
   resetError,
   confirmReset,
+  scheduleForDeleteAll,
+  isDeletingAllSaved,
+  deleteAllSavedError,
+  confirmDeleteAllSaved,
 }: ReportScheduleModalsProps) {
   const isModalOpen = (name: ModalType) => activeModal === name;
 
@@ -105,6 +114,17 @@ export function ReportScheduleModals({
           onConfirm={() => selectedSchedule && confirmToggleActive(selectedSchedule)}
           error={toggleActiveError}
           isLoading={isTogglingActive}
+        />
+      )}
+
+      {isModalOpen('deleteAllSaved') && (
+        <DeleteAllSavedReportsModal
+          isOpen
+          scheduleName={scheduleForDeleteAll?.name}
+          onClose={closeModal}
+          onConfirm={confirmDeleteAllSaved}
+          error={deleteAllSavedError}
+          isLoading={isDeletingAllSaved}
         />
       )}
     </>
