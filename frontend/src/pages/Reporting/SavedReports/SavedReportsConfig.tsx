@@ -95,38 +95,28 @@ export interface SavedReportActionsProps {
   formatDateTime?: (value: DateLike) => string;
   onDelete: (id: number) => void;
   onGoToSchedule: (report: SavedReport) => void;
+  onOpen: (report: SavedReport) => void;
+  onBackToReports: (report: SavedReport) => void;
 }
 
 export const getSavedReportItemActions = (
   props: SavedReportActionsProps,
 ): ((report: SavedReport) => ActionItem[]) => {
-  const { t, onDelete, onGoToSchedule } = props;
+  const { t, onDelete, onGoToSchedule, onOpen, onBackToReports } = props;
   return (report: SavedReport) => {
-    const openUrl = `/report/savedreport/${report.savedReportId}/report/${report.reportName}/open`;
     const exportUrl = `/report/savedreport/${report.savedReportId}/report/${report.reportName}/export`;
     return [
       {
         label: t('Open'),
         icon: ExternalLink,
-        onClick: () => {
-          window.location.href = openUrl;
-        },
+        onClick: () => onOpen(report),
         isQuickAction: true,
         variant: 'primary' as const,
       },
       {
-        label: t('Open'),
-        icon: ExternalLink,
-        onClick: () => {
-          window.location.href = openUrl;
-        },
-      },
-      {
         label: t('Back to Reports'),
         icon: ArrowLeft,
-        onClick: () => {
-          window.location.href = `/report/form/${report.reportName}`;
-        },
+        onClick: () => onBackToReports(report),
       },
       {
         label: t('Go to Schedule'),

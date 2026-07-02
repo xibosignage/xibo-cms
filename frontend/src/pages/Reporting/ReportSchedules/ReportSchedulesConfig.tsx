@@ -21,7 +21,15 @@
 
 import type { ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
-import { ArrowLeft, Edit, PauseCircle, PlayCircle, RefreshCw, Trash2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  Edit,
+  ExternalLink,
+  PauseCircle,
+  PlayCircle,
+  RefreshCw,
+  Trash2,
+} from 'lucide-react';
 import type { ComponentProps } from 'react';
 
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
@@ -41,7 +49,7 @@ export interface ReportScheduleFilterInput {
   onlyMySchedules: string;
 }
 
-export type ModalType = 'edit' | 'delete' | 'reset' | 'toggleActive';
+export type ModalType = 'edit' | 'delete' | 'reset' | 'toggleActive' | 'deleteAllSaved';
 
 export const INITIAL_FILTER_STATE: ReportScheduleFilterInput = {
   reportScheduleId: null,
@@ -105,12 +113,24 @@ export interface ReportScheduleActionsProps {
   openEditModal: (row: ReportSchedule) => void;
   openResetModal: (row: ReportSchedule) => void;
   openToggleActiveModal: (row: ReportSchedule) => void;
+  onOpenLastSaved: (schedule: ReportSchedule) => void;
+  onDeleteAllSaved: (schedule: ReportSchedule) => void;
+  onBackToReports: (schedule: ReportSchedule) => void;
 }
 
 export const getReportScheduleItemActions = (
   props: ReportScheduleActionsProps,
 ): ((schedule: ReportSchedule) => ActionItem[]) => {
-  const { t, onDelete, openEditModal, openResetModal, openToggleActiveModal } = props;
+  const {
+    t,
+    onDelete,
+    openEditModal,
+    openResetModal,
+    openToggleActiveModal,
+    onOpenLastSaved,
+    onDeleteAllSaved,
+    onBackToReports,
+  } = props;
   return (schedule: ReportSchedule) => {
     const isActive = schedule.isActive === 1;
     return [
@@ -127,6 +147,15 @@ export const getReportScheduleItemActions = (
         isQuickAction: true,
         onClick: () => openToggleActiveModal(schedule),
       },
+      ...(schedule.lastSavedReportId !== 0
+        ? [
+            {
+              label: t('Open Last Report'),
+              icon: ExternalLink,
+              onClick: () => onOpenLastSaved(schedule),
+            },
+          ]
+        : []),
       {
         label: t('Edit'),
         icon: Edit,
@@ -135,9 +164,7 @@ export const getReportScheduleItemActions = (
       {
         label: t('Back to Reports'),
         icon: ArrowLeft,
-        onClick: () => {
-          window.location.href = `/report/form/${schedule.reportNameId}`;
-        },
+        onClick: () => onBackToReports(schedule),
       },
       {
         label: t('Reset to previous run'),
@@ -150,6 +177,17 @@ export const getReportScheduleItemActions = (
         icon: isActive ? PauseCircle : PlayCircle,
         onClick: () => openToggleActiveModal(schedule),
       },
+      ...(schedule.lastSavedReportId !== 0
+        ? [
+            { isSeparator: true as const },
+            {
+              label: t('Delete All Saved Reports'),
+              icon: Trash2,
+              onClick: () => onDeleteAllSaved(schedule),
+              variant: 'danger' as const,
+            },
+          ]
+        : []),
       { isSeparator: true },
       {
         label: t('Delete'),

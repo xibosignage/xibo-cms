@@ -229,15 +229,6 @@ $app->get('/stats/data/bandwidth', ['\Xibo\Controller\Stats','bandwidthData'])
     ->setName('stats.bandwidth.data');
 
 //
-// Saved reports
-//
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/report/savedreport/{id}/report/{name}/open', ['\Xibo\Controller\SavedReport','savedReportOpen'])->setName('savedreport.open');
-    $group->get('/report/savedreport/{id}/report/{name}/export', ['\Xibo\Controller\SavedReport','savedReportExport'])->setName('savedreport.export');
-    $group->get('/report/savedreport/{id}/report/{name}/convert', ['\Xibo\Controller\OldReport','savedReportConvert'])->setName('savedreport.convert');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['report.saving']));
-
-//
 // Ad hoc report
 //
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {

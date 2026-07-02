@@ -256,13 +256,12 @@ class SavedReport extends Base
             }
         }
 
-        // only for tablebased report
-        if ($report->output_type == 'both' || $report->output_type == 'table') {
-            $tableData = $results->table;
-        }
+        $tableData = $results->table;
 
         // Get report email template to export
         $emailTemplate = $this->reportService->getReportEmailTemplate($name);
+
+        $fileName = null;
 
         if (!empty($emailTemplate)) {
             // Save PDF attachment
@@ -304,7 +303,12 @@ class SavedReport extends Base
                 $mpdf->Output($fileName, \Mpdf\Output\Destination::FILE);
             } catch (\Exception $error) {
                 $this->getLog()->error($error->getMessage());
+                $fileName = null;
             }
+        }
+
+        if ($fileName === null) {
+            throw new GeneralException(__('Unable to generate PDF export for this report.'));
         }
 
         // Return the file with PHP

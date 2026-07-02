@@ -21,9 +21,13 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
+import { isAxiosError } from 'axios';
 import { Filter, FilterX, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+
+import { savedReportQueryKeys } from '../SavedReports/hooks/useSavedReportData';
 
 import {
   getBulkActions,
@@ -38,15 +42,19 @@ import { useReportScheduleFilterOptions } from './hooks/useReportScheduleFilterO
 
 import Button from '@/components/ui/Button';
 import FilterInputs from '@/components/ui/FilterInputs';
+import { notify } from '@/components/ui/Notification';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { REPORT_META } from '@/config/reportRoutes';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
+import { deleteAllSavedReportsForSchedule } from '@/services/reportScheduleApi';
 import type { ReportSchedule } from '@/types/reportSchedule';
 
 export default function ReportSchedules() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { formatDateTime } = useDateFormatter();
   const queryClient = useQueryClient();
 
@@ -79,6 +87,9 @@ export default function ReportSchedules() {
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
   const [itemsToDelete, setItemsToDelete] = useState<ReportSchedule[]>([]);
   const [selectedSchedule, setSelectedSchedule] = useState<ReportSchedule | null>(null);
+  const [scheduleForDeleteAll, setScheduleForDeleteAll] = useState<ReportSchedule | null>(null);
+  const [isDeletingAllSaved, setIsDeletingAllSaved] = useState(false);
+  const [deleteAllSavedError, setDeleteAllSavedError] = useState<string | null>(null);
 
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
@@ -168,6 +179,50 @@ export default function ReportSchedules() {
     openModal('toggleActive');
   };
 
+  const handleOpenLastSaved = (schedule: ReportSchedule) => {
+    navigate(
+      `/reporting/saved-reports/${schedule.lastSavedReportId}/${schedule.reportNameId}/view`,
+    );
+  };
+
+  const handleBackToReports = (schedule: ReportSchedule) => {
+    const meta = REPORT_META[schedule.reportNameId];
+    if (meta) {
+      navigate(meta.route);
+    } else {
+      window.location.assign(`/report/form/${schedule.reportNameId}`);
+    }
+  };
+
+  const handleDeleteAllSaved = (schedule: ReportSchedule) => {
+    setScheduleForDeleteAll(schedule);
+    setDeleteAllSavedError(null);
+    openModal('deleteAllSaved');
+  };
+
+  const confirmDeleteAllSaved = async () => {
+    if (!scheduleForDeleteAll || isDeletingAllSaved) {
+      return;
+    }
+    try {
+      setIsDeletingAllSaved(true);
+      setDeleteAllSavedError(null);
+      await deleteAllSavedReportsForSchedule(scheduleForDeleteAll.reportScheduleId);
+      notify.success(t('All saved reports deleted successfully'));
+      handleRefresh();
+      queryClient.invalidateQueries({ queryKey: savedReportQueryKeys.all });
+      closeModal();
+    } catch (err: unknown) {
+      const message =
+        isAxiosError(err) && err.response?.data?.message
+          ? err.response.data.message
+          : t('An unexpected error occurred.');
+      setDeleteAllSavedError(message);
+    } finally {
+      setIsDeletingAllSaved(false);
+    }
+  };
+
   const handleResetFilters = () => {
     setFilterInputs(INITIAL_FILTER_STATE);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
@@ -189,6 +244,9 @@ export default function ReportSchedules() {
     openEditModal,
     openResetModal,
     openToggleActiveModal,
+    onOpenLastSaved: handleOpenLastSaved,
+    onDeleteAllSaved: handleDeleteAllSaved,
+    onBackToReports: handleBackToReports,
   });
 
   const bulkActions = getBulkActions({
@@ -303,6 +361,10 @@ export default function ReportSchedules() {
         isResetting={isResetting}
         resetError={resetError}
         confirmReset={confirmReset}
+        scheduleForDeleteAll={scheduleForDeleteAll}
+        isDeletingAllSaved={isDeletingAllSaved}
+        deleteAllSavedError={deleteAllSavedError}
+        confirmDeleteAllSaved={confirmDeleteAllSaved}
       />
     </section>
   );

@@ -515,7 +515,7 @@ class SummaryReport implements ReportInterface
                 periods.start,
                 periods.end,
                 stat.count AS numberOfPlays,
-                LEAST(stat.duration, LEAST(periods.end, statEnd, :toDt) - GREATEST(periods.start, statStart, :fromDt)) AS actualDiff
+                LEAST(stat.duration, GREATEST(0, LEAST(periods.end, statEnd, :toDt) - GREATEST(periods.start, statStart, :fromDt))) AS actualDiff
              FROM `' . $periods . '` AS periods
                 LEFT OUTER JOIN (
                     SELECT 

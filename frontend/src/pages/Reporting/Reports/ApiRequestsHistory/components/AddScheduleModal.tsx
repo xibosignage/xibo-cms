@@ -22,7 +22,8 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { ApiRequestsHistoryFilter } from '../ApiRequestsHistoryConfig';
+import type { ApiRequestsHistoryFilter, ApiRequestsLogType } from '../ApiRequestsHistoryConfig';
+import { TYPE_OPTIONS } from '../ApiRequestsHistoryConfig';
 
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import ReportScheduleModalShell from '@/pages/Reporting/Reports/shared/ReportScheduleModalShell';
@@ -44,11 +45,13 @@ export default function AddScheduleModal({
   const { t } = useTranslation();
 
   const [userId, setUserId] = useState<number | null>(currentFilter.userId);
+  const [type, setType] = useState<ApiRequestsLogType>(currentFilter.type);
   const userSelect = useUserOptions(isOpen);
 
   useEffect(() => {
     if (isOpen) {
       setUserId(currentFilter.userId);
+      setType(currentFilter.type);
     }
   }, [isOpen]);
 
@@ -69,9 +72,18 @@ export default function AddScheduleModal({
         toDt: draft.toDt || undefined,
         sendEmail: draft.sendEmail,
         nonusers: draft.nonusers,
-        hiddenFields: { type: currentFilter.type },
+        hiddenFields: { type },
       })}
     >
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-semibold text-gray-500 leading-5">{t('Type')}</label>
+        <SelectDropdown
+          value={type}
+          options={TYPE_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }))}
+          onSelect={(val) => setType((val as ApiRequestsLogType) || currentFilter.type)}
+        />
+      </div>
+
       <div className="flex flex-col gap-1">
         <label className="text-sm font-semibold text-gray-500 leading-5">{t('User')}</label>
         <SelectDropdown

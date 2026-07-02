@@ -1,8 +1,8 @@
 {#
-/**
- * Copyright (C) 2022 Xibo Signage Ltd
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -47,15 +47,11 @@
         {% for item in displayStat %}
             <tr>
                 {% for displayData in item %}
-                    {% set percent = "0%" %}
-                    {% if displayData.percent > 0 %}
-                        {% set percent = displayData.percent~"%" %}
-                    {% endif %}
+                    {% set upTimePercent = max(0, displayData.percent) %}
 
-                    <td style="width:180px; text-align: right">{{ displayData.label }} - {{ displayData.percent }}%</td>
+                    <td style="width:180px; text-align: right">{{ displayData.label }} - {{ upTimePercent }}%</td>
                     <td>
-                        <progress id="file" value="{{ displayData.percent }}" max="100"> {{ displayData.percent }}% </progress>
-
+                        <progress id="file" value="{{ upTimePercent }}" max="100"> {{ upTimePercent }}% </progress>
                     </td>
                 {% endfor %}
             </tr>
