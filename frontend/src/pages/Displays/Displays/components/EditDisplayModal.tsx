@@ -846,8 +846,10 @@ export default function EditDisplayModal({
         latitude: draft.latitude ?? undefined,
         longitude: draft.longitude ?? undefined,
         bandwidthLimit: draft.bandwidthLimit ?? undefined,
+        screenSize: draft.screenSize ?? undefined,
         costPerPlay: draft.costPerPlay ?? undefined,
         impressionsPerPlay: draft.impressionsPerPlay ?? undefined,
+        wakeOnLanTime: draft.wakeOnLanTime || undefined,
       });
 
       if (!result.success) {
@@ -1151,6 +1153,7 @@ export default function EditDisplayModal({
                 value={draft.display}
                 onChange={(v) => set('display', v)}
                 error={fieldErrors.display}
+                maxLength={50}
               />
               <TextInput
                 name="license"
@@ -1167,6 +1170,8 @@ export default function EditDisplayModal({
                 placeholder=" "
                 value={draft.description}
                 onChange={(v) => set('description', v)}
+                error={fieldErrors.description}
+                maxLength={254}
               />
               <TagInput
                 label={t('Tags')}
@@ -1280,8 +1285,10 @@ export default function EditDisplayModal({
                 label={t('Screen size')}
                 helpText={t('The Screen size of this Display')}
                 placeholder=" "
+                min={0}
                 value={draft.screenSize ?? undefined}
                 onChange={(v) => set('screenSize', v || null)}
+                error={fieldErrors.screenSize}
               />
               <Checkbox
                 id="isMobile"
@@ -1302,6 +1309,8 @@ export default function EditDisplayModal({
                 label={t('Cost per play')}
                 helpText={t('The cost per play')}
                 placeholder=" "
+                min={0}
+                step="0.01"
                 value={draft.costPerPlay ?? undefined}
                 onChange={(v) => set('costPerPlay', v || null)}
                 error={fieldErrors.costPerPlay}
@@ -1311,6 +1320,8 @@ export default function EditDisplayModal({
                 label={t('Impressions per play')}
                 helpText={t('The impressions per play')}
                 placeholder=" "
+                min={0}
+                step="0.01"
                 value={draft.impressionsPerPlay ?? undefined}
                 onChange={(v) => set('impressionsPerPlay', v || null)}
                 error={fieldErrors.impressionsPerPlay}
@@ -1405,6 +1416,8 @@ export default function EditDisplayModal({
                 placeholder="HH:MM"
                 value={draft.wakeOnLanTime}
                 onChange={(v) => set('wakeOnLanTime', v)}
+                error={fieldErrors.wakeOnLanTime}
+                maxLength={5}
               />
               <TextInput
                 name="cidr"

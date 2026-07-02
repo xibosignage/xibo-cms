@@ -771,6 +771,10 @@ class Display implements \JsonSerializable, XmrTargetInterface
             throw new InvalidArgumentException(__('Can not have a display without a name'), 'name');
         }
 
+        if (!v::stringType()->length(null, 50)->validate($this->display)) {
+            throw new InvalidArgumentException(__('Name cannot exceed 50 characters'), 'display');
+        }
+
         if (!v::stringType()->notEmpty()->validate($this->license)) {
             throw new InvalidArgumentException(__('Can not have a display without a hardware key'), 'license');
         }
@@ -779,6 +783,16 @@ class Display implements \JsonSerializable, XmrTargetInterface
             throw new InvalidArgumentException(
                 __('Wake on Lan is enabled, but you have not specified a time to wake the display'),
                 'wakeonlan'
+            );
+        }
+
+        // Validate the Wake on Lan time format (24hr HH:MM) when one has been provided
+        if (!empty($this->wakeOnLanTime)
+            && !v::regex('/^([01][0-9]|2[0-3]):[0-5][0-9]$/')->validate($this->wakeOnLanTime)
+        ) {
+            throw new InvalidArgumentException(
+                __('Please enter a valid time format (e.g., HH:MM).'),
+                'wakeOnLanTime'
             );
         }
         // Broadcast Address
@@ -832,6 +846,27 @@ class Display implements \JsonSerializable, XmrTargetInterface
             throw new InvalidArgumentException(
                 __('Bandwidth limit must be a whole number greater than 0.'),
                 'bandwidthLimit'
+            );
+        }
+
+        if ($this->screenSize !== null && $this->screenSize !== '' && $this->screenSize < 0) {
+            throw new InvalidArgumentException(
+                __('Value must be greater than or equal to 0.'),
+                'screenSize'
+            );
+        }
+
+        if ($this->costPerPlay !== null && $this->costPerPlay !== '' && $this->costPerPlay < 0) {
+            throw new InvalidArgumentException(
+                __('Value must be greater than or equal to 0.'),
+                'costPerPlay'
+            );
+        }
+
+        if ($this->impressionsPerPlay !== null && $this->impressionsPerPlay !== '' && $this->impressionsPerPlay < 0) {
+            throw new InvalidArgumentException(
+                __('Value must be greater than or equal to 0.'),
+                'impressionsPerPlay'
             );
         }
 

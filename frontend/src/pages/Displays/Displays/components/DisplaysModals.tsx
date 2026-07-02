@@ -116,7 +116,9 @@ export function DisplayModals({ actions, selection, handlers }: DisplayModalsPro
 
   return (
     <>
-      {isModalOpen('add') && <AddDisplayModal onClose={actions.closeModal} />}
+      {isModalOpen('add') && (
+        <AddDisplayModal onClose={actions.closeModal} onAdded={actions.handleRefresh} />
+      )}
 
       {isModalOpen('manage') && display && (
         <ManageDisplayModal display={display} onClose={actions.closeModal} />

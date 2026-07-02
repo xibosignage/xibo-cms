@@ -31,9 +31,10 @@ import { addDisplayViaCode } from '@/services/displaysApi';
 interface AddDisplayModalProps {
   isOpen?: boolean;
   onClose: () => void;
+  onAdded?: () => void;
 }
 
-export default function AddDisplayModal({ isOpen = true, onClose }: AddDisplayModalProps) {
+export default function AddDisplayModal({ isOpen = true, onClose, onAdded }: AddDisplayModalProps) {
   const { t } = useTranslation();
   const [isPending, startTransition] = useTransition();
   const [userCode, setUserCode] = useState('');
@@ -52,6 +53,7 @@ export default function AddDisplayModal({ isOpen = true, onClose }: AddDisplayMo
       try {
         await addDisplayViaCode(userCode);
         notify.success(t('CMS Credentials Added'));
+        onAdded?.();
         onClose();
       } catch (err: unknown) {
         if (isAxiosError(err) && err.response?.data?.message) {
