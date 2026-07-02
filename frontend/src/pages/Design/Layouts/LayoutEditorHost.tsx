@@ -20,15 +20,19 @@
  */
 
 import { useTranslation } from 'react-i18next';
-import { Navigate, useLocation, useParams, useSearchParams } from 'react-router-dom';
+import { Navigate, useLoaderData, useLocation, useParams, useSearchParams } from 'react-router-dom';
 
 import EditorHost from '@/components/editor/EditorHost';
+import { BrandingProvider } from '@/context/BrandingContext';
+import { UserProvider } from '@/context/UserContext';
+import type { User } from '@/types/user';
 
 export default function LayoutEditorHost() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const location = useLocation();
+  const { user } = useLoaderData() as { user: User | null };
   const isTemplateEditor = searchParams.get('isTemplateEditor') === '1';
 
   const from = (location.state as { from?: string } | null)?.from;
@@ -39,14 +43,19 @@ export default function LayoutEditorHost() {
   }
 
   return (
-    <EditorHost
-      id={id}
-      editorBasePath="/layout/designer"
-      stayPathPrefix="/layout/designer"
-      returnPath={returnPath}
-      forwardQuery={isTemplateEditor ? 'isTemplateEditor=1' : undefined}
-      title={isTemplateEditor ? t('Template Editor') : t('Layout Editor')}
-      readySelector="#layout-editor"
-    />
+    <BrandingProvider branding={user?.branding}>
+      <UserProvider initialUser={user}>
+        <EditorHost
+          id={id}
+          editorBasePath="/layout/designer"
+          stayPathPrefix="/layout/designer"
+          returnPath={returnPath}
+          forwardQuery={isTemplateEditor ? 'isTemplateEditor=1' : undefined}
+          title={isTemplateEditor ? t('Template Editor') : t('Layout Editor')}
+          readySelector="#layout-editor"
+          showChrome
+        />
+      </UserProvider>
+    </BrandingProvider>
   );
 }

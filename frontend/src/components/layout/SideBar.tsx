@@ -122,7 +122,7 @@ export default function SidebarMenu({ isCollapsed, closeMobileDrawer }: SidebarM
       </div>
       {/* Routes — scrollable */}
       <div
-        className={`flex-1 overflow-y-auto overflow-x-hidden flex flex-col gap-y-2 ${isCollapsed ? 'items-center p-0' : 'items-start px-5'}`}
+        className={`custom-scrollbar flex-1 overflow-y-auto overflow-x-hidden flex flex-col gap-y-2 ${isCollapsed ? 'items-center p-0' : 'items-start custom-scrollbar-inset'}`}
       >
         {visibleRoutes.map((route, index) => {
           const label = !contentHidden ? t(route.labelKey) : null;

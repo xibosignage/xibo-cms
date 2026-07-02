@@ -25,7 +25,7 @@
 
 // CSS
 .editor-toolbar nav {
-    background: $xibo-color-primary;
+    background: $xibo-color-primary-d60;
     color: $xibo-color-neutral-100;
     z-index: $toolbar-z-index;
     margin-left: 0;
@@ -952,7 +952,7 @@
         }
 
         &:hover {
-            background: $xibo-color-primary-l60;
+            background: $xibo-color-primary-d40;
             color: $xibo-color-neutral-100;
         }
     }
@@ -1057,7 +1057,7 @@
             line-height: 20px;
             height: calc($toolbar-tab-menu-height - 10px);
             border-radius: 8px;
-            @include set-transparent-color(background-color, $xibo-color-primary-d60, 0.4);
+            @include set-transparent-color(background-color, $xibo-color-neutral-1000, 0.1);
 
             &.btn-menu-option-custom-icon {
                 padding: 8px;
@@ -1070,7 +1070,7 @@
             }
 
             &:hover {
-                @include set-transparent-color(background-color, $xibo-color-primary-d60, 0.6);
+                @include set-transparent-color(background-color, $xibo-color-neutral-1000, 0.2);
                 color: $xibo-color-neutral-100;
             }
         }

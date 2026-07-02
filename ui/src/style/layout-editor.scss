@@ -47,6 +47,10 @@ body.editor-opened .row.header.header-side {
     z-index: $header-z-index;
 }
 
+body.editor-opened .xibo-logo-container {
+    display: none;
+}
+
 /* Flex structure */
 .layout-editor-flex {
     display: flex;
@@ -151,21 +155,6 @@ body.editor-opened #content-wrapper .page-content>.row {
                     width: 36px;
                     height: 36px;
                     border-radius: 2px;
-                }
-            }
-        }
-
-        .xibo-logo-container {
-            margin-left: 50%;
-            transform: translateX(-50%);
-
-            .page {
-                width: auto;
-                padding: 0;
-
-                .xibo-logo {
-                    height: 30px;
-                    margin: 10px 0;
                 }
             }
         }
