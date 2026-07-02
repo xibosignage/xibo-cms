@@ -34,13 +34,12 @@ $app->get('/login', ['\Xibo\Controller\Login', 'loginForm'])->setName('login');
 // Login Requests
 $app->post('/login', ['\Xibo\Controller\Login','login']);
 $app->post('/login/forgotten', ['\Xibo\Controller\Login','forgottenPassword'])->setName('login.forgotten');
-$app->get('/tfa', ['\Xibo\Controller\Login','twoFactorAuthForm'])->setName('tfa');
 
 // Logout Request
 $app->get('/logout', ['\Xibo\Controller\Login','logout'])->setName('logout');
 
 // Ping pong route
-$app->get('/login/ping', ['\Xibo\Controller\Login','PingPong'])->setName('ping');
+$app->get('/login/ping', ['\Xibo\Controller\Login','pingPong'])->setName('ping');
 
 //
 // notification
@@ -213,35 +212,21 @@ $app->get('/fault/view', ['\Xibo\Controller\Fault','displayPage'])
     ->setName('fault.view');
 
 //
-// license
+// Reporting
 //
-$app->get('/license/view', ['\Xibo\Controller\Login','about'])->setName('license.view');
+$app->get('/report/view', ['\Xibo\Controller\Stats','displayReportPage'])
+    ->addMiddleware(new FeatureAuth($app->getContainer(), ['report.view']))
+    ->setName('report.view');
+
+$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
+    $group->get('/stats/form/export', ['\Xibo\Controller\Stats','exportForm'])->setName('stats.export.form');
+    $group->get('/stats/getExportStatsCount', ['\Xibo\Controller\Stats','getExportStatsCount'])->setName('stats.getExportStatsCount');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['proof-of-play']));
 
 // Used in Display Manage
 $app->get('/stats/data/bandwidth', ['\Xibo\Controller\Stats','bandwidthData'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['displays.reporting']))
     ->setName('stats.bandwidth.data');
-
-//
-// Commands
-//
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/command/view', ['\Xibo\Controller\Command','displayPage'])->setName('command.view');
-    $group->get('/command/form/add', ['\Xibo\Controller\Command','addForm'])->setName('command.add.form');
-    $group->get('/command/form/edit/{id}', ['\Xibo\Controller\Command','editForm'])->setName('command.edit.form');
-    $group->get('/command/form/delete/{id}', ['\Xibo\Controller\Command','deleteForm'])->setName('command.delete.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['command.view']));
-
-//
-// Tasks
-//
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/task/view', ['\Xibo\Controller\Task','displayPage'])->setName('task.view');
-    $group->get('/task/form/add', ['\Xibo\Controller\Task','addForm'])->setName('task.add.form');
-    $group->get('/task/form/edit/{id}', ['\Xibo\Controller\Task','editForm'])->setName('task.edit.form');
-    $group->get('/task/form/delete/{id}', ['\Xibo\Controller\Task','deleteForm'])->setName('task.delete.form');
-    $group->get('/task/form/runNow/{id}', ['\Xibo\Controller\Task','runNowForm'])->setName('task.runNow.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['task.view']));
 
 //
 // Saved reports

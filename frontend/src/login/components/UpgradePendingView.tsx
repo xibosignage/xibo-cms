@@ -19,32 +19,27 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useTranslation } from 'react-i18next';
+import { t } from '../i18n';
 
-import { AboutModalContent } from '@/components/about/AboutModalContent';
-import Modal from '@/components/ui/modals/Modal';
+import { LoginCard } from './LoginCard';
 
-interface AboutModalProps {
-  isOpen?: boolean;
-  onClose: () => void;
-}
+const config = window.__LOGIN_CONFIG__;
 
-export default function AboutModal({ isOpen = true, onClose }: AboutModalProps) {
-  const { t } = useTranslation();
-
+export function UpgradePendingView() {
   return (
-    <Modal
-      variant="confirmation"
-      isOpen={isOpen}
-      onClose={onClose}
-      title={t('About')}
-      size="lg"
-      scrollable={true}
-      actions={[{ label: t('Close'), variant: 'secondary', onClick: onClose }]}
+    <div
+      style={{
+        minHeight: '100vh',
+        paddingTop: 40,
+        paddingBottom: 40,
+        backgroundColor: '#f7f7f7',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        fontSize: 14,
+      }}
     >
-      <div className="p-6 text-gray-700 space-y-6">
-        <AboutModalContent />
-      </div>
-    </Modal>
+      <LoginCard logoUrl={config.logoUrl} supportUrl={config.supportUrl ?? ''}>
+        <p style={{ textAlign: 'center', margin: 0 }}>{t('upgradeMessage')}</p>
+      </LoginCard>
+    </div>
   );
 }

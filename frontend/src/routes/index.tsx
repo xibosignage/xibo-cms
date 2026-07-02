@@ -22,7 +22,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import type { RouteObject } from 'react-router-dom';
 
-import { requireAuthLoader } from './loaders';
+import { requireAuthLoader, requireAuthOnlyLoader } from './loaders';
 
 import RootLayout from '@/app/RootLayout';
 import WithPageWrapper from '@/app/WithPageWrapper';
@@ -79,6 +79,14 @@ export const router = createBrowserRouter(
           ],
         },
       ],
+    },
+    {
+      path: 'user/force-change-password',
+      loader: requireAuthOnlyLoader,
+      lazy: () =>
+        import('@/pages/User/ForceChangePassword/ForceChangePassword').then((m) => ({
+          Component: m.default,
+        })),
     },
     {
       path: 'design/layout/:id/editor',
