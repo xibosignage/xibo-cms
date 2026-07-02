@@ -29,7 +29,7 @@ import { SearchAssignPanel } from '@/components/ui/SearchAssignPanel';
 import Checkbox from '@/components/ui/forms/Checkbox';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
-import TagInput from '@/components/ui/forms/TagInput';
+import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
 import { CheckMarkCell, TextCell } from '@/components/ui/table/cells';
@@ -77,6 +77,7 @@ export default function EditCampaignModal({
   const [isPending, startTransition] = useTransition();
   const [activeTab, setActiveTab] = useState<Tab>('general');
   const [apiError, setApiError] = useState('');
+  const [pendingTagInput, setPendingTagInput] = useState('');
 
   const [draft, setDraft] = useState<EditDraft>({
     name: '',
@@ -120,6 +121,7 @@ export default function EditCampaignModal({
       });
       setActiveTab('general');
       setApiError('');
+      setPendingTagInput('');
       setLayoutKeyword('');
       setLayoutPagination({ pageIndex: 0, pageSize: 5 });
     }
@@ -181,11 +183,9 @@ export default function EditCampaignModal({
 
     startTransition(async () => {
       try {
-        const serializedTags = draft.tags
-          .map((tag) =>
-            tag.value != null && tag.value !== '' ? `${tag.tag}|${tag.value}` : tag.tag,
-          )
-          .join(',');
+        const finalTags = collectTags(draft.tags, pendingTagInput);
+        setPendingTagInput('');
+        const serializedTags = serializeTags(finalTags);
 
         await updateCampaign(campaign.campaignId, {
           name: draft.name,
@@ -323,6 +323,8 @@ export default function EditCampaignModal({
                 value={draft.tags}
                 helpText={t('Tags for this Campaign — comma-separated Tag or Tag|Value format.')}
                 onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
+                inputValue={pendingTagInput}
+                onInputChange={setPendingTagInput}
               />
 
               <Checkbox
