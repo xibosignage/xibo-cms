@@ -81,7 +81,7 @@ function getColumns(
 
   if (logType === 'requests') {
     return [
-      textCol('logDate', t('Date'), 160),
+      textCol('startTime', t('Date'), 160),
       textCol('userName', t('User'), 140),
       textCol('userId', t('User ID'), 120),
       textCol('applicationName', t('Application'), 160),
