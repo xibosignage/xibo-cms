@@ -118,7 +118,7 @@ const buildDraftFromPlaylist = (data: Playlist): PlaylistDraft => ({
   filterMediaTag: parseFilterTags(data.filterMediaTags),
   exactTags: Boolean(data.filterExactTags),
   logicalOperator: data.filterMediaTagsLogicalOperator || 'OR',
-  filterFolderId: data.filterFolderId != null ? Number(data.filterFolderId) : null,
+  filterFolderId: data.filterFolderId ? Number(data.filterFolderId) : null,
   maxNumberOfItems: Number(data.maxNumberOfItems) || 0,
 });
 
