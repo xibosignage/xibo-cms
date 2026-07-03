@@ -29,10 +29,10 @@ import Button from '@/components/ui/Button';
 import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { TextCell } from '@/components/ui/table/cells/TextCell';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import type { ActionType } from '@/hooks/useFolderActions';
 import { fetchFolderById } from '@/services/folderApi';
 import type { Folder, FolderUsageEntry } from '@/types/folder';
-import { formatDate } from '@/utils/date';
 
 interface FolderInfoPanelProps {
   folderId: number;
@@ -50,6 +50,7 @@ export default function FolderInfoPanel({
   onAction,
 }: FolderInfoPanelProps) {
   const { t } = useTranslation();
+  const { formatDateTime } = useDateFormatter();
   const [folder, setFolder] = useState<Folder | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isTableLoading, setIsTableLoading] = useState(false);
@@ -171,7 +172,7 @@ export default function FolderInfoPanel({
             <h2 className="text-xl font-semibold">{folder.text}</h2>
             <span className="text-xs text-gray-500">
               {t('Created')}:{' '}
-              {folder.createdDt ? formatDate(new Date(folder.createdDt.replace(' ', 'T'))) : '-'}
+              {folder.createdDt ? formatDateTime(folder.createdDt.replace(' ', 'T')) : '-'}
             </span>
           </div>
           <div className="flex items-center gap-4 text-sm text-gray-500">
@@ -190,9 +191,7 @@ export default function FolderInfoPanel({
             <div className="text-right p-2 bg-slate-50 rounded-lg">
               <div className="text-xs text-gray-400">{t('Updated')}</div>
               <div className="font-semibold text-gray-700">
-                {folder.modifiedDt
-                  ? formatDate(new Date(folder.modifiedDt.replace(' ', 'T')))
-                  : '-'}
+                {folder.modifiedDt ? formatDateTime(folder.modifiedDt.replace(' ', 'T')) : '-'}
               </div>
             </div>
           </div>

@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { Table, VisibilityState } from '@tanstack/react-table';
+import type { Column, Table, VisibilityState } from '@tanstack/react-table';
 import {
   ChevronDown,
   Printer,
@@ -73,7 +73,16 @@ export function DataTableOptions<TData>({
 
   const currentVisibility = columnVisibility ?? table?.getState().columnVisibility ?? {};
 
-  const columns = (table?.getAllLeafColumns() ?? []).filter((column) => column.getCanHide());
+  const getColumnLabel = (column: Column<TData, unknown>) => {
+    const header = column.columnDef.header;
+    return typeof header === 'string' ? header : column.id;
+  };
+
+  const columns = (table?.getAllLeafColumns() ?? [])
+    .filter((column) => column.getCanHide())
+    .sort((a, b) =>
+      getColumnLabel(a).localeCompare(getColumnLabel(b), undefined, { sensitivity: 'base' }),
+    );
 
   const isTableMode = viewMode == null || viewMode === 'table';
   const isGridMode = viewMode === 'grid';
@@ -130,12 +139,7 @@ export function DataTableOptions<TData>({
                         }}
                       />
                       {columns.map((column) => {
-                        let label = column.id;
-                        const header = column.columnDef.header;
-
-                        if (typeof header === 'string') {
-                          label = header;
-                        }
+                        const label = getColumnLabel(column);
 
                         const uniqueCheckboxId = `col-toggle-${column.id}`;
                         const isVisible = currentVisibility[column.id] ?? true;

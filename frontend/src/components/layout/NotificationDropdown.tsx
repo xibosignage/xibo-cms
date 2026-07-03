@@ -38,6 +38,7 @@ import { useNavigate } from 'react-router-dom';
 
 import InfoBanner from '@/components/ui/InfoBanner';
 import { useUserContext } from '@/context/UserContext';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useDismissOnIframeFocus } from '@/hooks/useDismissOnIframeFocus';
 import ShowNotificationModal from '@/pages/Notification/components/ShowNotificationModal';
 import {
@@ -55,11 +56,6 @@ const getDateBoundaries = () => {
   return { todayStart, yesterdayStart };
 };
 
-const formatTime = (ts: number | string): string => {
-  const d = new Date(Number(ts) * 1000);
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-};
-
 function NotificationItem({
   notification,
   onClick,
@@ -67,7 +63,10 @@ function NotificationItem({
   notification: Notification;
   onClick: (n: Notification) => void;
 }) {
+  const { formatTime } = useDateFormatter();
   const isUnread = !notification.read;
+
+  const releaseDate = new Date(Number(notification.releaseDt) * 1000);
 
   return (
     <button
@@ -90,7 +89,7 @@ function NotificationItem({
         >
           {notification.subject}
         </p>
-        <p className="text-xs text-gray-400 mt-0.5">{formatTime(notification.releaseDt)}</p>
+        <p className="text-xs text-gray-400 mt-0.5">{formatTime(releaseDate)}</p>
       </div>
     </button>
   );

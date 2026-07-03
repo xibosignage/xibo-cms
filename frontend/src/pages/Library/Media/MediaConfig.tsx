@@ -55,6 +55,7 @@ import { getCommonFormOptions } from '@/config/commonForms';
 import type { Media } from '@/types/media';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
+import type { DateLike } from '@/utils/date';
 import { formatDuration } from '@/utils/formatters';
 
 export interface MediaFilterInput {
@@ -252,6 +253,7 @@ export const getStatusTypeFromMediaType = (mediaType: string) => {
 
 export interface MediaActionsProps {
   t: TFunction;
+  formatDateTime: (value: DateLike) => string;
   onPreview?: (row: Media) => void;
   onDelete: (id: number) => void;
   onDownload: (row: Media) => void;
@@ -420,7 +422,7 @@ export const filterMediaByPermission = <T,>(
 };
 
 export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] => {
-  const { t, onPreview } = props;
+  const { t, onPreview, formatDateTime } = props;
   const getActions = getMediaItemActions(props);
   return [
     {
@@ -568,13 +570,13 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
       accessorKey: 'createdDt',
       header: t('Created'),
       size: 180,
-      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+      cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
     },
     {
       accessorKey: 'modifiedDt',
       header: t('Modified'),
       size: 180,
-      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+      cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
     },
     {
       accessorKey: 'expires',

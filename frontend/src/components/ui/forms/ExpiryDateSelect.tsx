@@ -38,7 +38,7 @@ import { twMerge } from 'tailwind-merge';
 
 import DatePicker from '../DatePicker';
 
-import { useUserContext } from '@/context/UserContext';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import type { ExpiryValue } from '@/utils/date';
 
 interface ExpiryDateSelectProps {
@@ -55,8 +55,7 @@ export default function ExpiryDateSelect({
   optional = false,
 }: ExpiryDateSelectProps) {
   const { t } = useTranslation();
-  const { user } = useUserContext();
-  const timeZone = user?.settings?.defaultTimezone;
+  const { formatDateTime } = useDateFormatter();
 
   const [isOpen, setIsOpen] = useState(false);
   const [openDatePicker, setOpenDatePicker] = useState(false);
@@ -109,7 +108,7 @@ export default function ExpiryDateSelect({
             ? t('Never Expire')
             : value?.type === 'preset'
               ? t(value.value)
-              : value?.date.toLocaleString(undefined, timeZone ? { timeZone } : undefined)}
+              : formatDateTime(value?.date)}
         </span>
         <button
           type="button"

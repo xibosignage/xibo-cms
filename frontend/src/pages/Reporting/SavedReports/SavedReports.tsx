@@ -40,6 +40,7 @@ import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { REPORT_META } from '@/config/reportRoutes';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import { saveUserPreference } from '@/services/userApi';
@@ -47,6 +48,7 @@ import type { SavedReport } from '@/types/savedReport';
 
 export default function SavedReports() {
   const { t } = useTranslation();
+  const { formatDateTime } = useDateFormatter();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -200,6 +202,7 @@ export default function SavedReports() {
 
   const columns = getSavedReportColumns({
     t,
+    formatDateTime,
     reportDescriptionMap,
     onDelete: handleDelete,
     onGoToSchedule: handleGoToSchedule,

@@ -36,7 +36,7 @@ import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
 import DatePicker from '@/components/ui/DatePicker';
-import { useUserContext } from '@/context/UserContext';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 
 interface DatePickerInputProps {
   label: string;
@@ -64,8 +64,7 @@ export default function DatePickerInput({
   optional = false,
 }: DatePickerInputProps) {
   const { t } = useTranslation();
-  const { user } = useUserContext();
-  const timeZone = user?.settings?.defaultTimezone;
+  const { formatDateTime, formatDate } = useDateFormatter();
   const [isOpen, setIsOpen] = useState(false);
 
   const { refs, floatingStyles, context } = useFloating({
@@ -80,12 +79,7 @@ export default function DatePickerInput({
   const dismiss = useDismiss(context);
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
 
-  const tzOption = timeZone ? { timeZone } : undefined;
-  const displayValue = value
-    ? showTimePicker
-      ? new Date(value).toLocaleString(undefined, tzOption)
-      : new Date(value).toLocaleDateString(undefined, tzOption)
-    : '';
+  const displayValue = value ? (showTimePicker ? formatDateTime(value) : formatDate(value)) : '';
 
   return (
     <div className="flex flex-col gap-1.5 relative">

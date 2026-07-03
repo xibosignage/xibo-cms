@@ -55,6 +55,7 @@ import { getCommonFormOptions } from '@/config/commonForms';
 import type { Layout } from '@/types/layout';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
+import type { DateLike } from '@/utils/date';
 import { formatDuration } from '@/utils/formatters';
 
 export interface LayoutFilterInput {
@@ -224,6 +225,7 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<LayoutFilterIn
 
 export interface LayoutActionsProps {
   t: TFunction;
+  formatDateTime: (value: DateLike) => string;
   onPreview?: (row: Layout) => void;
   onDelete: (id: number) => void;
   openEditModal: (row: Layout) => void;
@@ -427,7 +429,7 @@ export const getLayoutItemActions = ({
 };
 
 export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[] => {
-  const { t, showDescriptionId } = props;
+  const { t, showDescriptionId, formatDateTime } = props;
   const getActions = getLayoutItemActions(props);
 
   return [
@@ -548,7 +550,7 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
       accessorKey: 'modifiedDt',
       header: t('Modified'),
       size: 160,
-      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+      cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
     },
     {
       accessorKey: 'layoutId',

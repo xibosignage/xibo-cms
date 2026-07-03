@@ -45,6 +45,7 @@ import {
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 import type { Template } from '@/types/templates';
+import type { DateLike } from '@/utils/date';
 
 export interface TemplatesFilterInput {
   template?: string;
@@ -93,6 +94,7 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<TemplatesFilte
 
 export interface TemplatesActionsProps {
   t: TFunction;
+  formatDateTime: (value: DateLike) => string;
   onPreview?: (row: Template) => void;
   onDelete: (id: number) => void;
   openAddEditModal: (row: Template) => void;
@@ -109,7 +111,7 @@ export interface TemplatesActionsProps {
 }
 
 export const getTemplateColumn = (props: TemplatesActionsProps): ColumnDef<Template>[] => {
-  const { t } = props;
+  const { t, formatDateTime } = props;
   const getActions = getTemplateItemActions(props);
 
   return [
@@ -205,7 +207,7 @@ export const getTemplateColumn = (props: TemplatesActionsProps): ColumnDef<Templ
       accessorKey: 'modifiedDt',
       header: t('Modified'),
       size: 160,
-      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+      cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
       enableSorting: true,
     },
 
