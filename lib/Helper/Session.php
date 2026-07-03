@@ -305,6 +305,28 @@ class Session implements \SessionHandlerInterface
     }
 
     /**
+     * Persist the session to the database immediately and commit.
+     *
+     * The session is normally written to the DB on request shutdown (via the
+     * registered session_write_close handler), inside a transaction that only
+     * commits in close(). The login flow needs the freshly regenerated session
+     * row - including the userId set by setUser() - to be durably committed
+     * before we return the response, because the React app does a full-page
+     * redirect to the main app the instant it receives the login response and
+     * immediately fires /user/me. If that request races the shutdown commit it
+     * reads an as-yet-unauthenticated session and renders a broken,
+     * half-authenticated page (a reload fixes it). Committing here closes that
+     * window.
+     *
+     * Call this only after all session mutations for the request are complete:
+     * once the session is closed, further writes to $_SESSION are not persisted.
+     */
+    public function persist(): void
+    {
+        session_write_close();
+    }
+
+    /**
      * Store a variable in the session
      * @param string $key
      * @param mixed $secondKey

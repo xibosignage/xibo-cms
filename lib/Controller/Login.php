@@ -120,6 +120,11 @@ class Login extends Base
                         'UserAgent' => $request->getHeader('User-Agent')
                     ]);
 
+                    // Commit the new session to the DB before the redirect, so
+                    // the immediate /user/me the React app fires on load can't
+                    // race the session write. See Session::persist().
+                    $this->session->persist();
+
                     return $response->withRedirect($this->urlFor($request, 'home'));
                 } catch (NotFoundException $notFoundException) {
                     $this->getLog()->error('Valid nonce for non-existing user');
@@ -261,6 +266,12 @@ class Login extends Base
 
                 // We are logged in, so complete the login flow
                 $this->completeLoginFlow($user, $request);
+
+                // Commit the new session to the DB before responding, so the
+                // immediate /user/me the React app fires after redirect can't
+                // race the session write. See Session::persist().
+                $this->session->persist();
+
                 return $response->withJson([
                     'status' => 'ok',
                     'isPasswordChangeRequired' => $user->isPasswordChangeRequired === 1,
@@ -653,6 +664,12 @@ class Login extends Base
 
             //unset the session tfaUsername
             unset($_SESSION['tfaUsername']);
+
+            // Commit the new session to the DB before responding, so the
+            // immediate /user/me the React app fires after redirect can't race
+            // the session write. Must run after the tfaUsername unset above so
+            // that removal is persisted. See Session::persist().
+            $this->session->persist();
 
             return $response->withJson([
                 'status' => 'ok',
