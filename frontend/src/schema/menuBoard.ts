@@ -31,7 +31,7 @@ export const getMenuBoardSchema = (t: TFunction) =>
       .max(255, t('Name must be at most 255 characters')),
     description: z
       .string()
-      .max(255, t('Description must be at most 255 characters'))
+      .max(250, t('Description must be at most 250 characters'))
       .nullable()
       .optional(),
     code: z.string().max(50, t('Code must be at most 50 characters')).optional().nullable(),
@@ -49,7 +49,7 @@ export const getMenuBoardCategorySchema = (t: TFunction) =>
       .max(255, t('Name must be at most 255 characters')),
     description: z
       .string()
-      .max(255, t('Description must be at most 255 characters'))
+      .max(250, t('Description must be at most 250 characters'))
       .nullable()
       .optional(),
     code: z.string().max(50, t('Code must be at most 50 characters')).optional().nullable(),

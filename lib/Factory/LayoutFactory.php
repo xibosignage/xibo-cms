@@ -2489,10 +2489,16 @@ class LayoutFactory extends BaseFactory
             $params['retired'] = $parsedFilter->getInt('retired',['default' => 0]);
         }
 
-        // Modified Since?
-        if ($parsedFilter->getDate('modifiedSinceDt') != null) {
-            $body .= ' AND layout.modifiedDt > :modifiedSinceDt ';
-            $params['modifiedSinceDt'] = $parsedFilter->getDate('modifiedSinceDt')
+        // Modified Date range
+        if ($parsedFilter->getDate('modifiedDateFrom') != null) {
+            $body .= ' AND layout.modifiedDt >= :modifiedDateFrom ';
+            $params['modifiedDateFrom'] = $parsedFilter->getDate('modifiedDateFrom')
+                ->format(DateFormatHelper::getSystemFormat());
+        }
+
+        if ($parsedFilter->getDate('modifiedDateTo') != null) {
+            $body .= ' AND layout.modifiedDt <= :modifiedDateTo ';
+            $params['modifiedDateTo'] = $parsedFilter->getDate('modifiedDateTo')
                 ->format(DateFormatHelper::getSystemFormat());
         }
 
