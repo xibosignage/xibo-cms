@@ -76,7 +76,7 @@ class Connector extends Base
      * @throws GeneralException
      * @throws NotFoundException
      */
-    public function searchById(Request $request, Response $response, int $id): Response|ResponseInterface
+    public function searchById(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $connector = $this->connectorFactory->getById($id);
 
@@ -96,13 +96,13 @@ class Connector extends Base
      *
      * @param  Request  $request
      * @param  Response $response
-     * @param  int $id
+     * @param  int|string $id
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
      */
-    public function editFormFields(Request $request, Response $response, int $id): Response|ResponseInterface
+    public function editFormFields(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $connector = $this->connectorFactory->getById($id);
         $interface = $this->connectorFactory->create($connector);
@@ -127,7 +127,7 @@ class Connector extends Base
      *
      * @param  Request  $request
      * @param  Response $response
-     * @param  int      $id
+     * @param  int|string $id
      * @param  string   $method
      * @return ResponseInterface|Response
      * @throws \Slim\Exception\HttpMethodNotAllowedException
@@ -137,7 +137,7 @@ class Connector extends Base
     public function editFormProxy(
         Request $request,
         Response $response,
-        int $id,
+        $id,
         string $method
     ): Response|ResponseInterface {
         $connector = $this->connectorFactory->getById($id);
@@ -159,14 +159,14 @@ class Connector extends Base
      *
      * @param  Request  $request
      * @param  Response $response
-     * @param  int $id
+     * @param  int|string $id
      * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws NotFoundException
      */
-    public function edit(Request $request, Response $response, int $id): Response|ResponseInterface
+    public function edit(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $params = $this->getSanitizer($request->getParams());
         $connector = $this->connectorFactory->getById($id);

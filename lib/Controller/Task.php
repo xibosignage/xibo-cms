@@ -507,14 +507,14 @@ class Task extends Base
      */
     public function getTaskList(Request $request, Response $response): Response|ResponseInterface
     {
-        // Provide a list of possible task classes by searching for .task file in /tasks
+        // Provide a list of possible task classes by searching for .task files in /tasks and /custom
         $data = ['tasksAvailable' => []];
 
         // Do we have any modules to install?!
         if ($this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') != 1 &&
             $this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') != 'Checked'
         ) {
-            // Get a list of matching files in the tasks folder
+            // Get a list of matching files in the tasks and custom folders
             $files = array_merge(
                 glob(PROJECT_ROOT . '/tasks/*.task'),
                 glob(PROJECT_ROOT . '/custom/*.task')

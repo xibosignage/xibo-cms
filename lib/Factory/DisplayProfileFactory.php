@@ -553,19 +553,27 @@ class DisplayProfileFactory extends BaseFactory
      */
     public function getAvailableTypes(): array
     {
-        $knownTypes = ['android', 'chromeOS', 'hisense', 'linux', 'lg', 'sssp', 'windows'];
+        // get distinct player types from the displayprofile table, this will include any custom profile types as well
+        $dbTypes = $this->getStore()->select('SELECT DISTINCT type FROM `displayprofile` ORDER BY type', []);
+        // get an array of default player types from default config,
+        // this is to ensure we will always have the default types available for add form
+        $defaultTypes = $this->loadForType('defaultTypes');
+
+        // merge arrays removing any duplicates
+        $types = array_unique(array_merge($dbTypes, $defaultTypes), SORT_REGULAR);
 
         $entries = [];
-        foreach ($knownTypes as $type) {
-            if ($type === 'sssp') {
+        foreach ($types as $row) {
+            $sanitizedRow = $this->getSanitizer($row);
+            if ($sanitizedRow->getString('type') === 'sssp') {
                 $typeName = 'Tizen';
-            } elseif ($type === 'lg') {
+            } elseif ($sanitizedRow->getString('type') === 'lg') {
                 $typeName = 'webOS';
             } else {
-                $typeName = ucfirst($type);
+                $typeName = ucfirst($sanitizedRow->getString('type'));
             }
 
-            $entries[] = ['typeId' => $type, 'type' => $typeName];
+            $entries[] = ['typeId' => $sanitizedRow->getString('type'), 'type' => $typeName];
         }
 
         return $entries;

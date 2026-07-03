@@ -74,7 +74,9 @@ export default function CloudDropdown() {
   const daysUntilRenewal = isValid ? renewal.diff(DateTime.now(), 'days').days : Infinity;
   // Mirror the legacy threshold logic: trials warn at 5 days, monthly at 1, otherwise 30.
   const threshold = cloud.isDemo ? 5 : cloud.isMonthly ? 1 : 30;
-  const isWarning = daysUntilRenewal < threshold;
+  // Only warn when renewal is actually at risk — an instance set to auto-renew is healthy,
+  // so it shouldn't show the red expiry icon. Trials always warn as they are not renewing.
+  const isWarning = (cloud.isDemo || !cloud.willRenew) && daysUntilRenewal < threshold;
 
   const relative = isValid ? (renewal.toRelative() ?? '') : cloud.renewalDate;
   const formattedDate = isValid ? renewal.toLocaleString(DateTime.DATE_FULL) : cloud.renewalDate;
