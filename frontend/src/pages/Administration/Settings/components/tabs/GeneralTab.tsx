@@ -168,16 +168,6 @@ export default function GeneralTab({
             disabled={!isEditable('DEFAULTS_IMPORTED')}
           />
         )}
-        {isVisible('EMBEDDED_STATUS_WIDGET') && (
-          <TextInput
-            name="EMBEDDED_STATUS_WIDGET"
-            label={t('Status Dashboard Widget')}
-            helpText={t('HTML to embed in an iframe on the Status Dashboard')}
-            value={formValues.EMBEDDED_STATUS_WIDGET ?? ''}
-            onChange={(v) => updateField('EMBEDDED_STATUS_WIDGET', v)}
-            disabled={!isEditable('EMBEDDED_STATUS_WIDGET')}
-          />
-        )}
         {isVisible('INSTANCE_SUSPENDED') && (
           <SelectDropdown
             label={t('Instance Suspended')}

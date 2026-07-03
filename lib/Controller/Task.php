@@ -515,7 +515,10 @@ class Task extends Base
             $this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') != 'Checked'
         ) {
             // Get a list of matching files in the tasks folder
-            $files = glob(PROJECT_ROOT . '/tasks/*.task');
+            $files = array_merge(
+                glob(PROJECT_ROOT . '/tasks/*.task'),
+                glob(PROJECT_ROOT . '/custom/*.task')
+            );
 
             // Add to the list of available tasks
             foreach ($files as $file) {
