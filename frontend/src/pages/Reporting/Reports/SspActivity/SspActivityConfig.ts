@@ -20,7 +20,7 @@
  */
 
 import type { SspActivityRow } from '@/services/sspActivityApi';
-import { formatDate } from '@/utils/date';
+import type { DateLike } from '@/utils/date';
 
 export interface SspActivityFilter {
   displayId: number | null;
@@ -92,7 +92,11 @@ function hourKeyOf(scheduledAt: string | null): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:00`;
 }
 
-export function aggregateSummary(rows: SspActivityRow[], groupBy: SspSummaryGroupBy): SspSummary {
+export function aggregateSummary(
+  rows: SspActivityRow[],
+  groupBy: SspSummaryGroupBy,
+  formatDate: (value: DateLike) => string,
+): SspSummary {
   const groups = new Map<string, SspSummaryRow>();
 
   for (const row of rows) {
@@ -129,7 +133,7 @@ export function aggregateSummary(rows: SspActivityRow[], groupBy: SspSummaryGrou
     acc.impressions += row.impressions ?? 0;
     acc.impressionActual += row.impressionActual ?? 0;
     acc.campaignId = row.campaignId;
-    acc.date = row.scheduledAt ? formatDate(new Date(row.scheduledAt)) : '';
+    acc.date = row.scheduledAt ? formatDate(row.scheduledAt) : '';
     acc.time = row.scheduledAt ? `${pad(new Date(row.scheduledAt).getHours())}:00` : '';
     acc.errorCode = row.errorCode;
 

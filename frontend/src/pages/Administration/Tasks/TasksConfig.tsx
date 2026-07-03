@@ -30,7 +30,7 @@ import { ActionsCell, CheckMarkCell, StatusCell, TextCell } from '@/components/u
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Task } from '@/types/task';
 import type { UIStatus } from '@/types/uiStatus';
-import { formatDateTime } from '@/utils/date';
+import { type DateLike, formatCmsDateTime } from '@/utils/date';
 import { formatDuration } from '@/utils/formatters';
 
 export interface TaskFilterInput {
@@ -88,7 +88,7 @@ function getTaskStatusType(status: number): UIStatus {
   }
 }
 
-function formatUnixTimestamp(ts: number): string {
+function formatUnixTimestamp(ts: number, formatDateTime: (value: DateLike) => string): string {
   if (!ts || ts === 0) return '';
   return formatDateTime(new Date(ts * 1000));
 }
@@ -108,6 +108,7 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<TaskFilterInpu
 
 export interface TaskActionsProps {
   t: TFunction;
+  formatDateTime?: (value: DateLike) => string;
   onDelete: (taskId: number) => void;
   onEdit: (task: Task) => void;
   onRunNow: (task: Task) => void;
@@ -165,6 +166,7 @@ export const getTaskItemActions = ({
 
 export const getTaskColumns = (props: TaskActionsProps): ColumnDef<Task>[] => {
   const { t } = props;
+  const formatDateTime = props.formatDateTime ?? ((value: DateLike) => formatCmsDateTime(value));
   const getActions = getTaskItemActions(props);
   return [
     {
@@ -198,7 +200,9 @@ export const getTaskColumns = (props: TaskActionsProps): ColumnDef<Task>[] => {
       accessorKey: 'nextRunDt',
       header: t('Next Run'),
       enableSorting: false,
-      cell: (info) => <TextCell>{formatUnixTimestamp(info.getValue<number>())}</TextCell>,
+      cell: (info) => (
+        <TextCell>{formatUnixTimestamp(info.getValue<number>(), formatDateTime)}</TextCell>
+      ),
     },
     {
       accessorKey: 'runNow',
@@ -208,7 +212,9 @@ export const getTaskColumns = (props: TaskActionsProps): ColumnDef<Task>[] => {
     {
       accessorKey: 'lastRunDt',
       header: t('Last Run'),
-      cell: (info) => <TextCell>{formatUnixTimestamp(info.getValue<number>())}</TextCell>,
+      cell: (info) => (
+        <TextCell>{formatUnixTimestamp(info.getValue<number>(), formatDateTime)}</TextCell>
+      ),
     },
     {
       accessorKey: 'lastRunStatus',

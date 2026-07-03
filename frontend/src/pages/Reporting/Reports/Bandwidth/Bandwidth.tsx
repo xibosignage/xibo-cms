@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { ArrowLeft, Loader2, Plus } from 'lucide-react';
+import { ArrowLeft, Filter, FilterX, Loader2, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -44,6 +44,7 @@ export default function Bandwidth() {
 
   const [submittedFilter, setSubmittedFilter] = useState<BandwidthFilter | null>(null);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(true);
 
   const {
     pagination,
@@ -74,6 +75,7 @@ export default function Bandwidth() {
   const handleApply = () => {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
     setSubmittedFilter({ ...filter });
+    setFiltersOpen(false);
   };
 
   const handleRefresh = () => {
@@ -91,9 +93,20 @@ export default function Bandwidth() {
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="" navigation={reportingTabs} />
-          <Button variant="primary" leftIcon={Plus} onClick={() => setScheduleModalOpen(true)}>
-            {t('Schedule')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="primary" leftIcon={Plus} onClick={() => setScheduleModalOpen(true)}>
+              {t('Schedule')}
+            </Button>
+            <Button
+              leftIcon={filtersOpen ? FilterX : Filter}
+              variant="secondary"
+              disabled={!isHydrated}
+              onClick={() => setFiltersOpen((prev) => !prev)}
+              removeTextOnMobile
+            >
+              {t('Filters')}
+            </Button>
+          </div>
         </div>
 
         <div className="flex items-center justify-between">
@@ -117,12 +130,14 @@ export default function Bandwidth() {
           </div>
         ) : (
           <>
-            <BandwidthFilters
-              filter={filter}
-              onFilterChange={handleFilterChange}
-              onApply={handleApply}
-              isLoading={isFetching}
-            />
+            {filtersOpen && (
+              <BandwidthFilters
+                filter={filter}
+                onFilterChange={handleFilterChange}
+                onApply={handleApply}
+                isLoading={isFetching}
+              />
+            )}
 
             {submittedFilter !== null ? (
               <BandwidthResults

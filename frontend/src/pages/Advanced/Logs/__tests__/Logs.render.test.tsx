@@ -91,7 +91,6 @@ describe('Logs Page - Rendering', () => {
   it('renders the DataTable with log rows after Apply Filter is clicked', async () => {
     const { user } = renderWithProviders(<Logs />);
 
-    await user.click(screen.getByRole('button', { name: /filters/i }));
     await user.click(screen.getByRole('button', { name: /apply filter/i }));
 
     await waitFor(() => {
@@ -111,7 +110,6 @@ describe('Logs Page - Rendering', () => {
 
     const { user } = renderWithProviders(<Logs />);
 
-    await user.click(screen.getByRole('button', { name: /filters/i }));
     await user.click(screen.getByRole('button', { name: /apply filter/i }));
 
     await waitFor(() => {
@@ -122,7 +120,6 @@ describe('Logs Page - Rendering', () => {
   it('does not show an error alert when data loads successfully', async () => {
     const { user } = renderWithProviders(<Logs />);
 
-    await user.click(screen.getByRole('button', { name: /filters/i }));
     await user.click(screen.getByRole('button', { name: /apply filter/i }));
 
     await waitFor(() => {
@@ -179,7 +176,6 @@ describe('Logs Page - Rendering', () => {
 
     const { user } = renderWithProviders(<Logs />);
 
-    await user.click(screen.getByRole('button', { name: /filters/i }));
     await user.click(screen.getByRole('button', { name: /apply filter/i }));
 
     await waitFor(() => {

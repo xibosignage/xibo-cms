@@ -46,6 +46,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { useTranslation } from 'react-i18next';
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { twMerge } from 'tailwind-merge';
 
 import { agendaQueryKeys, useAgendaData } from '../hooks/useAgendaData';
@@ -56,6 +57,7 @@ import Modal from '@/components/ui/modals/Modal';
 import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import { StatusCell } from '@/components/ui/table/cells/StatusCell';
 import { useUserContext } from '@/context/UserContext';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { usePreline } from '@/hooks/usePreline';
 import type {
   AgendaLayout,
@@ -63,7 +65,6 @@ import type {
   FetchAgendaEventsResponse,
 } from '@/services/eventApi';
 import type { Event } from '@/types/event';
-import { formatDateTime } from '@/utils/date';
 
 interface AgendaModalProps {
   date: DateTimeType;
@@ -519,6 +520,8 @@ interface BreadcrumbPanelProps {
 
 function BreadcrumbPanel({ row, data, selectedGroupId, onEdit }: BreadcrumbPanelProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const location = useLocation();
   const event = data.events.find(
     (ev) => ev.layoutId === row.layoutId && ev.eventId === row.eventId,
   );
@@ -556,14 +559,17 @@ function BreadcrumbPanel({ row, data, selectedGroupId, onEdit }: BreadcrumbPanel
   return (
     <div className="rounded-lg px-4 py-3 text-sm text-gray-500 font-semibold flex flex-wrap items-center gap-y-1">
       {showLayoutLink ? (
-        <a
-          href={`/layout/designer/${layout.layoutId}`}
+        <button
+          type="button"
+          onClick={() =>
+            navigate(`/design/layout/${layout.layoutId}/editor`, {
+              state: { from: `${location.pathname}${location.search}` },
+            })
+          }
           className="px-3 py-2 text-xibo-blue-600 cursor-pointer hover:underline"
-          target="_blank"
-          rel="noreferrer"
         >
           {layoutName}
-        </a>
+        </button>
       ) : (
         <span className="px-3 py-2">{layoutName}</span>
       )}
@@ -1164,7 +1170,7 @@ function DisplayGroupScroller({
 export function AgendaModal({ date, displayGroups, onClose }: AgendaModalProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
-  const timezone = user?.settings?.defaultTimezone ?? 'UTC';
+  const { formatDateTime } = useDateFormatter();
   const defaultLat = Number(user?.settings?.DEFAULT_LAT ?? DEFAULT_LAT_FALLBACK);
   const defaultLng = Number(user?.settings?.DEFAULT_LONG ?? DEFAULT_LNG_FALLBACK);
 
@@ -1196,7 +1202,7 @@ export function AgendaModal({ date, displayGroups, onClose }: AgendaModalProps) 
 
   const { data, isFetching, isError } = useAgendaData(queryParams, selectedGroupId !== null);
 
-  const formatDt = (ts: number) => formatDateTime(new Date(ts * 1000), timezone);
+  const formatDt = (ts: number) => formatDateTime(new Date(ts * 1000));
 
   const handleRowClick = (row: SelectedRow) => {
     const isSame =

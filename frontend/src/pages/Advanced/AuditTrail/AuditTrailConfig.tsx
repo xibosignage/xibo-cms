@@ -28,6 +28,7 @@ import { useTranslation } from 'react-i18next';
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
 import { TextCell } from '@/components/ui/table/cells';
 import type { AuditLog } from '@/types/auditTrail';
+import { type DateLike, formatCmsDateTime } from '@/utils/date';
 
 export interface AuditTrailFilterInput {
   fromDt?: string;
@@ -136,7 +137,10 @@ function ObjectAfterCell({ value }: { value: Record<string, unknown> | null }) {
   );
 }
 
-export const getAuditTrailColumns = (t: TFunction): ColumnDef<AuditLog>[] => [
+export const getAuditTrailColumns = (
+  t: TFunction,
+  formatDateTime: (value: DateLike) => string = (value) => formatCmsDateTime(value),
+): ColumnDef<AuditLog>[] => [
   {
     accessorKey: 'logId',
     header: t('ID'),
@@ -149,7 +153,7 @@ export const getAuditTrailColumns = (t: TFunction): ColumnDef<AuditLog>[] => [
     size: 180,
     cell: (info) => {
       const ts = info.getValue<number>();
-      return <TextCell>{ts ? new Date(ts * 1000).toLocaleString() : ''}</TextCell>;
+      return <TextCell>{ts ? formatDateTime(new Date(ts * 1000)) : ''}</TextCell>;
     },
   },
   {

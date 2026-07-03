@@ -79,10 +79,6 @@ const openBulkDeleteModal = async (rowCount: number) => {
 // Tests
 // =============================================================================
 
-// Full-page render + interaction can exceed the 5s default under parallel
-// JSDOM contention (each test still runs in ~1s in isolation).
-vi.setConfig({ testTimeout: 20_000 });
-
 describe('DisplayProfile page - delete', () => {
   beforeEach(() => {
     testQueryClient.clear();

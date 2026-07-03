@@ -31,6 +31,7 @@ import { getCommonFormOptions } from '@/config/commonForms';
 import type { Campaign } from '@/types/campaign';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
+import type { DateLike } from '@/utils/date';
 
 export interface CampaignFilterInput {
   name?: string;
@@ -136,6 +137,7 @@ export type ModalType = BaseModalType | 'schedule' | null;
 
 interface CampaignActionsProps {
   t: TFunction;
+  formatDateTime: (value: DateLike) => string;
   onDelete?: (id: number) => void;
   openEditModal?: (campaign: Campaign) => void;
   openAdEditor?: (campaign: Campaign) => void;
@@ -146,7 +148,7 @@ interface CampaignActionsProps {
 }
 
 export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campaign>[] => {
-  const { t } = props;
+  const { t, formatDateTime } = props;
   const getActions = getCampaignItemActions(props);
 
   return [
@@ -181,7 +183,7 @@ export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campai
       enableSorting: true,
       cell: (info) => {
         const value = info.getValue<number>();
-        return <TextCell>{value ? new Date(value * 1000).toLocaleString() : '-'}</TextCell>;
+        return <TextCell>{value ? formatDateTime(new Date(value * 1000)) : '-'}</TextCell>;
       },
     },
 
@@ -192,7 +194,7 @@ export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campai
       enableSorting: true,
       cell: (info) => {
         const value = info.getValue<number>();
-        return <TextCell>{value ? new Date(value * 1000).toLocaleString() : '-'}</TextCell>;
+        return <TextCell>{value ? formatDateTime(new Date(value * 1000)) : '-'}</TextCell>;
       },
     },
 

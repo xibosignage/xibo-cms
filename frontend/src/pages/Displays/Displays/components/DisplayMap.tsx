@@ -38,6 +38,7 @@ import 'react-leaflet-cluster/dist/assets/MarkerCluster.css';
 import type { DisplayFilterInput } from '../DisplaysConfig';
 
 import { useUserContext } from '@/context/UserContext';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { fetchDisplaysMap } from '@/services/displaysApi';
 
 interface DisplayMapProps {
@@ -344,11 +345,10 @@ const LEGEND_ITEMS: LegendItem[] = [
 export default function DisplayMap({ filters, folderId }: DisplayMapProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
+  const { formatDateTime } = useDateFormatter();
 
   const defaultLat = Number(user?.settings?.DEFAULT_LAT ?? DEFAULT_LAT_FALLBACK);
   const defaultLng = Number(user?.settings?.DEFAULT_LONG ?? DEFAULT_LNG_FALLBACK);
-
-  const timezone = (user?.settings?.defaultTimezone as string | undefined) ?? 'UTC';
 
   const [tileLayer, setTileLayer] = useState<L.TileLayer | null>(null);
   const handleTileLayerRef = (instance: L.TileLayer | null) => {
@@ -452,7 +452,7 @@ export default function DisplayMap({ filters, folderId }: DisplayMapProps) {
             } = feature.properties;
 
             const lastAccessedStr = lastAccessed
-              ? new Date(lastAccessed * 1000).toLocaleString(undefined, { timeZone: timezone })
+              ? formatDateTime(new Date(Number(lastAccessed) * 1000))
               : null;
 
             return (

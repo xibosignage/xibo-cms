@@ -42,6 +42,7 @@ interface TextInputProps {
   rows?: number;
   type?: React.HTMLInputTypeAttribute;
   optional?: boolean;
+  maxLength?: number;
 }
 
 export default function TextInput({
@@ -63,6 +64,7 @@ export default function TextInput({
   rows,
   type,
   optional = false,
+  maxLength,
 }: TextInputProps) {
   const { t } = useTranslation();
   const generatedId = useId();
@@ -104,6 +106,7 @@ export default function TextInput({
             value={value}
             disabled={disabled}
             rows={rows}
+            maxLength={maxLength}
             onChange={(e) => onChange && onChange(e.target.value)}
             placeholder={placeholder || t('Add text')}
             className={twMerge(
@@ -118,6 +121,7 @@ export default function TextInput({
             name={name}
             value={value}
             disabled={disabled}
+            maxLength={maxLength}
             onChange={(e) => onChange && onChange(e.target.value)}
             placeholder={placeholder || t('Add text')}
             type={type || 'text'}

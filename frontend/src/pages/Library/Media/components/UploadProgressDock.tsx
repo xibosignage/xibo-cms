@@ -25,11 +25,7 @@ import { createPortal } from 'react-dom';
 
 import { useUploadContext } from '@/context/UploadContext';
 
-interface UploadProgressDockProps {
-  isModalOpen: boolean;
-}
-
-export function UploadProgressDock({ isModalOpen }: UploadProgressDockProps) {
+export function UploadProgressDock() {
   const { queue, clearQueue } = useUploadContext();
   const [isExpanded, setIsExpanded] = useState(true);
 
@@ -41,7 +37,7 @@ export function UploadProgressDock({ isModalOpen }: UploadProgressDockProps) {
   const hasErrors = queue.some((i) => i.status === 'error');
   const isFinished = total > 0 && inProgress === 0;
 
-  const isVisible = total > 0 && !isModalOpen && (!isFinished || !hasDismissed);
+  const isVisible = total > 0 && (!isFinished || !hasDismissed);
 
   useEffect(() => {
     if (inProgress > 0 && hasDismissed) {
@@ -67,7 +63,7 @@ export function UploadProgressDock({ isModalOpen }: UploadProgressDockProps) {
     : `${completed}/${total} items are still uploading`;
 
   const content = (
-    <div className="fixed bottom-0 right-21.25 w-72.5 z-60 shadow-lg shadow-black/15">
+    <div className="fixed bottom-0 right-21.25 w-72.5 z-40 shadow-lg shadow-black/15">
       <div className="rounded-t-xl overflow-hidden relative">
         {/* Header */}
         <div className="flex justify-between items-center bg-gray-100">

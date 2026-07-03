@@ -33,6 +33,7 @@ import {
   INITIAL_FILTER_STATE,
   type PlaylistFilterInput,
 } from './PlaylistsConfig';
+import PlaylistEditorOverlay from './components/PlaylistEditorOverlay';
 import { PlaylistModals } from './components/PlaylistModals';
 import { usePlaylistActions } from './hooks/usePlaylistActions';
 import { usePlaylistData } from './hooks/usePlaylistData';
@@ -45,6 +46,7 @@ import FolderSidebar from '@/components/ui/FolderSidebar';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useUserContext } from '@/context/UserContext';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -55,6 +57,7 @@ import { hasFeature } from '@/utils/permissions';
 
 export default function Playlist() {
   const { t } = useTranslation();
+  const { formatDateTime } = useDateFormatter();
   const { user } = useUserContext();
   const queryClient = useQueryClient();
   const canViewFolders = usePermissions()?.canViewFolders;
@@ -126,6 +129,7 @@ export default function Playlist() {
   const [itemsToMove, setItemsToMove] = useState<Playlist[]>([]);
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<number | null>(null);
+  const [timelinePlaylistId, setTimelinePlaylistId] = useState<number | null>(null);
 
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
@@ -244,7 +248,7 @@ export default function Playlist() {
   };
 
   const handleOpenTimeline = (playlistId: number) => {
-    window.open(`/playlist/designer/${playlistId}`, '_blank');
+    setTimelinePlaylistId(playlistId);
   };
 
   const handleResetFilters = () => {
@@ -264,6 +268,7 @@ export default function Playlist() {
 
   const columns = getPlaylistColumns({
     t,
+    formatDateTime,
     onDelete: handleDelete,
     openAddEditModal,
     openMoveModal: (playlist) => {
@@ -467,8 +472,19 @@ export default function Playlist() {
           handleConfirmEnableStats: (value) =>
             selectedPlaylist && handleConfirmEnableStats(selectedPlaylist, value),
         }}
+        openTimeline={handleOpenTimeline}
         folderActions={folderActions}
       />
+
+      {timelinePlaylistId != null && (
+        <PlaylistEditorOverlay
+          playlistId={timelinePlaylistId}
+          onClose={() => {
+            setTimelinePlaylistId(null);
+            handleRefresh();
+          }}
+        />
+      )}
     </section>
   );
 }

@@ -43,6 +43,7 @@ import {
 
 import { UserProvider } from '@/context/UserContext';
 import { testQueryClient } from '@/setupTests';
+import { formatCmsDateTime } from '@/utils/date';
 
 // =============================================================================
 // Module mocks
@@ -255,7 +256,10 @@ describe('Campaigns page - grid rendering', () => {
     await act(async () => {
       renderWithAllColumns();
     });
-    const formatted = new Date(mockAdCampaign.startDt * 1000).toLocaleString();
+    const formatted = formatCmsDateTime(new Date(mockAdCampaign.startDt * 1000), {
+      format: 'DD/MM/YYYY',
+      timeZone: 'UTC',
+    });
     expect(await screen.findByText(formatted)).toBeInTheDocument();
   });
 

@@ -61,6 +61,7 @@ import type { Display } from '@/types/display';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 import type { UIStatus } from '@/types/uiStatus';
+import type { DateLike } from '@/utils/date';
 
 export interface DisplayFilterInput {
   displayId?: number | null;
@@ -87,6 +88,7 @@ export type ModalType =
   | BaseModalType
   | 'add'
   | 'edit'
+  | 'manage'
   | 'authorise'
   | 'checkLicence'
   | 'requestScreenShot'
@@ -403,6 +405,7 @@ export interface DisplayActionsProps {
   onJumpToScheduledLayouts?: (displayGroupId: number) => void;
   onSchedule?: (display: Display) => void;
   onPreviewScreenshot?: (display: Display) => void;
+  formatDateTime: (value: DateLike) => string;
 }
 
 export const getDisplayItemActions = ({
@@ -586,7 +589,7 @@ export const getDisplayItemActions = ({
 };
 
 export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display>[] => {
-  const { t } = props;
+  const { t, formatDateTime } = props;
   const getActions = getDisplayItemActions(props);
 
   return [
@@ -735,7 +738,10 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
       accessorKey: 'lastAccessed',
       header: t('Last Accessed'),
       size: 180,
-      cell: (info) => <TextCell>{info.getValue<string | null>() ?? ''}</TextCell>,
+      cell: (info) => {
+        const value = info.getValue<number | null>();
+        return <TextCell>{value ? formatDateTime(new Date(Number(value) * 1000)) : ''}</TextCell>;
+      },
     },
     {
       accessorKey: 'displayProfile',
@@ -746,8 +752,18 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
     {
       accessorKey: 'clientVersion',
       header: t('Version'),
-      size: 110,
-      cell: (info) => <TextCell>{info.getValue<string | null>() ?? ''}</TextCell>,
+      size: 180,
+      cell: (info) => {
+        const { clientType, clientVersion, clientCode } = info.row.original;
+        const typeAndVersion = [getClientTypeLabel(t, clientType), clientVersion]
+          .filter(Boolean)
+          .join(' ');
+        const value =
+          clientCode != null && typeAndVersion !== ''
+            ? `${typeAndVersion}-${clientCode}`
+            : typeAndVersion;
+        return <TextCell>{value}</TextCell>;
+      },
     },
     {
       accessorKey: 'isPlayerSupported',
@@ -930,13 +946,13 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
       accessorKey: 'createdDt',
       header: t('Created Date'),
       size: 170,
-      cell: (info) => <TextCell>{info.getValue<string | null>() ?? ''}</TextCell>,
+      cell: (info) => <TextCell>{formatDateTime(info.getValue<string | null>())}</TextCell>,
     },
     {
       accessorKey: 'modifiedDt',
       header: t('Modified Date'),
       size: 170,
-      cell: (info) => <TextCell>{info.getValue<string | null>() ?? ''}</TextCell>,
+      cell: (info) => <TextCell>{formatDateTime(info.getValue<string | null>())}</TextCell>,
     },
     {
       accessorKey: 'countFaults',

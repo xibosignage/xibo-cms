@@ -27,7 +27,7 @@ import type { TimeConnectedTable } from '@/services/timeConnectedApi';
 import { fetchTimeConnected } from '@/services/timeConnectedApi';
 import { formatDateTime } from '@/utils/date';
 
-function transformData(table: TimeConnectedTable): DisplayReportRow[] {
+export function transformData(table: TimeConnectedTable): DisplayReportRow[] {
   const rows: DisplayReportRow[] = [];
   const displayMeta = table.displayMeta ?? {};
 
@@ -42,7 +42,10 @@ function transformData(table: TimeConnectedTable): DisplayReportRow[] {
       Object.entries(periodData).forEach(([periodLabel, periodDisplays]) => {
         const entry = periodDisplays[displayIdStr];
         if (entry) {
-          periods.push({ label: entry.label || periodLabel, percent: entry.percent });
+          periods.push({
+            label: entry.label || periodLabel,
+            percent: Math.min(100, Math.max(0, entry.percent)),
+          });
         } else {
           periods.push({ label: periodLabel, percent: 100 });
         }
@@ -51,7 +54,8 @@ function transformData(table: TimeConnectedTable): DisplayReportRow[] {
       const totalPeriods = periods.length;
       const avgUptime =
         totalPeriods > 0 ? periods.reduce((sum, p) => sum + p.percent, 0) / totalPeriods : 0;
-      const uptimePercent = Math.round(avgUptime * 100) / 100;
+      const displayUptime = Math.min(100, Math.max(0, avgUptime));
+      const uptimePercent = Math.round(displayUptime * 100) / 100;
 
       rows.push({
         displayId,
@@ -59,7 +63,7 @@ function transformData(table: TimeConnectedTable): DisplayReportRow[] {
         lastAccessed: meta?.lastAccessed ?? null,
         periods,
         uptimePercent,
-        offlinePercent: Math.round((100 - avgUptime) * 100) / 100,
+        offlinePercent: Math.round((100 - displayUptime) * 100) / 100,
       });
     });
   });

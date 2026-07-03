@@ -47,10 +47,6 @@ vi.mock('../hooks/useDisplayProfileFilterOptions', () => ({
 // Tests — DisplayProfile page column visibility
 // =============================================================================
 
-// Full-page render + interaction can exceed the 5s default under parallel
-// JSDOM contention (each test still runs in ~1s in isolation).
-vi.setConfig({ testTimeout: 20_000 });
-
 describe('DisplayProfile page - column visibility', () => {
   beforeEach(() => {
     testQueryClient.clear();

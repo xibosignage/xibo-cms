@@ -204,11 +204,6 @@ describe('Events page - filters', () => {
 
     // Clicking the "Filters" button should open the panel. Clicking it a
     // second time should close it again.
-    //
-    // Bumped timeout to match the sibling pagination-reset tests in this
-    // file: when the whole Schedule test suite runs in parallel the JSDOM
-    // worker is heavily loaded and a couple of `act` cycles can exceed the
-    // 5s default. The test runs in ~1s in isolation.
     test('clicking the Filters button opens the panel, clicking again closes it', async () => {
       await act(async () => {
         renderEventsPage();
@@ -223,7 +218,7 @@ describe('Events page - filters', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
       });
       expect(screen.getByTestId('filter-inputs')).toHaveAttribute('data-is-open', 'false');
-    }, 20_000);
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -298,7 +293,7 @@ describe('Events page - filters', () => {
         },
         { timeout: 10_000 },
       );
-    }, 20_000);
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -383,7 +378,7 @@ describe('Events page - filters', () => {
         },
         { timeout: 10_000 },
       );
-    }, 20_000);
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -426,7 +421,7 @@ describe('Events page - filters', () => {
         },
         { timeout: 10_000 },
       );
-    }, 20_000);
+    });
   });
 
   // ---------------------------------------------------------------------------

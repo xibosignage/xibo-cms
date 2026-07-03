@@ -129,6 +129,7 @@ class SessionHistory implements ReportInterface
             'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
                 ->format(DateFormatHelper::getSystemFormat()),
             'title' => $savedReport->saveAs,
+            'type' => $json['metadata']['type'] ?? '',
         ];
 
         // Report result object
@@ -187,12 +188,13 @@ class SessionHistory implements ReportInterface
                 break;
         }
 
+        $type = $sanitizedParams->getString('type');
+
         $metadata = [
             'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
             'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
+            'type' => $type,
         ];
-
-        $type = $sanitizedParams->getString('type');
 
         if ($type === 'audit') {
             $params = [
@@ -213,8 +215,8 @@ class SessionHistory implements ReportInterface
              `auditlog`.sessionHistoryId,
              `session_history`.userAgent
                 FROM `auditlog`
-                    INNER JOIN `user` ON `user`.`userId` = `auditlog`.`userId`
-                    INNER JOIN `session_history` ON `session_history`.`sessionId` = `auditlog`.`sessionHistoryId`
+                    LEFT OUTER JOIN `user` ON `user`.`userId` = `auditlog`.`userId`
+                    LEFT OUTER JOIN `session_history` ON `session_history`.`sessionId` = `auditlog`.`sessionHistoryId`
              WHERE `auditlog`.logDate BETWEEN :fromDt AND :toDt
              ';
 
@@ -284,8 +286,8 @@ class SessionHistory implements ReportInterface
              `session_history`.userAgent
                 FROM `log`
                     LEFT OUTER JOIN `display` ON `display`.`displayid` = `log`.`displayid`
-                    INNER JOIN `user` ON `user`.`userId` = `log`.`userId`
-                    INNER JOIN `session_history` ON `session_history`.`sessionId` = `log`.`sessionHistoryId`
+                    LEFT OUTER JOIN `user` ON `user`.`userId` = `log`.`userId`
+                    LEFT OUTER JOIN `session_history` ON `session_history`.`sessionId` = `log`.`sessionHistoryId`
              WHERE `log`.logDate BETWEEN :fromDt AND :toDt
              ';
 

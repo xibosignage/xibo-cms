@@ -42,6 +42,18 @@ export async function requireAuthLoader({ request }: { request: Request }) {
     throw redirect(`/login?priorRoute=${returnTo}`);
   }
 
+  if (user.isPasswordChangeRequired === 1) {
+    throw redirect('/prototype/user/force-change-password');
+  }
+
+  return { user };
+}
+
+export async function requireAuthOnlyLoader() {
+  const user = await getUserSession();
+  if (!user) {
+    throw redirect('/login');
+  }
   return { user };
 }
 

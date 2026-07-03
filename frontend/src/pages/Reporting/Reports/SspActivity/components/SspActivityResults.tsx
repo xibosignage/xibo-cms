@@ -37,12 +37,12 @@ import SspActivityChart from './SspActivityChart';
 import Button from '@/components/ui/Button';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import { DataTable } from '@/components/ui/table/DataTable';
-import { useUserContext } from '@/context/UserContext';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { sortRows } from '@/pages/Reporting/Reports/shared/utils/sortRows';
 import type { SspActivityRow } from '@/services/sspActivityApi';
-import { formatDateTime } from '@/utils/date';
+import type { DateLike } from '@/utils/date';
 
-type DateFormatter = (value: string | null) => string;
+type DateFormatter = (value: DateLike) => string;
 type BoolRenderer = (value: boolean) => string;
 
 const REPORT_PAGE_SIZE = 10;
@@ -180,16 +180,15 @@ export default function SspActivityResults({
   onRefresh,
 }: SspActivityResultsProps) {
   const { t } = useTranslation();
-  const { user } = useUserContext();
-  const timeZone = user?.settings?.defaultTimezone;
+  const { formatDateTime } = useDateFormatter();
 
   const [tab, setTab] = useState<ResultTab>('summary');
   const [groupBy, setGroupBy] = useState<SspSummaryGroupBy>('hour');
 
-  const fmtDt: DateFormatter = (value) => (value ? formatDateTime(new Date(value), timeZone) : '');
+  const fmtDt: DateFormatter = (value) => (value ? formatDateTime(value) : '');
   const yesNo: BoolRenderer = (value) => (value ? t('Yes') : t('No'));
 
-  const summary = aggregateSummary(rows, groupBy);
+  const summary = aggregateSummary(rows, groupBy, fmtDt);
 
   const detailedColumns = getDetailedColumns(t, fmtDt, yesNo);
   const summaryColumns = getSummaryColumns(t, groupBy);

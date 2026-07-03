@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ theme.getThemeConfig("theme_title", "Xibo Digital Signage") }}</title>
+
+    {# CSRF token — React reads this on mount via document.querySelector('meta[name="token"]') #}
+    <meta name="token" content="{{ csrfToken }}"/>
+    <meta name="public-path" content="{{ theme.rootUri() }}"/>
+
+    <link rel="shortcut icon" href="{{ theme.rootUri() }}brand/favicon.ico"/>
+    <link rel="stylesheet" href="{{ theme.rootUri() }}brand/theme.css">
+
+    {% if loginCssUrl %}
+        <link rel="stylesheet" href="{{ loginCssUrl }}">
+    {% endif %}
+
+    {#
+        Config blob: json_encode with JSON_HEX_* flags in PHP prevents </script> injection.
+        The | raw filter is safe because the JSON is already hardened before reaching Twig.
+    #}
+    <script nonce="{{ cspNonce }}">window.__LOGIN_CONFIG__ = {{ loginConfigJson | raw }};</script>
+</head>
+<body>
+    <div id="login-root"></div>
+
+    {% if viteRefreshUrl %}
+        {#
+            React Fast Refresh preamble — must execute before any React module.
+            @vitejs/plugin-react transforms every component to call $RefreshReg$/$RefreshSig$
+            and throws if __vite_plugin_react_preamble_installed__ is not set.
+            Vite injects this automatically when it serves the HTML; since PHP serves this
+            shell we have to do it manually.
+        #}
+        <script type="module" nonce="{{ cspNonce }}">
+            import RefreshRuntime from "{{ viteRefreshUrl }}"
+            RefreshRuntime.injectIntoGlobalHook(window)
+            window.$RefreshReg$ = () => {}
+            window.$RefreshSig$ = () => {}
+            window.__vite_plugin_react_preamble_installed__ = true
+        </script>
+    {% endif %}
+    {% if viteClientUrl %}
+        <script type="module" src="{{ viteClientUrl }}" nonce="{{ cspNonce }}"></script>
+    {% endif %}
+    <script type="module" src="{{ loginJsUrl }}" nonce="{{ cspNonce }}"></script>
+</body>
+</html>

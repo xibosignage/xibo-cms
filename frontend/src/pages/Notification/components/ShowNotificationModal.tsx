@@ -25,7 +25,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Modal from '@/components/ui/modals/Modal';
-import { useUserContext } from '@/context/UserContext';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { notificationQueryKeys } from '@/pages/Notification/hooks/useNotificationData';
 import { markAllNotificationsRead } from '@/services/notificationApi';
 import type { Notification } from '@/types/notification';
@@ -43,8 +43,7 @@ export default function ShowNotificationModal({
 }: ShowNotificationModalProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const { user } = useUserContext();
-  const timeZone = user?.settings?.defaultTimezone;
+  const { formatDateTime } = useDateFormatter();
   const [iframeHeight, setIframeHeight] = useState(200);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -52,7 +51,7 @@ export default function ShowNotificationModal({
     if (value === null || value === undefined || value === '') return '';
     const ts = Number(value);
     if (isNaN(ts) || ts === 0) return String(value);
-    return new Date(ts * 1000).toLocaleString(undefined, timeZone ? { timeZone } : undefined);
+    return formatDateTime(new Date(ts * 1000));
   };
 
   useEffect(() => {

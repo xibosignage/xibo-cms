@@ -33,6 +33,7 @@ import 'react-day-picker/dist/style.css';
 import Button from './Button';
 
 import { useUserContext } from '@/context/UserContext';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 
 export type DatePickerMode = 'single' | 'range';
 
@@ -84,6 +85,7 @@ export default function DatePicker({
   const { t } = useTranslation();
   const { user } = useUserContext();
   const timeZone = user?.settings?.defaultTimezone;
+  const { formatDate } = useDateFormatter();
 
   const defaultClassNames = getDefaultClassNames();
   const [single, setSingle] = useState<Date | undefined>(() => {
@@ -255,7 +257,7 @@ export default function DatePicker({
       {/* Footer */}
       <div className="flex justify-between items-center p-4 border-t border-gray-200">
         <p className="text-xs text-gray-600" data-testid="datepicker-selected">
-          {mode === 'single' && single && single.toLocaleDateString()}
+          {mode === 'single' && single && formatDate(single)}
 
           {mode === 'range' && range?.from && (
             <>

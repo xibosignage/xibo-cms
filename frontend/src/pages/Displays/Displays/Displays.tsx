@@ -48,6 +48,7 @@ import TabNav from '@/components/ui/TabNav';
 import { DataMap } from '@/components/ui/table/DataMap';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useUserContext } from '@/context/UserContext';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -57,6 +58,7 @@ import { hasFeature } from '@/utils/permissions';
 
 export default function Displays() {
   const { t } = useTranslation();
+  const { formatDateTime } = useDateFormatter();
   const { user } = useUserContext();
   const queryClient = useQueryClient();
   const canViewFolders = usePermissions()?.canViewFolders;
@@ -240,7 +242,6 @@ export default function Displays() {
     confirmDelete,
     confirmAuthorise,
     handleConfirmMove,
-    handleManage,
     isActionPending,
     actionError,
     setActionError,
@@ -313,7 +314,7 @@ export default function Displays() {
       : undefined,
     openShareModal,
     onAuthorise: (display) => openActionModal(display, 'authorise'),
-    onManage: handleManage,
+    onManage: (display) => openActionModal(display, 'manage'),
     onCheckLicence: (display) => openActionModal(display, 'checkLicence'),
     onRequestScreenShot: (display) => openActionModal(display, 'requestScreenShot'),
     onCollectNow: (display) => openActionModal(display, 'collectNow'),
@@ -330,6 +331,7 @@ export default function Displays() {
     onJumpToScheduledLayouts: handleJumpToScheduledLayouts,
     onSchedule: canSchedule ? (display) => openActionModal(display, 'schedule') : undefined,
     onPreviewScreenshot: (display) => setPreviewDisplay(display),
+    formatDateTime,
   });
 
   const getAllSelectedItems = (): Display[] => {

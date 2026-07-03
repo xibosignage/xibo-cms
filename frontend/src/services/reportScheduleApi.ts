@@ -124,6 +124,11 @@ export async function createReportSchedule(
   }
   if (payload.hiddenFields) {
     params.append('hiddenFields', JSON.stringify(payload.hiddenFields));
+    for (const [key, value] of Object.entries(payload.hiddenFields)) {
+      if (value != null) {
+        params.append(key, String(value));
+      }
+    }
   }
   if (payload.fromDt) {
     params.append('fromDt', formatDateTime(new Date(payload.fromDt)));
@@ -160,4 +165,11 @@ export async function resetReportSchedule(id: number): Promise<ReportSchedule> {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   });
   return data;
+}
+
+export async function deleteAllSavedReportsForSchedule(id: number): Promise<void> {
+  const params = new URLSearchParams();
+  await http.post(`/report/reportschedule/${id}/deletesavedreport`, params.toString(), {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
 }

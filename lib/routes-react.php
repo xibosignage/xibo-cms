@@ -109,6 +109,16 @@ $app->group('', function (RouteCollectorProxy $group) {
 })->add(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.playlist']));
 
 //
+// Display Manage
+//
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->get('/display/manage/{id}', ['\Xibo\Controller\Display', 'displayManage'])
+        ->setName('display.manage.json');
+    $group->get('/stats/data/bandwidth', ['\Xibo\Controller\Stats', 'bandwidthData'])
+        ->setName('stats.bandwidth.data.json');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['displays.view']));
+
+//
 // notification
 //
 $app->get('/notification/mynotifications', ['\Xibo\Controller\Notification', 'myNotifications'])
@@ -126,6 +136,15 @@ $app->get('/notification/export/{id}', ['\Xibo\Controller\Notification', 'export
 $app->get('/report/available', ['\Xibo\Controller\Stats', 'availableReports'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['report.view']))
     ->setName('report.available');
+
+//
+// Saved reports
+//
+$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
+    $group->get('/report/savedreport/{id}/report/{name}/open', ['\Xibo\Controller\SavedReport','savedReportOpen'])->setName('savedreport.open');
+    $group->get('/report/savedreport/{id}/report/{name}/export', ['\Xibo\Controller\SavedReport','savedReportExport'])->setName('savedreport.export');
+    $group->get('/report/savedreport/{id}/report/{name}/convert', ['\Xibo\Controller\SavedReport','savedReportConvert'])->setName('savedreport.convert');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['report.saving']));
 
 $app->get('/stats/export/count', ['\Xibo\Controller\Stats', 'exportStatsCount'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['proof-of-play']))

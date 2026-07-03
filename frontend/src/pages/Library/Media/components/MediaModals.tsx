@@ -29,7 +29,6 @@ import EditMediaModal from './EditMediaModal';
 import EnableStatsMediaModal from './EnableStatsMediaModal';
 import { MediaInfoPanel } from './MediaInfoPanel';
 import ReplaceFileModal from './ReplaceFileModal';
-import { UploadProgressDock } from './UploadProgressDock';
 
 import { FileUploader } from '@/components/ui/FileUploader';
 import FolderActionModals from '@/components/ui/FolderActionModals';
@@ -270,8 +269,6 @@ export function MediaModals({
           loading={infoPanel.loading}
         />
       )}
-
-      <UploadProgressDock isModalOpen={upload.isOpen} />
 
       <FolderActionModals folderActions={folderActions} />
     </>

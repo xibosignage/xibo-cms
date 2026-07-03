@@ -39,6 +39,8 @@ import Button from '@/components/ui/Button';
 import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { REPORT_META } from '@/config/reportRoutes';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import { saveUserPreference } from '@/services/userApi';
@@ -46,8 +48,18 @@ import type { SavedReport } from '@/types/savedReport';
 
 export default function SavedReports() {
   const { t } = useTranslation();
+  const { formatDateTime } = useDateFormatter();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+
+  const savedPageIndex = (() => {
+    try {
+      const v = sessionStorage.getItem('savedReports_pageIndex');
+      return v !== null ? parseInt(v, 10) : 0;
+    } catch {
+      return 0;
+    }
+  })();
 
   const {
     pagination,
@@ -63,7 +75,7 @@ export default function SavedReports() {
     setFilterInputs,
     isHydrated,
   } = useTableState<SavedReportFilterInput>('saved_reports_page', {
-    pagination: { pageIndex: 0, pageSize: 10 },
+    pagination: { pageIndex: savedPageIndex, pageSize: 10 },
     sorting: [],
     columnVisibility: {},
     viewMode: 'table',
@@ -141,6 +153,24 @@ export default function SavedReports() {
     openModal('delete');
   };
 
+  const handleOpen = (report: SavedReport) => {
+    try {
+      sessionStorage.setItem('savedReports_pageIndex', String(pagination.pageIndex));
+    } catch {
+      /* ignore */
+    }
+    navigate(`/reporting/saved-reports/${report.savedReportId}/${report.reportName}/view`);
+  };
+
+  const handleBackToReports = (report: SavedReport) => {
+    const meta = REPORT_META[report.reportName];
+    if (meta) {
+      navigate(meta.route);
+    } else {
+      window.location.assign(`/report/form/${report.reportName}`);
+    }
+  };
+
   const handleGoToSchedule = (report: SavedReport) => {
     void saveUserPreference({
       option: 'report_schedules_page',
@@ -172,9 +202,12 @@ export default function SavedReports() {
 
   const columns = getSavedReportColumns({
     t,
+    formatDateTime,
     reportDescriptionMap,
     onDelete: handleDelete,
     onGoToSchedule: handleGoToSchedule,
+    onOpen: handleOpen,
+    onBackToReports: handleBackToReports,
   });
 
   const bulkActions = getBulkActions({

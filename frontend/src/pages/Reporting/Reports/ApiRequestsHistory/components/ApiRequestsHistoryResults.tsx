@@ -68,7 +68,7 @@ function getColumns(
   if (logType === 'debug') {
     return [
       textCol('logDate', t('Date'), 160),
-      textCol('userName', t('User'), 120),
+      textCol('userName', t('UserName'), 120),
       textCol('userId', t('User ID'), 120),
       textCol('applicationName', t('Application'), 140),
       textCol('requestId', t('Request ID'), 120),
@@ -81,8 +81,8 @@ function getColumns(
 
   if (logType === 'requests') {
     return [
-      textCol('logDate', t('Date'), 160),
-      textCol('userName', t('User'), 140),
+      textCol('startTime', t('Date'), 160),
+      textCol('userName', t('UserName'), 140),
       textCol('userId', t('User ID'), 120),
       textCol('applicationName', t('Application'), 160),
       textCol('requestId', t('Request ID'), 120),
@@ -94,7 +94,7 @@ function getColumns(
   // Audit (default)
   return [
     textCol('logDate', t('Date'), 160),
-    textCol('userName', t('User'), 120),
+    textCol('userName', t('User Name'), 120),
     textCol('userId', t('User ID'), 120),
     textCol('applicationName', t('Application'), 140),
     textCol('requestId', t('Request ID'), 120),
@@ -102,7 +102,6 @@ function getColumns(
     textCol('url', t('URL'), 200, true),
     textCol('entity', t('Entity'), 130),
     textCol('entityId', t('Entity ID'), 100),
-    textCol('startTime', t('Start Time'), 160),
     textCol('message', t('Message'), 250, true),
     {
       id: 'details',

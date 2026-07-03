@@ -258,7 +258,7 @@ class ReportService implements ReportServiceInterface
     /**
      * @inheritdoc
      */
-    public function getSavedReportResults($savedreportId, $reportName)
+    public function getSavedReportResults($savedreportId, $reportName): ReportResult|array
     {
         $className = $this->getReportClass($reportName);
 
@@ -282,6 +282,13 @@ class ReportService implements ReportServiceInterface
 
         // Get the reportscheduledetails
         $json = json_decode($zip->getFromName('reportschedule.json'), true);
+        $zip->close();
+
+        // Backward-compat: old ZIP files may omit the chart key or store null.
+        // Ensure it is always an array so per-report getSavedReportResults() can safely read it.
+        if (!array_key_exists('chart', $json) || !is_array($json['chart'])) {
+            $json['chart'] = [];
+        }
 
         // Retrieve the saved report result array
         $results = $object->getSavedReportResults($json, $savedReport);

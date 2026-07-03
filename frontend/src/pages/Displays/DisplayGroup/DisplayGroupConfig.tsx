@@ -40,6 +40,7 @@ import { ActionsCell, CheckMarkCell, TagsCell, TextCell } from '@/components/ui/
 import type { DisplayGroup } from '@/types/displayGroup';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
+import type { DateLike } from '@/utils/date';
 
 export type ModalType =
   | BaseModalType
@@ -144,6 +145,7 @@ export interface DisplayGroupActionsProps {
   openSendCommandModal: (displayGroup: DisplayGroup) => void;
   collectNow: (displayGroup: DisplayGroup) => void;
   triggerWebhook: (displayGroup: DisplayGroup) => void;
+  formatDateTime: (value: DateLike) => string;
 }
 
 export const getDisplayGroupItemActions = ({
@@ -297,7 +299,7 @@ export const getBulkActions = ({
 export const getDisplayGroupColumns = (
   props: DisplayGroupActionsProps,
 ): ColumnDef<DisplayGroup>[] => {
-  const { t } = props;
+  const { t, formatDateTime } = props;
   const getActions = getDisplayGroupItemActions(props);
   return [
     {
@@ -387,13 +389,13 @@ export const getDisplayGroupColumns = (
       accessorKey: 'createdDt',
       header: t('Created Date'),
       size: 160,
-      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+      cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
     },
     {
       accessorKey: 'modifiedDt',
       header: t('Modified Date'),
       size: 160,
-      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+      cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
     },
     {
       id: 'tableActions',

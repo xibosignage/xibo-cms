@@ -458,6 +458,16 @@ export const APP_ROUTES: AppRoute[] = [
         feature: 'report.saving',
       },
       {
+        path: 'saved-reports/:savedReportId/:reportName/view',
+        labelKey: 'View Saved Report',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Reporting/SavedReports/SavedReportViewer/SavedReportViewer').then(
+            (m) => ({ Component: m.default }),
+          ),
+        feature: 'report.saving',
+      },
+      {
         path: 'time-connected',
         labelKey: 'Time Connected',
         hideFromMenu: true,
@@ -597,12 +607,6 @@ export const APP_ROUTES: AppRoute[] = [
             Component: m.default,
           })),
         feature: 'auditlog.view',
-      },
-      {
-        path: 'report-fault',
-        labelKey: 'Report Fault',
-        externalURL: '/fault/view',
-        feature: 'fault.view',
       },
     ],
   },

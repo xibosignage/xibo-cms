@@ -40,12 +40,14 @@ import Button from '@/components/ui/Button';
 import FilterInputs from '@/components/ui/FilterInputs';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useUserContext } from '@/context/UserContext';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useTableState } from '@/hooks/useTableState';
 import type { Notification } from '@/types/notification';
 import { hasFeature } from '@/utils/permissions';
 
 export default function NotificationCentre() {
   const { t } = useTranslation();
+  const { formatDateTime } = useDateFormatter();
   const queryClient = useQueryClient();
   const { user } = useUserContext();
   const canAdd = hasFeature(user, 'notification.add');
@@ -164,7 +166,7 @@ export default function NotificationCentre() {
     onDelete: handleDelete,
     onView: handleView,
     onEdit: handleEdit,
-    timeZone: user?.settings?.defaultTimezone,
+    formatDateTime,
   });
 
   const getAllSelectedItems = (): Notification[] => {
