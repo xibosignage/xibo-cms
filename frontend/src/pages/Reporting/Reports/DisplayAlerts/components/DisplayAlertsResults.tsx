@@ -27,9 +27,18 @@ import { useTranslation } from 'react-i18next';
 import Button from '@/components/ui/Button';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { TextCell } from '@/components/ui/table/cells/TextCell';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { sortRows } from '@/pages/Reporting/Reports/shared/utils/sortRows';
 import type { DisplayAlertsRow } from '@/services/displayAlertsApi';
 import { formatDurationText } from '@/utils/formatters';
+
+type Timestamp = string | number;
+
+function toDate(value: Timestamp): Date | null {
+  const seconds = Number(value);
+  if (!value || !Number.isFinite(seconds)) return null;
+  return new Date(seconds * 1000);
+}
 
 interface DisplayAlertsResultsProps {
   rows: DisplayAlertsRow[];
@@ -42,15 +51,20 @@ interface DisplayAlertsResultsProps {
   onSortingChange: OnChangeFn<SortingState>;
 }
 
-function computeDuration(start: string, end: string, t: TFunction): string {
-  if (!start || !end) return '';
-  const startDate = new Date(start);
-  const endDate = new Date(end);
+function computeDuration(start: Timestamp, end: Timestamp, t: TFunction): string {
+  const startDate = toDate(start);
+  const endDate = toDate(end);
+  if (!startDate || !endDate) {
+    return '';
+  }
   const diffSeconds = Math.max(0, Math.floor((endDate.getTime() - startDate.getTime()) / 1000));
   return formatDurationText(diffSeconds, t);
 }
 
-function getColumns(t: TFunction): ColumnDef<DisplayAlertsRow>[] {
+function getColumns(
+  t: TFunction,
+  formatTimestamp: (value: Timestamp) => string,
+): ColumnDef<DisplayAlertsRow>[] {
   return [
     {
       accessorKey: 'displayId',
@@ -74,13 +88,13 @@ function getColumns(t: TFunction): ColumnDef<DisplayAlertsRow>[] {
       accessorKey: 'start',
       header: t('Start'),
       size: 160,
-      cell: ({ row }) => <TextCell>{row.original.start}</TextCell>,
+      cell: ({ row }) => <TextCell>{formatTimestamp(row.original.start)}</TextCell>,
     },
     {
       accessorKey: 'end',
       header: t('End'),
       size: 160,
-      cell: ({ row }) => <TextCell>{row.original.end}</TextCell>,
+      cell: ({ row }) => <TextCell>{formatTimestamp(row.original.end)}</TextCell>,
     },
     {
       id: 'duration',
@@ -116,8 +130,14 @@ export default function DisplayAlertsResults({
   onSortingChange,
 }: DisplayAlertsResultsProps) {
   const { t } = useTranslation();
+  const { formatDateTime } = useDateFormatter();
 
-  const columns = getColumns(t);
+  const formatTimestamp = (value: Timestamp) => {
+    const date = toDate(value);
+    return date ? formatDateTime(date) : '';
+  };
+
+  const columns = getColumns(t, formatTimestamp);
   const showError = isError && !isFetching;
   const isEmpty = !isError && !isFetching && rows.length === 0;
 

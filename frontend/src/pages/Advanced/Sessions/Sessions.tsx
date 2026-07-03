@@ -41,12 +41,14 @@ import Button from '@/components/ui/Button';
 import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import type { Session } from '@/types/session';
 
 export default function Sessions() {
   const { t } = useTranslation();
+  const { formatDateTime } = useDateFormatter();
   const queryClient = useQueryClient();
 
   const {
@@ -161,6 +163,7 @@ export default function Sessions() {
   const columns = getSessionColumns({
     t,
     onLogout: handleLogout,
+    formatDateTime,
   });
 
   const getAllSelectedItems = (): Session[] => {

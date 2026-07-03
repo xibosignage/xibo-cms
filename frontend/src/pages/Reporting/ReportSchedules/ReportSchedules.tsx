@@ -46,6 +46,7 @@ import { notify } from '@/components/ui/Notification';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { REPORT_META } from '@/config/reportRoutes';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import { deleteAllSavedReportsForSchedule } from '@/services/reportScheduleApi';
@@ -54,6 +55,7 @@ import type { ReportSchedule } from '@/types/reportSchedule';
 export default function ReportSchedules() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { formatDateTime } = useDateFormatter();
   const queryClient = useQueryClient();
 
   const {
@@ -236,6 +238,7 @@ export default function ReportSchedules() {
 
   const columns = getReportScheduleColumns({
     t,
+    formatDateTime,
     reportDescriptionMap,
     onDelete: handleDelete,
     openEditModal,

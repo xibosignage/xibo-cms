@@ -40,6 +40,7 @@ import { TextCell } from '../table/cells';
 import Modal, { type ModalAction } from './Modal';
 
 import { useUserContext } from '@/context/UserContext';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { DisplayGroupMultiSelect } from '@/pages/Schedule/Schedule/components/DisplayGroupMultiSelect';
 import {
   type DraftCriterion,
@@ -115,6 +116,7 @@ export default function ScheduleEventModal({
 }: ScheduleEventModalProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
+  const { formatDateTime } = useDateFormatter();
   const timezone = user?.settings?.defaultTimezone ?? 'UTC';
 
   const canGeoSchedule = hasFeature(user, 'schedule.geoLocation');
@@ -1460,7 +1462,7 @@ export default function ScheduleEventModal({
                                   end.setHours(end.getHours() + draft.relativeHours);
                                   end.setMinutes(end.getMinutes() + draft.relativeMinutes);
                                   end.setSeconds(end.getSeconds() + draft.relativeSeconds);
-                                  return `${now.toLocaleString()} - ${end.toLocaleString()}`;
+                                  return `${formatDateTime(now)} - ${formatDateTime(end)}`;
                                 })()}
                               </span>
                             </div>

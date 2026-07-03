@@ -47,7 +47,7 @@ import type { Event } from '@/types/event';
 import { EventTypeId } from '@/types/event';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { UIStatus } from '@/types/uiStatus';
-import { formatDateTime } from '@/utils/date';
+import { type DateLike, formatCmsDateTime } from '@/utils/date';
 
 export interface EventFilterInput {
   eventTypeId?: number | null;
@@ -162,6 +162,7 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<EventFilterInp
 export interface EventActionsProps {
   t: TFunction;
   timezone: string;
+  formatDateTime?: (value: DateLike) => string;
   onDelete: (id: number) => void;
   openAddEditModal: (row: Event) => void;
   copyEvent?: (row: number) => void;
@@ -326,13 +327,18 @@ export const getEventBadge = (event: Event): EventBadge => {
   return BADGE_MULTI_DISPLAY;
 };
 
-const formatUnixTimestamp = (ts: number | null | undefined, timezone: string): string => {
+const formatUnixTimestamp = (
+  ts: number | null | undefined,
+  formatDateTime: (value: DateLike) => string,
+): string => {
   if (!ts) return '—';
-  return formatDateTime(new Date(ts * 1000), timezone);
+  return formatDateTime(new Date(ts * 1000));
 };
 
 export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] => {
   const { t, timezone } = props;
+  const formatDateTime =
+    props.formatDateTime ?? ((value: DateLike) => formatCmsDateTime(value, { timeZone: timezone }));
   const getActions = getEventItemActions(props);
   return [
     {
@@ -392,7 +398,7 @@ export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] =>
         if (row.original.isAlways === 1) {
           return <StatusCell label={t('Always')} variation="outline" type="neutral" />;
         }
-        return <TextCell>{formatUnixTimestamp(row.original.fromDt, timezone)}</TextCell>;
+        return <TextCell>{formatUnixTimestamp(row.original.fromDt, formatDateTime)}</TextCell>;
       },
     },
     {
@@ -403,7 +409,7 @@ export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] =>
         if (row.original.isAlways === 1) {
           return <StatusCell label={t('Always')} variation="outline" type="neutral" />;
         }
-        return <TextCell>{formatUnixTimestamp(row.original.toDt, timezone)}</TextCell>;
+        return <TextCell>{formatUnixTimestamp(row.original.toDt, formatDateTime)}</TextCell>;
       },
     },
     {
@@ -482,7 +488,9 @@ export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] =>
       accessorKey: 'recurrenceRange',
       header: t('Recurrence End'),
       size: 130,
-      cell: (info) => <TextCell>{formatUnixTimestamp(info.getValue<number>(), timezone)}</TextCell>,
+      cell: (info) => (
+        <TextCell>{formatUnixTimestamp(info.getValue<number>(), formatDateTime)}</TextCell>
+      ),
     },
     {
       accessorKey: 'isPriority',
@@ -502,7 +510,7 @@ export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] =>
       size: 160,
       cell: (info) => {
         const val = info.getValue<string | undefined>();
-        return <TextCell>{val ? formatDateTime(new Date(val), timezone) : '—'}</TextCell>;
+        return <TextCell>{val ? formatDateTime(val) : '—'}</TextCell>;
       },
     },
     {
@@ -511,7 +519,7 @@ export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] =>
       size: 160,
       cell: (info) => {
         const val = info.getValue<string | null | undefined>();
-        return <TextCell>{val ? formatDateTime(new Date(val), timezone) : '—'}</TextCell>;
+        return <TextCell>{val ? formatDateTime(val) : '—'}</TextCell>;
       },
     },
     {

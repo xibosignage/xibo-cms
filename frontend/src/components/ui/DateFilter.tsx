@@ -27,6 +27,7 @@ import { twMerge } from 'tailwind-merge';
 import DatePicker from './DatePicker';
 
 import { useClickOutside } from '@/hooks/useClickOutside';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useKeydown } from '@/hooks/useKeydown';
 import { formatDateTime } from '@/utils/date';
 
@@ -48,6 +49,7 @@ export default function DateFilter({
   className,
 }: DateFilterProps) {
   const { t } = useTranslation();
+  const { formatDate } = useDateFormatter();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -58,7 +60,7 @@ export default function DateFilter({
     if (!value) return t('Any time');
     const date = new Date(value.replace(' ', 'T'));
     if (isNaN(date.getTime())) return value;
-    return date.toLocaleDateString();
+    return formatDate(date);
   };
 
   return (

@@ -50,6 +50,7 @@ import TabNav from '@/components/ui/TabNav';
 import { DataCalendar } from '@/components/ui/table/DataCalendar';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useUserContext } from '@/context/UserContext';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import { fetchUserPreference, saveUserPreference } from '@/services/userApi';
@@ -61,6 +62,7 @@ export default function Events() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { user } = useUserContext();
+  const { formatDateTime } = useDateFormatter();
   const timezone = user?.settings?.defaultTimezone ?? 'UTC';
 
   const {
@@ -280,6 +282,7 @@ export default function Events() {
 
   const columns = getEventColumns({
     t,
+    formatDateTime,
     timezone,
     onDelete: handleDelete,
     openAddEditModal,

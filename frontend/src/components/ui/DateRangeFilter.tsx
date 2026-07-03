@@ -6,6 +6,7 @@ import { twMerge } from 'tailwind-merge';
 import DatePicker from './DatePicker';
 
 import { useClickOutside } from '@/hooks/useClickOutside';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useKeydown } from '@/hooks/useKeydown';
 import type { FilterOption } from '@/types/filter';
 
@@ -29,6 +30,7 @@ export default function DateRangeFilter({
   className,
 }: DateRangeFilterProps) {
   const { t } = useTranslation();
+  const { formatDate } = useDateFormatter();
   const [open, setOpen] = useState(false);
   const [openDatePicker, setOpenDatePicker] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -47,7 +49,7 @@ export default function DateRangeFilter({
     if (typeof value === 'string' && value.startsWith('range:')) {
       const [from, to] = value.replace('range:', '').split('|');
       if (from && to) {
-        return `${new Date(from).toLocaleDateString()} - ${new Date(to).toLocaleDateString()}`;
+        return `${formatDate(from)} - ${formatDate(to)}`;
       }
       return t('Custom Range');
     }

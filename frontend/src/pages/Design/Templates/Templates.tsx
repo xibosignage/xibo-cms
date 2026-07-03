@@ -43,6 +43,7 @@ import FolderSidebar from '@/components/ui/FolderSidebar';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useUserContext } from '@/context/UserContext';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -53,6 +54,7 @@ import { hasFeature } from '@/utils/permissions';
 
 export default function Templates() {
   const { t } = useTranslation();
+  const { formatDateTime } = useDateFormatter();
   const queryClient = useQueryClient();
   const { user } = useUserContext();
   const canViewFolders = usePermissions()?.canViewFolders;
@@ -270,6 +272,7 @@ export default function Templates() {
 
   const columns = getTemplateColumn({
     t,
+    formatDateTime,
     onDelete: handleDelete,
     openAddEditModal,
     alterTemplate,

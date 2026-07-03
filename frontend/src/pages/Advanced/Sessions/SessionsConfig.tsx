@@ -30,6 +30,7 @@ import { TextCell, ActionsCell, CheckMarkCell } from '@/components/ui/table/cell
 import { getCommonFormOptions } from '@/config/commonForms';
 import type { Session } from '@/types/session';
 import type { ActionItem, BaseModalType } from '@/types/table';
+import type { DateLike } from '@/utils/date';
 
 export interface SessionFilterInput {
   type?: string | null;
@@ -66,6 +67,7 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<SessionFilterI
 export interface SessionActionsProps {
   t: TFunction;
   onLogout: (id: number) => void;
+  formatDateTime: (value: DateLike) => string;
 }
 
 export const getSessionItemActions = ({
@@ -84,14 +86,14 @@ export const getSessionItemActions = ({
 };
 
 export const getSessionColumns = (props: SessionActionsProps): ColumnDef<Session>[] => {
-  const { t } = props;
+  const { t, formatDateTime } = props;
   const getActions = getSessionItemActions(props);
   return [
     {
       accessorKey: 'lastAccessed',
       header: t('Last Accessed'),
       size: 180,
-      cell: (info) => <TextCell weight="bold">{info.getValue<string>()}</TextCell>,
+      cell: (info) => <TextCell weight="bold">{formatDateTime(info.getValue<string>())}</TextCell>,
     },
 
     {
@@ -123,7 +125,7 @@ export const getSessionColumns = (props: SessionActionsProps): ColumnDef<Session
       accessorKey: 'expiresAt',
       header: t('Expires At'),
       size: 140,
-      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
+      cell: (info) => <TextCell>{formatDateTime(info.getValue<string>())}</TextCell>,
     },
     {
       id: 'tableActions',

@@ -51,6 +51,7 @@ import TabNav from '@/components/ui/TabNav';
 import { DataGrid } from '@/components/ui/table/DataGrid';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useUserContext } from '@/context/UserContext';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { useOwner } from '@/hooks/useOwner';
@@ -63,6 +64,7 @@ import { hasFeature } from '@/utils/permissions';
 
 export default function Media() {
   const { t } = useTranslation();
+  const { formatDateTime } = useDateFormatter();
   const { user } = useUserContext();
   const queryClient = useQueryClient();
   const canViewFolders = usePermissions()?.canViewFolders;
@@ -323,6 +325,7 @@ export default function Media() {
 
   const columns = getMediaColumns({
     t,
+    formatDateTime,
     onPreview: handlePreviewClick,
     onDelete: handleDelete,
     onDownload: handleDownload,
@@ -459,6 +462,7 @@ export default function Media() {
 
   const getMediaActions = getMediaItemActions({
     t,
+    formatDateTime,
     onDelete: handleDelete,
     onDownload: handleDownload,
     openEditModal,
