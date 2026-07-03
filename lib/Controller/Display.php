@@ -342,9 +342,8 @@ class Display extends Base
         $this->getLog()->debug(sprintf('Base for size is %d and suffix is %s', $base, $units));
 
 
-        // Call to render the template
-        $this->getState()->template = 'display-page-manage';
-        $this->getState()->setData([
+        // Return the manage data as JSON (consumed by the React Manage Display modal)
+        return $response->withJson([
             'requiredFiles' => [],
             'display' => $display,
             'timeAgo' => Carbon::createFromTimestamp($display->lastAccessed)->diffForHumans(),
@@ -374,8 +373,6 @@ class Display extends Base
                 'toDate' => Carbon::now()->endOfMonth()->format(DateFormatHelper::getSystemFormat())
             ]
         ]);
-
-        return $this->render($request, $response);
     }
 
     /**
@@ -689,19 +686,10 @@ class Display extends Base
             $this->decorateDisplayProperties($parsedQueryParams, $display, $request);
         }
 
-        if ($this->isJson($request) || $this->isApi($request)) {
-            return $response
-                ->withStatus(200)
-                ->withHeader('X-Total-Count', $this->displayFactory->countLast())
-                ->withJson($displays);
-        }
-
-        // TODO remove when no longer needed.
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->displayFactory->countLast();
-        $this->getState()->setData($displays);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $this->displayFactory->countLast())
+            ->withJson($displays);
     }
 
     #[OA\Get(

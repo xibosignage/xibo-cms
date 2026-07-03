@@ -40,8 +40,6 @@ $(function() {
         templates.help.feedbackForm({
           trans: translations.helpPane,
           pageURL: window.location.pathname,
-          faultViewUrl: $help.data('faultViewUrl'),
-          faultViewEnabled: $help.data('faultViewEnabled') == 1,
           accountId: accountId,
           currentUserName,
           currentUserEmail,

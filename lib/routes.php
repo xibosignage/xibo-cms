@@ -655,15 +655,6 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/audit/{id}', ['\Xibo\Controller\AuditLog','searchById'])->setName('auditLog.searchById');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['auditlog.view']));
 
-//
-// Fault
-//
-$app->group('', function (RouteCollectorProxy $group) {
-    $group->put('/fault/debug/on', ['\Xibo\Controller\Fault','debugOn'])->setName('fault.debug.on');
-    $group->put('/fault/debug/off', ['\Xibo\Controller\Fault','debugOff'])->setName('fault.debug.off');
-    $group->get('/fault/collect', ['\Xibo\Controller\Fault','collect'])->setName('fault.collect');
-})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['fault.view']));
-
 /**
  * Commands
  */

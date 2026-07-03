@@ -126,7 +126,6 @@ $app->post('/library/connector/import', ['\Xibo\Controller\Library', 'connectorI
 //
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/display/map', ['\Xibo\Controller\Display', 'displayMap'])->setName('display.map');
-    $group->get('/display/manage/{id}', ['\Xibo\Controller\Display', 'displayManage'])->setName('display.manage');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['displays.view']));
 
 //
@@ -138,7 +137,6 @@ $app->get('/user/form/profile', ['\Xibo\Controller\User','editProfileForm'])->se
 $app->get('/user/form/preferences', ['\Xibo\Controller\User', 'preferencesForm'])->setName('user.preferences.form');
 $app->get('/user/permissions/form/{entity}/{id}', ['\Xibo\Controller\User','permissionsForm'])->setName('user.permissions.form');
 $app->get('/user/permissions/multiple/form/{entity}', ['\Xibo\Controller\User','permissionsMultiForm'])->setName('user.permissions.multi.form');
-$app->get('/user/page/password', ['\Xibo\Controller\User','forceChangePasswordPage'])->setName('user.force.change.password.page');
 
 
 $app->get('/user/form/homepages', ['\Xibo\Controller\User', 'homepages'])
@@ -148,16 +146,6 @@ $app->get('/user/form/homepages', ['\Xibo\Controller\User', 'homepages'])
 //
 // campaign
 //
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/campaign/form/edit/{id}', ['\Xibo\Controller\Campaign', 'editForm'])->setName('campaign.edit.form');
-    $group->get('/campaign/form/layout/remove/{id}', ['\Xibo\Controller\Campaign', 'removeLayoutForm'])
-        ->setName('campaign.layout.remove.form');
-
-    $group->get('/campaign-builder/{id}', ['\Xibo\Controller\Campaign', 'displayCampaignBuilder'])
-        ->addMiddleware(new FeatureAuth($group->getContainer(), ['ad.campaign']))
-        ->setName('campaign.builder');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.modify']));
-
 $app->get('/campaign/{id}/preview', ['\Xibo\Controller\Campaign','preview'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.view', 'layout.view']))
     ->setName('campaign.preview');
@@ -179,8 +167,7 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->post('/dataset/cache/clear/{id}', ['\Xibo\Controller\DataSet', 'clearCache'])->setName('dataSet.clear.cache');
 
-    // Data connector
-    $group->get('/dataset/dataConnector/{id}', ['\Xibo\Controller\DataSet', 'dataConnectorView'])->setName('dataSet.dataConnector.view');
+    // Data connector test page (embedded in an iframe by the React data connector page)
     $group->get('/dataset/dataConnector/test/{id}', ['\Xibo\Controller\DataSet', 'dataConnectorTest'])->setName('dataSet.dataConnector.test');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['dataset.modify']));
 
@@ -203,13 +190,6 @@ $app->get('/module/asset/{assetId}', ['\Xibo\Controller\Module', 'assetDownload'
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/transition/form/edit/{id}', ['\Xibo\Controller\Transition','editForm'])->setName('transition.edit.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['transition.view']));
-
-//
-// fault
-//
-$app->get('/fault/view', ['\Xibo\Controller\Fault','displayPage'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['fault.view']))
-    ->setName('fault.view');
 
 //
 // Reporting

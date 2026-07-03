@@ -863,11 +863,6 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'displays',
                     'title' => __('Allow edits of Synchronised Groups')
                 ],
-                'fault.view' => [
-                    'feature' => 'fault.view',
-                    'group' => 'troubleshooting',
-                    'title' => __('Access to a Report Fault wizard for collecting reports to forward to the support team for analysis, which may contain sensitive data.')
-                ],
                 'log.view' => [
                     'feature' => 'log.view',
                     'group' => 'troubleshooting',

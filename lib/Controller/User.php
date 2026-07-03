@@ -304,7 +304,7 @@ class User extends Base
                 ->withHeader('X-Total-Count', $this->userFactory->countLast())
                 ->withJson($users);
         } else {
-            // TODO remove once userGroups ( membership ) and pages with owner filters are converted.
+            // TODO remove layout editor is updated.
             $this->getState()->template = 'grid';
             $this->getState()->recordsTotal = $this->userFactory->countLast();
             $this->getState()->setData($users);
@@ -1247,27 +1247,6 @@ class User extends Base
         $this->getState()->setData([
             'codes' => $user->twoFactorRecoveryCodes
         ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Force User Password Change
-     * @param Request $request
-     * @param Response $response
-     * @return \Slim\Http\Response
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function forceChangePasswordPage(Request $request, Response $response): Response
-    {
-        $user = $this->getUser();
-
-        // if the flag to force change password is not set to 1 then redirect to the Homepage
-        if ($user->isPasswordChangeRequired != 1) {
-            return $response->withRedirect($this->urlFor($request, 'home'));
-        }
-
-        $this->getState()->template = 'user-force-change-password-page';
 
         return $this->render($request, $response);
     }

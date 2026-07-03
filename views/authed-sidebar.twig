@@ -136,20 +136,20 @@
             <li class="sidebar-title"><a>{% trans "Reporting" %}</a></li>
 
             {% if currentUser.featureEnabled("report.view") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/reporting/reports">{% trans "All Reports" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/reporting/all-reports">{% trans "All Reports" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("report.scheduling") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/reporting/schedules">{% trans "Report Schedules" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/reporting/report-schedules">{% trans "Report Schedules" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("report.saving") %}
-                <li class="sidebar-list"><a href="{{ url_for("savedreport.view") }}">{% trans "Saved Reports" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/reporting/saved-reports">{% trans "Saved Reports" %}</a></li>
             {% endif %}
 
         {% endif %}
 
-        {% set countViewable = currentUser.featureEnabledCount(["log.view", "sessions.view", "auditlog.view", "fault.view"]) %}
+        {% set countViewable = currentUser.featureEnabledCount(["log.view", "sessions.view", "auditlog.view"]) %}
         {% if countViewable > 0 %}
             <li class="sidebar-title"><a>{% trans "Advanced" %}</a></li>
 
@@ -163,10 +163,6 @@
 
             {% if currentUser.featureEnabled("auditlog.view") %}
                 <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/advanced/audit-trail">{% trans "Audit Trail" %}</a></li>
-            {% endif %}
-
-            {% if currentUser.featureEnabled("fault.view") %}
-                <li class="sidebar-list"><a href="{{ url_for("fault.view") }}">{% trans "Report Fault" %}</a></li>
             {% endif %}
         {% endif %}
 
