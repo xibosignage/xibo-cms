@@ -133,6 +133,7 @@ export default function ProofOfPlayFilters({
             value={filter.tags}
             onChange={(tags) => onFilterChange({ tags })}
             placeholder={t('Add tags')}
+            allowValues={false}
             suffix={
               <button
                 type="button"

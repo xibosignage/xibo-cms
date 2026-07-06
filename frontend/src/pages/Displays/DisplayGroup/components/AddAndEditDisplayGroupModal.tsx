@@ -27,7 +27,7 @@ import { useTranslation } from 'react-i18next';
 
 import Checkbox from '@/components/ui/forms/Checkbox';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
-import TagInput from '@/components/ui/forms/TagInput';
+import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
 import { DataTable } from '@/components/ui/table/DataTable';
@@ -124,6 +124,7 @@ export default function AddAndEditDisplayGroupModal({
   });
   const [formErrors, setFormErrors] = useState<DisplayGroupFormErrors>({});
   const [apiError, setApiError] = useState<string | undefined>();
+  const [pendingTagInput, setPendingTagInput] = useState('');
 
   const [previewPagination, setPreviewPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -157,6 +158,7 @@ export default function AddAndEditDisplayGroupModal({
   );
 
   useEffect(() => {
+    setPendingTagInput('');
     if (type === 'edit' && data) {
       setDraft(draftFromDisplayGroup(data));
     } else {
@@ -191,11 +193,9 @@ export default function AddAndEditDisplayGroupModal({
       setFormErrors({});
 
       try {
-        const serializedTags = draft.tags
-          .map((tag) =>
-            tag.value != null && tag.value !== '' ? `${tag.tag}|${tag.value}` : tag.tag,
-          )
-          .join(',');
+        const finalTags = collectTags(draft.tags, pendingTagInput);
+        setPendingTagInput('');
+        const serializedTags = serializeTags(finalTags);
 
         const payload = {
           displayGroup: draft.displayGroup.trim(),
@@ -374,6 +374,8 @@ export default function AddAndEditDisplayGroupModal({
               value={draft.tags}
               helpText={t('Tags (Comma-separated: Tag or Tag|Value)')}
               onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
+              inputValue={pendingTagInput}
+              onInputChange={setPendingTagInput}
             />
 
             {/* Dynamic Group */}

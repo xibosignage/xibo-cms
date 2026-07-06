@@ -26,7 +26,7 @@ import { useTranslation } from 'react-i18next';
 import Checkbox from '@/components/ui/forms/Checkbox';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
-import TagInput from '@/components/ui/forms/TagInput';
+import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
 import { getCampaignSchema } from '@/schema/campaign';
@@ -83,12 +83,14 @@ export default function AddCampaignModal({
   }));
   const [formErrors, setFormErrors] = useState<CampaignFormErrors>({});
   const [apiError, setApiError] = useState<string | undefined>();
+  const [pendingTagInput, setPendingTagInput] = useState('');
 
   useEffect(() => {
     if (!isOpen) {
       setDraft({ ...DEFAULT_DRAFT, folderId: defaultFolderId ?? null });
       setFormErrors({});
       setApiError(undefined);
+      setPendingTagInput('');
     }
   }, [isOpen, defaultFolderId]);
 
@@ -116,11 +118,9 @@ export default function AddCampaignModal({
       }
 
       try {
-        const serializedTags = draft.tags
-          .map((tag) =>
-            tag.value != null && tag.value !== '' ? `${tag.tag}|${tag.value}` : tag.tag,
-          )
-          .join(',');
+        const finalTags = collectTags(draft.tags, pendingTagInput);
+        setPendingTagInput('');
+        const serializedTags = serializeTags(finalTags);
 
         await createCampaign({
           name: draft.name,
@@ -227,6 +227,8 @@ export default function AddCampaignModal({
             value={draft.tags}
             helpText={t('Tags separated by commas')}
             onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
+            inputValue={pendingTagInput}
+            onInputChange={setPendingTagInput}
           />
 
           {draft.type === 'ad' ? (
