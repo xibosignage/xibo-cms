@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { submitLogin } from '../api';
 import { t } from '../i18n';
 import type { LoginResponse } from '../types';
+import { publicPath } from '../utils';
 
 import { ErrorBanner } from './ErrorBanner';
 import { SubmitButton } from './SubmitButton';
@@ -60,7 +61,7 @@ export function LoginForm({
     return (
       <div className="text-center">
         <p>{t('casPrompt')}</p>
-        <form action="/cas/login" method="post">
+        <form action={`${publicPath}cas/login`} method="post">
           <SubmitButton label={t('casLoginButton')} />
         </form>
       </div>

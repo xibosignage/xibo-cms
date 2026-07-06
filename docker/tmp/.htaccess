@@ -8,6 +8,11 @@ RewriteBase REPLACE_ME/
 RewriteCond %{HTTP:Authorization} .+
 RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
+# JSON api
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_URI} ^REPLACE_ME/json/.*$
+RewriteRule ^ json/index.php [QSA,L]
+
 # requests for api authorize
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_URI} ^REPLACE_ME/api/authorize/.*$

@@ -270,7 +270,7 @@ class Handlers
                             $brandDir = rtrim($configService->getSetting('LIBRARY_LOCATION'), '/') . '/brand';
                             $upgradeConfig = [
                                 'upgradeInProgress' => true,
-                                'logoUrl'    => $configService->rootUri() . 'brand/'
+                                'logoUrl'    => '/brand/'
                                     . (file_exists($brandDir . '/logo.svg') ? 'logo.svg' : 'logo.png'),
                                 'supportUrl' => $configService->getThemeConfig('theme_url', 'https://xibosignage.com'),
                                 'version'    => Environment::$WEBSITE_VERSION_NAME,

@@ -488,7 +488,6 @@ class Login extends Base
     public function aboutConfig(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
     {
         $brandDir = rtrim($this->getConfig()->getSetting('LIBRARY_LOCATION'), '/') . '/brand';
-        $rootUri = $this->getConfig()->rootUri();
         $logoFile = file_exists($brandDir . '/logo.svg') ? 'logo.svg' : 'logo.png';
         $iconFile = file_exists($brandDir . '/logo-icon.svg') ? 'logo-icon.svg' : 'logo-icon.png';
 
@@ -497,8 +496,8 @@ class Login extends Base
             'revision'    => Environment::getGitCommit(),
             'appName'     => $this->getConfig()->getThemeConfig('app_name', 'Xibo'),
             'productName' => $this->getConfig()->getThemeConfig('theme_title', 'Xibo Digital Signage'),
-            'logoUrl'     => $rootUri . 'brand/' . $logoFile,
-            'logoIconUrl' => $rootUri . 'brand/' . $iconFile,
+            'logoUrl'     => '/brand/' . $logoFile,
+            'logoIconUrl' => '/brand/' . $iconFile,
             'supportUrl'  => $this->getConfig()->getThemeConfig('theme_url', 'https://xibosignage.com'),
             'sourceUrl'   => $this->getConfig()->getThemeConfig(
                 'cms_source_url',
@@ -747,7 +746,9 @@ class Login extends Base
     private function getBrandLogoUrl(): string
     {
         $brandDir = rtrim($this->getConfig()->getSetting('LIBRARY_LOCATION'), '/') . '/brand';
-        return $this->getConfig()->rootUri() . 'brand/'
+        // Brand assets are served by Apache at the domain-root /brand alias (preserved even on
+        // alias installs), so this is NOT rootUri-prefixed — matches the React BrandingContext.
+        return '/brand/'
             . (file_exists($brandDir . '/logo.svg') ? 'logo.svg' : 'logo.png');
     }
 

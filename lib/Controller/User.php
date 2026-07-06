@@ -84,14 +84,15 @@ class User extends Base
     public function home(Request $request, Response $response): Response|ResponseInterface
     {
         // Should we show this user the welcome page?
+        // Redirects go through rootUri() so sub-folder/alias installs (e.g. /cms/) resolve.
         if ($this->getUser()->newUserWizard == 0) {
-            return $response->withRedirect('/welcome');
+            return $response->withRedirect($this->getConfig()->rootUri() . 'welcome');
         }
 
         // User wizard seen, go to the React dashboard
         $this->getLog()->debug('Showing the homepage: ' . $this->getUser()->homePageId);
 
-        return $response->withRedirect('/dashboard');
+        return $response->withRedirect($this->getConfig()->rootUri() . 'dashboard');
     }
 
     /**

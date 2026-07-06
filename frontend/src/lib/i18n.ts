@@ -22,7 +22,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
-import { withAssetBase } from '@/config/publicPath';
+import { withAssetBase, withPublicPath } from '@/config/publicPath';
 
 // Guard against HTML responses (404 rewrites)
 async function fetchJson(url: string, init?: RequestInit) {
@@ -37,9 +37,8 @@ async function fetchJson(url: string, init?: RequestInit) {
 const FALLBACK_LANG = 'en_GB';
 
 async function resolveLanguage() {
-  const apiBase = import.meta.env.VITE_API_BASE_URL || '/json';
   try {
-    const me = await fetchJson(`${window.location.origin}${apiBase}/user/me`, {
+    const me = await fetchJson(withPublicPath('json/user/me'), {
       credentials: 'include',
       headers: { Accept: 'application/json' },
     });

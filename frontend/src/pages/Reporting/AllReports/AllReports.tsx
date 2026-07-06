@@ -46,6 +46,7 @@ import { useAllReportsData } from './hooks/useAllReportsData';
 import Button from '@/components/ui/Button';
 import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
+import { withPublicPath } from '@/config/publicPath';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import type { Report } from '@/types/report';
@@ -120,7 +121,7 @@ function ReportCard({ report }: { report: Report }) {
           navigate(report.url);
         } else {
           // Legacy Twig report lives outside the SPA, so a full navigation is required.
-          window.location.href = `/report/form/${report.name}`;
+          window.location.href = withPublicPath(`report/form/${report.name}`);
         }
       }}
     />

@@ -21,6 +21,7 @@
 
 import { redirect } from 'react-router-dom';
 
+import { publicPath, withPublicPath } from '@/config/publicPath';
 import http from '@/lib/api';
 import type { User } from '@/types/user';
 
@@ -75,11 +76,11 @@ export async function requireAuthLoader({ request }: { request: Request }) {
     const currentUrl = new URL(request.url);
     const returnTo = encodeURIComponent(currentUrl.pathname + currentUrl.search);
 
-    throw redirect(`/login?priorRoute=${returnTo}`);
+    throw redirect(withPublicPath(`login?priorRoute=${returnTo}`));
   }
 
   if (user.isPasswordChangeRequired === 1) {
-    throw redirect('/user/force-change-password');
+    throw redirect(withPublicPath('user/force-change-password'));
   }
 
   return { user };
@@ -88,7 +89,7 @@ export async function requireAuthLoader({ request }: { request: Request }) {
 export async function requireAuthOnlyLoader() {
   const user = await getUserSession();
   if (!user) {
-    throw redirect('/login');
+    throw redirect(withPublicPath('login'));
   }
   return { user };
 }
@@ -97,7 +98,7 @@ export async function redirectIfAuthedLoader() {
   const user = await getUserSession();
 
   if (user) {
-    throw redirect('/');
+    throw redirect(publicPath);
   }
 
   return null;

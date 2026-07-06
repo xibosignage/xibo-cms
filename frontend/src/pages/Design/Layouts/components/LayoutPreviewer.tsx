@@ -25,6 +25,7 @@ import { useTranslation } from 'react-i18next';
 
 import { LayoutInfoPanel } from './LayoutInfoPannel';
 
+import { withPublicPath } from '@/config/publicPath';
 import { useKeydown } from '@/hooks/useKeydown';
 import { useOwner } from '@/hooks/useOwner';
 import type { Layout } from '@/types/layout';
@@ -103,7 +104,7 @@ export default function LayoutPreviewer({
         <div className="flex-1 w-full p-4 flex justify-center items-center overflow-hidden min-h-0">
           <iframe
             sandbox="allow-scripts"
-            src={layoutData?.previewUrl ?? `/layout/preview/${layoutId}`}
+            src={layoutData?.previewUrl ?? withPublicPath(`layout/preview/${layoutId}`)}
             title={`Layout ${layoutId}`}
             className="w-full h-full min-h-125 rounded shadow-md border-0"
           />

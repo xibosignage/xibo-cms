@@ -15,8 +15,9 @@
        Runs before the module scripts below (classic inline script executes at parse time). #}
     <script nonce="{{ cspNonce }}">window.__XIBO_ASSET_BASE__ = "{{ assetBase }}";</script>
 
-    <link rel="shortcut icon" href="{{ theme.rootUri() }}brand/favicon.ico"/>
-    <link rel="stylesheet" href="{{ theme.rootUri() }}brand/theme.css">
+    {# Brand assets are served at the domain-root /brand alias (preserved on alias installs). #}
+    <link rel="shortcut icon" href="/brand/favicon.ico"/>
+    <link rel="stylesheet" href="/brand/theme.css">
 
     {% if appCssUrl %}
         <link rel="stylesheet" href="{{ appCssUrl }}">

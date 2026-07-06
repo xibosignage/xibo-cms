@@ -55,7 +55,9 @@ export default defineConfig(({ mode }) => ({
     tailwindcss(),
     visualizer({
       filename: 'stats.html',
-      open: true,
+      // Do not auto-open: it spawns a browser (powershell.exe under WSL) during the build,
+      // which crashes headless/Docker/CI builds. Open frontend/stats.html manually instead.
+      open: false,
       gzipSize: true,
       brotliSize: true,
     }),
@@ -84,6 +86,10 @@ export default defineConfig(({ mode }) => ({
     // dev server MUST bind 5173. Fail loudly if it's taken rather than silently drifting to
     // 5174 — otherwise the PHP-served shell loads scripts from a port with nothing on it.
     strictPort: true,
+    // The PHP app (localhost) serves the HTML shell while Vite serves assets. Emit dev asset
+    // URLs (incl. CSS-referenced fonts like @fontsource) with the full Vite origin so they
+    // resolve against :5173, not the document origin (:80) — otherwise they 404 in dev.
+    origin: 'http://localhost:5173',
     // Open the PHP app (which renders the SPA shell + injects <meta public-path>), NOT the
     // raw Vite server at /app/. Browsing PHP gives clean URLs (basename '/') matching prod;
     // browsing the Vite server directly would prefix every route with the '/app/' asset base.

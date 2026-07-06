@@ -9,8 +9,9 @@
     <meta name="token" content="{{ csrfToken }}"/>
     <meta name="public-path" content="{{ theme.rootUri() }}"/>
 
-    <link rel="shortcut icon" href="{{ theme.rootUri() }}brand/favicon.ico"/>
-    <link rel="stylesheet" href="{{ theme.rootUri() }}brand/theme.css">
+    {# Brand assets are served at the domain-root /brand alias (preserved on alias installs). #}
+    <link rel="shortcut icon" href="/brand/favicon.ico"/>
+    <link rel="stylesheet" href="/brand/theme.css">
 
     {% if loginCssUrl %}
         <link rel="stylesheet" href="{{ loginCssUrl }}">

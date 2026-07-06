@@ -21,6 +21,8 @@
 
 import { useEffect, useState } from 'react';
 
+import { withPublicPath } from '@/config/publicPath';
+
 interface AboutConfig {
   version: string;
   revision: string;
@@ -35,7 +37,7 @@ export function AboutModalContent() {
   const currentYear = new Date().getFullYear();
 
   useEffect(() => {
-    fetch('/about/config')
+    fetch(withPublicPath('about/config'))
       .then((r) => r.json())
       .then((data: AboutConfig) => setConfig(data))
       .catch(() => {})

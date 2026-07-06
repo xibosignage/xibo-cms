@@ -31,6 +31,7 @@ import Button from '@/components/ui/Button';
 import InfoBanner from '@/components/ui/InfoBanner';
 import TabNav from '@/components/ui/TabNav';
 import TextInput from '@/components/ui/forms/TextInput';
+import { withPublicPath } from '@/config/publicPath';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import {
   getDatasetById,
@@ -420,7 +421,7 @@ export default function DatasetDataConnector() {
         key={iframeKey}
         ref={iframeRef}
         sandbox="allow-scripts"
-        src={`/dataset/dataConnector/test/${datasetId}`}
+        src={withPublicPath(`dataset/dataConnector/test/${datasetId}`)}
         className="hidden"
         title="data-connector-test"
       />

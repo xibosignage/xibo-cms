@@ -27,6 +27,7 @@ import type { ComponentProps } from 'react';
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
 import type { SelectOption } from '@/components/ui/forms/SelectDropdown';
 import { ActionsCell, TextCell } from '@/components/ui/table/cells';
+import { withPublicPath } from '@/config/publicPath';
 import type { ModuleTemplate } from '@/types/moduleTemplates';
 import type { ActionItem } from '@/types/table';
 
@@ -112,7 +113,7 @@ export const getModuleTemplateItemActions = ({
           label: t('Export XML'),
           icon: Download,
           onClick: () => {
-            window.location.href = `/developer/template/${template.id}/export`;
+            window.location.href = withPublicPath(`developer/template/${template.id}/export`);
           },
         },
         {

@@ -48,6 +48,16 @@ export function withAssetBase(path: string): string {
 }
 
 /**
+ * Joins a path onto the install root (publicPath), tolerating slashes on either side.
+ * Use for anything served by the CMS itself — the JSON API, legacy PHP pages, export
+ * downloads, auth redirects — so it resolves on sub-folder/alias installs.
+ * e.g. withPublicPath('json/user/me') -> '/cms/json/user/me' (or '/json/user/me' at root).
+ */
+export function withPublicPath(path: string): string {
+  return publicPath.replace(/\/$/, '') + '/' + path.replace(/^\//, '');
+}
+
+/**
  * The React Router basename.
  *
  * When PHP serves the shell (login-spa.twig / app-spa.twig) — in BOTH dev and prod — it
