@@ -279,15 +279,15 @@
         {% endif %}
 
             {% if currentUser.featureEnabled("report.view") %}
-                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/reporting/reports">{% trans "All Reports" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/reporting/all-reports">{% trans "All Reports" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("report.scheduling") %}
-                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/reporting/schedules">{% trans "Report Schedules" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/reporting/report-schedules">{% trans "Report Schedules" %}</a>
             {% endif %}
 
             {% if currentUser.featureEnabled("report.saving") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("savedreport.view") }}">{% trans "Saved Reports" %}</a>
+                <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/reporting/saved-reports">{% trans "Saved Reports" %}</a>
             {% endif %}
 
         {% if countViewable > 1 %}
@@ -296,7 +296,7 @@
         </li>
     {% endif %}
 
-    {% set countViewable = currentUser.featureEnabledCount(["log.view", "sessions.view", "auditlog.view", "fault.view"]) %}
+    {% set countViewable = currentUser.featureEnabledCount(["log.view", "sessions.view", "auditlog.view"]) %}
     {% set groupElementClass = (countViewable > 1) ? 'dropdown-item' : 'nav-link' %}
     {% if countViewable > 0 %}
         {% if countViewable > 1 %}
@@ -316,10 +316,6 @@
 
             {% if currentUser.featureEnabled("auditlog.view") %}
                 <a class="{{ groupElementClass }}" href="{{ theme.rootUri() }}prototype/advanced/audit-trail">{% trans "Audit Trail" %}</a>
-            {% endif %}
-
-            {% if currentUser.featureEnabled("fault.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("fault.view") }}">{% trans "Report Fault" %}</a>
             {% endif %}
         {% if countViewable > 1 %}
             </div>
