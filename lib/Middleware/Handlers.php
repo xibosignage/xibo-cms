@@ -187,7 +187,7 @@ class Handlers
                         Str::replaceFirst($configService->rootUri(), '', $request->getUri()->getPath()),
                         '/'
                     );
-                    $assetOrApiPrefixes = ['/prototype/', '/json', '/api', '/preview', '/pwa', '/authorize'];
+                    $assetOrApiPrefixes = ['/app/', '/json', '/api', '/preview', '/pwa', '/authorize'];
                     $assetOrApiPrefixes[] = '/swagger.json';
                     $isAssetOrApi = false;
                     foreach ($assetOrApiPrefixes as $prefix) {
@@ -203,11 +203,13 @@ class Handlers
                     ) {
                         try {
                             // Throws if the manifest is present but the entry is missing (assets not built).
-                            $appJsUrl = \Xibo\Helper\ViteManifest::getJsUrl('index.html');
+                            $rootUri = $configService->rootUri();
+                            $appJsUrl = \Xibo\Helper\ViteManifest::getJsUrl('index.html', $rootUri);
                             return $twig->render($response, 'app-spa.twig', array_merge($viewParams, [
                                 'csrfToken'      => '',
                                 'appJsUrl'       => $appJsUrl,
-                                'appCssUrl'      => \Xibo\Helper\ViteManifest::getCssUrl('index.html'),
+                                'appCssUrl'      => \Xibo\Helper\ViteManifest::getCssUrl('index.html', $rootUri),
+                                'assetBase'      => \Xibo\Helper\ViteManifest::getAssetBase($rootUri),
                                 'viteClientUrl'  => \Xibo\Helper\ViteManifest::getClientUrl(),
                                 'viteRefreshUrl' => \Xibo\Helper\ViteManifest::getRefreshUrl(),
                             ]))->withStatus(200);
@@ -262,7 +264,8 @@ class Handlers
                     // Upgrade pending: serve through the React login shell for visual consistency.
                     // Fall back to the legacy Twig page if Vite assets are not built yet.
                     if ($exception instanceof UpgradePendingException) {
-                        $loginJsUrl = \Xibo\Helper\ViteManifest::getJsUrl('login.html');
+                        $rootUri = $configService->rootUri();
+                        $loginJsUrl = \Xibo\Helper\ViteManifest::getJsUrl('login.html', $rootUri);
                         if ($loginJsUrl !== null) {
                             $brandDir = rtrim($configService->getSetting('LIBRARY_LOCATION'), '/') . '/brand';
                             $upgradeConfig = [
@@ -288,7 +291,8 @@ class Handlers
                                     JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
                                 ),
                                 'loginJsUrl'      => $loginJsUrl,
-                                'loginCssUrl'     => \Xibo\Helper\ViteManifest::getCssUrl('login.html'),
+                                'loginCssUrl'     => \Xibo\Helper\ViteManifest::getCssUrl('login.html', $rootUri),
+                                'assetBase'       => \Xibo\Helper\ViteManifest::getAssetBase($rootUri),
                                 'viteClientUrl'   => \Xibo\Helper\ViteManifest::getClientUrl(),
                                 'viteRefreshUrl'  => \Xibo\Helper\ViteManifest::getRefreshUrl(),
                             ]);

@@ -41,7 +41,10 @@ function dndKitReact19Compat(): Plugin {
 }
 
 export default defineConfig(({ mode }) => ({
-  base: '/prototype/',
+  // Internal asset base (never user-facing): where built JS/CSS physically live (web/app)
+  // and the dev-server mount point. Production asset URLs are made install-root-aware at
+  // runtime via experimental.renderBuiltUrl below (see window.__XIBO_ASSET_BASE__).
+  base: '/app/',
   plugins: [
     dndKitReact19Compat(),
     react({
@@ -81,7 +84,11 @@ export default defineConfig(({ mode }) => ({
     // dev server MUST bind 5173. Fail loudly if it's taken rather than silently drifting to
     // 5174 — otherwise the PHP-served shell loads scripts from a port with nothing on it.
     strictPort: true,
-    open: '/prototype/',
+    // Open the PHP app (which renders the SPA shell + injects <meta public-path>), NOT the
+    // raw Vite server at /app/. Browsing PHP gives clean URLs (basename '/') matching prod;
+    // browsing the Vite server directly would prefix every route with the '/app/' asset base.
+    // Vite resolves this absolute URL as-is (new URL(open, devServerUrl)).
+    open: 'http://localhost/',
     cors: {
       origin: true,
       methods: ['GET', 'OPTIONS'],
@@ -106,7 +113,7 @@ export default defineConfig(({ mode }) => ({
       // Proxy everything that isn't a Vite-internal path or an existing proxy rule.
       // @vite, @fs, @id, src/, node_modules/ are Vite's own paths and must NOT be
       // forwarded to PHP — Vite handles them before the proxy in its middleware stack.
-      '^/(?!prototype|api|authorize|swagger.json|@vite|@fs|@id|src|node_modules).*': {
+      '^/(?!app|api|authorize|swagger.json|@vite|@fs|@id|src|node_modules).*': {
         target: 'http://localhost',
         changeOrigin: true,
         secure: false,
@@ -144,5 +151,20 @@ export default defineConfig(({ mode }) => ({
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
     __APP_MODE__: JSON.stringify(mode),
+  },
+  experimental: {
+    // Make built asset URLs install-root-aware at runtime. The `base` above bakes an
+    // absolute prefix into chunk imports and CSS asset refs, which breaks sub-folder/alias
+    // installs (e.g. /cms/). Instead resolve them against window.__XIBO_ASSET_BASE__, which
+    // the PHP shell sets to rootUri + 'app/'. Build-only — the dev server is unaffected.
+    renderBuiltUrl(filename: string, { hostType }: { hostType: 'js' | 'css' | 'html' }) {
+      if (hostType === 'js') {
+        // JS-hosted refs: chunk-to-chunk imports, dynamic imports, asset URLs from JS.
+        return { runtime: `window.__XIBO_ASSET_BASE__ + ${JSON.stringify(filename)}` };
+      }
+      // CSS/HTML can't use a runtime expression; `relative` resolves against the file's own
+      // URL (hashed assets sit next to their CSS in assets/), correct on any sub-path.
+      return { relative: true };
+    },
   },
 }));

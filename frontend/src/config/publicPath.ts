@@ -19,10 +19,33 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+declare global {
+  interface Window {
+    // Base where built assets + public files (locales) are served, injected by the PHP shell.
+    __XIBO_ASSET_BASE__?: string;
+  }
+}
+
 // Root URI injected by PHP via <meta name="public-path"> (login-spa.twig / app-spa.twig).
 // e.g. '/' for a root install, '/cms/' for a subfolder install.
 export const publicPath: string =
   document.querySelector<HTMLMetaElement>('meta[name="public-path"]')?.content ?? '/';
+
+// Base under which built assets AND public files (locale JSON, etc.) are served. This is the
+// install root plus the asset folder ('/app/' or '/cms/app/'), NOT the router basename (which
+// is just the install root). The PHP shell injects it as window.__XIBO_ASSET_BASE__ so it is
+// install-root-aware; the fallback covers the raw Vite dev server (no shell → no global), where
+// origin + the Vite base is correct.
+export const assetBase: string =
+  window.__XIBO_ASSET_BASE__ ?? window.location.origin + import.meta.env.BASE_URL;
+
+/**
+ * Joins a path onto the asset base, tolerating slashes on either side.
+ * e.g. withAssetBase('locale/langs/en.json') -> '/cms/app/locale/langs/en.json'.
+ */
+export function withAssetBase(path: string): string {
+  return assetBase.replace(/\/$/, '') + '/' + path.replace(/^\//, '');
+}
 
 /**
  * The React Router basename.
@@ -31,7 +54,7 @@ export const publicPath: string =
  * injects <meta name="public-path"> with the install root ('/' or '/cms/') and the app
  * owns clean URLs under it. Only when the Vite dev server serves the raw index.html
  * directly (no meta injected) do routes live under the Vite base (import.meta.env.BASE_URL,
- * e.g. '/prototype/'). So we key off the meta's presence, not import.meta.env.DEV — a dev
+ * e.g. '/app/'). So we key off the meta's presence, not import.meta.env.DEV — a dev
  * build reached through PHP still needs the clean-URL basename. The trailing slash is
  * stripped because React Router expects a basename without one.
  */

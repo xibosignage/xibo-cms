@@ -41,7 +41,7 @@ RewriteRule ^pwa/(.*)$ chromeos/$1 [NC,L]
 # all others - i.e. web
 # The React SPA has no dedicated rewrite: unmatched routes fall through to index.php,
 # and the Slim NotFound handler serves the SPA shell (see lib/Middleware/Handlers.php).
-# Real asset files under web/prototype/ are served directly by the !-f condition below.
+# Real asset files under web/app/ are served directly by the !-f condition below.
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !\.(css|js|png|jpg)$

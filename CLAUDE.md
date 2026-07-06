@@ -108,7 +108,7 @@ npm test
 npm run test:watch
 ```
 
-The Vite dev server proxies all routes except the SPA's own base (`import.meta.env.BASE_URL`, currently `/prototype/`) to `http://localhost` (the Docker PHP app). When developing the React frontend, Docker must be running. The proxy uses `changeOrigin: true`, so the PHP app sees requests as coming from `localhost` regardless of the Vite origin. Note: `/prototype/` is now only the internal *asset* base (where the built JS/CSS live and where the dev server mounts) — user-facing URLs are clean (`/design/layout`), served by PHP rendering the SPA shell (`views/app-spa.twig`) via the Slim NotFound handler.
+The Vite dev server proxies all routes except the SPA's own base (`import.meta.env.BASE_URL`, `/app/`) to `http://localhost` (the Docker PHP app). When developing the React frontend, Docker must be running. The proxy uses `changeOrigin: true`, so the PHP app sees requests as coming from `localhost` regardless of the Vite origin. Note: `/app/` is only the internal *asset* base (where the built JS/CSS live under `web/app/` and where the dev server mounts) — user-facing URLs are clean (`/design/layout`), served by PHP rendering the SPA shell (`views/app-spa.twig`) via the Slim NotFound handler. Built asset URLs are made install-root-aware at runtime via `vite.config.ts`'s `experimental.renderBuiltUrl` (which resolves chunks against `window.__XIBO_ASSET_BASE__`, injected by the shell as `rootUri + 'app/'`), so sub-folder/alias installs work.
 
 **Database Migrations** (via Phinx):
 ```bash
@@ -333,7 +333,7 @@ frontend/
 
 **React Frontend** (new — `frontend/`):
 
-The newer admin pages are built in React and served at clean root URLs (e.g. `/design/layout`, `/design/campaign`, `/displays/displays`). They are compiled by Vite (output to `frontend/dist/`, deployed to `web/prototype/` — the physical asset location; `base: '/prototype/'`) and their HTML shell is rendered by PHP (`views/app-spa.twig` via `ViteManifest`) from the Slim NotFound handler, so legacy PHP routes take precedence and any unmatched route falls through to the SPA. The React Router `basename` is derived at runtime (`frontend/src/config/publicPath.ts`): the Vite base in dev, the install root (`<meta name="public-path">`) in production.
+The newer admin pages are built in React and served at clean root URLs (e.g. `/design/layout`, `/design/campaign`, `/displays/displays`). They are compiled by Vite (output to `frontend/dist/`, deployed to `web/app/` — the physical asset location; `base: '/app/'`) and their HTML shell is rendered by PHP (`views/app-spa.twig` via `ViteManifest`) from the Slim NotFound handler, so legacy PHP routes take precedence and any unmatched route falls through to the SPA. Two runtime-derived, distinct bases (both from values the PHP shell injects, `frontend/src/config/publicPath.ts`): the React Router `basename` = the install root (`<meta name="public-path">`, `/` or `/cms/`); the **asset base** = install root + `app/` (`window.__XIBO_ASSET_BASE__`), used for code-split chunks and locale fetches. `ViteManifest` prefixes entry-point URLs with the install root too, so everything resolves on sub-folder/alias installs.
 
 Key patterns:
 - Pages live in `frontend/src/pages/{Section}/{PageName}/`

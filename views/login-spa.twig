@@ -21,6 +21,9 @@
         The | raw filter is safe because the JSON is already hardened before reaching Twig.
     #}
     <script nonce="{{ cspNonce }}">window.__LOGIN_CONFIG__ = {{ loginConfigJson | raw }};</script>
+
+    {# Base where built assets + public files (locales) are served — see app-spa.twig. #}
+    <script nonce="{{ cspNonce }}">window.__XIBO_ASSET_BASE__ = "{{ assetBase }}";</script>
 </head>
 <body>
     <div id="login-root"></div>

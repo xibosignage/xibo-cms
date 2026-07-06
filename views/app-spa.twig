@@ -10,6 +10,11 @@
     {# Install root (e.g. '/' or '/cms/'). React Router derives its basename from this in production. #}
     <meta name="public-path" content="{{ theme.rootUri() }}"/>
 
+    {# Base where built assets + public files (locales) are served. The SPA resolves code-split
+       chunks and locale files against this at runtime, so sub-folder/alias installs work.
+       Runs before the module scripts below (classic inline script executes at parse time). #}
+    <script nonce="{{ cspNonce }}">window.__XIBO_ASSET_BASE__ = "{{ assetBase }}";</script>
+
     <link rel="shortcut icon" href="{{ theme.rootUri() }}brand/favicon.ico"/>
     <link rel="stylesheet" href="{{ theme.rootUri() }}brand/theme.css">
 
