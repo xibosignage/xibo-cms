@@ -1,13 +1,26 @@
 <?php
 /*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (NullSession.php)
+ * Copyright (C) 2026 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Helper;
-
 
 class NullSession
 {
@@ -15,7 +28,7 @@ class NullSession
      * Set UserId
      * @param $userId
      */
-    function setUser($userId)
+    public function setUser($userId): void
     {
         $_SESSION['userid'] = $userId;
     }
@@ -25,16 +38,25 @@ class NullSession
      */
     public function regenerateSessionId()
     {
-
     }
 
     /**
      * Set Expired
      * @param $isExpired
      */
-    function setIsExpired($isExpired)
+    public function setIsExpired($isExpired)
     {
+    }
 
+    /**
+     * Is the session expired?
+     * There is no real session in this context (e.g. API), so report as expired
+     * to keep session-dependent behaviour switched off.
+     * @return bool
+     */
+    public function isExpired(): bool
+    {
+        return true;
     }
 
     /**
@@ -44,7 +66,7 @@ class NullSession
      * @param mixed|null $value
      * @return mixed
      */
-    public static function set($key, $secondKey, $value = null)
+    public static function set($key, $secondKey, $value = null): mixed
     {
         if (func_num_args() == 2) {
             return $secondKey;
@@ -59,7 +81,7 @@ class NullSession
      * @param string [Optional] $secondKey
      * @return bool
      */
-    public static function get($key, $secondKey = NULL)
+    public static function get($key, $secondKey = null): bool
     {
         return false;
     }

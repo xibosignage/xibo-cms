@@ -35,6 +35,7 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserNotificationFactory;
 use Xibo\Helper\AttachmentUploadHandler;
 use Xibo\Helper\Environment;
+use Xibo\Helper\NullSession;
 use Xibo\Helper\SendFile;
 use Xibo\Helper\Session;
 use Xibo\Service\DisplayNotifyService;
@@ -59,7 +60,7 @@ class Notification extends Base
         private readonly DisplayGroupFactory $displayGroupFactory,
         private readonly UserGroupFactory $userGroupFactory,
         private readonly DisplayNotifyService $displayNotifyService,
-        private readonly Session $session,
+        private readonly Session|NullSession $session,
     ) {
     }
 
