@@ -77,6 +77,10 @@ export default defineConfig(({ mode }) => ({
   },
   server: {
     port: 5173,
+    // ViteManifest (PHP) hardcodes http://localhost:5173 for dev asset/HMR URLs, so the
+    // dev server MUST bind 5173. Fail loudly if it's taken rather than silently drifting to
+    // 5174 — otherwise the PHP-served shell loads scripts from a port with nothing on it.
+    strictPort: true,
     open: '/prototype/',
     cors: {
       origin: true,

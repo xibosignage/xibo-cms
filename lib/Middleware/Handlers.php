@@ -179,6 +179,43 @@ class Handlers
                         'message' => __('Sorry we could not find that page.')
                     ], 404);
                 } else {
+                    // No server route matched. If this is a genuine navigation request, serve the
+                    // React SPA shell (HTTP 200) and let React Router resolve the route client-side.
+                    // Guard: only GET requests that accept HTML, and never asset/API paths — a missing
+                    // hashed asset or an unknown API call must still return a real 404, not the shell.
+                    $relativePath = '/' . ltrim(
+                        Str::replaceFirst($configService->rootUri(), '', $request->getUri()->getPath()),
+                        '/'
+                    );
+                    $assetOrApiPrefixes = ['/prototype/', '/json', '/api', '/preview', '/pwa', '/authorize'];
+                    $assetOrApiPrefixes[] = '/swagger.json';
+                    $isAssetOrApi = false;
+                    foreach ($assetOrApiPrefixes as $prefix) {
+                        if (str_starts_with($relativePath, $prefix)) {
+                            $isAssetOrApi = true;
+                            break;
+                        }
+                    }
+
+                    if ($request->getMethod() === 'GET'
+                        && str_contains($request->getHeaderLine('Accept'), 'text/html')
+                        && !$isAssetOrApi
+                    ) {
+                        try {
+                            // Throws if the manifest is present but the entry is missing (assets not built).
+                            $appJsUrl = \Xibo\Helper\ViteManifest::getJsUrl('index.html');
+                            return $twig->render($response, 'app-spa.twig', array_merge($viewParams, [
+                                'csrfToken'      => '',
+                                'appJsUrl'       => $appJsUrl,
+                                'appCssUrl'      => \Xibo\Helper\ViteManifest::getCssUrl('index.html'),
+                                'viteClientUrl'  => \Xibo\Helper\ViteManifest::getClientUrl(),
+                                'viteRefreshUrl' => \Xibo\Helper\ViteManifest::getRefreshUrl(),
+                            ]))->withStatus(200);
+                        } catch (\Throwable) {
+                            // Assets not built or render failed — fall through to the not-found page.
+                        }
+                    }
+
                     try {
                         return $twig->render($response, 'not-found.twig', $viewParams)->withStatus(404);
                     } catch (\Exception) {

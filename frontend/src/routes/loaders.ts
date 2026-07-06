@@ -79,7 +79,7 @@ export async function requireAuthLoader({ request }: { request: Request }) {
   }
 
   if (user.isPasswordChangeRequired === 1) {
-    throw redirect('/prototype/user/force-change-password');
+    throw redirect('/user/force-change-password');
   }
 
   return { user };

@@ -1,7 +1,7 @@
-// Root URI injected by PHP via <meta name="public-path"> in login-spa.twig.
-// e.g. '/' for a root install, '/cms/' for a subfolder install.
-export const publicPath: string =
-  document.querySelector<HTMLMetaElement>('meta[name="public-path"]')?.content ?? '/';
+// Re-exported for existing importers; the canonical definition lives in @/config/publicPath.
+import { publicPath } from '@/config/publicPath';
+
+export { publicPath };
 
 /**
  * Validates a priorRoute value before navigation. Mirrors PHP's
@@ -10,7 +10,7 @@ export const publicPath: string =
  */
 export function getSafeRedirectUrl(
   priorRoute: string | undefined,
-  fallback = `${publicPath}prototype/`,
+  fallback = `${publicPath}`,
 ): string {
   if (!priorRoute) return fallback;
 

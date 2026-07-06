@@ -85,13 +85,13 @@ class User extends Base
     {
         // Should we show this user the welcome page?
         if ($this->getUser()->newUserWizard == 0) {
-            return $response->withRedirect('/prototype/welcome');
+            return $response->withRedirect('/welcome');
         }
 
         // User wizard seen, go to the React dashboard
         $this->getLog()->debug('Showing the homepage: ' . $this->getUser()->homePageId);
 
-        return $response->withRedirect('/prototype/dashboard');
+        return $response->withRedirect('/dashboard');
     }
 
     /**
@@ -110,7 +110,7 @@ class User extends Base
             $this->getUser()->save(['validate' => false]);
         }
 
-        return $response->withRedirect($this->getConfig()->rootUri() . 'prototype/welcome');
+        return $response->withRedirect($this->getConfig()->rootUri() . 'welcome');
     }
 
     #[OA\Get(

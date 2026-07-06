@@ -10,5 +10,5 @@
   "category": "Display",
   "feature": "displays.reporting",
   "adminOnly": 0,
-  "prototype_url": "/prototype/reporting/time-connected"
+  "url": "/reporting/time-connected"
 }

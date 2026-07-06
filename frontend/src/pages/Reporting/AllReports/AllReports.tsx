@@ -114,10 +114,10 @@ function ReportCard({ report }: { report: Report }) {
         report.type === 'Export' ? t('Export') : t('View {{type}}', { type: t(report.type) })
       }
       onClick={() => {
-        if (report.prototype_url) {
-          // React report inside this SPA (mounted at basename /prototype), navigate
-          // client-side so the app/sidebar isn't torn down and rebooted.
-          navigate(report.prototype_url.replace(/^\/prototype/, ''));
+        if (report.url) {
+          // React report inside this SPA — navigate client-side so the app/sidebar
+          // isn't torn down and rebooted.
+          navigate(report.url);
         } else {
           // Legacy Twig report lives outside the SPA, so a full navigation is required.
           window.location.href = `/report/form/${report.name}`;

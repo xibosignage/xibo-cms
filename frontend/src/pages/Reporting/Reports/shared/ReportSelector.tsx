@@ -70,8 +70,8 @@ export default function ReportSelector({
                 }`}
                 onClick={() => {
                   if (!isActive) {
-                    if (report.prototype_url) {
-                      navigate(report.prototype_url.replace(/^\/prototype/, ''));
+                    if (report.url) {
+                      navigate(report.url);
                     } else {
                       window.location.href = `/report/form/${report.name}`;
                     }

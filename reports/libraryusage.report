@@ -10,5 +10,5 @@
   "category": "Library",
   "feature": "admin",
   "adminOnly": 1,
-  "prototype_url": "/prototype/reporting/library-usage"
+  "url": "/reporting/library-usage"
 }

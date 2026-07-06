@@ -108,7 +108,7 @@ npm test
 npm run test:watch
 ```
 
-The Vite dev server proxies all routes except `/prototype/` to `http://localhost` (the Docker PHP app). When developing the React frontend, Docker must be running. The proxy uses `changeOrigin: true`, so the PHP app sees requests as coming from `localhost` regardless of the Vite origin.
+The Vite dev server proxies all routes except the SPA's own base (`import.meta.env.BASE_URL`, currently `/prototype/`) to `http://localhost` (the Docker PHP app). When developing the React frontend, Docker must be running. The proxy uses `changeOrigin: true`, so the PHP app sees requests as coming from `localhost` regardless of the Vite origin. Note: `/prototype/` is now only the internal *asset* base (where the built JS/CSS live and where the dev server mounts) — user-facing URLs are clean (`/design/layout`), served by PHP rendering the SPA shell (`views/app-spa.twig`) via the Slim NotFound handler.
 
 **Database Migrations** (via Phinx):
 ```bash
@@ -333,7 +333,7 @@ frontend/
 
 **React Frontend** (new — `frontend/`):
 
-The newer admin pages are built in React and served at `/prototype/*` URLs (e.g. `/prototype/design/layout`, `/prototype/design/campaign`, `/prototype/displays/displays`). These are compiled by Vite and output to `web/dist/pages/`.
+The newer admin pages are built in React and served at clean root URLs (e.g. `/design/layout`, `/design/campaign`, `/displays/displays`). They are compiled by Vite (output to `frontend/dist/`, deployed to `web/prototype/` — the physical asset location; `base: '/prototype/'`) and their HTML shell is rendered by PHP (`views/app-spa.twig` via `ViteManifest`) from the Slim NotFound handler, so legacy PHP routes take precedence and any unmatched route falls through to the SPA. The React Router `basename` is derived at runtime (`frontend/src/config/publicPath.ts`): the Vite base in dev, the install root (`<meta name="public-path">`) in production.
 
 Key patterns:
 - Pages live in `frontend/src/pages/{Section}/{PageName}/`
