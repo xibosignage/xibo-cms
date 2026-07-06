@@ -26,6 +26,7 @@ interface TextProps extends React.HTMLAttributes<HTMLDivElement> {
   subtext?: string;
   weight?: 'normal' | 'bold';
   truncate?: boolean;
+  wrap?: boolean;
   className?: string;
 }
 
@@ -35,12 +36,13 @@ export function TextCell({
   className = '',
   weight = 'normal',
   truncate = false,
+  wrap = false,
   ...props
 }: TextProps) {
   return (
     <div className={`flex items-center w-full min-w-0 gap-2 ${className}`} {...props}>
       <span
-        className={`text-gray-800 text-sm ${truncate ? 'truncate' : ''} ${weight === 'bold' ? 'font-semibold' : ''}`}
+        className={`text-gray-800 text-sm ${truncate ? 'truncate' : ''} ${wrap ? 'min-w-0 break-words whitespace-normal' : ''} ${weight === 'bold' ? 'font-semibold' : ''}`}
       >
         {children}
       </span>
