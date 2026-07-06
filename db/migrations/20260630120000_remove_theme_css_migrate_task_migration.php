@@ -1,7 +1,8 @@
+<?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -19,40 +20,15 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+use Phinx\Migration\AbstractMigration;
 
-/* Move down content because we have a fixed navbar that is 50px tall */
-body {
-  padding-top: 50px;
-  padding-bottom: 20px;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
-}
-body {
-  /* Margin bottom by footer height */
-  margin-bottom: 60px;
-}
-.footer {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  /* Set the fixed height of the footer here */
-  height: 80px;
-  padding: 5px;
-}
-img.logo {
-	height: 60px;
-}
-.main-container {
-	margin-top: 25px;
-}
-.main-container button {
-	margin-left: -15px;
-	margin-right: -15px;
-	float: left;
-}
-.tab-pane {
-	padding-top: 25px;
+/**
+ * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
+ */
+class RemoveThemeCssMigrateTaskMigration extends AbstractMigration
+{
+    public function change(): void
+    {
+        $this->execute("DELETE FROM `task` WHERE `class` = '\\\\Xibo\\\\XTR\\\\ThemeCssMigrateTask'");
+    }
 }

@@ -33,6 +33,9 @@ If not, see <http://www.gnu.org/licenses/>.
 We recommend installing an official release via Docker. Instructions for doing so can be found in our 
 [documentation](https://xibosignage.com/docs/setup/cms-installation-guides).
 
+For self-hosted manual installations without Docker, see [MANUAL_INSTALL.md](MANUAL_INSTALL.md).
+Manual installations are community-supported only and not covered by the official administration manual.
+
 
 # Developing
 

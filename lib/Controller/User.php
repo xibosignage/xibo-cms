@@ -176,11 +176,26 @@ class User extends Base
             'supportUrl'  => $brandConfig['supportUrl']  ?? 'https://xibosignage.com',
         ];
 
-        // TODO: output some settings
+        // Cloud metadata.
+        // Only surfaced to super admins on Xibo-themed Cloud instances.
+        $cloudHosting = null;
+        if ($this->getUser()->isSuperAdmin()
+            && $branding['appName'] === 'Xibo'
+            && !empty($this->getConfig()->getSetting('cloud_renewal_date'))
+        ) {
+            $cloudHosting = [
+                'renewalDate' => $this->getConfig()->getSetting('cloud_renewal_date'),
+                'isDemo'      => $this->getConfig()->getSetting('cloud_demo') == 1,
+                'isMonthly'   => $this->getConfig()->getSetting('cloud_monthly') == 1,
+                'willRenew'   => $this->getConfig()->getSetting('cloud_renewal_status') == 1,
+            ];
+        }
+
         return $response->withJson(array_merge($this->getUser()->toArray(), [
             'settings' => $settings,
             'features' => $this->getUserFeatures(),
             'branding' => $branding,
+            'cloudHosting' => $cloudHosting,
         ]));
     }
 

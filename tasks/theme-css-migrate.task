@@ -1,5 +1,0 @@
-{
-  "name": "Theme CSS Migration",
-  "class": "\\Xibo\\XTR\\ThemeCssMigrateTask",
-  "options": []
-}
