@@ -218,8 +218,8 @@ export interface UpdateMediaRequest {
   tags?: string;
   retired?: number;
   enableStat?: string;
-  updateInLayouts?: number; // temporary field
-  orientation?: 'portrait' | 'landscape';
+  updateInLayouts?: number;
+  orientation?: 'portrait' | 'landscape' | 'square';
   expires?: string;
   mediaNoExpiryDate?: number;
 }
