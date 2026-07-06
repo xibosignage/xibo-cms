@@ -132,20 +132,34 @@ export default function AddAndEditDisplayGroupModal({
   const [previewSorting, setPreviewSorting] = useState<SortingState>([]);
 
   const debouncedCriteria = useDebounce(draft.dynamicCriteria, 500);
+  const debouncedCriteriaTags = useDebounce(draft.dynamicCriteriaTags, 500);
   const hasActiveFilters =
-    draft.isDynamic && (debouncedCriteria.trim() !== '' || draft.dynamicCriteriaTags.trim() !== '');
+    draft.isDynamic &&
+    (debouncedCriteria.trim() !== '' || debouncedCriteriaTags.trim() !== '');
 
   const { data: previewQueryData, isFetching: isFetchingPreview } = useQuery({
     queryKey: [
       'displays',
       'dgPreview',
-      { criteria: debouncedCriteria, pagination: previewPagination },
+      {
+        criteria: debouncedCriteria,
+        logicalOperatorName: draft.logicalOperatorName,
+        criteriaTags: debouncedCriteriaTags,
+        exactTags: draft.exactTags,
+        logicalOperator: draft.logicalOperator,
+        pagination: previewPagination,
+      },
     ],
     queryFn: () =>
       fetchDisplays({
         start: previewPagination.pageIndex * previewPagination.pageSize,
         length: previewPagination.pageSize,
-        keyword: debouncedCriteria || undefined,
+        display: debouncedCriteria || undefined,
+        useRegexForName: 1,
+        logicalOperatorName: draft.logicalOperatorName,
+        tags: debouncedCriteriaTags || undefined,
+        exactTags: draft.exactTags ? 1 : 0,
+        logicalOperator: draft.logicalOperator,
       }),
     enabled: hasActiveFilters,
     staleTime: 1000 * 30,
