@@ -1,30 +1,24 @@
-# Custom Modules
-This folder is provided as a reasonable place to copy/develop custom modules. This folder is auto-loaded based on the 
-`Xibo\Custom` namespace.
-
-This folder is also monitored by the Modules Page for `.json` files describing modules available to be installed, the 
-structure of such a file is:
-
-``` json
-{
-  "title": "Module Title",
-  "author": "Module Author",
-  "description": "Module Description",
-  "name": "code-name",
-  "class": "Xibo\\Custom\\ClassName"
-}
-```
-
-The module class must `extend Xibo\Widget\ModuleWidget` and implement the installOrUpdate method.
-
-We recommend that modules put their Twig Views in a sub-folder of this one, named as their module name. This should be
-set in `installOrUpdate` like `$module->viewPath = '../custom/{name}';`.
+# Custom Folder
 
 
-## Web Accessible Resources
-All web accessible resources must placed in the `/web/modules` folder and be installed to the library in `installFiles`.
+This folder is provided as a reasonable place to copy/develop custom modules. It is autoloaded by Composer under the `Xibo\Custom` PSR-4 namespace. It is not intended for use for open-ended third party customisations.
 
+### Custom modules (`custom/modules/`)
 
-# Theme Views
-This location can also be used for theme views - we recommend a sub-folder for each theme. The theme `config.php` file
-should set its `view_path` to `PROJECT_ROOT . '/custom/folder-name`.
+Place module XML definitions in `custom/modules/`.  The module factory discovers them automatically.
+The corresponding PHP class should live in `custom/` under the `Xibo\Custom` namespace.
+
+### Middleware
+
+Custom middleware classes (e.g. SAML) are loaded by reference from `$middleware` in`web/settings-custom.php`. The class itself can live anywhere that Composer can autoload it, including `custom/` via the `Xibo\Custom` namespace.
+
+### Task classes
+
+Background tasks are registered directly in the database via a Phinx migration that references the fully-qualified class name. The class itself can live in `custom/`.
+
+## Not supported in v4.5
+
+- **Custom connectors** (`.connector`) : JSON file discovery from `custom/` is removed. All connectors are registered in the database as system connectors.
+- **Custom reports** (`.report`) : JSON file discovery from `custom/` is removed. Only built-in reports in `reports/` are loaded.
+- **Custom Twig views** (`custom/`) : is no longer in the Twig filesystem loader path. Module templates should live in `modules/` or be served by a React component.
+- **Custom display profile types** : the runtime middleware registration mechanism (`CustomDisplayProfileMiddlewareTrait`) is removed. Only the built-in profile types (Android, ChromeOS, Hisense, Linux, webOS, Tizen and Windows) are supported.

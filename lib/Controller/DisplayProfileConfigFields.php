@@ -26,16 +26,18 @@ use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Trait DisplayProfileConfigFields
+ *
  * @package Xibo\Controller
  */
 trait DisplayProfileConfigFields
 {
     /**
      * Edit config fields
-     * @param \Xibo\Entity\DisplayProfile $displayProfile
-     * @param SanitizerInterface $sanitizedParams
-     * @param null|array $config if empty will edit the config of provided display profile
-     * @param \Xibo\Entity\Display $display
+     *
+     * @param  \Xibo\Entity\DisplayProfile $displayProfile
+     * @param  SanitizerInterface          $sanitizedParams
+     * @param  null|array                  $config          if empty will edit the config of provided display profile
+     * @param  \Xibo\Entity\Display        $display
      * @return null|array
      * @throws InvalidArgumentException
      * @throws \Xibo\Support\Exception\NotFoundException
@@ -116,12 +118,7 @@ trait DisplayProfileConfigFields
                 break;
 
             default:
-                if ($displayProfile->isCustom()) {
-                    $this->getLog()->info('Edit for custom Display profile type ' . $displayProfile->getClientType());
-                    $config = $displayProfile->handleCustomFields($sanitizedParams, $config, $display);
-                } else {
-                    $this->getLog()->info('Edit for unknown type ' . $displayProfile->getClientType());
-                }
+                $this->getLog()->warning('Edit for unknown display profile type ' . $displayProfile->getClientType());
         }
 
         if ($changedSettings != []) {
@@ -2370,8 +2367,10 @@ trait DisplayProfileConfigFields
 
                     if (strlen($timerOn) != 5 || strlen($timerOff) != 5) {
                         throw new InvalidArgumentException(
-                            __('On/Off Timers: Please enter a on and off date for any'
-                                . ' row with a day selected, or remove that row'),
+                            __(
+                                'On/Off Timers: Please enter a on and off date for any'
+                                . ' row with a day selected, or remove that row'
+                            ),
                             'timers'
                         );
                     }

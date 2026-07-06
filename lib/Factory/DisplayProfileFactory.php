@@ -23,18 +23,15 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\DisplayProfile;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Support\Exception\GeneralException;
-use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
-use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Class DisplayProfileFactory
+ *
  * @package Xibo\Factory
  */
 class DisplayProfileFactory extends BaseFactory
 {
-    private array $customProfileSettings = [];
 
     public function __construct(
         private readonly ConfigServiceInterface $config,
@@ -61,8 +58,8 @@ class DisplayProfileFactory extends BaseFactory
     }
 
     /**
-     * @param int $displayProfileId
-     * @param bool $disableUserCheck
+     * @param  int  $displayProfileId
+     * @param  bool $disableUserCheck
      * @return DisplayProfile
      * @throws NotFoundException
      */
@@ -78,14 +75,13 @@ class DisplayProfileFactory extends BaseFactory
         }
 
         $profile = $profiles[0];
-        /* @var DisplayProfile $profile */
 
         $profile->load([]);
         return $profile;
     }
 
     /**
-     * @param string $type
+     * @param  string $type
      * @return DisplayProfile
      * @throws NotFoundException
      */
@@ -103,7 +99,7 @@ class DisplayProfileFactory extends BaseFactory
     }
 
     /**
-     * @param $clientType
+     * @param  $clientType
      * @return DisplayProfile
      * @throws NotFoundException
      */
@@ -122,7 +118,8 @@ class DisplayProfileFactory extends BaseFactory
 
     /**
      * Get by Command Id
-     * @param $commandId
+     *
+     * @param  $commandId
      * @return DisplayProfile[]
      * @throws NotFoundException
      */
@@ -134,19 +131,6 @@ class DisplayProfileFactory extends BaseFactory
     public function getByOwnerId($ownerId)
     {
         return $this->query(null, ['disableUserCheck' => 1, 'userId' => $ownerId]);
-    }
-
-    public function createCustomProfile($options)
-    {
-        $params = $this->getSanitizer($options);
-        $displayProfile = $this->createEmpty();
-        $displayProfile->name = $params->getString('name');
-        $displayProfile->type = $params->getString('type');
-        $displayProfile->isDefault = $params->getCheckbox('isDefault');
-        $displayProfile->userId = $params->getInt('userId');
-        $displayProfile->isCustom = 1;
-
-        return $displayProfile;
     }
 
     /**
@@ -440,24 +424,20 @@ class DisplayProfileFactory extends BaseFactory
         }
 
         if (!isset($config[$type])) {
-            try {
-                $config[$type] = $this->getCustomProfileConfig($type);
-            } catch (GeneralException $exception) {
-                $this->getLog()->error('loadForType: error with ' . $type . ', e = ' . $exception->getMessage());
-                $config[$type] = $this->getUnknownProfile($type)->getProfileConfig();
-            }
+            $this->getLog()->warning('loadForType: unknown profile type ' . $type . ', using empty config');
+            $config[$type] = $this->getUnknownProfile($type)->getProfileConfig();
         }
 
         return $config[$type];
     }
 
     /**
-     * @param array $sortOrder
-     * @param array $filterBy
+     * @param  ?array $sortOrder
+     * @param  array $filterBy
      * @return DisplayProfile[]
      * @throws NotFoundException
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query(?array $sortOrder = null, array $filterBy = []): array
     {
         $profiles = [];
         $parsedFilter = $this->getSanitizer($filterBy);
@@ -568,6 +548,7 @@ class DisplayProfileFactory extends BaseFactory
 
     /**
      * Called by the Display Profile page and Add form
+     *
      * @return array
      */
     public function getAvailableTypes(): array
@@ -596,93 +577,6 @@ class DisplayProfileFactory extends BaseFactory
         }
 
         return $entries;
-    }
-
-    public function registerCustomDisplayProfile($type, $class, $template, $defaultConfig, $handleCustomFields)
-    {
-        if (!array_key_exists($type, $this->customProfileSettings)) {
-            $this->customProfileSettings[$type] = [
-                'class' => $class,
-                'template' => $template,
-                'defaultConfig' => $defaultConfig,
-                'handleCustomFields' => $handleCustomFields
-            ];
-        }
-    }
-
-    public function getCustomEditTemplate($type)
-    {
-        $settings = $this->customProfileSettings[$type] ?? null;
-
-        if ($settings === null) {
-            throw new InvalidArgumentException(
-                sprintf(__('Custom Display Profile not registered correctly for type %s'), $type),
-            );
-        }
-
-        if (!array_key_exists('template', $settings)) {
-            throw new InvalidArgumentException(
-                sprintf(__('Custom template not registered correctly for type %s'), $type),
-            );
-        }
-
-        $function = $settings['template'];
-        return $settings['class']::$function();
-    }
-
-    public function getCustomProfileConfig($type)
-    {
-        $settings = $this->customProfileSettings[$type] ?? null;
-
-        if ($settings === null) {
-            throw new InvalidArgumentException(
-                sprintf(__('Custom Display Profile not registered correctly for type %s'), $type),
-            );
-        }
-
-        if (!array_key_exists('defaultConfig', $settings)) {
-            throw new InvalidArgumentException(
-                sprintf(__('Custom config not registered correctly for type %s'), $type),
-            );
-        }
-
-        $function = $settings['defaultConfig'];
-        return $settings['class']::$function($this->config);
-    }
-
-    public function isCustomType($type)
-    {
-        $results = $this->getStore()->select(
-            'SELECT displayProfileId FROM `displayprofile` WHERE isCustom = 1 AND type = :type',
-            ['type' => $type],
-        );
-
-        return (count($results) >= 1) ? 1 : 0;
-    }
-
-    public function handleCustomFields(
-        DisplayProfile $displayProfile,
-        SanitizerInterface $sanitizedParams,
-        $config,
-        $display,
-    ) {
-        $clientType = $displayProfile->getClientType();
-        $settings = $this->customProfileSettings[$clientType] ?? null;
-
-        if ($settings === null) {
-            throw new InvalidArgumentException(
-                sprintf(__('Custom Display Profile not registered correctly for type %s'), $clientType),
-            );
-        }
-
-        if (!array_key_exists('handleCustomFields', $settings)) {
-            throw new InvalidArgumentException(
-                sprintf(__('Custom fields handling not registered correctly for type %s'), $clientType),
-            );
-        }
-
-        $function = $settings['handleCustomFields'];
-        return $settings['class']::$function($displayProfile, $sanitizedParams, $config, $display, $this->getLog());
     }
 
     public function getOrCreateHisenseClone(DisplayProfile $source): DisplayProfile

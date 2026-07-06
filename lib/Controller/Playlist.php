@@ -706,7 +706,7 @@ class Playlist extends Base
         if ($playlist->isDynamic === 1) {
             $filterMediaName = $sanitizedParams->getString('filterMediaName');
             $filterMediaTag = $sanitizedParams->getString('filterMediaTag');
-            $filterFolderId = $sanitizedParams->getString('filterFolderId');
+            $filterFolderId = $sanitizedParams->getInt('filterFolderId');
 
             if (empty($filterMediaName) && empty($filterMediaTag) && empty($filterFolderId)) {
                 throw new InvalidArgumentException(__('No filters have been set for this dynamic Playlist!'));

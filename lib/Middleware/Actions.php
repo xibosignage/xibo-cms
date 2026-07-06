@@ -27,7 +27,6 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
-use Slim\Routing\RouteContext;
 use Xibo\Entity\User;
 use Xibo\Entity\UserNotification;
 use Xibo\Factory\UserNotificationFactory;
@@ -58,20 +57,20 @@ class Actions implements Middleware
         $app = $this->app;
         $container = $app->getContainer();
 
-        // Get the current route pattern
-        $routeContext = RouteContext::fromRequest($request);
-        $route = $routeContext->getRoute();
-        $resource = $route->getPattern();
-        $routeParser = $app->getRouteCollector()->getRouteParser();
-
         // Do we have a user set?
         /** @var User $user */
         $user = $container->get('user');
 
-        if (!$this->isAjax($request) && $user->isPasswordChangeRequired == 1 && $resource != '/user/page/password') {
+        // Force a password change by redirecting to the React force-change-password page.
+        // The React SPA (served from /prototype via .htaccess) guards this client-side too,
+        // but this catches full-page loads of the remaining server-rendered legacy pages.
+        if (!$this->isAjax($request) && $user->isPasswordChangeRequired == 1) {
             return $handler->handle($request)
                 ->withStatus(302)
-                ->withHeader('Location', $routeParser->urlFor('user.force.change.password.page'));
+                ->withHeader(
+                    'Location',
+                    $container->get('configService')->rootUri() . 'prototype/user/force-change-password'
+                );
         }
 
         return $handler->handle($request);

@@ -219,6 +219,6 @@ export const getLogsColumns = (t: TFunction): ColumnDef<LogEntry>[] => [
     accessorKey: 'message',
     header: t('Message'),
     size: 300,
-    cell: (info) => <TextCell>{decodeHtmlEntities(info.getValue<string>())}</TextCell>,
+    cell: (info) => <TextCell wrap>{decodeHtmlEntities(info.getValue<string>())}</TextCell>,
   },
 ];

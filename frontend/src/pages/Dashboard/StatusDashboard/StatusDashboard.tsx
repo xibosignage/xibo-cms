@@ -27,7 +27,6 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
-import cloud from '../../../assets/dashboard/cloud-arrow-up.svg';
 import display from '../../../assets/dashboard/display.svg';
 import server from '../../../assets/dashboard/server.svg';
 import users from '../../../assets/dashboard/user.svg';
@@ -38,7 +37,6 @@ import DisplayChart from './components/DisplayChart';
 import LibraryUsageChart from './components/LibraryUsageChart';
 import { useDashboardStats } from './hooks/useDashboardStats';
 
-import Button from '@/components/ui/Button';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { INITIAL_FILTER_STATE } from '@/pages/Displays/Displays/DisplaysConfig';
 import { useDisplaysData } from '@/pages/Displays/Displays/hooks/useDisplaysData';
@@ -190,19 +188,10 @@ export default function Dashboard() {
   return (
     <section className="flex flex-col space-y-5 p-5">
       {/* Top Stats */}
-      <div className="grid grid-cols-4 gap-5">
+      <div className="grid grid-cols-3 gap-5">
         <StatCard icon={display} value={displayCount} label={t('Active Displays')} />
         <StatCard icon={server} value={librarySize} label={t('Remaining Storage')} />
         <StatCard icon={users} value={userCount} label={t('Active Users')} />
-        <StatCard
-          icon={cloud}
-          value={t('Cloud')}
-          label={
-            <Button variant="tertiary" rightIcon={ArrowRight} className="p-0">
-              {t('Manage Account')}
-            </Button>
-          }
-        />
       </div>
 
       {/* Charts & News */}

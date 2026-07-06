@@ -422,9 +422,6 @@ class StatusDashboard extends Base
             $data['widget-error'] = 'Unable to get widget details';
         }
 
-        // Do we have an embedded widget?
-        $data['embeddedWidget'] = html_entity_decode($this->getConfig()->getSetting('EMBEDDED_STATUS_WIDGET'));
-
         return $response
             ->withStatus(200)
             ->withJson($data);

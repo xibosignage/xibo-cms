@@ -163,18 +163,10 @@ class Module extends Base
             $totalCount
         );
 
-        if ($this->isJson($request) || $this->isApi($request)) {
-            return $response
-                ->withStatus(200)
-                ->withHeader('X-Total-Count', $totalCount)
-                ->withJson($modules);
-        }
-
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $totalCount;
-        $this->getState()->setData($modules);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $totalCount)
+            ->withJson($modules);
     }
 
     #[OA\Get(

@@ -67,10 +67,10 @@ class WidgetHtmlRenderer
     private $moduleFactory;
 
     /**
-     * @param string $cachePath
-     * @param Twig $twig
+     * @param string                 $cachePath
+     * @param Twig                   $twig
      * @param ConfigServiceInterface $config
-     * @param ModuleFactory $moduleFactory
+     * @param ModuleFactory          $moduleFactory
      */
     public function __construct(
         string $cachePath,
@@ -85,7 +85,7 @@ class WidgetHtmlRenderer
     }
 
     /**
-     * @param \Psr\Log\LoggerInterface $logger
+     * @param  \Psr\Log\LoggerInterface $logger
      * @return $this
      */
     public function useLogger(LoggerInterface $logger): WidgetHtmlRenderer
@@ -179,8 +179,9 @@ class WidgetHtmlRenderer
     /**
      * Render or cache.
      * ----------------
-     * @param ModuleTemplate[] $moduleTemplates
-     * @param \Xibo\Entity\Widget[] $widgets
+     *
+     * @param  ModuleTemplate[]      $moduleTemplates
+     * @param  \Xibo\Entity\Widget[] $widgets
      * @throws \Twig\Error\SyntaxError
      * @throws \Twig\Error\RuntimeError
      * @throws \Twig\Error\LoaderError
@@ -243,10 +244,12 @@ class WidgetHtmlRenderer
         $modifiedDt = max(Carbon::createFromTimestamp($widgetModifiedDt), $playlistModifiedDt);
         $cachedDt = Carbon::createFromTimestamp(file_exists($cachePath) ? filemtime($cachePath) : 0);
 
-        $this->getLog()->debug('renderOrCache: Cache details - modifiedDt: '
+        $this->getLog()->debug(
+            'renderOrCache: Cache details - modifiedDt: '
             . $modifiedDt->format(DateFormatHelper::getSystemFormat())
             . ', cachedDt: ' . $cachedDt->format(DateFormatHelper::getSystemFormat())
-            . ', cachePath: ' . $cachePath);
+            . ', cachePath: ' . $cachePath
+        );
 
         if ($modifiedDt->greaterThan($cachedDt) || !file_get_contents($cachePath)) {
             $this->getLog()->debug('renderOrCache: We will need to regenerate');
@@ -277,10 +280,11 @@ class WidgetHtmlRenderer
 
     /**
      * Decorate the HTML output for a preview
-     * @param \Xibo\Entity\Region $region
-     * @param string $output
-     * @param callable $urlFor
-     * @param \Psr\Http\Message\ServerRequestInterface $request
+     *
+     * @param  \Xibo\Entity\Region                      $region
+     * @param  string                                   $output
+     * @param  callable                                 $urlFor
+     * @param  \Psr\Http\Message\ServerRequestInterface $request
      * @return string
      */
     public function decorateForPreview(
@@ -354,12 +358,13 @@ class WidgetHtmlRenderer
 
     /**
      * Decorate the HTML output for a player
-     * @param \Xibo\Entity\Display $display
-     * @param string $output
-     * @param array $storedAs A keyed array of library media this widget has access to
-     * @param bool $isSupportsDataUrl
-     * @param array $data A keyed array of data this widget has access to
-     * @param \Xibo\Widget\Definition\Asset[] $assets A keyed array of assets this widget has access to
+     *
+     * @param  \Xibo\Entity\Display            $display
+     * @param  string                          $output
+     * @param  array                           $storedAs          A keyed array of library media this widget has access to
+     * @param  bool                            $isSupportsDataUrl
+     * @param  array                           $data              A keyed array of data this widget has access to
+     * @param  \Xibo\Widget\Definition\Asset[] $assets            A keyed array of assets this widget has access to
      * @return string
      * @throws \Xibo\Support\Exception\NotFoundException
      */
@@ -542,8 +547,9 @@ class WidgetHtmlRenderer
 
     /**
      * Render out the widgets HTML
-     * @param \Xibo\Entity\Widget[] $widgets
-     * @param ModuleTemplate[] $moduleTemplates
+     *
+     * @param  \Xibo\Entity\Widget[] $widgets
+     * @param  ModuleTemplate[]      $moduleTemplates
      * @throws \Twig\Error\SyntaxError
      * @throws \Twig\Error\RuntimeError
      * @throws \Twig\Error\LoaderError
@@ -618,8 +624,10 @@ class WidgetHtmlRenderer
         // Render each widget out into the html
         foreach ($widgets as $widget) {
             $this->getLog()->debug('render: widget to process is widgetId: ' . $widget->widgetId);
-            $this->getLog()->debug('render: ' . count($widgets) . ' widgets, '
-                . count($moduleTemplates) . ' templates');
+            $this->getLog()->debug(
+                'render: ' . count($widgets) . ' widgets, '
+                . count($moduleTemplates) . ' templates'
+            );
 
             // Get the module.
             $module = $this->moduleFactory->getByType($widget->type);
@@ -812,13 +820,17 @@ class WidgetHtmlRenderer
                     $widgetElements[$widgetIndex]['widgetId'] = $widget->widgetId;
 
                     foreach (($widgetElement['elements'] ?? []) as $elementIndex => $element) {
-                        $this->getLog()->debug('render: elements: processing widget index ' . $widgetIndex
-                            . ', element index ' . $elementIndex . ' with id ' . $element['id']);
+                        $this->getLog()->debug(
+                            'render: elements: processing widget index ' . $widgetIndex
+                            . ', element index ' . $elementIndex . ' with id ' . $element['id']
+                        );
 
                         foreach ($moduleTemplates as $moduleTemplate) {
                             if ($moduleTemplate->templateId === $element['id']) {
-                                $this->getLog()->debug('render: elements: found template for element '
-                                    . $element['id']);
+                                $this->getLog()->debug(
+                                    'render: elements: found template for element '
+                                    . $element['id']
+                                );
 
                                 // Merge the properties on the element with the properties on the template.
                                 $widgetElements[$widgetIndex]['elements'][$elementIndex]['properties'] =
@@ -971,8 +983,9 @@ class WidgetHtmlRenderer
 
     /**
      * Decorate translations in template files.
-     * @param string $content
-     * @param \GetText\Translator $translator
+     *
+     * @param  string              $content
+     * @param  ?\GetText\Translator $translator
      * @return string
      */
     private function decorateTranslations(string $content, ?\Gettext\Translator $translator): string
@@ -998,7 +1011,7 @@ class WidgetHtmlRenderer
     }
 
     /**
-     * @param \Xibo\Entity\Widget $widget
+     * @param  \Xibo\Entity\Widget $widget
      * @return void
      */
     public function clearWidgetCache(Widget $widget)
@@ -1022,13 +1035,16 @@ class WidgetHtmlRenderer
             }
             rmdir($cachePath);
         } catch (\UnexpectedValueException $unexpectedValueException) {
-            $this->logger->debug('HTML cache doesn\'t exist yet or cannot be deleted. '
-                . $unexpectedValueException->getMessage());
+            $this->logger->debug(
+                'HTML cache doesn\'t exist yet or cannot be deleted. '
+                . $unexpectedValueException->getMessage()
+            );
         }
     }
 
     /**
      * Get a Twig Sandbox
+     *
      * @return \Slim\Views\Twig
      * @throws \Twig\Error\LoaderError
      */
@@ -1037,7 +1053,6 @@ class WidgetHtmlRenderer
         // Create a Twig Environment with a Sandbox
         $sandbox = Twig::create([
             PROJECT_ROOT . '/modules',
-            PROJECT_ROOT . '/custom',
         ], [
             'cache' => false,
         ]);

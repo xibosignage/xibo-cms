@@ -782,18 +782,6 @@ class Settings extends Base
             );
         }
 
-        if ($this->getConfig()->isSettingEditable('EMBEDDED_STATUS_WIDGET')) {
-            $this->handleChangedSettings(
-                'EMBEDDED_STATUS_WIDGET',
-                $sanitizedParams->getString('EMBEDDED_STATUS_WIDGET'),
-                $changedSettings
-            );
-            $this->getConfig()->changeSetting(
-                'EMBEDDED_STATUS_WIDGET',
-                $sanitizedParams->getString('EMBEDDED_STATUS_WIDGET')
-            );
-        }
-
         if ($this->getConfig()->isSettingEditable('DEFAULTS_IMPORTED')) {
             $this->handleChangedSettings(
                 'DEFAULTS_IMPORTED',

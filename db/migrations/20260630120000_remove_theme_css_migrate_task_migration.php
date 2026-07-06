@@ -1,8 +1,8 @@
-{#
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+<?php
+/*
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -19,10 +19,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-#}
-{% extends "base.twig" %}
 
-{% block content %}
-    {{ globalError }}
-    {{ message }}
-{% endblock %}
+use Phinx\Migration\AbstractMigration;
+
+/**
+ * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
+ */
+class RemoveThemeCssMigrateTaskMigration extends AbstractMigration
+{
+    public function change(): void
+    {
+        $this->execute("DELETE FROM `task` WHERE `class` = '\\\\Xibo\\\\XTR\\\\ThemeCssMigrateTask'");
+    }
+}

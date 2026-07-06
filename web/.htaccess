@@ -22,11 +22,6 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_URI} ^/api/.*$
 RewriteRule ^ api/index.php [QSA,L]
 
-# install
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_URI} ^/install/.*$
-RewriteRule ^ install/index.php [QSA,L]
-
 # preview
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_URI} ^/preview/.*$

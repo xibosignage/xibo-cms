@@ -84,12 +84,10 @@ describe('Edit Media — form fields', () => {
   // Tag input — add a new tag in tag|value format.
   //
   // Start with a media item that has no tags. Open the edit modal. Find the tag
-  // input box. Type season|summer into it and press Enter. Check that a pill with
-  // the text season appears.
-  // BUG: pill only shows 'season' — the |value part is stripped from display.
-  // Expected: the full 'season|summer' string should appear in the pill.
+  // input box. Type season|summer into it and press Enter. Check that a pill
+  // showing the full 'season|summer' string appears.
   // ---------------------------------------------------------------------------
-  test.fails('Tag input accepts new tags in tag|value format', async () => {
+  test('Tag input accepts new tags in tag|value format', async () => {
     mockMediaData({
       data: { rows: [{ ...mockEditMedia, tags: [] }], totalCount: 1 },
       isFetching: false,
@@ -104,16 +102,14 @@ describe('Edit Media — form fields', () => {
     fireEvent.change(tagInput, { target: { value: 'season|summer' } });
     fireEvent.keyDown(tagInput, { key: 'Enter' });
 
-    // Expected: full tag|value string is shown in the pill
     expect(screen.getByText('season|summer')).toBeInTheDocument();
   });
 
   // ---------------------------------------------------------------------------
-  // BUG: tag typed into the input but not committed with Enter is silently
-  // dropped on save. Expected: the uncommitted input value should be included
-  // in the saved payload.
+  // Tag typed into the input but not committed with Enter is included on save
+  // via collectTags picking up the pending input value.
   // ---------------------------------------------------------------------------
-  test.fails('Tag typed without pressing Enter is included when form is saved', async () => {
+  test('Tag typed without pressing Enter is included when form is saved', async () => {
     mockMediaData({
       data: { rows: [{ ...mockEditMedia, tags: [] }], totalCount: 1 },
       isFetching: false,
@@ -157,12 +153,10 @@ describe('Edit Media — form fields', () => {
     fireEvent.change(tagInput, { target: { value: 'Tag|value' } });
     fireEvent.keyDown(tagInput, { key: 'Enter' });
 
-    // Expected: pill shows 'Tag', not 'TAg'
-    expect(within(dialog).getByText('Tag')).toBeInTheDocument();
+    // Expected: pill shows 'Tag|value' with original capitalisation
+    expect(within(dialog).getByText('Tag|value')).toBeInTheDocument();
   });
 
-  // ---------------------------------------------------------------------------
-  // BUG: tags with Season|summer only saves Season.
   // ---------------------------------------------------------------------------
   test('Tag name preserves original capitalisation when added', async () => {
     mockMediaData({
@@ -179,8 +173,8 @@ describe('Edit Media — form fields', () => {
     fireEvent.change(tagInput, { target: { value: 'Season|summer' } });
     fireEvent.keyDown(tagInput, { key: 'Enter' });
 
-    // Expected: pill shows 'Season', not 'season'
-    expect(within(dialog).getByText('Season')).toBeInTheDocument();
+    // Expected: pill shows 'Season|summer' with original capitalisation
+    expect(within(dialog).getByText('Season|summer')).toBeInTheDocument();
   });
 
   // ---------------------------------------------------------------------------
@@ -193,15 +187,15 @@ describe('Edit Media — form fields', () => {
     renderMediaPage();
     const dialog = await openEditModal();
 
-    // 'nature' also appears as a tag badge in the table row behind the modal,
+    // 'nature|forest' also appears as a tag badge in the table row behind the modal,
     // so scope all queries to the dialog to avoid ambiguity.
-    expect(within(dialog).getByText('nature')).toBeInTheDocument();
+    expect(within(dialog).getByText('nature|forest')).toBeInTheDocument();
 
     // Find the tag pill span inside the dialog and click its remove button
-    const tagPill = within(dialog).getByText('nature').closest('span')!;
+    const tagPill = within(dialog).getByText('nature|forest').closest('span')!;
     fireEvent.click(within(tagPill).getByRole('button'));
 
-    expect(within(dialog).queryByText('nature')).not.toBeInTheDocument();
+    expect(within(dialog).queryByText('nature|forest')).not.toBeInTheDocument();
   });
 
   // ---------------------------------------------------------------------------

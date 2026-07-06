@@ -23,6 +23,7 @@ import { Menu } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { matchPath } from 'react-router-dom';
 
+import CloudDropdown from './CloudDropdown';
 import NotificationDropdown from './NotificationDropdown';
 import UserMenu from './UserMenu/UserMenu';
 
@@ -73,6 +74,8 @@ export default function TopNav({ pathName, onToggleMobileDrawer: onToggleSidebar
           <div className="flex align-middle font-semibold text-[16px]">{t(pageTitle)}</div>
         </div>
         <div className="center gap-x-2">
+          {/* Self-hides unless super admin on an Xibo-themed Cloud instance */}
+          <CloudDropdown />
           <div className="h-9.5 w-9.5 center flex">
             <NotificationDropdown />
           </div>
