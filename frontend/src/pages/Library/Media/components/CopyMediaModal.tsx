@@ -22,7 +22,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import TagInput, { collectTags } from '@/components/ui/forms/TagInput';
+import TagInput from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
 import type { Media } from '@/types/media';
@@ -49,14 +49,12 @@ export default function CopyMediaModal({
   const { t } = useTranslation();
   const [newName, setNewName] = useState('');
   const [newTags, setNewTags] = useState([] as Tag[]);
-  const [pendingTagInput, setPendingTagInput] = useState('');
   const [error, setError] = useState<string | undefined>();
 
   useEffect(() => {
     if (media && isOpen) {
       setNewName(incrementName(media.name));
       setNewTags(media.tags ?? []);
-      setPendingTagInput('');
     }
   }, [media, isOpen]);
 
@@ -76,9 +74,7 @@ export default function CopyMediaModal({
     }
 
     setError(undefined);
-    const finalTags = collectTags(newTags, pendingTagInput);
-    setPendingTagInput('');
-    onConfirm(trimmed, finalTags);
+    onConfirm(trimmed, newTags);
   };
 
   if (!isOpen) {
@@ -117,12 +113,7 @@ export default function CopyMediaModal({
           }}
         />
 
-        <TagInput
-          onChange={setNewTags}
-          value={newTags}
-          inputValue={pendingTagInput}
-          onInputChange={setPendingTagInput}
-        />
+        <TagInput onChange={setNewTags} value={newTags}></TagInput>
       </div>
     </Modal>
   );
