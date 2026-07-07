@@ -21,7 +21,6 @@
 
 import { redirect } from 'react-router-dom';
 
-import { publicPath, withPublicPath } from '@/config/publicPath';
 import http from '@/lib/api';
 import type { User } from '@/types/user';
 
@@ -40,11 +39,14 @@ export async function requireAuthLoader({ request }: { request: Request }) {
     const currentUrl = new URL(request.url);
     const returnTo = encodeURIComponent(currentUrl.pathname + currentUrl.search);
 
-    throw redirect(withPublicPath(`login?priorRoute=${returnTo}`));
+    // redirect() targets are resolved against the router's basename (getRouterBasename())
+    // automatically, so these must stay basename-relative — do not prefix with
+    // withPublicPath()/publicPath, or the install root ends up applied twice.
+    throw redirect(`/login?priorRoute=${returnTo}`);
   }
 
   if (user.isPasswordChangeRequired === 1) {
-    throw redirect(withPublicPath('user/force-change-password'));
+    throw redirect('/user/force-change-password');
   }
 
   return { user };
@@ -53,7 +55,7 @@ export async function requireAuthLoader({ request }: { request: Request }) {
 export async function requireAuthOnlyLoader() {
   const user = await getUserSession();
   if (!user) {
-    throw redirect(withPublicPath('login'));
+    throw redirect('/login');
   }
   return { user };
 }
@@ -62,7 +64,7 @@ export async function redirectIfAuthedLoader() {
   const user = await getUserSession();
 
   if (user) {
-    throw redirect(publicPath);
+    throw redirect('/');
   }
 
   return null;
