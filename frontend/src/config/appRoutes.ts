@@ -638,7 +638,10 @@ export const APP_ROUTES: AppRoute[] = [
     ],
   },
   {
-    path: 'notification',
+    // 'notification-centre', not 'notification' — the bare path collides with the
+    // documented public REST API GET /notification (Notification::grid()), which
+    // always wins the route match and returns JSON instead of the SPA shell.
+    path: 'notification-centre',
     labelKey: 'Notification Centre',
     hideFromMenu: true,
     lazy: () => import('@/pages/Notification/Notification').then((m) => ({ Component: m.default })),

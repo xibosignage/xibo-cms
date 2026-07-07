@@ -224,7 +224,7 @@ export default function NotificationDropdown() {
 
   const handleOpenCentre = () => {
     setIsOpen(false);
-    navigate('/notification');
+    navigate('/notification-centre');
   };
 
   return (
