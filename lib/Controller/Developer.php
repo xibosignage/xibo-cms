@@ -542,8 +542,7 @@ class Developer extends Base
             'id' => $params->getInt('id'),
             'templateId' => $params->getString('templateId'),
             'dataType' => $params->getString('dataType'),
-            'keyword' => $params->getString('keyword')
-            ], $params
-        );
+            'keyword' => $params->getString('keyword'),
+        ], $params);
     }
 }
