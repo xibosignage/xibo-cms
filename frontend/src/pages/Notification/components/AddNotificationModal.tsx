@@ -969,7 +969,6 @@ export default function AddNotificationModal({
                   placeholder={t('Add email and press Enter or comma')}
                   helpText={t('Additional emails separated by a comma.')}
                   optional
-                  allowValues={false}
                 />
               </div>
 

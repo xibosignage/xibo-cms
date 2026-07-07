@@ -58,10 +58,7 @@ vi.mock('@/hooks/useOwner', () => ({
 
 vi.mock('@/components/ui/FolderActionModals', () => ({ default: () => null }));
 vi.mock('@/components/ui/forms/SelectFolder', () => ({ default: () => null }));
-vi.mock('@/components/ui/forms/TagInput', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/components/ui/forms/TagInput')>();
-  return { ...actual, default: () => null };
-});
+vi.mock('@/components/ui/forms/TagInput', () => ({ default: () => null }));
 vi.mock('@/components/ui/modals/Modal');
 
 // =============================================================================

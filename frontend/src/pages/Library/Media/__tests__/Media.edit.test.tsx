@@ -180,8 +180,8 @@ describe('Edit Media — modal lifecycle', () => {
     // mockEditMedia.duration = 10 seconds, displayed as HH:MM:SS
     expect(within(dialog).getByPlaceholderText('00:00:00')).toHaveValue('00:00:10');
 
-    // The existing tag from mockEditMedia.tags should appear as a pill with its value
-    expect(within(dialog).getByText('nature|forest')).toBeInTheDocument();
+    // The existing tag from mockEditMedia.tags should appear as a pill
+    expect(within(dialog).getByText('nature')).toBeInTheDocument();
 
     // mockEditMedia.retired = false, so the checkbox should be unchecked
     expect(within(dialog).getByRole('checkbox', { name: /Retire this media/i })).not.toBeChecked();
