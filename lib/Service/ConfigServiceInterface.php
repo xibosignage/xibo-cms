@@ -136,6 +136,14 @@ interface ConfigServiceInterface
     public function getThemeConfig($settingName = null, $default = null);
 
     /**
+     * Resolve which file backs a brand asset, preferring the SVG variant and falling
+     * back to PNG for WL packages that ship a raster logo.
+     * @param string $base Asset base name, e.g. "logo" or "logo-icon"
+     * @return string
+     */
+    public function getBrandAssetFile(string $base): string;
+
+    /**
      * Get theme URI
      * @param string $uri
      * @param bool $local

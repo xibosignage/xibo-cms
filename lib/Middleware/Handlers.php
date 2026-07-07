@@ -167,7 +167,8 @@ class Handlers
                 'homeUrl' => $configService->rootUri(),
                 'aboutUrl' => $configService->rootUri() . 'about',
                 'loginUrl' => $configService->rootUri() . 'login',
-                'version' => Environment::$WEBSITE_VERSION_NAME
+                'version' => Environment::$WEBSITE_VERSION_NAME,
+                'brandLogoFile' => $configService->getBrandAssetFile('logo'),
             ];
 
             // Handle 404's
@@ -227,11 +228,10 @@ class Handlers
                     if ($exception instanceof UpgradePendingException) {
                         $loginJsUrl = \Xibo\Helper\ViteManifest::getJsUrl('login.html');
                         if ($loginJsUrl !== null) {
-                            $brandDir = rtrim($configService->getSetting('LIBRARY_LOCATION'), '/') . '/brand';
                             $upgradeConfig = [
                                 'upgradeInProgress' => true,
                                 'logoUrl'    => $configService->rootUri() . 'brand/'
-                                    . (file_exists($brandDir . '/logo.svg') ? 'logo.svg' : 'logo.png'),
+                                    . $configService->getBrandAssetFile('logo'),
                                 'supportUrl' => $configService->getThemeConfig('theme_url', 'https://xibosignage.com'),
                                 'version'    => Environment::$WEBSITE_VERSION_NAME,
                                 'appName'    => $configService->getThemeConfig('app_name', 'Xibo'),

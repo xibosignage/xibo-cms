@@ -486,10 +486,9 @@ class Login extends Base
      */
     public function aboutConfig(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
     {
-        $brandDir = rtrim($this->getConfig()->getSetting('LIBRARY_LOCATION'), '/') . '/brand';
         $rootUri = $this->getConfig()->rootUri();
-        $logoFile = file_exists($brandDir . '/logo.svg') ? 'logo.svg' : 'logo.png';
-        $iconFile = file_exists($brandDir . '/logo-icon.svg') ? 'logo-icon.svg' : 'logo-icon.png';
+        $logoFile = $this->getConfig()->getBrandAssetFile('logo');
+        $iconFile = $this->getConfig()->getBrandAssetFile('logo-icon');
 
         $payload = [
             'version'     => Environment::$WEBSITE_VERSION_NAME,
@@ -745,9 +744,7 @@ class Login extends Base
 
     private function getBrandLogoUrl(): string
     {
-        $brandDir = rtrim($this->getConfig()->getSetting('LIBRARY_LOCATION'), '/') . '/brand';
-        return $this->getConfig()->rootUri() . 'brand/'
-            . (file_exists($brandDir . '/logo.svg') ? 'logo.svg' : 'logo.png');
+        return $this->getConfig()->rootUri() . 'brand/' . $this->getConfig()->getBrandAssetFile('logo');
     }
 
     private function isPasswordReminderEnabled(): bool

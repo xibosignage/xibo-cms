@@ -109,7 +109,15 @@ chown -R www-data.www-data /var/www/cms/library/certs
 # Source is /brand/ — ADD docker/ / in the Dockerfile maps docker/ to the container root.
 # Per-file copy: skip files already present so a WL brand folder is not overwritten on restart.
 mkdir -p /var/www/cms/library/brand/layouts
-for f in logo.svg logo-icon.svg favicon.ico theme.css xibologo.png 192x192.png 512x512.png; do
+# logo.svg / logo-icon.svg have a WL-providable .png alternative. Only copy the default
+# .svg when neither variant is present, so a WL .png survives a rebuild instead of being
+# shadowed by our default .svg (every downstream probe prefers .svg when both exist).
+for base in logo logo-icon; do
+  if [ ! -f "/var/www/cms/library/brand/$base.svg" ] && [ ! -f "/var/www/cms/library/brand/$base.png" ]; then
+    cp "/brand/$base.svg" "/var/www/cms/library/brand/$base.svg"
+  fi
+done
+for f in favicon.ico theme.css xibologo.png 192x192.png 512x512.png; do
   if [ ! -f "/var/www/cms/library/brand/$f" ]; then
     cp "/brand/$f" "/var/www/cms/library/brand/$f"
   fi

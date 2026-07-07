@@ -161,11 +161,8 @@ class User extends Base
 
         // Branding is served from library/brand/ via the /brand Apache alias.
         $brandConfig = $this->getConfig()->getBrandConfig();
-        $brandDir = rtrim($this->getConfig()->getSetting('LIBRARY_LOCATION'), '/') . '/brand';
-
-        // Prefer SVG; fall back to PNG for WL packages that ship a raster logo.
-        $logoFile = file_exists($brandDir . '/logo.svg') ? 'logo.svg' : 'logo.png';
-        $iconFile = file_exists($brandDir . '/logo-icon.svg') ? 'logo-icon.svg' : 'logo-icon.png';
+        $logoFile = $this->getConfig()->getBrandAssetFile('logo');
+        $iconFile = $this->getConfig()->getBrandAssetFile('logo-icon');
 
         $branding = [
             'productName' => $brandConfig['productName'] ?? 'Xibo Digital Signage',
