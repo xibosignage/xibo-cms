@@ -25,8 +25,10 @@ use Xibo\Middleware\FeatureAuth;
 use Xibo\Middleware\SuperAdminAuth;
 
 // Special "root" route
+// Note: '/welcome' has no PHP route — it's the React welcome page, served via the
+// SPA-shell NotFound fallback. Marking the wizard seen is handled client-side
+// (see Welcome.tsx -> markWelcomeSeen() -> PUT /user/welcome).
 $app->get('/', ['\Xibo\Controller\User', 'home'])->setName('home');
-$app->get('/welcome', ['\Xibo\Controller\User', 'welcome'])->setName('welcome.view');
 
 // Login Form
 $app->get('/login', ['\Xibo\Controller\Login', 'loginForm'])->setName('login');

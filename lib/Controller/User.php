@@ -95,25 +95,6 @@ class User extends Base
         return $response->withRedirect($this->getConfig()->rootUri() . 'dashboard');
     }
 
-    /**
-     * Welcome Page
-     * @param Request $request
-     * @param Response $response
-     * @return ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function welcome(Request $request, Response $response): Response|ResponseInterface
-    {
-        // Mark the page as seen
-        if ($this->getUser()->newUserWizard == 0) {
-            $this->getUser()->newUserWizard = 1;
-            $this->getUser()->save(['validate' => false]);
-        }
-
-        return $response->withRedirect($this->getConfig()->rootUri() . 'welcome');
-    }
-
     #[OA\Get(
         path: '/user/me',
         operationId: 'userMe',
