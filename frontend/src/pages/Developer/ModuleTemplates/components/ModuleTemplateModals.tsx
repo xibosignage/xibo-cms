@@ -44,8 +44,11 @@ import type { ModuleTemplate } from '@/types/moduleTemplates';
 interface ModuleTemplateModalsProps {
   activeModal: ModalType;
   selectedTemplate: ModuleTemplate | null;
+  selectedTemplates?: ModuleTemplate[];
   onClose: () => void;
   onSuccess: () => void;
+  /** Called with the ids that were deleted when a bulk delete only partially succeeds. */
+  onPartialSuccess?: (deletedIds: number[]) => void;
 }
 
 // ── Add Modal ────────────────────────────────────────────────────────────────
@@ -250,13 +253,15 @@ function CopyModal({
 // ── Delete Modal ─────────────────────────────────────────────────────────────
 
 function DeleteModal({
-  template,
+  templates,
   onClose,
   onSuccess,
+  onPartialSuccess,
 }: {
-  template: ModuleTemplate;
+  templates: ModuleTemplate[];
   onClose: () => void;
   onSuccess: () => void;
+  onPartialSuccess?: (deletedIds: number[]) => void;
 }) {
   const { t } = useTranslation();
   const [isPending, setIsPending] = useState(false);
@@ -266,14 +271,31 @@ function DeleteModal({
     setError(null);
     setIsPending(true);
     try {
-      await deleteModuleTemplate(template.id);
-      onSuccess();
-    } catch (err: unknown) {
-      setError(
-        (isAxiosError(err) && err.response?.data?.message) ||
-          (err instanceof Error && err.message) ||
-          t('Failed to delete template'),
+      const results = await Promise.allSettled(
+        templates.map((template) => deleteModuleTemplate(template.id)),
       );
+      const failed = results.filter((r) => r.status === 'rejected');
+      if (failed.length > 0) {
+        // Deleted templates are already gone server-side even though the batch as a
+        // whole "failed" — reflect that in the table/selection now, rather than only
+        // on the next full onSuccess (which never fires until every item succeeds).
+        const deletedIds = templates
+          .filter((_, i) => results[i]?.status === 'fulfilled')
+          .map((template) => template.id);
+        if (deletedIds.length > 0) {
+          onPartialSuccess?.(deletedIds);
+        }
+
+        const firstRejected = failed[0] as PromiseRejectedResult;
+        const reason = firstRejected.reason;
+        setError(
+          (isAxiosError(reason) && reason.response?.data?.message) ||
+            (reason instanceof Error && reason.message) ||
+            t('{{count}} template(s) could not be deleted.', { count: failed.length }),
+        );
+        return;
+      }
+      onSuccess();
     } finally {
       setIsPending(false);
     }
@@ -303,16 +325,24 @@ function DeleteModal({
             </div>
           </div>
           <h2 className="text-center text-lg font-semibold mb-2 text-red-800">
-            {t('Delete Template?')}
+            {templates.length === 1 ? t('Delete Template?') : t('Delete Templates?')}
           </h2>
         </div>
 
         <p className="text-center text-gray-500">
-          <Trans
-            i18nKey='Are you sure you want to delete "<strong>{{name}}</strong>"?'
-            values={{ name: template.templateId }}
-            components={{ strong: <strong /> }}
-          />
+          {templates.length === 1 ? (
+            <Trans
+              i18nKey='Are you sure you want to delete "<strong>{{name}}</strong>"?'
+              values={{ name: templates[0]?.templateId }}
+              components={{ strong: <strong /> }}
+            />
+          ) : (
+            <Trans
+              i18nKey="Are you sure you want to delete <strong>{{count}}</strong> templates?"
+              values={{ count: templates.length }}
+              components={{ strong: <strong /> }}
+            />
+          )}
         </p>
 
         <span className="flex justify-center gap-px rounded-md bg-gray-50 p-1.5">
@@ -337,11 +367,24 @@ function DeleteModal({
 export function ModuleTemplateModals({
   activeModal,
   selectedTemplate,
+  selectedTemplates,
   onClose,
   onSuccess,
+  onPartialSuccess,
 }: ModuleTemplateModalsProps) {
   if (activeModal === 'add') {
     return <AddModal onClose={onClose} onSuccess={onSuccess} />;
+  }
+
+  if (activeModal === 'bulkDelete' && selectedTemplates && selectedTemplates.length > 0) {
+    return (
+      <DeleteModal
+        templates={selectedTemplates}
+        onClose={onClose}
+        onSuccess={onSuccess}
+        onPartialSuccess={onPartialSuccess}
+      />
+    );
   }
 
   if (!selectedTemplate) return null;
@@ -351,7 +394,7 @@ export function ModuleTemplateModals({
   }
 
   if (activeModal === 'delete') {
-    return <DeleteModal template={selectedTemplate} onClose={onClose} onSuccess={onSuccess} />;
+    return <DeleteModal templates={[selectedTemplate]} onClose={onClose} onSuccess={onSuccess} />;
   }
 
   return null;

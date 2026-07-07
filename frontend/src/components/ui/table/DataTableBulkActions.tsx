@@ -8,6 +8,7 @@ export interface DataTableBulkAction<TData> {
   icon?: LucideIcon;
   onClick: (selectedRows: TData[]) => void;
   variant?: 'default' | 'danger';
+  disabled?: boolean;
 }
 
 interface DataTableBulkActionsProps<TData> {
@@ -50,6 +51,7 @@ export function DataTableBulkActions<TData>({
             <button
               key={idx}
               onClick={() => action.onClick(selectedRows)}
+              disabled={action.disabled}
               className={twMerge(
                 'cursor-pointer flex justify-center size-6 items-center text-sm font-medium rounded-lg border border-transparent focus:outline-hidden disabled:opacity-50 disabled:pointer-events-none',
                 action.variant === 'danger'

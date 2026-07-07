@@ -396,6 +396,9 @@ class Developer extends Base
             'libraryQuotaFull' => false,
         ];
 
+        // Output handled by UploadHandler
+        $this->setNoOutput(true);
+
         $this->getLog()->debug('Hand off to Upload Handler with options: ' . json_encode($options));
 
         // Hand off to the Upload Handler provided by jquery-file-upload
@@ -438,7 +441,7 @@ class Developer extends Base
 
         $uploadHandler->post();
 
-        return $response->withStatus(200)->withJson(['success' => true]);
+        return $response->withHeader('Content-Type', 'application/json');
     }
 
     /**

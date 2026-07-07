@@ -153,6 +153,10 @@ $app->get('/stats/export/count', ['\Xibo\Controller\Stats', 'exportStatsCount'])
 //
 // Developer
 //
+$app->delete('/developer/template/{id}', ['\Xibo\Controller\Developer', 'templateDelete'])
+    ->setName('developer.templates.delete')
+    ->addMiddleware(new FeatureAuth($app->getContainer(), ['developer.delete']));
+
 $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/developer/template/datatypes', ['\Xibo\Controller\Developer', 'getAvailableDataTypes'])
         ->setName('developer.templates.datatypes.search');
@@ -164,8 +168,6 @@ $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
         ->setName('developer.templates.add');
     $group->put('/developer/template/{id}', ['\Xibo\Controller\Developer', 'templateEdit'])
         ->setName('developer.templates.edit');
-    $group->delete('/developer/template/{id}', ['\Xibo\Controller\Developer', 'templateDelete'])
-        ->setName('developer.templates.delete');
     $group->get('/developer/template/{id}/export', ['\Xibo\Controller\Developer', 'templateExport'])
         ->setName('developer.templates.export');
     $group->post('/developer/template/import', ['\Xibo\Controller\Developer', 'templateImport'])
