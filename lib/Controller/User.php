@@ -167,10 +167,20 @@ class User extends Base
         $logoFile = file_exists($brandDir . '/logo.svg') ? 'logo.svg' : 'logo.png';
         $iconFile = file_exists($brandDir . '/logo-icon.svg') ? 'logo-icon.svg' : 'logo-icon.png';
 
+        // Dark logo, for display on light backgrounds (e.g. the force-change-password page).
+        if (file_exists($brandDir . '/logo-dark.svg')) {
+            $logoDarkFile = 'logo-dark.svg';
+        } elseif (file_exists($brandDir . '/logo-dark.png')) {
+            $logoDarkFile = 'logo-dark.png';
+        } else {
+            $logoDarkFile = $logoFile;
+        }
+
         $branding = [
             'productName' => $brandConfig['productName'] ?? 'Xibo Digital Signage',
             'appName'     => $brandConfig['appName']     ?? 'Xibo',
             'logoUrl'     => '/brand/' . $logoFile,
+            'logoDarkUrl' => '/brand/' . $logoDarkFile,
             'faviconUrl'  => '/brand/' . $iconFile,
             'cssUrl'      => '/brand/theme.css',
             'supportUrl'  => $brandConfig['supportUrl']  ?? 'https://xibosignage.com',

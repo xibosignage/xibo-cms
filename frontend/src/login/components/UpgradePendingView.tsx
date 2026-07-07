@@ -27,18 +27,25 @@ const config = window.__LOGIN_CONFIG__;
 
 export function UpgradePendingView() {
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        paddingTop: 40,
-        paddingBottom: 40,
-        backgroundColor: '#f7f7f7',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-        fontSize: 14,
-      }}
-    >
-      <LoginCard logoUrl={config.logoUrl} supportUrl={config.supportUrl ?? ''}>
-        <p style={{ textAlign: 'center', margin: 0 }}>{t('upgradeMessage')}</p>
+    <div className="login-root">
+      <LoginCard logoUrl={config.logoDarkUrl} supportUrl={config.supportUrl ?? ''}>
+        <div className="login-upgrade">
+          <span className="login-upgrade-icon">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+            </svg>
+          </span>
+          <h1 className="login-upgrade-title">{t('upgradeTitle')}</h1>
+          <p className="login-upgrade-message">{t('upgradeMessage')}</p>
+        </div>
       </LoginCard>
     </div>
   );

@@ -21,6 +21,8 @@
 
 import { useEffect } from 'react';
 
+import { t } from '../i18n';
+
 import { AboutModalContent } from '@/components/about/AboutModalContent';
 
 interface LoginAboutModalProps {
@@ -37,13 +39,15 @@ export function LoginAboutModal({ onClose }: LoginAboutModalProps) {
   }, [onClose]);
 
   return (
-    <div className="login-about-overlay" onClick={onClose}>
-      <div className="login-about-card" onClick={(e) => e.stopPropagation()}>
+    <div className="login-about-overlay">
+      <div
+        className="login-about-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="login-about-title"
+      >
         <div className="login-about-header">
-          <span>About</span>
-          <button className="login-about-close" onClick={onClose} aria-label="Close">
-            &#x2715;
-          </button>
+          <span id="login-about-title">{t('aboutLabel')}</span>
         </div>
 
         <div className="login-about-body">
@@ -51,8 +55,8 @@ export function LoginAboutModal({ onClose }: LoginAboutModalProps) {
         </div>
 
         <div className="login-about-footer-bar">
-          <button className="btn-link btn-link-muted" onClick={onClose}>
-            Close
+          <button type="button" className="login-btn-secondary" onClick={onClose}>
+            {t('closeLabel')}
           </button>
         </div>
       </div>
