@@ -73,7 +73,7 @@ class ViteManifest
             throw new \RuntimeException('Vite manifest: entry \'' . $entry . '\' not found');
         }
 
-        return $rootUri . 'app/' . $file;
+        return $rootUri . ltrim(self::VITE_BASE, '/') . $file;
     }
 
     /**
@@ -119,7 +119,7 @@ class ViteManifest
         }
 
         $css = self::load()[$entry]['css'][0] ?? null;
-        return $css !== null ? $rootUri . 'app/' . $css : null;
+        return $css !== null ? $rootUri . ltrim(self::VITE_BASE, '/') . $css : null;
     }
 
     /**
@@ -135,7 +135,7 @@ class ViteManifest
         if (self::isDevMode()) {
             return self::DEV_BASE . self::VITE_BASE;
         }
-        return $rootUri . 'app/';
+        return $rootUri . ltrim(self::VITE_BASE, '/');
     }
 
     /**
