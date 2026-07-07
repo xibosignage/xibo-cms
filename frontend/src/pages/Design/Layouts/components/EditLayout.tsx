@@ -27,7 +27,7 @@ import Modal from '../../../../components/ui/modals/Modal';
 
 import Checkbox from '@/components/ui/forms/Checkbox';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
-import TagInput from '@/components/ui/forms/TagInput';
+import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import { getLayoutSchema } from '@/schema/layout';
 import { updateLayout } from '@/services/layoutsApi';
@@ -63,6 +63,7 @@ export default function EditLayout({ isOpen = true, onClose, data, onSave }: Edi
   const [isSaving, setIsSaving] = useState(false);
   const [formErrors, setFormErrors] = useState<LayoutFormErrors>({});
   const [apiError, setApiError] = useState<string | undefined>();
+  const [pendingTagInput, setPendingTagInput] = useState('');
 
   const [draft, setDraft] = useState<LayoutDraft>(() => ({
     name: data.layout,
@@ -75,6 +76,7 @@ export default function EditLayout({ isOpen = true, onClose, data, onSave }: Edi
   }));
 
   useEffect(() => {
+    setPendingTagInput('');
     setDraft({
       name: data.layout,
       folderId: data.folderId,
@@ -116,14 +118,13 @@ export default function EditLayout({ isOpen = true, onClose, data, onSave }: Edi
     try {
       setIsSaving(true);
 
-      const serializedTags = draft.tags
-        .map((t) => (t.value ? `${t.tag}|${t.value}` : t.tag))
-        .join(',');
+      const finalTags = collectTags(draft.tags, pendingTagInput);
+      setPendingTagInput('');
 
       const updatedLayout = await updateLayout(data.layoutId, {
         name: draft.name,
         description: draft.description,
-        tags: serializedTags,
+        tags: serializeTags(finalTags),
         code: draft.code,
         retired: draft.retired ? 1 : 0,
         enableStat: draft.enableStat ? 1 : 0,
@@ -202,6 +203,8 @@ export default function EditLayout({ isOpen = true, onClose, data, onSave }: Edi
             value={draft.tags}
             helpText={t('Tags separated by commas. Use Tag|Value for tagged attributes.')}
             onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
+            inputValue={pendingTagInput}
+            onInputChange={setPendingTagInput}
           />
 
           <TextInput
