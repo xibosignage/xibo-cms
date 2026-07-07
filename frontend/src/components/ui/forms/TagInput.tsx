@@ -20,48 +20,11 @@
  */
 
 import { X } from 'lucide-react';
-import { useEffect, useId, useRef, useState } from 'react';
+import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
 import type { Tag } from '@/types/tag';
-
-export function parseTag(raw: string): Tag | null {
-  const trimmed = raw.trim();
-  if (!trimmed) return null;
-
-  const pipeIndex = trimmed.indexOf('|');
-  const tag = pipeIndex === -1 ? trimmed : trimmed.slice(0, pipeIndex);
-  const rawValue = pipeIndex === -1 ? undefined : trimmed.slice(pipeIndex + 1);
-
-  if (!tag) return null;
-
-  return {
-    tag: tag.trim(),
-    value:
-      rawValue !== undefined && rawValue !== ''
-        ? isNaN(Number(rawValue))
-          ? rawValue.trim()
-          : Number(rawValue)
-        : '',
-    tagId: 0,
-  };
-}
-
-// Merges any uncommitted text from the tag input into the tag list.
-export function collectTags(tags: Tag[], pendingInput: string): Tag[] {
-  const pending = parseTag(pendingInput);
-  if (!pending) return tags;
-  if (tags.some((t) => t.tag === pending.tag)) return tags;
-  return [...tags, pending];
-}
-
-// Serializes a Tag[] into the comma-separated string the API expects.
-export function serializeTags(tags: Tag[]): string {
-  return tags
-    .map((t) => (t.value != null && t.value !== '' ? `${t.tag}|${t.value}` : t.tag))
-    .join(',');
-}
 
 interface TagInputProps {
   value: Tag[];
@@ -75,9 +38,6 @@ interface TagInputProps {
   suffix?: React.ReactNode;
   error?: string;
   optional?: boolean;
-  inputValue?: string;
-  onInputChange?: (value: string) => void;
-  allowValues?: boolean;
 }
 
 function TagInput({
@@ -92,37 +52,31 @@ function TagInput({
   suffix,
   error,
   optional = false,
-  inputValue,
-  onInputChange,
-  allowValues = true,
 }: TagInputProps) {
   const { t } = useTranslation();
   const inputId = useId();
-  const valueInputId = useId();
-  const [internalInput, setInternalInput] = useState('');
-  const input = inputValue !== undefined ? inputValue : internalInput;
-  const setInput = onInputChange ?? setInternalInput;
+  const [input, setInput] = useState('');
   const tags = Array.isArray(value) ? value : [];
 
-  // Track which tag is pending a value entry
-  const [pendingValueTag, setPendingValueTag] = useState<string | null>(null);
-  const [valueInput, setValueInput] = useState('');
-  const valueInputRef = useRef<HTMLInputElement>(null);
+  const parseTag = (raw: string): Tag | null => {
+    const trimmed = raw.trim();
+    if (!trimmed) return null;
 
-  // Reset pending value state when tags are cleared externally (e.g. modal close/reopen)
-  useEffect(() => {
-    if (tags.length === 0 && pendingValueTag !== null) {
-      setPendingValueTag(null);
-      setValueInput('');
-    }
-  }, [tags.length, pendingValueTag]);
+    const [tag, rawValue] = trimmed.split('|');
 
-  // Focus the value input when a pending tag is set
-  useEffect(() => {
-    if (pendingValueTag) {
-      valueInputRef.current?.focus();
-    }
-  }, [pendingValueTag]);
+    if (!tag) return null;
+
+    return {
+      tag: tag.trim(),
+      value:
+        rawValue !== undefined && rawValue !== ''
+          ? isNaN(Number(rawValue))
+            ? rawValue.trim()
+            : Number(rawValue)
+          : '',
+      tagId: 0, // temporary ID (backend can replace this)
+    };
+  };
 
   const addTag = (raw: string) => {
     const newTag = parseTag(raw);
@@ -133,12 +87,6 @@ function TagInput({
 
     onChange([...tags, newTag]);
     setInput('');
-
-    // If added without a value, show value input
-    if (allowValues && newTag.value === '') {
-      setPendingValueTag(newTag.tag);
-      setValueInput('');
-    }
   };
 
   const removeTag = (tag: string) => {
@@ -146,24 +94,7 @@ function TagInput({
       return;
     }
 
-    if (pendingValueTag === tag) {
-      setPendingValueTag(null);
-      setValueInput('');
-    }
     onChange(tags.filter((t) => t.tag !== tag));
-  };
-
-  const applyValue = () => {
-    if (!pendingValueTag) return;
-
-    const trimmedValue = valueInput.trim();
-    if (trimmedValue) {
-      const parsedValue = isNaN(Number(trimmedValue)) ? trimmedValue : Number(trimmedValue);
-      onChange(tags.map((t) => (t.tag === pendingValueTag ? { ...t, value: parsedValue } : t)));
-    }
-
-    setPendingValueTag(null);
-    setValueInput('');
   };
 
   return (
@@ -193,12 +124,9 @@ function TagInput({
               key={tagObj.tag}
               className="flex items-center gap-1 px-2 py-1 text-sm font-semibold border text-xibo-blue-600 border-xibo-blue-400 rounded-full"
             >
-              {tagObj.value !== '' && tagObj.value != null
-                ? `${tagObj.tag}|${tagObj.value}`
-                : tagObj.tag}
+              {tagObj.tag}
               <button
                 type="button"
-                aria-label={t('Remove tag {{tag}}', { tag: tagObj.tag })}
                 onClick={() => removeTag(tagObj.tag)}
                 disabled={disabled}
                 className="text-blue-600 w-3 rounded-full h-3 flex items-center justify-center bg-blue-200 hover:text-gray-600"
@@ -211,7 +139,7 @@ function TagInput({
             id={inputId}
             className="flex-1 min-w-10 text-sm p-1 bg-transparent border-none outline-none focus:outline-none focus:ring-0"
             value={input}
-            disabled={disabled || pendingValueTag !== null}
+            disabled={disabled}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ',') {
@@ -224,11 +152,7 @@ function TagInput({
                 }
               }
             }}
-            onBlur={() => {
-              if (!pendingValueTag) {
-                addTag(input);
-              }
-            }}
+            onBlur={() => addTag(input)}
             placeholder={tags.length === 0 ? placeholder || t('Add tags') : ''}
           />
         </div>
@@ -237,34 +161,6 @@ function TagInput({
           <div className="flex items-center border-s border-gray-200 shrink-0">{suffix}</div>
         )}
       </div>
-
-      {pendingValueTag && (
-        <div className="flex flex-col gap-1">
-          <label htmlFor={valueInputId} className="text-sm font-semibold text-gray-500 leading-5">
-            {t('Tag Value')}
-          </label>
-          <input
-            id={valueInputId}
-            ref={valueInputRef}
-            className="w-full text-sm px-3 py-2.5 rounded-lg border border-gray-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 min-h-11.25"
-            value={valueInput}
-            onChange={(e) => setValueInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                applyValue();
-              } else if (e.key === 'Escape') {
-                setPendingValueTag(null);
-                setValueInput('');
-              }
-            }}
-            onBlur={applyValue}
-          />
-          <span className="text-xs text-gray-400">
-            {t('Enter the value for this Tag and confirm by pressing enter on keyboard.')}
-          </span>
-        </div>
-      )}
 
       {error ? (
         <p className="text-xs text-red-600 ml-2 mt-1">{error}</p>

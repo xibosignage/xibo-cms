@@ -406,11 +406,15 @@ export const getCampaignItemActions = ({
       isQuickAction: true,
       variant: 'primary' as const,
     },
-    {
-      label: t('Schedule'),
-      icon: CalendarClock,
-      onClick: () => onSchedule && onSchedule(campaign),
-    },
+    ...(campaign.type !== 'ad'
+      ? [
+          {
+            label: t('Schedule'),
+            icon: CalendarClock,
+            onClick: () => onSchedule && onSchedule(campaign),
+          },
+        ]
+      : []),
     {
       label: t('Preview Campaign'),
       icon: Eye,

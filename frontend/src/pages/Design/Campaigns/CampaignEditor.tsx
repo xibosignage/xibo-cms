@@ -36,7 +36,7 @@ import Button from '@/components/ui/Button';
 import DatePickerInput from '@/components/ui/forms/DatePickerInput';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import type { SelectOption } from '@/components/ui/forms/SelectDropdown';
-import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
+import TagInput from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { ActionsCell, CheckMarkCell, StatusCell, TextCell } from '@/components/ui/table/cells';
@@ -219,7 +219,6 @@ export default function CampaignEditor() {
 
   const [activeTab, setActiveTab] = useState<EditorTab>('general');
   const [draft, setDraft] = useState<GeneralDraft | null>(null);
-  const [pendingTagInput, setPendingTagInput] = useState('');
   const [dateErrors, setDateErrors] = useState<{ startDt?: string; endDt?: string }>({});
 
   const [displayTargets, setDisplayTargets] = useState<DisplayGroupMultiSelectValue>({
@@ -373,9 +372,9 @@ export default function CampaignEditor() {
     }
     setDateErrors({});
 
-    const finalTags = collectTags(draft.tags, pendingTagInput);
-    setPendingTagInput('');
-    const serializedTags = serializeTags(finalTags);
+    const serializedTags = draft.tags
+      .map((tag) => (tag.value != null && tag.value !== '' ? `${tag.tag}|${tag.value}` : tag.tag))
+      .join(',');
 
     saveGeneral.mutate({
       name: draft.name,
@@ -623,8 +622,6 @@ export default function CampaignEditor() {
                     'Tags for this Campaign - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below.',
                   )}
                   onChange={(tags) => setDraft((prev) => prev && { ...prev, tags })}
-                  inputValue={pendingTagInput}
-                  onInputChange={setPendingTagInput}
                 />
               </>
             )}

@@ -412,7 +412,6 @@ export default function FilterInputs<T>({
                   placeholder={filter.placeholder}
                   prefix={prefix}
                   suffix={suffix}
-                  allowValues={false}
                 />
               );
             }
