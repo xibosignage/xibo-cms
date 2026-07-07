@@ -31,7 +31,7 @@ import DurationInput from '@/components/ui/forms/DurationInput';
 import ExpiryDateSelect from '@/components/ui/forms/ExpiryDateSelect';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
-import TagInput from '@/components/ui/forms/TagInput';
+import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import { getCommonFormOptions } from '@/config/commonForms';
 import { getMediaSchema } from '@/schema/media';
@@ -55,7 +55,7 @@ type MediaDraft = {
   folderId: number | null;
   fileName: string;
   tags: Tag[];
-  orientation: 'portrait' | 'landscape';
+  orientation: string;
   duration: number;
   mediaNoExpiryDate?: ExpiryValue;
   enableStat: string;
@@ -74,6 +74,7 @@ export default function EditMediaModal({
   const [apiError, setApiError] = useState<string | undefined>();
   const [formErrors, setFormErrors] = useState<MediaFormErrors>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [pendingTagInput, setPendingTagInput] = useState('');
 
   const clearError = (field: keyof MediaDraft) => {
     setFormErrors((prev) => ({
@@ -87,7 +88,7 @@ export default function EditMediaModal({
     folderId: data.folderId ?? null,
     fileName: data.name,
     tags: data.tags.map((t) => ({ ...t })),
-    orientation: data.orientation,
+    orientation: data.orientation ?? '',
     duration: data.duration,
     mediaNoExpiryDate: expiresToExpiryValue(data.expires),
     enableStat: data.enableStat,
@@ -99,13 +100,14 @@ export default function EditMediaModal({
     const initialExpiry = expiresToExpiryValue(data.expires);
 
     setExpiry(initialExpiry);
+    setPendingTagInput('');
 
     setDraft({
       folderId: data.folderId,
       name: data.name,
       fileName: data.name,
       tags: data.tags.map((t) => ({ ...t })),
-      orientation: data.orientation,
+      orientation: data.orientation ?? '',
       duration: data.duration,
       mediaNoExpiryDate: initialExpiry,
       enableStat: data.enableStat,
@@ -139,7 +141,11 @@ export default function EditMediaModal({
     setFormErrors({});
     setIsSaving(true);
 
-    const serializedTags = draft.tags.map((t) => (t.value != null ? `${t.tag}|${t.value}` : t.tag));
+    // Include any pending text in the tag input that wasn't committed
+    const finalTags = collectTags(draft.tags, pendingTagInput);
+    setPendingTagInput('');
+
+    const serializedTags = serializeTags(finalTags);
 
     const expires = expiryToDateTime(expiry);
 
@@ -149,8 +155,8 @@ export default function EditMediaModal({
         duration: draft.duration,
         retired: draft.retired ? 1 : 0,
         updateInLayouts: draft.updateInLayouts ? 1 : 0,
-        tags: serializedTags.join(','),
-        orientation: draft.orientation,
+        tags: serializedTags,
+        orientation: (draft.orientation as 'portrait' | 'landscape' | 'square') || undefined,
         enableStat: draft.enableStat,
         expires,
         mediaNoExpiryDate: expiry?.type === 'never' ? 1 : 0,
@@ -170,7 +176,7 @@ export default function EditMediaModal({
       } else if (err instanceof Error) {
         setApiError(err.message);
       } else {
-        setApiError(t('An unexpected error occurred while saving the playlist.'));
+        setApiError(t('An unexpected error occurred while saving the media.'));
       }
     } finally {
       setIsSaving(false);
@@ -234,17 +240,20 @@ export default function EditMediaModal({
             value={draft.tags}
             helpText={t('Tags separated by commas. Use Tag|Value for tagged attributes.')}
             onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
+            inputValue={pendingTagInput}
+            onInputChange={setPendingTagInput}
           />
 
           <div className="grid grid-cols-2 gap-2">
             {/* Orientation */}
             <SelectDropdown
-              label="Orientation"
+              label={t('Orientation')}
               value={draft.orientation}
-              placeholder="Select orientation"
+              placeholder={t('Select orientation')}
               options={getCommonFormOptions(t).orientation}
+              clearable
               onSelect={(value) => {
-                setDraft((prev) => ({ ...prev, orientation: value as 'portrait' | 'landscape' }));
+                setDraft((prev) => ({ ...prev, orientation: value }));
               }}
               error={formErrors.orientation}
             />
@@ -272,9 +281,9 @@ export default function EditMediaModal({
 
           {/* Enable Stats */}
           <SelectDropdown
-            label="Enable Media Stats Collection?"
+            label={t('Enable Media Stats Collection?')}
             value={draft.enableStat}
-            placeholder="Inherit"
+            placeholder={t('Inherit')}
             options={getCommonFormOptions(t).inherit}
             onSelect={(value) => {
               setDraft((prev) => ({ ...prev, enableStat: value }));
