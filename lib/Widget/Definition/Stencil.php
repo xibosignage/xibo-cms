@@ -77,6 +77,7 @@ class Stencil implements \JsonSerializable
     public function jsonSerialize(): array
     {
         return [
+            'twig' => $this->twig,
             'hbsId' => $this->hbsId,
             'hbs' => $this->hbs,
             'head' => $this->head,

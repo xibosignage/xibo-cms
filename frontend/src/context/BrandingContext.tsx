@@ -32,6 +32,7 @@ const defaults: BrandingConfig = {
   productName: 'Xibo Digital Signage',
   appName: 'Xibo',
   logoUrl: '/brand/logo.svg',
+  logoDarkUrl: '/brand/logo-dark.svg',
   faviconUrl: '/brand/logo-icon.svg',
   cssUrl: '/brand/theme.css',
   supportUrl: 'https://xibosignage.com',

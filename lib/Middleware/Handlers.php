@@ -268,10 +268,18 @@ class Handlers
                         $loginJsUrl = \Xibo\Helper\ViteManifest::getJsUrl('login.html', $rootUri);
                         if ($loginJsUrl !== null) {
                             $brandDir = rtrim($configService->getSetting('LIBRARY_LOCATION'), '/') . '/brand';
+                            $logoFile = file_exists($brandDir . '/logo.svg') ? 'logo.svg' : 'logo.png';
+                            if (file_exists($brandDir . '/logo-dark.svg')) {
+                                $logoDarkFile = 'logo-dark.svg';
+                            } elseif (file_exists($brandDir . '/logo-dark.png')) {
+                                $logoDarkFile = 'logo-dark.png';
+                            } else {
+                                $logoDarkFile = $logoFile;
+                            }
                             $upgradeConfig = [
                                 'upgradeInProgress' => true,
-                                'logoUrl'    => '/brand/'
-                                    . (file_exists($brandDir . '/logo.svg') ? 'logo.svg' : 'logo.png'),
+                                'logoUrl'     => $configService->rootUri() . 'brand/' . $logoFile,
+                                'logoDarkUrl' => $configService->rootUri() . 'brand/' . $logoDarkFile,
                                 'supportUrl' => $configService->getThemeConfig('theme_url', 'https://xibosignage.com'),
                                 'version'    => Environment::$WEBSITE_VERSION_NAME,
                                 'appName'    => $configService->getThemeConfig('app_name', 'Xibo'),
