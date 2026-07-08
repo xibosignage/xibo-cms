@@ -39,6 +39,7 @@ import { TextCell } from '../table/cells';
 
 import Modal, { type ModalAction } from './Modal';
 
+import { withPublicPath } from '@/config/publicPath';
 import { useUserContext } from '@/context/UserContext';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { DisplayGroupMultiSelect } from '@/pages/Schedule/Schedule/components/DisplayGroupMultiSelect';
@@ -1198,7 +1199,12 @@ export default function ScheduleEventModal({
                       variant="secondary"
                       className="mb-0"
                       rightIcon={Tablet}
-                      onClick={() => window.open(`/campaign/${draft.campaignId}/preview`, '_blank')}
+                      onClick={() =>
+                        window.open(
+                          withPublicPath(`campaign/${draft.campaignId}/preview`),
+                          '_blank',
+                        )
+                      }
                     >
                       {t('Preview')}
                     </Button>

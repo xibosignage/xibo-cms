@@ -28,6 +28,7 @@ import type { FilterConfigItem } from '@/components/ui/FilterInputs';
 import type { SelectOption } from '@/components/ui/forms/SelectDropdown';
 import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
 import { ActionsCell, TextCell } from '@/components/ui/table/cells';
+import { withPublicPath } from '@/config/publicPath';
 import type { ModuleTemplate } from '@/types/moduleTemplates';
 import type { ActionItem } from '@/types/table';
 
@@ -133,7 +134,7 @@ export const getModuleTemplateItemActions = ({
           label: t('Export XML'),
           icon: Download,
           onClick: () => {
-            window.location.href = `/json/developer/template/${template.id}/export`;
+            window.location.href = withPublicPath(`developer/template/${template.id}/export`);
           },
         },
         {

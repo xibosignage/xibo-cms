@@ -39,6 +39,7 @@ import Button from '@/components/ui/Button';
 import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { withPublicPath } from '@/config/publicPath';
 import { REPORT_META } from '@/config/reportRoutes';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
@@ -167,7 +168,7 @@ export default function SavedReports() {
     if (meta) {
       navigate(meta.route);
     } else {
-      window.location.assign(`/report/form/${report.reportName}`);
+      window.location.assign(withPublicPath(`report/form/${report.reportName}`));
     }
   };
 

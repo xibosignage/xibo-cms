@@ -31,7 +31,7 @@ export interface Report {
   category: string;
   feature: string;
   adminOnly: number;
-  prototype_url?: string;
+  url?: string;
 }
 
 export type ReportsByCategory = Record<string, Report[]>;

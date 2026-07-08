@@ -77,7 +77,8 @@ class CsrfGuard implements Middleware
         $token = $_SESSION[$this->key] ?? null;
 
         if ($token === null) {
-            $_SESSION[$this->key] = bin2hex(random_bytes(20));
+            $token = bin2hex(random_bytes(20));
+            $_SESSION[$this->key] = $token;
 
             // Set the XSRF-TOKEN cookie
             // This cookie is NOT HttpOnly so the SPA can read it.

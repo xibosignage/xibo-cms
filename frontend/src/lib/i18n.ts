@@ -22,10 +22,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
-// Build URLs that respect Vite's base (e.g. /react/)
-function withBase(p: string) {
-  return new URL(p, window.location.origin + import.meta.env.BASE_URL).toString();
-}
+import { withAssetBase, withPublicPath } from '@/config/publicPath';
 
 // Guard against HTML responses (404 rewrites)
 async function fetchJson(url: string, init?: RequestInit) {
@@ -40,9 +37,8 @@ async function fetchJson(url: string, init?: RequestInit) {
 const FALLBACK_LANG = 'en_GB';
 
 async function resolveLanguage() {
-  const apiBase = import.meta.env.VITE_API_BASE_URL || '/json';
   try {
-    const me = await fetchJson(`${window.location.origin}${apiBase}/user/me`, {
+    const me = await fetchJson(withPublicPath('json/user/me'), {
       credentials: 'include',
       headers: { Accept: 'application/json' },
     });
@@ -54,14 +50,14 @@ async function resolveLanguage() {
 
 async function loadTranslations(lang: string) {
   try {
-    return { lang, translations: await fetchJson(withBase(`locale/langs/${lang}.json`)) };
+    return { lang, translations: await fetchJson(withAssetBase(`locale/langs/${lang}.json`)) };
   } catch {
     if (lang === FALLBACK_LANG) {
       throw new Error(`Missing translations for fallback language ${FALLBACK_LANG}`);
     }
     return {
       lang: FALLBACK_LANG,
-      translations: await fetchJson(withBase(`locale/langs/${FALLBACK_LANG}.json`)),
+      translations: await fetchJson(withAssetBase(`locale/langs/${FALLBACK_LANG}.json`)),
     };
   }
 }

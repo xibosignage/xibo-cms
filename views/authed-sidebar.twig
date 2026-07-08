@@ -1,32 +1,32 @@
 <div id="sidebar-wrapper">
     <ul class="sidebar">
-        <li class="sidebar-main"><a href="{{ theme.rootUri() }}prototype/dashboard">{% trans "Dashboard" %}</a></li>
+        <li class="sidebar-main"><a href="{{ theme.rootUri() }}dashboard">{% trans "Dashboard" %}</a></li>
 
         {% if currentUser.featureEnabled("schedule.view") %}
-            <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/schedule/events">{% trans "Schedule" %}</a></li>
+            <li class="sidebar-list"><a href="{{ theme.rootUri() }}schedule/events">{% trans "Schedule" %}</a></li>
         {% endif %}
 
         {% if currentUser.featureEnabled("daypart.view") %}
-            <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/schedule/dayparting">{% trans "Dayparting" %}</a></li>
+            <li class="sidebar-list"><a href="{{ theme.rootUri() }}schedule/dayparting">{% trans "Dayparting" %}</a></li>
         {% endif %}
 
         {% set countViewable = currentUser.featureEnabledCount(["campaign.view", "layout.view", "template.view", "resolution.view"]) %}
         {% if countViewable > 0 %}
             <li class="sidebar-title"><a>{% trans "Design" %}</a></li>
             {% if currentUser.featureEnabled("campaign.view") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/design/campaign">{% trans "Campaigns" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}design/campaign">{% trans "Campaigns" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("layout.view") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/design/layout">{% trans "Layouts" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}design/layout">{% trans "Layouts" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("template.view") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/design/templates">{% trans "Templates" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}design/templates">{% trans "Templates" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("resolution.view") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/design/resolutions">{% trans "Resolutions" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}design/resolutions">{% trans "Resolutions" %}</a></li>
             {% endif %}
         {% endif %}
 
@@ -34,19 +34,19 @@
         {% if countViewable > 0 %}
             <li class="sidebar-title"><a>{% trans "Library" %}</a></li>
             {% if currentUser.featureEnabled("playlist.view") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/library/playlists">{% trans "Playlists" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}library/playlists">{% trans "Playlists" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("library.view") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/library/media">{% trans "Media" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}library/media">{% trans "Media" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("dataset.view") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/library/datasets">{% trans "DataSets" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}library/datasets">{% trans "DataSets" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("menuBoard.view") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/library/menu-boards">{% trans "Menu Boards" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}library/menu-boards">{% trans "Menu Boards" %}</a></li>
             {% endif %}
         {% endif %}
 
@@ -54,27 +54,27 @@
         {% if countViewable > 0 %}
             <li class="sidebar-title"><a>{% trans "Displays" %}</a></li>
             {% if currentUser.featureEnabled("displays.view") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/displays/displays">{% trans "Displays" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}displays/displays">{% trans "Displays" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("displaygroup.view") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/displays/display-groups">{% trans "Display Groups" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}displays/display-groups">{% trans "Display Groups" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("display.syncView") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/displays/sync-groups">{% trans "Sync Groups" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}displays/sync-groups">{% trans "Sync Groups" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("displayprofile.view") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/displays/settings">{% trans "Display Settings" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}displays/settings">{% trans "Display Settings" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("playersoftware.view") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/displays/player-versions">{% trans "Player Versions" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}displays/player-versions">{% trans "Player Versions" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("command.view") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/displays/commands">{% trans "Commands" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}displays/commands">{% trans "Commands" %}</a></li>
             {% endif %}
         {% endif %}
 
@@ -90,43 +90,43 @@
             <li class="sidebar-title"><a>{% trans "Administration" %}</a></li>
 
             {% if userMenuViewable %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/administration/users">{% trans "Users" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}administration/users">{% trans "Users" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("usergroup.view") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/administration/user-groups">{% trans "User Groups" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}administration/user-groups">{% trans "User Groups" %}</a></li>
             {% endif %}
 
             {% if currentUser.isSuperAdmin() %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/administration/settings">{% trans "Settings" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}administration/settings">{% trans "Settings" %}</a></li>
             {% endif %}
 
             {% if currentUser.isSuperAdmin() %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/administration/applications">{% trans "Applications" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}administration/applications">{% trans "Applications" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("module.view") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/administration/modules">{% trans "Modules" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}administration/modules">{% trans "Modules" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("transition.view") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/administration/transitions">{% trans "Transitions" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}administration/transitions">{% trans "Transitions" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("task.view") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/administration/tasks">{% trans "Tasks" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}administration/tasks">{% trans "Tasks" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("tag.view") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/administration/tags">{% trans "Tags" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}administration/tags">{% trans "Tags" %}</a></li>
             {% endif %}
 
             {% if currentUser.isSuperAdmin() %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri }}prototype/administration/folders">{% trans "Folders" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}administration/folders">{% trans "Folders" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("font.view") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/administration/fonts">{% trans "Fonts" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}administration/fonts">{% trans "Fonts" %}</a></li>
             {% endif %}
         {% endif %}
 
@@ -136,15 +136,15 @@
             <li class="sidebar-title"><a>{% trans "Reporting" %}</a></li>
 
             {% if currentUser.featureEnabled("report.view") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/reporting/all-reports">{% trans "All Reports" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}reporting/all-reports">{% trans "All Reports" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("report.scheduling") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/reporting/report-schedules">{% trans "Report Schedules" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}reporting/report-schedules">{% trans "Report Schedules" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("report.saving") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/reporting/saved-reports">{% trans "Saved Reports" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}reporting/saved-reports">{% trans "Saved Reports" %}</a></li>
             {% endif %}
 
         {% endif %}
@@ -154,15 +154,15 @@
             <li class="sidebar-title"><a>{% trans "Advanced" %}</a></li>
 
             {% if currentUser.featureEnabled("log.view") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/advanced/log">{% trans "Log" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}advanced/log">{% trans "Log" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("sessions.view") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/advanced/sessions">{% trans "Sessions" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}advanced/sessions">{% trans "Sessions" %}</a></li>
             {% endif %}
 
             {% if currentUser.featureEnabled("auditlog.view") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/advanced/audit-trail">{% trans "Audit Trail" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}advanced/audit-trail">{% trans "Audit Trail" %}</a></li>
             {% endif %}
         {% endif %}
 
@@ -171,7 +171,7 @@
             <li class="sidebar-title"><a>{% trans "Developer" %}</a></li>
 
             {% if currentUser.featureEnabled("developer.edit") %}
-                <li class="sidebar-list"><a href="{{ theme.rootUri() }}prototype/developer/template">{% trans "Module Templates" %}</a></li>
+                <li class="sidebar-list"><a href="{{ theme.rootUri() }}developer/template">{% trans "Module Templates" %}</a></li>
             {% endif %}
         {% endif %}
     </ul>

@@ -13,6 +13,7 @@ node_modules
 results.xml
 containers/
 web/dist
+web/app
 modules/bundle*.js*
 modules/assets/pdfjs
 

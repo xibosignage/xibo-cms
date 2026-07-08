@@ -34,7 +34,7 @@ import { getSafeRedirectUrl, publicPath } from './utils';
 const config = window.__LOGIN_CONFIG__;
 
 // Module-level so publicPath is evaluated once after DOM is ready.
-const FORCE_CHANGE_PASSWORD_PATH = `${publicPath}prototype/user/force-change-password`;
+const FORCE_CHANGE_PASSWORD_PATH = `${publicPath}user/force-change-password`;
 
 // Module-level so the React Compiler doesn't flag it as a mutation inside the component.
 function navigateTo(url: string) {

@@ -29,6 +29,7 @@ import WithPageWrapper from '@/app/WithPageWrapper';
 import ProtectedRoute from '@/components/layout/ProtectedRoute';
 import { APP_ROUTES, DEFAULT_INTERNAL_ROUTE } from '@/config/appRoutes';
 import type { AppRoute } from '@/config/appRoutes';
+import { getRouterBasename, publicPath } from '@/config/publicPath';
 
 const flattenRoutes = (routes: AppRoute[], base = ''): RouteObject[] => {
   return routes.reduce((acc: RouteObject[], route: AppRoute) => {
@@ -101,7 +102,7 @@ export const router = createBrowserRouter(
       path: 'login',
       loader: () => {
         // Force to go to server login page
-        window.location.href = '/login';
+        window.location.href = `${publicPath}login`;
         return null;
       },
     },
@@ -111,6 +112,6 @@ export const router = createBrowserRouter(
     },
   ],
   {
-    basename: '/prototype',
+    basename: getRouterBasename(),
   },
 );

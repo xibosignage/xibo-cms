@@ -10,7 +10,7 @@
         var librarySearchUrl = "{{ url_for("library.search.all") }}";
         var libraryAddUrl = "{{ url_for("library.add") }}";
         var templateSearchUrl = "{{ url_for("template.search.all") }}";
-        var defaultThumbnailUrl = '/img/thumbs/placeholder.png';
+        var defaultThumbnailUrl = "{{ theme.rootUri() }}img/thumbs/placeholder.png";
         var uploadFormUpdateAllDefault = {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}true{% else %}false{% endif %};
         var uploadFormDeleteOldDefault = {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == 1 %}true{% else %}false{% endif %};
         var assetDownloadUrl = "{{ url_for("module.asset.download", {assetId: ':assetId'}) }}";
@@ -95,7 +95,7 @@
                     type: 'PUT'
                 },
                 list: {
-                    url: "{{ theme.rootUri() }}prototype/design/layout"
+                    url: "{{ theme.rootUri() }}design/layout"
                 },
                 status: {
                     url: "{{ url_for("layout.status", {id: ':id'}) }}"
@@ -142,7 +142,7 @@
             },
             template: {
                 list: {
-                    url: "{{ theme.rootUri() }}prototype/design/templates"
+                    url: "{{ theme.rootUri() }}design/templates"
                 },
                 getProviders: {
                     url: "{{ url_for("template.search.providers") }}",
