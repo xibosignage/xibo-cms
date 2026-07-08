@@ -212,7 +212,7 @@ class Login extends Base
                 JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE
             ),
             'loginJsUrl'      => \Xibo\Helper\ViteManifest::getJsUrl('login.html', $this->getConfig()->rootUri()),
-            'loginCssUrl'     => \Xibo\Helper\ViteManifest::getCssUrl('login.html', $this->getConfig()->rootUri()),
+            'loginCssUrls'    => \Xibo\Helper\ViteManifest::getCssUrls('login.html', $this->getConfig()->rootUri()),
             'assetBase'       => \Xibo\Helper\ViteManifest::getAssetBase($this->getConfig()->rootUri()),
             'viteClientUrl'   => \Xibo\Helper\ViteManifest::getClientUrl(),
             'viteRefreshUrl'  => \Xibo\Helper\ViteManifest::getRefreshUrl(),

@@ -19,9 +19,9 @@
     <link rel="shortcut icon" href="/brand/favicon.ico"/>
     <link rel="stylesheet" href="/brand/theme.css">
 
-    {% if appCssUrl %}
-        <link rel="stylesheet" href="{{ appCssUrl }}">
-    {% endif %}
+    {% for cssUrl in appCssUrls %}
+        <link rel="stylesheet" href="{{ cssUrl }}">
+    {% endfor %}
 </head>
 <body>
     <div id="root"></div>

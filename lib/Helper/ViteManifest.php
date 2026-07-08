@@ -109,17 +109,55 @@ class ViteManifest
     }
 
     /**
-     * Returns the CSS bundle URL for the given entry point, or null.
-     * In dev mode Vite injects CSS via JS — no separate CSS URL is needed.
+     * Returns the CSS bundle URLs for the given entry point, including CSS pulled in by every
+     * chunk the entry statically imports. Rollup/Vite may split a component's CSS into its own
+     * shared chunk (e.g. one also used by another entry) rather than attaching it to the entry's
+     * own bundle, so reading only the entry's 'css' array can silently miss stylesheets.
+     * Empty array in dev mode (Vite injects CSS via JS — no separate CSS URL is needed).
+     *
+     * @return string[]
      */
-    public static function getCssUrl(string $entry, string $rootUri = '/'): ?string
+    public static function getCssUrls(string $entry, string $rootUri = '/'): array
     {
         if (self::isDevMode()) {
-            return null;
+            return [];
         }
 
-        $css = self::load()[$entry]['css'][0] ?? null;
-        return $css !== null ? $rootUri . ltrim(self::VITE_BASE, '/') . $css : null;
+        $files = array_unique(self::collectCssFiles($entry, self::load()));
+
+        return array_map(
+            fn (string $css) => $rootUri . ltrim(self::VITE_BASE, '/') . $css,
+            $files
+        );
+    }
+
+    /**
+     * Recursively collects CSS files for a manifest entry and everything it statically imports.
+     * Dynamic imports are deliberately excluded — Vite injects their CSS at runtime when that
+     * chunk is actually loaded, so eagerly including it here would be wasted/unused preloading.
+     *
+     * @param array<string, array<string, mixed>> $manifest
+     * @param array<string, bool> $visited
+     * @return string[]
+     */
+    private static function collectCssFiles(string $entry, array $manifest, array &$visited = []): array
+    {
+        if (isset($visited[$entry])) {
+            return [];
+        }
+        $visited[$entry] = true;
+
+        $chunk = $manifest[$entry] ?? null;
+        if ($chunk === null) {
+            return [];
+        }
+
+        $css = $chunk['css'] ?? [];
+        foreach ($chunk['imports'] ?? [] as $importedKey) {
+            $css = array_merge($css, self::collectCssFiles($importedKey, $manifest, $visited));
+        }
+
+        return $css;
     }
 
     /**

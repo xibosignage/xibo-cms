@@ -13,9 +13,9 @@
     <link rel="shortcut icon" href="/brand/favicon.ico"/>
     <link rel="stylesheet" href="/brand/theme.css">
 
-    {% if loginCssUrl %}
-        <link rel="stylesheet" href="{{ loginCssUrl }}">
-    {% endif %}
+    {% for cssUrl in loginCssUrls %}
+        <link rel="stylesheet" href="{{ cssUrl }}">
+    {% endfor %}
 
     {#
         Config blob: json_encode with JSON_HEX_* flags in PHP prevents </script> injection.

@@ -208,7 +208,7 @@ class Handlers
                             return $twig->render($response, 'app-spa.twig', array_merge($viewParams, [
                                 'csrfToken'      => '',
                                 'appJsUrl'       => $appJsUrl,
-                                'appCssUrl'      => \Xibo\Helper\ViteManifest::getCssUrl('index.html', $rootUri),
+                                'appCssUrls'     => \Xibo\Helper\ViteManifest::getCssUrls('index.html', $rootUri),
                                 'assetBase'      => \Xibo\Helper\ViteManifest::getAssetBase($rootUri),
                                 'viteClientUrl'  => \Xibo\Helper\ViteManifest::getClientUrl(),
                                 'viteRefreshUrl' => \Xibo\Helper\ViteManifest::getRefreshUrl(),
@@ -299,7 +299,7 @@ class Handlers
                                     JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
                                 ),
                                 'loginJsUrl'      => $loginJsUrl,
-                                'loginCssUrl'     => \Xibo\Helper\ViteManifest::getCssUrl('login.html', $rootUri),
+                                'loginCssUrls'    => \Xibo\Helper\ViteManifest::getCssUrls('login.html', $rootUri),
                                 'assetBase'       => \Xibo\Helper\ViteManifest::getAssetBase($rootUri),
                                 'viteClientUrl'   => \Xibo\Helper\ViteManifest::getClientUrl(),
                                 'viteRefreshUrl'  => \Xibo\Helper\ViteManifest::getRefreshUrl(),
