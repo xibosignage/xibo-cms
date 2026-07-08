@@ -75,18 +75,20 @@ const XiboPlayer = function() {
                 cmsData: data,
             });
 
+            // Normalise the CMS data to an object BEFORE merging real-time
+            // data. On some player consumers (e.g. ChromeOS) getData resolves
+            // to a JSON string rather than a parsed object; merging real-time
+            // data first and re-parsing afterwards silently discarded it.
+            let widgetData = (typeof data === 'string') ? JSON.parse(data) : data;
+
             if (realTimeData) {
               console.debug('[XiboPlayer::getWidgetData] - Promise.all > Serving real-time data');
-              data.data = realTimeData;
+              widgetData.data = realTimeData;
             }
 
-            let widgetData = data;
             console.debug('[XiboPlayer::getWidgetData] - Promise.all > widgetData', {
                 widgetData,
             });
-            if (typeof widgetData === 'string') {
-              widgetData = JSON.parse(data);
-            }
 
             return {...widgetData, isDataReady: true};
           },
