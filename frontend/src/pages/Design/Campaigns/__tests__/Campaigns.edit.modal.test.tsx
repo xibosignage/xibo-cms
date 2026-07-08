@@ -56,7 +56,10 @@ vi.mock('@/hooks/useDebounce');
 
 vi.mock('@/components/ui/modals/Modal');
 vi.mock('@/components/ui/forms/SelectFolder', () => ({ default: () => null }));
-vi.mock('@/components/ui/forms/TagInput', () => ({ default: () => null }));
+vi.mock('@/components/ui/forms/TagInput', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/components/ui/forms/TagInput')>();
+  return { ...actual, default: () => null };
+});
 
 // Stub SearchAssignPanel so tests are not coupled to its internal rendering.
 // Exposes Remove/Add/Clear All buttons to simulate layout assignment changes.
