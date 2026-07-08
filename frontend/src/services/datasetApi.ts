@@ -21,6 +21,7 @@
 
 import axios from 'axios';
 
+import { withPublicPath } from '@/config/publicPath';
 import http from '@/lib/api';
 import type {
   Dataset,
@@ -327,7 +328,7 @@ export async function importDatasetCsv(
 }
 
 export async function testRemoteDataset(payload: UpdateDatasetRequest) {
-  const response = await axios.post('/dataset/remote/test', payload);
+  const response = await axios.post(withPublicPath('dataset/remote/test'), payload);
   return response.data;
 }
 

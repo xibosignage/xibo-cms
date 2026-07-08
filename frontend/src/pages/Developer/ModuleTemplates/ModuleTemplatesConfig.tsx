@@ -26,7 +26,9 @@ import type { ComponentProps } from 'react';
 
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
 import type { SelectOption } from '@/components/ui/forms/SelectDropdown';
+import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
 import { ActionsCell, TextCell } from '@/components/ui/table/cells';
+import { withPublicPath } from '@/config/publicPath';
 import type { ModuleTemplate } from '@/types/moduleTemplates';
 import type { ActionItem } from '@/types/table';
 
@@ -43,7 +45,7 @@ export interface ModuleTemplateFilterInput {
   dataType?: string | null;
 }
 
-export type ModalType = 'add' | 'copy' | 'delete' | 'share' | null;
+export type ModalType = 'add' | 'copy' | 'delete' | 'bulkDelete' | 'share' | null;
 
 export const INITIAL_FILTER_STATE: ModuleTemplateFilterInput = {
   id: null,
@@ -82,6 +84,12 @@ export interface ModuleTemplateActionsProps {
   onCopy: (template: ModuleTemplate) => void;
   onDelete: (template: ModuleTemplate) => void;
   onShare: (template: ModuleTemplate) => void;
+  currentUserId: number;
+  isSuperAdmin: boolean;
+  /** "Add/Edit custom modules and templates" global feature. */
+  canManageTemplates: boolean;
+  /** "Delete custom modules and templates" global feature — distinct from canManageTemplates. */
+  canDeleteTemplates: boolean;
 }
 
 export const getModuleTemplateItemActions = ({
@@ -90,11 +98,25 @@ export const getModuleTemplateItemActions = ({
   onCopy,
   onDelete,
   onShare,
+  currentUserId,
+  isSuperAdmin,
+  canManageTemplates,
+  canDeleteTemplates,
 }: ModuleTemplateActionsProps): ((template: ModuleTemplate) => ActionItem[]) => {
   return (template: ModuleTemplate) => {
     const actions: ActionItem[] = [];
+    const isUserTemplate = template.ownership === 'user';
+    const isOwner = template.ownerId === currentUserId;
+    // Edit/Copy/Export require BOTH the global "manage templates" feature and the
+    // per-template share permission — a share grant alone is not enough.
+    const canEdit = isUserTemplate && canManageTemplates && !!(template.userPermissions?.edit ?? 1);
+    // Delete has its own distinct global feature, separate from edit/manage.
+    const canDelete =
+      isUserTemplate && canDeleteTemplates && !!(template.userPermissions?.delete ?? 1);
+    // Share is never granted via a share permission — only the owner or a Super Admin may share.
+    const canShare = isOwner || isSuperAdmin;
 
-    if (template.ownership === 'user') {
+    if (canEdit) {
       actions.push(
         {
           label: t('Edit'),
@@ -112,7 +134,7 @@ export const getModuleTemplateItemActions = ({
           label: t('Export XML'),
           icon: Download,
           onClick: () => {
-            window.location.href = `/developer/template/${template.id}/export`;
+            window.location.href = withPublicPath(`developer/template/${template.id}/export`);
           },
         },
         {
@@ -123,15 +145,21 @@ export const getModuleTemplateItemActions = ({
       );
     }
 
-    actions.push({ isSeparator: true });
-    actions.push({
-      label: t('Share'),
-      icon: Share2,
-      onClick: () => onShare(template),
-    });
+    if (canShare) {
+      if (actions.length > 0) {
+        actions.push({ isSeparator: true });
+      }
+      actions.push({
+        label: t('Share'),
+        icon: Share2,
+        onClick: () => onShare(template),
+      });
+    }
 
-    if (template.ownership === 'user') {
-      actions.push({ isSeparator: true });
+    if (canDelete) {
+      if (actions.length > 0) {
+        actions.push({ isSeparator: true });
+      }
       actions.push({
         label: t('Delete'),
         icon: Trash2,
@@ -143,6 +171,40 @@ export const getModuleTemplateItemActions = ({
     return actions;
   };
 };
+
+interface GetBulkActionsProps {
+  t: TFunction;
+  onBulkDelete: () => void;
+  onBulkShare: () => void;
+  isSuperAdmin: boolean;
+  canDeleteTemplates: boolean;
+}
+
+export const getBulkActions = ({
+  t,
+  onBulkDelete,
+  onBulkShare,
+  isSuperAdmin,
+  canDeleteTemplates,
+}: GetBulkActionsProps): DataTableBulkAction<ModuleTemplate>[] => [
+  {
+    // Bulk selections can span templates the current user doesn't own, so — same as the
+    // per-row action — Share is only enabled here for Super Admins. Shown but disabled
+    // (rather than omitted) so a view-only user can see the action exists without being
+    // able to use it.
+    label: t('Share'),
+    icon: Share2,
+    onClick: onBulkShare,
+    disabled: !isSuperAdmin,
+  },
+  {
+    label: t('Delete Selected'),
+    icon: Trash2,
+    onClick: onBulkDelete,
+    variant: 'danger',
+    disabled: !canDeleteTemplates,
+  },
+];
 
 export const getModuleTemplateColumns = (
   props: ModuleTemplateActionsProps,

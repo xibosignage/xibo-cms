@@ -38,6 +38,7 @@ import TimeConnectedSavedReport from './TimeConnectedSavedReport';
 
 import Button from '@/components/ui/Button';
 import TabNav from '@/components/ui/TabNav';
+import { withPublicPath } from '@/config/publicPath';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { fetchSavedReportData } from '@/services/savedReportApi';
 import type { TimeConnectedTable } from '@/services/timeConnectedApi';
@@ -232,7 +233,9 @@ export default function SavedReportViewer() {
 
   const [viewMode, setViewMode] = useState<'table' | 'chart'>('table');
 
-  const exportUrl = `/json/report/savedreport/${savedReportId}/report/${reportName}/export`;
+  const exportUrl = withPublicPath(
+    `json/report/savedreport/${savedReportId}/report/${reportName}/export`,
+  );
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['savedReport', 'open', savedReportId, reportName],

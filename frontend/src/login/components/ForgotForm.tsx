@@ -35,25 +35,31 @@ export function ForgotForm({ onSent, onBack }: Props) {
 
   return (
     <form onSubmit={handleSubmit} noValidate>
-      <p className="mb-3 text-sm text-gray-600">{t('forgotPrompt')}</p>
+      <p className="login-prompt">{t('forgotPrompt')}</p>
 
-      <input
-        type="text"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        placeholder={t('username')}
-        autoComplete="username"
-        autoFocus
-        required
-        className="form-control mb-3"
-      />
+      <div className="login-field">
+        <label className="login-label" htmlFor="forgot-username">
+          {t('username')}
+        </label>
+        <input
+          id="forgot-username"
+          type="text"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          placeholder={t('usernamePlaceholder')}
+          autoComplete="username"
+          autoFocus
+          required
+          className="login-input"
+        />
+      </div>
 
       {error && <ErrorBanner message={error} />}
 
       <SubmitButton label={t('forgotSendButton')} loading={loading} />
 
-      <p className="mt-3 text-center text-sm">
-        <button type="button" onClick={onBack} className="btn-link btn-link-muted">
+      <p className="login-alt">
+        <button type="button" onClick={onBack} className="login-link login-link-muted">
           {t('loginInstead')}
         </button>
       </p>

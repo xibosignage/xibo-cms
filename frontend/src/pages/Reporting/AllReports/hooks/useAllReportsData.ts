@@ -49,7 +49,7 @@ function withSspActivityReport(data: ReportsByCategory, t: TFunction): ReportsBy
     category: SSP_REPORT_CATEGORY,
     feature: 'report.view',
     adminOnly: 1,
-    prototype_url: '/prototype/reporting/ssp-activity',
+    url: '/reporting/ssp-activity',
   };
 
   const existing = data[SSP_REPORT_CATEGORY] ?? [];

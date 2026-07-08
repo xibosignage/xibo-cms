@@ -48,7 +48,7 @@ RUN npm run publish
 
 
 # Stage 3
-# Build prototype
+# Build the React app
 FROM node:22 AS vite
 WORKDIR /app/frontend
 
@@ -216,8 +216,8 @@ COPY --from=webpack /app/web/dist /var/www/cms/web/dist
 # Copy modules built webpack app folder to cms modules
 COPY --from=webpack /app/modules /var/www/cms/modules
 
-# Copy frontend built prototype folder to cms web
-COPY --from=vite /app/frontend/dist /var/www/cms/web/prototype
+# Copy the built React app to the cms web asset folder (served under /app)
+COPY --from=vite /app/frontend/dist /var/www/cms/web/app
 
 # All other files (.dockerignore excludes many things, but we tidy up the rest below)
 COPY --chown=www-data:www-data . /var/www/cms

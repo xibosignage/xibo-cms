@@ -112,7 +112,7 @@ mkdir -p /var/www/cms/library/brand/layouts
 # logo.svg / logo-icon.svg have a WL-providable .png alternative. Only copy the default
 # .svg when neither variant is present, so a WL .png survives a rebuild instead of being
 # shadowed by our default .svg (every downstream probe prefers .svg when both exist).
-for base in logo logo-icon; do
+for base in logo logo-icon logo-dark; do
   if [ ! -f "/var/www/cms/library/brand/$base.svg" ] && [ ! -f "/var/www/cms/library/brand/$base.png" ]; then
     cp "/brand/$base.svg" "/var/www/cms/library/brand/$base.svg"
   fi

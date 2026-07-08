@@ -67,6 +67,13 @@ export interface ModuleTemplateProperty {
   };
 }
 
+export interface ModuleTemplatePermissions {
+  view?: number;
+  edit?: number;
+  delete?: number;
+  modifyPermissions?: number;
+}
+
 export interface ModuleTemplate {
   id: number;
   templateId: string;
@@ -84,6 +91,7 @@ export interface ModuleTemplate {
   onTemplateVisible: string | null;
   stencil: ModuleTemplateStencil | null;
   properties: ModuleTemplateProperty[] | null;
+  userPermissions?: ModuleTemplatePermissions;
 }
 
 export interface DataType {

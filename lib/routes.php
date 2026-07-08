@@ -42,7 +42,7 @@ $app->post('/tfa', ['\Xibo\Controller\Login' , 'twoFactorAuthValidate'])->setNam
 $app->get('/schedule', ['\Xibo\Controller\Schedule','grid'])->setName('schedule.search');
 
 $app->get('/schedule/{id}/events', ['\Xibo\Controller\Schedule','eventList'])->setName('schedule.events');
-$app->get('/schedule/{id}', ['\Xibo\Controller\Schedule','searchById'])
+$app->get('/schedule/{id:[0-9]+}', ['\Xibo\Controller\Schedule','searchById'])
     ->add(new FeatureAuth($app->getContainer(), ['schedule.view']))
     ->setName('schedule.search.id');
 
@@ -51,10 +51,10 @@ $app->post('/schedule', ['\Xibo\Controller\Schedule','add'])
     ->setName('schedule.add');
 
 $app->group('', function (RouteCollectorProxy $group) {
-    $group->put('/schedule/{id}', ['\Xibo\Controller\Schedule','edit'])
+    $group->put('/schedule/{id:[0-9]+}', ['\Xibo\Controller\Schedule','edit'])
         ->setName('schedule.edit');
 
-    $group->delete('/schedule/{id}', ['\Xibo\Controller\Schedule','delete'])
+    $group->delete('/schedule/{id:[0-9]+}', ['\Xibo\Controller\Schedule','delete'])
         ->setName('schedule.delete');
 
     $group->delete('/schedulerecurrence/{id}', ['\Xibo\Controller\Schedule','deleteRecurrence'])
@@ -275,12 +275,13 @@ $app->group('', function (RouteCollectorProxy $group) {
  * Library
  */
 $app->get('/library', ['\Xibo\Controller\Library','grid'])->setName('library.search');
-$app->get('/library/{id}', ['\Xibo\Controller\Library','searchById'])->setName('library.search.id');
+$app->get('/library/{id:[0-9]+}', ['\Xibo\Controller\Library','searchById'])->setName('library.search.id');
 $app->get('/library/{id}/isused', ['\Xibo\Controller\Library','isUsed'])->setName('library.isused');
 
 $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/library/usage/{id}', ['\Xibo\Controller\Library','usage'])->setName('library.usage');
-    $group->get('/library/usage/layouts/{id}', ['\Xibo\Controller\Library','usageLayouts'])->setName('library.usage.layouts');
+    $group->get('/library/usage/layouts/{id}', ['\Xibo\Controller\Library','usageLayouts'])
+        ->setName('library.usage.layouts');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['library.view']));
 
 $app->get('/library/download/{id}', ['\Xibo\Controller\Library', 'download'])->setName('library.download');
@@ -296,12 +297,14 @@ $app->group('', function (RouteCollectorProxy $group) {
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['library.add']));
 
 $app->group('', function (RouteCollectorProxy $group) {
-    $group->put('/library/{id}', ['\Xibo\Controller\Library','edit'])->setName('library.edit');
-    $group->put('/library/setenablestat/{id}', ['\Xibo\Controller\Library','setEnableStat'])->setName('library.setenablestat');
+    $group->put('/library/{id:[0-9]+}', ['\Xibo\Controller\Library','edit'])->setName('library.edit');
+    $group->put('/library/setenablestat/{id}', ['\Xibo\Controller\Library','setEnableStat'])
+        ->setName('library.setenablestat');
     $group->delete('/library/tidy', ['\Xibo\Controller\Library','tidy'])->setName('library.tidy');
-    $group->delete('/library/{id}', ['\Xibo\Controller\Library','delete'])->setName('library.delete');
+    $group->delete('/library/{id:[0-9]+}', ['\Xibo\Controller\Library','delete'])->setName('library.delete');
     $group->post('/library/copy/{id}', ['\Xibo\Controller\Library','copy'])->setName('library.copy');
-    $group->put('/library/{id}/selectfolder', ['\Xibo\Controller\Library','selectFolder'])->setName('library.selectfolder');
+    $group->put('/library/{id}/selectfolder', ['\Xibo\Controller\Library','selectFolder'])
+        ->setName('library.selectfolder');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['library.modify']));
 
 // Tagging
@@ -539,19 +542,26 @@ $app->get('/user/me', ['\Xibo\Controller\User','myDetails'])->setName('user.me')
 $app->get('/user/types', ['\Xibo\Controller\User','getUserTypes'])->setName('user.types');
 $app->get('/user', ['\Xibo\Controller\User','grid'])->setName('user.search');
 $app->get('/user/{id}/applications', ['\Xibo\Controller\User', 'applicationsGrid'])->setName('user.applications');
-$app->get('/user/{id}', ['\Xibo\Controller\User','searchById'])->setName('user.search.id');
+$app->get('/user/{id:[0-9]+}', ['\Xibo\Controller\User','searchById'])->setName('user.search.id');
 $app->put('/user/profile/edit', ['\Xibo\Controller\User','editProfile'])->setName('user.edit.profile');
 $app->get('/user/profile/setup', ['\Xibo\Controller\User','tfaSetup'])->setName('user.setup.profile');
 $app->post('/user/profile/validate', ['\Xibo\Controller\User','tfaValidate'])->setName('user.validate.profile');
-$app->get('/user/profile/recoveryGenerate', ['\Xibo\Controller\User','tfaRecoveryGenerate'])->setName('user.recovery.generate.profile');
-$app->get('/user/profile/recoveryShow', ['\Xibo\Controller\User','tfaRecoveryShow'])->setName('user.recovery.show.profile');
-$app->put('/user/password/forceChange', ['\Xibo\Controller\User','forceChangePassword'])->setName('user.force.change.password');
+$app->get('/user/profile/recoveryGenerate', ['\Xibo\Controller\User','tfaRecoveryGenerate'])
+    ->setName('user.recovery.generate.profile');
+$app->get('/user/profile/recoveryShow', ['\Xibo\Controller\User','tfaRecoveryShow'])
+    ->setName('user.recovery.show.profile');
+$app->put('/user/password/forceChange', ['\Xibo\Controller\User','forceChangePassword'])
+    ->setName('user.force.change.password');
 
 // permissions
-$app->get('/user/permissions/{entity}/{id}', ['\Xibo\Controller\User','permissionsGrid'])->setName('user.permissions');
-$app->get('/user/permissions/{entity}', ['\Xibo\Controller\User','permissionsMultiGrid'])->setName('user.permissions.multi');
-$app->post('/user/permissions/{entity}/{id}', ['\Xibo\Controller\User','permissions'])->setName('user.set.permissions');
-$app->post('/user/permissions/{entity}', ['\Xibo\Controller\User','permissionsMulti'])->setName('user.set.permissions.multi');
+$app->get('/user/permissions/{entity}/{id}', ['\Xibo\Controller\User','permissionsGrid'])
+    ->setName('user.permissions');
+$app->get('/user/permissions/{entity}', ['\Xibo\Controller\User','permissionsMultiGrid'])
+    ->setName('user.permissions.multi');
+$app->post('/user/permissions/{entity}/{id}', ['\Xibo\Controller\User','permissions'])
+    ->setName('user.set.permissions');
+$app->post('/user/permissions/{entity}', ['\Xibo\Controller\User','permissionsMulti'])
+    ->setName('user.set.permissions.multi');
 
 $app->post('/user', ['\Xibo\Controller\User','add'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['users.add']))
@@ -562,9 +572,10 @@ $app->put('/user/welcome', ['\Xibo\Controller\User','userWelcomeSetSeen'])->setN
 $app->post('/user/welcome', ['\Xibo\Controller\User','userWelcomeSetUnseen'])->setName('welcome.wizard.unseen');
 
 $app->group('', function (RouteCollectorProxy $group) {
-    $group->put('/user/{id}', ['\Xibo\Controller\User','edit'])->setName('user.edit');
-    $group->delete('/user/{id}', ['\Xibo\Controller\User','delete'])->setName('user.delete');
-    $group->post('/user/{id}/usergroup/assign', ['\Xibo\Controller\User','assignUserGroup'])->setName('user.assign.userGroup');
+    $group->put('/user/{id:[0-9]+}', ['\Xibo\Controller\User','edit'])->setName('user.edit');
+    $group->delete('/user/{id:[0-9]+}', ['\Xibo\Controller\User','delete'])->setName('user.delete');
+    $group->post('/user/{id}/usergroup/assign', ['\Xibo\Controller\User','assignUserGroup'])
+        ->setName('user.assign.userGroup');
     $group->post('/user/{id}/setHomeFolder', ['\Xibo\Controller\User', 'setHomeFolder'])
         ->addMiddleware(new FeatureAuth($group->getContainer(), ['folder.userHome']))
         ->setName('user.homeFolder');

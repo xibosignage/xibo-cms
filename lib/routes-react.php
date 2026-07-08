@@ -140,10 +140,15 @@ $app->get('/report/available', ['\Xibo\Controller\Stats', 'availableReports'])
 //
 // Saved reports
 //
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/report/savedreport/{id}/report/{name}/open', ['\Xibo\Controller\SavedReport','savedReportOpen'])->setName('savedreport.open');
-    $group->get('/report/savedreport/{id}/report/{name}/export', ['\Xibo\Controller\SavedReport','savedReportExport'])->setName('savedreport.export');
-    $group->get('/report/savedreport/{id}/report/{name}/convert', ['\Xibo\Controller\SavedReport','savedReportConvert'])->setName('savedreport.convert');
+$app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
+    $group->get('/report/savedreport/{id}/report/{name}/open', ['\Xibo\Controller\SavedReport', 'savedReportOpen'])
+        ->setName('savedreport.open');
+    $group->get('/report/savedreport/{id}/report/{name}/export', ['\Xibo\Controller\SavedReport', 'savedReportExport'])
+        ->setName('savedreport.export');
+    $group->get(
+        '/report/savedreport/{id}/report/{name}/convert',
+        ['\Xibo\Controller\SavedReport', 'savedReportConvert']
+    )->setName('savedreport.convert');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['report.saving']));
 
 $app->get('/stats/export/count', ['\Xibo\Controller\Stats', 'exportStatsCount'])
@@ -153,6 +158,10 @@ $app->get('/stats/export/count', ['\Xibo\Controller\Stats', 'exportStatsCount'])
 //
 // Developer
 //
+$app->delete('/developer/template/{id}', ['\Xibo\Controller\Developer', 'templateDelete'])
+    ->setName('developer.templates.delete')
+    ->addMiddleware(new FeatureAuth($app->getContainer(), ['developer.delete']));
+
 $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/developer/template/datatypes', ['\Xibo\Controller\Developer', 'getAvailableDataTypes'])
         ->setName('developer.templates.datatypes.search');
@@ -164,8 +173,6 @@ $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
         ->setName('developer.templates.add');
     $group->put('/developer/template/{id}', ['\Xibo\Controller\Developer', 'templateEdit'])
         ->setName('developer.templates.edit');
-    $group->delete('/developer/template/{id}', ['\Xibo\Controller\Developer', 'templateDelete'])
-        ->setName('developer.templates.delete');
     $group->get('/developer/template/{id}/export', ['\Xibo\Controller\Developer', 'templateExport'])
         ->setName('developer.templates.export');
     $group->post('/developer/template/import', ['\Xibo\Controller\Developer', 'templateImport'])

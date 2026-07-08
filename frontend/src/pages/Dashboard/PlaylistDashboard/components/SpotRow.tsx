@@ -27,6 +27,7 @@ import { twMerge } from 'tailwind-merge';
 import type { SpotUploadState } from '../hooks/usePlaylistDashboardActions';
 
 import Button from '@/components/ui/Button';
+import { withPublicPath } from '@/config/publicPath';
 import { ACCEPTED_MIME_TYPES, getMediaIcon } from '@/pages/Library/Media/MediaConfig';
 import type { SpotWidget } from '@/types/dashboard';
 import { formatFileSizeIEC } from '@/utils/formatters';
@@ -45,7 +46,7 @@ function SpotThumbnail({ widget, blobUrl }: { widget?: SpotWidget; blobUrl?: str
   const thumbnailSrc =
     blobUrl ??
     (widget?.regionSpecific === 0 && widget?.type === 'image' && widget?.mediaIds[0]
-      ? `/library/thumbnail/${widget.mediaIds[0]}`
+      ? withPublicPath(`library/thumbnail/${widget.mediaIds[0]}`)
       : null);
 
   if (thumbnailSrc) {

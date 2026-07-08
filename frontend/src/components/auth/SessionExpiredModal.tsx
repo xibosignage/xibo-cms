@@ -28,6 +28,7 @@ import Button from '../ui/Button';
 import type { ModalAction } from '../ui/modals/Modal';
 import Modal from '../ui/modals/Modal';
 
+import { withPublicPath } from '@/config/publicPath';
 import http from '@/lib/api';
 import { authEvents } from '@/lib/auth-events';
 
@@ -98,7 +99,7 @@ export function SessionExpiredModal() {
       label: t('Log Out'),
       onClick: () => {
         setIsOpen(false);
-        window.location.href = '/logout';
+        window.location.href = withPublicPath('logout');
       },
       variant: 'secondary',
     },
@@ -106,7 +107,8 @@ export function SessionExpiredModal() {
       label: t('Log In'),
       onClick: () => {
         const currentPath = window.location.pathname + window.location.search;
-        window.location.href = '/login?priorRoute=' + encodeURIComponent(currentPath);
+        window.location.href =
+          withPublicPath('login') + '?priorRoute=' + encodeURIComponent(currentPath);
       },
       disabled: isChecking,
     },

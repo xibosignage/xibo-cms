@@ -37,6 +37,7 @@ import 'react-leaflet-cluster/dist/assets/MarkerCluster.css';
 
 import type { DisplayFilterInput } from '../DisplaysConfig';
 
+import { withPublicPath } from '@/config/publicPath';
 import { useUserContext } from '@/context/UserContext';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { fetchDisplaysMap } from '@/services/displaysApi';
@@ -408,7 +409,7 @@ export default function DisplayMap({ filters, folderId }: DisplayMapProps) {
           return (
             <div key={`${item.colour}-${item.state}`} className="flex items-center gap-2">
               <img
-                src={`/dist/assets/map-marker-${item.colour}-${item.state}.png`}
+                src={withPublicPath(`dist/assets/map-marker-${item.colour}-${item.state}.png`)}
                 alt={item.label}
                 style={{ width: 12, height: 20 }}
               />

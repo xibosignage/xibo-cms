@@ -26,6 +26,7 @@ import { useNavigate } from 'react-router-dom';
 import type { NavigateFunction } from 'react-router-dom';
 
 import EditorChrome from '@/components/editor/EditorChrome';
+import { withPublicPath } from '@/config/publicPath';
 
 interface EditorHostProps {
   id: string;
@@ -107,7 +108,10 @@ export default function EditorHost({
 
     try {
       const path = frame.contentWindow?.location.pathname ?? '';
-      if (path && !path.startsWith(stayPathPrefix)) {
+      // The iframe loads the legacy editor under the install root (e.g. /cms/layout/designer/5),
+      // so compare against the rootUri-prefixed prefix — otherwise we'd wrongly detect a
+      // navigation-away and exit on alias installs.
+      if (path && !path.startsWith(withPublicPath(stayPathPrefix))) {
         exit();
         return;
       }
@@ -146,7 +150,11 @@ export default function EditorHost({
     }, READY_POLL_MS);
   };
 
-  const src = `${editorBasePath}/${id}?embed=1${forwardQuery ? `&${forwardQuery}` : ''}`;
+  // editorBasePath is a CMS route (e.g. /layout/designer), so prefix with the install root
+  // (rootUri) — the iframe must load /cms/layout/designer/5 on alias installs, not domain root.
+  const src = withPublicPath(
+    `${editorBasePath}/${id}?embed=1${forwardQuery ? `&${forwardQuery}` : ''}`,
+  );
 
   return (
     <div className="relative h-screen w-full">

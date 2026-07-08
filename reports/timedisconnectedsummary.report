@@ -5,7 +5,7 @@
   "type": "Report",
   "output_type": "both",
   "lucide_icon": "FileClock",
-  "prototype_url": "/prototype/reporting/time-connected-summary",
+  "url": "/reporting/time-connected-summary",
   "sort_order": 4,
   "hidden": 0,
   "category": "Display",

@@ -45,6 +45,7 @@ import FilterInputs from '@/components/ui/FilterInputs';
 import { notify } from '@/components/ui/Notification';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { withPublicPath } from '@/config/publicPath';
 import { REPORT_META } from '@/config/reportRoutes';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
@@ -190,7 +191,7 @@ export default function ReportSchedules() {
     if (meta) {
       navigate(meta.route);
     } else {
-      window.location.assign(`/report/form/${schedule.reportNameId}`);
+      window.location.assign(withPublicPath(`report/form/${schedule.reportNameId}`));
     }
   };
 

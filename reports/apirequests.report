@@ -4,7 +4,7 @@
   "class": "\\Xibo\\Report\\ApiRequests",
   "type": "Report",
   "output_type": "table",
-  "prototype_url": "/prototype/reporting/api-requests",
+  "url": "/reporting/api-requests",
   "lucide_icon": "FileCode2",
   "sort_order": 5,
   "hidden": 0,
