@@ -25,7 +25,7 @@ import { useTranslation } from 'react-i18next';
 
 import Checkbox from '@/components/ui/forms/Checkbox';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
-import TagInput from '@/components/ui/forms/TagInput';
+import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
 import { getTemplateSchema } from '@/schema/templates';
@@ -50,6 +50,7 @@ export default function SaveAsTemplateModal({
   const [description, setDescription] = useState(layout?.description ?? '');
   const [tags, setTags] = useState<Tag[]>(layout?.tags?.map((t) => ({ ...t })) ?? []);
   const [includeWidgets, setIncludeWidgets] = useState(false);
+  const [pendingTagInput, setPendingTagInput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [formErrors, setFormErrors] = useState<{ name?: string }>({});
   const [apiError, setApiError] = useState<string | undefined>();
@@ -67,6 +68,7 @@ export default function SaveAsTemplateModal({
       setDescription(layout.description ?? '');
       setTags(layout.tags?.map((t) => ({ ...t })) ?? []);
       setFolderId(layout.folderId);
+      setPendingTagInput('');
     }
   }, [layout]);
 
@@ -98,13 +100,14 @@ export default function SaveAsTemplateModal({
     try {
       setIsSaving(true);
 
-      const serializedTags = tags.map((t) => (t.value ? `${t.tag}|${t.value}` : t.tag)).join(',');
+      const finalTags = collectTags(tags, pendingTagInput);
+      setPendingTagInput('');
 
       await saveLayoutAsTemplate(layout.layoutId, {
         name,
         includeWidgets,
         description,
-        tags: serializedTags,
+        tags: serializeTags(finalTags),
         folderId,
       });
 
@@ -182,6 +185,8 @@ export default function SaveAsTemplateModal({
             value={tags}
             helpText={t('Tags separated by commas. Use Tag|Value for tagged attributes.')}
             onChange={(tags) => setTags(tags)}
+            inputValue={pendingTagInput}
+            onInputChange={setPendingTagInput}
           />
 
           <Checkbox

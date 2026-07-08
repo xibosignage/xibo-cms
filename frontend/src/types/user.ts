@@ -30,6 +30,17 @@ export interface BrandingConfig {
   supportUrl: string;
 }
 
+/**
+ * Xibo in the Cloud subscription metadata. Populated by /user/me only for super admins on
+ * Xibo-themed Cloud instances; null otherwise (e.g. self-hosted).
+ */
+export interface CloudHosting {
+  renewalDate: string; // 'YYYY-MM-DD'
+  isDemo: boolean;
+  isMonthly: boolean;
+  willRenew: boolean;
+}
+
 export enum UserType {
   SuperAdmin = 1,
   GroupAdmin = 2,
@@ -107,4 +118,5 @@ export interface User {
   isSuperAdmin?: boolean;
 
   branding?: BrandingConfig;
+  cloudHosting?: CloudHosting | null;
 }

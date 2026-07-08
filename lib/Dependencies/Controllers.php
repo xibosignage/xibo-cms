@@ -206,15 +206,6 @@ class Controllers
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
-            '\Xibo\Controller\Fault' => function (ContainerInterface $c) {
-                $controller = new \Xibo\Controller\Fault(
-                    $c->get('store'),
-                    $c->get('logFactory'),
-                    $c->get('displayFactory')
-                );
-                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
-                return $controller;
-            },
             '\Xibo\Controller\Folder' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Folder(
                     $c->get('folderFactory')

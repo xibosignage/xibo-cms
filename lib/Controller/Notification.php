@@ -35,6 +35,7 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserNotificationFactory;
 use Xibo\Helper\AttachmentUploadHandler;
 use Xibo\Helper\Environment;
+use Xibo\Helper\NullSession;
 use Xibo\Helper\SendFile;
 use Xibo\Helper\Session;
 use Xibo\Service\DisplayNotifyService;
@@ -59,7 +60,7 @@ class Notification extends Base
         private readonly DisplayGroupFactory $displayGroupFactory,
         private readonly UserGroupFactory $userGroupFactory,
         private readonly DisplayNotifyService $displayNotifyService,
-        private readonly Session $session,
+        private readonly Session|NullSession $session,
     ) {
     }
 
@@ -332,8 +333,14 @@ class Notification extends Base
 
         return $response
             ->withStatus(200)
-            ->withHeader('X-Total-Count', $this->userNotificationFactory->countLast() + count($environmentNotifications))
-            ->withHeader('X-Unread-Count', $this->userNotificationFactory->countMyUnread() + count($environmentNotifications))
+            ->withHeader(
+                'X-Total-Count',
+                $this->userNotificationFactory->countLast() + count($environmentNotifications)
+            )
+            ->withHeader(
+                'X-Unread-Count',
+                $this->userNotificationFactory->countMyUnread() + count($environmentNotifications)
+            )
             ->withJson(array_merge($environmentNotifications, $notifications));
     }
 
@@ -567,7 +574,12 @@ class Notification extends Base
             $notification->userGroups ?? []
         );
 
-        $this->assignAudienceFromParams($notification, $sanitizedParams, $originalDisplayGroupIds, $originalUserGroupIds);
+        $this->assignAudienceFromParams(
+            $notification,
+            $sanitizedParams,
+            $originalDisplayGroupIds,
+            $originalUserGroupIds
+        );
 
         $notification->save();
 
@@ -662,11 +674,6 @@ class Notification extends Base
         if (Environment::isDevMode()) {
             $notifications[] = $this->buildEnvironmentNotification(__('CMS is running in DEV mode'));
         } elseif ($this->getUser()->userTypeId === 1) {
-            if (file_exists(PROJECT_ROOT . '/web/install/index.php')) {
-                $notifications[] = $this->buildEnvironmentNotification(
-                    __('Installation files should be removed — web/install/index.php still exists')
-                );
-            }
             if (!Environment::checkUrl($request->getUri())) {
                 $notifications[] = $this->buildEnvironmentNotification(
                     __('CMS URL configuration warning — /web/ should not appear in the URL')

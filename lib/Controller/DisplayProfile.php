@@ -38,6 +38,7 @@ use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class DisplayProfile
+ *
  * @package Xibo\Controller
  */
 class DisplayProfile extends Base
@@ -133,8 +134,8 @@ class DisplayProfile extends Base
         )
     )]
     /**
-     * @param Request $request
-     * @param Response $response
+     * @param  Request  $request
+     * @param  Response $response
      * @return ResponseInterface|Response
      * @throws NotFoundException
      * @throws GeneralException
@@ -192,9 +193,9 @@ class DisplayProfile extends Base
         content: new OA\JsonContent(ref: '#/components/schemas/DisplayProfile')
     )]
     /**
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
+     * @param  Request  $request
+     * @param  Response $response
+     * @param  int      $id
      * @return Response|ResponseInterface
      * @throws InvalidArgumentException
      * @throws NotFoundException
@@ -254,8 +255,8 @@ class DisplayProfile extends Base
     /**
      * Display Profile Add
      *
-     * @param Request $request
-     * @param Response $response
+     * @param  Request  $request
+     * @param  Response $response
      * @return ResponseInterface|Response
      * @throws ControllerNotImplemented
      * @throws GeneralException
@@ -270,7 +271,7 @@ class DisplayProfile extends Base
         $displayProfile->type = $sanitizedParams->getString('type');
         $displayProfile->isDefault = $sanitizedParams->getCheckbox('isDefault');
         $displayProfile->userId = $this->getUser()->userId;
-        $displayProfile->isCustom = $this->displayProfileFactory->isCustomType($displayProfile->type);
+        $displayProfile->isCustom = 0;
 
         // We do not set any config at this point, so that unless the user chooses to edit the display profile
         // our defaults in the Display Profile Factory take effect
@@ -326,9 +327,10 @@ class DisplayProfile extends Base
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Edit
-     * @param Request $request
-     * @param Response $response
-     * @param $id
+     *
+     * @param  Request  $request
+     * @param  Response $response
+     * @param  int $id
      * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws NotFoundException
@@ -336,7 +338,7 @@ class DisplayProfile extends Base
      * @throws GeneralException
      * @throws InvalidArgumentException
      */
-    public function edit(Request $request, Response $response, $id): Response|ResponseInterface
+    public function edit(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         // Create a form out of the config object.
         $displayProfile = $this->displayProfileFactory->getById($id);
@@ -419,9 +421,10 @@ class DisplayProfile extends Base
     #[OA\Response(response: 204, description: 'successful operation')]
     /**
      * Delete Display Profile
-     * @param Request $request
-     * @param Response $response
-     * @param $id
+     *
+     * @param  Request  $request
+     * @param  Response $response
+     * @param  int $id
      * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws NotFoundException
@@ -429,7 +432,7 @@ class DisplayProfile extends Base
      * @throws GeneralException
      * @throws InvalidArgumentException
      */
-    public function delete(Request $request, Response $response, $id): Response|ResponseInterface
+    public function delete(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         // Create a form out of the config object.
         $displayProfile = $this->displayProfileFactory->getById($id);
@@ -484,9 +487,10 @@ class DisplayProfile extends Base
     )]
     /**
      * Copy Display Profile
-     * @param Request $request
-     * @param Response $response
-     * @param $id
+     *
+     * @param  Request  $request
+     * @param  Response $response
+     * @param  int $id
      * @return ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws NotFoundException
@@ -494,7 +498,7 @@ class DisplayProfile extends Base
      * @throws GeneralException
      * @throws InvalidArgumentException
      */
-    public function copy(Request $request, Response $response, $id): Response|ResponseInterface
+    public function copy(Request $request, Response $response, int $id): Response|ResponseInterface
     {
         // Create a form out of the config object.
         $displayProfile = $this->displayProfileFactory->getById($id);
@@ -533,7 +537,8 @@ class DisplayProfile extends Base
 
     /**
      * List of display profile types
-     * @param Response $response
+     *
+     * @param  Response $response
      * @return Response
      */
     public function getDisplayProfileTypes(Response $response): Response
@@ -543,7 +548,8 @@ class DisplayProfile extends Base
 
     /**
      * Get the display profile filters
-     * @param $parsedQueryParams
+     *
+     * @param  $parsedQueryParams
      * @return array
      */
     private function getDisplayProfileFilterQuery($parsedQueryParams): array
@@ -560,8 +566,9 @@ class DisplayProfile extends Base
 
     /**
      * Decorate display profile properties
-     * @param $profile
-     * @param $embed
+     *
+     * @param  $profile
+     * @param  $embed
      * @return void
      * @throws InvalidArgumentException
      */

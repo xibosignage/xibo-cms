@@ -40,16 +40,8 @@ if (\Xibo\Helper\Environment::isDevMode() || \Xibo\Helper\Environment::isForceDe
     ini_set('display_errors', 0);
 }
 
-// Should we show the installer?
 if (!file_exists('settings.php')) {
-    // Check to see if the install app is available
-    if (file_exists(PROJECT_ROOT . '/web/install/index.php')) {
-        header('Location: install/1');
-        exit();
-    } else {
-        // We can't do anything here - no install app and no settings file.
-        die('Not configured');
-    }
+    die('Not configured: Please create web/settings.php — see MANUAL_INSTALL.md');
 }
 
 // Check that the cache folder if writeable - if it isn't we're in big trouble

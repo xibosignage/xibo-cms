@@ -32,6 +32,7 @@ use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class DisplayProfile
+ *
  * @package Xibo\Entity
  */
 #[OA\Schema]
@@ -83,6 +84,7 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Commands associated with this profile.
+     *
      * @var Command[]
      */
     public $commands = [];
@@ -115,6 +117,7 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Get Id
+     *
      * @return int
      */
     public function getId()
@@ -132,9 +135,10 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Get Setting
-     * @param $setting
-     * @param null $default
-     * @param bool $fromDefault
+     *
+     * @param  $setting
+     * @param  null $default
+     * @param  bool $fromDefault
      * @return mixed
      * @throws \Xibo\Support\Exception\NotFoundException
      */
@@ -156,10 +160,11 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Set setting
-     * @param $setting
-     * @param $value
-     * @param boolean $ownConfig if provided will set the values on this object and not on the member config object
-     * @param array|null $config
+     *
+     * @param  $setting
+     * @param  $value
+     * @param  boolean    $ownConfig if provided will set the values on this object and not on the member config object
+     * @param  array|null $config
      * @return $this
      * @throws \Xibo\Support\Exception\NotFoundException
      */
@@ -224,8 +229,9 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Merge two configs
-     * @param $default
-     * @param $override
+     *
+     * @param  $default
+     * @param  $override
      * @return array
      */
     private function mergeConfigs($default, $override): array
@@ -262,6 +268,7 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Get the client type
+     *
      * @return string
      */
     public function getClientType()
@@ -271,7 +278,8 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Assign Command
-     * @param Command $command
+     *
+     * @param  Command $command
      * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function assignCommand($command)
@@ -298,7 +306,8 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Unassign Command
-     * @param Command $command
+     *
+     * @param  Command $command
      * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function unassignCommand($command)
@@ -316,6 +325,7 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Sets the Owner
+     *
      * @param int $ownerId
      */
     public function setOwner($ownerId)
@@ -325,13 +335,16 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Load
-     * @param array $options
+     *
+     * @param  array $options
      * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function load($options = []): void
     {
-        $this->getLog()->debug('load: Loading display profile, type: ' . $this->clientType
-            . ' id: ' . $this->displayProfileId);
+        $this->getLog()->debug(
+            'load: Loading display profile, type: ' . $this->clientType
+            . ' id: ' . $this->displayProfileId
+        );
 
         $options = array_merge([
             'loadConfig' => true,
@@ -377,6 +390,7 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Validate
+     *
      * @throws InvalidArgumentException
      */
     public function validate()
@@ -431,7 +445,8 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Save
-     * @param bool $validate
+     *
+     * @param  bool $validate
      * @throws InvalidArgumentException
      */
     public function save(bool $validate = true): void
@@ -451,6 +466,7 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Delete
+     *
      * @throws InvalidArgumentException
      */
     public function delete(): void
@@ -578,26 +594,9 @@ class DisplayProfile implements \JsonSerializable
         return $this->configCombined;
     }
 
-    public function getCustomEditTemplate()
-    {
-        if ($this->isCustom()) {
-            return $this->displayProfileFactory->getCustomEditTemplate($this->getClientType());
-        } else {
-            $this->getLog()->error(
-                'Attempting to get Custom Edit template for Display Profile ' .
-                $this->getClientType() . ' that is not custom'
-            );
-            return null;
-        }
-    }
-
-    public function handleCustomFields($sanitizedParams, $config = null, $display = null)
-    {
-        return $this->displayProfileFactory->handleCustomFields($this, $sanitizedParams, $config, $display);
-    }
-
     /**
      * Does this display profile has elevated log level?
+     *
      * @return bool
      * @throws NotFoundException
      */
@@ -605,11 +604,13 @@ class DisplayProfile implements \JsonSerializable
     {
         $elevatedUntil = $this->getSetting('elevateLogsUntil', 0);
 
-        $this->getLog()->debug(sprintf(
-            'Testing whether this display profile has elevated log level. %d vs %d.',
-            $elevatedUntil,
-            Carbon::now()->format('U')
-        ));
+        $this->getLog()->debug(
+            sprintf(
+                'Testing whether this display profile has elevated log level. %d vs %d.',
+                $elevatedUntil,
+                Carbon::now()->format('U')
+            )
+        );
 
         return (!empty($elevatedUntil) && $elevatedUntil >= Carbon::now()->format('U'));
     }

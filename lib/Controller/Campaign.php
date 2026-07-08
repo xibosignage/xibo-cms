@@ -87,48 +87,6 @@ class Campaign extends Base
         $this->displayGroupFactory = $displayGroupFactory;
     }
 
-    /**
-     * Display the Campaign Builder
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return ResponseInterface|Response
-     * @throws GeneralException
-     */
-    public function displayCampaignBuilder(Request $request, Response $response, $id)
-    {
-        $campaign = $this->campaignFactory->getById($id);
-        if (!$this->getUser()->checkEditable($campaign)) {
-            throw new AccessDeniedException();
-        }
-
-        if ($campaign->type !== 'ad') {
-            throw new InvalidArgumentException(__('This campaign is not compatible with the Campaign builder'));
-        }
-
-        // Load in our current display groups for the form.
-        $displayGroups = [];
-        $displayGroupIds = $campaign->loadDisplayGroupIds();
-        foreach ($displayGroupIds as $displayGroupId) {
-            $displayGroups[] = $this->displayGroupFactory->getById($displayGroupId);
-        }
-
-        // Work out the percentage complete/target.
-        $progress = $campaign->getProgress();
-
-        $this->getState()->template = 'campaign-builder';
-        $this->getState()->setData([
-            'campaign' => $campaign,
-            'displayGroupIds' => $displayGroupIds,
-            'displayGroups' => $displayGroups,
-            'stats' => [
-                'complete' => round($progress->progressTime, 2),
-                'target' => round($progress->progressTarget, 2),
-            ],
-        ]);
-        return $this->render($request, $response);
-    }
-
     #[OA\Get(
         path: '/campaign',
         operationId: 'campaignSearch',
@@ -553,48 +511,6 @@ class Campaign extends Base
         return $this->render($request, $response);
     }
 
-    /**
-     * Campaign Edit Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
-     * @throws NotFoundException
-     */
-    public function editForm(Request $request, Response $response, $id)
-    {
-        $campaign = $this->campaignFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($campaign)) {
-            throw new AccessDeniedException();
-        }
-
-        // Load layouts
-        $layouts = [];
-        foreach ($campaign->loadLayouts() as $layout) {
-            // TODO: more efficient way than loading an entire layout just to check permissions?
-            if (!$this->getUser()->checkViewable($this->layoutFactory->getById($layout->layoutId))) {
-                // Hide all layout details from the user
-                $layout->layout = __('Layout');
-                $layout->setUnmatchedProperty('locked', true);
-            } else {
-                $layout->setUnmatchedProperty('locked', false);
-            }
-            $layouts[] = $layout;
-        }
-
-        $this->getState()->template = 'campaign-form-edit';
-        $this->getState()->setData([
-            'campaign' => $campaign,
-            'layouts' => $layouts,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
     #[OA\Put(
         path: '/campaign/{campaignId}',
         operationId: 'campaignEdit',
@@ -997,33 +913,6 @@ class Campaign extends Base
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => sprintf(__('Assigned Layouts to %s'), $campaign->campaign)
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Remove Layout Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function removeLayoutForm(Request $request, Response $response, $id)
-    {
-        $this->getLog()->debug('removeLayoutForm: ' . $id);
-
-        $campaign = $this->campaignFactory->getById($id);
-        if (!$this->getUser()->checkEditable($campaign)) {
-            throw new AccessDeniedException();
-        }
-        $campaign->loadLayouts();
-
-        $this->getState()->template = 'campaign-form-layout-delete';
-        $this->getState()->setData([
-            'campaign' => $campaign,
-            'layout' => $campaign->getLayoutAt($this->getSanitizer($request->getParams())->getInt('displayOrder')),
         ]);
 
         return $this->render($request, $response);

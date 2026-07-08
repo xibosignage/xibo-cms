@@ -28,7 +28,7 @@ import Modal from '../../../../components/ui/modals/Modal';
 import Checkbox from '@/components/ui/forms/Checkbox';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
-import TagInput from '@/components/ui/forms/TagInput';
+import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import { getTemplateSchema } from '@/schema/templates';
 import { fetchResolution } from '@/services/resolutionApi';
@@ -78,6 +78,7 @@ export default function AddAndEditTemplateModal({
   const [isPending, startTransition] = useTransition();
   const [formErrors, setFormErrors] = useState<TemplateFormErrors>({});
   const [apiError, setApiError] = useState<string | undefined>();
+  const [pendingTagInput, setPendingTagInput] = useState('');
   const [resolutions, setResolutions] = useState<Resolution[]>([]);
   const [loadingResolutions, setLoadingResolutions] = useState(false);
 
@@ -118,6 +119,7 @@ export default function AddAndEditTemplateModal({
   }, [isOpen]);
 
   useEffect(() => {
+    setPendingTagInput('');
     if (type === 'edit' && data) {
       setDraft({
         name: data.layout || '',
@@ -159,10 +161,13 @@ export default function AddAndEditTemplateModal({
 
       setFormErrors({});
       try {
+        const finalTags = collectTags(draft.tags, pendingTagInput);
+        setPendingTagInput('');
+
         const commonPayload = {
           name: draft.name,
           description: draft.description,
-          tags: draft.tags.map((t) => (t.value ? `${t.tag}|${t.value}` : t.tag)).join(','),
+          tags: serializeTags(finalTags),
           retired: draft.retired ? 1 : 0,
           folderId: draft.folderId,
         };
@@ -265,6 +270,8 @@ export default function AddAndEditTemplateModal({
             value={draft.tags}
             helpText={t('Tags separated by commas')}
             onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
+            inputValue={pendingTagInput}
+            onInputChange={setPendingTagInput}
           />
 
           {type === 'add' ? (
