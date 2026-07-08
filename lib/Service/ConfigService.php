@@ -98,11 +98,13 @@ class ConfigService implements ConfigServiceInterface
      */
     public function setDependencies($store, $rootUri)
     {
-        if ($store == null)
+        if ($store == null) {
             throw new \RuntimeException('ConfigService setDependencies called with null store');
+        }
 
-        if ($rootUri == null)
+        if ($rootUri == null) {
             throw new \RuntimeException('ConfigService setDependencies called with null rootUri');
+        }
 
         $this->store = $store;
         $this->rootUri = $rootUri;
@@ -131,8 +133,9 @@ class ConfigService implements ConfigServiceInterface
      */
     protected function getStore()
     {
-        if ($this->store == null)
+        if ($this->store == null) {
             throw new \RuntimeException('Config Service called before setDependencies');
+        }
 
         return $this->store;
     }
@@ -151,8 +154,9 @@ class ConfigService implements ConfigServiceInterface
      */
     public function rootUri()
     {
-        if ($this->rootUri == null)
+        if ($this->rootUri == null) {
             throw new \RuntimeException('Config Service called before setDependencies');
+        }
 
         return $this->rootUri;
     }
@@ -213,7 +217,7 @@ class ConfigService implements ConfigServiceInterface
         $config = new ConfigService();
 
         // Include the provided settings file.
-        require ($settings);
+        require($settings);
 
         // Create a DB config
         self::$dbConfig = [
@@ -228,42 +232,52 @@ class ConfigService implements ConfigServiceInterface
         // Pull in other settings
 
         // Log handlers
-        if (isset($logHandlers))
+        if (isset($logHandlers)) {
             $config->logHandlers = $logHandlers;
+        }
 
         // Log Processors
-        if (isset($logProcessors))
+        if (isset($logProcessors)) {
             $config->logProcessors = $logProcessors;
+        }
 
         // Middleware
-        if (isset($middleware))
+        if (isset($middleware)) {
             $config->middleware = $middleware;
+        }
 
         // Authentication
-        if (isset($authentication))
+        if (isset($authentication)) {
             $config->authentication = $authentication;
+        }
 
         // Saml settings
-        if (isset($samlSettings))
+        if (isset($samlSettings)) {
             $config->samlSettings = $samlSettings;
+        }
 
         // CAS settings
-        if (isset($casSettings))
+        if (isset($casSettings)) {
             $config->casSettings = $casSettings;
+        }
 
         // Cache drivers
-        if (isset($cacheDrivers))
+        if (isset($cacheDrivers)) {
             $config->cacheDrivers = $cacheDrivers;
+        }
 
         // Time series store settings
-        if (isset($timeSeriesStore))
+        if (isset($timeSeriesStore)) {
             $config->timeSeriesStore = $timeSeriesStore;
+        }
 
-        if (isset($cacheNamespace))
+        if (isset($cacheNamespace)) {
             $config->cacheNamespace = $cacheNamespace;
+        }
 
-        if (isset($apiKeyPaths))
+        if (isset($apiKeyPaths)) {
             $config->apiKeyPaths = $apiKeyPaths;
+        }
 
         // Connector settings
         if (isset($connectorSettings)) {
@@ -353,8 +367,32 @@ class ConfigService implements ConfigServiceInterface
             'supportUrl'             => $raw['supportUrl']   ?? $raw['theme_url']      ?? null,
             'cmsSourceUrl'           => $raw['cmsSourceUrl'] ?? $raw['cms_source_url'] ?? null,
             'aboutText'              => $raw['aboutText']    ?? null,
-            'removeLicenceFromLogin' => isset($raw['removeLicenceFromLogin']) ? (bool)$raw['removeLicenceFromLogin'] : null,
+            'removeLicenceFromLogin' => isset($raw['removeLicenceFromLogin'])
+                ? (bool)$raw['removeLicenceFromLogin']
+                : null,
         ];
+    }
+
+    /**
+     * Resolve which file backs a brand asset, preferring the SVG variant and falling
+     * back to PNG for WL packages that ship a raster logo.
+     */
+    public function getBrandAssetFile(string $base): string
+    {
+        $brandDir = rtrim($this->getSetting('LIBRARY_LOCATION', ''), '/') . '/brand';
+        return file_exists($brandDir . '/' . $base . '.svg') ? $base . '.svg' : $base . '.png';
+    }
+
+    public function getBrandLogoDarkFile(): string
+    {
+        $brandDir = rtrim($this->getSetting('LIBRARY_LOCATION', ''), '/') . '/brand';
+        if (file_exists($brandDir . '/logo-dark.svg')) {
+            return 'logo-dark.svg';
+        }
+        if (file_exists($brandDir . '/logo-dark.png')) {
+            return 'logo-dark.png';
+        }
+        return $this->getBrandAssetFile('logo');
     }
 
     /**
@@ -365,13 +403,15 @@ class ConfigService implements ConfigServiceInterface
      */
     public function getThemeConfig($settingName = null, $default = null)
     {
-        if ($settingName == null)
+        if ($settingName == null) {
             return $this->themeConfig;
+        }
 
-        if (isset($this->themeConfig[$settingName]))
+        if (isset($this->themeConfig[$settingName])) {
             return $this->themeConfig[$settingName];
-        else
+        } else {
             return $default;
+        }
     }
 
     /**
@@ -385,17 +425,16 @@ class ConfigService implements ConfigServiceInterface
     {
         $rootUri = ($local) ? PROJECT_ROOT . '/web/' : $this->rootUri();
 
-        if (!$this->themeLoaded)
+        if (!$this->themeLoaded) {
             return $rootUri . 'theme/default/' . $uri;
+        }
 
         // Serve the appropriate theme file
         if (is_dir(PROJECT_ROOT . '/web/' . $this->themeConfig['themeFolder'] . $uri)) {
             return $rootUri . $this->themeConfig['themeFolder'] . $uri;
-        }
-        else if (file_exists(PROJECT_ROOT . '/web/' . $this->themeConfig['themeFolder'] . $uri)) {
+        } else if (file_exists(PROJECT_ROOT . '/web/' . $this->themeConfig['themeFolder'] . $uri)) {
             return $rootUri . $this->themeConfig['themeFolder'] . $uri;
-        }
-        else {
+        } else {
             return $rootUri . 'theme/default/' . $uri;
         }
     }
@@ -445,7 +484,10 @@ class ConfigService implements ConfigServiceInterface
             // Are we still null?
             if ($this->settings === null) {
                 // Load from the database
-                $this->settings = $this->getStore()->select('SELECT `setting`, `value`, `userSee`, `userChange` FROM `setting`', []);
+                $this->settings = $this->getStore()->select(
+                    'SELECT `setting`, `value`, `userSee`, `userChange` FROM `setting`',
+                    []
+                );
             }
         }
 
@@ -454,7 +496,9 @@ class ConfigService implements ConfigServiceInterface
             // See about caching these settings - dependent on whether we're logging or not
             $cacheExpiry = 60 * 5;
             foreach ($this->settings as $setting) {
-                if ($setting['setting'] == 'ELEVATE_LOG_UNTIL' && intval($setting['value']) > Carbon::now()->format('U')) {
+                if ($setting['setting'] == 'ELEVATE_LOG_UNTIL'
+                    && intval($setting['value']) > Carbon::now()->format('U')
+                ) {
                     $cacheExpiry = intval($setting['value']);
                     break;
                 }
@@ -483,7 +527,7 @@ class ConfigService implements ConfigServiceInterface
     }
 
     /** @inheritdoc */
-    public function getSetting($setting, $default = NULL, $full = false)
+    public function getSetting($setting, $default = null, $full = false)
     {
         $settings = $this->loadSettings();
 
@@ -591,24 +635,28 @@ class ConfigService implements ConfigServiceInterface
         $proxyExceptions = $this->getSetting('PROXY_EXCEPTIONS');
 
         // If empty, cannot be an exception
-        if (empty($proxyExceptions))
+        if (empty($proxyExceptions)) {
             return false;
+        }
 
         // Simple test
-        if (stripos($host, $proxyExceptions) !== false)
+        if (stripos($host, $proxyExceptions) !== false) {
             return true;
+        }
 
         // Host test
         $parsedHost = parse_url($host, PHP_URL_HOST);
 
         // Kick out extremely malformed hosts
-        if ($parsedHost === false)
+        if ($parsedHost === false) {
             return false;
+        }
 
         // Go through each exception and test against the host
         foreach (explode(',', $proxyExceptions) as $proxyException) {
-            if (stripos($parsedHost, $proxyException) !== false)
+            if (stripos($parsedHost, $proxyException) !== false) {
                 return true;
+            }
         }
 
         // If we've got here without returning, then we aren't an exception
@@ -686,12 +734,14 @@ class ConfigService implements ConfigServiceInterface
         $status = ($result) ? 1 : (($fault) ? 0 : 2);
 
         // Set fault flag
-        if (!$result && $fault)
+        if (!$result && $fault) {
             $this->envFault = true;
+        }
 
         // Set warning flag
-        if (!$result && !$fault)
+        if (!$result && !$fault) {
             $this->envWarning = true;
+        }
 
         $results[] = [
             'item' => $item,
@@ -708,109 +758,149 @@ class ConfigService implements ConfigServiceInterface
     {
         $rows = array();
 
-        $this->testItem($rows, __('PHP Version'),
+        $this->testItem(
+            $rows,
+            __('PHP Version'),
             Environment::checkPHP(),
-            sprintf(__("PHP version %s or later required."), Environment::$VERSION_REQUIRED) . ' Detected ' . phpversion()
+            sprintf(__('PHP version %s or later required.'), Environment::$VERSION_REQUIRED) . ' Detected ' . phpversion()//phpcs:ignore
         );
 
-        $this->testItem($rows, __('Cache File System Permissions'),
+        $this->testItem(
+            $rows,
+            __('Cache File System Permissions'),
             Environment::checkCacheFileSystemPermissions(),
             __('Write permissions are required for cache/')
         );
 
-        $this->testItem($rows, __('MySQL database (PDO MySql)'),
+        $this->testItem(
+            $rows,
+            __('MySQL database (PDO MySql)'),
             Environment::checkPDO(),
             __('PDO support with MySQL drivers must be enabled in PHP.')
         );
 
-        $this->testItem($rows, __('JSON Extension'),
+        $this->testItem(
+            $rows,
+            __('JSON Extension'),
             Environment::checkJson(),
             __('PHP JSON extension required to function.')
         );
 
-        $this->testItem($rows, __('SOAP Extension'),
+        $this->testItem(
+            $rows,
+            __('SOAP Extension'),
             Environment::checkSoap(),
             __('PHP SOAP extension required to function.')
         );
 
-        $this->testItem($rows, __('GD Extension'),
+        $this->testItem(
+            $rows,
+            __('GD Extension'),
             Environment::checkGd(),
             __('PHP GD extension required to function.')
         );
 
-        $this->testItem($rows, __('Session'),
+        $this->testItem(
+            $rows,
+            __('Session'),
             Environment::checkGd(),
             __('PHP session support required to function.')
         );
 
-        $this->testItem($rows, __('FileInfo'),
+        $this->testItem(
+            $rows,
+            __('FileInfo'),
             Environment::checkFileInfo(),
-            __('Requires PHP FileInfo support to function. If you are on Windows you need to enable the php_fileinfo.dll in your php.ini file.')
+            __('Requires PHP FileInfo support to function. If you are on Windows you need to enable the php_fileinfo.dll in your php.ini file.')//phpcs:ignore
         );
 
-        $this->testItem($rows, __('PCRE'),
+        $this->testItem(
+            $rows,
+            __('PCRE'),
             Environment::checkPCRE(),
             __('PHP PCRE support to function.')
         );
 
-        $this->testItem($rows, __('Gettext'),
+        $this->testItem(
+            $rows,
+            __('Gettext'),
             Environment::checkPCRE(),
             __('PHP Gettext support to function.')
         );
 
-        $this->testItem($rows, __('DOM Extension'),
+        $this->testItem(
+            $rows,
+            __('DOM Extension'),
             Environment::checkDom(),
             __('PHP DOM core functionality enabled.')
         );
 
-        $this->testItem($rows, __('DOM XML Extension'),
+        $this->testItem(
+            $rows,
+            __('DOM XML Extension'),
             Environment::checkDomXml(),
             __('PHP DOM XML extension to function.')
         );
 
-        $this->testItem($rows, __('Allow PHP to open external URLs'),
+        $this->testItem(
+            $rows,
+            __('Allow PHP to open external URLs'),
             (Environment::checkCurl() || Environment::checkAllowUrlFopen()),
-            __('You must have the curl extension enabled or PHP configured with "allow_url_fopen = On" for the CMS to access external resources. We strongly recommend curl.'),
+            __('You must have the curl extension enabled or PHP configured with "allow_url_fopen = On" for the CMS to access external resources. We strongly recommend curl.'),//phpcs:ignore
             false
         );
 
-        $this->testItem($rows, __('DateTimeZone'),
+        $this->testItem(
+            $rows,
+            __('DateTimeZone'),
             Environment::checkTimezoneIdentifiers(),
             __('This enables us to get a list of time zones supported by the hosting server.'),
             false
         );
 
-        $this->testItem($rows, __('ZIP'),
+        $this->testItem(
+            $rows,
+            __('ZIP'),
             Environment::checkZip(),
             __('This enables import / export of layouts.')
         );
 
         $advice = __('Support for uploading large files is recommended.');
-        $advice .= __('We suggest setting your PHP post_max_size and upload_max_filesize to at least 128M, and also increasing your max_execution_time to at least 120 seconds.');
+        $advice .= __('We suggest setting your PHP post_max_size and upload_max_filesize to at least 128M, and also increasing your max_execution_time to at least 120 seconds.');//phpcs:ignore
 
-        $this->testItem($rows, __('Large File Uploads'),
+        $this->testItem(
+            $rows,
+            __('Large File Uploads'),
             Environment::checkPHPUploads(),
             $advice,
             false
         );
 
-        $this->testItem($rows, __('cURL'),
+        $this->testItem(
+            $rows,
+            __('cURL'),
             Environment::checkCurlInstalled(),
             __('cURL is used to fetch data from the Internet or Local Network')
         );
 
-        $this->testItem($rows, __('OpenSSL'),
+        $this->testItem(
+            $rows,
+            __('OpenSSL'),
             Environment::checkOpenSsl(),
             __('OpenSSL is used to seal and verify messages sent to XMR'),
             false
         );
 
-        $this->testItem($rows, __('SimpleXML'),
+        $this->testItem(
+            $rows,
+            __('SimpleXML'),
             Environment::checkSimpleXml(),
             __('SimpleXML is used to parse RSS feeds and other XML data sources')
         );
 
-        $this->testItem($rows, __('GNUPG'),
+        $this->testItem(
+            $rows,
+            __('GNUPG'),
             Environment::checkGnu(),
             __('checkGnu is used to verify the integrity of Player Software versions uploaded to the CMS'),
             false
@@ -856,8 +946,9 @@ class ConfigService implements ConfigServiceInterface
         //TODO: move this into storage interface
         $results = $this->getStore()->select('show variables like \'log_bin\'', []);
 
-        if (count($results) <= 0)
+        if (count($results) <= 0) {
             return false;
+        }
 
         return ($results[0]['Value'] != 'OFF');
     }
@@ -871,8 +962,9 @@ class ConfigService implements ConfigServiceInterface
         //TODO: move this into storage interface
         $results = $this->getStore()->select('show variables like \'binlog_format\'', []);
 
-        if (count($results) <= 0)
+        if (count($results) <= 0) {
             return false;
+        }
 
         return ($results[0]['Value'] != 'STATEMENT');
     }

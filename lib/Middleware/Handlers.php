@@ -167,7 +167,8 @@ class Handlers
                 'homeUrl' => $configService->rootUri(),
                 'aboutUrl' => $configService->rootUri() . 'about',
                 'loginUrl' => $configService->rootUri() . 'login',
-                'version' => Environment::$WEBSITE_VERSION_NAME
+                'version' => Environment::$WEBSITE_VERSION_NAME,
+                'brandLogoFile' => $configService->getBrandAssetFile('logo'),
             ];
 
             // Handle 404's
@@ -267,19 +268,12 @@ class Handlers
                         $rootUri = $configService->rootUri();
                         $loginJsUrl = \Xibo\Helper\ViteManifest::getJsUrl('login.html', $rootUri);
                         if ($loginJsUrl !== null) {
-                            $brandDir = rtrim($configService->getSetting('LIBRARY_LOCATION'), '/') . '/brand';
-                            $logoFile = file_exists($brandDir . '/logo.svg') ? 'logo.svg' : 'logo.png';
-                            if (file_exists($brandDir . '/logo-dark.svg')) {
-                                $logoDarkFile = 'logo-dark.svg';
-                            } elseif (file_exists($brandDir . '/logo-dark.png')) {
-                                $logoDarkFile = 'logo-dark.png';
-                            } else {
-                                $logoDarkFile = $logoFile;
-                            }
+                            $logoFile = $configService->getBrandAssetFile('logo');
+                            $logoDarkFile = $configService->getBrandLogoDarkFile();
                             $upgradeConfig = [
                                 'upgradeInProgress' => true,
-                                'logoUrl'     => $configService->rootUri() . 'brand/' . $logoFile,
-                                'logoDarkUrl' => $configService->rootUri() . 'brand/' . $logoDarkFile,
+                                'logoUrl'     => '/brand/' . $logoFile,
+                                'logoDarkUrl' => '/brand/' . $logoDarkFile,
                                 'supportUrl' => $configService->getThemeConfig('theme_url', 'https://xibosignage.com'),
                                 'version'    => Environment::$WEBSITE_VERSION_NAME,
                                 'appName'    => $configService->getThemeConfig('app_name', 'Xibo'),
