@@ -5,7 +5,7 @@
   "type": "Chart",
   "output_type": "chart",
   "lucide_icon": "Gauge",
-  "prototype_url": "/prototype/reporting/bandwidth",
+  "url": "/reporting/bandwidth",
   "sort_order": 3,
   "hidden": 0,
   "category": "Display",

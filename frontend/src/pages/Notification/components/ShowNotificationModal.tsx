@@ -25,6 +25,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Modal from '@/components/ui/modals/Modal';
+import { withPublicPath } from '@/config/publicPath';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { notificationQueryKeys } from '@/pages/Notification/hooks/useNotificationData';
 import { markAllNotificationsRead } from '@/services/notificationApi';
@@ -120,7 +121,7 @@ export default function ShowNotificationModal({
 
         {hasAttachment && (
           <a
-            href={`/json/notification/export/${notification.notificationId}`}
+            href={withPublicPath(`json/notification/export/${notification.notificationId}`)}
             className="text-xibo-blue-600 hover:text-xibo-blue-800 underline text-sm text-left"
           >
             {notification.originalFileName}

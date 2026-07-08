@@ -21,11 +21,8 @@
 
 import { useEffect, useState } from 'react';
 
+import { withAssetBase } from '@/config/publicPath';
 import i18n from '@/lib/i18n';
-
-function withBase(p: string) {
-  return new URL(p, window.location.origin + import.meta.env.BASE_URL).toString();
-}
 
 // Map for known labels
 const PRETTY: Record<string, string> = {
@@ -73,7 +70,7 @@ export default function LanguageSwitcher() {
   useEffect(() => {
     (async () => {
       try {
-        const url = withBase('locale/available.json');
+        const url = withAssetBase('locale/available.json');
         const list: string[] = await fetch(url).then((r) => r.json());
         setCodes(list);
         // Initialise from storage if available and in list
@@ -87,7 +84,7 @@ export default function LanguageSwitcher() {
 
   const changeLang = async (code: string) => {
     if (!i18n.hasResourceBundle(code, 'translation')) {
-      const url = withBase(`locale/langs/${code}.json`);
+      const url = withAssetBase(`locale/langs/${code}.json`);
       const res = await fetch(url);
       const msgs = await res.json();
       i18n.addResourceBundle(code, 'translation', msgs, true, true);

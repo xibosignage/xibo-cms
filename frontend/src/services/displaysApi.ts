@@ -21,6 +21,7 @@
 
 import axios from 'axios';
 
+import { withPublicPath } from '@/config/publicPath';
 import http from '@/lib/api';
 import type { Display } from '@/types/display';
 import type { DisplayGroup } from '@/types/displayGroup';
@@ -294,7 +295,10 @@ export interface DisplayMapFeatureCollection {
 export async function fetchDisplaysMap(
   params: Record<string, unknown> = {},
 ): Promise<DisplayMapFeatureCollection> {
-  const response = await axios.get('/display/map', { params, withCredentials: true });
+  const response = await axios.get(withPublicPath('display/map'), {
+    params,
+    withCredentials: true,
+  });
   return response.data;
 }
 

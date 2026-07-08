@@ -34,7 +34,7 @@ import { getSafeRedirectUrl, publicPath } from './utils';
 const config = window.__LOGIN_CONFIG__;
 
 // Module-level so publicPath is evaluated once after DOM is ready.
-const FORCE_CHANGE_PASSWORD_PATH = `${publicPath}prototype/user/force-change-password`;
+const FORCE_CHANGE_PASSWORD_PATH = `${publicPath}user/force-change-password`;
 
 // Module-level so the React Compiler doesn't flag it as a mutation inside the component.
 function navigateTo(url: string) {
@@ -121,46 +121,25 @@ export function LoginApp() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        paddingTop: 40,
-        paddingBottom: 40,
-        backgroundColor: '#f7f7f7',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-        fontSize: 14,
-      }}
-    >
-      <LoginCard logoUrl={config.logoUrl} supportUrl={config.supportUrl}>
+    <div className="login-root">
+      <LoginCard logoUrl={config.logoDarkUrl} supportUrl={config.supportUrl}>
         <div className="login-view-enter">{renderView()}</div>
       </LoginCard>
 
       {showAbout && <LoginAboutModal onClose={() => setShowAbout(false)} />}
 
-      <p className="text-center" style={{ color: '#6c757d', fontSize: 12, marginTop: 8 }}>
-        {t('versionLabel')} {config.version}
+      <p className="login-footer">
+        <span className="login-footer-badge">{config.version}</span>
         {!config.removeLicenceFromLogin && config.sourceUrl && (
           <>
-            {' | '}
-            <a href={config.sourceUrl} style={{ color: '#6c757d' }}>
-              {t('sourceLabel')}
-            </a>
+            <span className="login-footer-sep">|</span>
+            <a href={config.sourceUrl}>{t('sourceLabel')}</a>
           </>
         )}
         {!config.removeLicenceFromLogin && (
           <>
-            {' | '}
-            <button
-              type="button"
-              onClick={() => setShowAbout(true)}
-              style={{
-                color: '#6c757d',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0,
-              }}
-            >
+            <span className="login-footer-sep">|</span>
+            <button type="button" onClick={() => setShowAbout(true)}>
               {t('aboutLabel')}
             </button>
           </>

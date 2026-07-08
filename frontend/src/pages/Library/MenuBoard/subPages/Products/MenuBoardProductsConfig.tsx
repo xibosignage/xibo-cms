@@ -27,6 +27,7 @@ import { type ComponentProps } from 'react';
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
 import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
 import { ActionsCell, CheckMarkCell, MediaCell, TextCell } from '@/components/ui/table/cells';
+import { withPublicPath } from '@/config/publicPath';
 import type { MenuBoardProduct } from '@/types/menuBoardProduct';
 import type { ActionItem } from '@/types/table';
 
@@ -150,7 +151,7 @@ export const getProductColumnDefinitions = (
         }
         return (
           <MediaCell
-            thumb={`/library/thumbnail/${mediaId}`}
+            thumb={withPublicPath(`library/thumbnail/${mediaId}`)}
             alt={info.row.original.name}
             mediaType="image"
             onPreview={onPreview ? () => onPreview(info.row.original) : undefined}

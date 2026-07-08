@@ -23,7 +23,11 @@ import axios from 'axios';
 
 import { triggerSessionExpired } from './auth-events';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/json';
+import { withPublicPath } from '@/config/publicPath';
+
+// The JSON API is served by the CMS under its install root, so prefix with publicPath
+// (rootUri) — '/json' at a root install, '/cms/json' under an alias.
+const BASE_URL = withPublicPath(import.meta.env.VITE_API_BASE_URL || 'json');
 
 const http = axios.create({
   baseURL: BASE_URL,

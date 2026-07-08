@@ -34,7 +34,7 @@
     var libraryFontCSS = "{{ url_for("library.font.css") }}";
     var imageDownloadUrl = "{{ url_for("library.download", {id: ':id'}) }}?preview=1";
     var commandSearchUrl = "{{ url_for("command.search") }}";
-    var welcomeViewURL = "{{ url_for("welcome.view") }}";
+    var welcomeViewURL = "{{ theme.rootUri() }}welcome";
     var supportURL = '{{ theme.getThemeConfig("product_support_url", "https://community.xibo.org.uk/c/support") }}';
     var isXiboThemed = (appName == "Xibo");
     var accountId = "{{ accountId }}";

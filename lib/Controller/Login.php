@@ -144,6 +144,7 @@ class Login extends Base
             ),
             'loginError'              => $loginError,
             'logoUrl'                 => $logoUrl,
+            'logoDarkUrl'             => $this->getBrandLogoDarkUrl(),
             'passwordReminderEnabled' => $passwordReminderEnabled,
             'authCASEnabled'          => $authCASEnabled,
             'version'                 => Environment::$WEBSITE_VERSION_NAME,
@@ -164,6 +165,10 @@ class Login extends Base
                 // Common
                 'username'             => __('Username'),
                 'password'             => __('Password'),
+                'usernamePlaceholder'  => __('Enter username'),
+                'passwordPlaceholder'  => __('Enter password'),
+                'showPassword'         => __('Show password'),
+                'hidePassword'         => __('Hide password'),
                 'loginButton'          => __('Login'),
                 'backToLogin'          => __('Back to login'),
                 'loginInstead'         => __('Login instead?'),
@@ -171,7 +176,7 @@ class Login extends Base
                 'rateLimitError'       => __('Too many attempts. Please wait before trying again.'),
                 // Login form
                 'loginPrompt'          => __('Please provide your credentials'),
-                'forgotPasswordLink'   => __('Forgotten your password?'),
+                'forgotPasswordLink'   => __('Forgot Password?'),
                 'invalidCredentials'   => __('Username or password incorrect.'),
                 'casPrompt'            => __('Connect with the Central Authentication Server'),
                 'casLoginButton'       => __('CAS Login'),
@@ -180,6 +185,8 @@ class Login extends Base
                 'tfaRecoveryPrompt'    => __('Please provide your Two Factor Recovery Code'),
                 'tfaCode'              => __('Code'),
                 'tfaRecoveryCode'      => __('Recovery Code'),
+                'tfaCodePlaceholder'         => __('Enter code'),
+                'tfaRecoveryCodePlaceholder' => __('Enter recovery code'),
                 'tfaVerifyButton'      => __('Verify'),
                 'tfaSwitchToRecovery'  => __('Use Recovery Code instead?'),
                 'tfaSwitchToCode'      => __('Use Two Factor Code instead?'),
@@ -194,6 +201,7 @@ class Login extends Base
                 'versionLabel'         => __('Version'),
                 'sourceLabel'          => __('Source'),
                 'aboutLabel'           => __('About'),
+                'closeLabel'           => __('Close'),
             ],
         ];
 
@@ -203,8 +211,9 @@ class Login extends Base
                 $loginConfig,
                 JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE
             ),
-            'loginJsUrl'      => \Xibo\Helper\ViteManifest::getJsUrl('login.html'),
-            'loginCssUrl'     => \Xibo\Helper\ViteManifest::getCssUrl('login.html'),
+            'loginJsUrl'      => \Xibo\Helper\ViteManifest::getJsUrl('login.html', $this->getConfig()->rootUri()),
+            'loginCssUrls'    => \Xibo\Helper\ViteManifest::getCssUrls('login.html', $this->getConfig()->rootUri()),
+            'assetBase'       => \Xibo\Helper\ViteManifest::getAssetBase($this->getConfig()->rootUri()),
             'viteClientUrl'   => \Xibo\Helper\ViteManifest::getClientUrl(),
             'viteRefreshUrl'  => \Xibo\Helper\ViteManifest::getRefreshUrl(),
         ]);
@@ -487,7 +496,6 @@ class Login extends Base
     public function aboutConfig(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
     {
         $brandDir = rtrim($this->getConfig()->getSetting('LIBRARY_LOCATION'), '/') . '/brand';
-        $rootUri = $this->getConfig()->rootUri();
         $logoFile = file_exists($brandDir . '/logo.svg') ? 'logo.svg' : 'logo.png';
         $iconFile = file_exists($brandDir . '/logo-icon.svg') ? 'logo-icon.svg' : 'logo-icon.png';
 
@@ -496,8 +504,8 @@ class Login extends Base
             'revision'    => Environment::getGitCommit(),
             'appName'     => $this->getConfig()->getThemeConfig('app_name', 'Xibo'),
             'productName' => $this->getConfig()->getThemeConfig('theme_title', 'Xibo Digital Signage'),
-            'logoUrl'     => $rootUri . 'brand/' . $logoFile,
-            'logoIconUrl' => $rootUri . 'brand/' . $iconFile,
+            'logoUrl'     => '/brand/' . $logoFile,
+            'logoIconUrl' => '/brand/' . $iconFile,
             'supportUrl'  => $this->getConfig()->getThemeConfig('theme_url', 'https://xibosignage.com'),
             'sourceUrl'   => $this->getConfig()->getThemeConfig(
                 'cms_source_url',
@@ -746,8 +754,26 @@ class Login extends Base
     private function getBrandLogoUrl(): string
     {
         $brandDir = rtrim($this->getConfig()->getSetting('LIBRARY_LOCATION'), '/') . '/brand';
-        return $this->getConfig()->rootUri() . 'brand/'
+        // Brand assets are served by Apache at the domain-root /brand alias (preserved even on
+        // alias installs), so this is NOT rootUri-prefixed — matches the React BrandingContext.
+        return '/brand/'
             . (file_exists($brandDir . '/logo.svg') ? 'logo.svg' : 'logo.png');
+    }
+
+    /**
+     * The dark-coloured logo, for display on light backgrounds (e.g. the login card).
+     * Falls back to the standard logo if a white-label package ships no dark variant.
+     */
+    private function getBrandLogoDarkUrl(): string
+    {
+        $brandDir = rtrim($this->getConfig()->getSetting('LIBRARY_LOCATION'), '/') . '/brand';
+        if (file_exists($brandDir . '/logo-dark.svg')) {
+            return $this->getConfig()->rootUri() . 'brand/logo-dark.svg';
+        }
+        if (file_exists($brandDir . '/logo-dark.png')) {
+            return $this->getConfig()->rootUri() . 'brand/logo-dark.png';
+        }
+        return $this->getBrandLogoUrl();
     }
 
     private function isPasswordReminderEnabled(): bool

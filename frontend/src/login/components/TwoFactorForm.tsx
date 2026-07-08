@@ -53,27 +53,31 @@ export function TwoFactorForm({ mode, onSuccess, onSwitchMode, onBack }: Props) 
 
   return (
     <form onSubmit={handleSubmit} noValidate>
-      <p className="mb-3 text-sm text-gray-600">
-        {isCode ? t('tfaPrompt') : t('tfaRecoveryPrompt')}
-      </p>
+      <p className="login-prompt">{isCode ? t('tfaPrompt') : t('tfaRecoveryPrompt')}</p>
 
-      <input
-        ref={inputRef}
-        type="text"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        placeholder={isCode ? t('tfaCode') : t('tfaRecoveryCode')}
-        autoFocus
-        autoComplete="one-time-code"
-        required
-        className="form-control mb-3"
-      />
+      <div className="login-field">
+        <label className="login-label" htmlFor="tfa-code">
+          {isCode ? t('tfaCode') : t('tfaRecoveryCode')}
+        </label>
+        <input
+          id="tfa-code"
+          ref={inputRef}
+          type="text"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder={isCode ? t('tfaCodePlaceholder') : t('tfaRecoveryCodePlaceholder')}
+          autoFocus
+          autoComplete="one-time-code"
+          required
+          className="login-input"
+        />
+      </div>
 
       {error && <ErrorBanner message={error} />}
 
       <SubmitButton label={t('tfaVerifyButton')} loading={loading} disabled={rateLimited} />
 
-      <p className="mt-3 text-center text-sm">
+      <p className="login-alt">
         <button
           type="button"
           onClick={() => {
@@ -81,14 +85,14 @@ export function TwoFactorForm({ mode, onSuccess, onSwitchMode, onBack }: Props) 
             setError('');
             onSwitchMode(isCode ? 'recovery' : 'code');
           }}
-          className="btn-link"
+          className="login-link"
         >
           {isCode ? t('tfaSwitchToRecovery') : t('tfaSwitchToCode')}
         </button>
       </p>
 
-      <p className="mt-1 text-center text-sm">
-        <button type="button" onClick={onBack} className="btn-link btn-link-muted">
+      <p className="login-alt">
+        <button type="button" onClick={onBack} className="login-link login-link-muted">
           {t('backToLogin')}
         </button>
       </p>

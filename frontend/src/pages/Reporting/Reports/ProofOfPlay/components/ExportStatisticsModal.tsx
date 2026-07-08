@@ -26,6 +26,7 @@ import { Trans, useTranslation } from 'react-i18next';
 import DatePickerInput from '@/components/ui/forms/DatePickerInput';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import Modal from '@/components/ui/modals/Modal';
+import { withPublicPath } from '@/config/publicPath';
 import { useDisplayOptions } from '@/pages/Reporting/Reports/shared/hooks/useDisplayOptions';
 import { fetchExportStatsCount } from '@/services/reportApi';
 
@@ -131,7 +132,7 @@ export default function ExportStatisticsModal({ isOpen, onClose }: ExportStatist
     if (displayId) {
       params.set('displayId', displayId);
     }
-    window.location.href = `/stats/export?${params.toString()}`;
+    window.location.href = withPublicPath(`stats/export?${params.toString()}`);
     onClose();
   }
 

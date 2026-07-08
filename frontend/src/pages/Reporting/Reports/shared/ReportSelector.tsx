@@ -24,6 +24,7 @@ import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import Button from '@/components/ui/Button';
+import { withPublicPath } from '@/config/publicPath';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import { useAllReportsData } from '@/pages/Reporting/AllReports/hooks/useAllReportsData';
 
@@ -70,10 +71,10 @@ export default function ReportSelector({
                 }`}
                 onClick={() => {
                   if (!isActive) {
-                    if (report.prototype_url) {
-                      navigate(report.prototype_url.replace(/^\/prototype/, ''));
+                    if (report.url) {
+                      navigate(report.url);
                     } else {
-                      window.location.href = `/report/form/${report.name}`;
+                      window.location.href = withPublicPath(`report/form/${report.name}`);
                     }
                   }
                   setOpen(false);

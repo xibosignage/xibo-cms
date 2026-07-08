@@ -5,6 +5,7 @@ export interface LoginConfig {
   priorRoute: string;
   loginError?: string;
   logoUrl: string;
+  logoDarkUrl: string;
   passwordReminderEnabled: boolean;
   authCASEnabled: boolean;
   version: string;

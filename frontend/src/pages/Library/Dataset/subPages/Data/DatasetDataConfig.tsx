@@ -26,6 +26,7 @@ import { type ComponentProps } from 'react';
 
 import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
 import { TextCell, ActionsCell, MediaCell } from '@/components/ui/table/cells';
+import { withPublicPath } from '@/config/publicPath';
 import type { DynamicRowData } from '@/services/datasetApi';
 import type { DatasetColumn } from '@/types/datasetColumn';
 import type { ActionItem } from '@/types/table';
@@ -74,7 +75,11 @@ export const getDynamicDataColumns = (
         if (col.dataTypeId === 5) {
           const mediaId = String(value);
           return (
-            <MediaCell thumb={`/library/thumbnail/${mediaId}`} title={mediaId} mediaType="image" />
+            <MediaCell
+              thumb={withPublicPath(`library/thumbnail/${mediaId}`)}
+              title={mediaId}
+              mediaType="image"
+            />
           );
         }
 

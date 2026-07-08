@@ -84,33 +84,15 @@ class User extends Base
     public function home(Request $request, Response $response): Response|ResponseInterface
     {
         // Should we show this user the welcome page?
+        // Redirects go through rootUri() so sub-folder/alias installs (e.g. /cms/) resolve.
         if ($this->getUser()->newUserWizard == 0) {
-            return $response->withRedirect('/prototype/welcome');
+            return $response->withRedirect($this->getConfig()->rootUri() . 'welcome');
         }
 
         // User wizard seen, go to the React dashboard
         $this->getLog()->debug('Showing the homepage: ' . $this->getUser()->homePageId);
 
-        return $response->withRedirect('/prototype/dashboard');
-    }
-
-    /**
-     * Welcome Page
-     * @param Request $request
-     * @param Response $response
-     * @return ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function welcome(Request $request, Response $response): Response|ResponseInterface
-    {
-        // Mark the page as seen
-        if ($this->getUser()->newUserWizard == 0) {
-            $this->getUser()->newUserWizard = 1;
-            $this->getUser()->save(['validate' => false]);
-        }
-
-        return $response->withRedirect($this->getConfig()->rootUri() . 'prototype/welcome');
+        return $response->withRedirect($this->getConfig()->rootUri() . 'dashboard');
     }
 
     #[OA\Get(
@@ -167,10 +149,20 @@ class User extends Base
         $logoFile = file_exists($brandDir . '/logo.svg') ? 'logo.svg' : 'logo.png';
         $iconFile = file_exists($brandDir . '/logo-icon.svg') ? 'logo-icon.svg' : 'logo-icon.png';
 
+        // Dark logo, for display on light backgrounds (e.g. the force-change-password page).
+        if (file_exists($brandDir . '/logo-dark.svg')) {
+            $logoDarkFile = 'logo-dark.svg';
+        } elseif (file_exists($brandDir . '/logo-dark.png')) {
+            $logoDarkFile = 'logo-dark.png';
+        } else {
+            $logoDarkFile = $logoFile;
+        }
+
         $branding = [
             'productName' => $brandConfig['productName'] ?? 'Xibo Digital Signage',
             'appName'     => $brandConfig['appName']     ?? 'Xibo',
             'logoUrl'     => '/brand/' . $logoFile,
+            'logoDarkUrl' => '/brand/' . $logoDarkFile,
             'faviconUrl'  => '/brand/' . $iconFile,
             'cssUrl'      => '/brand/theme.css',
             'supportUrl'  => $brandConfig['supportUrl']  ?? 'https://xibosignage.com',
