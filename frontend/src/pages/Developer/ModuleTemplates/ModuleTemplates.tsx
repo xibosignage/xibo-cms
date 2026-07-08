@@ -21,6 +21,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
+import { isAxiosError } from 'axios';
 import { Filter, FilterX, Plus, Search, Upload } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -28,6 +29,7 @@ import { useNavigate } from 'react-router-dom';
 
 import type { ModalType, ModuleTemplateFilterInput } from './ModuleTemplatesConfig';
 import {
+  getBulkActions,
   getFilterKeys,
   getModuleTemplateColumns,
   INITIAL_FILTER_STATE,
@@ -41,16 +43,23 @@ import { notify } from '@/components/ui/Notification';
 import TabNav from '@/components/ui/TabNav';
 import ShareModal from '@/components/ui/modals/ShareModal';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import { fetchDataTypes, importModuleTemplateXml } from '@/services/moduleTemplatesApi';
 import type { ModuleTemplate } from '@/types/moduleTemplates';
+import { UserType } from '@/types/user';
+import { hasFeature } from '@/utils/permissions';
 
 export default function ModuleTemplates() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user } = useUserContext();
+  const isSuperAdmin = user?.userTypeId === UserType.SuperAdmin;
+  const canManageTemplates = hasFeature(user, 'developer.edit');
+  const canDeleteTemplates = hasFeature(user, 'developer.delete');
 
   const {
     pagination,
@@ -84,8 +93,9 @@ export default function ModuleTemplates() {
   const [openFilter, setOpenFilter] = useState(false);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<ModuleTemplate | null>(null);
-  const [shareEntityId, setShareEntityId] = useState<number | null>(null);
+  const [shareEntityId, setShareEntityId] = useState<number | number[] | null>(null);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [selectionCache, setSelectionCache] = useState<Record<string, ModuleTemplate>>({});
 
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => {
@@ -122,6 +132,31 @@ export default function ModuleTemplates() {
 
   const developerTabs = useFilteredTabs('developer');
 
+  const getRowId = (row: ModuleTemplate) => String(row.id);
+
+  const handleRowSelectionChange: typeof setRowSelection = (updaterOrValue) => {
+    const newSelection =
+      typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
+
+    setRowSelection(newSelection);
+
+    setSelectionCache((prev) => {
+      const next = { ...prev };
+      templateList.forEach((item) => {
+        const id = getRowId(item);
+        if (newSelection[id]) {
+          next[id] = item;
+        }
+      });
+      return next;
+    });
+  };
+
+  const getAllSelectedItems = (): ModuleTemplate[] =>
+    Object.keys(rowSelection)
+      .map((id) => selectionCache[id])
+      .filter((item): item is ModuleTemplate => !!item);
+
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: moduleTemplateQueryKeys.all });
   };
@@ -149,6 +184,35 @@ export default function ModuleTemplates() {
     openModal('share');
   };
 
+  const handleBulkDelete = () => {
+    openModal('bulkDelete');
+  };
+
+  const handleBulkShare = () => {
+    setShareEntityId(getAllSelectedItems().map((item) => item.id));
+    openModal('share');
+  };
+
+  const handleBulkSuccess = () => {
+    setRowSelection({});
+    closeModal();
+    handleRefresh();
+  };
+
+  // A bulk delete batch can partially succeed: keep the modal open (it still shows the
+  // error for the templates that failed) but drop the already-deleted ids from the
+  // selection and refresh the table so they don't linger as if nothing happened.
+  const handleBulkPartialSuccess = (deletedIds: number[]) => {
+    setRowSelection((prev) => {
+      const next = { ...prev };
+      deletedIds.forEach((id) => {
+        delete next[String(id)];
+      });
+      return next;
+    });
+    handleRefresh();
+  };
+
   const handleImportXml = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -156,8 +220,12 @@ export default function ModuleTemplates() {
       await importModuleTemplateXml(file);
       notify.success(t('Template imported successfully'));
       handleRefresh();
-    } catch {
-      notify.error(t('Failed to import template'));
+    } catch (err: unknown) {
+      const message =
+        (isAxiosError(err) && err.response?.data?.message) ||
+        (err instanceof Error && err.message) ||
+        t('Failed to import template');
+      notify.error(message);
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
@@ -174,6 +242,18 @@ export default function ModuleTemplates() {
     onCopy: handleCopy,
     onDelete: handleDelete,
     onShare: handleShare,
+    currentUserId: user?.userId ?? 0,
+    isSuperAdmin,
+    canManageTemplates,
+    canDeleteTemplates,
+  });
+
+  const bulkActions = getBulkActions({
+    t,
+    onBulkDelete: handleBulkDelete,
+    onBulkShare: handleBulkShare,
+    isSuperAdmin,
+    canDeleteTemplates,
   });
 
   const filterOptions = getFilterKeys(t, dataTypeOptions);
@@ -275,13 +355,14 @@ export default function ModuleTemplates() {
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetching}
               rowSelection={rowSelection}
-              onRowSelectionChange={setRowSelection}
+              onRowSelectionChange={handleRowSelectionChange}
+              bulkActions={bulkActions}
               onRefresh={handleRefresh}
               columnPinning={{ left: [], right: ['tableActions'] }}
               columnVisibility={columnVisibility}
               onColumnVisibilityChange={setColumnVisibility}
               viewMode={null}
-              getRowId={(row: ModuleTemplate) => String(row.id)}
+              getRowId={getRowId}
             />
           )}
         </div>
@@ -292,20 +373,16 @@ export default function ModuleTemplates() {
         entityType="ModuleTemplate"
         entityId={shareEntityId}
         isOpen={activeModal === 'share'}
-        onClose={() => {
-          closeModal();
-          handleRefresh();
-        }}
+        onClose={handleBulkSuccess}
       />
 
       <ModuleTemplateModals
         activeModal={activeModal}
         selectedTemplate={selectedTemplate}
+        selectedTemplates={getAllSelectedItems()}
         onClose={closeModal}
-        onSuccess={() => {
-          closeModal();
-          handleRefresh();
-        }}
+        onSuccess={handleBulkSuccess}
+        onPartialSuccess={handleBulkPartialSuccess}
       />
     </section>
   );

@@ -605,6 +605,8 @@ interface PropertyCardProps {
   dragHandleNode?: React.ReactNode;
   /** Visual-only overlay clone while dragging. */
   isOverlay?: boolean;
+  /** Briefly highlights the card right after it's added. */
+  isNew?: boolean;
 }
 
 function PropertyCard({
@@ -614,6 +616,7 @@ function PropertyCard({
   onDelete,
   dragHandleNode,
   isOverlay,
+  isNew,
 }: PropertyCardProps) {
   const { t } = useTranslation();
 
@@ -623,8 +626,12 @@ function PropertyCard({
 
   return (
     <div
-      className={`w-[360px] shrink-0 border rounded-lg bg-white flex flex-col ${
-        isOverlay ? 'border-xibo-blue-400 shadow-xl rotate-1' : 'border-gray-200'
+      className={`w-[360px] shrink-0 border rounded-lg bg-white flex flex-col transition-[box-shadow,border-color] duration-1000 ${
+        isOverlay
+          ? 'border-xibo-blue-400 shadow-xl rotate-1'
+          : isNew
+            ? 'border-xibo-blue-400 ring-2 ring-xibo-blue-300'
+            : 'border-gray-200'
       }`}
     >
       {/* Sticky header */}
@@ -833,6 +840,8 @@ export default function PropertiesTab({ properties, onChange }: PropertiesTabPro
   const counterRef = useRef(properties.length);
   const [activeId, setActiveId] = useState<string | null>(null);
   const lastSetPropertiesRef = useRef<ModuleTemplateProperty[]>(properties);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [justAddedId, setJustAddedId] = useState<string | null>(null);
 
   // Re-sync sortIds when properties changes externally (e.g. form reset via Cancel).
   // Uses referential equality: if the incoming prop is not the array we last passed
@@ -854,7 +863,21 @@ export default function PropertiesTab({ properties, onChange }: PropertiesTabPro
     const newId = `prop-${counterRef.current++}`;
     setSortIds((prev) => [...prev, newId]);
     callOnChange([...properties, { type: 'text', id: '' }]);
+    setJustAddedId(newId);
   };
+
+  // Scroll the newly added card into view and briefly highlight it, since the
+  // list scrolls horizontally and an appended card otherwise renders off-screen
+  // with no visible sign anything happened.
+  useEffect(() => {
+    if (!justAddedId) return;
+    scrollContainerRef.current?.scrollTo({
+      left: scrollContainerRef.current.scrollWidth,
+      behavior: 'smooth',
+    });
+    const timer = setTimeout(() => setJustAddedId(null), 1500);
+    return () => clearTimeout(timer);
+  }, [justAddedId]);
 
   const updateProperty = (index: number, updated: ModuleTemplateProperty) =>
     callOnChange(properties.map((p, i) => (i === index ? updated : p)));
@@ -906,7 +929,10 @@ export default function PropertiesTab({ properties, onChange }: PropertiesTabPro
           onDragEnd={handleDragEnd}
         >
           <SortableContext items={sortIds} strategy={horizontalListSortingStrategy}>
-            <div className="flex flex-row items-start gap-4 overflow-x-auto overflow-y-auto max-h-[calc(100vh-300px)] pb-2">
+            <div
+              ref={scrollContainerRef}
+              className="flex flex-row items-start gap-4 overflow-x-auto overflow-y-auto max-h-[calc(100vh-300px)] pb-2"
+            >
               {properties.map((prop, idx) => (
                 <SortablePropertyCard
                   key={sortIds[idx]}
@@ -915,6 +941,7 @@ export default function PropertiesTab({ properties, onChange }: PropertiesTabPro
                   index={idx}
                   onChange={updateProperty}
                   onDelete={deleteProperty}
+                  isNew={sortIds[idx] === justAddedId}
                 />
               ))}
             </div>

@@ -155,10 +155,20 @@ export async function copyModuleTemplate(
   return response.data.data;
 }
 
+interface UploadHandlerFile {
+  name?: string;
+  error?: string;
+}
+
 export async function importModuleTemplateXml(file: File): Promise<void> {
   const formData = new FormData();
   formData.append('files[]', file);
-  await http.post('/developer/template/import', formData, {
+  const response = await http.post('/developer/template/import', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
+
+  const uploadedFile: UploadHandlerFile | undefined = response.data?.files?.[0];
+  if (uploadedFile?.error) {
+    throw new Error(uploadedFile.error);
+  }
 }

@@ -104,7 +104,7 @@ export const getSavedReportItemActions = (
 ): ((report: SavedReport) => ActionItem[]) => {
   const { t, onDelete, onGoToSchedule, onOpen, onBackToReports } = props;
   return (report: SavedReport) => {
-    const exportUrl = `/report/savedreport/${report.savedReportId}/report/${report.reportName}/export`;
+    const exportUrl = `/json/report/savedreport/${report.savedReportId}/report/${report.reportName}/export`;
     return [
       {
         label: t('Open'),
