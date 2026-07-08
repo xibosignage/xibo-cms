@@ -23,7 +23,7 @@ import type { TFunction } from 'i18next';
 import React from 'react';
 
 import { DynamicSettingField } from './DynamicSettingField';
-import { getFieldMetaForType } from './fieldMetadata';
+import { getFieldMetaForType, isFieldMetaEnabled } from './fieldMetadata';
 
 import type { PlayerSoftware } from '@/services/playerSoftwareApi';
 import type { Daypart } from '@/types/daypart';
@@ -47,6 +47,7 @@ export interface ChromeOsFieldProps {
   onLoadMorePlayerVersions?: () => void;
   isLoadingMorePlayerVersions?: boolean;
   onSearchPlayerVersions?: (term: string) => void;
+  settings?: Record<string, unknown> | null;
 }
 
 export function ChromeOsFields({
@@ -68,9 +69,12 @@ export function ChromeOsFields({
   onLoadMorePlayerVersions,
   isLoadingMorePlayerVersions,
   onSearchPlayerVersions,
+  settings,
 }: ChromeOsFieldProps) {
   const metaMap = getFieldMetaForType('chromeOS', t);
-  const fieldsForTab = Object.entries(metaMap).filter(([, meta]) => meta.tab === tab);
+  const fieldsForTab = Object.entries(metaMap).filter(
+    ([, meta]) => meta.tab === tab && isFieldMetaEnabled(meta, settings),
+  );
 
   if (fieldsForTab.length === 0) {
     return null;

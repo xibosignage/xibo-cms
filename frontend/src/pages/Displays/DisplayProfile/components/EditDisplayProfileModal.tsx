@@ -40,6 +40,7 @@ import { CHECKBOX_FIELDS_BY_TYPE } from './fields/fieldMetadata';
 import Checkbox from '@/components/ui/forms/Checkbox';
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
+import { useUserContext } from '@/context/UserContext';
 import { getEditDisplayProfileSchema } from '@/schema/displayProfile';
 import { fetchDaypart } from '@/services/daypartApi';
 import { fetchDisplayProfileById, updateDisplayProfile } from '@/services/displayProfileApi';
@@ -111,6 +112,7 @@ export default function EditDisplayProfileModal({
   onSave,
 }: EditDisplayProfileModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
   const [isPending, startTransition] = useTransition();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>('general');
@@ -590,6 +592,7 @@ export default function EditDisplayProfileModal({
     onPictureOptionRowsChange: setPictureOptionRows,
     lockOptionsState,
     onLockOptionsStateChange: setLockOptionsState,
+    settings: user?.settings,
   };
 
   const renderTypeFields = () => {

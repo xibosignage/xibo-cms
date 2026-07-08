@@ -135,8 +135,7 @@ export default function AddAndEditDisplayGroupModal({
   const debouncedCriteria = useDebounce(draft.dynamicCriteria, 500);
   const debouncedCriteriaTags = useDebounce(draft.dynamicCriteriaTags, 500);
   const hasActiveFilters =
-    draft.isDynamic &&
-    (debouncedCriteria.trim() !== '' || debouncedCriteriaTags.trim() !== '');
+    draft.isDynamic && (debouncedCriteria.trim() !== '' || debouncedCriteriaTags.trim() !== '');
 
   const { data: previewQueryData, isFetching: isFetchingPreview } = useQuery({
     queryKey: [
