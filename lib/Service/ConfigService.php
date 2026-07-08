@@ -383,6 +383,18 @@ class ConfigService implements ConfigServiceInterface
         return file_exists($brandDir . '/' . $base . '.svg') ? $base . '.svg' : $base . '.png';
     }
 
+    public function getBrandLogoDarkFile(): string
+    {
+        $brandDir = rtrim($this->getSetting('LIBRARY_LOCATION', ''), '/') . '/brand';
+        if (file_exists($brandDir . '/logo-dark.svg')) {
+            return 'logo-dark.svg';
+        }
+        if (file_exists($brandDir . '/logo-dark.png')) {
+            return 'logo-dark.png';
+        }
+        return $this->getBrandAssetFile('logo');
+    }
+
     /**
      * Get Theme Specific Settings
      * @param null $settingName

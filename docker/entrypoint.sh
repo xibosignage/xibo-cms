@@ -109,14 +109,30 @@ chown -R www-data.www-data /var/www/cms/library/certs
 # Source is /brand/ — ADD docker/ / in the Dockerfile maps docker/ to the container root.
 # Per-file copy: skip files already present so a WL brand folder is not overwritten on restart.
 mkdir -p /var/www/cms/library/brand/layouts
+# Snapshot customisation state before we write any stock defaults below.
+main_logo_customised=false
+if [ -f /var/www/cms/library/brand/logo.svg ] || [ -f /var/www/cms/library/brand/logo.png ]; then
+  main_logo_customised=true
+fi
+
 # logo.svg / logo-icon.svg have a WL-providable .png alternative. Only copy the default
 # .svg when neither variant is present, so a WL .png survives a rebuild instead of being
 # shadowed by our default .svg (every downstream probe prefers .svg when both exist).
-for base in logo logo-icon logo-dark; do
+for base in logo logo-icon; do
   if [ ! -f "/var/www/cms/library/brand/$base.svg" ] && [ ! -f "/var/www/cms/library/brand/$base.png" ]; then
     cp "/brand/$base.svg" "/var/www/cms/library/brand/$base.svg"
   fi
 done
+
+# logo-dark has no WL-providable mechanism yet: only seed the stock dark variant when the
+# main logo itself is still stock, so a WL/manually-branded logo isn't silently overridden
+# by Xibo's stock dark logo on the login/upgrade/force-change-password screens. A manually
+# dropped-in custom logo-dark.svg/.png is preserved across restarts either way.
+if [ "$main_logo_customised" = false ] \
+    && [ ! -f /var/www/cms/library/brand/logo-dark.svg ] \
+    && [ ! -f /var/www/cms/library/brand/logo-dark.png ]; then
+  cp /brand/logo-dark.svg /var/www/cms/library/brand/logo-dark.svg
+fi
 for f in favicon.ico theme.css xibologo.png 192x192.png 512x512.png; do
   if [ ! -f "/var/www/cms/library/brand/$f" ]; then
     cp "/brand/$f" "/var/www/cms/library/brand/$f"

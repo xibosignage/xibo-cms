@@ -144,6 +144,13 @@ interface ConfigServiceInterface
     public function getBrandAssetFile(string $base): string;
 
     /**
+     * Resolve which file backs the dark-logo variant (for light backgrounds, e.g. the login
+     * card): dark SVG, else dark PNG, else fall back to the standard logo asset.
+     * @return string
+     */
+    public function getBrandLogoDarkFile(): string;
+
+    /**
      * Get theme URI
      * @param string $uri
      * @param bool $local

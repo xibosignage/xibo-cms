@@ -753,11 +753,9 @@ class Login extends Base
 
     private function getBrandLogoUrl(): string
     {
-        $brandDir = rtrim($this->getConfig()->getSetting('LIBRARY_LOCATION'), '/') . '/brand';
         // Brand assets are served by Apache at the domain-root /brand alias (preserved even on
         // alias installs), so this is NOT rootUri-prefixed — matches the React BrandingContext.
-        return '/brand/'
-            . (file_exists($brandDir . '/logo.svg') ? 'logo.svg' : 'logo.png');
+        return '/brand/' . $this->getConfig()->getBrandAssetFile('logo');
     }
 
     /**
@@ -766,14 +764,8 @@ class Login extends Base
      */
     private function getBrandLogoDarkUrl(): string
     {
-        $brandDir = rtrim($this->getConfig()->getSetting('LIBRARY_LOCATION'), '/') . '/brand';
-        if (file_exists($brandDir . '/logo-dark.svg')) {
-            return $this->getConfig()->rootUri() . 'brand/logo-dark.svg';
-        }
-        if (file_exists($brandDir . '/logo-dark.png')) {
-            return $this->getConfig()->rootUri() . 'brand/logo-dark.png';
-        }
-        return $this->getBrandLogoUrl();
+        // Same /brand alias reasoning as getBrandLogoUrl() above — not rootUri-prefixed.
+        return '/brand/' . $this->getConfig()->getBrandLogoDarkFile();
     }
 
     private function isPasswordReminderEnabled(): bool
