@@ -6,7 +6,7 @@ interface Props {
 
 export function SubmitButton({ label, loading = false, disabled = false }: Props) {
   return (
-    <button type="submit" disabled={disabled || loading} className="btn-brand">
+    <button type="submit" disabled={disabled || loading} className="login-button">
       {loading ? (
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
           <svg

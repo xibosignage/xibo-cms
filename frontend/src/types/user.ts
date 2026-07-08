@@ -25,6 +25,7 @@ export interface BrandingConfig {
   productName: string;
   appName: string;
   logoUrl: string;
+  logoDarkUrl: string;
   faviconUrl: string;
   cssUrl: string;
   supportUrl: string;
