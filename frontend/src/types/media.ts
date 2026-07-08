@@ -44,7 +44,7 @@ export interface Media {
   released: number;
   fileName: string;
   fileSizeFormatted: string;
-  orientation: 'portrait' | 'landscape' | 'square' | null;
+  orientation: 'portrait' | 'landscape';
   tags: Tag[];
   fileSize: number;
   duration: number;

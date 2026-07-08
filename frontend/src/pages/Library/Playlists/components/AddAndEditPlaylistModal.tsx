@@ -30,7 +30,7 @@ import Checkbox from '@/components/ui/forms/Checkbox';
 import NumberInput from '@/components/ui/forms/NumberInput';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
-import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
+import TagInput from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { StatusCell, TagsCell, TextCell } from '@/components/ui/table/cells';
@@ -134,7 +134,6 @@ export default function AddAndEditPlaylistModal({
   const [isPending, startTransition] = useTransition();
   const [formErrors, setFormErrors] = useState<PlaylistFormErrors>({});
   const [apiError, setApiError] = useState<string | undefined>();
-  const [pendingTagInput, setPendingTagInput] = useState('');
 
   const [draft, setDraft] = useState<PlaylistDraft>(() => {
     if (type === 'edit' && data) {
@@ -180,7 +179,6 @@ export default function AddAndEditPlaylistModal({
 
     setApiError(undefined);
     setFormErrors({});
-    setPendingTagInput('');
   }, [data, type, defaultFolderId]);
 
   const handleSave = () => {
@@ -205,20 +203,23 @@ export default function AddAndEditPlaylistModal({
 
       setFormErrors({});
       try {
-        const finalTags = collectTags(draft.tags, pendingTagInput);
-        setPendingTagInput('');
+        const serializedTags = draft.tags.map((t) =>
+          t.value != null ? `${t.tag}|${t.value}` : t.tag,
+        );
 
         const payload = {
           name: draft.name,
           isDynamic: draft.isDynamic,
-          tags: serializeTags(finalTags),
+          tags: serializedTags.join(','),
           enableStat: draft.enableStat,
           folderId: draft.folderId,
 
           ...(draft.isDynamic && {
             filterMediaName: draft.filterMediaName,
             logicalOperatorName: draft.logicalOperatorName,
-            filterMediaTag: serializeTags(draft.filterMediaTag),
+            filterMediaTag: draft.filterMediaTag
+              .map((t) => (t.value != null && t.value !== '' ? `${t.tag}|${t.value}` : t.tag))
+              .join(','),
             exactTags: draft.exactTags,
             logicalOperator: draft.logicalOperator,
             filterFolderId: draft.filterFolderId,
@@ -361,8 +362,6 @@ export default function AddAndEditPlaylistModal({
             value={draft.tags}
             helpText={t('Tags (Comma-separated: Tag or Tag|Value)')}
             onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
-            inputValue={pendingTagInput}
-            onInputChange={setPendingTagInput}
           />
 
           {/* Enable Stats */}
@@ -431,7 +430,6 @@ export default function AddAndEditPlaylistModal({
                   placeholder={t('Enter Tag Filter')}
                   value={draft.filterMediaTag}
                   onChange={(val) => setDraft((prev) => ({ ...prev, filterMediaTag: val }))}
-                  allowValues={false}
                   suffix={
                     <div className="flex items-stretch">
                       <label className="flex items-center gap-1.5 px-3 text-sm text-gray-500 border-gray-200 cursor-pointer border-e">

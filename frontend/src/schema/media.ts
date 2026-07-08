@@ -6,7 +6,7 @@ export const getMediaSchema = (t: TFunction) =>
     name: z.string().min(1, t('Name is required')),
     folderId: z.number().nullable().optional(),
     duration: z.number().optional(),
-    orientation: z.enum(['portrait', 'landscape', 'square']).or(z.literal('')).optional(),
+    orientation: z.enum(['portrait', 'landscape', 'square']).optional(),
     enableStat: z.enum(['On', 'Off', 'Inherit']).optional(),
     retired: z.coerce.boolean().optional(),
     updateInLayouts: z.boolean().optional(),

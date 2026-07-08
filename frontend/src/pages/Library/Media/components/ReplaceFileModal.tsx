@@ -7,7 +7,7 @@ import { getMediaIcon } from '../MediaConfig';
 import Button from '@/components/ui/Button';
 import { notify } from '@/components/ui/Notification';
 import Checkbox from '@/components/ui/forms/Checkbox';
-import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
+import TagInput from '@/components/ui/forms/TagInput';
 import Modal from '@/components/ui/modals/Modal';
 import { replaceMedia } from '@/services/mediaApi';
 import type { Media, MediaType } from '@/types/media';
@@ -38,7 +38,6 @@ export default function ReplaceFileModal({
   const [isSaving, setIsSaving] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [pendingTagInput, setPendingTagInput] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const Icon = getMediaIcon(data.mediaType);
@@ -60,16 +59,12 @@ export default function ReplaceFileModal({
       setIsSaving(true);
       setUploadProgress(0);
 
-      const finalTags = collectTags(draft.tags, pendingTagInput);
-      setPendingTagInput('');
-      const serialized = serializeTags(finalTags);
-
       const res = await replaceMedia({
         file: selectedFile,
         oldMediaId: draft.oldMediaId,
         name: draft.name,
         folderId: data.folderId,
-        tags: serialized.split(',').filter(Boolean),
+        tags: draft.tags.map((t) => `${t.tag}${t.value ? `|${t.value}` : ''}`),
         updateInLayouts: draft.updateInLayouts,
         deleteOldRevisions: draft.deleteOldRevisions,
         onProgress: (p) => setUploadProgress(p),
@@ -124,7 +119,6 @@ export default function ReplaceFileModal({
   };
 
   useEffect(() => {
-    setPendingTagInput('');
     setDraft({
       name: data.name,
       tags: data.tags.map((t) => ({ ...t })),
@@ -262,8 +256,6 @@ export default function ReplaceFileModal({
             value={draft.tags}
             helpText={t('Tags (Comma-separated: Tag or Tag|Value)')}
             onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
-            inputValue={pendingTagInput}
-            onInputChange={setPendingTagInput}
           />
           {/* Retired */}
           <div className="bg-gray-50 flex flex-col ">

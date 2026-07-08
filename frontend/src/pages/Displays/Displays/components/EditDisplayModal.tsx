@@ -44,7 +44,7 @@ import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import type { SelectOption } from '@/components/ui/forms/SelectDropdown';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
 import Switch from '@/components/ui/forms/Switch';
-import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
+import TagInput from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import TimezoneSelect from '@/components/ui/forms/TimezoneSelect';
 import Modal from '@/components/ui/modals/Modal';
@@ -494,7 +494,6 @@ export default function EditDisplayModal({
   const [activeTab, setActiveTab] = useState<ActiveTab>('general');
   const [apiError, setApiError] = useState<string | undefined>();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({});
-  const [pendingTagInput, setPendingTagInput] = useState('');
 
   const [draft, setDraft] = useState<EditDraft>({
     display: '',
@@ -575,7 +574,6 @@ export default function EditDisplayModal({
     setActiveTab('general');
     setApiError(undefined);
     setFieldErrors({});
-    setPendingTagInput('');
     setIsLoadingProfile(true);
     setDayparts([]);
     setPlayerVersions([]);
@@ -864,9 +862,10 @@ export default function EditDisplayModal({
       setFieldErrors({});
       setApiError(undefined);
 
-      const finalTags = collectTags(draft.tags, pendingTagInput);
-      setPendingTagInput('');
-      const tagString = finalTags.length > 0 ? serializeTags(finalTags) : undefined;
+      const tagString =
+        draft.tags.length > 0
+          ? draft.tags.map((tg) => (tg.value ? `${tg.tag}|${tg.value}` : tg.tag)).join(',')
+          : undefined;
 
       try {
         const updated = await updateDisplay(data.displayId, {
@@ -1182,8 +1181,6 @@ export default function EditDisplayModal({
                 placeholder=" "
                 value={draft.tags}
                 onChange={(tags) => set('tags', tags)}
-                inputValue={pendingTagInput}
-                onInputChange={setPendingTagInput}
               />
               <SelectDropdown
                 label={t('Default Layout')}
