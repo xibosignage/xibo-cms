@@ -21,7 +21,7 @@
 
 import type { ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
-import { Copy, Edit, Trash2, Users } from 'lucide-react';
+import { Copy, Edit, Settings, Trash2, Users } from 'lucide-react';
 import { type ComponentProps } from 'react';
 
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
@@ -37,7 +37,7 @@ export interface UserGroupFilterInput {
   useRegexForName: boolean;
 }
 
-export type ModalType = BaseModalType | 'copy' | 'members' | null;
+export type ModalType = BaseModalType | 'copy' | 'members' | 'features' | null;
 
 export const INITIAL_FILTER_STATE: UserGroupFilterInput = {
   userGroup: null,
@@ -63,6 +63,7 @@ export interface UserGroupActionsProps {
   onEdit: (userGroup: UserGroup) => void;
   onCopy: (userGroup: UserGroup) => void;
   onMembers: (userGroup: UserGroup) => void;
+  onFeatures: (userGroup: UserGroup) => void;
   onDelete: (userGroup: UserGroup) => void;
 }
 
@@ -71,6 +72,7 @@ export const getUserGroupItemActions = ({
   onEdit,
   onCopy,
   onMembers,
+  onFeatures,
   onDelete,
 }: UserGroupActionsProps): ((userGroup: UserGroup) => ActionItem[]) => {
   return (userGroup: UserGroup) => [
@@ -98,6 +100,11 @@ export const getUserGroupItemActions = ({
       label: t('Members'),
       icon: Users,
       onClick: () => onMembers(userGroup),
+    },
+    {
+      label: t('Features'),
+      icon: Settings,
+      onClick: () => onFeatures(userGroup),
     },
     { isSeparator: true },
     {
