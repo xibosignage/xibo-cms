@@ -56,6 +56,7 @@ export default function Campaigns() {
   const { user } = useUserContext();
   const canViewFolders = usePermissions()?.canViewFolders;
   const canSchedule = hasFeature(user, 'schedule.add');
+  const canAccessAdCampaign = hasFeature(user, 'ad.campaign');
   const homeFolderId = user?.homeFolderId ?? 1;
 
   const location = useLocation();
@@ -82,19 +83,11 @@ export default function Campaigns() {
     sorting: [],
     columnVisibility: {
       campaign: true,
-      type: true,
-      startDt: false,
-      endDt: false,
       numberLayouts: true,
       tags: true,
       totalDuration: true,
       cyclePlaybackEnabled: false,
       playCount: true,
-      targetType: false,
-      target: false,
-      plays: false,
-      spend: false,
-      impressions: false,
       ref1: false,
       ref2: false,
       ref3: false,
@@ -103,6 +96,18 @@ export default function Campaigns() {
       createdAt: false,
       modifiedAt: true,
       modifiedByName: true,
+      ...(canAccessAdCampaign
+        ? {
+            type: true,
+            startDt: false,
+            endDt: false,
+            targetType: false,
+            target: false,
+            plays: false,
+            spend: false,
+            impressions: false,
+          }
+        : {}),
     },
     viewMode: 'table',
     globalFilter: '',
@@ -214,6 +219,7 @@ export default function Campaigns() {
     confirmDelete,
     handleConfirmClone,
     handleConfirmMove,
+    handlePreview,
   } = useCampaignActions({
     t,
     handleRefresh,
@@ -273,6 +279,7 @@ export default function Campaigns() {
   const columns = getCampaignColumn({
     t,
     formatDateTime,
+    canAccessAdCampaign,
     onDelete: handleDelete,
     openEditModal,
     openAdEditor,
@@ -280,6 +287,7 @@ export default function Campaigns() {
     openMoveModal,
     openShareModal,
     onSchedule: canSchedule ? openScheduleModal : undefined,
+    onPreview: handlePreview,
   });
 
   const getAllSelectedItems = (): Campaign[] => {
@@ -309,7 +317,7 @@ export default function Campaigns() {
     },
   });
 
-  const { filterOptions } = useCampaignFilterOptions(t);
+  const { filterOptions } = useCampaignFilterOptions(t, { canAccessAdCampaign });
 
   const libraryTabs = useFilteredTabs('design');
 

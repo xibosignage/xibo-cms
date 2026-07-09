@@ -24,6 +24,7 @@ import { isAxiosError } from 'axios';
 import type { TFunction } from 'i18next';
 import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { notify } from '@/components/ui/Notification';
 import { copyCampaign, deleteCampaign } from '@/services/campaignApi';
@@ -45,6 +46,7 @@ export function useCampaignActions({
   setRowSelection,
   setItemsToMove,
 }: UseCampaignActionsProps) {
+  const navigate = useNavigate();
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isCloning, setIsCloning] = useState(false);
@@ -156,6 +158,10 @@ export function useCampaignActions({
     }
   };
 
+  const handlePreview = (campaign: Campaign) => {
+    navigate(`/design/campaign/${campaign.campaignId}/preview`);
+  };
+
   return {
     isDeleting,
     deleteError,
@@ -164,5 +170,6 @@ export function useCampaignActions({
     confirmDelete,
     handleConfirmClone,
     handleConfirmMove,
+    handlePreview,
   };
 }

@@ -148,6 +148,16 @@ export const APP_ROUTES: AppRoute[] = [
         feature: 'ad.campaign',
       },
       {
+        path: 'campaign/:id/preview',
+        labelKey: 'Campaign Preview',
+        hideFromMenu: true,
+        lazy: () =>
+          import('@/pages/Design/Campaigns/CampaignPreview').then((m) => ({
+            Component: m.default,
+          })),
+        feature: 'campaign.view',
+      },
+      {
         path: 'layout',
         labelKey: 'Layouts',
         lazy: () =>

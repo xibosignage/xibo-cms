@@ -23,6 +23,7 @@ import {
   useFloating,
   autoUpdate,
   flip,
+  offset,
   shift,
   useHover,
   useFocus,
@@ -53,7 +54,7 @@ export function SidebarPopup({ route, isCollapsed, children }: SidebarPopupProps
     onOpenChange: setOpen,
     placement: 'right-start',
     whileElementsMounted: autoUpdate,
-    middleware: [flip(), shift()],
+    middleware: [offset(12), flip(), shift()],
   });
 
   const hover = useHover(context, {
