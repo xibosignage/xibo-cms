@@ -19,8 +19,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Maximize2 } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -29,20 +30,25 @@ import { fetchLayouts } from '@/services/layoutsApi';
 import type { Layout } from '@/types/layout';
 import { formatDuration } from '@/utils/formatters';
 
+const PAGE_SIZE = 30;
+
 function LayoutPreviewCard({ layout }: { layout: Layout }) {
   const { t } = useTranslation();
 
   return (
     <div className="flex flex-col gap-2 rounded-sm overflow-hidden shadow-sm">
       <div className="relative w-full aspect-4/3 bg-black rounded overflow-hidden">
-        {layout.previewUrl && (
+        {layout.previewUrl ? (
           <iframe
             sandbox="allow-scripts"
             src={layout.previewUrl}
-            title={`Layout ${layout.layoutId}`}
+            title={t('Layout {{id}}', { id: layout.layoutId })}
             className="absolute inset-0 w-full h-full border-0 overflow-hidden"
-            style={{ pointerEvents: 'auto' }}
           />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-xs text-gray-400">{t('Preview not available')}</span>
+          </div>
         )}
       </div>
       <div className="flex items-end justify-between gap-x-2 p-2">
@@ -96,19 +102,51 @@ export default function CampaignPreview() {
     isLoading: layoutsLoading,
     isError: isLayoutsError,
     error: layoutsError,
-  } = useQuery({
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ['campaign-preview-layouts', campaignId],
-    queryFn: () =>
+    queryFn: ({ pageParam = 0 }) =>
       fetchLayouts({
-        start: 0,
-        length: 100,
+        start: pageParam,
+        length: PAGE_SIZE,
         campaignId,
+        sortBy: 'displayOrder',
+        sortDir: 'ASC',
       }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      const loaded = allPages.reduce((total, page) => total + page.rows.length, 0);
+      return loaded < lastPage.totalCount ? loaded : undefined;
+    },
     enabled: isValidId,
   });
 
-  const layouts = layoutsData?.rows ?? [];
+  const layouts = layoutsData?.pages.flatMap((page) => page.rows) ?? [];
   const isLoading = campaignLoading || layoutsLoading;
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!hasNextPage || !sentinelRef.current || !scrollContainerRef.current) {
+      return;
+    }
+
+    const el = sentinelRef.current;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1, root: scrollContainerRef.current },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
   const isError = isCampaignError || isLayoutsError;
   const errorMessage =
     campaignError instanceof Error
@@ -167,10 +205,16 @@ export default function CampaignPreview() {
           <span className="text-gray-500">{t('No layouts found in this campaign.')}</span>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 overflow-y-auto pb-6">
-          {layouts.map((layout) => (
-            <LayoutPreviewCard key={layout.layoutId} layout={layout} />
-          ))}
+        <div ref={scrollContainerRef} className="overflow-y-auto pb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            {layouts.map((layout) => (
+              <LayoutPreviewCard key={layout.layoutId} layout={layout} />
+            ))}
+          </div>
+          {hasNextPage && <div ref={sentinelRef} className="h-1" />}
+          {isFetchingNextPage && (
+            <p className="text-xs text-gray-400 text-center py-3">{t('Loading…')}</p>
+          )}
         </div>
       )}
     </section>
