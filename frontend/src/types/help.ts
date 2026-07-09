@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -19,16 +19,14 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// --- Xibo JS files ----
-// Xibo forms
-require('./src/style/forms.scss');
-require('./src/core/forms.js');
+export interface HelpLink {
+  title: string;
+  summary: string;
+  url: string;
+  isAllowWhiteLabel: boolean;
+}
 
-// Xibo datatables and folders
-require('./src/core/xibo-datatables.js');
-
-// Xibo calendar
-require('./src/core/xibo-calendar.js');
-
-// Xibo core
-require('./src/core/xibo-cms.js');
+export interface HelpPageLinks {
+  landingPage: string;
+  links: HelpLink[];
+}

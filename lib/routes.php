@@ -539,6 +539,7 @@ $app->get('/user/pref', ['\Xibo\Controller\User' , 'pref'])->setName('user.pref'
 $app->post('/user/pref', ['\Xibo\Controller\User' ,'prefEdit']);
 $app->put('/user/pref', ['\Xibo\Controller\User' ,'prefEditFromForm']);
 $app->get('/user/me', ['\Xibo\Controller\User','myDetails'])->setName('user.me');
+$app->get('/help/page-links', ['\Xibo\Controller\Help','pageLinks'])->setName('help.pageLinks');
 $app->get('/user/types', ['\Xibo\Controller\User','getUserTypes'])->setName('user.types');
 $app->get('/user', ['\Xibo\Controller\User','grid'])->setName('user.search');
 $app->get('/user/{id}/applications', ['\Xibo\Controller\User', 'applicationsGrid'])->setName('user.applications');

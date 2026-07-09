@@ -24,6 +24,7 @@ import { useState } from 'react';
 import { Outlet, useLocation, useLoaderData } from 'react-router-dom';
 
 import { SessionExpiredModal } from '@/components/auth/SessionExpiredModal';
+import HelpPane from '@/components/help/HelpPane';
 import SideBar from '@/components/layout/SideBar';
 import TopNav from '@/components/layout/TopNav';
 import { BrandingProvider } from '@/context/BrandingContext';
@@ -93,6 +94,7 @@ export default function RootLayout() {
           <SessionExpiredModal />
           <NotificationInterruptCheck />
           <UploadProgressDock />
+          <HelpPane />
         </div>
       </UserProvider>
     </BrandingProvider>
