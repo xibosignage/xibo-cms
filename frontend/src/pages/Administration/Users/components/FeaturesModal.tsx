@@ -27,6 +27,7 @@ import { useTranslation } from 'react-i18next';
 import {
   getFeatureCategories,
   getFeatureDefinitions,
+  getGroupDescriptions,
   getGroupLabels,
 } from '../config/featureDefinitions';
 import type { FeatureDefinition } from '../config/featureDefinitions';
@@ -63,6 +64,7 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
   const categories = getFeatureCategories(t);
   const allFeatures = getFeatureDefinitions(t);
   const groupLabels = getGroupLabels(t);
+  const groupDescriptions = getGroupDescriptions(t);
   const [activeTab, setActiveTab] = useState<FeatureTab>(categories[0]?.key ?? 'content');
 
   // Load the user's group features + compute inherited from other groups
@@ -164,13 +166,19 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
   const activeCategoryGroups = activeCategory?.groups ?? [];
 
   // Group features by their backend group within the active category
-  const featuresByGroup: { groupKey: string; label: string; features: FeatureDefinition[] }[] = [];
+  const featuresByGroup: {
+    groupKey: string;
+    label: string;
+    description?: string;
+    features: FeatureDefinition[];
+  }[] = [];
   for (const groupKey of activeCategoryGroups) {
     const groupFeatures = allFeatures.filter((f) => f.group === groupKey);
     if (groupFeatures.length > 0) {
       featuresByGroup.push({
         groupKey,
         label: groupLabels[groupKey] ?? groupKey,
+        description: groupDescriptions[groupKey],
         features: groupFeatures,
       });
     }
@@ -246,7 +254,7 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
                 </span>
               </div>
 
-              {featuresByGroup.map(({ groupKey, label, features }) => {
+              {featuresByGroup.map(({ groupKey, label, description, features }) => {
                 const isExpanded = expandedGroups.has(groupKey);
                 const allEnabled = features.every((f) => enabledFeatures.has(f.feature));
                 const someEnabled =
@@ -263,11 +271,18 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
                       >
                         <ChevronDown
                           size={14}
-                          className={`text-gray-500 transition-transform duration-200 ${
+                          className={`text-gray-500 transition-transform duration-200 shrink-0 mt-0.5 ${
                             isExpanded ? 'rotate-180' : 'rotate-0'
                           }`}
                         />
-                        <span className="text-sm font-bold text-gray-800">{label}</span>
+                        <div>
+                          <span className="text-sm font-bold text-gray-800">{label}</span>
+                          {!isExpanded && description && (
+                            <p className="text-xs text-gray-500 font-normal mt-0.5">
+                              {description}
+                            </p>
+                          )}
+                        </div>
                       </button>
                       <div className="flex justify-center">
                         <input
@@ -295,7 +310,7 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
                       features.map((feat) => (
                         <div
                           key={feat.feature}
-                          className="grid grid-cols-[1fr_100px_100px] items-center border-b border-gray-50 hover:bg-blue-50/30 transition-colors"
+                          className="grid grid-cols-[1fr_100px_100px] items-center border-b border-gray-50 hover:bg-blue-50/30 transition-colors pr-3"
                         >
                           <div className="px-4 py-2.5 pl-10">
                             <span className="text-sm text-gray-700">{feat.title}</span>

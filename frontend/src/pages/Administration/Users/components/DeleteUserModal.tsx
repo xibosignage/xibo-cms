@@ -35,6 +35,7 @@ interface DeleteUserModalProps {
   onDelete: (options: { deleteAllItems: boolean; reassignUserId: number | null }) => void;
   userName?: string;
   userId?: number;
+  isSuperAdmin?: boolean;
   error?: string | null;
   isLoading?: boolean;
 }
@@ -45,6 +46,7 @@ export default function DeleteUserModal({
   onDelete,
   userName,
   userId,
+  isSuperAdmin,
   isLoading,
   error,
 }: DeleteUserModalProps) {
@@ -116,19 +118,21 @@ export default function DeleteUserModal({
         </p>
 
         <div className="mt-2 space-y-3">
-          <Checkbox
-            id="deleteAllItems"
-            title={t('Delete all content')}
-            label={t('Delete all content owned by this user')}
-            className="items-center px-3 py-2.5"
-            checked={deleteAllItems}
-            onChange={() => {
-              setDeleteAllItems((prev) => !prev);
-              if (!deleteAllItems) {
-                setReassignUserId(null);
-              }
-            }}
-          />
+          {!isSuperAdmin && (
+            <Checkbox
+              id="deleteAllItems"
+              title={t('Delete all content')}
+              label={t('Delete all content owned by this user')}
+              className="items-center px-3 py-2.5"
+              checked={deleteAllItems}
+              onChange={() => {
+                setDeleteAllItems((prev) => !prev);
+                if (!deleteAllItems) {
+                  setReassignUserId(null);
+                }
+              }}
+            />
+          )}
 
           {!deleteAllItems && (
             <SelectDropdown

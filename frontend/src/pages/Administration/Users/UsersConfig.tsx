@@ -110,6 +110,7 @@ const getUserTypeLabel = (t: TFunction, userTypeId: number): string => {
 
 export interface UserActionsProps {
   t: TFunction;
+  currentUserId?: number;
   onEdit: (user: User) => void;
   onSetHomeFolder: (user: User) => void;
   onUserGroups: (user: User) => void;
@@ -119,51 +120,61 @@ export interface UserActionsProps {
 
 export const getUserItemActions = ({
   t,
+  currentUserId,
   onEdit,
   onSetHomeFolder,
   onUserGroups,
   onFeatures,
   onDelete,
 }: UserActionsProps): ((user: User) => ActionItem[]) => {
-  return (user: User) => [
-    // Quick action
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => onEdit(user),
-      isQuickAction: true,
-      variant: 'primary' as const,
-    },
+  return (user: User) => {
+    const isSelf = user.userId === currentUserId;
 
-    // Dropdown menu actions
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => onEdit(user),
-    },
-    {
-      label: t('Set Home Folder'),
-      icon: Folder,
-      onClick: () => onSetHomeFolder(user),
-    },
-    {
-      label: t('User Groups'),
-      icon: Users,
-      onClick: () => onUserGroups(user),
-    },
-    {
-      label: t('Features'),
-      icon: Settings,
-      onClick: () => onFeatures(user),
-    },
-    { isSeparator: true },
-    {
-      label: t('Delete'),
-      icon: Trash2,
-      onClick: () => onDelete(user),
-      variant: 'danger' as const,
-    },
-  ];
+    const actions: ActionItem[] = [
+      // Quick action
+      {
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => onEdit(user),
+        isQuickAction: true,
+        variant: 'primary' as const,
+      },
+
+      // Dropdown menu actions
+      {
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => onEdit(user),
+      },
+      {
+        label: t('Set Home Folder'),
+        icon: Folder,
+        onClick: () => onSetHomeFolder(user),
+      },
+      {
+        label: t('User Groups'),
+        icon: Users,
+        onClick: () => onUserGroups(user),
+      },
+      {
+        label: t('Features'),
+        icon: Settings,
+        onClick: () => onFeatures(user),
+      },
+    ];
+
+    if (!isSelf) {
+      actions.push({ isSeparator: true });
+      actions.push({
+        label: t('Delete'),
+        icon: Trash2,
+        onClick: () => onDelete(user),
+        variant: 'danger' as const,
+      });
+    }
+
+    return actions;
+  };
 };
 
 export const getUserColumns = (props: UserActionsProps): ColumnDef<User>[] => {
@@ -187,6 +198,7 @@ export const getUserColumns = (props: UserActionsProps): ColumnDef<User>[] => {
       accessorKey: 'userTypeId',
       header: t('User Type'),
       size: 140,
+      enableSorting: false,
       cell: (info) => <TextCell>{getUserTypeLabel(t, info.getValue<number>())}</TextCell>,
     },
     {
@@ -199,18 +211,21 @@ export const getUserColumns = (props: UserActionsProps): ColumnDef<User>[] => {
       accessorKey: 'homePage',
       header: t('Home Page'),
       size: 160,
+      enableSorting: false,
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
     {
       accessorKey: 'libraryQuotaFormatted',
       header: t('Library Quota'),
       size: 140,
+      enableSorting: false,
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
     {
       accessorKey: 'loggedIn',
       header: t('Active Sessions'),
       size: 120,
+      enableSorting: false,
       cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
     },
     {
@@ -223,6 +238,7 @@ export const getUserColumns = (props: UserActionsProps): ColumnDef<User>[] => {
       accessorKey: 'twoFactorDescription',
       header: t('Two Factor'),
       size: 140,
+      enableSorting: false,
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
     {

@@ -78,10 +78,6 @@ export function useTableState<TFilters>(
         if (savedPrefs.viewMode) {
           setViewMode(savedPrefs.viewMode);
         }
-        if (savedPrefs.globalFilter !== undefined) {
-          setGlobalFilter(savedPrefs.globalFilter);
-          setDebouncedFilter(savedPrefs.globalFilter);
-        }
         if (savedPrefs.filterInputs) {
           setFilterInputs(savedPrefs.filterInputs);
         }
@@ -111,7 +107,6 @@ export function useTableState<TFilters>(
     sorting,
     columnVisibility,
     viewMode,
-    globalFilter,
     filterInputs,
     folderId,
   };

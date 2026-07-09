@@ -16,7 +16,7 @@ export const getAddUserSchema = (t: TFunction) =>
 
     groupId: z.number({ message: t('Initial user group is required') }),
 
-    homePageId: z.string().optional(),
+    homePageId: z.string().min(1, t('Homepage is required')),
 
     libraryQuota: z.number().min(0, t('Library quota must be a positive number')).optional(),
 

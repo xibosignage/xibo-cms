@@ -28,6 +28,7 @@ import SetHomeFolderModal from './SetHomeFolderModal';
 import UserGroupsModal from './UserGroupsModal';
 
 import type { User } from '@/types/user';
+import { UserType } from '@/types/user';
 
 interface UsersModalsProps {
   activeModal: ModalType;
@@ -76,6 +77,7 @@ export function UsersModals({
           onDelete={(options) => confirmDelete(selectedUser.userId, options)}
           userName={selectedUser.userName}
           userId={selectedUser.userId}
+          isSuperAdmin={selectedUser.userTypeId === UserType.SuperAdmin}
           error={deleteError}
           isLoading={isDeleting}
         />
