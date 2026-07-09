@@ -55,9 +55,11 @@ export default function MediaCard({
   actions,
 }: MediaCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [hasThumbnailError, setHasThumbnailError] = useState(false);
 
   const isPlayable = media.mediaType === 'video' || media.mediaType === 'audio';
   const IconComponent = getMediaIcon(media.mediaType);
+  const showThumbnail = media.thumbnail && !hasThumbnailError;
 
   const { refs, floatingStyles, context } = useFloating({
     open: isMenuOpen,
@@ -105,12 +107,14 @@ export default function MediaCard({
         className="aspect-video w-full bg-gray-400 rounded-t-lg overflow-hidden cursor-pointer relative flex items-center justify-center"
         onClick={() => onPreview(media)}
       >
-        {media.thumbnail ? (
+        {showThumbnail ? (
           <div className="flex h-full justify-center items-center">
             <img
               src={media.thumbnail}
               alt={media.name}
+              loading="lazy"
               className="w-full h-full object-cover transition-transform group-hover:scale-105"
+              onError={() => setHasThumbnailError(true)}
             />
             {isPlayable && (
               <div className="absolute flex items-center justify-center rounded-full bg-white/10 size-9.5">

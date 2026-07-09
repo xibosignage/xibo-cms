@@ -176,9 +176,11 @@ class WidgetDownloader
         // and then thumbnails in tn_{mediaId}_{mediaType}cover.png
         // unless we are an image module, which is its own image, and would then have a thumbnail in
         // tn_{mediaId}_{mediaType}cover.png
+        // This single cached thumbnail is shared by the library table view (shown small) and the
+        // gallery view (shown larger) - sized for the gallery, downscaled by the browser for the table.
         try {
-            $width = 120;
-            $height = 120;
+            $width = 320;
+            $height = 320;
 
             if ($media->mediaType === 'image') {
                 $filePath = $this->libraryLocation . $media->storedAs;
