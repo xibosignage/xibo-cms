@@ -345,7 +345,7 @@ export const getDisplayGroupColumns = (
       size: 160,
       cell: ({ row }) => (
         <TagsCell
-          tags={(row.original.tags ?? []).map((tag) => ({ id: tag.tagId, label: tag.tag }))}
+          tags={(row.original.tags ?? []).map((tag) => ({ id: tag.tagId, label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag }))}
         />
       ),
     },

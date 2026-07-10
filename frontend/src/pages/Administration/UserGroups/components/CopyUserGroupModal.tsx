@@ -45,7 +45,7 @@ export default function CopyUserGroupModal({
 
   const [name, setName] = useState(`${userGroup.group} (Copy)`);
   const [copyMembers, setCopyMembers] = useState(false);
-  const [copyFeatures, setCopyFeatures] = useState(false);
+  const [copyFeatures, setCopyFeatures] = useState(true);
   const [nameError, setNameError] = useState('');
   const [apiError, setApiError] = useState<string | undefined>();
 
