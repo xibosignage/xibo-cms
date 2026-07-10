@@ -165,6 +165,7 @@ export default function UserGroups() {
     onEdit: (userGroup) => openModal('edit', userGroup),
     onCopy: (userGroup) => openModal('copy', userGroup),
     onMembers: (userGroup) => openModal('members', userGroup),
+    onFeatures: (userGroup) => openModal('features', userGroup),
     onDelete: (userGroup) => {
       setItemsToDelete([userGroup]);
       setDeleteError(null);

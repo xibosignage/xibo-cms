@@ -27,6 +27,7 @@ import AddEditUserGroupModal from './AddEditUserGroupModal';
 import CopyUserGroupModal from './CopyUserGroupModal';
 import DeleteUserGroupModal from './DeleteUserGroupModal';
 import ManageMembersModal from './ManageMembersModal';
+import UserGroupFeaturesModal from './UserGroupFeaturesModal';
 
 import type { UserGroup } from '@/types/userGroup';
 
@@ -98,6 +99,14 @@ export function UserGroupModals({
 
       {isModalOpen('members') && selectedUserGroup && (
         <ManageMembersModal
+          userGroup={selectedUserGroup}
+          onClose={closeModal}
+          onSuccess={handleRefresh}
+        />
+      )}
+
+      {isModalOpen('features') && selectedUserGroup && (
+        <UserGroupFeaturesModal
           userGroup={selectedUserGroup}
           onClose={closeModal}
           onSuccess={handleRefresh}
