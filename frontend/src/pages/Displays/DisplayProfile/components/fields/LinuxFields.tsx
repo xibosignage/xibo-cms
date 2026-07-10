@@ -23,7 +23,7 @@ import type { TFunction } from 'i18next';
 import React from 'react';
 
 import { DynamicSettingField } from './DynamicSettingField';
-import { getFieldMetaForType } from './fieldMetadata';
+import { getFieldMetaForType, isFieldMetaEnabled } from './fieldMetadata';
 
 import type { Daypart } from '@/types/daypart';
 
@@ -41,6 +41,7 @@ export interface LinuxFieldProps {
   onLoadMoreDayparts?: () => void;
   isLoadingMoreDayparts?: boolean;
   onSearchDayparts?: (term: string) => void;
+  settings?: Record<string, unknown> | null;
 }
 
 export function LinuxFields({
@@ -57,9 +58,12 @@ export function LinuxFields({
   onLoadMoreDayparts,
   isLoadingMoreDayparts,
   onSearchDayparts,
+  settings,
 }: LinuxFieldProps) {
   const metaMap = getFieldMetaForType('linux', t);
-  const fieldsForTab = Object.entries(metaMap).filter(([, meta]) => meta.tab === tab);
+  const fieldsForTab = Object.entries(metaMap).filter(
+    ([, meta]) => meta.tab === tab && isFieldMetaEnabled(meta, settings),
+  );
 
   if (fieldsForTab.length === 0) {
     return null;

@@ -140,9 +140,27 @@ export interface FieldMeta {
   helpText?: string;
   inputType: FieldInputType;
   options?: Array<{ value: string; label: string }>;
+  /** CMS setting key that must be truthy (default: enabled) for this field to be shown at all. */
+  requiresSetting?: string;
 }
 
 export type FieldMetaMap = Record<string, FieldMeta>;
+
+/**
+ * Whether a field should be shown, based on its `requiresSetting` gate (if any) and the
+ * CMS-wide settings from the current user's bootstrap payload. Missing/undefined settings
+ * default to enabled, matching the settings' own DB default of '1'.
+ */
+export function isFieldMetaEnabled(
+  meta: FieldMeta,
+  settings?: Record<string, unknown> | null,
+): boolean {
+  if (!meta.requiresSetting) {
+    return true;
+  }
+  const value = settings?.[meta.requiresSetting];
+  return value === undefined || value === null || Number(value) !== 0;
+}
 
 function commonMeta(t: TFunction): FieldMetaMap {
   return {
@@ -259,6 +277,7 @@ function commonMeta(t: TFunction): FieldMetaMap {
         'When enabled the Player will send the current layout to the CMS each time it changes. Warning: This is bandwidth intensive and should be disabled unless on a LAN.',
       ),
       inputType: 'checkbox',
+      requiresSetting: 'DISPLAY_PROFILE_CURRENT_LAYOUT_STATUS_ENABLED',
     },
     expireModifiedLayouts: {
       label: t('Expire Modified Layouts?'),
@@ -275,6 +294,7 @@ function commonMeta(t: TFunction): FieldMetaMap {
         'The duration between status screen shots in minutes. 0 to disable. Warning: This is bandwidth intensive.',
       ),
       inputType: 'number',
+      requiresSetting: 'DISPLAY_PROFILE_SCREENSHOT_INTERVAL_ENABLED',
     },
     screenShotSize: {
       label: t('Screen Shot Size'),

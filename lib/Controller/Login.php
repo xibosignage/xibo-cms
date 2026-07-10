@@ -495,17 +495,17 @@ class Login extends Base
      */
     public function aboutConfig(Request $request, Response $response): \Psr\Http\Message\ResponseInterface
     {
-        $brandDir = rtrim($this->getConfig()->getSetting('LIBRARY_LOCATION'), '/') . '/brand';
-        $logoFile = file_exists($brandDir . '/logo.svg') ? 'logo.svg' : 'logo.png';
-        $iconFile = file_exists($brandDir . '/logo-icon.svg') ? 'logo-icon.svg' : 'logo-icon.png';
+        $rootUri = $this->getConfig()->rootUri();
+        $logoFile = $this->getConfig()->getBrandAssetFile('logo');
+        $iconFile = $this->getConfig()->getBrandAssetFile('logo-icon');
 
         $payload = [
             'version'     => Environment::$WEBSITE_VERSION_NAME,
             'revision'    => Environment::getGitCommit(),
             'appName'     => $this->getConfig()->getThemeConfig('app_name', 'Xibo'),
             'productName' => $this->getConfig()->getThemeConfig('theme_title', 'Xibo Digital Signage'),
-            'logoUrl'     => '/brand/' . $logoFile,
-            'logoIconUrl' => '/brand/' . $iconFile,
+            'logoUrl'     => $rootUri . 'brand/' . $logoFile,
+            'logoIconUrl' => $rootUri . 'brand/' . $iconFile,
             'supportUrl'  => $this->getConfig()->getThemeConfig('theme_url', 'https://xibosignage.com'),
             'sourceUrl'   => $this->getConfig()->getThemeConfig(
                 'cms_source_url',
@@ -753,11 +753,9 @@ class Login extends Base
 
     private function getBrandLogoUrl(): string
     {
-        $brandDir = rtrim($this->getConfig()->getSetting('LIBRARY_LOCATION'), '/') . '/brand';
         // Brand assets are served by Apache at the domain-root /brand alias (preserved even on
         // alias installs), so this is NOT rootUri-prefixed — matches the React BrandingContext.
-        return '/brand/'
-            . (file_exists($brandDir . '/logo.svg') ? 'logo.svg' : 'logo.png');
+        return '/brand/' . $this->getConfig()->getBrandAssetFile('logo');
     }
 
     /**
@@ -766,14 +764,8 @@ class Login extends Base
      */
     private function getBrandLogoDarkUrl(): string
     {
-        $brandDir = rtrim($this->getConfig()->getSetting('LIBRARY_LOCATION'), '/') . '/brand';
-        if (file_exists($brandDir . '/logo-dark.svg')) {
-            return $this->getConfig()->rootUri() . 'brand/logo-dark.svg';
-        }
-        if (file_exists($brandDir . '/logo-dark.png')) {
-            return $this->getConfig()->rootUri() . 'brand/logo-dark.png';
-        }
-        return $this->getBrandLogoUrl();
+        // Same /brand alias reasoning as getBrandLogoUrl() above — not rootUri-prefixed.
+        return '/brand/' . $this->getConfig()->getBrandLogoDarkFile();
     }
 
     private function isPasswordReminderEnabled(): bool

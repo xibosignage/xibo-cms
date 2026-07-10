@@ -26,7 +26,7 @@ import { useTranslation } from 'react-i18next';
 
 import { DynamicSettingField } from './DynamicSettingField';
 import type { PicturePropertyDef } from './LgSsspFields';
-import { getFieldMetaForType } from './fieldMetadata';
+import { getFieldMetaForType, isFieldMetaEnabled } from './fieldMetadata';
 
 import Button from '@/components/ui/Button';
 import Checkbox from '@/components/ui/forms/Checkbox';
@@ -352,6 +352,7 @@ export interface HisenseFieldProps {
   onHisenseTimerRulesChange: (rules: HisenseTimerRule[]) => void;
   hisensePictureRows: HisensePictureRow[];
   onHisensePictureRowsChange: (rows: HisensePictureRow[]) => void;
+  settings?: Record<string, unknown> | null;
 }
 
 export function HisenseFields({
@@ -377,6 +378,7 @@ export function HisenseFields({
   onHisenseTimerRulesChange,
   hisensePictureRows,
   onHisensePictureRowsChange,
+  settings,
 }: HisenseFieldProps) {
   if (tab === 'timers') {
     return (
@@ -432,7 +434,8 @@ export function HisenseFields({
       meta.tab === tab &&
       !['timers', 'picture-options', 'hisense-timers', 'hisense-picture-options'].includes(
         meta.inputType,
-      ),
+      ) &&
+      isFieldMetaEnabled(meta, settings),
   );
 
   if (fieldsForTab.length === 0) {

@@ -22,6 +22,11 @@
 import http from '@/lib/api';
 import type { User } from '@/types/user';
 
+export async function fetchCurrentUser(): Promise<User> {
+  const response = await http.get<User>('/user/me');
+  return response.data;
+}
+
 export interface FetchUsersRequest {
   start: number;
   length: number;

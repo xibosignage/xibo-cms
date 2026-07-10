@@ -35,7 +35,11 @@ export interface FetchDisplaysRequest {
   keyword?: string;
   displayId?: number;
   display?: string;
+  useRegexForName?: number;
   tags?: string;
+  exactTags?: number;
+  logicalOperator?: 'OR' | 'AND';
+  logicalOperatorName?: 'OR' | 'AND';
   mediaInventoryStatus?: number | string;
   loggedIn?: number | string;
   authorised?: number | string;

@@ -23,7 +23,7 @@ import type { TFunction } from 'i18next';
 import React from 'react';
 
 import { DynamicSettingField } from './DynamicSettingField';
-import { getFieldMetaForType } from './fieldMetadata';
+import { getFieldMetaForType, isFieldMetaEnabled } from './fieldMetadata';
 
 import NumberInput from '@/components/ui/forms/NumberInput';
 import type { PlayerSoftware } from '@/services/playerSoftwareApi';
@@ -48,6 +48,7 @@ export interface AndroidFieldProps {
   onLoadMorePlayerVersions?: () => void;
   isLoadingMorePlayerVersions?: boolean;
   onSearchPlayerVersions?: (term: string) => void;
+  settings?: Record<string, unknown> | null;
 }
 
 export function AndroidFields({
@@ -69,12 +70,16 @@ export function AndroidFields({
   onLoadMorePlayerVersions,
   isLoadingMorePlayerVersions,
   onSearchPlayerVersions,
+  settings,
 }: AndroidFieldProps) {
   // Fetch the schema mapping for Android profiles
   const metaMap = getFieldMetaForType('android', t);
 
-  // Filter fields so we only render the ones that belong on the current active tab
-  const fieldsForTab = Object.entries(metaMap).filter(([, meta]) => meta.tab === tab);
+  // Filter fields so we only render the ones that belong on the current active tab and
+  // whose gating CMS setting (if any) is enabled
+  const fieldsForTab = Object.entries(metaMap).filter(
+    ([, meta]) => meta.tab === tab && isFieldMetaEnabled(meta, settings),
+  );
 
   if (fieldsForTab.length === 0) {
     return null;

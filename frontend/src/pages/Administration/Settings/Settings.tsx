@@ -44,14 +44,17 @@ import Button from '@/components/ui/Button';
 import { notify } from '@/components/ui/Notification';
 import TabNav from '@/components/ui/TabNav';
 import type { TabNavItem } from '@/components/ui/TabNav';
+import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { reloadAppLanguage } from '@/lib/i18n';
 import { updateSettings } from '@/services/settingsApi';
+import { fetchCurrentUser } from '@/services/userApi';
 
 export default function Settings() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const adminTabs = useFilteredTabs('administration');
+  const { updateUser } = useUserContext();
 
   const { data, isLoading, isError, error: queryError } = useSettingsData();
   const { formValues, updateField, isVisible, isEditable, isDirty, resetForm } =
@@ -73,6 +76,17 @@ export default function Settings() {
         notify.success(t('Settings Updated'));
         queryClient.invalidateQueries({ queryKey: settingsQueryKeys.all });
         await reloadAppLanguage();
+
+        // The current user's bootstrap payload (settings/features/branding) is only
+        // fetched once per full page load and isn't part of any React Query cache, so it
+        // goes stale the moment global settings change here. Refresh it so other pages
+        // relying on it (e.g. the Display Profile form) reflect the change immediately,
+        // without requiring a hard reload.
+        try {
+          updateUser(await fetchCurrentUser());
+        } catch {
+          // Non-fatal — the settings save itself already succeeded.
+        }
       } catch (err: unknown) {
         const message =
           (isAxiosError(err) && err.response?.data?.message) ||
@@ -168,7 +182,7 @@ export default function Settings() {
                 <div />
               )}
               <div className="flex gap-x-3">
-                <Button variant="secondary" onClick={resetForm}>
+                <Button variant="secondary" onClick={resetForm} disabled={isPending}>
                   {t('Cancel')}
                 </Button>
                 <Button variant="primary" onClick={handleSave} disabled={isPending || !isDirty}>
