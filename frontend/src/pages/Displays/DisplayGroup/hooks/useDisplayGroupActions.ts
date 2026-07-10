@@ -230,6 +230,7 @@ export function useDisplayGroupActions({
     confirmMove,
     isActionPending,
     actionError,
+    setActionError,
     confirmCollectNow,
     confirmSendCommand,
     confirmTriggerWebhook,

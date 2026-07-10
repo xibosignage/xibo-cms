@@ -159,7 +159,7 @@ export function DisplayGroupModals({ actions, selection, handlers }: DisplayGrou
           onClose={actions.closeModal}
           onConfirm={handlers.confirmCollectNow}
           isActionPending={actions.isActionPending}
-          actionError={null}
+          actionError={actions.actionError}
         />
       )}
 

@@ -24,7 +24,7 @@ import { Minus, Plus } from 'lucide-react';
 import React from 'react';
 
 import { DynamicSettingField } from './DynamicSettingField';
-import { getFieldMetaForType } from './fieldMetadata';
+import { getFieldMetaForType, isFieldMetaEnabled } from './fieldMetadata';
 
 import Button from '@/components/ui/Button';
 import Checkbox from '@/components/ui/forms/Checkbox';
@@ -387,6 +387,7 @@ export interface LgSsspFieldProps {
   onPictureOptionRowsChange?: (rows: PictureOptionRow[]) => void;
   lockOptionsState?: LockOptionsState;
   onLockOptionsStateChange?: (state: LockOptionsState) => void;
+  settings?: Record<string, unknown> | null;
 }
 
 export function LgSsspFields({
@@ -415,6 +416,7 @@ export function LgSsspFields({
   onPictureOptionRowsChange,
   lockOptionsState = { usblock: 'empty', osdlock: 'empty', keylockLocal: '', keylockRemote: '' },
   onLockOptionsStateChange,
+  settings,
 }: LgSsspFieldProps) {
   if (tab === 'timers' && onTimerRowsChange) {
     return (
@@ -457,7 +459,9 @@ export function LgSsspFields({
   const metaMap = getFieldMetaForType(playerType, t);
   const fieldsForTab = Object.entries(metaMap).filter(
     ([, meta]) =>
-      meta.tab === tab && !['timers', 'pictureOptions', 'lockOptions'].includes(meta.inputType),
+      meta.tab === tab &&
+      !['timers', 'pictureOptions', 'lockOptions'].includes(meta.inputType) &&
+      isFieldMetaEnabled(meta, settings),
   );
 
   if (fieldsForTab.length === 0) {

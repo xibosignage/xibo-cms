@@ -176,6 +176,7 @@ export default function DisplayGroupPage() {
     confirmCollectNow,
     isActionPending,
     actionError,
+    setActionError,
     confirmSendCommand,
     confirmTriggerWebhook,
     confirmBulkSendCommand,
@@ -261,14 +262,17 @@ export default function DisplayGroupPage() {
     },
     openSendCommandModal: (displayGroup) => {
       setSelectedDisplayGroup(displayGroup);
+      setActionError(null);
       openModal('sendCommand');
     },
     collectNow: (displayGroup) => {
       setSelectedDisplayGroup(displayGroup);
+      setActionError(null);
       openModal('collectNow');
     },
     triggerWebhook: (displayGroup) => {
       setSelectedDisplayGroup(displayGroup);
+      setActionError(null);
       openModal('triggerWebhook');
     },
     formatDateTime,
@@ -291,9 +295,11 @@ export default function DisplayGroupPage() {
       openModal('move');
     },
     onBulkSendCommand: () => {
+      setActionError(null);
       openModal('bulkSendCommand');
     },
     onBulkTriggerWebhook: () => {
+      setActionError(null);
       openModal('bulkTriggerWebhook');
     },
     onBulkShare: () => {
