@@ -23,8 +23,11 @@ import type { TFunction } from 'i18next';
 
 import { getCampaignFilterKeys } from '../CampaignConfig';
 
-export function useCampaignFilterOptions(t: TFunction) {
-  const filterOptions = getCampaignFilterKeys(t);
+export function useCampaignFilterOptions(
+  t: TFunction,
+  options?: { canAccessAdCampaign?: boolean },
+) {
+  const filterOptions = getCampaignFilterKeys(t, options);
 
   return { filterOptions, isLoading: false };
 }
