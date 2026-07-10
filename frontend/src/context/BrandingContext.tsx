@@ -24,10 +24,12 @@ import { createContext, useContext, useEffect, type ReactNode } from 'react';
 import type { BrandingConfig } from '@/types/user';
 
 const THEME_LINK_ID = 'xibo-theme-css';
-const FAVICON_LINK_ID = 'xibo-favicon';
 
 // Fallback used only while the /user/me API call is in-flight.
 // Once the response arrives, BrandingProvider replaces these with server values.
+// Note: the browser tab favicon is NOT managed here — it's served statically as
+// /brand/favicon.ico from the Twig shell, already branded per install (default vs WL).
+// faviconUrl below is only used as the collapsed-sidebar icon mark (SidebarHeader.tsx).
 const defaults: BrandingConfig = {
   productName: 'Xibo Digital Signage',
   appName: 'Xibo',
@@ -59,17 +61,6 @@ export function BrandingProvider({ branding, children }: Props) {
       document.getElementById(THEME_LINK_ID)?.remove();
     };
   }, [value.cssUrl]);
-
-  useEffect(() => {
-    let link = document.getElementById(FAVICON_LINK_ID) as HTMLLinkElement | null;
-    if (!link) {
-      link = document.createElement('link');
-      link.rel = 'icon';
-      link.id = FAVICON_LINK_ID;
-      document.head.appendChild(link);
-    }
-    link.href = value.faviconUrl;
-  }, [value.faviconUrl]);
 
   return <BrandingContext.Provider value={value}>{children}</BrandingContext.Provider>;
 }
