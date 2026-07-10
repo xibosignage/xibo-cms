@@ -60,7 +60,10 @@ export const CAMPAIGN_INITIAL_FILTER_STATE: CampaignFilterInput = {
   exactTags: false,
 };
 
-export const getCampaignFilterKeys = (t: TFunction): FilterConfigItem<CampaignFilterInput>[] => [
+export const getCampaignFilterKeys = (
+  t: TFunction,
+  options?: { canAccessAdCampaign?: boolean },
+): FilterConfigItem<CampaignFilterInput>[] => [
   {
     label: t('Name'),
     name: 'name',
@@ -104,16 +107,20 @@ export const getCampaignFilterKeys = (t: TFunction): FilterConfigItem<CampaignFi
     className: '',
   },
 
-  {
-    label: t('Type'),
-    name: 'type',
-    className: '',
-    options: [
-      { label: t('All'), value: '' },
-      { label: t('Layout List'), value: 'list' },
-      { label: t('Ad Campaign'), value: 'ad' },
-    ],
-  },
+  ...(options?.canAccessAdCampaign
+    ? [
+        {
+          label: t('Type'),
+          name: 'type' as const,
+          className: '',
+          options: [
+            { label: t('All'), value: '' },
+            { label: t('Layout List'), value: 'list' },
+            { label: t('Ad Campaign'), value: 'ad' },
+          ],
+        },
+      ]
+    : []),
 
   {
     label: t('Cycle Based'),
@@ -138,6 +145,7 @@ export type ModalType = BaseModalType | 'schedule' | null;
 interface CampaignActionsProps {
   t: TFunction;
   formatDateTime: (value: DateLike) => string;
+  canAccessAdCampaign?: boolean;
   onDelete?: (id: number) => void;
   openEditModal?: (campaign: Campaign) => void;
   openAdEditor?: (campaign: Campaign) => void;
@@ -145,10 +153,11 @@ interface CampaignActionsProps {
   openMoveModal?: (row: Campaign | Campaign[]) => void;
   openCopyModal?: (campaign: Campaign) => void;
   onSchedule?: (campaign: Campaign) => void;
+  onPreview?: (campaign: Campaign) => void;
 }
 
 export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campaign>[] => {
-  const { t, formatDateTime } = props;
+  const { t, formatDateTime, canAccessAdCampaign } = props;
   const getActions = getCampaignItemActions(props);
 
   return [
@@ -165,38 +174,40 @@ export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campai
       enableSorting: true,
     },
 
-    {
-      accessorKey: 'type',
-      header: t('Type'),
-      size: 120,
-      enableSorting: true,
-      cell: (info) => {
-        const value = info.getValue<string>();
-        return <TextCell>{value === 'ad' ? t('Ad Campaign') : t('Layout List')}</TextCell>;
-      },
-    },
-
-    {
-      accessorKey: 'startDt',
-      header: t('Start Date'),
-      size: 160,
-      enableSorting: true,
-      cell: (info) => {
-        const value = info.getValue<number>();
-        return <TextCell>{value ? formatDateTime(new Date(value * 1000)) : '-'}</TextCell>;
-      },
-    },
-
-    {
-      accessorKey: 'endDt',
-      header: t('End Date'),
-      size: 160,
-      enableSorting: true,
-      cell: (info) => {
-        const value = info.getValue<number>();
-        return <TextCell>{value ? formatDateTime(new Date(value * 1000)) : '-'}</TextCell>;
-      },
-    },
+    ...(canAccessAdCampaign
+      ? ([
+          {
+            accessorKey: 'type',
+            header: t('Type'),
+            size: 120,
+            enableSorting: true,
+            cell: (info) => {
+              const value = info.getValue<string>();
+              return <TextCell>{value === 'ad' ? t('Ad Campaign') : t('Layout List')}</TextCell>;
+            },
+          },
+          {
+            accessorKey: 'startDt',
+            header: t('Start Date'),
+            size: 160,
+            enableSorting: true,
+            cell: (info) => {
+              const value = info.getValue<number>();
+              return <TextCell>{value ? formatDateTime(new Date(value * 1000)) : '-'}</TextCell>;
+            },
+          },
+          {
+            accessorKey: 'endDt',
+            header: t('End Date'),
+            size: 160,
+            enableSorting: true,
+            cell: (info) => {
+              const value = info.getValue<number>();
+              return <TextCell>{value ? formatDateTime(new Date(value * 1000)) : '-'}</TextCell>;
+            },
+          },
+        ] as ColumnDef<Campaign>[])
+      : []),
 
     {
       accessorKey: 'numberLayouts',
@@ -253,45 +264,45 @@ export const getCampaignColumn = (props: CampaignActionsProps): ColumnDef<Campai
       cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
     },
 
-    {
-      accessorKey: 'targetType',
-      header: t('Target Type'),
-      size: 140,
-      enableSorting: true,
-      cell: (info) => <TextCell>{info.getValue<string>() || '-'}</TextCell>,
-    },
-
-    {
-      accessorKey: 'target',
-      header: t('Target'),
-      size: 120,
-      enableSorting: true,
-      cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
-    },
-
-    {
-      accessorKey: 'plays',
-      header: t('Plays'),
-      size: 100,
-      enableSorting: true,
-      cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
-    },
-
-    {
-      accessorKey: 'spend',
-      header: t('Spend'),
-      size: 120,
-      enableSorting: true,
-      cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
-    },
-
-    {
-      accessorKey: 'impressions',
-      header: t('Impressions'),
-      size: 140,
-      enableSorting: true,
-      cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
-    },
+    ...(canAccessAdCampaign
+      ? ([
+          {
+            accessorKey: 'targetType',
+            header: t('Target Type'),
+            size: 140,
+            enableSorting: true,
+            cell: (info) => <TextCell>{info.getValue<string>() || '-'}</TextCell>,
+          },
+          {
+            accessorKey: 'target',
+            header: t('Target'),
+            size: 120,
+            enableSorting: true,
+            cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
+          },
+          {
+            accessorKey: 'plays',
+            header: t('Plays'),
+            size: 100,
+            enableSorting: true,
+            cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
+          },
+          {
+            accessorKey: 'spend',
+            header: t('Spend'),
+            size: 120,
+            enableSorting: true,
+            cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
+          },
+          {
+            accessorKey: 'impressions',
+            header: t('Impressions'),
+            size: 140,
+            enableSorting: true,
+            cell: (info) => <TextCell>{info.getValue<number>()}</TextCell>,
+          },
+        ] as ColumnDef<Campaign>[])
+      : []),
 
     {
       accessorKey: 'ref1',
@@ -389,6 +400,7 @@ export const getCampaignItemActions = ({
   openMoveModal,
   openCopyModal,
   onSchedule,
+  onPreview,
 }: CampaignActionsProps): ((campaign: Campaign) => ActionItem[]) => {
   const editCampaign = (campaign: Campaign) => {
     if (campaign.type === 'ad') {
@@ -413,13 +425,13 @@ export const getCampaignItemActions = ({
             icon: CalendarClock,
             onClick: () => onSchedule && onSchedule(campaign),
           },
+          {
+            label: t('Preview Campaign'),
+            icon: Eye,
+            onClick: () => onPreview && onPreview(campaign),
+          },
         ]
       : []),
-    {
-      label: t('Preview Campaign'),
-      icon: Eye,
-      onClick: () => {},
-    },
     { isSeparator: true },
     {
       label: t('Edit'),

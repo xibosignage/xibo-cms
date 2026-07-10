@@ -182,7 +182,7 @@ export default function Settings() {
                 <div />
               )}
               <div className="flex gap-x-3">
-                <Button variant="secondary" onClick={resetForm}>
+                <Button variant="secondary" onClick={resetForm} disabled={isPending}>
                   {t('Cancel')}
                 </Button>
                 <Button variant="primary" onClick={handleSave} disabled={isPending || !isDirty}>

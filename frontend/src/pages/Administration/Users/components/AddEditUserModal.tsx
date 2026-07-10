@@ -21,7 +21,7 @@
 
 import { isAxiosError } from 'axios';
 import { Loader2 } from 'lucide-react';
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { UserDraft, UserFormErrors } from '../config/addEditUserTypes';
@@ -36,6 +36,7 @@ import type { PermissionLevel } from '@/components/ui/FolderPermissionTree';
 import type { SelectOption } from '@/components/ui/forms/SelectDropdown';
 import Modal from '@/components/ui/modals/Modal';
 import { useUserContext } from '@/context/UserContext';
+import { useDebounce } from '@/hooks/useDebounce';
 import { usePermissions } from '@/hooks/usePermissions';
 import { getAddUserSchema, getEditUserSchema } from '@/schema/user';
 import { fetchFolderTree } from '@/services/folderApi';
@@ -45,6 +46,8 @@ import { fetchUserGroups } from '@/services/userGroupApi';
 import type { Folder } from '@/types/folder';
 import type { User } from '@/types/user';
 import { UserType } from '@/types/user';
+
+const GROUP_PAGE_SIZE = 10;
 
 type Tab = 'general' | 'folderPermission' | 'references' | 'notifications' | 'options';
 
@@ -140,10 +143,16 @@ export default function AddEditUserModal({
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Dynamic options
+  // Dynamic options — paginated user group loading
   const [groupData, setGroupData] = useState<
     { groupId: number; name: string; features: string[] }[]
   >([]);
+  const [groupOptions, setGroupOptions] = useState<SelectOption[]>([]);
+  const [groupHasMore, setGroupHasMore] = useState(false);
+  const [groupSearch, setGroupSearch] = useState('');
+  const debouncedGroupSearch = useDebounce(groupSearch, 300);
+  const [isLoadingMoreGroups, setIsLoadingMoreGroups] = useState(false);
+  const groupPageRef = useRef(0);
 
   // Folder permissions
   const [folderTreeData, setFolderTreeData] = useState<Folder[]>([]);
@@ -201,26 +210,77 @@ export default function AddEditUserModal({
     return allHomepages.filter((hp) => !hp.feature).map(({ label, value }) => ({ label, value }));
   })();
 
-  // Load user groups on mount
+  // Load user groups with pagination
   useEffect(() => {
     if (!isOpen) return;
     const controller = new AbortController();
-    fetchUserGroups({ start: 0, length: 1000, isUser: 0, signal: controller.signal })
+    groupPageRef.current = 0;
+    setGroupOptions([]);
+    setGroupData([]);
+    fetchUserGroups({
+      start: 0,
+      length: GROUP_PAGE_SIZE,
+      isUser: 0,
+      isShownForAddUser: 1,
+      userGroup: debouncedGroupSearch || undefined,
+      signal: controller.signal,
+    })
       .then((res) => {
         if (controller.signal.aborted) return;
+        const filtered = res.rows.filter((g) => g.isUserSpecific !== 1);
         setGroupData(
-          res.rows
-            .filter((g) => g.isUserSpecific !== 1)
-            .map((g) => ({
-              groupId: g.groupId,
-              name: g.group,
-              features: g.features ?? [],
-            })),
+          filtered.map((g) => ({
+            groupId: g.groupId,
+            name: g.group,
+            features: g.features ?? [],
+          })),
         );
+        setGroupOptions(
+          filtered.map((g) => ({
+            label: g.group,
+            value: String(g.groupId),
+          })),
+        );
+        setGroupHasMore(res.rows.length === GROUP_PAGE_SIZE);
+        groupPageRef.current = 1;
       })
       .catch(() => {});
     return () => controller.abort();
-  }, [isOpen]);
+  }, [isOpen, debouncedGroupSearch]);
+
+  const loadMoreGroups = () => {
+    if (isLoadingMoreGroups || !groupHasMore) return;
+    setIsLoadingMoreGroups(true);
+    fetchUserGroups({
+      start: groupPageRef.current * GROUP_PAGE_SIZE,
+      length: GROUP_PAGE_SIZE,
+      isUser: 0,
+      isShownForAddUser: 1,
+      userGroup: debouncedGroupSearch || undefined,
+    })
+      .then((res) => {
+        const filtered = res.rows.filter((g) => g.isUserSpecific !== 1);
+        setGroupData((prev) => [
+          ...prev,
+          ...filtered.map((g) => ({
+            groupId: g.groupId,
+            name: g.group,
+            features: g.features ?? [],
+          })),
+        ]);
+        setGroupOptions((prev) => [
+          ...prev,
+          ...filtered.map((g) => ({
+            label: g.group,
+            value: String(g.groupId),
+          })),
+        ]);
+        setGroupHasMore(res.rows.length === GROUP_PAGE_SIZE);
+        groupPageRef.current += 1;
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingMoreGroups(false));
+  };
 
   // Load data for edit mode
   useEffect(() => {
@@ -303,6 +363,7 @@ export default function AddEditUserModal({
       setFolderTreeData([]);
       setShowPassword(false);
       setFolderSearch('');
+      setGroupSearch('');
     }
   }, [isOpen]);
 
@@ -340,7 +401,7 @@ export default function AddEditUserModal({
             email: draft.email || undefined,
             userTypeId: draft.userTypeId,
             groupId: draft.groupId ?? undefined,
-            homePageId: draft.homePageId || undefined,
+            homePageId: draft.homePageId,
             libraryQuota: draft.libraryQuota || undefined,
             firstName: draft.firstName || undefined,
             lastName: draft.lastName || undefined,
@@ -369,6 +430,7 @@ export default function AddEditUserModal({
           mapped.email ||
           mapped.userTypeId ||
           mapped.groupId ||
+          mapped.homePageId ||
           mapped.password ||
           mapped.libraryQuota
         ) {
@@ -578,7 +640,11 @@ export default function AddEditUserModal({
               isSuperAdmin={isSuperAdmin}
               showPassword={showPassword}
               setShowPassword={setShowPassword}
-              groupData={groupData}
+              groupOptions={groupOptions}
+              groupHasMore={groupHasMore}
+              groupIsLoadingMore={isLoadingMoreGroups}
+              onGroupLoadMore={loadMoreGroups}
+              onGroupSearch={setGroupSearch}
               homepageOptions={homepageOptions}
             />
           )}

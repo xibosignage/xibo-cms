@@ -29,12 +29,12 @@ import {
   getFeatureDefinitions,
   getGroupDescriptions,
   getGroupLabels,
-} from '../config/featureDefinitions';
-import type { FeatureDefinition } from '../config/featureDefinitions';
+} from '../../Users/config/featureDefinitions';
+import type { FeatureDefinition } from '../../Users/config/featureDefinitions';
 
 import Modal from '@/components/ui/modals/Modal';
-import { fetchUserGroupById, fetchUserGroups, updateGroupFeatures } from '@/services/userGroupApi';
-import type { User } from '@/types/user';
+import { fetchUserGroupById, updateGroupFeatures } from '@/services/userGroupApi';
+import type { UserGroup } from '@/types/userGroup';
 
 type FeatureTab = string;
 
@@ -45,20 +45,23 @@ function tabClass(activeTab: FeatureTab, tab: FeatureTab): string {
   }`;
 }
 
-export interface FeaturesModalProps {
-  user: User;
+export interface UserGroupFeaturesModalProps {
+  userGroup: UserGroup;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModalProps) {
+export default function UserGroupFeaturesModal({
+  userGroup,
+  onClose,
+  onSuccess,
+}: UserGroupFeaturesModalProps) {
   const { t } = useTranslation();
   const [isPending, startTransition] = useTransition();
   const [apiError, setApiError] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(true);
 
   const [enabledFeatures, setEnabledFeatures] = useState<Set<string>>(new Set());
-  const [inheritedFeatures, setInheritedFeatures] = useState<Set<string>>(new Set());
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   const categories = getFeatureCategories(t);
@@ -67,40 +70,18 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
   const groupDescriptions = getGroupDescriptions(t);
   const [activeTab, setActiveTab] = useState<FeatureTab>(categories[0]?.key ?? 'content');
 
-  // Load the user's group features + compute inherited from other groups
   useEffect(() => {
-    if (!user.groupId) {
-      setIsLoading(false);
-      return;
-    }
-
     setIsLoading(true);
 
-    Promise.all([
-      // Fetch the user-specific group features (directly assigned)
-      fetchUserGroupById(user.groupId),
-      // Fetch all groups to find which ones this user belongs to
-      fetchUserGroups({ start: 0, length: 1000 }),
-    ])
-      .then(([userGroup, allGroups]) => {
-        setEnabledFeatures(new Set(userGroup.features ?? []));
-
-        // Inherited = features from non-user-specific groups the user belongs to
-        const inherited = new Set<string>();
-        const memberGroupIds = new Set((user.groups ?? []).map((g) => g.groupId));
-        for (const group of allGroups.rows) {
-          if (group.isUserSpecific !== 1 && memberGroupIds.has(group.groupId) && group.features) {
-            group.features.forEach((f) => inherited.add(f));
-          }
-        }
-        setInheritedFeatures(inherited);
+    fetchUserGroupById(userGroup.groupId)
+      .then((group) => {
+        setEnabledFeatures(new Set(group.features ?? []));
       })
       .catch(() => {
         setEnabledFeatures(new Set());
-        setInheritedFeatures(new Set());
       })
       .finally(() => setIsLoading(false));
-  }, [user.groupId, user.groups]);
+  }, [userGroup.groupId]);
 
   const toggleFeature = (feature: string) => {
     setEnabledFeatures((prev) => {
@@ -142,11 +123,9 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
   };
 
   const handleSave = () => {
-    if (!user.groupId) return;
-
     startTransition(async () => {
       try {
-        await updateGroupFeatures(user.groupId!, Array.from(enabledFeatures));
+        await updateGroupFeatures(userGroup.groupId, Array.from(enabledFeatures));
         onSuccess();
         onClose();
       } catch (err: unknown) {
@@ -161,11 +140,9 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
     });
   };
 
-  // Get features for the active tab
   const activeCategory = categories.find((c) => c.key === activeTab);
   const activeCategoryGroups = activeCategory?.groups ?? [];
 
-  // Group features by their backend group within the active category
   const featuresByGroup: {
     groupKey: string;
     label: string;
@@ -189,7 +166,7 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
       variant="tabbed"
       isOpen
       onClose={onClose}
-      title={t('Features for {{name}}', { name: user.userName })}
+      title={t('Features for {{name}}', { name: userGroup.group })}
       size="lg"
       scrollable={false}
       isPending={isPending || isLoading}
@@ -244,13 +221,10 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
           ) : (
             <div className="border border-gray-200 rounded-lg overflow-hidden">
               {/* Header */}
-              <div className="grid grid-cols-[1fr_100px_100px] items-center bg-gray-50 border-b border-gray-200 px-4 py-2.5">
+              <div className="grid grid-cols-[1fr_100px] items-center bg-gray-50 border-b border-gray-200 px-4 py-2.5">
                 <span className="text-sm font-medium text-gray-600">{t('Feature')}</span>
                 <span className="text-sm font-medium text-gray-600 text-center">
                   {t('Enabled?')}
-                </span>
-                <span className="text-sm font-medium text-gray-600 text-center">
-                  {t('Inherited?')}
                 </span>
               </div>
 
@@ -263,7 +237,7 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
                 return (
                   <div key={groupKey}>
                     {/* Group header row */}
-                    <div className="grid grid-cols-[1fr_100px_100px] items-center border-b border-gray-100 hover:bg-gray-50 transition-colors pr-3">
+                    <div className="grid grid-cols-[1fr_100px] items-center border-b border-gray-100 hover:bg-gray-50 transition-colors pr-3">
                       <button
                         type="button"
                         onClick={() => toggleExpand(groupKey)}
@@ -295,14 +269,6 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
                           className="h-4 w-4 border-gray-300 rounded cursor-pointer text-blue-600 focus:ring-blue-500"
                         />
                       </div>
-                      <div className="flex justify-center">
-                        <input
-                          type="checkbox"
-                          checked={features.some((f) => inheritedFeatures.has(f.feature))}
-                          disabled
-                          className="h-4 w-4 border-gray-300 rounded text-gray-400 opacity-60 disabled:bg-slate-100 disabled:cursor-not-allowed"
-                        />
-                      </div>
                     </div>
 
                     {/* Expanded child features */}
@@ -310,7 +276,7 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
                       features.map((feat) => (
                         <div
                           key={feat.feature}
-                          className="grid grid-cols-[1fr_100px_100px] items-center border-b border-gray-50 hover:bg-blue-50/30 transition-colors pr-3"
+                          className="grid grid-cols-[1fr_100px] items-center border-b border-gray-50 hover:bg-blue-50/30 transition-colors pr-3"
                         >
                           <div className="px-4 py-2.5 pl-10">
                             <span className="text-sm text-gray-700">{feat.title}</span>
@@ -321,14 +287,6 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
                               checked={enabledFeatures.has(feat.feature)}
                               onChange={() => toggleFeature(feat.feature)}
                               className="h-4 w-4 border-gray-300 rounded cursor-pointer text-blue-600 focus:ring-blue-500"
-                            />
-                          </div>
-                          <div className="flex justify-center">
-                            <input
-                              type="checkbox"
-                              checked={inheritedFeatures.has(feat.feature)}
-                              disabled
-                              className="h-4 w-4 border-gray-300 rounded text-gray-400 opacity-60 disabled:bg-slate-100 disabled:cursor-not-allowed"
                             />
                           </div>
                         </div>

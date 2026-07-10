@@ -442,6 +442,36 @@ export const getFeatureDefinitions = (t: TFunction): FeatureDefinition[] => [
   { feature: 'task.view', group: 'system', title: t('Page for Task Management') },
 ];
 
+/** Group description mapping for display */
+export const getGroupDescriptions = (t: TFunction): Record<string, string> => ({
+  folders: t('Organise content sharing with Folders'),
+  library: t(
+    'Media Library that stores file based content for use in Layouts, DataSets, Playlists and Menu Boards',
+  ),
+  'layout-design': t(
+    'Allow content creators to create Layouts - which hold the content you want to show on your Displays',
+  ),
+  campaigns: t('Ensure ordering by grouping Layouts into Campaigns'),
+  tagging: t('Organise and filter items by using Tags'),
+  'playlist-design': t('Create and manage Playlists independently to Layouts'),
+  'menuboard-design': t('Create and manage Menu Boards'),
+  fonts: t('Administrative access to Fonts'),
+  scheduling: t('Schedule content to Displays'),
+  displays: t('Manage Displays connected to the platform'),
+  reporting: t('Access to Reports and Proof of Play'),
+  users: t('User profile preferences for the logged in User'),
+  notifications: t(
+    'Notification Centre allows for users to create/edit Notifications sent to other Users or used in Layouts',
+  ),
+  'users-management': t(
+    "Manage Users that can authenticate with the CMS. Create and organise them into User Groups to enable 'Group Features'",
+  ),
+  dashboards: t('Dashboards bring together key features for Users'),
+  system: t('Configuration'),
+  troubleshooting: t('Tools to diagnose problems when seeking help'),
+  custom: t('Third party extensions to the platform.'),
+});
+
 /** Group label mapping for display */
 export const getGroupLabels = (t: TFunction): Record<string, string> => ({
   folders: t('Folders'),

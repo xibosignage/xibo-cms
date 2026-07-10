@@ -41,12 +41,14 @@ import Button from '@/components/ui/Button';
 import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import type { User } from '@/types/user';
 
 export default function Users() {
   const { t } = useTranslation();
+  const { user: currentUser } = useUserContext();
   const queryClient = useQueryClient();
 
   const {
@@ -164,12 +166,14 @@ export default function Users() {
   });
 
   const handleResetFilters = () => {
+    setGlobalFilter('');
     setFilterInputs(INITIAL_FILTER_STATE);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
   const columns = getUserColumns({
     t,
+    currentUserId: currentUser?.userId,
     onEdit: (user) => openModal('edit', user),
     onSetHomeFolder: (user) => openModal('setHomeFolder', user),
     onUserGroups: (user) => openModal('userGroups', user),

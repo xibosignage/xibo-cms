@@ -39,7 +39,11 @@ export default function GeneralTab({
   isSuperAdmin,
   showPassword,
   setShowPassword,
-  groupData,
+  groupOptions,
+  groupHasMore,
+  groupIsLoadingMore,
+  onGroupLoadMore,
+  onGroupSearch,
   homepageOptions,
 }: GeneralTabProps) {
   const { t } = useTranslation();
@@ -67,9 +71,13 @@ export default function GeneralTab({
             <SelectDropdown
               label={t('Initial User Group')}
               value={draft.groupId !== null ? String(draft.groupId) : ''}
-              options={groupData.map((g) => ({ label: g.name, value: String(g.groupId) }))}
+              options={groupOptions}
               searchable
               searchPlaceholder={t('Search groups...')}
+              onSearch={onGroupSearch}
+              onLoadMore={onGroupLoadMore}
+              hasMore={groupHasMore}
+              isLoadingMore={groupIsLoadingMore}
               onSelect={(val) => setDraft((prev) => ({ ...prev, groupId: Number(val) }))}
               error={formErrors.groupId}
             />
@@ -82,7 +90,7 @@ export default function GeneralTab({
           options={homepageOptions}
           onSelect={(val) => setDraft((prev) => ({ ...prev, homePageId: val }))}
           error={formErrors.homePageId}
-          optional
+          optional={isEdit}
         />
         <LibraryQuotaInput
           value={draft.libraryQuota}

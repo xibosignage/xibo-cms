@@ -68,7 +68,11 @@ export interface GeneralTabProps {
   isSuperAdmin: boolean;
   showPassword: boolean;
   setShowPassword: Dispatch<SetStateAction<boolean>>;
-  groupData: { groupId: number; name: string; features: string[] }[];
+  groupOptions: SelectOption[];
+  groupHasMore: boolean;
+  groupIsLoadingMore: boolean;
+  onGroupLoadMore: () => void;
+  onGroupSearch: (search: string) => void;
   homepageOptions: SelectOption[];
 }
 
