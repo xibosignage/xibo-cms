@@ -23,6 +23,7 @@ import { useTranslation } from 'react-i18next';
 import { Navigate, useLoaderData, useLocation, useParams, useSearchParams } from 'react-router-dom';
 
 import EditorHost from '@/components/editor/EditorHost';
+import HelpPane from '@/components/help/HelpPane';
 import { BrandingProvider } from '@/context/BrandingContext';
 import { UserProvider } from '@/context/UserContext';
 import type { User } from '@/types/user';
@@ -55,6 +56,7 @@ export default function LayoutEditorHost() {
           readySelector="#layout-editor"
           showChrome
         />
+        <HelpPane />
       </UserProvider>
     </BrandingProvider>
   );

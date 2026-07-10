@@ -132,7 +132,6 @@ class Theme implements Middleware
 
         $view['theme'] = $container->get('configService');
         $view['settings'] = $settings;
-        $view['helpService'] = $container->get('helpService');
         $view['translate'] = [
             'locale' => Translate::GetLocale(),
             'jsLocale' => Translate::getRequestedJsLocale(),
@@ -152,7 +151,6 @@ class Theme implements Middleware
         $view['revision'] = Environment::getGitCommit();
         $view['playerVersion'] = Environment::$PLAYER_SUPPORT;
         $view['isDevMode'] = Environment::isDevMode();
-        $view['accountId'] = defined('ACCOUNT_ID') ? constant('ACCOUNT_ID') : null;
 
         $samlSettings = $container->get('configService')->samlSettings;
         if (isset($samlSettings['workflow'])

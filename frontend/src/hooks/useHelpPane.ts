@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2026 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -19,16 +19,22 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// --- Xibo JS files ----
-// Xibo forms
-require('./src/style/forms.scss');
-require('./src/core/forms.js');
+import { useQuery } from '@tanstack/react-query';
+import { useLocation } from 'react-router-dom';
 
-// Xibo datatables and folders
-require('./src/core/xibo-datatables.js');
+import { getHelpKeyForPath } from '@/config/helpKeys';
+import { getHelpPageLinks } from '@/services/helpApi';
 
-// Xibo calendar
-require('./src/core/xibo-calendar.js');
+export function useHelpKey(): string | undefined {
+  const { pathname } = useLocation();
+  return getHelpKeyForPath(pathname);
+}
 
-// Xibo core
-require('./src/core/xibo-cms.js');
+export function useHelpPageLinks(helpKey: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: ['help', 'pageLinks', helpKey ?? null],
+    queryFn: ({ signal }) => getHelpPageLinks(helpKey, signal),
+    enabled,
+    staleTime: 1000 * 60 * 10,
+  });
+}
