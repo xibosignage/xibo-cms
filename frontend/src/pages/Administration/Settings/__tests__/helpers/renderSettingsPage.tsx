@@ -25,15 +25,26 @@ import { MemoryRouter } from 'react-router-dom';
 
 import Settings from '../../Settings';
 
+import { UserProvider } from '@/context/UserContext';
 import { testQueryClient } from '@/setupTests';
+import type { User } from '@/types/user';
 
-// Settings does not use UserContext — no UserProvider needed.
+// The current user for Settings page tests — Settings reads/updates this via
+// useUserContext() to refresh the bootstrap payload after a settings save.
+export const mockUser: User = {
+  userId: 1,
+  userName: 'TestUser',
+  userTypeId: 1,
+};
+
 // Call testQueryClient.clear() and vi.clearAllMocks() in beforeEach.
 export const renderSettingsPage = () =>
   render(
     <QueryClientProvider client={testQueryClient}>
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>
+      <UserProvider initialUser={mockUser}>
+        <MemoryRouter>
+          <Settings />
+        </MemoryRouter>
+      </UserProvider>
     </QueryClientProvider>,
   );
