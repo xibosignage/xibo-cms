@@ -19,32 +19,26 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useEffect, useState } from 'react';
+import { usePaginatedOptions } from './usePaginatedOptions';
+import type { OptionsLoader } from './usePaginatedOptions';
 
-import type { MultiSelectOption } from '@/components/ui/forms/MultiSelectDropdown';
 import { fetchLayouts } from '@/services/layoutsApi';
 
-const MAX_LAYOUTS = 100;
+const PAGE_SIZE = 20;
 
-export function useLayoutOptions(enabled = true): MultiSelectOption[] {
-  const [options, setOptions] = useState<MultiSelectOption[]>([]);
+export function useLayoutOptions(enabled = true) {
+  const loader: OptionsLoader = async (search, start, signal) => {
+    const { rows, totalCount } = await fetchLayouts({
+      start,
+      length: PAGE_SIZE,
+      layout: search,
+      signal,
+    });
+    return {
+      options: rows.map((l) => ({ value: String(l.layoutId), label: l.layout })),
+      totalCount,
+    };
+  };
 
-  useEffect(() => {
-    if (!enabled) {
-      return;
-    }
-    const controller = new AbortController();
-    fetchLayouts({
-      start: 0,
-      length: MAX_LAYOUTS,
-      signal: controller.signal,
-    })
-      .then(({ rows }) => {
-        setOptions(rows.map((l) => ({ value: String(l.layoutId), label: l.layout })));
-      })
-      .catch(() => {});
-    return () => controller.abort();
-  }, [enabled]);
-
-  return options;
+  return usePaginatedOptions({ loader, enabled });
 }

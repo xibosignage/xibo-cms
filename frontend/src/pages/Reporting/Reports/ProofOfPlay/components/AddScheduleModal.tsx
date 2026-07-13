@@ -27,9 +27,10 @@ import { twMerge } from 'tailwind-merge';
 import type { ProofOfPlayFilter } from '../ProofOfPlayConfig';
 import { SORT_BY_OPTIONS, TAGS_TYPE_OPTIONS, TYPE_OPTIONS } from '../ProofOfPlayConfig';
 
+import PaginatedMultiSelectDropdown from './PaginatedMultiSelectDropdown';
+
 import Button from '@/components/ui/Button';
 import AndOrButton from '@/components/ui/forms/AndOrButton';
-import MultiSelectDropdown from '@/components/ui/forms/MultiSelectDropdown';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import TagInput from '@/components/ui/forms/TagInput';
 import ReportScheduleModalShell from '@/pages/Reporting/Reports/shared/ReportScheduleModalShell';
@@ -131,20 +132,30 @@ export default function AddScheduleModal({
           </div>
 
           {/* Layout */}
-          <MultiSelectDropdown
+          <PaginatedMultiSelectDropdown
             label={t('Layout')}
             value={layoutId.map(String)}
-            options={layoutOpts}
+            options={layoutOpts.options}
+            isLoading={layoutOpts.isLoading}
+            isLoadingMore={layoutOpts.isLoadingMore}
+            hasMore={layoutOpts.hasMore}
+            onSearch={layoutOpts.onSearch}
+            onLoadMore={layoutOpts.onLoadMore}
             placeholder={t('All Layouts')}
             showTags
             onChange={(vals) => setLayoutId(vals.map(Number))}
           />
 
           {/* Media */}
-          <MultiSelectDropdown
+          <PaginatedMultiSelectDropdown
             label={t('Media')}
             value={mediaId.map(String)}
-            options={mediaOpts}
+            options={mediaOpts.options}
+            isLoading={mediaOpts.isLoading}
+            isLoadingMore={mediaOpts.isLoadingMore}
+            hasMore={mediaOpts.hasMore}
+            onSearch={mediaOpts.onSearch}
+            onLoadMore={mediaOpts.onLoadMore}
             placeholder={t('All Media')}
             showTags
             onChange={(vals) => setMediaId(vals.map(Number))}
@@ -191,22 +202,19 @@ export default function AddScheduleModal({
               />
             }
             suffix={
-              <div
-                className="px-3 py-2 flex items-center cursor-pointer justify-center"
+              <Button
+                variant="tertiary"
+                leftIcon={Equal}
+                ariaLabel={t('Match exact characters only')}
+                aria-pressed={exactTags}
                 onClick={() => setExactTags((prev) => !prev)}
-                title={t('Match exact characters only')}
-              >
-                <Button
-                  variant="tertiary"
-                  leftIcon={Equal}
-                  className={twMerge(
-                    'p-1.5',
-                    exactTags
-                      ? 'bg-xibo-blue-600 text-white hover:bg-xibo-blue-700 hover:text-white'
-                      : 'text-xibo-blue-600 hover:text-xibo-blue-800',
-                  )}
-                />
-              </div>
+                className={twMerge(
+                  'p-1.5',
+                  exactTags
+                    ? 'bg-xibo-blue-600 text-white hover:bg-xibo-blue-700 hover:text-white'
+                    : 'text-xibo-blue-600 hover:text-xibo-blue-800',
+                )}
+              />
             }
           />
         </>

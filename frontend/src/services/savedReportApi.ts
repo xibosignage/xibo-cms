@@ -94,13 +94,14 @@ export async function exportSavedReport(savedReportId: number, reportName: strin
     if (err && typeof err === 'object' && 'response' in err) {
       const axiosErr = err as { response?: { data?: unknown } };
       if (axiosErr.response?.data instanceof Blob) {
+        const text = await (axiosErr.response.data as Blob).text();
+        let message: string | undefined;
         try {
-          const text = await (axiosErr.response.data as Blob).text();
-          const json = JSON.parse(text) as { message?: string };
-          if (json.message) throw new Error(json.message);
-        } catch (inner) {
-          if (inner instanceof Error && inner.message) throw inner;
+          message = (JSON.parse(text) as { message?: string }).message;
+        } catch {
+          // Response body wasn't JSON — fall through to the generic error below.
         }
+        if (message) throw new Error(message);
       }
     }
     throw err;

@@ -32,6 +32,8 @@ import {
   TYPE_OPTIONS,
 } from '../ProofOfPlayConfig';
 
+import PaginatedMultiSelectDropdown from './PaginatedMultiSelectDropdown';
+
 import Button from '@/components/ui/Button';
 import DateRangeFilter from '@/components/ui/DateRangeFilter';
 import AndOrButton from '@/components/ui/forms/AndOrButton';
@@ -120,10 +122,15 @@ export default function ProofOfPlayFilters({
             onChange={(vals) => onFilterChange({ displayGroupId: vals.map(Number) })}
           />
 
-          <MultiSelectDropdown
+          <PaginatedMultiSelectDropdown
             label={t('Layout')}
             value={filter.layoutId.map(String)}
-            options={layoutOpts}
+            options={layoutOpts.options}
+            isLoading={layoutOpts.isLoading}
+            isLoadingMore={layoutOpts.isLoadingMore}
+            hasMore={layoutOpts.hasMore}
+            onSearch={layoutOpts.onSearch}
+            onLoadMore={layoutOpts.onLoadMore}
             placeholder={t('All Layouts')}
             showTags
             onChange={(vals) => onFilterChange({ layoutId: vals.map(Number) })}
@@ -132,16 +139,27 @@ export default function ProofOfPlayFilters({
           <SelectDropdown
             label={t('Campaign')}
             value={filter.parentCampaignId ? String(filter.parentCampaignId) : ''}
-            options={campaignOpts}
+            options={campaignOpts.options}
+            searchable
+            isLoading={campaignOpts.isLoading}
+            isLoadingMore={campaignOpts.isLoadingMore}
+            hasMore={campaignOpts.hasMore}
+            onSearch={campaignOpts.onSearch}
+            onLoadMore={campaignOpts.onLoadMore}
             placeholder={t('All Campaigns')}
             clearable
             onSelect={(val) => onFilterChange({ parentCampaignId: val ? Number(val) : null })}
           />
 
-          <MultiSelectDropdown
+          <PaginatedMultiSelectDropdown
             label={t('Media')}
             value={filter.mediaId.map(String)}
-            options={mediaOpts}
+            options={mediaOpts.options}
+            isLoading={mediaOpts.isLoading}
+            isLoadingMore={mediaOpts.isLoadingMore}
+            hasMore={mediaOpts.hasMore}
+            onSearch={mediaOpts.onSearch}
+            onLoadMore={mediaOpts.onLoadMore}
             placeholder={t('All Media')}
             showTags
             onChange={(vals) => onFilterChange({ mediaId: vals.map(Number) })}
@@ -174,22 +192,19 @@ export default function ProofOfPlayFilters({
               />
             }
             suffix={
-              <div
-                className="px-3 py-2 flex items-center cursor-pointer justify-center"
+              <Button
+                variant="tertiary"
+                leftIcon={Equal}
+                ariaLabel={t('Match exact characters only')}
+                aria-pressed={filter.exactTags}
                 onClick={() => onFilterChange({ exactTags: !filter.exactTags })}
-                title={t('Match exact characters only')}
-              >
-                <Button
-                  variant="tertiary"
-                  leftIcon={Equal}
-                  className={twMerge(
-                    'p-1.5',
-                    filter.exactTags
-                      ? 'bg-xibo-blue-600 text-white hover:bg-xibo-blue-700 hover:text-white'
-                      : 'text-xibo-blue-600 hover:text-xibo-blue-800',
-                  )}
-                />
-              </div>
+                className={twMerge(
+                  'p-1.5',
+                  filter.exactTags
+                    ? 'bg-xibo-blue-600 text-white hover:bg-xibo-blue-700 hover:text-white'
+                    : 'text-xibo-blue-600 hover:text-xibo-blue-800',
+                )}
+              />
             }
           />
         </div>

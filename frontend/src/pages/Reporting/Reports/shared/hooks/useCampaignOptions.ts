@@ -19,32 +19,26 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useEffect, useState } from 'react';
+import { usePaginatedOptions } from './usePaginatedOptions';
+import type { OptionsLoader } from './usePaginatedOptions';
 
-import type { MultiSelectOption } from '@/components/ui/forms/MultiSelectDropdown';
 import { fetchCampaigns } from '@/services/campaignApi';
 
-const MAX_CAMPAIGNS = 100;
+const PAGE_SIZE = 20;
 
-export function useCampaignOptions(enabled = true): MultiSelectOption[] {
-  const [options, setOptions] = useState<MultiSelectOption[]>([]);
+export function useCampaignOptions(enabled = true) {
+  const loader: OptionsLoader = async (search, start, signal) => {
+    const { rows, totalCount } = await fetchCampaigns({
+      start,
+      length: PAGE_SIZE,
+      name: search,
+      signal,
+    });
+    return {
+      options: rows.map((c) => ({ value: String(c.campaignId), label: c.campaign })),
+      totalCount,
+    };
+  };
 
-  useEffect(() => {
-    if (!enabled) {
-      return;
-    }
-    const controller = new AbortController();
-    fetchCampaigns({
-      start: 0,
-      length: MAX_CAMPAIGNS,
-      signal: controller.signal,
-    })
-      .then(({ rows }) => {
-        setOptions(rows.map((c) => ({ value: String(c.campaignId), label: c.campaign })));
-      })
-      .catch(() => {});
-    return () => controller.abort();
-  }, [enabled]);
-
-  return options;
+  return usePaginatedOptions({ loader, enabled });
 }
