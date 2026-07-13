@@ -713,7 +713,14 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
       enableSorting: false,
       cell: (info) => {
         const tags = info.getValue<Tag[]>() ?? [];
-        return <TagsCell tags={tags.map((tag) => ({ id: tag.tagId, label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag }))} />;
+        return (
+          <TagsCell
+            tags={tags.map((tag) => ({
+              id: tag.tagId,
+              label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
+            }))}
+          />
+        );
       },
     },
     {
