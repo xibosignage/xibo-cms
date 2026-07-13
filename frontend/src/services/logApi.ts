@@ -32,8 +32,8 @@ export interface FetchLogsRequest {
   channel?: string;
   page?: string;
   function?: string;
-  displayId?: number;
   userId?: number;
+  displayId?: number;
   excludeLog?: number;
   runNo?: string;
   message?: string;

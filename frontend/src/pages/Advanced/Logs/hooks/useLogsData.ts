@@ -83,10 +83,10 @@ export const useLogsData = ({
         intervalType: intervalType ? Number(intervalType) : undefined,
         useRegexForName: useRegexForName === '1' ? 1 : undefined,
         ...restFilters,
-        displayId: restFilters.displayId ? Number(restFilters.displayId) : undefined,
         userId: restFilters.userId ? Number(restFilters.userId) : undefined,
+        displayId: restFilters.displayId ? Number(restFilters.displayId) : undefined,
         displayGroupId: restFilters.displayGroupId ? Number(restFilters.displayGroupId) : undefined,
-        excludeLog: restFilters.excludeLog === '1' ? 1 : undefined,
+        excludeLog: restFilters.excludeLog ? 1 : undefined,
       };
 
       return fetchLogs(request);
