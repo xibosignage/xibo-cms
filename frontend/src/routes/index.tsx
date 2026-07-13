@@ -90,6 +90,14 @@ export const router = createBrowserRouter(
         })),
     },
     {
+      path: 'application/authorize',
+      loader: requireAuthOnlyLoader,
+      lazy: () =>
+        import('@/pages/Administration/Applications/Authorize/AuthorizeApplication').then((m) => ({
+          Component: m.default,
+        })),
+    },
+    {
       path: 'design/layout/:id/editor',
       loader: requireAuthLoader,
       hydrateFallbackElement: <></>,

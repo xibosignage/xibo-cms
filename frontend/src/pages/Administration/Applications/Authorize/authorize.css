@@ -1,0 +1,92 @@
+/* Additions to login/styles.css specific to the OAuth "Authorize application" consent screen. */
+
+.authorize-view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.authorize-cover {
+  height: 96px;
+  margin: -32px -32px 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.4;
+}
+
+.authorize-logo {
+  display: flex;
+  justify-content: center;
+}
+
+.authorize-logo img {
+  width: 96px;
+  max-height: 96px;
+  object-fit: contain;
+}
+
+.authorize-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  text-align: center;
+  color: #1f2937;
+}
+
+.authorize-scopes {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+  color: #1f2937;
+}
+
+.authorize-description {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.authorize-links {
+  display: flex;
+  gap: 16px;
+  margin: 0;
+  font-size: 14px;
+}
+
+.authorize-links a {
+  color: var(--brand-primary, #0e70f6);
+  text-decoration: none;
+}
+
+.authorize-links a:hover {
+  text-decoration: underline;
+}
+
+.authorize-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.authorize-actions .login-button {
+  width: auto;
+  flex: 1;
+}
+
+.authorize-button-deny {
+  flex: 1;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.authorize-button-deny:hover,
+.authorize-button-deny:focus-visible {
+  background-color: #f6f7f9;
+  outline: none;
+}

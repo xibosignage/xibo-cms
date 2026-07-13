@@ -195,10 +195,21 @@ class Applications extends Base
         if ($this->applicationFactory
             ->checkAuthorised($authParams->getClient()->getIdentifier(), $this->getUser()->userId)
         ) {
-            return $this->authorize($request->withParsedBody(['authorization' => 'Approve']), $response);
+            // Already authorised - complete the request and hand the frontend a redirect URL to
+            // navigate to itself, rather than returning the redirect response directly. This is
+            // fetched via AJAX, and a cross-origin 3xx here can't be safely auto-followed by fetch/axios.
+            $redirectResponse = $this->completeAuthorization($authParams, true, $request, $response);
+
+            return $response
+                ->withStatus(200)
+                ->withJson([
+                    'alreadyAuthorized' => true,
+                    'redirectUrl' => $redirectResponse->getHeaderLine('Location'),
+                ]);
         }
 
         $client = $this->applicationFactory->getClientEntity($authParams->getClient()->getIdentifier())->load();
+        $client->excludeProperty('secret');
 
         // Process any scopes.
         $scopes = [];
@@ -236,10 +247,9 @@ class Applications extends Base
         return $response
             ->withStatus(200)
             ->withJson([
-                'forceHide' => true,
-                'authParams' => $authParams,
+                'alreadyAuthorized' => false,
+                'application' => $client,
                 'scopes' => $scopes,
-                'application' => $client
             ]);
     }
 
@@ -263,17 +273,25 @@ class Applications extends Base
         }
 
         $sanitizedQueryParams = $this->getSanitizer($request->getParams());
+        $approved = $sanitizedQueryParams->getString('authorization') === 'Approve';
 
+        return $this->completeAuthorization($authRequest, $approved, $request, $response);
+    }
+
+    /**
+     * Build the AuthorizationServer used to complete an authorization-code grant request.
+     * @return AuthorizationServer
+     */
+    private function buildAuthorizationServer(): AuthorizationServer
+    {
         $apiKeyPaths = $this->getConfig()->getApiKeyDetails();
-        $privateKey = $apiKeyPaths['privateKeyPath'];
-        $encryptionKey = $apiKeyPaths['encryptionKey'];
 
         $server = new AuthorizationServer(
             $this->applicationFactory,
             new \Xibo\OAuth\AccessTokenRepository($this->getLog(), $this->pool, $this->applicationFactory),
             $this->applicationScopeFactory,
-            $privateKey,
-            $encryptionKey
+            $apiKeyPaths['privateKeyPath'],
+            $apiKeyPaths['encryptionKey']
         );
 
         $server->enableGrantType(
@@ -285,13 +303,38 @@ class Applications extends Base
             new \DateInterval('PT1H')
         );
 
+        return $server;
+    }
+
+    /**
+     * Set the approval decision on an AuthorizationRequest and complete it, producing the
+     * redirect response back to the client's redirect_uri (success code or error).
+     * @param AuthorizationRequest $authRequest
+     * @param bool $approved
+     * @param Request $request
+     * @param Response $response
+     * @return ResponseInterface|Response
+     * @throws \Exception
+     */
+    private function completeAuthorization(
+        AuthorizationRequest $authRequest,
+        bool $approved,
+        Request $request,
+        Response $response
+    ): Response|ResponseInterface {
+        // Session::get() returns $_SESSION['authParams'] directly rather than a copy, so $authRequest
+        // is often the exact object still referenced by the session. Clone before mutating it below -
+        // setUser() attaches the full User entity (with its injected factories), and if that ends up
+        // left on the session-resident object, session_write_close() fatals trying to serialize it.
+        $authRequest = clone $authRequest;
+
+        $server = $this->buildAuthorizationServer();
+
         // get oauth User Entity and set the UserId to the current web userId
         $authRequest->setUser($this->getUser());
+        $authRequest->setAuthorizationApproved($approved);
 
-        // We are authorized
-        if ($sanitizedQueryParams->getString('authorization') === 'Approve') {
-            $authRequest->setAuthorizationApproved(true);
-
+        if ($approved) {
             $this->applicationFactory->setApplicationApproved(
                 $authRequest->getClient()->getIdentifier(),
                 $authRequest->getUser()->getIdentifier(),
@@ -308,8 +351,6 @@ class Applications extends Base
                     'Application Name' => $authRequest->getClient()->getName()
                 ]
             );
-        } else {
-            $authRequest->setAuthorizationApproved(false);
         }
 
         // Redirect back to the specified redirect url
@@ -317,7 +358,9 @@ class Applications extends Base
             return $server->completeAuthorizationRequest($authRequest, $response);
         } catch (OAuthServerException $exception) {
             if ($exception->hasRedirect()) {
-                return $response->withRedirect($exception->getRedirectUri());
+                // generateHttpResponse() appends the error/error_description payload to the
+                // redirect query string - getRedirectUri() alone only has state, e.g. on Deny.
+                return $exception->generateHttpResponse($response);
             } else {
                 throw $exception;
             }
