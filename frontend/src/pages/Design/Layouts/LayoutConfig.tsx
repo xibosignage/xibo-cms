@@ -37,6 +37,7 @@ import {
   FileX,
   ArrowRight,
   Info,
+  Eye,
 } from 'lucide-react';
 import type { ComponentProps } from 'react';
 
@@ -228,6 +229,7 @@ export interface LayoutActionsProps {
   t: TFunction;
   formatDateTime: (value: DateLike) => string;
   onPreview?: (row: Layout) => void;
+  onMiniPreview?: (row: Layout, kind: 'published' | 'draft') => void;
   onDelete: (id: number) => void;
   openEditModal: (row: Layout) => void;
   openShareModal?: (id: number) => void;
@@ -253,6 +255,7 @@ export interface LayoutActionsProps {
 export const getLayoutItemActions = ({
   t,
   onDelete,
+  onMiniPreview,
   openEditModal,
   openShareModal,
   openMoveModal,
@@ -328,6 +331,20 @@ export const getLayoutItemActions = ({
     }
 
     actions.push({ isSeparator: true });
+
+    actions.push({
+      label: t('Preview Layout'),
+      icon: Eye,
+      onClick: () => onMiniPreview && onMiniPreview(layout, 'published'),
+    });
+
+    if (layout.publishedStatus !== 'Published') {
+      actions.push({
+        label: t('Preview Draft Layout'),
+        icon: Eye,
+        onClick: () => onMiniPreview && onMiniPreview(layout, 'draft'),
+      });
+    }
 
     if (canEdit) {
       actions.push({

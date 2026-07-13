@@ -33,6 +33,7 @@ import type { Layout } from '@/types/layout';
 interface LayoutPreviewerProps {
   layoutId: number | null;
   name?: string;
+  previewUrlOverride?: string | null;
   onMove?: () => void;
   onShare?: (id: number) => void;
   layoutData?: Layout | null;
@@ -43,6 +44,7 @@ interface LayoutPreviewerProps {
 export default function LayoutPreviewer({
   layoutId,
   name,
+  previewUrlOverride,
   onMove,
   layoutData,
   onShare,
@@ -104,7 +106,11 @@ export default function LayoutPreviewer({
         <div className="flex-1 w-full p-4 flex justify-center items-center overflow-hidden min-h-0">
           <iframe
             sandbox="allow-scripts"
-            src={layoutData?.previewUrl ?? withPublicPath(`layout/preview/${layoutId}`)}
+            src={
+              previewUrlOverride ??
+              layoutData?.previewUrl ??
+              withPublicPath(`layout/preview/${layoutId}`)
+            }
             title={`Layout ${layoutId}`}
             className="w-full h-full min-h-125 rounded shadow-md border-0"
           />
