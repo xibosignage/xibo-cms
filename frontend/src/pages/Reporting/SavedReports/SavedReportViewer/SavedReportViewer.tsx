@@ -41,6 +41,7 @@ import TabNav from '@/components/ui/TabNav';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { exportSavedReport, fetchSavedReportData } from '@/services/savedReportApi';
 import type { TimeConnectedTable } from '@/services/timeConnectedApi';
+import { decodeHtmlEntities } from '@/utils/stringUtils';
 
 type ColumnDef = {
   key: string;
@@ -54,9 +55,7 @@ type ColumnConfig =
 
 function decodeHtml(val: unknown): string {
   if (val == null || val === '') return '';
-  const el = document.createElement('textarea');
-  el.innerHTML = String(val);
-  return el.value;
+  return decodeHtmlEntities(String(val));
 }
 
 function formatDuration(val: unknown): string {
@@ -78,8 +77,9 @@ function formatObjectAfter(val: unknown): string {
       .join(', ');
   }
   if (typeof val !== 'string') return String(val);
+  const decoded = decodeHtml(val);
   try {
-    const parsed = JSON.parse(val);
+    const parsed = JSON.parse(decoded);
     if (typeof parsed === 'object' && parsed !== null) {
       return Object.entries(parsed)
         .map(([k, v]) => `${k}: ${v}`)
@@ -87,7 +87,7 @@ function formatObjectAfter(val: unknown): string {
     }
     return String(parsed);
   } catch {
-    return val;
+    return decoded;
   }
 }
 
