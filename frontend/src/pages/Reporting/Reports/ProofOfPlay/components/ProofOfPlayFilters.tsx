@@ -28,18 +28,21 @@ import {
   DATE_RANGE_OPTIONS,
   GROUP_BY_OPTIONS,
   INITIAL_FILTER_STATE,
-  SORT_BY_OPTIONS,
   TAGS_TYPE_OPTIONS,
   TYPE_OPTIONS,
 } from '../ProofOfPlayConfig';
 
 import Button from '@/components/ui/Button';
 import DateRangeFilter from '@/components/ui/DateRangeFilter';
+import AndOrButton from '@/components/ui/forms/AndOrButton';
 import MultiSelectDropdown from '@/components/ui/forms/MultiSelectDropdown';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import TagInput from '@/components/ui/forms/TagInput';
+import { useCampaignOptions } from '@/pages/Reporting/Reports/shared/hooks/useCampaignOptions';
 import { useDisplayGroupOptions } from '@/pages/Reporting/Reports/shared/hooks/useDisplayGroupOptions';
 import { useDisplayOptions } from '@/pages/Reporting/Reports/shared/hooks/useDisplayOptions';
+import { useLayoutOptions } from '@/pages/Reporting/Reports/shared/hooks/useLayoutOptions';
+import { useMediaOptions } from '@/pages/Reporting/Reports/shared/hooks/useMediaOptions';
 
 interface ProofOfPlayFiltersProps {
   filter: ProofOfPlayFilter;
@@ -57,6 +60,9 @@ export default function ProofOfPlayFilters({
   const { t } = useTranslation();
   const displaySelect = useDisplayOptions();
   const displayGroupOptions = useDisplayGroupOptions();
+  const layoutOpts = useLayoutOptions();
+  const campaignOpts = useCampaignOptions();
+  const mediaOpts = useMediaOptions();
 
   const handleReset = () => {
     onFilterChange({ ...INITIAL_FILTER_STATE });
@@ -83,10 +89,10 @@ export default function ProofOfPlayFilters({
           />
 
           <SelectDropdown
-            label={t('Type')}
-            value={filter.type}
-            options={TYPE_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }))}
-            onSelect={(val) => onFilterChange({ type: val })}
+            label={t('Group By')}
+            value={filter.groupBy}
+            options={GROUP_BY_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }))}
+            onSelect={(val) => onFilterChange({ groupBy: val })}
           />
 
           <SelectDropdown
@@ -114,18 +120,45 @@ export default function ProofOfPlayFilters({
             onChange={(vals) => onFilterChange({ displayGroupId: vals.map(Number) })}
           />
 
-          <SelectDropdown
-            label={t('Group By')}
-            value={filter.groupBy}
-            options={GROUP_BY_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }))}
-            onSelect={(val) => onFilterChange({ groupBy: val })}
+          <MultiSelectDropdown
+            label={t('Layout')}
+            value={filter.layoutId.map(String)}
+            options={layoutOpts}
+            placeholder={t('All Layouts')}
+            showTags
+            onChange={(vals) => onFilterChange({ layoutId: vals.map(Number) })}
           />
 
           <SelectDropdown
-            label={t('Sort By')}
-            value={filter.sortBy}
-            options={SORT_BY_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }))}
-            onSelect={(val) => onFilterChange({ sortBy: val })}
+            label={t('Campaign')}
+            value={filter.parentCampaignId ? String(filter.parentCampaignId) : ''}
+            options={campaignOpts}
+            placeholder={t('All Campaigns')}
+            clearable
+            onSelect={(val) => onFilterChange({ parentCampaignId: val ? Number(val) : null })}
+          />
+
+          <MultiSelectDropdown
+            label={t('Media')}
+            value={filter.mediaId.map(String)}
+            options={mediaOpts}
+            placeholder={t('All Media')}
+            showTags
+            onChange={(vals) => onFilterChange({ mediaId: vals.map(Number) })}
+          />
+
+          <SelectDropdown
+            label={t('Type')}
+            value={filter.type}
+            options={TYPE_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }))}
+            onSelect={(val) => onFilterChange({ type: val })}
+          />
+
+          <SelectDropdown
+            label={t('Tags From')}
+            value={filter.tagsType}
+            options={TAGS_TYPE_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }))}
+            onSelect={(val) => onFilterChange({ tagsType: val })}
           />
 
           <TagInput
@@ -134,28 +167,30 @@ export default function ProofOfPlayFilters({
             onChange={(tags) => onFilterChange({ tags })}
             placeholder={t('Add tags')}
             allowValues={false}
+            prefix={
+              <AndOrButton
+                value={(filter.logicalOperator as 'AND' | 'OR') || 'OR'}
+                onChange={(val) => onFilterChange({ logicalOperator: val })}
+              />
+            }
             suffix={
-              <button
-                type="button"
+              <div
+                className="px-3 py-2 flex items-center cursor-pointer justify-center"
                 onClick={() => onFilterChange({ exactTags: !filter.exactTags })}
                 title={t('Match exact characters only')}
-                className={twMerge(
-                  'flex items-center justify-center px-3 h-full cursor-pointer',
-                  filter.exactTags
-                    ? 'bg-xibo-blue-600 text-white'
-                    : 'text-xibo-blue-600 hover:text-xibo-blue-800',
-                )}
               >
-                <Equal size={18} />
-              </button>
+                <Button
+                  variant="tertiary"
+                  leftIcon={Equal}
+                  className={twMerge(
+                    'p-1.5',
+                    filter.exactTags
+                      ? 'bg-xibo-blue-600 text-white hover:bg-xibo-blue-700 hover:text-white'
+                      : 'text-xibo-blue-600 hover:text-xibo-blue-800',
+                  )}
+                />
+              </div>
             }
-          />
-
-          <SelectDropdown
-            label={t('Tags Type')}
-            value={filter.tagsType}
-            options={TAGS_TYPE_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }))}
-            onSelect={(val) => onFilterChange({ tagsType: val })}
           />
         </div>
 

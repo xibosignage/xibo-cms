@@ -19,18 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import {
-  autoUpdate,
-  flip,
-  FloatingPortal,
-  offset,
-  shift,
-  useClick,
-  useDismiss,
-  useFloating,
-  useInteractions,
-} from '@floating-ui/react';
-import { ChevronDown, Equal, Regex } from 'lucide-react';
+import { Equal, Regex } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
@@ -39,6 +28,7 @@ import Button from './Button';
 import DateFilter from './DateFilter';
 import DateRangeFilter from './DateRangeFilter';
 import InputFilter from './InputFilter';
+import AndOrButton from './forms/AndOrButton';
 import SelectDropdown from './forms/SelectDropdown';
 import type { SelectOption } from './forms/SelectDropdown';
 import TagInput from './forms/TagInput';
@@ -103,72 +93,6 @@ function DebouncedInputFilter({ externalValue, onChange, ...props }: DebouncedIn
   };
 
   return <InputFilter {...props} value={localValue} onChange={handleChange} />;
-}
-
-function AndOrButton({
-  value,
-  onChange,
-}: {
-  value: 'AND' | 'OR';
-  onChange: (value: 'AND' | 'OR') => void;
-}) {
-  const { t } = useTranslation();
-  const [isOpen, setIsOpen] = useState(false);
-  const { refs, floatingStyles, context } = useFloating({
-    open: isOpen,
-    onOpenChange: setIsOpen,
-    placement: 'bottom-start',
-    whileElementsMounted: autoUpdate,
-    middleware: [offset(4), flip(), shift()],
-  });
-  const click = useClick(context);
-  const dismiss = useDismiss(context);
-  const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
-
-  return (
-    <>
-      <button
-        type="button"
-        ref={refs.setReference}
-        {...getReferenceProps()}
-        title={value === 'AND' ? t('Match ALL entered terms') : t('Match ANY entered terms')}
-        className="flex items-center gap-2 p-3 h-full text-sm font-semibold text-gray-500 cursor-pointer bg-transparent border-none"
-      >
-        {value}
-        <ChevronDown
-          size={12}
-          className={twMerge('transition-transform duration-200', isOpen && 'rotate-180')}
-        />
-      </button>
-      <FloatingPortal>
-        {isOpen && (
-          <div
-            ref={refs.setFloating}
-            style={floatingStyles}
-            {...getFloatingProps()}
-            className="z-9999 bg-white shadow-md rounded-lg border border-gray-200 flex flex-col overflow-clip"
-          >
-            {(['AND', 'OR'] as const).map((opt) => (
-              <button
-                key={opt}
-                type="button"
-                onClick={() => {
-                  onChange(opt);
-                  setIsOpen(false);
-                }}
-                className={twMerge(
-                  'p-3 text-sm font-semibold text-left hover:bg-gray-100 cursor-pointer',
-                  value === opt && 'text-xibo-blue-600',
-                )}
-              >
-                {opt}
-              </button>
-            ))}
-          </div>
-        )}
-      </FloatingPortal>
-    </>
-  );
 }
 
 type DebouncedTextWithControlsProps = {

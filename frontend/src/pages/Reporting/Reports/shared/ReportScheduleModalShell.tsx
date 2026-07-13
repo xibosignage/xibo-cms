@@ -67,6 +67,7 @@ interface ReportScheduleModalShellProps {
   canSave?: boolean;
   warning?: ReactNode;
   children?: ReactNode;
+  bottomChildren?: ReactNode;
   frequencyOptions?: { value: string; label: string }[];
 }
 
@@ -79,6 +80,7 @@ export default function ReportScheduleModalShell({
   canSave = true,
   warning,
   children,
+  bottomChildren,
   frequencyOptions = DEFAULT_FREQUENCY_OPTIONS,
 }: ReportScheduleModalShellProps) {
   const { t } = useTranslation();
@@ -185,6 +187,8 @@ export default function ReportScheduleModalShell({
             'Set a future date and time to end the schedule. Leave blank to run indefinitely.',
           )}
         />
+
+        {bottomChildren}
 
         <Checkbox
           id="sendEmail"

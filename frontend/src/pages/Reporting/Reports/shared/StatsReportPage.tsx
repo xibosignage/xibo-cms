@@ -106,7 +106,12 @@ export default function StatsReportPage({ config }: StatsReportPageProps) {
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="" navigation={reportingTabs} />
           <div className="flex items-center gap-2">
-            <Button variant="primary" leftIcon={Plus} onClick={() => setScheduleModalOpen(true)}>
+            <Button
+              variant="primary"
+              leftIcon={Plus}
+              disabled={!itemSelected}
+              onClick={() => setScheduleModalOpen(true)}
+            >
               {t('Schedule')}
             </Button>
             <Button
