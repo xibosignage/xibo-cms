@@ -19,10 +19,23 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import {
+  FloatingPortal,
+  autoUpdate,
+  flip,
+  offset,
+  shift,
+  size,
+  useDismiss,
+  useFloating,
+  useInteractions,
+} from '@floating-ui/react';
 import { X } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
+
+import { useTagSuggestions } from './hooks/useTagSuggestions';
 
 import type { Tag } from '@/types/tag';
 
@@ -78,6 +91,7 @@ interface TagInputProps {
   inputValue?: string;
   onInputChange?: (value: string) => void;
   allowValues?: boolean;
+  suggestions?: boolean;
 }
 
 function TagInput({
@@ -95,10 +109,12 @@ function TagInput({
   inputValue,
   onInputChange,
   allowValues = true,
+  suggestions = true,
 }: TagInputProps) {
   const { t } = useTranslation();
   const inputId = useId();
   const valueInputId = useId();
+  const listboxId = useId();
   const [internalInput, setInternalInput] = useState('');
   const input = inputValue !== undefined ? inputValue : internalInput;
   const setInput = onInputChange ?? setInternalInput;
@@ -108,6 +124,54 @@ function TagInput({
   const [pendingValueTag, setPendingValueTag] = useState<string | null>(null);
   const [valueInput, setValueInput] = useState('');
   const valueInputRef = useRef<HTMLInputElement>(null);
+
+  const [isFocused, setIsFocused] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [highlightIndex, setHighlightIndex] = useState(-1);
+
+  const { suggestions: tagSuggestions } = useTagSuggestions(
+    input,
+    suggestions && !disabled && pendingValueTag === null,
+  );
+
+  const filteredSuggestions = tagSuggestions.filter((s) => !tags.some((t) => t.tag === s.tag));
+
+  const showSuggestions =
+    suggestions &&
+    isOpen &&
+    isFocused &&
+    !disabled &&
+    pendingValueTag === null &&
+    input.trim().length > 0 &&
+    filteredSuggestions.length > 0;
+
+  const { refs, floatingStyles, context } = useFloating({
+    open: showSuggestions,
+    onOpenChange: setIsOpen,
+    placement: 'bottom-start',
+    whileElementsMounted: autoUpdate,
+    middleware: [
+      offset(4),
+      flip(),
+      shift(),
+      size({
+        apply({ rects, availableHeight, elements }) {
+          Object.assign(elements.floating.style, {
+            minWidth: `${rects.reference.width}px`,
+            maxHeight: `${Math.min(availableHeight, 240)}px`,
+          });
+        },
+        padding: 8,
+      }),
+    ],
+  });
+
+  const dismiss = useDismiss(context);
+  const { getReferenceProps, getFloatingProps } = useInteractions([dismiss]);
+
+  useEffect(() => {
+    setHighlightIndex(-1);
+  }, [input]);
 
   // Reset pending value state when tags are cleared externally (e.g. modal close/reopen)
   useEffect(() => {
@@ -139,6 +203,12 @@ function TagInput({
       setPendingValueTag(newTag.tag);
       setValueInput('');
     }
+  };
+
+  const selectSuggestion = (tag: Tag) => {
+    addTag(tag.tag);
+    setIsOpen(false);
+    setHighlightIndex(-1);
   };
 
   const removeTag = (tag: string) => {
@@ -177,6 +247,8 @@ function TagInput({
       </label>
 
       <div
+        ref={refs.setReference}
+        {...getReferenceProps()}
         className={twMerge(
           'flex rounded-lg bg-white border border-gray-200 overflow-hidden transition-colors min-h-11.25',
           'focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500',
@@ -209,14 +281,44 @@ function TagInput({
           ))}
           <input
             id={inputId}
+            role="combobox"
+            aria-expanded={showSuggestions}
+            aria-controls={listboxId}
+            aria-autocomplete="list"
+            aria-activedescendant={
+              showSuggestions && highlightIndex >= 0
+                ? `${listboxId}-option-${highlightIndex}`
+                : undefined
+            }
             className="flex-1 min-w-10 text-sm p-1 bg-transparent border-none outline-none focus:outline-none focus:ring-0"
             value={input}
             disabled={disabled || pendingValueTag !== null}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {
+              setInput(e.target.value);
+              setIsOpen(true);
+            }}
+            onFocus={() => setIsFocused(true)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ',') {
+              if (showSuggestions && e.key === 'ArrowDown') {
                 e.preventDefault();
+                setHighlightIndex((i) => (i + 1) % filteredSuggestions.length);
+              } else if (showSuggestions && e.key === 'ArrowUp') {
+                e.preventDefault();
+                setHighlightIndex((i) => (i <= 0 ? filteredSuggestions.length - 1 : i - 1));
+              } else if (e.key === 'Enter' || e.key === ',') {
+                e.preventDefault();
+                if (e.key === 'Enter' && showSuggestions && highlightIndex >= 0) {
+                  const picked = filteredSuggestions[highlightIndex];
+                  if (picked) {
+                    selectSuggestion(picked);
+                    return;
+                  }
+                }
                 addTag(input);
+              } else if (e.key === 'Escape' && showSuggestions) {
+                e.preventDefault();
+                setIsOpen(false);
+                setHighlightIndex(-1);
               } else if (e.key === 'Backspace' && !input && tags.length > 0) {
                 const lastTag = tags[tags.length - 1];
                 if (lastTag) {
@@ -225,6 +327,7 @@ function TagInput({
               }
             }}
             onBlur={() => {
+              setIsFocused(false);
               if (!pendingValueTag) {
                 addTag(input);
               }
@@ -237,6 +340,38 @@ function TagInput({
           <div className="flex items-center border-s border-gray-200 shrink-0">{suffix}</div>
         )}
       </div>
+
+      <FloatingPortal>
+        {showSuggestions && (
+          <div
+            ref={refs.setFloating}
+            style={floatingStyles}
+            {...getFloatingProps()}
+            role="listbox"
+            id={listboxId}
+            className="z-9999 bg-white shadow-md rounded-lg overflow-y-auto border border-gray-200 py-1"
+          >
+            {filteredSuggestions.map((s, index) => (
+              <button
+                key={s.tag}
+                type="button"
+                role="option"
+                id={`${listboxId}-option-${index}`}
+                aria-selected={index === highlightIndex}
+                onMouseDown={(e) => e.preventDefault()}
+                onMouseEnter={() => setHighlightIndex(index)}
+                onClick={() => selectSuggestion(s)}
+                className={twMerge(
+                  'w-full text-left px-3 py-2 text-sm text-gray-800 cursor-pointer',
+                  index === highlightIndex ? 'bg-gray-100' : 'hover:bg-gray-100',
+                )}
+              >
+                {s.tag}
+              </button>
+            ))}
+          </div>
+        )}
+      </FloatingPortal>
 
       {pendingValueTag && (
         <div className="flex flex-col gap-1">
