@@ -22,8 +22,6 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
-use GuzzleHttp\Client;
-use Xibo\Helper\Guzzle\SafeClient;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManagerStatic as Img;
 use OpenApi\Attributes as OA;
@@ -37,10 +35,10 @@ use Xibo\Connector\ProviderImport;
 use Xibo\Entity\Media;
 use Xibo\Entity\SearchResult;
 use Xibo\Entity\SearchResults;
+use Xibo\Event\FolderTouchEvent;
 use Xibo\Event\LibraryProviderEvent;
 use Xibo\Event\LibraryProviderImportEvent;
 use Xibo\Event\LibraryProviderListEvent;
-use Xibo\Event\FolderTouchEvent;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\MediaFullLoadEvent;
 use Xibo\Factory\DisplayFactory;
@@ -57,6 +55,7 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\Guzzle\SafeClient;
 use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\LibraryDescription;
 use Xibo\Helper\XiboUploadHandler;
@@ -322,6 +321,17 @@ class Library extends Base
 
         $media->enableStat = $enableStat;
         $media->save(['saveTags' => false]);
+
+        // Enable stat has changed, so we need to trigger an update of all layouts this media is used on.
+        foreach ($this->widgetFactory->getByMediaId($media->mediaId, 0) as $widget) {
+            // Notify, no audit (the media record change has been audited instead)
+            // No playlist notify as no duration change
+            $widget->save([
+                'audit' => false,
+                'notify' => true,
+                'notifyPlaylists' => false,
+            ]);
+        }
 
         // Return
         $this->getState()->hydrate([
