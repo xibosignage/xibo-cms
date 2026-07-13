@@ -270,7 +270,7 @@ export const getPlaylistColumns = (props: PlaylistActionsProps): ColumnDef<Playl
         const tags = info.getValue<Tag[]>() || [];
         const formattedTags = tags.map((tag) => ({
           id: tag.tagId,
-          label: tag.tag,
+          label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
         }));
         return <TagsCell tags={formattedTags} />;
       },
