@@ -449,7 +449,7 @@ Per-callsite escaping in the assembly code is unnecessary and would hide the cho
 
 Widget options of type `code`, `richText`, and the `embedded` widget's `embedHtml`/`embedScript`/`embedStyle`/`embedJavaScript` fields are **intentionally** raw — the `embedded` widget exists specifically to allow users to embed arbitrary HTML/CSS/JS. The defence is **iframe sandbox isolation**, not output escaping.
 
-Every widget-render context wraps the rendered output in `<iframe sandbox="allow-scripts">` (without `allow-same-origin`), giving the content a null opaque origin. Scripts inside cannot reach the parent CMS's cookies, localStorage, or DOM. Verified consistent across `views/notification-form-show.twig`, `views/module-html-preview.twig`, `views/dataset-data-connector-page.twig`, `views/campaign-preview.twig`, `views/notification-interrupt.twig`, `ui/src/core/xibo-cms.js`, `ui/src/templates/viewer-layout-preview.hbs`.
+Every widget-render context wraps the rendered output in `<iframe sandbox="allow-scripts">` (without `allow-same-origin`), giving the content a null opaque origin. Scripts inside cannot reach the parent CMS's cookies, localStorage, or DOM. Verified consistent across `views/notification-form-show.twig`, `views/module-html-preview.twig`, `views/dataset-data-connector-page.twig`, `views/notification-interrupt.twig`, `ui/src/core/xibo-cms.js`, `ui/src/templates/viewer-layout-preview.hbs`.
 
 When extending widget rendering:
 

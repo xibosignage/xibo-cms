@@ -1201,7 +1201,7 @@ export default function ScheduleEventModal({
                       rightIcon={Tablet}
                       onClick={() =>
                         window.open(
-                          withPublicPath(`campaign/${draft.campaignId}/preview`),
+                          withPublicPath(`design/campaign/${draft.campaignId}/preview`),
                           '_blank',
                         )
                       }
