@@ -28,11 +28,13 @@ import TextInput from '@/components/ui/forms/TextInput';
 import CommandBuilder from '@/pages/Displays/Commands/components/CommandBuilder/CommandBuilder';
 import type { DisplayProfileCommand } from '@/types/displayProfile';
 
+type CommandOverrideMutableField = 'commandString' | 'validationString' | 'createAlertOn';
+
 export interface CommandOverrideDraft {
   commandId: number;
   command: string;
   code: string;
-  description: string;
+  description: string | null;
   baseCommandString: string;
   baseValidationString: string;
   baseCreateAlertOn: string;
@@ -49,7 +51,7 @@ export function buildCommandDrafts(commands: DisplayProfileCommand[]): {
     commandId: cmd.commandId,
     command: cmd.command,
     code: cmd.code ?? '',
-    description: cmd.description ?? '',
+    description: cmd.description ?? null,
     baseCommandString: cmd.commandString ?? '',
     baseValidationString: cmd.validationString ?? '',
     baseCreateAlertOn: cmd.createAlertOn ?? 'never',
@@ -89,10 +91,18 @@ export default function CommandsTab({
     });
   };
 
-  const updateDraft = (commandId: number, field: string, value: string) => {
-    onCommandDraftsChange(
-      commandDrafts.map((c) => (c.commandId === commandId ? { ...c, [field]: value } : c)),
-    );
+  const updateDraft = (commandId: number, field: CommandOverrideMutableField, value: string) => {
+    const updated = commandDrafts.map((c) => {
+      if (c.commandId !== commandId) return c;
+      const draft = { ...c, [field]: value };
+      // Reset dependent fields when the command string is cleared
+      if (field === 'commandString' && !value) {
+        draft.validationString = '';
+        draft.createAlertOn = '';
+      }
+      return draft;
+    });
+    onCommandDraftsChange(updated);
   };
 
   return (
@@ -105,6 +115,7 @@ export default function CommandsTab({
             <button
               type="button"
               className="flex w-full items-center gap-2 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+              aria-expanded={isExpanded}
               onClick={() => toggleExpanded(cmd.commandId)}
             >
               {isExpanded ? (
