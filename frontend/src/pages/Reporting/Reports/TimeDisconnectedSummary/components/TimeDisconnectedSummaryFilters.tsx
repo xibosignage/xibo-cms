@@ -32,6 +32,7 @@ import {
 
 import Button from '@/components/ui/Button';
 import DateRangeFilter from '@/components/ui/DateRangeFilter';
+import AndOrButton from '@/components/ui/forms/AndOrButton';
 import Checkbox from '@/components/ui/forms/Checkbox';
 import MultiSelectDropdown from '@/components/ui/forms/MultiSelectDropdown';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
@@ -125,6 +126,12 @@ export default function TimeDisconnectedSummaryFilters({
             onChange={(tags) => onFilterChange({ tags })}
             placeholder={t('Add tags')}
             allowValues={false}
+            prefix={
+              <AndOrButton
+                value={(filter.logicalOperator as 'AND' | 'OR') || 'OR'}
+                onChange={(val) => onFilterChange({ logicalOperator: val })}
+              />
+            }
             suffix={
               <button
                 type="button"

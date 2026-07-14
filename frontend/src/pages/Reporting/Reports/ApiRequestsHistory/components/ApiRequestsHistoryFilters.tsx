@@ -75,13 +75,6 @@ export default function ApiRequestsHistoryFilters({
           />
 
           <SelectDropdown
-            label={t('Type')}
-            value={filter.type}
-            options={TYPE_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }))}
-            onSelect={(val) => onFilterChange({ type: val as ApiRequestsLogType })}
-          />
-
-          <SelectDropdown
             label={t('User')}
             value={filter.userId?.toString() ?? ''}
             placeholder={t('All Users')}
@@ -103,6 +96,13 @@ export default function ApiRequestsHistoryFilters({
             placeholder=" "
             value={filter.requestId}
             onChange={(val) => onFilterChange({ requestId: val })}
+          />
+
+          <SelectDropdown
+            label={t('Report Type')}
+            value={filter.type}
+            options={TYPE_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }))}
+            onSelect={(val) => onFilterChange({ type: val as ApiRequestsLogType })}
           />
         </div>
 

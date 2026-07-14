@@ -31,6 +31,8 @@ import DatePickerInput from '@/components/ui/forms/DatePickerInput';
 import Modal from '@/components/ui/modals/Modal';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { TextCell, ActionsCell } from '@/components/ui/table/cells';
+import LayoutPreviewer from '@/pages/Design/Layouts/components/LayoutPreviewer';
+import MiniLayoutPreview from '@/pages/Design/Layouts/components/MiniLayoutPreview';
 import {
   fetchMediaUsageDisplays,
   fetchMediaUsageLayouts,
@@ -80,6 +82,7 @@ const getLayoutsColumns = (
   t: TFunction,
   navigate: NavigateFunction,
   from: string,
+  onPreview: (row: Layout) => void,
 ): ColumnDef<Layout>[] => [
   {
     accessorKey: 'layoutId',
@@ -132,7 +135,7 @@ const getLayoutsColumns = (
               label: t('Preview'),
               icon: Eye,
               isQuickAction: true,
-              onClick: () => row.previewUrl && window.open(row.previewUrl, '_blank'),
+              onClick: () => onPreview(row),
             },
           ]}
         />
@@ -177,6 +180,17 @@ export default function UsageReportModal({
   });
   const [layoutsSorting, setLayoutsSorting] = useState<SortingState>([]);
   const [layoutsLoading, setLayoutsLoading] = useState(false);
+
+  const [miniPreview, setMiniPreview] = useState<{ layout: Layout; url: string } | null>(null);
+  const [previewItem, setPreviewItem] = useState<Layout | null>(null);
+  const [previewOverrideUrl, setPreviewOverrideUrl] = useState<string | null>(null);
+
+  const handlePreview = (row: Layout) => {
+    if (!row.previewUrl) {
+      return;
+    }
+    setMiniPreview({ layout: row, url: row.previewUrl });
+  };
 
   useEffect(() => {
     if (!entityId) {
@@ -245,7 +259,12 @@ export default function UsageReportModal({
   }, [entityId, entityType, activeTab]);
 
   const displaysColumns = getDisplaysColumns(t);
-  const layoutsColumns = getLayoutsColumns(t, navigate, `${location.pathname}${location.search}`);
+  const layoutsColumns = getLayoutsColumns(
+    t,
+    navigate,
+    `${location.pathname}${location.search}`,
+    handlePreview,
+  );
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'displays', label: t('Displays') },
@@ -369,6 +388,35 @@ export default function UsageReportModal({
           )}
         </div>
       </div>
+
+      <MiniLayoutPreview
+        previewUrl={miniPreview?.url ?? null}
+        title={miniPreview?.layout.layout}
+        onClose={() => {
+          setMiniPreview(null);
+        }}
+        onFullscreen={() => {
+          if (!miniPreview) {
+            return;
+          }
+
+          setPreviewOverrideUrl(miniPreview.url);
+          setPreviewItem(miniPreview.layout);
+          setMiniPreview(null);
+        }}
+      />
+
+      <LayoutPreviewer
+        layoutId={previewItem?.layoutId ?? null}
+        name={previewItem?.layout}
+        previewUrlOverride={previewOverrideUrl}
+        layoutData={previewItem}
+        folderName=""
+        onClose={() => {
+          setPreviewItem(null);
+          setPreviewOverrideUrl(null);
+        }}
+      />
     </Modal>
   );
 }

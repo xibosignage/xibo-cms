@@ -76,15 +76,6 @@ export default function AddScheduleModal({
       })}
     >
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-semibold text-gray-500 leading-5">{t('Type')}</label>
-        <SelectDropdown
-          value={type}
-          options={TYPE_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }))}
-          onSelect={(val) => setType((val as ApiRequestsLogType) || currentFilter.type)}
-        />
-      </div>
-
-      <div className="flex flex-col gap-1">
         <label className="text-sm font-semibold text-gray-500 leading-5">{t('User')}</label>
         <SelectDropdown
           value={userId ? String(userId) : ''}
@@ -99,6 +90,15 @@ export default function AddScheduleModal({
           onSearch={userSelect.onSearch}
           onLoadMore={userSelect.onLoadMore}
           onSelect={(val) => setUserId(val ? Number(val) : null)}
+        />
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-semibold text-gray-500 leading-5">{t('Report Type')}</label>
+        <SelectDropdown
+          value={type}
+          options={TYPE_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }))}
+          onSelect={(val) => setType((val as ApiRequestsLogType) || currentFilter.type)}
         />
       </div>
     </ReportScheduleModalShell>

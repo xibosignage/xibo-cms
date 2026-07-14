@@ -30,6 +30,7 @@ import type { LayoutFilterInput, ModalType } from './LayoutConfig';
 import { getBulkActions, getLayoutColumns, LAYOUT_INITIAL_FILTER_STATE } from './LayoutConfig';
 import LayoutPreviewer from './components/LayoutPreviewer';
 import { LayoutModals } from './components/LayoutsModal';
+import MiniLayoutPreview from './components/MiniLayoutPreview';
 import { useLayoutActions } from './hooks/useLayoutActions';
 import { useLayoutData } from './hooks/useLayoutData';
 import { useLayoutFilterOptions } from './hooks/useLayoutFilterOptions';
@@ -126,6 +127,8 @@ export default function Layouts() {
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
   const [selectedLayoutId, setSelectedLayoutId] = useState<number | null>(null);
   const [previewItem, setPreviewItem] = useState<Layout | null>(null);
+  const [previewOverrideUrl, setPreviewOverrideUrl] = useState<string | null>(null);
+  const [miniPreview, setMiniPreview] = useState<{ layout: Layout; url: string } | null>(null);
 
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
@@ -264,7 +267,17 @@ export default function Layouts() {
   };
 
   const handlePreviewClick = (row: Layout) => {
+    setPreviewOverrideUrl(null);
     setPreviewItem(row);
+  };
+
+  const handleMiniPreview = (row: Layout, kind: 'published' | 'draft') => {
+    const url =
+      kind === 'draft' ? (row.previewDraftUrl ?? row.previewUrl ?? null) : (row.previewUrl ?? null);
+    if (!url) {
+      return;
+    }
+    setMiniPreview({ layout: row, url });
   };
 
   const openCopyModal = (layoutId: number) => {
@@ -325,6 +338,7 @@ export default function Layouts() {
       setShowInfoPanel(true);
     },
     onPreview: handlePreviewClick,
+    onMiniPreview: handleMiniPreview,
     openLayout: (layoutId) => {
       handleOpenLayout(layoutId);
     },
@@ -551,9 +565,11 @@ export default function Layouts() {
       />
       <LayoutPreviewer
         layoutId={previewItem && previewItem?.layoutId}
-        name={selectedLayout?.layout}
+        name={previewItem?.layout}
+        previewUrlOverride={previewOverrideUrl}
         onClose={() => {
           setPreviewItem(null);
+          setPreviewOverrideUrl(null);
         }}
         onShare={
           previewItem?.userPermissions?.modifyPermissions
@@ -577,6 +593,22 @@ export default function Layouts() {
         }
         layoutData={previewItem}
         folderName={selectedFolderName}
+      />
+      <MiniLayoutPreview
+        previewUrl={miniPreview?.url ?? null}
+        title={miniPreview?.layout.layout}
+        onClose={() => {
+          setMiniPreview(null);
+        }}
+        onFullscreen={() => {
+          if (!miniPreview) {
+            return;
+          }
+
+          setPreviewOverrideUrl(miniPreview.url);
+          setPreviewItem(miniPreview.layout);
+          setMiniPreview(null);
+        }}
       />
     </section>
   );

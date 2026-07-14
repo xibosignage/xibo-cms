@@ -19,16 +19,25 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { Equal } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { twMerge } from 'tailwind-merge';
 
 import type { ProofOfPlayFilter } from '../ProofOfPlayConfig';
+import { SORT_BY_OPTIONS, TAGS_TYPE_OPTIONS, TYPE_OPTIONS } from '../ProofOfPlayConfig';
 
-import MultiSelectDropdown from '@/components/ui/forms/MultiSelectDropdown';
+import PaginatedMultiSelectDropdown from './PaginatedMultiSelectDropdown';
+
+import Button from '@/components/ui/Button';
+import AndOrButton from '@/components/ui/forms/AndOrButton';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
+import TagInput from '@/components/ui/forms/TagInput';
 import ReportScheduleModalShell from '@/pages/Reporting/Reports/shared/ReportScheduleModalShell';
-import { useDisplayGroupOptions } from '@/pages/Reporting/Reports/shared/hooks/useDisplayGroupOptions';
 import { useDisplayOptions } from '@/pages/Reporting/Reports/shared/hooks/useDisplayOptions';
+import { useLayoutOptions } from '@/pages/Reporting/Reports/shared/hooks/useLayoutOptions';
+import { useMediaOptions } from '@/pages/Reporting/Reports/shared/hooks/useMediaOptions';
+import type { Tag } from '@/types/tag';
 
 interface AddScheduleModalProps {
   isOpen: boolean;
@@ -46,19 +55,32 @@ export default function AddScheduleModal({
   const { t } = useTranslation();
 
   const [displayId, setDisplayId] = useState<number | null>(currentFilter.displayId);
-  const [displayGroupId, setDisplayGroupId] = useState<number[]>(currentFilter.displayGroupId);
+  const [layoutId, setLayoutId] = useState<number[]>(currentFilter.layoutId);
+  const [mediaId, setMediaId] = useState<number[]>(currentFilter.mediaId);
+  const [type, setType] = useState<string>(currentFilter.type);
+  const [sortBy, setSortBy] = useState<string>(currentFilter.sortBy);
+  const [tagsType, setTagsType] = useState<string>(currentFilter.tagsType);
+  const [tags, setTags] = useState<Tag[]>(currentFilter.tags);
+  const [exactTags, setExactTags] = useState<boolean>(currentFilter.exactTags);
+  const [logicalOperator, setLogicalOperator] = useState<string>(currentFilter.logicalOperator);
 
   useEffect(() => {
     if (isOpen) {
       setDisplayId(currentFilter.displayId);
-      setDisplayGroupId(currentFilter.displayGroupId);
+      setLayoutId(currentFilter.layoutId);
+      setMediaId(currentFilter.mediaId);
+      setType(currentFilter.type);
+      setSortBy(currentFilter.sortBy);
+      setTagsType(currentFilter.tagsType);
+      setTags(currentFilter.tags);
+      setExactTags(currentFilter.exactTags);
+      setLogicalOperator(currentFilter.logicalOperator);
     }
   }, [isOpen]);
 
   const displaySelect = useDisplayOptions(isOpen);
-  const displayGroupOpts = useDisplayGroupOptions(isOpen);
-
-  const displaySelected = displayId !== null;
+  const layoutOpts = useLayoutOptions(isOpen);
+  const mediaOpts = useMediaOptions(isOpen);
 
   return (
     <ReportScheduleModalShell
@@ -73,45 +95,130 @@ export default function AddScheduleModal({
         groupByFilter: '',
         displayGroupIds: [],
         displayId,
-        displayGroupId: displaySelected ? [] : displayGroupId,
         fromDt: draft.fromDt || undefined,
         toDt: draft.toDt || undefined,
         sendEmail: draft.sendEmail,
         nonusers: draft.nonusers,
         hiddenFields: {
-          type: currentFilter.type,
-          groupBy: currentFilter.groupBy,
+          type,
+          sortBy: sortBy || undefined,
+          tagsType,
+          tags: tags.length > 0 ? tags.map((tag) => tag.tag).join(',') : undefined,
+          exactTags: exactTags ? 1 : 0,
+          logicalOperator,
+          layoutId: layoutId.length > 0 ? layoutId : undefined,
+          mediaId: mediaId.length > 0 ? mediaId : undefined,
         },
       })}
-    >
-      <div className="flex flex-col gap-1">
-        <label className="text-sm font-semibold text-gray-500 leading-5">{t('Display')}</label>
-        <SelectDropdown
-          value={displayId ? String(displayId) : ''}
-          placeholder={t('All Displays')}
-          searchable
-          clearable
-          resolveLabel={displaySelect.resolveLabel}
-          options={displaySelect.options}
-          isLoading={displaySelect.isLoading}
-          isLoadingMore={displaySelect.isLoadingMore}
-          hasMore={displaySelect.hasMore}
-          onSearch={displaySelect.onSearch}
-          onLoadMore={displaySelect.onLoadMore}
-          onSelect={(val) => setDisplayId(val ? Number(val) : null)}
-        />
-      </div>
+      bottomChildren={
+        <>
+          {/* Display */}
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-semibold text-gray-500 leading-5">{t('Display')}</label>
+            <SelectDropdown
+              value={displayId ? String(displayId) : ''}
+              placeholder={t('All Displays')}
+              searchable
+              clearable
+              resolveLabel={displaySelect.resolveLabel}
+              options={displaySelect.options}
+              isLoading={displaySelect.isLoading}
+              isLoadingMore={displaySelect.isLoadingMore}
+              hasMore={displaySelect.hasMore}
+              onSearch={displaySelect.onSearch}
+              onLoadMore={displaySelect.onLoadMore}
+              onSelect={(val) => setDisplayId(val ? Number(val) : null)}
+            />
+          </div>
 
-      {!displaySelected && (
-        <MultiSelectDropdown
-          label={t('Display Group')}
-          value={displayGroupId.map(String)}
-          options={displayGroupOpts}
-          placeholder={t('All Display Groups')}
-          showTags
-          onChange={(vals) => setDisplayGroupId(vals.map(Number))}
-        />
-      )}
-    </ReportScheduleModalShell>
+          {/* Layout */}
+          <PaginatedMultiSelectDropdown
+            label={t('Layout')}
+            value={layoutId.map(String)}
+            options={layoutOpts.options}
+            isLoading={layoutOpts.isLoading}
+            isLoadingMore={layoutOpts.isLoadingMore}
+            hasMore={layoutOpts.hasMore}
+            onSearch={layoutOpts.onSearch}
+            onLoadMore={layoutOpts.onLoadMore}
+            placeholder={t('All Layouts')}
+            showTags
+            onChange={(vals) => setLayoutId(vals.map(Number))}
+          />
+
+          {/* Media */}
+          <PaginatedMultiSelectDropdown
+            label={t('Media')}
+            value={mediaId.map(String)}
+            options={mediaOpts.options}
+            isLoading={mediaOpts.isLoading}
+            isLoadingMore={mediaOpts.isLoadingMore}
+            hasMore={mediaOpts.hasMore}
+            onSearch={mediaOpts.onSearch}
+            onLoadMore={mediaOpts.onLoadMore}
+            placeholder={t('All Media')}
+            showTags
+            onChange={(vals) => setMediaId(vals.map(Number))}
+          />
+
+          {/* Type */}
+          <SelectDropdown
+            label={t('Type')}
+            value={type}
+            options={TYPE_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }))}
+            onSelect={(val) => setType(val)}
+          />
+
+          {/* Sort By */}
+          <SelectDropdown
+            label={t('Sort By')}
+            value={sortBy}
+            options={SORT_BY_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }))}
+            onSelect={(val) => setSortBy(val)}
+          />
+
+          {/* Tags From */}
+          <SelectDropdown
+            label={t('Tags From')}
+            value={tagsType}
+            options={TAGS_TYPE_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }))}
+            onSelect={(val) => setTagsType(val)}
+          />
+
+          {/* Tags with AND/OR prefix and exact-match suffix */}
+          <TagInput
+            label={t('Tags')}
+            value={tags}
+            onChange={setTags}
+            placeholder={t('Add tags')}
+            allowValues={false}
+            helpText={t(
+              'A comma separated list of tags to filter by. Enter a tag|tag value to filter tags with values. Enter --no-tag to filter all items without tags. Enter - before a tag or tag value to exclude from results.',
+            )}
+            prefix={
+              <AndOrButton
+                value={(logicalOperator as 'AND' | 'OR') || 'OR'}
+                onChange={(val) => setLogicalOperator(val)}
+              />
+            }
+            suffix={
+              <Button
+                variant="tertiary"
+                leftIcon={Equal}
+                ariaLabel={t('Match exact characters only')}
+                aria-pressed={exactTags}
+                onClick={() => setExactTags((prev) => !prev)}
+                className={twMerge(
+                  'p-1.5',
+                  exactTags
+                    ? 'bg-xibo-blue-600 text-white hover:bg-xibo-blue-700 hover:text-white'
+                    : 'text-xibo-blue-600 hover:text-xibo-blue-800',
+                )}
+              />
+            }
+          />
+        </>
+      }
+    />
   );
 }

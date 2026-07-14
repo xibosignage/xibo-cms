@@ -38,10 +38,10 @@ import TimeConnectedSavedReport from './TimeConnectedSavedReport';
 
 import Button from '@/components/ui/Button';
 import TabNav from '@/components/ui/TabNav';
-import { withPublicPath } from '@/config/publicPath';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
-import { fetchSavedReportData } from '@/services/savedReportApi';
+import { exportSavedReport, fetchSavedReportData } from '@/services/savedReportApi';
 import type { TimeConnectedTable } from '@/services/timeConnectedApi';
+import { decodeHtmlEntities } from '@/utils/stringUtils';
 
 type ColumnDef = {
   key: string;
@@ -55,9 +55,7 @@ type ColumnConfig =
 
 function decodeHtml(val: unknown): string {
   if (val == null || val === '') return '';
-  const el = document.createElement('textarea');
-  el.innerHTML = String(val);
-  return el.value;
+  return decodeHtmlEntities(String(val));
 }
 
 function formatDuration(val: unknown): string {
@@ -79,8 +77,9 @@ function formatObjectAfter(val: unknown): string {
       .join(', ');
   }
   if (typeof val !== 'string') return String(val);
+  const decoded = decodeHtml(val);
   try {
-    const parsed = JSON.parse(val);
+    const parsed = JSON.parse(decoded);
     if (typeof parsed === 'object' && parsed !== null) {
       return Object.entries(parsed)
         .map(([k, v]) => `${k}: ${v}`)
@@ -88,7 +87,7 @@ function formatObjectAfter(val: unknown): string {
     }
     return String(parsed);
   } catch {
-    return val;
+    return decoded;
   }
 }
 
@@ -141,8 +140,8 @@ const REPORT_COLUMN_CONFIG: Record<string, ColumnConfig> = {
     { key: 'displayId', label: 'Display ID' },
     { key: 'display', label: 'Display' },
     { key: 'eventType', label: 'Event Type' },
-    { key: 'start', label: 'Start' },
-    { key: 'end', label: 'End' },
+    { key: 'startFormatted', label: 'Start' },
+    { key: 'endFormatted', label: 'End' },
     { key: 'refId', label: 'Reference' },
     { key: 'detail', label: 'Detail' },
   ],
@@ -232,10 +231,30 @@ export default function SavedReportViewer() {
   const { savedReportId, reportName } = useParams<{ savedReportId: string; reportName: string }>();
 
   const [viewMode, setViewMode] = useState<'table' | 'chart'>('table');
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
-  const exportUrl = withPublicPath(
-    `json/report/savedreport/${savedReportId}/report/${reportName}/export`,
-  );
+  const handleExport = async () => {
+    if (!savedReportId || !reportName) return;
+    setIsExporting(true);
+    setExportError(null);
+    try {
+      const blob = await exportSavedReport(Number(savedReportId), reportName);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${reportName}_${savedReportId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('Export failed. Please try again.');
+      setExportError(message);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['savedReport', 'open', savedReportId, reportName],
@@ -268,13 +287,18 @@ export default function SavedReportViewer() {
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="" navigation={tabs} />
-          <a
-            href={exportUrl}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+          <button
+            onClick={() => void handleExport()}
+            disabled={isExporting}
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <FileDown className="w-4 h-4" />
+            {isExporting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <FileDown className="w-4 h-4" />
+            )}
             {t('Export as PDF')}
-          </a>
+          </button>
         </div>
 
         <div className="mb-4">
@@ -322,6 +346,13 @@ export default function SavedReportViewer() {
               <div className="mb-4 flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
                 <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
                 <span>{data.error}</span>
+              </div>
+            )}
+
+            {exportError && (
+              <div className="mb-4 flex items-start gap-2 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                <span>{exportError}</span>
               </div>
             )}
 
