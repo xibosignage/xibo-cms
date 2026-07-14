@@ -420,6 +420,22 @@ class DisplayProfile implements \JsonSerializable
                     'maxRegionCount',
                 );
             }
+
+            if ($configName == 'startOnBootDelay' && $configValue < 10) {
+                throw new InvalidArgumentException(
+                    __('Start delay for device start up must be at least 10'),
+                    'startOnBootDelay',
+                );
+            }
+
+            if (in_array($configName, ['actionBarDisplayDuration', 'screenShotRequestInterval', 'screenShotSize'])
+                && $configValue < 0
+            ) {
+                throw new InvalidArgumentException(
+                    __('This field must be a non-negative number'),
+                    $configName,
+                );
+            }
         }
         // Check there is only 1 default (including this one)
         $sql = '

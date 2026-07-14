@@ -139,6 +139,7 @@ export function DynamicSettingField({
         helpText={meta.helpText}
         value={Number(value ?? 0)}
         onChange={onChange}
+        min={meta.min}
       />
     );
   }

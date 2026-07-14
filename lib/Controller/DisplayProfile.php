@@ -358,17 +358,20 @@ class DisplayProfile extends Base
         // Different fields for each client type
         $this->editConfigFields($displayProfile, $parsedParams);
 
-        // Capture and update commands
-        foreach ($this->commandFactory->query() as $command) {
-            if ($parsedParams->getString('commandString_' . $command->commandId) != null) {
-                // Set and assign the command
-                $command->commandString = $parsedParams->getString('commandString_' . $command->commandId);
-                $command->validationString = $parsedParams->getString('validationString_' . $command->commandId);
-                $command->createAlertOn = $parsedParams->getString('createAlertOn_' . $command->commandId);
+        // Capture and update commands (only when the form explicitly submits command data)
+        if ($parsedParams->getCheckbox('commandsSubmitted')) {
+            foreach ($this->commandFactory->query() as $command) {
+                $commandString = $parsedParams->getString('commandString_' . $command->commandId);
+                if ($commandString !== null && $commandString !== '') {
+                    // Set and assign the command
+                    $command->commandString = $commandString;
+                    $command->validationString = $parsedParams->getString('validationString_' . $command->commandId);
+                    $command->createAlertOn = $parsedParams->getString('createAlertOn_' . $command->commandId);
 
-                $displayProfile->assignCommand($command);
-            } else {
-                $displayProfile->unassignCommand($command);
+                    $displayProfile->assignCommand($command);
+                } else {
+                    $displayProfile->unassignCommand($command);
+                }
             }
         }
 

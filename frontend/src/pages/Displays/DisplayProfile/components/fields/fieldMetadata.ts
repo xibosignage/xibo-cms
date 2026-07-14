@@ -142,6 +142,8 @@ export interface FieldMeta {
   options?: Array<{ value: string; label: string }>;
   /** CMS setting key that must be truthy (default: enabled) for this field to be shown at all. */
   requiresSetting?: string;
+  /** Minimum allowed value for number inputs. */
+  min?: number;
 }
 
 export type FieldMetaMap = Record<string, FieldMeta>;
@@ -294,6 +296,7 @@ function commonMeta(t: TFunction): FieldMetaMap {
         'The duration between status screen shots in minutes. 0 to disable. Warning: This is bandwidth intensive.',
       ),
       inputType: 'number',
+      min: 0,
       requiresSetting: 'DISPLAY_PROFILE_SCREENSHOT_INTERVAL_ENABLED',
     },
     screenShotSize: {
@@ -301,6 +304,7 @@ function commonMeta(t: TFunction): FieldMetaMap {
       tab: 'advanced',
       helpText: t('The size of the largest dimension. Empty or 0 means the screen size.'),
       inputType: 'number',
+      min: 0,
     },
     dayPartId: {
       label: t('Operating Hours'),
@@ -464,6 +468,7 @@ function androidMeta(t: TFunction): FieldMetaMap {
       tab: 'advanced',
       helpText: t('How long should the Action Bar be shown for, in seconds?'),
       inputType: 'number',
+      min: 0,
     },
     actionBarIntent: {
       label: t('Action Bar Intent'),
@@ -486,6 +491,7 @@ function androidMeta(t: TFunction): FieldMetaMap {
         'The number of seconds to wait before starting the application after the device has started. Minimum 10.',
       ),
       inputType: 'number',
+      min: 10,
     },
     screenShotIntent: {
       label: t('Action for Screen Shot Intent'),
@@ -569,6 +575,7 @@ function androidMeta(t: TFunction): FieldMetaMap {
         'This setting is a memory limit protection setting which will stop rendering regions beyond the limit set. Leave at 0 for no limit.',
       ),
       inputType: 'number',
+      min: 0,
     },
     videoEngine: {
       label: t('Video Engine'),
@@ -722,9 +729,49 @@ function lgSsspMeta(t: TFunction): FieldMetaMap {
       ),
       inputType: 'player-version',
     },
+    // LG/SSSP profiles have no Network or Location tabs — surface these common
+    // fields on the General tab so they remain accessible.
+    forceHttps: {
+      label: t('Force HTTPS?'),
+      tab: 'general',
+      helpText: t('Should Displays be forced to use HTTPS connection to the CMS?'),
+      inputType: 'checkbox',
+    },
+    downloadStartWindow: {
+      label: t('Download Window Start Time'),
+      tab: 'general',
+      helpText: t('The start of the time window to connect to the CMS and download updates.'),
+      inputType: 'time',
+    },
+    downloadEndWindow: {
+      label: t('Download Window End Time'),
+      tab: 'general',
+      helpText: t('The end of the time window to connect to the CMS and download updates.'),
+      inputType: 'time',
+    },
+    updateStartWindow: {
+      label: t('Update Window Start Time'),
+      tab: 'general',
+      helpText: t('The start of the time window to install application updates.'),
+      inputType: 'time',
+    },
+    updateEndWindow: {
+      label: t('Update Window End Time'),
+      tab: 'general',
+      helpText: t('The end of the time window to install application updates.'),
+      inputType: 'time',
+    },
+    dayPartId: {
+      label: t('Operating Hours'),
+      tab: 'general',
+      helpText: t(
+        'Select a day part that should act as operating hours for this display - email alerts will not be sent outside of operating hours',
+      ),
+      inputType: 'daypart',
+    },
     orientation: {
       label: t('Orientation'),
-      tab: 'location',
+      tab: 'general',
       helpText: t('Set the orientation of the device.'),
       inputType: 'dropdown',
       options: [
@@ -749,6 +796,7 @@ function lgSsspMeta(t: TFunction): FieldMetaMap {
       tab: 'advanced',
       helpText: t('How long should the Action Bar be shown for, in seconds?'),
       inputType: 'number',
+      min: 0,
     },
     mediaInventoryTimer: {
       label: t('Media Inventory Timer'),

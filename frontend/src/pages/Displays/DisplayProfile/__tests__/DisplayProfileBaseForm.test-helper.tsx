@@ -166,6 +166,7 @@ export default function DisplayProfileBaseForm({
           name: draft.name,
           isDefault: draft.isDefault,
           config: configPayload,
+          commandOverrides: [],
         });
         onSave({ ...data, ...updated });
         onClose();
