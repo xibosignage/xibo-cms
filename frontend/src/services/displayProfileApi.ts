@@ -123,10 +123,18 @@ export interface HisensePictureControlEntry {
   value: number | null;
 }
 
+export interface CommandOverrideEntry {
+  commandId: number;
+  commandString: string;
+  validationString: string;
+  createAlertOn: string;
+}
+
 export interface UpdateDisplayProfileRequest {
   name: string;
   isDefault: number;
   config: Record<string, string | number | null>;
+  commandOverrides?: CommandOverrideEntry[];
   timers?: TimerEntry[];
   pictureControls?: PictureControlEntry[];
   lockOptions?: LockOptionsPayload;
@@ -192,6 +200,15 @@ export async function updateDisplayProfile(
     data.hisensePictureControls.forEach((ctrl) => {
       params.append(ctrl.property, ctrl.value !== null ? String(ctrl.value) : '');
     });
+  }
+
+  if (data.commandOverrides !== undefined) {
+    params.append('commandsSubmitted', 'on');
+    for (const cmd of data.commandOverrides) {
+      params.append(`commandString_${cmd.commandId}`, cmd.commandString);
+      params.append(`validationString_${cmd.commandId}`, cmd.validationString);
+      params.append(`createAlertOn_${cmd.commandId}`, cmd.createAlertOn);
+    }
   }
 
   const response = await http.put(`/displayprofile/${displayProfileId}`, params.toString(), {

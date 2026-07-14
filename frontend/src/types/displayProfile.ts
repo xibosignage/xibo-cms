@@ -54,7 +54,14 @@ export interface DisplayProfile {
 export interface DisplayProfileCommand {
   commandId: number;
   command: string;
-  commandString?: string;
-  validationString?: string;
+  code: string;
+  description?: string | null;
+  commandString?: string | null;
+  validationString?: string | null;
+  availableOn?: string | null;
   createAlertOn?: string;
+  commandStringDisplayProfile?: string | null;
+  validationStringDisplayProfile?: string | null;
+  createAlertOnDisplayProfile?: string | null;
+  displayProfileId?: number | null;
 }

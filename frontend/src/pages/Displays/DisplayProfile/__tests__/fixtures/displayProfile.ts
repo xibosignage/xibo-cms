@@ -20,7 +20,7 @@
  */
 
 import type { FetchDisplayProfileResponse } from '@/services/displayProfileApi';
-import type { DisplayProfile } from '@/types/displayProfile';
+import type { DisplayProfile, DisplayProfileCommand } from '@/types/displayProfile';
 import type { User } from '@/types/user';
 
 export const buildDisplayProfile = (overrides: Partial<DisplayProfile> = {}): DisplayProfile => ({
@@ -71,6 +71,31 @@ export const mockUser: User = {
     TIME_FORMAT_JS: 'HH:mm',
   },
 };
+
+export const mockCommands: DisplayProfileCommand[] = [
+  {
+    commandId: 1,
+    command: 'Reboot',
+    code: 'reboot',
+    commandString: 'reboot',
+    validationString: '',
+    createAlertOn: 'never',
+    commandStringDisplayProfile: null,
+    validationStringDisplayProfile: null,
+    createAlertOnDisplayProfile: null,
+  },
+  {
+    commandId: 2,
+    command: 'Shell Command',
+    code: 'shell',
+    commandString: 'shell|',
+    validationString: '',
+    createAlertOn: 'never',
+    commandStringDisplayProfile: 'shell|custom-cmd',
+    validationStringDisplayProfile: 'OK',
+    createAlertOnDisplayProfile: 'failure',
+  },
+];
 
 export const queryKeys = {
   displayProfilePage: ['userPref', 'displayProfile_page'] as const,

@@ -148,6 +148,7 @@ describe('DisplayProfile - edit form fields', () => {
       name: mockDisplayProfile.name,
       isDefault: mockDisplayProfile.isDefault,
       config: {},
+      commandOverrides: [],
     });
   });
 

@@ -23,6 +23,9 @@ import { isAxiosError } from 'axios';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import type { CommandOverrideDraft } from './CommandsTab';
+import CommandsTab from './CommandsTab';
+import { buildCommandDrafts } from './CommandsTab';
 import { AndroidFields } from './fields/AndroidFields';
 import { ChromeOsFields } from './fields/ChromeOsFields';
 import {
@@ -75,7 +78,8 @@ type ActiveTab =
   | 'advanced'
   | 'timers'
   | 'pictureOptions'
-  | 'lockSettings';
+  | 'lockSettings'
+  | 'commands';
 
 function tabClass(activeTab: ActiveTab, tab: ActiveTab): string {
   const isActive = activeTab === tab;
@@ -138,6 +142,9 @@ export default function EditDisplayProfileModal({
     { id: 0, property: '', value: 0 },
   ]);
 
+  const [commandDrafts, setCommandDrafts] = useState<CommandOverrideDraft[]>([]);
+  const [expandedCommandIds, setExpandedCommandIds] = useState<Set<number>>(new Set());
+
   const [dayparts, setDayparts] = useState<Daypart[]>([]);
   const [daypartsTotalCount, setDaypartsTotalCount] = useState(0);
   const [isLoadingMoreDayparts, setIsLoadingMoreDayparts] = useState(false);
@@ -185,6 +192,8 @@ export default function EditDisplayProfileModal({
     });
     setHisenseTimerRules([]);
     setHisensePictureRows([{ id: 0, property: '', value: 0 }]);
+    setCommandDrafts([]);
+    setExpandedCommandIds(new Set());
 
     const isLgSsspType = data.type === 'lg' || data.type === 'sssp';
     const isHisenseType = data.type === 'hisense';
@@ -305,6 +314,13 @@ export default function EditDisplayProfileModal({
         setHisensePictureRows(
           parsedPicRows.length > 0 ? parsedPicRows : [{ id: 0, property: '', value: 0 }],
         );
+      }
+
+      // Populate command overrides
+      if (full.commands) {
+        const { drafts, expandedIds } = buildCommandDrafts(full.commands);
+        setCommandDrafts(drafts);
+        setExpandedCommandIds(expandedIds);
       }
     });
 
@@ -536,6 +552,12 @@ export default function EditDisplayProfileModal({
               }));
             })(),
           }),
+          commandOverrides: commandDrafts.map((cmd) => ({
+            commandId: cmd.commandId,
+            commandString: cmd.commandString,
+            validationString: cmd.commandString ? cmd.validationString : '',
+            createAlertOn: cmd.commandString ? cmd.createAlertOn : 'never',
+          })),
         });
         onSave({ ...data, ...updated });
         onClose();
@@ -554,7 +576,11 @@ export default function EditDisplayProfileModal({
   const hasLocationTab =
     data?.type === 'android' || data?.type === 'windows' || data?.type === 'linux' || isHisense;
   const hasTroubleshootingTab =
-    data?.type === 'android' || data?.type === 'windows' || data?.type === 'linux' || isHisense;
+    data?.type === 'android' ||
+    data?.type === 'windows' ||
+    data?.type === 'linux' ||
+    isLgSssp ||
+    isHisense;
   const hasTimersTab = isLgSssp || isHisense;
   const hasPictureOptionsTab = isLgSssp || isHisense;
   const hasLockSettingsTab = isLgSssp;
@@ -642,7 +668,7 @@ export default function EditDisplayProfileModal({
           disabled: isPending || isLoading,
         },
       ]}
-      size={isHisense ? 'lg' : 'md'}
+      size="lg"
     >
       <div className="flex flex-col h-full overflow-y-hidden overflow-x-visible px-4">
         <nav className="flex px-4 overflow-x-auto shrink-0" aria-label="Tabs">
@@ -708,6 +734,13 @@ export default function EditDisplayProfileModal({
               {t('Advanced')}
             </button>
           )}
+          <button
+            type="button"
+            className={tab('commands')}
+            onClick={() => setActiveTab('commands')}
+          >
+            {t('Commands')}
+          </button>
         </nav>
 
         <div className="flex-1 overflow-y-auto py-4 px-8 space-y-4">
@@ -745,6 +778,15 @@ export default function EditDisplayProfileModal({
 
               {/* Type-specific fields */}
               {renderTypeFields()}
+
+              {/* Commands tab */}
+              {activeTab === 'commands' && (
+                <CommandsTab
+                  commandDrafts={commandDrafts}
+                  onCommandDraftsChange={setCommandDrafts}
+                  initialExpandedIds={expandedCommandIds}
+                />
+              )}
             </>
           )}
         </div>
