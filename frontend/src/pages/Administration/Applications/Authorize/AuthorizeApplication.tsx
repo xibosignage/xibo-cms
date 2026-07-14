@@ -30,6 +30,7 @@ import { withPublicPath } from '@/config/publicPath';
 import { useBranding } from '@/context/BrandingContext';
 import { ErrorBanner } from '@/login/components/ErrorBanner';
 import { LoginCard } from '@/login/components/LoginCard';
+import { isSafeHttpUrl } from '@/utils/url';
 
 import '@/login/styles.css';
 
@@ -82,6 +83,11 @@ export default function AuthorizeApplication() {
 
   const { application, scopes } = data;
 
+  // Terms/privacy URLs are set by the application owner, not the user viewing this screen —
+  // only render them as links when they're genuinely http/https, never javascript:/data:/etc.
+  const termsUrl = isSafeHttpUrl(application.termsUrl) ? application.termsUrl : null;
+  const privacyUrl = isSafeHttpUrl(application.privacyUrl) ? application.privacyUrl : null;
+
   return (
     <div className="login-root">
       <LoginCard logoUrl={logoDarkUrl} supportUrl={supportUrl}>
@@ -116,15 +122,15 @@ export default function AuthorizeApplication() {
             <p className="authorize-description">{application.description}</p>
           )}
 
-          {(application.termsUrl || application.privacyUrl) && (
+          {(termsUrl || privacyUrl) && (
             <p className="authorize-links">
-              {application.termsUrl && (
-                <a href={application.termsUrl} target="_blank" rel="noreferrer">
+              {termsUrl && (
+                <a href={termsUrl} target="_blank" rel="noreferrer">
                   {t('Terms')}
                 </a>
               )}
-              {application.privacyUrl && (
-                <a href={application.privacyUrl} target="_blank" rel="noreferrer">
+              {privacyUrl && (
+                <a href={privacyUrl} target="_blank" rel="noreferrer">
                   {t('Privacy Policy')}
                 </a>
               )}

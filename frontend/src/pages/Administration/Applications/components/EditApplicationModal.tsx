@@ -32,6 +32,7 @@ import Modal from '@/components/ui/modals/Modal';
 import { fetchApplicationDetails, fetchScopes, updateApplication } from '@/services/applicationApi';
 import { fetchUsers } from '@/services/userApi';
 import type { Application, ApplicationScope } from '@/types/application';
+import { isSafeHttpUrl } from '@/utils/url';
 
 interface EditApplicationModalProps {
   isOpen?: boolean;
@@ -192,6 +193,16 @@ export default function EditApplicationModal({
 
   const handleSave = () => {
     if (!application) {
+      return;
+    }
+
+    if (draft.termsUrl && !isSafeHttpUrl(draft.termsUrl)) {
+      setApiError(t('Terms URL must be a valid http or https URL.'));
+      return;
+    }
+
+    if (draft.privacyUrl && !isSafeHttpUrl(draft.privacyUrl)) {
+      setApiError(t('Privacy Policy URL must be a valid http or https URL.'));
       return;
     }
 

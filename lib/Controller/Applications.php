@@ -434,8 +434,14 @@ class Applications extends Base
             $client->logo = $sanitizedParams->getString('logo');
             $client->coverImage = $sanitizedParams->getString('coverImage');
             $client->companyName = $sanitizedParams->getString('companyName');
-            $client->termsUrl = $sanitizedParams->getString('termsUrl');
-            $client->privacyUrl = $sanitizedParams->getString('privacyUrl');
+            $client->termsUrl = $this->validateHttpUrl(
+                $sanitizedParams->getString('termsUrl'),
+                'termsUrl'
+            );
+            $client->privacyUrl = $this->validateHttpUrl(
+                $sanitizedParams->getString('privacyUrl'),
+                'privacyUrl'
+            );
         }
 
         // Delete all the redirect urls and add them again
@@ -499,6 +505,30 @@ class Applications extends Base
         return $response
             ->withStatus(200)
             ->withJson($client);
+    }
+
+    /**
+     * These fields are rendered as clickable links on the OAuth consent screen shown to a
+     * different, already-authenticated user, so only http/https destinations are permitted —
+     * anything else (javascript:, data:, etc.) is rejected rather than sanitised.
+     * @param string|null $url
+     * @param string $property
+     * @return string
+     * @throws InvalidArgumentException
+     */
+    private function validateHttpUrl(?string $url, string $property): string
+    {
+        if ($url === null || $url === '') {
+            return '';
+        }
+
+        $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+
+        if (!in_array($scheme, ['http', 'https'], true)) {
+            throw new InvalidArgumentException(__('Please enter a valid http or https URL'), $property);
+        }
+
+        return $url;
     }
 
     /**
