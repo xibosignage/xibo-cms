@@ -19,23 +19,25 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { ArrowLeft, Filter, FilterX, Loader2, Plus } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import type { TimeDisconnectedSummaryFilter } from './TimeDisconnectedSummaryConfig';
-import { INITIAL_FILTER_STATE } from './TimeDisconnectedSummaryConfig';
+import { ACTIVE_FILTER_KEYS, INITIAL_FILTER_STATE } from './TimeDisconnectedSummaryConfig';
 import AddScheduleModal from './components/AddScheduleModal';
 import TimeDisconnectedSummaryFilters from './components/TimeDisconnectedSummaryFilters';
 import TimeDisconnectedSummaryResults from './components/TimeDisconnectedSummaryResults';
 import { useTimeDisconnectedSummaryData } from './hooks/useTimeDisconnectedSummaryData';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import TabNav from '@/components/ui/TabNav';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import ReportSelector from '@/pages/Reporting/Reports/shared/ReportSelector';
+import { countActiveFilters } from '@/utils/filters';
 
 export default function TimeDisconnectedSummary() {
   const { t } = useTranslation();
@@ -69,6 +71,12 @@ export default function TimeDisconnectedSummary() {
 
   const filter: TimeDisconnectedSummaryFilter = { ...INITIAL_FILTER_STATE, ...filterInputs };
 
+  const activeFilterCount = countActiveFilters(
+    filterInputs,
+    INITIAL_FILTER_STATE,
+    ACTIVE_FILTER_KEYS,
+  );
+
   const { data, isFetching, isError, refetch } = useTimeDisconnectedSummaryData({
     filter: submittedFilter ?? INITIAL_FILTER_STATE,
     enabled: submittedFilter !== null,
@@ -101,15 +109,12 @@ export default function TimeDisconnectedSummary() {
             <Button variant="primary" leftIcon={Plus} onClick={() => setScheduleModalOpen(true)}>
               {t('Schedule')}
             </Button>
-            <Button
-              leftIcon={filtersOpen ? FilterX : Filter}
-              variant="secondary"
+            <FilterButton
+              isOpen={filtersOpen}
+              onToggle={() => setFiltersOpen((prev) => !prev)}
+              activeCount={activeFilterCount}
               disabled={!isHydrated}
-              onClick={() => setFiltersOpen((prev) => !prev)}
-              removeTextOnMobile
-            >
-              {t('Filters')}
-            </Button>
+            />
           </div>
         </div>
 

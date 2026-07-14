@@ -21,7 +21,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { Filter, FilterX, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import type { DateTime } from 'luxon';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -45,6 +45,7 @@ import { useEventData } from './hooks/useEventData';
 import { useEventFilterOptions } from './hooks/useEventFilterOptions';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { DataCalendar } from '@/components/ui/table/DataCalendar';
@@ -55,6 +56,7 @@ import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import { fetchUserPreference, saveUserPreference } from '@/services/userApi';
 import type { Event } from '@/types/event';
+import { countActiveFilters } from '@/utils/filters';
 
 const DATE_RANGE_PREF_KEY = 'event_page_date_range';
 
@@ -331,6 +333,8 @@ export default function Events() {
     return Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name));
   })();
 
+  const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
+
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
@@ -383,15 +387,12 @@ export default function Events() {
                 setPagination((prev) => ({ ...prev, pageIndex: 0 }));
               }}
             />
-            <Button
-              leftIcon={!openFilter ? Filter : FilterX}
-              variant="secondary"
+            <FilterButton
+              isOpen={openFilter}
+              onToggle={() => setOpenFilter((prev) => !prev)}
+              activeCount={activeFilterCount}
               disabled={!isHydrated}
-              onClick={() => setOpenFilter((prev) => !prev)}
-              removeTextOnMobile
-            >
-              {t('Filters')}
-            </Button>
+            />
           </div>
         </div>
 

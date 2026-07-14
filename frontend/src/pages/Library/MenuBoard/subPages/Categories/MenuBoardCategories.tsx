@@ -22,7 +22,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { isAxiosError } from 'axios';
-import { ChevronRight, Filter, FilterX, Plus, Search } from 'lucide-react';
+import { ChevronRight, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -41,6 +41,7 @@ import {
 } from './hooks/useMenuBoardCategoriesData';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import { notify } from '@/components/ui/Notification';
 import TabNav from '@/components/ui/TabNav';
@@ -54,6 +55,7 @@ import {
   deleteMenuBoardCategory,
 } from '@/services/menuBoardApi';
 import type { MenuBoardCategory } from '@/types/menuBoardCategory';
+import { countActiveFilters } from '@/utils/filters';
 
 type CategoryModalType = 'edit' | 'copy' | 'delete' | null;
 
@@ -272,6 +274,12 @@ export default function MenuBoardCategories() {
   const filterOptions = getCategoryFilterKeys(t);
   const libraryTabs = useFilteredTabs('library');
 
+  const activeFilterCount = countActiveFilters(
+    filterInputs,
+    INITIAL_CATEGORY_FILTER_STATE,
+    filterOptions,
+  );
+
   const handleResetFilters = () => {
     setFilterInputs(INITIAL_CATEGORY_FILTER_STATE);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
@@ -334,15 +342,12 @@ export default function MenuBoardCategories() {
                 className="py-2 px-3 pl-10 block h-11.25 bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none disabled:bg-gray-200"
               />
             </div>
-            <Button
-              leftIcon={!openFilter ? Filter : FilterX}
-              variant="secondary"
+            <FilterButton
+              isOpen={openFilter}
+              onToggle={() => setOpenFilter((prev) => !prev)}
+              activeCount={activeFilterCount}
               disabled={!isHydrated}
-              onClick={() => setOpenFilter((prev) => !prev)}
-              removeTextOnMobile
-            >
-              {t('Filters')}
-            </Button>
+            />
           </div>
         </div>
 

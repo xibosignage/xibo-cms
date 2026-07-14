@@ -19,29 +19,27 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export type LibraryUsageFilter = {
-  userId: number | null;
-  groupId: number | null;
+type FilterConfigLike<T> = {
+  name: keyof T & string;
+  type?: string;
 };
 
-export const INITIAL_FILTER_STATE: LibraryUsageFilter = {
-  userId: null,
-  groupId: null,
-};
+type FilterFieldRef<T> = FilterConfigLike<T> | (keyof T & string);
 
-export const ACTIVE_FILTER_KEYS: (keyof LibraryUsageFilter)[] = ['userId', 'groupId'];
+export function countActiveFilters<T extends object>(
+  values: Partial<T>,
+  initialState: Partial<T>,
+  fields: readonly FilterFieldRef<T>[],
+): number {
+  return fields.reduce((count, field) => {
+    const key = typeof field === 'string' ? field : field.name;
+    const value = values[key];
 
-export const CHART_PALETTE = [
-  '#0ea5a0',
-  '#3b82f6',
-  '#f59e0b',
-  '#8b5cf6',
-  '#ec4899',
-  '#10b981',
-  '#ef4444',
-  '#6366f1',
-  '#14b8a6',
-  '#f97316',
-  '#a855f7',
-  '#84cc16',
-];
+    if (Array.isArray(value)) {
+      return count + (value.length > 0 ? 1 : 0);
+    }
+
+    const isEmpty = value === undefined || value === null || value === '';
+    return count + (!isEmpty && value !== initialState[key] ? 1 : 0);
+  }, 0);
+}

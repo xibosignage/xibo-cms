@@ -45,6 +45,14 @@ export const INITIAL_FILTER_STATE: TimeDisconnectedSummaryFilter = {
   onlyLoggedIn: false,
 };
 
+export const ACTIVE_FILTER_KEYS: (keyof TimeDisconnectedSummaryFilter)[] = [
+  'reportFilter',
+  'displayId',
+  'displayGroupId',
+  'tags',
+  'onlyLoggedIn',
+];
+
 export const DATE_RANGE_OPTIONS = [
   { value: 'today', label: 'Today' },
   { value: 'yesterday', label: 'Yesterday' },

@@ -22,7 +22,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { isAxiosError } from 'axios';
-import { Filter, FilterX, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -40,7 +40,7 @@ import { useReportScheduleActions } from './hooks/useReportScheduleActions';
 import { reportScheduleQueryKeys, useReportScheduleData } from './hooks/useReportScheduleData';
 import { useReportScheduleFilterOptions } from './hooks/useReportScheduleFilterOptions';
 
-import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import { notify } from '@/components/ui/Notification';
 import TabNav from '@/components/ui/TabNav';
@@ -52,6 +52,7 @@ import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import { deleteAllSavedReportsForSchedule } from '@/services/reportScheduleApi';
 import type { ReportSchedule } from '@/types/reportSchedule';
+import { countActiveFilters } from '@/utils/filters';
 
 export default function ReportSchedules() {
   const { t } = useTranslation();
@@ -262,6 +263,8 @@ export default function ReportSchedules() {
 
   const tabs = useFilteredTabs('reporting');
 
+  const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
+
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
@@ -287,15 +290,12 @@ export default function ReportSchedules() {
                 className="py-2 px-3 pl-10 block h-11.25 bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none disabled:bg-gray-200"
               />
             </div>
-            <Button
-              leftIcon={!openFilter ? Filter : FilterX}
-              variant="secondary"
+            <FilterButton
+              isOpen={openFilter}
+              onToggle={() => setOpenFilter((prev) => !prev)}
+              activeCount={activeFilterCount}
               disabled={!isHydrated}
-              onClick={() => setOpenFilter((prev) => !prev)}
-              removeTextOnMobile
-            >
-              {t('Filters')}
-            </Button>
+            />
           </div>
         </div>
 

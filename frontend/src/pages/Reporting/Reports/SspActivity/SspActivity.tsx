@@ -19,21 +19,27 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { ArrowLeft, Filter, FilterX, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
-import { INITIAL_FILTER_STATE, type SspActivityFilter } from './SspActivityConfig';
+import {
+  ACTIVE_FILTER_KEYS,
+  INITIAL_FILTER_STATE,
+  type SspActivityFilter,
+} from './SspActivityConfig';
 import SspActivityFilters from './components/SspActivityFilters';
 import SspActivityResults from './components/SspActivityResults';
 import { useSspActivityData, useSspConnectorId, useSspPartners } from './hooks/useSspActivityData';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import TabNav from '@/components/ui/TabNav';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import ReportSelector from '@/pages/Reporting/Reports/shared/ReportSelector';
+import { countActiveFilters } from '@/utils/filters';
 
 export default function SspActivity() {
   const { t } = useTranslation();
@@ -91,20 +97,23 @@ export default function SspActivity() {
 
   const connectorMissing = !connectorLoading && connectorId == null;
 
+  const activeFilterCount = countActiveFilters(
+    filterInputs,
+    INITIAL_FILTER_STATE,
+    ACTIVE_FILTER_KEYS,
+  );
+
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="" navigation={reportingTabs} />
-          <Button
-            leftIcon={filtersOpen ? FilterX : Filter}
-            variant="secondary"
+          <FilterButton
+            isOpen={filtersOpen}
+            onToggle={() => setFiltersOpen((prev) => !prev)}
+            activeCount={activeFilterCount}
             disabled={!isHydrated || connectorMissing}
-            onClick={() => setFiltersOpen((prev) => !prev)}
-            removeTextOnMobile
-          >
-            {t('Filters')}
-          </Button>
+          />
         </div>
 
         <div className="flex items-center justify-between">
