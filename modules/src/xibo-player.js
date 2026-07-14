@@ -37,12 +37,43 @@ const XiboPlayer = function() {
 
     const dataSetId = currentWidget.properties?.dataSetId;
 
-    // Fetch real-time IC data and AJAX data in parallel.
-    // Real-time data takes priority over JSON file data when both resolve.
+    // Real-time data (published by a data connector and read back through
+    // xiboIC.getData) and the cached CMS widget data (fetched with $.ajax) are
+    // both transported as JSON *strings* on every player — ChromeOS, Electron,
+    // Android, webOS and Tizen. We therefore parse them at the point of use
+    // rather than assuming a given player pre-parsed the response (jQuery only
+    // auto-parses when the response carries an application/json content-type,
+    // which is not guaranteed across players).
+    //
+    // safeParse is deliberately defensive: an already-parsed object is returned
+    // untouched, and a malformed string is logged and returned as null so the
+    // widget degrades gracefully instead of throwing out of the promise chain
+    // and rendering blank.
+    const safeParse = function(value, context) {
+      if (typeof value !== 'string') {
+        // Already an object (a player that hands us parsed data, or the
+        // preview harness's in-memory data): use it as-is.
+        return value;
+      }
+
+      try {
+        return JSON.parse(value);
+      } catch (e) {
+        console.error(
+            '[XiboPlayer::getWidgetData] Failed to parse ' + context, e);
+        return null;
+      }
+    };
+
+    // Fetch real-time data and CMS data in parallel; real-time data takes
+    // priority over the cached CMS data when both resolve.
     const icPromise = dataSetId
         ? new Promise(function(resolve) {
           xiboIC.getData(dataSetId, {
-            done: (status, data) => resolve(data ? JSON.parse(data) : null),
+            // Resolve the raw string; it is parsed where it is merged into the
+            // widget data, matching the string transport the native players
+            // (Android/webOS/Tizen) use for real-time data.
+            done: (status, data) => resolve(data || null),
             error: () => resolve(null),
           });
         })
@@ -54,11 +85,10 @@ const XiboPlayer = function() {
         url: currentWidget.url,
       };
 
-      // We include dataType for ChromeOS player consumer
-      if (window.location && window.location.pathname === '/pwa/') {
-        ajaxOptions.dataType = 'json';
-      }
-
+      // Note: we intentionally do not force `dataType: 'json'` here. The
+      // response may arrive as a string or an object depending on the player's
+      // content-type; safeParse (below) normalises both, so the render path no
+      // longer depends on jQuery's content-type sniffing.
       const ajaxPromise = new Promise(function(resolve, reject) {
         $.ajax(ajaxOptions)
             .done(resolve)
@@ -70,23 +100,41 @@ const XiboPlayer = function() {
 
       return Promise.all([icPromise, ajaxPromise]).then(
           function([realTimeData, data]) {
-            console.debug('[XiboPlayer::getWidetData] - Promise.all', {
+            console.debug('[XiboPlayer::getWidgetData] - Promise.all', {
                 realTimeData,
                 cmsData: data,
             });
 
-            // Normalise the CMS data to an object BEFORE merging real-time
-            // data. On some player consumers (e.g. ChromeOS) getData resolves
-            // to a JSON string rather than a parsed object; merging real-time
-            // data first and re-parsing afterwards silently discarded it.
-            let widgetData = (typeof data === 'string') ? JSON.parse(data) : data;
+            // Normalise the CMS widget data to an object BEFORE merging
+            // real-time data. On ChromeOS getData resolves to a JSON string
+            // (the player serves it without an application/json content-type,
+            // so jQuery does not auto-parse); Electron and the native players
+            // hand us an object. Normalising first means the real-time merge
+            // below always operates on an object regardless of player — the
+            // earlier bug merged real-time data into a *string* (a silent
+            // no-op) and then re-parsed the original, discarding real-time.
+            const widgetData = safeParse(data, 'CMS widget data');
 
-            if (realTimeData) {
-              console.debug('[XiboPlayer::getWidgetData] - Promise.all > Serving real-time data');
-              widgetData.data = realTimeData;
+            // If the CMS data could not be parsed there is nothing renderable;
+            // surface it like an AJAX failure so the widget can degrade.
+            if (!widgetData || typeof widgetData !== 'object') {
+              return {isDataReady: false, success: false, data: null};
             }
 
-            console.debug('[XiboPlayer::getWidgetData] - Promise.all > widgetData', {
+            // Real-time data wins over the cached CMS data. It is transported
+            // as a string too, so parse it into the array the widget data
+            // pipeline (loadData -> onParseData) expects. A parse failure
+            // leaves the CMS data in place rather than blanking the widget.
+            if (realTimeData) {
+              const realTime = safeParse(realTimeData, 'real-time data');
+              if (realTime !== null && realTime !== undefined) {
+                console.debug(
+                    '[XiboPlayer::getWidgetData] - Serving real-time data');
+                widgetData.data = realTime;
+              }
+            }
+
+            console.debug('[XiboPlayer::getWidgetData] - widgetData', {
                 widgetData,
             });
 
@@ -102,10 +150,16 @@ const XiboPlayer = function() {
           },
       );
     } else if (currentWidget.data?.data !== undefined) {
-      // v3 players: data is already embedded in the HTML
+      // v3 players: the CMS data is already embedded in the widget HTML as an
+      // object, so only the real-time overlay needs parsing here.
       return icPromise.then(function(realTimeData) {
         if (realTimeData) {
-          currentWidget.data.data = realTimeData;
+          // Real-time data arrives as a string; parse it into the array the
+          // widget data pipeline expects. On failure keep the embedded data.
+          const realTime = safeParse(realTimeData, 'real-time data');
+          if (realTime !== null && realTime !== undefined) {
+            currentWidget.data.data = realTime;
+          }
         }
         return {...currentWidget.data, isDataReady: true};
       });
