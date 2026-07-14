@@ -373,6 +373,7 @@ export default function MenuBoardCategories() {
               columns={columns}
               data={categoryList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

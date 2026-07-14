@@ -46,6 +46,7 @@ interface SearchAssignPanelProps<TItem> {
   columns: ColumnDef<TItem>[];
   searchRows: TItem[];
   pageCount: number;
+  rowCount?: number;
   pagination: PaginationState;
   onPaginationChange: OnChangeFn<PaginationState>;
   sorting: SortingState;
@@ -74,6 +75,7 @@ export function SearchAssignPanel<TItem>({
   columns,
   searchRows,
   pageCount,
+  rowCount,
   pagination,
   onPaginationChange,
   sorting,
@@ -206,6 +208,7 @@ export function SearchAssignPanel<TItem>({
           columns={allColumns}
           data={searchRows}
           pageCount={pageCount}
+          rowCount={rowCount}
           pagination={pagination}
           onPaginationChange={onPaginationChange}
           sorting={sorting}

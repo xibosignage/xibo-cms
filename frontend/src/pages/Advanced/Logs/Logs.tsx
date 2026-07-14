@@ -181,6 +181,7 @@ export default function Logs() {
               columns={columns}
               data={logList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

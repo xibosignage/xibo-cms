@@ -451,6 +451,7 @@ export default function Events() {
               columns={columns}
               data={data}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

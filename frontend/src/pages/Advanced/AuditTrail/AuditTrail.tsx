@@ -163,6 +163,7 @@ export default function AuditTrail() {
               columns={columns}
               data={auditLogList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

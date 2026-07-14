@@ -287,6 +287,7 @@ export default function SavedReports() {
               columns={columns}
               data={reportList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

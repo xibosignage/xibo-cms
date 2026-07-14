@@ -402,6 +402,7 @@ export default function Dataset() {
               columns={columns}
               data={datasetList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

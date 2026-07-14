@@ -347,6 +347,7 @@ export default function ModuleTemplates() {
               columns={columns}
               data={templateList}
               pageCount={pageCount}
+              rowCount={totalCount}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

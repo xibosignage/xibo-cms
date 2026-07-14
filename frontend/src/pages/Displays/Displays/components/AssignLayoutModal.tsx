@@ -172,6 +172,7 @@ export default function AssignLayoutModal({ display, onClose, onSave }: AssignLa
           columns={columns}
           searchRows={searchRows}
           pageCount={pageCount}
+          rowCount={searchData?.totalCount ?? 0}
           pagination={pagination}
           onPaginationChange={setPagination}
           sorting={sorting}

@@ -406,6 +406,7 @@ export default function EditCampaignModal({
               columns={layoutColumns}
               searchRows={layoutRows}
               pageCount={layoutPageCount}
+              rowCount={layoutsData?.totalCount ?? 0}
               pagination={layoutPagination}
               onPaginationChange={setLayoutPagination}
               sorting={layoutSorting}

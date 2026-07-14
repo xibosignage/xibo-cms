@@ -480,6 +480,7 @@ export default function AddAndEditPlaylistModal({
                         columns={previewColumns}
                         data={previewData}
                         pageCount={previewPageCount}
+                        rowCount={previewQueryData?.totalCount || 0}
                         pagination={previewPagination}
                         onPaginationChange={setPreviewPagination}
                         sorting={previewSorting}

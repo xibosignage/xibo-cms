@@ -232,6 +232,7 @@ export default function Sessions() {
               columns={columns}
               data={sessionList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

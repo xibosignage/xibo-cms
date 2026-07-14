@@ -295,6 +295,7 @@ export default function Commands() {
                 columns={columns}
                 data={commandList}
                 pageCount={pageCount}
+                rowCount={queryData?.totalCount || 0}
                 pagination={pagination}
                 onPaginationChange={setPagination}
                 sorting={sorting}

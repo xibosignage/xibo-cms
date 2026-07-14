@@ -617,6 +617,7 @@ export default function Media() {
               columns={columns}
               data={mediaList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}
@@ -640,6 +641,7 @@ export default function Media() {
             <DataGrid
               data={mediaList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               rowSelection={rowSelection}

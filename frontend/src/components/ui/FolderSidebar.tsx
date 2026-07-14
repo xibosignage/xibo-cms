@@ -126,7 +126,7 @@ export default function FolderSidebar({
 
                   <Button
                     variant="tertiary"
-                    className="flex items-center justify-center w-full"
+                    className="flex items-center justify-center w-full -outline-offset-4"
                     leftIcon={FolderPlus}
                     onClick={handleCreateFolder}
                   >

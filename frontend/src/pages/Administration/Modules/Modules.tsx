@@ -212,6 +212,7 @@ export default function Modules() {
               columns={columns}
               data={moduleList}
               pageCount={pageCount}
+              rowCount={totalCount}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

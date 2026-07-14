@@ -501,6 +501,7 @@ export default function Displays() {
               columns={columns}
               data={displayList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

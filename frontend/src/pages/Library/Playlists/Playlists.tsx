@@ -421,6 +421,7 @@ export default function Playlist() {
               columns={columns}
               data={playlistList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

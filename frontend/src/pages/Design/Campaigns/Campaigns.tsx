@@ -416,6 +416,7 @@ export default function Campaigns() {
               columns={columns}
               data={campaignList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

@@ -39,6 +39,7 @@ import type { ViewMode } from './types';
 interface DataGridProps<TData> {
   data: TData[];
   pageCount: number;
+  rowCount?: number;
   pagination: PaginationState;
   onPaginationChange: OnChangeFn<PaginationState>;
   rowSelection: RowSelectionState;
@@ -59,6 +60,7 @@ interface DataGridProps<TData> {
 export function DataGrid<TData>({
   data,
   pageCount,
+  rowCount,
   pagination,
   onPaginationChange,
   rowSelection,
@@ -78,6 +80,7 @@ export function DataGrid<TData>({
     data,
     columns: [],
     pageCount,
+    rowCount,
     state: { pagination, rowSelection },
     enableRowSelection: true,
     onRowSelectionChange,

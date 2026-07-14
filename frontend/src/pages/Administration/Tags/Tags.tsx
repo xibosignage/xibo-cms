@@ -260,6 +260,7 @@ export default function Tags() {
               columns={columns}
               data={tagList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

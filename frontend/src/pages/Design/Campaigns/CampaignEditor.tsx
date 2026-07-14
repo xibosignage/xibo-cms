@@ -685,6 +685,7 @@ export default function CampaignEditor() {
             data={layoutPageRows}
             enableSelection={false}
             pageCount={layoutPageCount}
+            rowCount={sortedLayouts.length}
             pagination={layoutTablePagination}
             onPaginationChange={setLayoutTablePagination}
             sorting={layoutTableSorting}

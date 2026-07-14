@@ -290,6 +290,7 @@ export default function Resolution() {
               columns={columns}
               data={resolutionList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

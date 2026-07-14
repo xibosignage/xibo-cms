@@ -191,6 +191,7 @@ export default function DisplayAlertsResults({
             columns={columns}
             data={pageRows}
             pageCount={pageCount}
+            rowCount={rows.length}
             pagination={pagination}
             onPaginationChange={onPaginationChange}
             sorting={sorting}

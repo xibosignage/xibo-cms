@@ -291,6 +291,7 @@ export default function Daypart() {
               columns={columns}
               data={daypartList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

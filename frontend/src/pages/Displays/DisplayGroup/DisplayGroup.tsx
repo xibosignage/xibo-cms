@@ -407,6 +407,7 @@ export default function DisplayGroupPage() {
               columns={columns}
               data={displayGroupList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

@@ -261,6 +261,7 @@ export default function Tasks() {
               columns={columns}
               data={taskList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

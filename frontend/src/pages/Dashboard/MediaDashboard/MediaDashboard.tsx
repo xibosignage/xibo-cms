@@ -212,6 +212,7 @@ export default function MediaDashboard() {
             columns={unusedColumns}
             data={unusedRows}
             pageCount={unusedPageCount}
+            rowCount={unusedData?.totalCount ?? 0}
             pagination={unusedPagination}
             onPaginationChange={setUnusedPagination}
             sorting={unusedSorting}
@@ -236,6 +237,7 @@ export default function MediaDashboard() {
             columns={unreleasedColumns}
             data={unreleasedRows}
             pageCount={unreleasedPageCount}
+            rowCount={unreleasedData?.totalCount ?? 0}
             pagination={unreleasedPagination}
             onPaginationChange={setUnreleasedPagination}
             sorting={unreleasedSorting}

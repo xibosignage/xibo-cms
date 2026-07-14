@@ -258,6 +258,7 @@ export default function NotificationCentre() {
                 columns={columns}
                 data={notificationList}
                 pageCount={pageCount}
+                rowCount={queryData?.totalCount || 0}
                 pagination={pagination}
                 onPaginationChange={setPagination}
                 sorting={sorting}

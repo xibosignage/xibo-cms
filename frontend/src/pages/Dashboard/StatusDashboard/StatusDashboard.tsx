@@ -308,6 +308,7 @@ export default function Dashboard() {
           columns={displayColumns}
           data={displays}
           pageCount={displayPageCount}
+          rowCount={displayData?.totalCount ?? 0}
           pagination={displayPagination}
           onPaginationChange={setDisplayPagination}
           sorting={displaySorting}

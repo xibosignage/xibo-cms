@@ -425,6 +425,7 @@ export default function Templates() {
               columns={columns}
               data={templateList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

@@ -269,6 +269,7 @@ export default function Users() {
               columns={columns}
               data={userList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

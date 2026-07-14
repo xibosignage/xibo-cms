@@ -255,6 +255,7 @@ export default function Applications() {
               columns={columns}
               data={applicationList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

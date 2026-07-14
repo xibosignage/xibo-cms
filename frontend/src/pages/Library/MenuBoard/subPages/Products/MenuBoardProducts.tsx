@@ -380,6 +380,7 @@ export default function MenuBoardProducts() {
               columns={columns}
               data={productList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

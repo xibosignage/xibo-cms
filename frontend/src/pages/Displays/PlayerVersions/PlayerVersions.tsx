@@ -295,6 +295,7 @@ export default function PlayerVersions() {
               columns={columns}
               data={playerVersionList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}
