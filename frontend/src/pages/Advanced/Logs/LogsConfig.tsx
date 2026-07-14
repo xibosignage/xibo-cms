@@ -29,9 +29,9 @@ import { decodeHtmlEntities } from '@/utils/stringUtils';
 
 export interface LogsFilterInput {
   fromDt?: string;
-  seconds?: string;
-  intervalType?: string;
   level?: string;
+  intervalType?: string;
+  seconds?: string;
   runNo?: string;
   userId?: string;
   channel?: string;
@@ -42,16 +42,16 @@ export interface LogsFilterInput {
   useRegexForName?: string;
   displayGroupId?: string;
   message?: string;
-  excludeLog?: string;
+  excludeLog?: boolean;
 }
 
 export type ModalType = 'truncate' | null;
 
 export const INITIAL_FILTER_STATE: LogsFilterInput = {
   fromDt: '',
-  seconds: '24',
-  intervalType: '3600',
   level: '',
+  intervalType: '1',
+  seconds: '120',
   runNo: '',
   userId: '',
   channel: '',
@@ -62,7 +62,7 @@ export const INITIAL_FILTER_STATE: LogsFilterInput = {
   useRegexForName: '',
   displayGroupId: '',
   message: '',
-  excludeLog: '',
+  excludeLog: false,
 };
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<LogsFilterInput>[] => [
@@ -72,14 +72,16 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<LogsFilterInpu
     type: 'date',
   },
   {
-    label: t('Duration Back'),
-    name: 'seconds',
-    type: 'number',
+    label: t('Level'),
+    name: 'level',
+    type: 'text',
   },
   {
-    label: t('Interval Type'),
+    label: t('Interval'),
     name: 'intervalType',
     type: 'select',
+    clearable: false,
+    searchable: false,
     options: [
       { label: t('Seconds'), value: '1' },
       { label: t('Minutes'), value: '60' },
@@ -87,9 +89,9 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<LogsFilterInpu
     ],
   },
   {
-    label: t('Level'),
-    name: 'level',
-    type: 'text',
+    label: t('Duration Back'),
+    name: 'seconds',
+    type: 'number',
   },
   {
     label: t('Run No'),
@@ -97,9 +99,9 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<LogsFilterInpu
     type: 'text',
   },
   {
-    label: t('User ID'),
+    label: t('User'),
     name: 'userId',
-    type: 'number',
+    type: 'select',
   },
   {
     label: t('Channel'),
@@ -127,20 +129,20 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<LogsFilterInpu
   },
   {
     label: t('Display'),
+    name: 'displayId',
+    type: 'select',
+  },
+  {
+    label: t('Display Name'),
     name: 'display',
     type: 'text',
     showRegex: true,
     regexKey: 'useRegexForName',
   },
   {
-    label: t('Display ID'),
-    name: 'displayId',
-    type: 'number',
-  },
-  {
-    label: t('Display Group ID'),
+    label: t('Display Group'),
     name: 'displayGroupId',
-    type: 'number',
+    type: 'select',
   },
   {
     label: t('Message'),
@@ -150,11 +152,7 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<LogsFilterInpu
   {
     label: t('Exclude Log'),
     name: 'excludeLog',
-    type: 'select',
-    options: [
-      { label: t('All'), value: '' },
-      { label: t('Yes'), value: '1' },
-    ],
+    type: 'checkbox',
   },
 ];
 

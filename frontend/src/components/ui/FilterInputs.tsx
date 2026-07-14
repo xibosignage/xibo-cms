@@ -28,6 +28,7 @@ import Button from './Button';
 import DateFilter from './DateFilter';
 import DateRangeFilter from './DateRangeFilter';
 import InputFilter from './InputFilter';
+import Checkbox from './forms/Checkbox';
 import AndOrButton from './forms/AndOrButton';
 import SelectDropdown from './forms/SelectDropdown';
 import type { SelectOption } from './forms/SelectDropdown';
@@ -43,9 +44,11 @@ export interface FilterConfigItem<T> {
   label: string;
   name: keyof T & string;
   placeholder?: string;
-  type?: 'select' | 'text' | 'number' | 'tags' | 'date-range' | 'date';
+  type?: 'select' | 'text' | 'number' | 'tags' | 'date-range' | 'date' | 'checkbox';
   className?: string;
   options?: FilterOption[];
+  clearable?: boolean;
+  searchable?: boolean;
   onLoadMore?: () => void;
   hasMore?: boolean;
   isLoadingMore?: boolean;
@@ -370,6 +373,22 @@ export default function FilterInputs<T>({
               );
             }
 
+            if (filterType === 'checkbox') {
+              return (
+                <div
+                  key={filter.name}
+                  className={twMerge('flex items-center h-11.25', filter.className)}
+                >
+                  <Checkbox
+                    id={filter.name}
+                    label={filter.label}
+                    checked={Boolean(values[filter.name])}
+                    onChange={(e) => onChange(filter.name, e.target.checked)}
+                  />
+                </div>
+              );
+            }
+
             const allOpts = filter.options ?? [];
             const clearOpt = allOpts.find((o) => o.value === null || o.value === '');
             const realOpts = allOpts.filter((o) => o.value !== null && o.value !== '');
@@ -389,8 +408,8 @@ export default function FilterInputs<T>({
               initialLabel: filter.initialLabel,
               resolveLabel: filter.resolveLabel,
               options: selectOptions,
-              searchable: true as const,
-              clearable: true as const,
+              searchable: filter.searchable ?? true,
+              clearable: filter.clearable ?? true,
               placeholder,
               onSelect: (val: string) => {
                 if (!val) {

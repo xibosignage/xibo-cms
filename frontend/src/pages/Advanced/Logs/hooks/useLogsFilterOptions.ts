@@ -23,11 +23,60 @@ import type { TFunction } from 'i18next';
 
 import { getBaseFilterKeys } from '../LogsConfig';
 
+import { useDisplayGroupSelect } from '@/pages/Reporting/Reports/shared/hooks/useDisplayGroupSelect';
+import { useDisplayOptions } from '@/pages/Reporting/Reports/shared/hooks/useDisplayOptions';
+import { useUserOptions } from '@/pages/Reporting/Reports/shared/hooks/useUserOptions';
+
 export function useLogsFilterOptions(t: TFunction) {
-  const filterOptions = getBaseFilterKeys(t);
+  const userSelect = useUserOptions();
+  const displaySelect = useDisplayOptions();
+  const displayGroupSelect = useDisplayGroupSelect();
+
+  const filterOptions = getBaseFilterKeys(t).map((item) => {
+    if (item.name === 'userId') {
+      return {
+        ...item,
+        options: userSelect.options,
+        isLoading: userSelect.isLoading,
+        isLoadingMore: userSelect.isLoadingMore,
+        hasMore: userSelect.hasMore,
+        onSearch: userSelect.onSearch,
+        onLoadMore: userSelect.onLoadMore,
+        resolveLabel: userSelect.resolveLabel,
+      };
+    }
+
+    if (item.name === 'displayId') {
+      return {
+        ...item,
+        options: displaySelect.options,
+        isLoading: displaySelect.isLoading,
+        isLoadingMore: displaySelect.isLoadingMore,
+        hasMore: displaySelect.hasMore,
+        onSearch: displaySelect.onSearch,
+        onLoadMore: displaySelect.onLoadMore,
+        resolveLabel: displaySelect.resolveLabel,
+      };
+    }
+
+    if (item.name === 'displayGroupId') {
+      return {
+        ...item,
+        options: displayGroupSelect.options,
+        isLoading: displayGroupSelect.isLoading,
+        isLoadingMore: displayGroupSelect.isLoadingMore,
+        hasMore: displayGroupSelect.hasMore,
+        onSearch: displayGroupSelect.onSearch,
+        onLoadMore: displayGroupSelect.onLoadMore,
+        resolveLabel: displayGroupSelect.resolveLabel,
+      };
+    }
+
+    return item;
+  });
 
   return {
     filterOptions,
-    isLoading: false,
+    isLoading: userSelect.isLoading || displaySelect.isLoading || displayGroupSelect.isLoading,
   };
 }
