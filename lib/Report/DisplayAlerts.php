@@ -132,10 +132,28 @@ class DisplayAlerts implements ReportInterface
             'title' => $savedReport->saveAs,
         ];
 
+        // Backward-compat: reports saved before startFormatted/endFormatted were introduced
+        // only have raw start/end Unix timestamps in their stored JSON. Compute the formatted
+        // fields here so older saved reports still render correctly, without needing to
+        // rewrite the stored ZIP file.
+        $table = $json['table'];
+        foreach ($table as &$row) {
+            if (!array_key_exists('startFormatted', $row) && array_key_exists('start', $row)) {
+                $row['startFormatted'] = Carbon::createFromTimestamp($row['start'])
+                    ->format(DateFormatHelper::getSystemFormat());
+            }
+            if (!array_key_exists('endFormatted', $row) && array_key_exists('end', $row)) {
+                $row['endFormatted'] = $row['end'] !== null
+                    ? Carbon::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat())
+                    : '';
+            }
+        }
+        unset($row);
+
         // Report result object
         return new ReportResult(
             $metadata,
-            $json['table'],
+            $table,
             $json['recordsTotal'],
         );
     }
@@ -155,9 +173,29 @@ class DisplayAlerts implements ReportInterface
         $now = Carbon::now();
 
         switch ($reportFilter) {
+            case 'today':
+                $fromDt = $now->copy()->startOfDay();
+                $toDt = $now->copy();
+                break;
+
             case 'yesterday':
                 $fromDt = $now->copy()->startOfDay()->subDay();
                 $toDt = $now->copy()->startOfDay();
+                break;
+
+            case 'thisweek':
+                $fromDt = $now->copy()->locale(Translate::GetLocale())->startOfWeek();
+                $toDt = $now->copy();
+                break;
+
+            case 'thismonth':
+                $fromDt = $now->copy()->startOfMonth();
+                $toDt = $now->copy();
+                break;
+
+            case 'thisyear':
+                $fromDt = $now->copy()->startOfYear();
+                $toDt = $now->copy();
                 break;
 
             case 'lastweek':
@@ -211,7 +249,8 @@ class DisplayAlerts implements ReportInterface
                 INNER JOIN `lkdisplaydg` ON `display`.displayId = `lkdisplaydg`.displayId    
                 INNER JOIN `displaygroup` ON `displaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId
                                           AND `displaygroup`.isDisplaySpecific = 1
-            WHERE `displayevent`.eventDate BETWEEN :start AND :end   ';
+            WHERE `displayevent`.start <= :end
+              AND IFNULL(`displayevent`.end, :end) >= :start ';
 
         $eventTypeIdFilter = $sanitizedParams->getString('eventType');
 
@@ -317,6 +356,20 @@ class DisplayAlerts implements ReportInterface
             $displayEvent->setUnmatchedProperty(
                 'display',
                 $row['display']
+            );
+            // start/end are kept raw (Unix timestamps) for the live report view, which formats
+            // them client-side in the viewer's own timezone. Saved reports and the email/PDF
+            // template read these pre-formatted fields instead, matching this report's own
+            // periodStart/periodEnd and generatedOn metadata pattern above.
+            $displayEvent->setUnmatchedProperty(
+                'startFormatted',
+                Carbon::createFromTimestamp($row['start'])->format(DateFormatHelper::getSystemFormat())
+            );
+            $displayEvent->setUnmatchedProperty(
+                'endFormatted',
+                $row['end'] !== null
+                    ? Carbon::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat())
+                    : ''
             );
 
             $rows[] = $displayEvent;

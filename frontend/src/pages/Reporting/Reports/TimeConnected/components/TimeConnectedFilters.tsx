@@ -83,7 +83,7 @@ export default function TimeConnectedFilters({
 
         <div className="grid grid-cols-[repeat(auto-fit,minmax(15rem,1fr))] gap-4 items-end">
           <DateRangeFilter
-            label={t('Date Range')}
+            label={t('Range')}
             name="reportFilter"
             value={filter.reportFilter || ''}
             options={DATE_RANGE_OPTIONS.map((o) => ({ ...o, label: t(o.label) }))}
@@ -99,13 +99,6 @@ export default function TimeConnectedFilters({
             }
           />
 
-          <SelectDropdown
-            label={t('Sort By')}
-            value={filter.sortBy}
-            options={SORT_BY_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }))}
-            onSelect={(val) => onFilterChange({ sortBy: val as TimeConnectedFilter['sortBy'] })}
-          />
-
           <div className="flex flex-col gap-1">
             <label className="text-sm font-semibold text-gray-500 leading-5">
               {t('Display/Display Groups')}
@@ -116,6 +109,13 @@ export default function TimeConnectedFilters({
               triggerClassName="bg-white"
             />
           </div>
+
+          <SelectDropdown
+            label={t('Sort By')}
+            value={filter.sortBy}
+            options={SORT_BY_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }))}
+            onSelect={(val) => onFilterChange({ sortBy: val as TimeConnectedFilter['sortBy'] })}
+          />
         </div>
 
         <div className="flex justify-end">

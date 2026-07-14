@@ -30,6 +30,7 @@ export type TimeDisconnectedSummaryFilter = {
   displayGroupId: number[];
   tags: Tag[];
   exactTags: boolean;
+  logicalOperator: string;
   onlyLoggedIn: boolean;
 };
 
@@ -40,6 +41,7 @@ export const INITIAL_FILTER_STATE: TimeDisconnectedSummaryFilter = {
   displayGroupId: [],
   tags: [],
   exactTags: false,
+  logicalOperator: 'OR',
   onlyLoggedIn: false,
 };
 

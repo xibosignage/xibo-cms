@@ -32,6 +32,7 @@ import {
 
 import Button from '@/components/ui/Button';
 import DateRangeFilter from '@/components/ui/DateRangeFilter';
+import AndOrButton from '@/components/ui/forms/AndOrButton';
 import Checkbox from '@/components/ui/forms/Checkbox';
 import MultiSelectDropdown from '@/components/ui/forms/MultiSelectDropdown';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
@@ -81,15 +82,6 @@ export default function DisplayAlertsFilters({
           />
 
           <SelectDropdown
-            label={t('Event Type')}
-            value={filter.eventType}
-            placeholder={t('All Event Types')}
-            clearable
-            options={EVENT_TYPE_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }))}
-            onSelect={(val) => onFilterChange({ eventType: val ?? '' })}
-          />
-
-          <SelectDropdown
             label={t('Display')}
             value={filter.displayId?.toString() ?? ''}
             placeholder={t('All Displays')}
@@ -114,12 +106,27 @@ export default function DisplayAlertsFilters({
             onChange={(vals) => onFilterChange({ displayGroupId: vals.map(Number) })}
           />
 
+          <SelectDropdown
+            label={t('Event Type')}
+            value={filter.eventType}
+            placeholder={t('All Event Types')}
+            clearable
+            options={EVENT_TYPE_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }))}
+            onSelect={(val) => onFilterChange({ eventType: val ?? '' })}
+          />
+
           <TagInput
             label={t('Tags')}
             value={filter.tags}
             onChange={(tags) => onFilterChange({ tags })}
             placeholder={t('Add tags')}
             allowValues={false}
+            prefix={
+              <AndOrButton
+                value={(filter.logicalOperator as 'AND' | 'OR') || 'OR'}
+                onChange={(val) => onFilterChange({ logicalOperator: val })}
+              />
+            }
             suffix={
               <button
                 type="button"

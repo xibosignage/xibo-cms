@@ -100,6 +100,11 @@ export default function AddScheduleModal({
       <div className="flex flex-col gap-1">
         <label className="text-sm font-semibold text-gray-500 leading-5">{t('Display')}</label>
         <DisplayGroupMultiSelect value={displayValue} onChange={handleDisplayChange} />
+        <span className="text-xs text-gray-400">
+          {t(
+            'Please select one or more displays / groups for this notification to be shown on - Layouts will need the notification widget.',
+          )}
+        </span>
       </div>
     </ReportScheduleModalShell>
   );

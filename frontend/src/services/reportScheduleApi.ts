@@ -125,7 +125,10 @@ export async function createReportSchedule(
   if (payload.hiddenFields) {
     params.append('hiddenFields', JSON.stringify(payload.hiddenFields));
     for (const [key, value] of Object.entries(payload.hiddenFields)) {
-      if (value != null) {
+      if (value == null) continue;
+      if (Array.isArray(value)) {
+        value.forEach((item) => params.append(`${key}[]`, String(item)));
+      } else {
         params.append(key, String(value));
       }
     }

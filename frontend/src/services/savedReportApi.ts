@@ -80,3 +80,30 @@ export async function fetchSavedReportData(
   );
   return response.data;
 }
+
+export async function exportSavedReport(savedReportId: number, reportName: string): Promise<Blob> {
+  try {
+    const response = await http.get<Blob>(
+      `/report/savedreport/${savedReportId}/report/${reportName}/export`,
+      { responseType: 'blob' },
+    );
+    return response.data;
+  } catch (err) {
+    // When responseType is 'blob', axios wraps the error body as a Blob too.
+    // Convert it back to a plain Error with the server's message.
+    if (err && typeof err === 'object' && 'response' in err) {
+      const axiosErr = err as { response?: { data?: unknown } };
+      if (axiosErr.response?.data instanceof Blob) {
+        const text = await (axiosErr.response.data as Blob).text();
+        let message: string | undefined;
+        try {
+          message = (JSON.parse(text) as { message?: string }).message;
+        } catch {
+          // Response body wasn't JSON — fall through to the generic error below.
+        }
+        if (message) throw new Error(message);
+      }
+    }
+    throw err;
+  }
+}
