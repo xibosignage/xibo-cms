@@ -73,7 +73,6 @@ class Controllers
                     $c->get('tagFactory'),
                     $c->get('folderFactory'),
                     $c->get('displayGroupFactory'),
-                    $c->get('jwtService'),
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;

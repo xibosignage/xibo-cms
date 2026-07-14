@@ -146,13 +146,6 @@ $app->get('/user/form/homepages', ['\Xibo\Controller\User', 'homepages'])
     ->setName('user.homepages.search');
 
 //
-// campaign
-//
-$app->get('/campaign/{id}/preview', ['\Xibo\Controller\Campaign','preview'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.view', 'layout.view']))
-    ->setName('campaign.preview');
-
-//
 // template
 //
 $app->get('/template/connector/list', ['\Xibo\Controller\Template','providersList'])

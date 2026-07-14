@@ -27,11 +27,10 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Event\FolderTouchEvent;
 use Xibo\Factory\CampaignFactory;
+use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TagFactory;
-use Xibo\Helper\HttpsDetect;
-use Xibo\Service\JwtServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
@@ -45,46 +44,15 @@ use Xibo\Support\Exception\NotFoundException;
 class Campaign extends Base
 {
     /**
-     * @var CampaignFactory
-     */
-    private $campaignFactory;
-
-    /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
-
-    /**
-     * @var TagFactory
-     */
-    private $tagFactory;
-
-    /** @var FolderFactory */
-    private $folderFactory;
-
-    /** @var \Xibo\Factory\DisplayGroupFactory */
-    private $displayGroupFactory;
-
-    /**
      * Set common dependencies.
-     * @param CampaignFactory $campaignFactory
-     * @param LayoutFactory $layoutFactory
-     * @param TagFactory $tagFactory
-     * @param FolderFactory $folderFactory
      */
     public function __construct(
-        $campaignFactory,
-        $layoutFactory,
-        $tagFactory,
-        $folderFactory,
-        $displayGroupFactory,
-        private readonly JwtServiceInterface $jwtService
+        private readonly CampaignFactory $campaignFactory,
+        private readonly LayoutFactory $layoutFactory,
+        private readonly TagFactory $tagFactory,
+        private readonly FolderFactory $folderFactory,
+        private readonly DisplayGroupFactory $displayGroupFactory
     ) {
-        $this->campaignFactory = $campaignFactory;
-        $this->layoutFactory = $layoutFactory;
-        $this->tagFactory = $tagFactory;
-        $this->folderFactory = $folderFactory;
-        $this->displayGroupFactory = $displayGroupFactory;
     }
 
     #[OA\Get(
@@ -223,9 +191,9 @@ class Campaign extends Base
         description: 'successful operation',
         headers: [
             new OA\Header(
-            header: 'X-Total-Count',
-            description: 'The total number of records',
-            schema: new OA\Schema(type: 'integer')
+                header: 'X-Total-Count',
+                description: 'The total number of records',
+                schema: new OA\Schema(type: 'integer')
             )
         ],
         content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: '#/components/schemas/Campaign'))
@@ -266,19 +234,10 @@ class Campaign extends Base
 
         $recordsTotal = $this->campaignFactory->countLast();
 
-        if ($this->isApi($request) || $this->isJson($request)) {
-            return $response
-                ->withStatus(200)
-                ->withHeader('X-Total-Count', $recordsTotal)
-                ->withJson($campaigns);
-        }
-
-        // TODO: Remove this once the schedule page is complete
-        $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $recordsTotal;
-        $this->getState()->setData($campaigns);
-
-        return $this->render($request, $response);
+        return $response
+            ->withStatus(200)
+            ->withHeader('X-Total-Count', $recordsTotal)
+            ->withJson($campaigns);
     }
 
     #[OA\Get(
@@ -999,55 +958,6 @@ class Campaign extends Base
                 'layoutId' => $layoutId,
             ],
         );
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Returns a Campaign's preview
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return ResponseInterface|Response
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
-     * @throws NotFoundException
-     */
-    public function preview(Request $request, Response $response, $id)
-    {
-        $campaign = $this->campaignFactory->getById($id);
-
-        if (!$this->getUser()->checkViewable($campaign)) {
-            throw new AccessDeniedException(__('You do not have permissions to preview the campaign.'));
-        }
-
-        $layouts = $this->layoutFactory->getByCampaignId($id);
-        $duration = 0 ;
-        $extendedLayouts = [];
-        $baseUrl = (new HttpsDetect())->getBaseUrl($request);
-
-        foreach ($layouts as $layout) {
-            $duration += $layout->duration;
-            $extendedLayouts[] = [
-                'layout' => $layout,
-                'duration' => $layout->duration,
-                'previewUrl' => $baseUrl . '/preview/layout/preview/' . $layout->layoutId,
-                'previewJwt' => $this->jwtService->generateJwt(
-                    'Preview',
-                    'layout',
-                    $layout->layoutId,
-                    '/preview/layout/preview/' . $layout->layoutId,
-                    3600,
-                )->toString(),
-            ];
-        }
-        $this->getState()->template = 'campaign-preview';
-        $this->getState()->setData([
-            'campaign' => $campaign,
-            'layouts' => $layouts,
-            'duration' => $duration,
-            'extendedLayouts' => $extendedLayouts
-        ]);
 
         return $this->render($request, $response);
     }
