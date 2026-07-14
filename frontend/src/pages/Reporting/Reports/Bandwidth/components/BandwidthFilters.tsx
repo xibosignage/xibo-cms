@@ -62,6 +62,18 @@ export default function BandwidthFilters({
         </Button>
 
         <div className="grid grid-cols-[repeat(auto-fit,minmax(15rem,1fr))] gap-4 items-end">
+          <MonthPickerInput
+            label={t('From Date')}
+            value={filter.fromDt}
+            onChange={(val) => onFilterChange({ fromDt: val })}
+          />
+
+          <MonthPickerInput
+            label={t('To Date')}
+            value={filter.toDt}
+            onChange={(val) => onFilterChange({ toDt: val })}
+          />
+
           <SelectDropdown
             label={t('Display')}
             value={filter.displayId?.toString() ?? ''}
@@ -76,17 +88,6 @@ export default function BandwidthFilters({
             onSearch={displaySelect.onSearch}
             onLoadMore={displaySelect.onLoadMore}
             onSelect={(val) => onFilterChange({ displayId: val ? Number(val) : null })}
-          />
-          <MonthPickerInput
-            label={t('From Date')}
-            value={filter.fromDt}
-            onChange={(val) => onFilterChange({ fromDt: val })}
-          />
-
-          <MonthPickerInput
-            label={t('To Date')}
-            value={filter.toDt}
-            onChange={(val) => onFilterChange({ toDt: val })}
           />
         </div>
 

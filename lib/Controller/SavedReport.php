@@ -258,6 +258,17 @@ class SavedReport extends Base
 
         $tableData = $results->table;
 
+        // Guard against very large reports that would exhaust mPDF memory.
+        // Only flat (indexed) table arrays are counted; nested structures (e.g. timeconnected) are skipped.
+        $rowCount = is_array($tableData) && isset($tableData[0]) ? count($tableData) : 0;
+
+        if ($rowCount > 5000) {
+            throw new GeneralException(
+                __('This report contains %d rows and is too large to export as PDF. Maximum is 5,000 rows. 
+                Please narrow the date range and try again.', $rowCount)
+            );
+        }
+
         // Get report email template to export
         $emailTemplate = $this->reportService->getReportEmailTemplate($name);
 
@@ -301,7 +312,7 @@ class SavedReport extends Base
                 $mpdf->WriteHTML($stylesheet, 1);
                 $mpdf->WriteHTML($body);
                 $mpdf->Output($fileName, \Mpdf\Output\Destination::FILE);
-            } catch (\Exception $error) {
+            } catch (\Throwable $error) {
                 $this->getLog()->error($error->getMessage());
                 $fileName = null;
             }

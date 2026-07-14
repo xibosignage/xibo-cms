@@ -37,6 +37,7 @@ import { twMerge } from 'tailwind-merge';
 
 import { useTagSuggestions } from './hooks/useTagSuggestions';
 
+import { fetchTags } from '@/services/tagApi';
 import type { Tag } from '@/types/tag';
 
 export function parseTag(raw: string): Tag | null {
@@ -74,6 +75,25 @@ export function serializeTags(tags: Tag[]): string {
   return tags
     .map((t) => (t.value != null && t.value !== '' ? `${t.tag}|${t.value}` : t.tag))
     .join(',');
+}
+
+function parseOptions(raw: string | null | undefined): string[] | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return parsed.map(String);
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+interface PendingTag {
+  tag: string;
+  options: string[] | null;
+  isRequired: number;
 }
 
 interface TagInputProps {
@@ -121,8 +141,9 @@ function TagInput({
   const tags = Array.isArray(value) ? value : [];
 
   // Track which tag is pending a value entry
-  const [pendingValueTag, setPendingValueTag] = useState<string | null>(null);
+  const [pendingValueTag, setPendingValueTag] = useState<PendingTag | null>(null);
   const [valueInput, setValueInput] = useState('');
+  const [valueError, setValueError] = useState(false);
   const valueInputRef = useRef<HTMLInputElement>(null);
 
   const [isFocused, setIsFocused] = useState(false);
@@ -178,6 +199,7 @@ function TagInput({
     if (tags.length === 0 && pendingValueTag !== null) {
       setPendingValueTag(null);
       setValueInput('');
+      setValueError(false);
     }
   }, [tags.length, pendingValueTag]);
 
@@ -188,7 +210,32 @@ function TagInput({
     }
   }, [pendingValueTag]);
 
-  const addTag = (raw: string) => {
+  const startValueEntry = (name: string, known?: Tag) => {
+    const source = known ?? tagSuggestions.find((s) => s.tag === name);
+    setPendingValueTag({
+      tag: name,
+      options: parseOptions(source?.options),
+      isRequired: source?.isRequired ?? 0,
+    });
+    setValueInput('');
+    setValueError(false);
+
+    if (!source) {
+      fetchTags({ tag: name, allTags: 1, length: 5 })
+        .then(({ rows }) => {
+          const match = rows.find((r) => r.tag === name);
+          if (!match) return;
+          setPendingValueTag((prev) =>
+            prev && prev.tag === name
+              ? { ...prev, options: parseOptions(match.options), isRequired: match.isRequired ?? 0 }
+              : prev,
+          );
+        })
+        .catch(() => {});
+    }
+  };
+
+  const addTag = (raw: string, known?: Tag) => {
     const newTag = parseTag(raw);
     if (!newTag) return;
 
@@ -200,13 +247,12 @@ function TagInput({
 
     // If added without a value, show value input
     if (allowValues && newTag.value === '') {
-      setPendingValueTag(newTag.tag);
-      setValueInput('');
+      startValueEntry(newTag.tag, known);
     }
   };
 
   const selectSuggestion = (tag: Tag) => {
-    addTag(tag.tag);
+    addTag(tag.tag, tag);
     setIsOpen(false);
     setHighlightIndex(-1);
   };
@@ -216,24 +262,44 @@ function TagInput({
       return;
     }
 
-    if (pendingValueTag === tag) {
+    if (pendingValueTag?.tag === tag) {
       setPendingValueTag(null);
       setValueInput('');
     }
     onChange(tags.filter((t) => t.tag !== tag));
   };
 
-  const applyValue = () => {
+  const applyValue = (explicit?: string) => {
     if (!pendingValueTag) return;
 
-    const trimmedValue = valueInput.trim();
+    const raw = explicit !== undefined ? explicit : valueInput;
+    const trimmedValue = raw.trim();
+
+    if (!trimmedValue && pendingValueTag.isRequired) {
+      setValueError(true);
+      return;
+    }
+
     if (trimmedValue) {
       const parsedValue = isNaN(Number(trimmedValue)) ? trimmedValue : Number(trimmedValue);
-      onChange(tags.map((t) => (t.tag === pendingValueTag ? { ...t, value: parsedValue } : t)));
+      onChange(tags.map((t) => (t.tag === pendingValueTag.tag ? { ...t, value: parsedValue } : t)));
     }
 
     setPendingValueTag(null);
     setValueInput('');
+    setValueError(false);
+  };
+
+  const cancelValueEntry = () => {
+    if (!pendingValueTag) return;
+
+    if (pendingValueTag.isRequired) {
+      removeTag(pendingValueTag.tag);
+    } else {
+      setPendingValueTag(null);
+      setValueInput('');
+    }
+    setValueError(false);
   };
 
   return (
@@ -378,26 +444,73 @@ function TagInput({
           <label htmlFor={valueInputId} className="text-sm font-semibold text-gray-500 leading-5">
             {t('Tag Value')}
           </label>
-          <input
-            id={valueInputId}
-            ref={valueInputRef}
-            className="w-full text-sm px-3 py-2.5 rounded-lg border border-gray-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 min-h-11.25"
-            value={valueInput}
-            onChange={(e) => setValueInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                applyValue();
-              } else if (e.key === 'Escape') {
-                setPendingValueTag(null);
-                setValueInput('');
-              }
-            }}
-            onBlur={applyValue}
-          />
-          <span className="text-xs text-gray-400">
-            {t('Enter the value for this Tag and confirm by pressing enter on keyboard.')}
-          </span>
+          {pendingValueTag.options && pendingValueTag.options.length > 0 ? (
+            <select
+              id={valueInputId}
+              autoFocus
+              className={twMerge(
+                'w-full text-sm px-3 py-2.5 rounded-lg border border-gray-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 min-h-11.25 bg-white',
+                valueError && 'border-red-500 focus:border-red-500 focus:ring-red-500',
+              )}
+              aria-invalid={valueError}
+              aria-describedby={valueError ? `${valueInputId}-err` : undefined}
+              value={pendingValueTag.options.includes(valueInput) ? valueInput : ''}
+              onChange={(e) => applyValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  cancelValueEntry();
+                }
+              }}
+              onBlur={() => applyValue()}
+            >
+              <option value="">{t('Select a value')}</option>
+              {pendingValueTag.options.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              id={valueInputId}
+              ref={valueInputRef}
+              className={twMerge(
+                'w-full text-sm px-3 py-2.5 rounded-lg border border-gray-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 min-h-11.25',
+                valueError && 'border-red-500 focus:border-red-500 focus:ring-red-500',
+              )}
+              aria-invalid={valueError}
+              aria-describedby={valueError ? `${valueInputId}-err` : undefined}
+              value={valueInput}
+              onChange={(e) => {
+                setValueInput(e.target.value);
+                if (valueError) setValueError(false);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  applyValue();
+                } else if (e.key === 'Escape') {
+                  cancelValueEntry();
+                }
+              }}
+              onBlur={() => applyValue()}
+            />
+          )}
+          {valueError ? (
+            <span id={`${valueInputId}-err`} className="text-xs text-red-600">
+              {t('This Tag requires a value.')}
+            </span>
+          ) : (
+            <span className="text-xs text-gray-400">
+              {pendingValueTag.options && pendingValueTag.options.length > 0
+                ? pendingValueTag.isRequired
+                  ? t('Select a value for this Tag (required).')
+                  : t('Select a value for this Tag, or leave blank.')
+                : pendingValueTag.isRequired
+                  ? t('Enter a value for this Tag (required) and confirm by pressing enter.')
+                  : t('Enter the value for this Tag and confirm by pressing enter on keyboard.')}
+            </span>
+          )}
         </div>
       )}
 

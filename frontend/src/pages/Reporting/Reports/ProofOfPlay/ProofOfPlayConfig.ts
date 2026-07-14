@@ -46,11 +46,11 @@ export const INITIAL_FILTER_STATE: ProofOfPlayFilter = {
   displayGroupId: [],
   parentCampaignId: null,
   tags: [],
-  tagsType: '',
+  tagsType: 'dg',
   exactTags: false,
   logicalOperator: 'OR',
   groupBy: '',
-  sortBy: '',
+  sortBy: 'widgetId',
 };
 
 export const DATE_RANGE_OPTIONS = [
@@ -80,18 +80,18 @@ export const GROUP_BY_OPTIONS = [
 ];
 
 export const TAGS_TYPE_OPTIONS = [
-  { value: '', label: 'None' },
   { value: 'dg', label: 'Display Group' },
   { value: 'media', label: 'Media' },
   { value: 'layout', label: 'Layout' },
 ];
 
 export const SORT_BY_OPTIONS = [
-  { value: '', label: 'Default' },
   { value: 'widgetId', label: 'Widget ID' },
   { value: 'type', label: 'Type' },
   { value: 'display', label: 'Display' },
+  { value: 'displayId', label: 'Display ID' },
   { value: 'media', label: 'Media' },
   { value: 'layout', label: 'Layout' },
+  { value: 'layoutId', label: 'Layout ID' },
   { value: 'tag', label: 'Tag' },
 ];

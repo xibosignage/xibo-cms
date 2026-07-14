@@ -158,7 +158,7 @@ export default function StatsReportFilters({
 
         <div className="grid grid-cols-[repeat(auto-fit,minmax(15rem,1fr))] gap-4 items-end">
           <DateRangeFilter
-            label={t('Date Range')}
+            label={t('Range')}
             name="reportFilter"
             value={filter.reportFilter}
             options={config.dateRangeOptions.map((o) => ({ ...o, label: t(o.label) }))}

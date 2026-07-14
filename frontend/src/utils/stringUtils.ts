@@ -19,6 +19,17 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// Decodes HTML entities (named + numeric) produced by PHP's htmlentities()/htmlspecialchars().
+// Uses DOMParser rather than assigning to a live element's innerHTML: DOMParser's
+// document has no browsing context, so embedded scripts don't run and event handlers
+// (e.g. img onerror) are never invoked, avoiding the mutation-XSS risk of the classic
+// textarea.innerHTML decode trick.
+export function decodeHtmlEntities(encoded: string): string {
+  if (!encoded) return '';
+  const doc = new DOMParser().parseFromString(encoded, 'text/html');
+  return doc.documentElement.textContent ?? '';
+}
+
 // Increments a numeric suffix for media name
 export function incrementName(value: string): string {
   const regex = /^(.*?)(?:\s\((\d+)\))?$/;

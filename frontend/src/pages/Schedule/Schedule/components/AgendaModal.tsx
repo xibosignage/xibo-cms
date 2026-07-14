@@ -32,6 +32,7 @@ import {
   ChevronUp,
   ChevronsUpDown,
   Cog,
+  Eye,
   Map,
   MapPin,
   Minus,
@@ -56,9 +57,12 @@ import NumberInput from '@/components/ui/forms/NumberInput';
 import Modal from '@/components/ui/modals/Modal';
 import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import { StatusCell } from '@/components/ui/table/cells/StatusCell';
+import { withPublicPath } from '@/config/publicPath';
 import { useUserContext } from '@/context/UserContext';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { usePreline } from '@/hooks/usePreline';
+import LayoutPreviewer from '@/pages/Design/Layouts/components/LayoutPreviewer';
+import MiniLayoutPreview from '@/pages/Design/Layouts/components/MiniLayoutPreview';
 import type {
   AgendaLayout,
   AgendaScheduleEvent,
@@ -110,6 +114,10 @@ function formatDuration(seconds: number): string {
   const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+function buildLayoutPreviewUrl(layoutId: number, jwt: string): string {
+  return `${withPublicPath(`preview/layout/preview/${layoutId}`)}?jwt=${jwt}`;
 }
 
 function minutesToTime(minutes: number): string {
@@ -903,6 +911,7 @@ interface EventTypeTableProps {
   selectedRow: SelectedRow | null;
   linkedLayoutKeys: Set<string>;
   onRowClick: (row: SelectedRow) => void;
+  onPreview: (layout: AgendaLayout) => void;
 }
 
 function EventTypeTable({
@@ -913,6 +922,7 @@ function EventTypeTable({
   selectedRow,
   linkedLayoutKeys,
   onRowClick,
+  onPreview,
 }: EventTypeTableProps) {
   const { t } = useTranslation();
   const label = EVENT_TYPE_LABELS[typeId];
@@ -1034,7 +1044,24 @@ function EventTypeTable({
                   }
                 >
                   <td className="px-3 py-2 text-gray-500">{event.layoutId}</td>
-                  <td className="px-3 py-2 font-medium text-gray-800 max-w-48 truncate">{name}</td>
+                  <td className="px-3 py-2 font-medium text-gray-800 max-w-48">
+                    <div className="flex items-center gap-2">
+                      <span className="truncate">{name}</span>
+                      {layout?.previewJwt && (
+                        <button
+                          type="button"
+                          title={t('Preview Layout')}
+                          className="shrink-0 cursor-pointer text-gray-400 hover:text-xibo-blue-600"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onPreview(layout);
+                          }}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-3 py-2">
                     <LayoutStatusIcon status={layout?.status} />
                   </td>
@@ -1187,6 +1214,21 @@ export function AgendaModal({ date, displayGroups, onClose }: AgendaModalProps) 
   const [showMap, setShowMap] = useState(false);
   const [editEventId, setEditEventId] = useState<number | null>(null);
 
+  type PreviewTarget = { layoutId: number; name: string; url: string };
+  const [miniPreview, setMiniPreview] = useState<PreviewTarget | null>(null);
+  const [fullscreenPreview, setFullscreenPreview] = useState<PreviewTarget | null>(null);
+
+  const handlePreview = (layout: AgendaLayout) => {
+    if (!layout.previewJwt) {
+      return;
+    }
+    setMiniPreview({
+      layoutId: layout.layoutId,
+      name: layout.layout,
+      url: buildLayoutPreviewUrl(layout.layoutId, layout.previewJwt),
+    });
+  };
+
   const queryParams = showTimeline
     ? {
         displayGroupId: selectedGroupId ?? 0,
@@ -1330,6 +1372,7 @@ export function AgendaModal({ date, displayGroups, onClose }: AgendaModalProps) 
                     selectedRow={selectedRow}
                     linkedLayoutKeys={linked.layoutKeys}
                     onRowClick={handleRowClick}
+                    onPreview={handlePreview}
                   />
                 ))}
             </div>
@@ -1383,6 +1426,33 @@ export function AgendaModal({ date, displayGroups, onClose }: AgendaModalProps) 
           }}
         />
       )}
+
+      <MiniLayoutPreview
+        previewUrl={miniPreview?.url ?? null}
+        title={miniPreview?.name}
+        onClose={() => {
+          setMiniPreview(null);
+        }}
+        onFullscreen={() => {
+          if (!miniPreview) {
+            return;
+          }
+
+          setFullscreenPreview(miniPreview);
+          setMiniPreview(null);
+        }}
+      />
+
+      <LayoutPreviewer
+        layoutId={fullscreenPreview?.layoutId ?? null}
+        name={fullscreenPreview?.name}
+        previewUrlOverride={fullscreenPreview?.url ?? null}
+        layoutData={null}
+        folderName=""
+        onClose={() => {
+          setFullscreenPreview(null);
+        }}
+      />
     </Modal>
   );
 }

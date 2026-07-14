@@ -25,15 +25,7 @@ import type { TFunction } from 'i18next';
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
 import { TextCell } from '@/components/ui/table/cells';
 import type { LogEntry } from '@/types/log';
-
-function decodeHtmlEntities(encoded: string): string {
-  if (!encoded) {
-    return '';
-  }
-  const textarea = document.createElement('textarea');
-  textarea.innerHTML = encoded;
-  return textarea.value;
-}
+import { decodeHtmlEntities } from '@/utils/stringUtils';
 
 export interface LogsFilterInput {
   fromDt?: string;

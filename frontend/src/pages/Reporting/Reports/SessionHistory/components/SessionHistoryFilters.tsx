@@ -71,13 +71,6 @@ export default function SessionHistoryFilters({
           />
 
           <SelectDropdown
-            label={t('Type')}
-            value={filter.type}
-            options={TYPE_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }))}
-            onSelect={(val) => onFilterChange({ type: val as SessionHistoryLogType })}
-          />
-
-          <SelectDropdown
             label={t('User')}
             value={filter.userId?.toString() ?? ''}
             placeholder={t('All Users')}
@@ -95,10 +88,17 @@ export default function SessionHistoryFilters({
 
           <TextInput
             name="sessionHistoryId"
-            label={t('Session ID')}
+            label={t('Session History ID')}
             placeholder=" "
             value={filter.sessionHistoryId}
             onChange={(val) => onFilterChange({ sessionHistoryId: val })}
+          />
+
+          <SelectDropdown
+            label={t('Report Type')}
+            value={filter.type}
+            options={TYPE_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }))}
+            onSelect={(val) => onFilterChange({ type: val as SessionHistoryLogType })}
           />
         </div>
 
