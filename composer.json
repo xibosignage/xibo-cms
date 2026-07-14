@@ -62,7 +62,7 @@
     "flynsarmy/slim-monolog": "~1.0",
     "gettext/gettext": "~4.0",
     "guzzlehttp/guzzle": "7.9.*",
-    "guzzlehttp/psr7": "2.10.*",
+    "guzzlehttp/psr7": "2.12.*",
     "illuminate/support": "v10.48.*",
     "infostars/picofeed": "dev-westphal/php8",
     "intervention/image": "2.7.2",
