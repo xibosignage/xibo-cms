@@ -31,11 +31,7 @@ import EditCampaignModal from '../components/EditCampaignModal';
 import { mockCampaign, mockCampaignWithRefs, mockCycleCampaign } from './campaignTestUtils';
 
 import { updateCampaign } from '@/services/campaignApi';
-import {
-  assignLayoutToCampaign,
-  fetchLayouts,
-  unassignLayoutFromCampaign,
-} from '@/services/layoutsApi';
+import { fetchLayouts } from '@/services/layoutsApi';
 import { testQueryClient } from '@/setupTests';
 import type { Layout } from '@/types/layout';
 
@@ -179,8 +175,6 @@ describe('EditCampaignModal', () => {
     vi.clearAllMocks();
     vi.mocked(fetchLayouts).mockResolvedValue({ rows: [], totalCount: 0 });
     vi.mocked(updateCampaign).mockResolvedValue(mockCampaign);
-    vi.mocked(assignLayoutToCampaign).mockResolvedValue(undefined as never);
-    vi.mocked(unassignLayoutFromCampaign).mockResolvedValue(undefined as never);
   });
 
   // ---------------------------------------------------------------------------
@@ -414,7 +408,7 @@ describe('EditCampaignModal', () => {
     });
   });
 
-  test('Save calls assignLayoutToCampaign for each newly added layout', async () => {
+  test('Save sends the assigned layoutIds in order via updateCampaign', async () => {
     vi.mocked(fetchLayouts).mockImplementation(async (params) => {
       if (params?.campaignId) return { rows: [], totalCount: 0 };
       return { rows: [mockSearchLayout], totalCount: 1 };
@@ -431,14 +425,17 @@ describe('EditCampaignModal', () => {
     });
 
     await waitFor(() => {
-      expect(assignLayoutToCampaign).toHaveBeenCalledWith(
+      expect(updateCampaign).toHaveBeenCalledWith(
         mockCampaign.campaignId,
-        mockSearchLayout.layoutId,
+        expect.objectContaining({
+          manageLayouts: 1,
+          layoutIds: [mockSearchLayout.layoutId],
+        }),
       );
     });
   });
 
-  test('Save calls unassignLayoutFromCampaign for each removed layout', async () => {
+  test('Save omits a removed layout from the layoutIds sent to updateCampaign', async () => {
     vi.mocked(fetchLayouts).mockImplementation(async (params) => {
       if (params?.campaignId) return { rows: [mockLayout], totalCount: 1 };
       return { rows: [], totalCount: 0 };
@@ -455,9 +452,9 @@ describe('EditCampaignModal', () => {
     });
 
     await waitFor(() => {
-      expect(unassignLayoutFromCampaign).toHaveBeenCalledWith(
+      expect(updateCampaign).toHaveBeenCalledWith(
         mockCampaign.campaignId,
-        mockLayout.layoutId,
+        expect.objectContaining({ manageLayouts: 1, layoutIds: [] }),
       );
     });
   });

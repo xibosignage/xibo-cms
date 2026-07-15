@@ -35,11 +35,7 @@ import Modal from '@/components/ui/modals/Modal';
 import { CheckMarkCell, TextCell } from '@/components/ui/table/cells';
 import { useDebounce } from '@/hooks/useDebounce';
 import { updateCampaign } from '@/services/campaignApi';
-import {
-  assignLayoutToCampaign,
-  fetchLayouts,
-  unassignLayoutFromCampaign,
-} from '@/services/layoutsApi';
+import { fetchLayouts } from '@/services/layoutsApi';
 import type { Campaign } from '@/types/campaign';
 import type { Layout } from '@/types/layout';
 import type { Tag } from '@/types/tag';
@@ -94,7 +90,6 @@ export default function EditCampaignModal({
   });
 
   const [assignedLayouts, setAssignedLayouts] = useState<Layout[]>([]);
-  const [originalLayoutIds, setOriginalLayoutIds] = useState<Set<number>>(new Set());
   const [layoutKeyword, setLayoutKeyword] = useState('');
   const [layoutPagination, setLayoutPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -129,7 +124,14 @@ export default function EditCampaignModal({
 
   const { data: assignedData } = useQuery({
     queryKey: ['layouts', 'campaign', campaign?.campaignId],
-    queryFn: () => fetchLayouts({ start: 0, length: 200, campaignId: campaign!.campaignId }),
+    queryFn: () =>
+      fetchLayouts({
+        start: 0,
+        length: 200,
+        campaignId: campaign!.campaignId,
+        sortBy: 'displayOrder',
+        sortDir: 'asc',
+      }),
     enabled: isOpen && !!campaign,
     staleTime: 0,
   });
@@ -137,8 +139,6 @@ export default function EditCampaignModal({
   useEffect(() => {
     if (assignedData) {
       setAssignedLayouts(assignedData.rows);
-      const ids = new Set(assignedData.rows.map((l) => l.layoutId));
-      setOriginalLayoutIds(ids);
     }
   }, [assignedData]);
 
@@ -202,17 +202,9 @@ export default function EditCampaignModal({
           ref3: draft.ref3 || undefined,
           ref4: draft.ref4 || undefined,
           ref5: draft.ref5 || undefined,
+          manageLayouts: 1,
+          layoutIds: assignedLayouts.map((l) => l.layoutId),
         });
-
-        // Layout assignment changes
-        const currentIds = new Set(assignedLayouts.map((l) => l.layoutId));
-        const toAssign = [...currentIds].filter((id) => !originalLayoutIds.has(id));
-        const toUnassign = [...originalLayoutIds].filter((id) => !currentIds.has(id));
-
-        await Promise.all([
-          ...toAssign.map((id) => assignLayoutToCampaign(campaign.campaignId, id)),
-          ...toUnassign.map((id) => unassignLayoutFromCampaign(campaign.campaignId, id)),
-        ]);
 
         onSuccess();
         onClose();
@@ -400,6 +392,8 @@ export default function EditCampaignModal({
               noAssignedText={t('No layouts assigned yet')}
               getItemId={(l) => l.layoutId}
               getItemLabel={(l) => l.layout}
+              sortable
+              onReorder={setAssignedLayouts}
               keyword={layoutKeyword}
               onKeywordChange={setLayoutKeyword}
               searchPlaceholder={t('Search')}
