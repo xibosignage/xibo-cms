@@ -120,16 +120,20 @@ describe('INITIAL_FILTER_STATE', () => {
     expect(keys).toHaveLength(15);
   });
 
-  it('defaults seconds to "24"', () => {
-    expect(INITIAL_FILTER_STATE.seconds).toBe('24');
+  it('defaults seconds to "120"', () => {
+    expect(INITIAL_FILTER_STATE.seconds).toBe('120');
   });
 
-  it('defaults intervalType to "3600" (hours)', () => {
-    expect(INITIAL_FILTER_STATE.intervalType).toBe('3600');
+  it('defaults intervalType to "1" (seconds)', () => {
+    expect(INITIAL_FILTER_STATE.intervalType).toBe('1');
+  });
+
+  it('defaults excludeLog to false', () => {
+    expect(INITIAL_FILTER_STATE.excludeLog).toBe(false);
   });
 
   it('defaults all other string fields to empty string', () => {
-    const skipKeys = new Set(['seconds', 'intervalType']);
+    const skipKeys = new Set(['seconds', 'intervalType', 'excludeLog']);
     for (const [key, value] of Object.entries(INITIAL_FILTER_STATE)) {
       if (!skipKeys.has(key)) {
         expect(value).toBe('');
@@ -172,11 +176,10 @@ describe('getBaseFilterKeys', () => {
     expect(fn?.options).toHaveLength(7);
   });
 
-  it('excludeLog filter has type "select" with 2 options', () => {
+  it('excludeLog filter has type "checkbox"', () => {
     const keys = getBaseFilterKeys(t);
     const excludeLog = keys.find((k) => k.name === 'excludeLog');
-    expect(excludeLog?.type).toBe('select');
-    expect(excludeLog?.options).toHaveLength(2);
+    expect(excludeLog?.type).toBe('checkbox');
   });
 
   it('display filter has showRegex enabled', () => {
