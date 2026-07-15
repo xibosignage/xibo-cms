@@ -19,8 +19,18 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import {
+  closestCenter,
+  DndContext,
+  type DragEndEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import { arrayMove, rectSortingStrategy, SortableContext, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import type { ColumnDef, OnChangeFn, PaginationState, SortingState } from '@tanstack/react-table';
-import { MinusCircle, PlusCircle, Search, X } from 'lucide-react';
+import { GripVertical, MinusCircle, PlusCircle, Search, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -36,6 +46,8 @@ interface SearchAssignPanelProps<TItem> {
   noAssignedText?: string;
   getItemId: (item: TItem) => number | string;
   getItemLabel: (item: TItem) => string;
+  sortable?: boolean;
+  onReorder?: (items: TItem[]) => void;
 
   keyword: string;
   onKeywordChange: (keyword: string) => void;
@@ -56,6 +68,48 @@ interface SearchAssignPanelProps<TItem> {
   warningMessage?: string;
 }
 
+interface SortableChipProps {
+  id: number | string;
+  label: string;
+  onRemove: () => void;
+  removeAriaLabel: string;
+}
+
+function SortableChip({ id, label, onRemove, removeAriaLabel }: SortableChipProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+  });
+
+  return (
+    <span
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+      }}
+      className="inline-flex items-center justify-center gap-1 rounded-full border border-gray-400 p-1.5"
+    >
+      <span
+        className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 touch-none"
+        {...listeners}
+        {...attributes}
+      >
+        <GripVertical size={12} />
+      </span>
+      <span className="px-1 text-[12px] text-gray-800">{label}</span>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="flex justify-center items-center size-3.75 bg-gray-200 text-gray-500 hover:text-gray-600 hover:bg-gray-300 rounded-full"
+        aria-label={removeAriaLabel}
+      >
+        <X size={10} />
+      </button>
+    </span>
+  );
+}
+
 export function SearchAssignPanel<TItem>({
   assignedItems,
   isLoadingAssigned = false,
@@ -66,6 +120,8 @@ export function SearchAssignPanel<TItem>({
   noAssignedText,
   getItemId,
   getItemLabel,
+  sortable = false,
+  onReorder,
   keyword,
   onKeywordChange,
   searchLabel,
@@ -83,6 +139,21 @@ export function SearchAssignPanel<TItem>({
   warningMessage,
 }: SearchAssignPanelProps<TItem>) {
   const { t } = useTranslation();
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) {
+      return;
+    }
+    const oldIndex = assignedItems.findIndex((item) => getItemId(item) === active.id);
+    const newIndex = assignedItems.findIndex((item) => getItemId(item) === over.id);
+    if (oldIndex === -1 || newIndex === -1) {
+      return;
+    }
+    onReorder?.(arrayMove(assignedItems, oldIndex, newIndex));
+  };
 
   const handleKeywordChange = (value: string) => {
     onKeywordChange(value);
@@ -137,6 +208,29 @@ export function SearchAssignPanel<TItem>({
             <p className="text-sm text-gray-400 flex-1">
               {noAssignedText ?? t('No items assigned.')}
             </p>
+          ) : sortable ? (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={assignedItems.map((item) => getItemId(item))}
+                strategy={rectSortingStrategy}
+              >
+                <div className="flex flex-wrap gap-2 flex-1">
+                  {assignedItems.map((item) => (
+                    <SortableChip
+                      key={getItemId(item)}
+                      id={getItemId(item)}
+                      label={getItemLabel(item)}
+                      onRemove={() => onRemoveItem(item)}
+                      removeAriaLabel={t('Remove {{name}}', { name: getItemLabel(item) })}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           ) : (
             <div className="flex flex-wrap gap-2 flex-1">
               {assignedItems.map((item) => {

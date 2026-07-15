@@ -141,6 +141,8 @@ export interface UpdateCampaignPayload {
   ref3?: string;
   ref4?: string;
   ref5?: string;
+  manageLayouts?: number;
+  layoutIds?: number[];
 }
 
 export async function updateCampaign(
@@ -159,6 +161,10 @@ export async function updateCampaign(
   if (payload.ref3 !== undefined) params.append('ref3', payload.ref3);
   if (payload.ref4 !== undefined) params.append('ref4', payload.ref4);
   if (payload.ref5 !== undefined) params.append('ref5', payload.ref5);
+  if (payload.manageLayouts !== undefined) {
+    params.append('manageLayouts', String(payload.manageLayouts));
+    (payload.layoutIds ?? []).forEach((id) => params.append('layoutIds[]', String(id)));
+  }
 
   const { data } = await http.put(`/campaign/${campaignId}`, params.toString(), {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
