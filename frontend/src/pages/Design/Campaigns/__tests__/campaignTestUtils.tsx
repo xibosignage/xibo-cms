@@ -121,7 +121,6 @@ export const mockUser: User = {
   features: {
     'folder.view': true,
     'schedule.add': true,
-    'ad.campaign': true,
   },
   settings: {
     defaultTimezone: 'UTC',
