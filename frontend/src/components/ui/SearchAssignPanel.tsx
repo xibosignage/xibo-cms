@@ -40,7 +40,7 @@ interface SearchAssignPanelProps<TItem> {
   assignedItems: TItem[];
   isLoadingAssigned?: boolean;
   onAddItem: (item: TItem) => void;
-  onRemoveItem: (item: TItem) => void;
+  onRemoveItem: (item: TItem, index: number) => void;
   onClearAll?: () => void;
   assignedLabel?: string;
   noAssignedText?: string;
@@ -48,6 +48,8 @@ interface SearchAssignPanelProps<TItem> {
   getItemLabel: (item: TItem) => string;
   sortable?: boolean;
   onReorder?: (items: TItem[]) => void;
+  allowMultiple?: boolean;
+  getRowKey?: (item: TItem, index: number) => number | string;
 
   keyword: string;
   onKeywordChange: (keyword: string) => void;
@@ -84,7 +86,7 @@ function SortableChip({ id, label, onRemove, removeAriaLabel }: SortableChipProp
     <span
       ref={setNodeRef}
       style={{
-        transform: CSS.Transform.toString(transform),
+        transform: CSS.Translate.toString(transform),
         transition,
         opacity: isDragging ? 0.4 : 1,
       }}
@@ -122,6 +124,8 @@ export function SearchAssignPanel<TItem>({
   getItemLabel,
   sortable = false,
   onReorder,
+  allowMultiple = false,
+  getRowKey,
   keyword,
   onKeywordChange,
   searchLabel,
@@ -140,6 +144,8 @@ export function SearchAssignPanel<TItem>({
 }: SearchAssignPanelProps<TItem>) {
   const { t } = useTranslation();
 
+  const rowKey = getRowKey ?? ((item: TItem) => getItemId(item));
+
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -147,8 +153,8 @@ export function SearchAssignPanel<TItem>({
     if (!over || active.id === over.id) {
       return;
     }
-    const oldIndex = assignedItems.findIndex((item) => getItemId(item) === active.id);
-    const newIndex = assignedItems.findIndex((item) => getItemId(item) === over.id);
+    const oldIndex = assignedItems.findIndex((item, index) => rowKey(item, index) === active.id);
+    const newIndex = assignedItems.findIndex((item, index) => rowKey(item, index) === over.id);
     if (oldIndex === -1 || newIndex === -1) {
       return;
     }
@@ -166,12 +172,17 @@ export function SearchAssignPanel<TItem>({
     size: 20,
     enableSorting: false,
     cell: ({ row }) => {
-      const isAssigned = assignedItems.some((item) => getItemId(item) === getItemId(row.original));
+      const assignedIndex = allowMultiple
+        ? -1
+        : assignedItems.findIndex((item) => getItemId(item) === getItemId(row.original));
+      const isAssigned = assignedIndex !== -1;
       return (
         <div className="flex justify-center">
           <button
             type="button"
-            onClick={() => (isAssigned ? onRemoveItem(row.original) : onAddItem(row.original))}
+            onClick={() =>
+              isAssigned ? onRemoveItem(row.original, assignedIndex) : onAddItem(row.original)
+            }
             className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
               isAssigned
                 ? 'text-red-600 hover:text-red-800 hover:bg-red-50'
@@ -215,16 +226,16 @@ export function SearchAssignPanel<TItem>({
               onDragEnd={handleDragEnd}
             >
               <SortableContext
-                items={assignedItems.map((item) => getItemId(item))}
+                items={assignedItems.map((item, index) => rowKey(item, index))}
                 strategy={rectSortingStrategy}
               >
                 <div className="flex flex-wrap gap-2 flex-1">
-                  {assignedItems.map((item) => (
+                  {assignedItems.map((item, index) => (
                     <SortableChip
-                      key={getItemId(item)}
-                      id={getItemId(item)}
+                      key={rowKey(item, index)}
+                      id={rowKey(item, index)}
                       label={getItemLabel(item)}
-                      onRemove={() => onRemoveItem(item)}
+                      onRemove={() => onRemoveItem(item, index)}
                       removeAriaLabel={t('Remove {{name}}', { name: getItemLabel(item) })}
                     />
                   ))}
@@ -233,25 +244,22 @@ export function SearchAssignPanel<TItem>({
             </DndContext>
           ) : (
             <div className="flex flex-wrap gap-2 flex-1">
-              {assignedItems.map((item) => {
-                const id = getItemId(item);
-                return (
-                  <span
-                    key={id}
-                    className="inline-flex items-center justify-center gap-1 rounded-full border border-gray-400 p-1.5"
+              {assignedItems.map((item, index) => (
+                <span
+                  key={rowKey(item, index)}
+                  className="inline-flex items-center justify-center gap-1 rounded-full border border-gray-400 p-1.5"
+                >
+                  <span className="px-1 text-[12px] text-gray-800">{getItemLabel(item)}</span>
+                  <button
+                    type="button"
+                    onClick={() => onRemoveItem(item, index)}
+                    className="flex justify-center items-center size-3.75 bg-gray-200 text-gray-500 hover:text-gray-600 hover:bg-gray-300 rounded-full"
+                    aria-label={t('Remove {{name}}', { name: getItemLabel(item) })}
                   >
-                    <span className="px-1 text-[12px] text-gray-800">{getItemLabel(item)}</span>
-                    <button
-                      type="button"
-                      onClick={() => onRemoveItem(item)}
-                      className="flex justify-center items-center size-3.75 bg-gray-200 text-gray-500 hover:text-gray-600 hover:bg-gray-300 rounded-full"
-                      aria-label={t('Remove {{name}}', { name: getItemLabel(item) })}
-                    >
-                      <X size={10} />
-                    </button>
-                  </span>
-                );
-              })}
+                    <X size={10} />
+                  </button>
+                </span>
+              ))}
             </div>
           )}
           {onClearAll !== undefined && assignedItems.length > 0 && (

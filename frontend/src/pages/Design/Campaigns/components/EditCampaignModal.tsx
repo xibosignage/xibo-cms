@@ -22,7 +22,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table';
 import { isAxiosError } from 'axios';
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { SearchAssignPanel } from '@/components/ui/SearchAssignPanel';
@@ -63,6 +63,8 @@ interface EditDraft {
 
 type Tab = 'general' | 'reference' | 'layouts';
 
+type CampaignLayout = Layout & { assignmentKey?: number };
+
 export default function EditCampaignModal({
   isOpen = true,
   campaign,
@@ -89,7 +91,8 @@ export default function EditCampaignModal({
     ref5: '',
   });
 
-  const [assignedLayouts, setAssignedLayouts] = useState<Layout[]>([]);
+  const [assignedLayouts, setAssignedLayouts] = useState<CampaignLayout[]>([]);
+  const assignmentKeyRef = useRef(0);
   const [layoutKeyword, setLayoutKeyword] = useState('');
   const [layoutPagination, setLayoutPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -138,7 +141,9 @@ export default function EditCampaignModal({
 
   useEffect(() => {
     if (assignedData) {
-      setAssignedLayouts(assignedData.rows);
+      setAssignedLayouts(
+        assignedData.rows.map((l) => ({ ...l, assignmentKey: assignmentKeyRef.current++ })),
+      );
     }
   }, [assignedData]);
 
@@ -168,14 +173,14 @@ export default function EditCampaignModal({
   const layoutPageCount = Math.ceil((layoutsData?.totalCount ?? 0) / layoutPagination.pageSize);
 
   const addLayout = (layout: Layout) => {
-    if (assignedLayouts.some((l) => l.layoutId === layout.layoutId)) {
-      return;
-    }
-    setAssignedLayouts((prev) => [...prev, layout]);
+    setAssignedLayouts((prev) => [
+      ...prev,
+      { ...layout, assignmentKey: assignmentKeyRef.current++ },
+    ]);
   };
 
-  const removeLayout = (layout: Layout) => {
-    setAssignedLayouts((prev) => prev.filter((l) => l.layoutId !== layout.layoutId));
+  const removeLayout = (_layout: Layout, index: number) => {
+    setAssignedLayouts((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSave = () => {
@@ -220,7 +225,7 @@ export default function EditCampaignModal({
     });
   };
 
-  const layoutColumns: ColumnDef<Layout>[] = [
+  const layoutColumns: ColumnDef<CampaignLayout>[] = [
     {
       accessorKey: 'layoutId',
       header: t('ID'),
@@ -383,7 +388,7 @@ export default function EditCampaignModal({
 
           {/* Layouts Tab */}
           {activeTab === 'layouts' && (
-            <SearchAssignPanel<Layout>
+            <SearchAssignPanel<CampaignLayout>
               assignedItems={assignedLayouts}
               assignedLabel={t('Selected Layouts')}
               onAddItem={addLayout}
@@ -394,6 +399,8 @@ export default function EditCampaignModal({
               getItemLabel={(l) => l.layout}
               sortable
               onReorder={setAssignedLayouts}
+              allowMultiple
+              getRowKey={(l, index) => l.assignmentKey ?? index}
               keyword={layoutKeyword}
               onKeywordChange={setLayoutKeyword}
               searchPlaceholder={t('Search')}
