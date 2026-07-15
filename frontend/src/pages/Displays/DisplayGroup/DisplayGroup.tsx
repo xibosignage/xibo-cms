@@ -106,7 +106,6 @@ export default function DisplayGroupPage() {
   const [folderRefreshTrigger, setFolderRefreshTrigger] = useState(0);
   const [openFilter, setOpenFilter] = useState(false);
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
-  const [selectedFolderName, setSelectedFolderName] = useState(t('Root Folder'));
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [selectionCache, setSelectionCache] = useState<Record<string, DisplayGroup>>({});
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
@@ -143,7 +142,6 @@ export default function DisplayGroupPage() {
 
   const handleFolderChange = (folder: { id: number | null; text: string | '' }) => {
     setSelectedFolderId(folder.id);
-    setSelectedFolderName(folder.text);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
     setRowSelection({});
   };
@@ -444,7 +442,6 @@ export default function DisplayGroupPage() {
           itemsToDelete,
           existingNames,
           itemsToMove,
-          folderName: selectedFolderName,
           shareEntityIds,
           setShareEntityIds,
         }}
