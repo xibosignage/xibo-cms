@@ -83,6 +83,9 @@ export default function Campaigns() {
     sorting: [],
     columnVisibility: {
       campaign: true,
+      type: true,
+      startDt: false,
+      endDt: false,
       numberLayouts: true,
       tags: true,
       totalDuration: true,
@@ -98,9 +101,6 @@ export default function Campaigns() {
       modifiedByName: true,
       ...(canAccessAdCampaign
         ? {
-            type: true,
-            startDt: false,
-            endDt: false,
             targetType: false,
             target: false,
             plays: false,
