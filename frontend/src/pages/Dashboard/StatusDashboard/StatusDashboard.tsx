@@ -189,14 +189,14 @@ export default function Dashboard() {
   return (
     <section className="flex flex-col space-y-5 p-5">
       {/* Top Stats */}
-      <div className="grid grid-cols-3 gap-5">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
         <StatCard icon={display} value={displayCount} label={t('Active Displays')} />
         <StatCard icon={server} value={librarySize} label={t('Remaining Storage')} />
         <StatCard icon={users} value={userCount} label={t('Active Users')} />
       </div>
 
       {/* Charts & News */}
-      <div className="grid grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Display Activity */}
         <div className="rounded-lg flex flex-col border border-gray-200 bg-slate-50 p-5 space-y-8">
           <div className="flex items-center justify-between">
@@ -214,7 +214,7 @@ export default function Dashboard() {
               <span className="mt-2 text-gray-500">{t('Loading...')}</span>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
               <DisplayChart data={statusData} label={t('Status')} />
               <DisplayChart data={contentStatusData} label={t('Content Status')} />
             </div>
@@ -245,7 +245,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Bandwidth Usage */}
         <div className="rounded-lg flex flex-col border border-gray-200 bg-slate-50 p-5 space-y-8">
           <div className="flex items-center justify-between">

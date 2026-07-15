@@ -190,7 +190,7 @@ export default function SpotRow({
                 >
                   {widget!.mediaFiles?.[0]?.fileName ?? widget!.name}
                 </span>
-                <div className="flex items-center gap-x-2">
+                <div className="flex sm:items-center gap-2 flex-col sm:flex-row">
                   <span className="text-xs text-gray-500">{widget!.mediaFiles?.[0]?.fileSize}</span>
                   <span className="w-fit rounded-full bg-xibo-blue-100 px-1.5 py-0.5 text-[11px] font-medium text-xibo-blue-800">
                     {widget!.name}
