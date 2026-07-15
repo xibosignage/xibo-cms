@@ -406,6 +406,7 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'dynamicContrast',   'default' => null, 'type' => 'int'],
                 ['name' => 'colourTemperature', 'default' => null, 'type' => 'int'],
                 ['name' => 'timers',            'default' => null],
+                ['name' => 'disableTimerManagement', 'default' => 1, 'type' => 'checkbox'],
             ]
         );
 

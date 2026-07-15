@@ -106,6 +106,7 @@ export const CHECKBOX_FIELDS_BY_TYPE: Record<DisplayProfileType, Set<string>> = 
     'embeddedServerAllowWan',
     'installWithLoadedLinkLibraries',
     'isTouchEnabled',
+    'disableTimerManagement',
   ]),
 };
 
@@ -964,6 +965,14 @@ function hisenseMeta(t: TFunction): FieldMetaMap {
       tab: 'timers',
       helpText: t('Configure on/off timers for this display.'),
       inputType: 'hisense-timers',
+    },
+    disableTimerManagement: {
+      label: t('Disable managing on/off timer'),
+      tab: 'timers',
+      helpText: t(
+        'When disabled on/off timers can be controlled on the screen and will not be modified by the CMS',
+      ),
+      inputType: 'checkbox',
     },
   };
 }
