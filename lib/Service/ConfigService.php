@@ -626,6 +626,21 @@ class ConfigService implements ConfigServiceInterface
     }
 
     /**
+     * Is SAML Single Logout usable - i.e. explicitly enabled in workflow settings
+     * and the IdP has a singleLogoutService endpoint configured.
+     * @return bool
+     */
+    public function isSamlSloSupported()
+    {
+        if (empty($this->samlSettings)) {
+            return false;
+        }
+
+        return ($this->samlSettings['workflow']['slo'] ?? false) === true
+            && !empty($this->samlSettings['idp']['singleLogoutService']['url'] ?? null);
+    }
+
+    /**
      * Should the host be considered a proxy exception
      * @param $host
      * @return bool

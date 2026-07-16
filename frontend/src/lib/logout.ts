@@ -19,6 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export function logout(redirectUrl: string = '/logout') {
+import { withPublicPath } from '@/config/publicPath';
+
+export function logout(redirectUrl: string = withPublicPath('logout')) {
   window.location.href = redirectUrl;
 }

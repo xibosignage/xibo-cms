@@ -21,6 +21,7 @@
 
 import { useState } from 'react';
 
+import { withPublicPath } from '@/config/publicPath';
 import { logout as globalLogout } from '@/lib/logout';
 import type { User } from '@/types/user';
 
@@ -35,8 +36,11 @@ export function useUserAuth(initialUser: User | null): UserAuthType {
   const [user, setUser] = useState<User | null>(initialUser);
 
   const logout = () => {
+    // When SAML is active, /saml/logout performs the correct flow (real IdP
+    // Single Logout when supported, or falls back to the local logout otherwise).
+    const redirectUrl = user?.samlEnabled ? withPublicPath('saml/logout') : undefined;
     setUser(null);
-    globalLogout();
+    globalLogout(redirectUrl);
   };
 
   const updateUser = (data: Partial<User>) => {
