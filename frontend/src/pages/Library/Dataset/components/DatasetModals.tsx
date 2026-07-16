@@ -62,9 +62,16 @@ interface DatasetModalsProps {
     handleConfirmMove: (folderId: number) => void;
   };
   folderActions: ReturnType<typeof useFolderActions>;
+  canUseRealTime?: boolean;
 }
 
-export function DatasetModals({ actions, selection, handlers, folderActions }: DatasetModalsProps) {
+export function DatasetModals({
+  actions,
+  selection,
+  handlers,
+  folderActions,
+  canUseRealTime,
+}: DatasetModalsProps) {
   const { t } = useTranslation();
   const isModalOpen = (name: string) => actions.activeModal === name;
 
@@ -73,6 +80,7 @@ export function DatasetModals({ actions, selection, handlers, folderActions }: D
       {isModalOpen('edit') && (
         <AddAndEditDatasetModal
           type={selection.selectedDatasetId ? 'edit' : 'add'}
+          canUseRealTime={canUseRealTime}
           defaultFolderId={selection.defaultFolderId}
           onClose={() => {
             actions.closeModal();

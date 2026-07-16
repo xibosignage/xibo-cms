@@ -53,6 +53,7 @@ import { useTableState } from '@/hooks/useTableState';
 import { exportDatasetCsv } from '@/services/datasetApi';
 import { fetchContextButtons } from '@/services/folderApi';
 import type { Dataset } from '@/types/dataset';
+import { filterByPermission, hasFeature } from '@/utils/permissions';
 
 export default function Dataset() {
   const { t } = useTranslation();
@@ -152,6 +153,9 @@ export default function Dataset() {
   const error = isError && queryError instanceof Error ? queryError.message : '';
   const datasetList = data ?? [];
   const canAddToFolder = folderPerms?.create || false;
+  const canAddDataset = hasFeature(user, 'dataset.add');
+  const canModify = hasFeature(user, 'dataset.modify');
+  const canRealTime = hasFeature(user, 'dataset.realtime');
 
   const folderActions = useFolderActions({
     onSuccess: (targetFolder) => {
@@ -251,6 +255,7 @@ export default function Dataset() {
 
   const columns = getDatasetColumns({
     t,
+    canModify,
     onDelete: handleDelete,
     openAddEditModal,
     openMoveModal: (dataset) => {
@@ -276,21 +281,46 @@ export default function Dataset() {
 
   const bulkActions = getBulkActions({
     t,
+    canModify,
     onDelete: () => {
-      const allItems = getAllSelectedItems();
+      const allItems = filterByPermission(
+        getAllSelectedItems(),
+        (d) => d.userPermissions?.delete,
+        t,
+        t('delete'),
+      );
+      if (allItems.length === 0) {
+        return;
+      }
       setItemsToDelete(allItems);
       setDeleteError(null);
       openModal('delete');
     },
     onMove: canViewFolders
       ? () => {
-          const allItems = getAllSelectedItems();
+          const allItems = filterByPermission(
+            getAllSelectedItems(),
+            (d) => d.userPermissions?.edit,
+            t,
+            t('move'),
+          );
+          if (allItems.length === 0) {
+            return;
+          }
           setItemsToMove(allItems);
           openModal('move');
         }
       : undefined,
     onShare: () => {
-      const allItems = getAllSelectedItems();
+      const allItems = filterByPermission(
+        getAllSelectedItems(),
+        (d) => d.userPermissions?.modifyPermissions,
+        t,
+        t('share'),
+      );
+      if (allItems.length === 0) {
+        return;
+      }
       const ids = allItems.map((i) => i.dataSetId);
       setShareEntityIds(ids);
       openModal('share');
@@ -320,15 +350,17 @@ export default function Dataset() {
                 {t('Generating CSV...')}
               </span>
             )}
-            <Button
-              variant="primary"
-              className="font-semibold"
-              disabled={!canAddToFolder || !isHydrated}
-              onClick={() => openAddEditModal(null)}
-              leftIcon={Plus}
-            >
-              {t('Add Dataset')}
-            </Button>
+            {canAddDataset && (
+              <Button
+                variant="primary"
+                className="font-semibold"
+                disabled={!canAddToFolder || !isHydrated}
+                onClick={() => openAddEditModal(null)}
+                leftIcon={Plus}
+              >
+                {t('Add Dataset')}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -451,6 +483,7 @@ export default function Dataset() {
           },
         }}
         folderActions={folderActions}
+        canUseRealTime={canRealTime}
       />
     </section>
   );

@@ -31,6 +31,7 @@ import type { ActionItem } from '@/types/table';
 
 export interface DatasetColumnActionsProps {
   t: TFunction;
+  canEdit?: boolean;
   onEdit: (column: DatasetColumn) => void;
   onCopy: (column: DatasetColumn) => void;
   onDelete: (id: number) => void;
@@ -73,17 +74,10 @@ export const getColumnActions = ({
 export const getColumnDefinitions = (
   props: DatasetColumnActionsProps,
 ): ColumnDef<DatasetColumn>[] => {
-  const { t } = props;
+  const { t, canEdit = false } = props;
   const getActions = getColumnActions(props);
 
-  return [
-    {
-      id: 'tableSelection',
-      header: '',
-      size: 40,
-      enableHiding: false,
-      enableResizing: false,
-    },
+  const dataColumns: ColumnDef<DatasetColumn>[] = [
     {
       accessorKey: 'heading',
       header: t('HEADING'),
@@ -147,22 +141,38 @@ export const getColumnDefinitions = (
         );
       },
     },
-    {
-      id: 'tableActions',
-      header: t('ACTION'),
-      size: 80,
-      minSize: 80,
-      maxSize: 80,
-      enableHiding: false,
-      enableResizing: false,
-      cell: ({ row }) => (
-        <ActionsCell
-          row={row}
-          actions={getActions(row.original) as ComponentProps<typeof ActionsCell>['actions']}
-        />
-      ),
-    },
   ];
+
+  // Column editing (add/edit/delete) is gated behind the dataset.modify feature
+  if (!canEdit) {
+    return dataColumns;
+  }
+
+  const selectionColumn: ColumnDef<DatasetColumn> = {
+    id: 'tableSelection',
+    header: '',
+    size: 40,
+    enableHiding: false,
+    enableResizing: false,
+  };
+
+  const actionColumn: ColumnDef<DatasetColumn> = {
+    id: 'tableActions',
+    header: t('ACTION'),
+    size: 80,
+    minSize: 80,
+    maxSize: 80,
+    enableHiding: false,
+    enableResizing: false,
+    cell: ({ row }) => (
+      <ActionsCell
+        row={row}
+        actions={getActions(row.original) as ComponentProps<typeof ActionsCell>['actions']}
+      />
+    ),
+  };
+
+  return [selectionColumn, ...dataColumns, actionColumn];
 };
 
 interface GetBulkActionsProps {

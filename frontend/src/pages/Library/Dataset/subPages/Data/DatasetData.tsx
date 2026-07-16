@@ -37,6 +37,7 @@ import Button from '@/components/ui/Button';
 import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import type { DatasetRowValue } from '@/services/datasetApi';
@@ -46,6 +47,7 @@ import {
   getDatasetById,
   type DynamicRowData,
 } from '@/services/datasetApi';
+import { hasFeature } from '@/utils/permissions';
 
 type DataModalType = 'edit' | 'delete' | 'copy' | null;
 
@@ -53,7 +55,10 @@ export default function DatasetData() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useUserContext();
   const { datasetId } = useParams<{ datasetId: string }>();
+
+  const canEditData = hasFeature(user, 'dataset.data');
 
   const {
     pagination,
@@ -253,6 +258,7 @@ export default function DatasetData() {
 
   const tableColumns = getDynamicDataColumns(columnsSchema, {
     t,
+    canEdit: canEditData,
     rowIdKey: 'id',
     onEdit: (row) => {
       setSelectedRow(row);
@@ -278,15 +284,17 @@ export default function DatasetData() {
       .filter((item): item is DynamicRowData => !!item);
   };
 
-  const bulkActions = getBulkActions({
-    t,
-    onDelete: () => {
-      const allItems = getAllSelectedItems();
-      setItemsToDelete(allItems);
-      setDeleteError(null);
-      setActiveModal('delete');
-    },
-  });
+  const bulkActions = canEditData
+    ? getBulkActions({
+        t,
+        onDelete: () => {
+          const allItems = getAllSelectedItems();
+          setItemsToDelete(allItems);
+          setDeleteError(null);
+          setActiveModal('delete');
+        },
+      })
+    : [];
 
   const libraryTabs = useFilteredTabs('library');
 
@@ -296,18 +304,20 @@ export default function DatasetData() {
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Datasets" navigation={libraryTabs} />
           <div className="flex items-center gap-2">
-            <Button
-              variant="primary"
-              className="font-semibold"
-              disabled={isLoading || columnsSchema.length === 0}
-              onClick={() => {
-                setSelectedRow(null);
-                setActiveModal('edit');
-              }}
-              leftIcon={Plus}
-            >
-              {t('Add Row')}
-            </Button>
+            {canEditData && (
+              <Button
+                variant="primary"
+                className="font-semibold"
+                disabled={isLoading || columnsSchema.length === 0}
+                onClick={() => {
+                  setSelectedRow(null);
+                  setActiveModal('edit');
+                }}
+                leftIcon={Plus}
+              >
+                {t('Add Row')}
+              </Button>
+            )}
             <Button
               variant="secondary"
               className="font-semibold"

@@ -55,6 +55,7 @@ interface AddAndEditDatasetModalProps {
   data?: Dataset | null;
   defaultFolderId?: number;
   dataConnectorSources?: { id: string; name: string }[];
+  canUseRealTime?: boolean;
   onClose: () => void;
   onSave: (updated: Dataset) => void;
 }
@@ -143,6 +144,7 @@ export default function AddAndEditDatasetModal({
   onClose,
   data,
   defaultFolderId,
+  canUseRealTime = true,
   onSave,
 }: AddAndEditDatasetModalProps) {
   const { t } = useTranslation();
@@ -414,28 +416,32 @@ export default function AddAndEditDatasetModal({
               </div>
 
               <div className="flex flex-col gap-3 pt-2  p-4 rounded-lg">
-                <Checkbox
-                  id="isRealTime"
-                  title={t('Real-time')}
-                  label={t('Enable live data streaming for this source.')}
-                  checked={draft.isRealTime}
-                  onChange={(e) => updateDraft('isRealTime', e.target.checked)}
-                />
-                {!!draft.isRealTime && (
-                  <div className="pt-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                    <SelectDropdown
-                      label={t('Data Connector Source')}
-                      value={draft.dataConnectorSource}
-                      options={dataConnectorSources.map((source) => ({
-                        label: source.name,
-                        value: String(source.id),
-                      }))}
-                      onSelect={(val) => {
-                        updateDraft('dataConnectorSource', val);
-                      }}
-                      helpText={t('Select data connector source.')}
+                {canUseRealTime && (
+                  <>
+                    <Checkbox
+                      id="isRealTime"
+                      title={t('Real-time')}
+                      label={t('Enable live data streaming for this source.')}
+                      checked={draft.isRealTime}
+                      onChange={(e) => updateDraft('isRealTime', e.target.checked)}
                     />
-                  </div>
+                    {!!draft.isRealTime && (
+                      <div className="pt-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <SelectDropdown
+                          label={t('Data Connector Source')}
+                          value={draft.dataConnectorSource}
+                          options={dataConnectorSources.map((source) => ({
+                            label: source.name,
+                            value: String(source.id),
+                          }))}
+                          onSelect={(val) => {
+                            updateDraft('dataConnectorSource', val);
+                          }}
+                          helpText={t('Select data connector source.')}
+                        />
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {type === 'edit' && data && (

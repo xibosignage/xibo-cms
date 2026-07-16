@@ -34,10 +34,12 @@ import { useDatasetColumnsData } from './hooks/useDatasetColumnsData';
 import Button from '@/components/ui/Button';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import { createDatasetColumn, deleteDatasetColumn, getDatasetById } from '@/services/datasetApi';
 import type { DatasetColumn } from '@/types/datasetColumn';
+import { hasFeature } from '@/utils/permissions';
 
 type ColumnModalType = 'edit' | 'delete' | 'copy' | null;
 
@@ -45,8 +47,11 @@ export default function DatasetColumns() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useUserContext();
 
   const { datasetId } = useParams<{ datasetId: string }>();
+
+  const canModify = hasFeature(user, 'dataset.modify');
 
   const {
     pagination,
@@ -236,6 +241,7 @@ export default function DatasetColumns() {
 
   const columns = getColumnDefinitions({
     t,
+    canEdit: canModify,
     onEdit: handleEdit,
     onDelete: handleDelete,
     onCopy: handleCopyModalOpen,
@@ -247,19 +253,21 @@ export default function DatasetColumns() {
       .filter((item): item is DatasetColumn => !!item);
   };
 
-  const bulkActions = [
-    {
-      label: t('Delete'),
-      icon: Trash2,
-      onClick: () => {
-        const allItems = getAllSelectedItems();
-        setItemsToDelete(allItems);
-        setDeleteError(null);
-        setActiveModal('delete');
-      },
-      variant: 'danger' as const,
-    },
-  ];
+  const bulkActions = canModify
+    ? [
+        {
+          label: t('Delete'),
+          icon: Trash2,
+          onClick: () => {
+            const allItems = getAllSelectedItems();
+            setItemsToDelete(allItems);
+            setDeleteError(null);
+            setActiveModal('delete');
+          },
+          variant: 'danger' as const,
+        },
+      ]
+    : [];
 
   const libraryTabs = useFilteredTabs('library');
 
@@ -269,15 +277,17 @@ export default function DatasetColumns() {
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Datasets" navigation={libraryTabs} />
           <div className="flex items-center gap-2">
-            <Button
-              variant="primary"
-              className="font-semibold"
-              disabled={!isHydrated}
-              onClick={handleAdd}
-              leftIcon={Plus}
-            >
-              {t('Add Column')}
-            </Button>
+            {canModify && (
+              <Button
+                variant="primary"
+                className="font-semibold"
+                disabled={!isHydrated}
+                onClick={handleAdd}
+                leftIcon={Plus}
+              >
+                {t('Add Column')}
+              </Button>
+            )}
             <Button
               variant="secondary"
               className="font-semibold"
