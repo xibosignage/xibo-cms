@@ -173,6 +173,7 @@ export function DataTable<TData, TValue>({
     },
     enableRowSelection: enableSelection,
     enableColumnPinning: true,
+    sortDescFirst: false,
     onRowSelectionChange,
     onPaginationChange,
     onSortingChange,

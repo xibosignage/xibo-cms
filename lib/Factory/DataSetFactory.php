@@ -337,6 +337,7 @@ class DataSetFactory extends BaseFactory
         $allowedColumns = [
             'dataSetId',
             'dataSet',
+            'description',
             'code',
             'isRemote',
             'isRealTime',
