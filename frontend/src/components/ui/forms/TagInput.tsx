@@ -458,6 +458,7 @@ function TagInput({
               placeholder={t('Select a value')}
               options={pendingValueTag.options.map((opt) => ({ label: opt, value: opt }))}
               onSelect={(val) => applyValue(val)}
+              clearable
             />
           ) : (
             <input

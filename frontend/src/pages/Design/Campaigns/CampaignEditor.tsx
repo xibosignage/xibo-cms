@@ -718,7 +718,11 @@ export default function CampaignEditor() {
         <Button variant="secondary" onClick={() => navigate('/design/campaign')}>
           {t('Back')}
         </Button>
-        <Button variant="primary" disabled={saveGeneral.isPending || hasTagPendingValue} onClick={handleSaveGeneral}>
+        <Button
+          variant="primary"
+          disabled={saveGeneral.isPending || hasTagPendingValue}
+          onClick={handleSaveGeneral}
+        >
           {saveGeneral.isPending ? t('Saving…') : t('Save')}
         </Button>
       </div>
