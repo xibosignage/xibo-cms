@@ -27,7 +27,7 @@ jobs:
   phpunit:
     name: Run PHPUnit
     needs: check-base-branch
-    if: needs.check-base-branch.outputs.base_ref == 'develop'
+    if: needs.check-base-branch.outputs.base_ref == 'develop' || needs.check-base-branch.outputs.base_ref == 'grigg'
     runs-on: ubuntu-latest
 
     steps:
@@ -96,7 +96,7 @@ jobs:
   lint:
     name: Run ESLint
     needs: check-base-branch
-    if: needs.check-base-branch.outputs.base_ref == 'develop'
+    if: needs.check-base-branch.outputs.base_ref == 'develop' || needs.check-base-branch.outputs.base_ref == 'grigg'
     runs-on: ubuntu-latest
 
     steps:
@@ -148,7 +148,7 @@ jobs:
   vitest:
     name: Run Vitest
     needs: [check-base-branch, phpunit]
-    if: needs.check-base-branch.outputs.base_ref == 'develop'
+    if: needs.check-base-branch.outputs.base_ref == 'develop' || needs.check-base-branch.outputs.base_ref == 'grigg'
     runs-on: ubuntu-latest
 
     steps:
@@ -251,7 +251,7 @@ jobs:
   comment:
     name: Post Result Comment
     needs: [check-base-branch, phpunit, lint, vitest]
-    if: always() && needs.check-base-branch.outputs.base_ref == 'develop'
+    if: always() && (needs.check-base-branch.outputs.base_ref == 'develop' || needs.check-base-branch.outputs.base_ref == 'grigg')
     runs-on: ubuntu-latest
     steps:
       - name: Add workflow result as comment on PR
