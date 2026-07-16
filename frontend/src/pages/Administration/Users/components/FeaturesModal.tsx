@@ -287,6 +287,7 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
                       <div className="flex justify-center">
                         <input
                           type="checkbox"
+                          aria-label={t('Enable all in {{group}}', { group: label })}
                           checked={allEnabled}
                           ref={(el) => {
                             if (el) el.indeterminate = someEnabled;
@@ -298,6 +299,7 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
                       <div className="flex justify-center">
                         <input
                           type="checkbox"
+                          aria-label={t('{{group}} inherited', { group: label })}
                           checked={features.some((f) => inheritedFeatures.has(f.feature))}
                           disabled
                           className="h-4 w-4 border-gray-300 rounded text-gray-400 opacity-60 disabled:bg-slate-100 disabled:cursor-not-allowed"
@@ -318,6 +320,7 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
                           <div className="flex justify-center">
                             <input
                               type="checkbox"
+                              aria-label={t('Enable {{feature}}', { feature: feat.title })}
                               checked={enabledFeatures.has(feat.feature)}
                               onChange={() => toggleFeature(feat.feature)}
                               className="h-4 w-4 border-gray-300 rounded cursor-pointer text-blue-600 focus:ring-blue-500"
@@ -326,6 +329,7 @@ export default function FeaturesModal({ user, onClose, onSuccess }: FeaturesModa
                           <div className="flex justify-center">
                             <input
                               type="checkbox"
+                              aria-label={t('{{feature}} inherited', { feature: feat.title })}
                               checked={inheritedFeatures.has(feat.feature)}
                               disabled
                               className="h-4 w-4 border-gray-300 rounded text-gray-400 opacity-60 disabled:bg-slate-100 disabled:cursor-not-allowed"

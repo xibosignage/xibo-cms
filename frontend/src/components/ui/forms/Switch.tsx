@@ -25,6 +25,7 @@ import { twMerge } from 'tailwind-merge';
 
 interface SwitchProps {
   label?: string;
+  ariaLabel?: string;
   checked: boolean;
   helpText?: string;
   optional?: boolean;
@@ -36,6 +37,7 @@ interface SwitchProps {
 
 export default function Switch({
   label,
+  ariaLabel,
   checked,
   helpText,
   optional = false,
@@ -75,6 +77,7 @@ export default function Switch({
           type="button"
           role="switch"
           aria-checked={checked}
+          aria-label={label ? undefined : ariaLabel}
           disabled={disabled}
           onClick={() => onChange(!checked)}
           className={twMerge(

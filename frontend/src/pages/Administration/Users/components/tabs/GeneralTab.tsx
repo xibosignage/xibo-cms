@@ -134,6 +134,7 @@ export default function GeneralTab({
           <button
             type="button"
             onClick={() => setShowPassword((prev) => !prev)}
+            aria-label={showPassword ? t('Hide password') : t('Show password')}
             className="px-3 text-gray-500 hover:text-gray-700 transition-colors"
           >
             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}

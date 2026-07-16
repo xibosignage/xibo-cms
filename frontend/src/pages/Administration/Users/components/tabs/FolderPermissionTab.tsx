@@ -96,6 +96,7 @@ export default function FolderPermissionTab({
                       next.delete(folderId);
                       setFolderPermissions(next);
                     }}
+                    aria-label={t('Remove {{name}}', { name: displayName })}
                     className="ml-0.5 text-blue-500 hover:text-blue-800"
                   >
                     <X size={12} />
