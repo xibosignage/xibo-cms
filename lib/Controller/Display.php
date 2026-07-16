@@ -25,8 +25,6 @@ use Carbon\Carbon;
 use GeoJson\Feature\Feature;
 use GeoJson\Feature\FeatureCollection;
 use GeoJson\Geometry\Point;
-use GuzzleHttp\Client;
-use Xibo\Helper\Guzzle\SafeClient;
 use Intervention\Image\ImageManagerStatic as Img;
 use OpenApi\Attributes as OA;
 use Psr\Http\Message\ResponseInterface;
@@ -52,6 +50,7 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
+use Xibo\Helper\Guzzle\SafeClient;
 use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\Random;
 use Xibo\Helper\WakeOnLan;
@@ -2168,11 +2167,15 @@ class Display extends Base
         // Current layout from cache
         $display->getCurrentLayoutId($this->pool, $this->layoutFactory);
 
-        $display->lastAccessed =
-            Carbon::createFromTimestamp($display->lastAccessed)->format(DateFormatHelper::getSystemFormat());
-        $display->auditingUntil = ($display->auditingUntil == 0)
-            ? 0
-            :Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
+        // Only format these as human-readable strings for true API (OAuth) clients.
+        // the React frontend expects raw timestamps and formats them itself.
+        if ($this->isApi($request)) {
+            $display->lastAccessed =
+                Carbon::createFromTimestamp($display->lastAccessed)->format(DateFormatHelper::getSystemFormat());
+            $display->auditingUntil = ($display->auditingUntil == 0)
+                ? 0
+                : Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
+        }
 
         // use try and catch here to cover scenario
         // when there is no default display profile set for any of the existing display types.
