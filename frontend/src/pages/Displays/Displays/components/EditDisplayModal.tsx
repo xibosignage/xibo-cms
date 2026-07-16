@@ -48,6 +48,7 @@ import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagI
 import TextInput from '@/components/ui/forms/TextInput';
 import TimezoneSelect from '@/components/ui/forms/TimezoneSelect';
 import Modal from '@/components/ui/modals/Modal';
+import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useDebounce } from '@/hooks/useDebounce';
 import { DynamicSettingField } from '@/pages/Displays/DisplayProfile/components/fields/DynamicSettingField';
 import {
@@ -75,6 +76,7 @@ import type {
 } from '@/types/displayProfile';
 import type { Layout } from '@/types/layout';
 import type { Tag } from '@/types/tag';
+import type { DateLike } from '@/utils/date';
 
 type ActiveTab =
   | 'general'
@@ -253,12 +255,46 @@ function summarizeHisensePictureOptions(str: string, t: TFunction): string {
   }
 }
 
+function resolveDatepickerLabel(str: string, formatDateTime: (value: DateLike) => string): string {
+  if (str === '0') {
+    return '';
+  }
+  const ts = Number(str);
+  return !isNaN(ts) && ts > 0 ? formatDateTime(new Date(ts * 1000)) : formatDateTime(str);
+}
+
+/**
+ * Reformats a raw-epoch-seconds `elevateLogsUntil` override value (as stored/read back from
+ * `overrideConfig`) into the `Y-m-d H:i:s` string the backend's date sanitizer expects, so an
+ * untouched override survives a resave. Mirrors EditDisplayProfileModal.tsx's config payload logic.
+ */
+function normalizeOverridesForSave(overrides: Record<string, string>): Record<string, string> {
+  const value = overrides['elevateLogsUntil'];
+  if (value === undefined) {
+    return overrides;
+  }
+  const trimmed = value.trim();
+  const ts = Number(trimmed);
+  const isRawEpoch = trimmed !== '' && !isNaN(ts) && String(Math.floor(ts)) === trimmed;
+  if (!isRawEpoch) {
+    return overrides;
+  }
+  if (ts <= 0) {
+    return { ...overrides, elevateLogsUntil: '' };
+  }
+  const d = new Date(ts * 1000);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const formatted = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  return { ...overrides, elevateLogsUntil: formatted };
+}
+
 function resolveLabel(
   raw: string | number | null | undefined,
   meta: FieldMeta,
   playerVersions: PlayerSoftware[],
   dayparts: Daypart[],
   t: TFunction,
+  formatDateTime: (value: DateLike) => string,
 ): string {
   if (raw === null || raw === undefined) {
     return '—';
@@ -291,6 +327,9 @@ function resolveLabel(
   if (meta.inputType === 'checkbox') {
     return str === '1' || str === 'true' ? t('True') : t('False');
   }
+  if (meta.inputType === 'datepicker') {
+    return resolveDatepickerLabel(str, formatDateTime);
+  }
   return str;
 }
 
@@ -318,6 +357,7 @@ function OverrideCell({
   onRemove,
 }: OverrideCellProps) {
   const { t } = useTranslation();
+  const { formatDateTime } = useDateFormatter();
   const [isOpen, setIsOpen] = useState(false);
   const [editValue, setEditValue] = useState('');
 
@@ -350,7 +390,7 @@ function OverrideCell({
 
   const displayText =
     overrideVal !== undefined
-      ? resolveLabel(overrideVal, meta, playerVersions, dayparts, t)
+      ? resolveLabel(overrideVal, meta, playerVersions, dayparts, t, formatDateTime)
       : undefined;
 
   return (
@@ -476,6 +516,7 @@ export default function EditDisplayModal({
   onSave,
 }: EditDisplayModalProps) {
   const { t } = useTranslation();
+  const { formatDateTime } = useDateFormatter();
   const [isPending, startTransition] = useTransition();
 
   const displayTypes: SelectOption[] = [
@@ -917,7 +958,8 @@ export default function EditDisplayModal({
           })(),
           clearCachedData: draft.clearCachedData,
           rekeyXmr: draft.rekeyXmr,
-          overrideValues: Object.keys(overrides).length > 0 ? overrides : undefined,
+          overrideValues:
+            Object.keys(overrides).length > 0 ? normalizeOverridesForSave(overrides) : undefined,
         });
         onSave({ ...data, ...updated });
         onClose();
@@ -1500,6 +1542,7 @@ export default function EditDisplayModal({
                           playerVersions,
                           dayparts,
                           t,
+                          formatDateTime,
                         );
 
                         return (

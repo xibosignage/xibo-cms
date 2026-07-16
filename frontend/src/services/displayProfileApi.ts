@@ -186,7 +186,11 @@ export async function updateDisplayProfile(
   }
 
   if (data.hisenseTimers !== undefined) {
-    data.hisenseTimers.forEach((timer, i) => {
+    const hisenseTimersToSend =
+      data.hisenseTimers.length > 0
+        ? data.hisenseTimers
+        : [{ index: 0, dayScope: 0, time: '00:00', manualWeeks: [] }];
+    hisenseTimersToSend.forEach((timer, i) => {
       params.append(`timers[${i}][index]`, String(timer.index));
       params.append(`timers[${i}][type]`, String(timer.dayScope));
       params.append(`timers[${i}][time]`, timer.time);

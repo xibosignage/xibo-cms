@@ -497,20 +497,26 @@ export default function EditDisplayProfileModal({
         if (checkboxFields.has(key)) {
           configPayload[key] = value === 1 || value === '1' || value === 'on' ? 'on' : 'off';
         } else if (key === 'elevateLogsUntil') {
-          const ts = Number(value);
-          if (!value || value === '0' || value === 0 || isNaN(ts) || ts <= 0) {
+          if (!value || value === '0' || value === 0) {
             configPayload[key] = '';
-          } else if (
-            typeof value === 'number' ||
-            (typeof value === 'string' && String(Math.floor(ts)) === value.trim())
-          ) {
-            const d = new Date(ts * 1000);
-            const pad = (n: number) => String(n).padStart(2, '0');
-            configPayload[key] =
-              `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
-              ` ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
           } else {
-            configPayload[key] = value;
+            const ts = Number(value);
+            const isRawEpoch =
+              !isNaN(ts) &&
+              (typeof value === 'number' ||
+                (typeof value === 'string' && String(Math.floor(ts)) === value.trim()));
+            if (!isRawEpoch) {
+              // Already a formatted 'Y-m-d H:i:s' string (e.g. from the datepicker) — pass through.
+              configPayload[key] = value;
+            } else if (ts <= 0) {
+              configPayload[key] = '';
+            } else {
+              const d = new Date(ts * 1000);
+              const pad = (n: number) => String(n).padStart(2, '0');
+              configPayload[key] =
+                `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
+                ` ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+            }
           }
         } else {
           configPayload[key] = value;
