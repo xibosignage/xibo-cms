@@ -78,7 +78,8 @@ export default function MoveModal({
 
     if (isSameFolder) {
       commonFolderId = firstId;
-      currentFolderName = safeItems[0]?.folderName;
+      const rawName = safeItems[0]?.folderName;
+      currentFolderName = rawName === '/' ? t('Root Folder') : rawName;
     }
   }
 
