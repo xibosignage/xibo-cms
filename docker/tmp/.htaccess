@@ -4,6 +4,11 @@ RewriteEngine On
 
 RewriteBase REPLACE_ME/
 
+# discourage search engines from indexing the CMS
+<IfModule mod_headers.c>
+    Header always set X-Robots-Tag "noindex, nofollow"
+</IfModule>
+
 # fix authorization header
 RewriteCond %{HTTP:Authorization} .+
 RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
