@@ -39,6 +39,8 @@ interface EventModalsProps {
     isCloning: boolean;
     agendaDate: DateTime | null;
     displayGroups: { id: number; name: string }[];
+    displaySpecificGroupIds: number[];
+    displayGroupIds: number[];
   };
   selection: {
     selectedEvent: Event | null;
@@ -96,7 +98,13 @@ export function EventModals({ actions, selection, handlers }: EventModalsProps) 
       )}
 
       {isModalOpen('schedule') && (
-        <ScheduleEventModal isOpen onClose={actions.closeModal} onSaved={actions.handleRefresh} />
+        <ScheduleEventModal
+          isOpen
+          onClose={actions.closeModal}
+          onSaved={actions.handleRefresh}
+          displaySpecificGroupIds={actions.displaySpecificGroupIds}
+          displayGroupIds={actions.displayGroupIds}
+        />
       )}
 
       {isModalOpen('edit') && selection.selectedEvent && (
