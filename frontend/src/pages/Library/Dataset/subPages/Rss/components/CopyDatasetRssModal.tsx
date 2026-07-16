@@ -45,7 +45,7 @@ export default function CopyDatasetRssModal({
   return (
     <Modal
       isOpen={isOpen}
-      title={t('Copy Rss Row')}
+      title={t('Copy RSS Row')}
       onClose={onClose}
       size="sm"
       actions={[
@@ -64,7 +64,7 @@ export default function CopyDatasetRssModal({
     >
       <div className="px-8 pb-8 space-y-4">
         <p className="text-gray-600">
-          {t('Are you sure you want to create an exact duplicate of this Rss?')}
+          {t('Are you sure you want to create an exact duplicate of this RSS?')}
         </p>
       </div>
     </Modal>

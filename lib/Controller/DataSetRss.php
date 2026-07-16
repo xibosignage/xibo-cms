@@ -24,7 +24,6 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
-use Carbon\Exceptions\InvalidDateException;
 use OpenApi\Attributes as OA;
 use PicoFeed\Syndication\Rss20FeedBuilder;
 use PicoFeed\Syndication\Rss20ItemBuilder;
@@ -798,8 +797,12 @@ class DataSetRss extends Base
                         $item->withContent($value);
                     } else if ($mappings[$key]['dataSetColumnId'] === $feed->publishedDateColumnId) {
                         try {
-                            $date = Carbon::createFromTimestamp($value);
-                        } catch (InvalidDateException) {
+                            // Dataset date columns are stored as system-format strings (Y-m-d H:i:s);
+                            // treat purely numeric values as Unix timestamps for backwards-compat.
+                            $date = is_numeric($value)
+                                ? Carbon::createFromTimestamp($value)
+                                : Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $value);
+                        } catch (\Exception) {
                             $date = $dataSetEditDate;
                         }
 

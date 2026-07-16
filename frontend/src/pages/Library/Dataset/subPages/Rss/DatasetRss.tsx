@@ -271,7 +271,7 @@ export default function DatasetRss() {
               onClick={handleAdd}
               leftIcon={Plus}
             >
-              {t('Add Rss')}
+              {t('Add RSS')}
             </Button>
             <Button
               variant="secondary"

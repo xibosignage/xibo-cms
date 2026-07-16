@@ -140,6 +140,16 @@ export function AddAndEditDatasetRssModal({
     })) || []),
   ];
 
+  const dateColumnOptions = [
+    { value: '', label: t('Select Column') },
+    ...(columnsResponse?.rows
+      .filter((c) => c.dataTypeId === 3)
+      .map((c) => ({
+        value: String(c.dataSetColumnId),
+        label: c.heading,
+      })) || []),
+  ];
+
   useEffect(() => {
     if (isOpen) {
       setActiveTab('general');
@@ -369,7 +379,7 @@ export function AddAndEditDatasetRssModal({
                 />
                 <SelectDropdown
                   label={t('Published Date Column')}
-                  options={columnOptions}
+                  options={dateColumnOptions}
                   value={String(draft.publishedDateColumnId || '')}
                   onSelect={(val: string) => {
                     updateDraft('publishedDateColumnId', val ? Number(val) : undefined);
