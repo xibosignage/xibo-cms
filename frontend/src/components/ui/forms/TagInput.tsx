@@ -35,6 +35,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
+import SelectDropdown from './SelectDropdown';
 import { useTagSuggestions } from './hooks/useTagSuggestions';
 
 import { fetchTags } from '@/services/tagApi';
@@ -112,6 +113,7 @@ interface TagInputProps {
   onInputChange?: (value: string) => void;
   allowValues?: boolean;
   suggestions?: boolean;
+  onPendingValueChange?: (isPending: boolean) => void;
 }
 
 function TagInput({
@@ -130,6 +132,7 @@ function TagInput({
   onInputChange,
   allowValues = true,
   suggestions = true,
+  onPendingValueChange,
 }: TagInputProps) {
   const { t } = useTranslation();
   const inputId = useId();
@@ -209,6 +212,11 @@ function TagInput({
       valueInputRef.current?.focus();
     }
   }, [pendingValueTag]);
+
+  // Notify parent when pending value entry is active/inactive
+  useEffect(() => {
+    onPendingValueChange?.(pendingValueTag !== null);
+  }, [pendingValueTag, onPendingValueChange]);
 
   const startValueEntry = (name: string, known?: Tag) => {
     const source = known ?? tagSuggestions.find((s) => s.tag === name);
@@ -445,31 +453,12 @@ function TagInput({
             {t('Tag Value')}
           </label>
           {pendingValueTag.options && pendingValueTag.options.length > 0 ? (
-            <select
-              id={valueInputId}
-              autoFocus
-              className={twMerge(
-                'w-full text-sm px-3 py-2.5 rounded-lg border border-gray-200 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 min-h-11.25 bg-white',
-                valueError && 'border-red-500 focus:border-red-500 focus:ring-red-500',
-              )}
-              aria-invalid={valueError}
-              aria-describedby={valueError ? `${valueInputId}-err` : undefined}
+            <SelectDropdown
               value={pendingValueTag.options.includes(valueInput) ? valueInput : ''}
-              onChange={(e) => applyValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Escape') {
-                  cancelValueEntry();
-                }
-              }}
-              onBlur={() => applyValue()}
-            >
-              <option value="">{t('Select a value')}</option>
-              {pendingValueTag.options.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
+              placeholder={t('Select a value')}
+              options={pendingValueTag.options.map((opt) => ({ label: opt, value: opt }))}
+              onSelect={(val) => applyValue(val)}
+            />
           ) : (
             <input
               id={valueInputId}
