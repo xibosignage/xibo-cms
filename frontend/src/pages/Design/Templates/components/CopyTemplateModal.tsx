@@ -25,6 +25,7 @@ import { useTranslation } from 'react-i18next';
 import Checkbox from '@/components/ui/forms/Checkbox';
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
+import { useUserContext } from '@/context/UserContext';
 import { getTemplateSchema } from '@/schema/templates';
 import type { Template } from '@/types/templates';
 import { incrementName } from '@/utils/stringUtils';
@@ -49,20 +50,23 @@ export default function CopyTemplateModal({
   existingNames,
 }: CopyTemplateModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
+  const defaultCopyMedia = user?.settings?.LAYOUT_COPY_MEDIA_CHECKB === '1';
+
   const [newName, setNewName] = useState('');
   const [description, setDescription] = useState('');
-  const [copyMediaFiles, setCopyMediaFiles] = useState(false);
+  const [copyMediaFiles, setCopyMediaFiles] = useState(defaultCopyMedia);
   const [formErrors, setFormErrors] = useState<CopyTemplateFormErrors>({});
 
   useEffect(() => {
     if (template && isOpen) {
       setNewName(incrementName(template.layout));
       setDescription(template.description ?? '');
-      setCopyMediaFiles(false);
+      setCopyMediaFiles(defaultCopyMedia);
     }
 
     setFormErrors({});
-  }, [template, isOpen]);
+  }, [template, isOpen, defaultCopyMedia]);
 
   const handleSave = () => {
     const schema = getTemplateSchema(t).pick({
