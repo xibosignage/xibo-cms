@@ -30,6 +30,7 @@ import Button from '@/components/ui/Button';
 import Checkbox from '@/components/ui/forms/Checkbox';
 import NumberInput from '@/components/ui/forms/NumberInput';
 import SelectDropdown from '@/components/ui/forms/SelectDropdown';
+import type { SelectOption } from '@/components/ui/forms/SelectDropdown';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TextInput from '@/components/ui/forms/TextInput';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -40,6 +41,7 @@ import {
   createDataset,
   testRemoteDataset,
   fetchDataConnectorSource,
+  fetchDataset,
 } from '@/services/datasetApi';
 import type {
   Dataset,
@@ -166,6 +168,7 @@ export default function AddAndEditDatasetModal({
   const [dataConnectorSources, setDataConnectorSources] = useState<{ id: string; name: string }[]>(
     [],
   );
+  const [runsAfterOptions, setRunsAfterOptions] = useState<SelectOption[]>([]);
 
   useEffect(() => {
     fetchDataConnectorSource()
@@ -176,6 +179,21 @@ export default function AddAndEditDatasetModal({
         console.error('Failed to fetch data connector sources:', err);
       });
   }, [isOpen]);
+
+  useEffect(() => {
+    fetchDataset({ start: 0, length: 10000 })
+      .then(({ rows }) => {
+        setRunsAfterOptions([
+          { label: t('None'), value: '0' },
+          ...rows
+            .filter((ds) => ds.dataSetId !== data?.dataSetId)
+            .map((ds) => ({ label: ds.dataSet, value: String(ds.dataSetId) })),
+        ]);
+      })
+      .catch((err) => {
+        console.error('Failed to fetch datasets:', err);
+      });
+  }, [isOpen, data?.dataSetId, t]);
 
   const handleTestRemoteData = () => {
     setTestResult(t('Testing...'));
@@ -763,7 +781,8 @@ export default function AddAndEditDatasetModal({
               <SelectDropdown
                 label={t('Depends on Dataset')}
                 value={draft.runsAfter.toString()}
-                options={[]}
+                options={runsAfterOptions}
+                searchable
                 helpText={t(
                   'The DataSet you select here will be processed in advance and have its values available for substitution in the data to add to this request on the Remote tab.',
                 )}
