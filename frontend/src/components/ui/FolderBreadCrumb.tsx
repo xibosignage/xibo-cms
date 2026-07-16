@@ -39,6 +39,7 @@ import { twMerge } from 'tailwind-merge';
 import Button from './Button';
 
 import type { ActionType } from '@/hooks/useFolderActions';
+import { usePermissions } from '@/hooks/usePermissions';
 import { fetchFolderTree, fetchContextButtons, type FolderPermissions } from '@/services/folderApi';
 import type { Folder } from '@/types/folder';
 
@@ -62,6 +63,7 @@ export default function FolderBreadcrumb({
   refreshTrigger,
 }: FolderBreadcrumbProps) {
   const { t } = useTranslation();
+  const { canViewFolders } = usePermissions();
   const { breadcrumbs } = useBreadcrumbPath(currentFolderId, refreshTrigger);
   const containerRef = useRef<HTMLDivElement>(null);
   const [limits, setLimits] = useState({ start: 3, end: 3 });
@@ -108,6 +110,10 @@ export default function FolderBreadcrumb({
 
     return () => observer.disconnect();
   }, []);
+
+  if (!canViewFolders) {
+    return null;
+  }
 
   const total = breadcrumbs.length;
   const threshold = limits.start + limits.end;
@@ -159,7 +165,7 @@ export default function FolderBreadcrumb({
         variant="tertiary"
         onClick={onToggleSidebar}
         title={t('Toggle Folder Tree')}
-        className="size-[38px] shrink-0 flex items-center justify-center mr-1"
+        className="size-9.5 shrink-0 flex items-center justify-center mr-1"
       >
         <FolderIcon className={twMerge('size-4.5', isSidebarOpen ? 'fill-current' : '')} />
       </Button>

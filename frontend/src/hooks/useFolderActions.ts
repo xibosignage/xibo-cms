@@ -23,6 +23,7 @@ import { useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { notify } from '@/components/ui/Notification';
+import { useFolderRefresh } from '@/context/FolderRefreshContext';
 import { createFolder, deleteFolder, editFolder, moveFolder } from '@/services/folderApi';
 import type { Folder } from '@/types/folder';
 
@@ -34,6 +35,7 @@ interface UseFolderActionsProps {
 
 export function useFolderActions({ onSuccess }: UseFolderActionsProps = {}) {
   const { t } = useTranslation();
+  const { refresh } = useFolderRefresh();
   const [isPending, startTransition] = useTransition();
 
   const [activeFolder, setActiveFolder] = useState<Folder | null>(null);
@@ -76,6 +78,7 @@ export function useFolderActions({ onSuccess }: UseFolderActionsProps = {}) {
 
       if (result.success) {
         notify.info(t('Folder "{{name}}" created', { name: inputText }));
+        refresh();
         closeAction();
         if (result.data.id) {
           // Selected newly created folder
@@ -102,6 +105,7 @@ export function useFolderActions({ onSuccess }: UseFolderActionsProps = {}) {
 
       if (result.success) {
         notify.info(t('Renamed to "{{name}}"', { name: inputText }));
+        refresh();
         closeAction();
 
         // Select renamed folder
@@ -124,6 +128,7 @@ export function useFolderActions({ onSuccess }: UseFolderActionsProps = {}) {
 
       if (result.success) {
         notify.info(t('Folder "{{name}}" moved', { name: activeFolder.text }));
+        refresh();
         closeAction();
         onSuccess?.();
       } else {
@@ -140,6 +145,7 @@ export function useFolderActions({ onSuccess }: UseFolderActionsProps = {}) {
 
       if (result.success) {
         notify.info(t('Folder "{{name}}" deleted', { name: activeFolder.text }));
+        refresh();
         closeAction();
 
         // Select home folder

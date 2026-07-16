@@ -47,6 +47,7 @@ export default function FolderPermissionTab({
       <div className="flex flex-col gap-1">
         <SelectFolder
           selectedId={draft.homeFolderId}
+          enforceViewPermission={false}
           onSelect={(folder) =>
             setDraft((prev) => ({
               ...prev,

@@ -47,6 +47,7 @@ import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import type { User } from '@/types/user';
 import { countActiveFilters } from '@/utils/filters';
+import { hasFeature } from '@/utils/permissions';
 
 export default function Users() {
   const { t } = useTranslation();
@@ -173,9 +174,12 @@ export default function Users() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
+  const canSetHomeFolder = hasFeature(currentUser, 'folder.userHome');
+
   const columns = getUserColumns({
     t,
     currentUserId: currentUser?.userId,
+    canSetHomeFolder,
     onEdit: (user) => openModal('edit', user),
     onSetHomeFolder: (user) => openModal('setHomeFolder', user),
     onUserGroups: (user) => openModal('userGroups', user),
@@ -185,6 +189,7 @@ export default function Users() {
 
   const bulkActions = getBulkActions({
     t,
+    canSetHomeFolder,
     onSetHomeFolder: () => {
       const allItems = getAllSelectedItems();
       setItemsToSetHomeFolder(allItems);
