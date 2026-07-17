@@ -152,10 +152,8 @@ class Theme implements Middleware
         $view['playerVersion'] = Environment::$PLAYER_SUPPORT;
         $view['isDevMode'] = Environment::isDevMode();
 
-        $samlSettings = $container->get('configService')->samlSettings;
-        if (isset($samlSettings['workflow'])
-            && isset($samlSettings['workflow']['slo'])
-            && $samlSettings['workflow']['slo'] == false) {
+        $configService = $container->get('configService');
+        if (!empty($configService->samlSettings) && !$configService->isSamlSloSupported()) {
             $view['hideLogout'] = true;
         }
     }

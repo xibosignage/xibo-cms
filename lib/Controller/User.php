@@ -172,11 +172,19 @@ class User extends Base
             ];
         }
 
+        // SAML: is the logout button usable? Hide it when SAML is configured but the
+        // IdP doesn't support Single Logout - a local-only logout would just get the
+        // user silently signed back in via SSO on their next protected-page visit.
+        $samlEnabled = !empty($this->getConfig()->samlSettings);
+        $hideLogoutButton = $samlEnabled && !$this->getConfig()->isSamlSloSupported();
+
         return $response->withJson(array_merge($this->getUser()->toArray(), [
             'settings' => $settings,
             'features' => $this->getUserFeatures(),
             'branding' => $branding,
             'cloudHosting' => $cloudHosting,
+            'samlEnabled' => $samlEnabled,
+            'hideLogoutButton' => $hideLogoutButton,
         ]));
     }
 

@@ -102,6 +102,13 @@ interface ConfigServiceInterface
     public function isProxyException($host);
 
     /**
+     * Is SAML Single Logout usable - i.e. explicitly enabled in workflow settings
+     * and the IdP has a singleLogoutService endpoint configured.
+     * @return bool
+     */
+    public function isSamlSloSupported();
+
+    /**
      * Get Proxy Configuration
      * @param array $httpOptions
      * @return array

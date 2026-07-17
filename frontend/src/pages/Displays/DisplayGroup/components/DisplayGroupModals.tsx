@@ -54,7 +54,6 @@ interface DisplayGroupModalsProps {
     itemsToDelete: DisplayGroup[];
     existingNames: string[];
     itemsToMove: DisplayGroup[];
-    folderName: string;
     shareEntityIds: number | number[] | null;
     setShareEntityIds: React.Dispatch<React.SetStateAction<number | number[] | null>>;
   };
@@ -129,10 +128,7 @@ export function DisplayGroupModals({ actions, selection, handlers }: DisplayGrou
         <MoveModal
           onClose={actions.closeModal}
           onConfirm={handlers.confirmMove}
-          items={selection.itemsToMove.map((item) => ({
-            ...item,
-            folderName: selection.folderName,
-          }))}
+          items={selection.itemsToMove}
           entityLabel={t('Display Groups')}
           isLoading={actions.isMoving}
         />

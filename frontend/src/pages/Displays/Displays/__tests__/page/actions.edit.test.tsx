@@ -23,7 +23,7 @@
 // Test type: Page integration test
 // Tests the edit flow on the Displays page — modal opens on Edit click,
 // table refreshes with updated data after save.
-// Form field logic lives in edit/edit.form.test.tsx.
+// Form field logic lives in modals/edit/edit.form.test.tsx.
 // =============================================================================
 
 import { screen } from '@testing-library/react';
@@ -73,7 +73,7 @@ vi.mock('../../hooks/useDisplaysFilterOptions', () => ({
 
 // These tests verify page-level behaviour only: does clicking Edit open the
 // modal, and does clicking Save refresh the table? Form field logic lives in
-// edit/edit.form.test.tsx, so the real modal is replaced with a minimal stub
+// modals/edit/edit.form.test.tsx, so the real modal is replaced with a minimal stub
 // that acts purely as a behavioural trigger.
 vi.mock('../../components/EditDisplayModal', () => ({
   default: ({

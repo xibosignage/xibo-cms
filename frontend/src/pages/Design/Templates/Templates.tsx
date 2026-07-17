@@ -52,7 +52,6 @@ import { useTableState } from '@/hooks/useTableState';
 import { fetchContextButtons } from '@/services/folderApi';
 import type { Template } from '@/types/templates';
 import { countActiveFilters } from '@/utils/filters';
-import { hasFeature } from '@/utils/permissions';
 
 export default function Templates() {
   const { t } = useTranslation();
@@ -60,7 +59,6 @@ export default function Templates() {
   const queryClient = useQueryClient();
   const { user } = useUserContext();
   const canViewFolders = usePermissions()?.canViewFolders;
-  const canSchedule = hasFeature(user, 'schedule.add');
   const homeFolderId = user?.homeFolderId ?? 1;
 
   const {
@@ -252,11 +250,6 @@ export default function Templates() {
     openModal('copy');
   };
 
-  const openScheduleModal = (template: Template) => {
-    setSelectedTemplateId(template.layoutId);
-    openModal('schedule');
-  };
-
   const openPublishModal = (layoutId: number) => {
     setSelectedTemplateId(layoutId);
     openModal('publish');
@@ -288,7 +281,6 @@ export default function Templates() {
     openCopyModal,
     openPublishModal,
     discardTemplate: handleDiscardModal,
-    onSchedule: canSchedule ? openScheduleModal : undefined,
     exportTemplate: handleExportModal,
   });
 

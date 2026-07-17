@@ -138,6 +138,26 @@ export const mockUserNoSchedule: User = {
   },
 };
 
+// User with the ad.campaign feature enabled — used for Type / Start Date / End Date
+// column tests, which are only rendered when canAccessAdCampaign is true.
+export const mockUserWithAdCampaign: User = {
+  ...mockUser,
+  features: {
+    ...mockUser.features,
+    'ad.campaign': true,
+  },
+};
+
+// User with the ad.campaign feature explicitly disabled — reserved for future tests
+// covering the Type / Start Date / End Date columns being hidden.
+export const mockUserWithoutAdCampaign: User = {
+  ...mockUser,
+  features: {
+    ...mockUser.features,
+    'ad.campaign': false,
+  },
+};
+
 // -----------------------------------------------------------------------------
 // Table data fixtures
 // -----------------------------------------------------------------------------

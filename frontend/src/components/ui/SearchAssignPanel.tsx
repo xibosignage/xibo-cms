@@ -19,8 +19,18 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import {
+  closestCenter,
+  DndContext,
+  type DragEndEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import { arrayMove, rectSortingStrategy, SortableContext, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import type { ColumnDef, OnChangeFn, PaginationState, SortingState } from '@tanstack/react-table';
-import { MinusCircle, PlusCircle, Search, X } from 'lucide-react';
+import { GripVertical, MinusCircle, PlusCircle, Search, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -30,12 +40,16 @@ interface SearchAssignPanelProps<TItem> {
   assignedItems: TItem[];
   isLoadingAssigned?: boolean;
   onAddItem: (item: TItem) => void;
-  onRemoveItem: (item: TItem) => void;
+  onRemoveItem: (item: TItem, index: number) => void;
   onClearAll?: () => void;
   assignedLabel?: string;
   noAssignedText?: string;
   getItemId: (item: TItem) => number | string;
   getItemLabel: (item: TItem) => string;
+  sortable?: boolean;
+  onReorder?: (items: TItem[]) => void;
+  allowMultiple?: boolean;
+  getRowKey?: (item: TItem, index: number) => number | string;
 
   keyword: string;
   onKeywordChange: (keyword: string) => void;
@@ -57,6 +71,48 @@ interface SearchAssignPanelProps<TItem> {
   warningMessage?: string;
 }
 
+interface SortableChipProps {
+  id: number | string;
+  label: string;
+  onRemove: () => void;
+  removeAriaLabel: string;
+}
+
+function SortableChip({ id, label, onRemove, removeAriaLabel }: SortableChipProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+  });
+
+  return (
+    <span
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Translate.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+      }}
+      className="inline-flex items-center justify-center gap-1 rounded-full border border-gray-400 p-1.5"
+    >
+      <span
+        className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 touch-none"
+        {...listeners}
+        {...attributes}
+      >
+        <GripVertical size={12} />
+      </span>
+      <span className="px-1 text-[12px] text-gray-800">{label}</span>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="flex justify-center items-center size-3.75 bg-gray-200 text-gray-500 hover:text-gray-600 hover:bg-gray-300 rounded-full"
+        aria-label={removeAriaLabel}
+      >
+        <X size={10} />
+      </button>
+    </span>
+  );
+}
+
 export function SearchAssignPanel<TItem>({
   assignedItems,
   isLoadingAssigned = false,
@@ -67,6 +123,10 @@ export function SearchAssignPanel<TItem>({
   noAssignedText,
   getItemId,
   getItemLabel,
+  sortable = false,
+  onReorder,
+  allowMultiple = false,
+  getRowKey,
   keyword,
   onKeywordChange,
   searchLabel,
@@ -86,6 +146,23 @@ export function SearchAssignPanel<TItem>({
 }: SearchAssignPanelProps<TItem>) {
   const { t } = useTranslation();
 
+  const rowKey = getRowKey ?? ((item: TItem) => getItemId(item));
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) {
+      return;
+    }
+    const oldIndex = assignedItems.findIndex((item, index) => rowKey(item, index) === active.id);
+    const newIndex = assignedItems.findIndex((item, index) => rowKey(item, index) === over.id);
+    if (oldIndex === -1 || newIndex === -1) {
+      return;
+    }
+    onReorder?.(arrayMove(assignedItems, oldIndex, newIndex));
+  };
+
   const handleKeywordChange = (value: string) => {
     onKeywordChange(value);
     onPaginationChange((prev) => ({ ...prev, pageIndex: 0 }));
@@ -97,12 +174,17 @@ export function SearchAssignPanel<TItem>({
     size: 20,
     enableSorting: false,
     cell: ({ row }) => {
-      const isAssigned = assignedItems.some((item) => getItemId(item) === getItemId(row.original));
+      const assignedIndex = allowMultiple
+        ? -1
+        : assignedItems.findIndex((item) => getItemId(item) === getItemId(row.original));
+      const isAssigned = assignedIndex !== -1;
       return (
         <div className="flex justify-center">
           <button
             type="button"
-            onClick={() => (isAssigned ? onRemoveItem(row.original) : onAddItem(row.original))}
+            onClick={() =>
+              isAssigned ? onRemoveItem(row.original, assignedIndex) : onAddItem(row.original)
+            }
             className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
               isAssigned
                 ? 'text-red-600 hover:text-red-800 hover:bg-red-50'
@@ -139,27 +221,47 @@ export function SearchAssignPanel<TItem>({
             <p className="text-sm text-gray-400 flex-1">
               {noAssignedText ?? t('No items assigned.')}
             </p>
+          ) : sortable ? (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={assignedItems.map((item, index) => rowKey(item, index))}
+                strategy={rectSortingStrategy}
+              >
+                <div className="flex flex-wrap gap-2 flex-1">
+                  {assignedItems.map((item, index) => (
+                    <SortableChip
+                      key={rowKey(item, index)}
+                      id={rowKey(item, index)}
+                      label={getItemLabel(item)}
+                      onRemove={() => onRemoveItem(item, index)}
+                      removeAriaLabel={t('Remove {{name}}', { name: getItemLabel(item) })}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           ) : (
             <div className="flex flex-wrap gap-2 flex-1">
-              {assignedItems.map((item) => {
-                const id = getItemId(item);
-                return (
-                  <span
-                    key={id}
-                    className="inline-flex items-center justify-center gap-1 rounded-full border border-gray-400 p-1.5"
+              {assignedItems.map((item, index) => (
+                <span
+                  key={rowKey(item, index)}
+                  className="inline-flex items-center justify-center gap-1 rounded-full border border-gray-400 p-1.5"
+                >
+                  <span className="px-1 text-[12px] text-gray-800">{getItemLabel(item)}</span>
+                  <button
+                    type="button"
+                    onClick={() => onRemoveItem(item, index)}
+                    className="flex justify-center items-center size-3.75 bg-gray-200 text-gray-500 hover:text-gray-600 hover:bg-gray-300 rounded-full"
+                    aria-label={t('Remove {{name}}', { name: getItemLabel(item) })}
                   >
-                    <span className="px-1 text-[12px] text-gray-800">{getItemLabel(item)}</span>
-                    <button
-                      type="button"
-                      onClick={() => onRemoveItem(item)}
-                      className="flex justify-center items-center size-3.75 bg-gray-200 text-gray-500 hover:text-gray-600 hover:bg-gray-300 rounded-full"
-                      aria-label={t('Remove {{name}}', { name: getItemLabel(item) })}
-                    >
-                      <X size={10} />
-                    </button>
-                  </span>
-                );
-              })}
+                    <X size={10} />
+                  </button>
+                </span>
+              ))}
             </div>
           )}
           {onClearAll !== undefined && assignedItems.length > 0 && (

@@ -157,7 +157,7 @@ describe('Display - edit form: General tab', () => {
     await renderEditModal();
     await user.click(screen.getByRole('tab', { name: 'General' }));
 
-    const tagsInput = screen.getByRole('textbox', { name: /^Tags$/i });
+    const tagsInput = screen.getByRole('combobox', { name: /^Tags$/i });
     await user.type(tagsInput, 'my-tag');
     expect(tagsInput).toHaveValue('my-tag');
   });

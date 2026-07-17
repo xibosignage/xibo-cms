@@ -2515,6 +2515,23 @@ trait DisplayProfileConfigFields
             $ownConfig
         );
 
+        if ($sanitizedParams->hasParam('disableTimerManagement')) {
+            $this->handleChangedSettings(
+                'disableTimerManagement',
+                ($ownConfig)
+                    ? $displayProfile->getSetting('disableTimerManagement')
+                    : $display->getSetting('disableTimerManagement'),
+                $sanitizedParams->getCheckbox('disableTimerManagement'),
+                $changedSettings
+            );
+            $displayProfile->setSetting(
+                'disableTimerManagement',
+                $sanitizedParams->getCheckbox('disableTimerManagement'),
+                $ownConfig,
+                $config
+            );
+        }
+
         // Hisense-exclusive integer picture settings with per-setting range validation
         $intSettings = [
             'brightness'        => ['min' => 0, 'max' => 100],
@@ -2639,7 +2656,7 @@ trait DisplayProfileConfigFields
 
                 usort($rules, fn($a, $b) => $a['index'] <=> $b['index']);
 
-                $encoded = json_encode($rules);
+                $encoded = empty($rules) ? null : json_encode($rules);
                 $this->handleChangedSettings(
                     'timers',
                     ($ownConfig) ? $displayProfile->getSetting('timers') : $display->getSetting('timers'),

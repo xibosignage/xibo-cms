@@ -22,7 +22,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table';
 import { isAxiosError } from 'axios';
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { SearchAssignPanel } from '@/components/ui/SearchAssignPanel';
@@ -35,11 +35,7 @@ import Modal from '@/components/ui/modals/Modal';
 import { CheckMarkCell, TextCell } from '@/components/ui/table/cells';
 import { useDebounce } from '@/hooks/useDebounce';
 import { updateCampaign } from '@/services/campaignApi';
-import {
-  assignLayoutToCampaign,
-  fetchLayouts,
-  unassignLayoutFromCampaign,
-} from '@/services/layoutsApi';
+import { fetchLayouts } from '@/services/layoutsApi';
 import type { Campaign } from '@/types/campaign';
 import type { Layout } from '@/types/layout';
 import type { Tag } from '@/types/tag';
@@ -67,6 +63,8 @@ interface EditDraft {
 
 type Tab = 'general' | 'reference' | 'layouts';
 
+type CampaignLayout = Layout & { assignmentKey?: number };
+
 export default function EditCampaignModal({
   isOpen = true,
   campaign,
@@ -78,6 +76,7 @@ export default function EditCampaignModal({
   const [activeTab, setActiveTab] = useState<Tab>('general');
   const [apiError, setApiError] = useState('');
   const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
 
   const [draft, setDraft] = useState<EditDraft>({
     name: '',
@@ -93,8 +92,8 @@ export default function EditCampaignModal({
     ref5: '',
   });
 
-  const [assignedLayouts, setAssignedLayouts] = useState<Layout[]>([]);
-  const [originalLayoutIds, setOriginalLayoutIds] = useState<Set<number>>(new Set());
+  const [assignedLayouts, setAssignedLayouts] = useState<CampaignLayout[]>([]);
+  const assignmentKeyRef = useRef(0);
   const [layoutKeyword, setLayoutKeyword] = useState('');
   const [layoutPagination, setLayoutPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -129,16 +128,23 @@ export default function EditCampaignModal({
 
   const { data: assignedData } = useQuery({
     queryKey: ['layouts', 'campaign', campaign?.campaignId],
-    queryFn: () => fetchLayouts({ start: 0, length: 200, campaignId: campaign!.campaignId }),
+    queryFn: () =>
+      fetchLayouts({
+        start: 0,
+        length: 200,
+        campaignId: campaign!.campaignId,
+        sortBy: 'displayOrder',
+        sortDir: 'asc',
+      }),
     enabled: isOpen && !!campaign,
     staleTime: 0,
   });
 
   useEffect(() => {
     if (assignedData) {
-      setAssignedLayouts(assignedData.rows);
-      const ids = new Set(assignedData.rows.map((l) => l.layoutId));
-      setOriginalLayoutIds(ids);
+      setAssignedLayouts(
+        assignedData.rows.map((l) => ({ ...l, assignmentKey: assignmentKeyRef.current++ })),
+      );
     }
   }, [assignedData]);
 
@@ -168,14 +174,14 @@ export default function EditCampaignModal({
   const layoutPageCount = Math.ceil((layoutsData?.totalCount ?? 0) / layoutPagination.pageSize);
 
   const addLayout = (layout: Layout) => {
-    if (assignedLayouts.some((l) => l.layoutId === layout.layoutId)) {
-      return;
-    }
-    setAssignedLayouts((prev) => [...prev, layout]);
+    setAssignedLayouts((prev) => [
+      ...prev,
+      { ...layout, assignmentKey: assignmentKeyRef.current++ },
+    ]);
   };
 
-  const removeLayout = (layout: Layout) => {
-    setAssignedLayouts((prev) => prev.filter((l) => l.layoutId !== layout.layoutId));
+  const removeLayout = (_layout: Layout, index: number) => {
+    setAssignedLayouts((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSave = () => {
@@ -202,17 +208,9 @@ export default function EditCampaignModal({
           ref3: draft.ref3 || undefined,
           ref4: draft.ref4 || undefined,
           ref5: draft.ref5 || undefined,
+          manageLayouts: 1,
+          layoutIds: assignedLayouts.map((l) => l.layoutId),
         });
-
-        // Layout assignment changes
-        const currentIds = new Set(assignedLayouts.map((l) => l.layoutId));
-        const toAssign = [...currentIds].filter((id) => !originalLayoutIds.has(id));
-        const toUnassign = [...originalLayoutIds].filter((id) => !currentIds.has(id));
-
-        await Promise.all([
-          ...toAssign.map((id) => assignLayoutToCampaign(campaign.campaignId, id)),
-          ...toUnassign.map((id) => unassignLayoutFromCampaign(campaign.campaignId, id)),
-        ]);
 
         onSuccess();
         onClose();
@@ -228,7 +226,7 @@ export default function EditCampaignModal({
     });
   };
 
-  const layoutColumns: ColumnDef<Layout>[] = [
+  const layoutColumns: ColumnDef<CampaignLayout>[] = [
     {
       accessorKey: 'layoutId',
       header: t('ID'),
@@ -272,7 +270,7 @@ export default function EditCampaignModal({
         {
           label: isPending ? t('Saving…') : t('Save'),
           onClick: handleSave,
-          disabled: isPending,
+          disabled: isPending || hasTagPendingValue,
         },
       ]}
     >
@@ -325,6 +323,7 @@ export default function EditCampaignModal({
                 onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
                 inputValue={pendingTagInput}
                 onInputChange={setPendingTagInput}
+                onPendingValueChange={setHasTagPendingValue}
               />
 
               <Checkbox
@@ -391,7 +390,7 @@ export default function EditCampaignModal({
 
           {/* Layouts Tab */}
           {activeTab === 'layouts' && (
-            <SearchAssignPanel<Layout>
+            <SearchAssignPanel<CampaignLayout>
               assignedItems={assignedLayouts}
               assignedLabel={t('Selected Layouts')}
               onAddItem={addLayout}
@@ -400,6 +399,10 @@ export default function EditCampaignModal({
               noAssignedText={t('No layouts assigned yet')}
               getItemId={(l) => l.layoutId}
               getItemLabel={(l) => l.layout}
+              sortable
+              onReorder={setAssignedLayouts}
+              allowMultiple
+              getRowKey={(l, index) => l.assignmentKey ?? index}
               keyword={layoutKeyword}
               onKeywordChange={setLayoutKeyword}
               searchPlaceholder={t('Search')}

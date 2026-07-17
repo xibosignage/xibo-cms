@@ -162,15 +162,18 @@ export default function UserMenu() {
                 onClick={() => openModal('about')}
               />
 
-              <div className="p-2 py-1 mt-2 border-t border-gray-200"></div>
-
-              <div className="space-y-0.5">
-                <MenuItem
-                  icon={<LogOut size={18} />}
-                  label={t('Sign Out')}
-                  onClick={handleSignOut}
-                />
-              </div>
+              {!user?.hideLogoutButton && (
+                <>
+                  <div className="p-2 py-1 mt-2 border-t border-gray-200"></div>
+                  <div className="space-y-0.5">
+                    <MenuItem
+                      icon={<LogOut size={18} />}
+                      label={t('Sign Out')}
+                      onClick={handleSignOut}
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}

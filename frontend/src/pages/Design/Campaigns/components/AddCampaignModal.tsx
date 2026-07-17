@@ -84,6 +84,7 @@ export default function AddCampaignModal({
   const [formErrors, setFormErrors] = useState<CampaignFormErrors>({});
   const [apiError, setApiError] = useState<string | undefined>();
   const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
@@ -178,7 +179,7 @@ export default function AddCampaignModal({
         {
           label: isPending ? t('Saving…') : t('Save'),
           onClick: handleSave,
-          disabled: isPending,
+          disabled: isPending || hasTagPendingValue,
         },
       ]}
     >
@@ -229,6 +230,7 @@ export default function AddCampaignModal({
             onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
             inputValue={pendingTagInput}
             onInputChange={setPendingTagInput}
+            onPendingValueChange={setHasTagPendingValue}
           />
 
           {draft.type === 'ad' ? (

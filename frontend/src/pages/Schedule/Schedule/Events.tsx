@@ -486,6 +486,8 @@ export default function Events() {
           isCloning,
           agendaDate,
           displayGroups: agendaDisplayGroups,
+          displaySpecificGroupIds: filterInputs.displaySpecificGroupIds ?? [],
+          displayGroupIds: filterInputs.displayGroupIds ?? [],
         }}
         selection={{
           selectedEvent,

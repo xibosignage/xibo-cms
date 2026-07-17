@@ -120,4 +120,13 @@ export interface User {
 
   branding?: BrandingConfig;
   cloudHosting?: CloudHosting | null;
+
+  /** Whether SAML authentication is configured for this CMS instance. */
+  samlEnabled?: boolean;
+  /**
+   * Hide the Sign Out control - set when SAML is configured but the IdP doesn't
+   * support Single Logout, so a local-only logout would just be silently
+   * re-authenticated via SSO on the next protected-page visit.
+   */
+  hideLogoutButton?: boolean;
 }

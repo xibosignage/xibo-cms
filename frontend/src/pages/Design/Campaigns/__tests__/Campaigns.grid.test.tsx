@@ -39,6 +39,8 @@ import {
   mockCampaignData,
   mockUser,
   mockUserNoSchedule,
+  mockUserWithAdCampaign,
+  mockUserWithoutAdCampaign,
 } from './campaignTestUtils';
 
 import { UserProvider } from '@/context/UserContext';
@@ -202,7 +204,7 @@ describe('Campaigns page - grid rendering', () => {
   test('renders "Layout List" for a campaign with type "list"', async () => {
     mockCampaignData(SINGLE_CAMPAIGN);
     await act(async () => {
-      renderPage();
+      renderPage(mockUserWithAdCampaign);
     });
     expect(await screen.findByText('Layout List')).toBeInTheDocument();
   });
@@ -210,9 +212,19 @@ describe('Campaigns page - grid rendering', () => {
   test('renders "Ad Campaign" for a campaign with type "ad"', async () => {
     mockCampaignData(SINGLE_AD_CAMPAIGN);
     await act(async () => {
-      renderPage();
+      renderPage(mockUserWithAdCampaign);
     });
     expect(await screen.findByText('Ad Campaign')).toBeInTheDocument();
+  });
+
+  test('hides the Type column when the user lacks the ad.campaign feature', async () => {
+    mockCampaignData(SINGLE_AD_CAMPAIGN);
+    await act(async () => {
+      renderPage(mockUserWithoutAdCampaign);
+    });
+    await screen.findByText(mockAdCampaign.campaign);
+    expect(screen.queryByText('Ad Campaign')).not.toBeInTheDocument();
+    expect(screen.queryByText('Layout List')).not.toBeInTheDocument();
   });
 
   // ---------------------------------------------------------------------------
@@ -254,7 +266,7 @@ describe('Campaigns page - grid rendering', () => {
   test('renders a formatted date string when startDt is a non-zero Unix timestamp', async () => {
     mockCampaignData(SINGLE_AD_CAMPAIGN);
     await act(async () => {
-      renderWithAllColumns();
+      renderWithAllColumns(mockUserWithAdCampaign);
     });
     const formatted = formatCmsDateTime(new Date(mockAdCampaign.startDt * 1000), {
       format: 'DD/MM/YYYY',

@@ -31,6 +31,7 @@ use Xibo\Helper\Environment;
 use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\LogoutTrait;
 use Xibo\Helper\Random;
+use Xibo\Helper\SafeRedirect;
 use Xibo\Helper\Session;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
@@ -139,7 +140,7 @@ class Login extends Base
 
         // Build config blob for the React SPA shell
         $loginConfig = [
-            'priorRoute' => $this->sanitizePriorRouteForOutput(
+            'priorRoute' => SafeRedirect::sanitizeRoute(
                 $sanitizedRequestBody->getString('priorRoute')
             ),
             'loginError'              => $loginError,
@@ -269,7 +270,7 @@ class Login extends Base
                     }
                     return $response->withJson([
                         'status'     => '2fa_required',
-                        'priorRoute' => $this->sanitizePriorRouteForOutput($priorRoute),
+                        'priorRoute' => SafeRedirect::sanitizeRoute($priorRoute),
                     ]);
                 }
 
@@ -722,33 +723,6 @@ class Login extends Base
         $this->getLog()->audit('User', $user->userId, 'Login Granted', [
                 'UserAgent' => $request->getHeader('User-Agent')
         ]);
-    }
-
-    /**
-     * Sanitize a priorRoute value before surfacing it to React via JSON.
-     * Strips host, scheme, and /login prefixes to prevent open redirects.
-     */
-    private function sanitizePriorRouteForOutput(?string $raw): string
-    {
-        if (empty($raw)) {
-            return '';
-        }
-        $parsed = parse_url($raw);
-        if ($parsed === false || !empty($parsed['host'])) {
-            return '';
-        }
-        $path = $parsed['path'] ?? '';
-        if ($path === '' || $path === '/' || str_starts_with($path, '/login')) {
-            return '';
-        }
-        $safe = $path;
-        if (!empty($parsed['query'])) {
-            $safe .= '?' . $parsed['query'];
-        }
-        if (!empty($parsed['fragment'])) {
-            $safe .= '#' . $parsed['fragment'];
-        }
-        return $safe;
     }
 
     private function getBrandLogoUrl(): string

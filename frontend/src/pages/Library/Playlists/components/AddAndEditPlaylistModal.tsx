@@ -135,6 +135,7 @@ export default function AddAndEditPlaylistModal({
   const [formErrors, setFormErrors] = useState<PlaylistFormErrors>({});
   const [apiError, setApiError] = useState<string | undefined>();
   const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
 
   const [draft, setDraft] = useState<PlaylistDraft>(() => {
     if (type === 'edit' && data) {
@@ -327,7 +328,7 @@ export default function AddAndEditPlaylistModal({
         {
           label: isPending ? t('Saving…') : t('Save'),
           onClick: handleSave,
-          disabled: isPending,
+          disabled: isPending || hasTagPendingValue,
         },
       ]}
     >
@@ -363,6 +364,7 @@ export default function AddAndEditPlaylistModal({
             onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
             inputValue={pendingTagInput}
             onInputChange={setPendingTagInput}
+            onPendingValueChange={setHasTagPendingValue}
           />
 
           {/* Enable Stats */}

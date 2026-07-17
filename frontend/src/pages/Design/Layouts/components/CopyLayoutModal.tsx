@@ -22,9 +22,11 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import InfoBanner from '@/components/ui/InfoBanner';
 import Checkbox from '@/components/ui/forms/Checkbox';
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
+import { useUserContext } from '@/context/UserContext';
 import type { Layout } from '@/types/layout';
 import { incrementName } from '@/utils/stringUtils';
 
@@ -46,20 +48,25 @@ export default function CopyLayoutModal({
   existingNames,
 }: CopyLayoutModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
+  const defaultCopyMedia =
+    user?.settings?.LAYOUT_COPY_MEDIA_CHECKB === '1' ||
+    user?.settings?.LAYOUT_COPY_MEDIA_CHECKB === 'Checked';
+
   const [newName, setNewName] = useState('');
   const [description, setDescription] = useState('');
-  const [copyMediaFiles, setCopyMediaFiles] = useState(false);
+  const [copyMediaFiles, setCopyMediaFiles] = useState(defaultCopyMedia);
   const [error, setError] = useState<string | undefined>();
 
   useEffect(() => {
     if (layout && isOpen) {
       setNewName(incrementName(layout.layout));
       setDescription(layout.description ?? '');
-      setCopyMediaFiles(false);
+      setCopyMediaFiles(defaultCopyMedia);
     }
 
     setError(undefined);
-  }, [layout, isOpen]);
+  }, [layout, isOpen, defaultCopyMedia]);
 
   const handleSave = () => {
     const trimmed = newName.trim();
@@ -105,6 +112,13 @@ export default function CopyLayoutModal({
       ]}
     >
       <div className="px-8 pb-8 space-y-4">
+        {layout?.publishedStatus !== 'Published' && (
+          <InfoBanner type="info">
+            {t(
+              'Copying this Layout will create an exact copy of the last time this Layout was Published. Any changes made to this Layout while it has been a Draft will not be copied. Publish the Layout before making a copy if the Draft changes should be included in the copy.',
+            )}
+          </InfoBanner>
+        )}
         <TextInput
           name="newName"
           value={newName}

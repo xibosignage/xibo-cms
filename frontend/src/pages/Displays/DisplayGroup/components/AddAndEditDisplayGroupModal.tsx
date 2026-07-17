@@ -125,6 +125,7 @@ export default function AddAndEditDisplayGroupModal({
   const [formErrors, setFormErrors] = useState<DisplayGroupFormErrors>({});
   const [apiError, setApiError] = useState<string | undefined>();
   const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
 
   const [previewPagination, setPreviewPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -312,7 +313,7 @@ export default function AddAndEditDisplayGroupModal({
     {
       label: isPending ? t('Saving…') : t('Save'),
       onClick: handleSave,
-      disabled: isPending,
+      disabled: isPending || hasTagPendingValue,
     },
   ];
 
@@ -392,6 +393,7 @@ export default function AddAndEditDisplayGroupModal({
               onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
               inputValue={pendingTagInput}
               onInputChange={setPendingTagInput}
+              onPendingValueChange={setHasTagPendingValue}
             />
 
             {/* Dynamic Group */}
