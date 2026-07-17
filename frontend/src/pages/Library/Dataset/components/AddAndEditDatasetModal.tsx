@@ -642,33 +642,6 @@ export default function AddAndEditDatasetModal({
                     onChange={(val) => updateDraft('dataRoot', val)}
                   />
 
-                  <Button
-                    className="h-11 rounded-0!"
-                    name="dataSetRemoteTestButton"
-                    variant="tertiary"
-                    onClick={handleTestRemoteData}
-                  >
-                    {isTesting ? t('Testing...') : t('Test Data URL')}
-                  </Button>
-
-                  {testResult && (
-                    <div className="relative bg-gray-100 rounded-lg p-3 h-35 overflow-y-auto w-full group">
-                      <button
-                        type="button"
-                        onClick={handleCopy}
-                        className="absolute top-2 right-2 p-3 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-md"
-                        aria-label={t('Copy to clipboard')}
-                        title={t('Copy to clipboard')}
-                      >
-                        {isCopied ? <Check size={14}></Check> : <Copy size={14}></Copy>}
-                      </button>
-
-                      <pre className="text-xs font-mono text-gray-700 whitespace-pre-wrap wrap-break-word pr-10">
-                        {testResult}
-                      </pre>
-                    </div>
-                  )}
-
                   <SelectDropdown
                     label={t('Aggregation')}
                     value={draft.summarize}
@@ -721,6 +694,33 @@ export default function AddAndEditDatasetModal({
                     onChange={(e) => updateDraft('ignoreFirstRow', e.target.checked)}
                   />
                 </>
+              )}
+
+              <Button
+                className="h-11 rounded-0!"
+                name="dataSetRemoteTestButton"
+                variant="tertiary"
+                onClick={handleTestRemoteData}
+              >
+                {isTesting ? t('Testing...') : t('Test Data URL')}
+              </Button>
+
+              {testResult && (
+                <div className="relative bg-gray-100 rounded-lg p-3 h-35 overflow-y-auto w-full group">
+                  <button
+                    type="button"
+                    onClick={handleCopy}
+                    className="absolute top-2 right-2 p-3 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-md"
+                    aria-label={t('Copy to clipboard')}
+                    title={t('Copy to clipboard')}
+                  >
+                    {isCopied ? <Check size={14}></Check> : <Copy size={14}></Copy>}
+                  </button>
+
+                  <pre className="text-xs font-mono text-gray-700 whitespace-pre-wrap wrap-break-word pr-10">
+                    {testResult}
+                  </pre>
+                </div>
               )}
             </div>
           )}

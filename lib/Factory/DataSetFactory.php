@@ -587,7 +587,7 @@ class DataSetFactory extends BaseFactory
                     $csv = $request->getBody()->getContents();
                     $array = array_map(
                         function ($v) use ($dataSet) {
-                            return str_getcsv($v, $dataSet->csvSeparator ?? ',');
+                            return str_getcsv($v, $dataSet->csvSeparator ?? ',', '"', '');
                         },
                         explode("\n", $csv)
                     );

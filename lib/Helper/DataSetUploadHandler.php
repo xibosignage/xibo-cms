@@ -107,7 +107,7 @@ class DataSetUploadHandler extends BlueImpUploadHandler
             $firstRow = true;
             $i = 0;
             $handle = fopen($controller->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $fileName, 'r');
-            while (($data = fgetcsv($handle)) !== FALSE ) {
+            while (($data = fgetcsv($handle, null, ',', '"', '')) !== false) {
                 $i++;
 
                 // remove any elements that doesn't contain any value from the array
