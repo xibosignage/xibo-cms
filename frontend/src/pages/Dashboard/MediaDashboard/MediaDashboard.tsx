@@ -156,7 +156,7 @@ export default function MediaDashboard() {
   return (
     <section className="flex flex-col gap-5 p-5 min-h-screen h-screen max-h-max">
       {/* Top Stats */}
-      <div className="grid grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <StatCard
           icon={list}
           value={isLoading ? Loading : (library?.countOf?.toLocaleString() ?? '—')}
@@ -185,7 +185,7 @@ export default function MediaDashboard() {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <MediaTypeChart
           title={t('No. of Media Items')}
           items={countItems}
@@ -203,7 +203,7 @@ export default function MediaDashboard() {
       </div>
 
       {/* Tables */}
-      <div className="flex-1 grid grid-cols-2 gap-5">
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className="rounded-lg border border-gray-200 bg-white p-5 min-h-full">
           <h3 className="mb-4 text-sm font-semibold uppercase text-gray-800">
             {t('Unused Media')}
@@ -212,6 +212,7 @@ export default function MediaDashboard() {
             columns={unusedColumns}
             data={unusedRows}
             pageCount={unusedPageCount}
+            rowCount={unusedData?.totalCount ?? 0}
             pagination={unusedPagination}
             onPaginationChange={setUnusedPagination}
             sorting={unusedSorting}
@@ -236,6 +237,7 @@ export default function MediaDashboard() {
             columns={unreleasedColumns}
             data={unreleasedRows}
             pageCount={unreleasedPageCount}
+            rowCount={unreleasedData?.totalCount ?? 0}
             pagination={unreleasedPagination}
             onPaginationChange={setUnreleasedPagination}
             sorting={unreleasedSorting}

@@ -123,7 +123,7 @@ export default function LibraryUsageChart({
   ];
 
   return (
-    <div className="flex items-center gap-6">
+    <div className="flex items-center gap-6 flex-col xl:flex-row">
       {/* Donut chart — used vs total */}
       <div className="relative shrink-0">
         <ResponsiveContainer width={200} height={200}>

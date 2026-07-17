@@ -19,29 +19,33 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export type LibraryUsageFilter = {
-  userId: number | null;
-  groupId: number | null;
-};
+import { createContext, useContext, useState, type ReactNode } from 'react';
 
-export const INITIAL_FILTER_STATE: LibraryUsageFilter = {
-  userId: null,
-  groupId: null,
-};
+interface FolderRefreshValue {
+  version: number;
+  refresh: () => void;
+}
 
-export const ACTIVE_FILTER_KEYS: (keyof LibraryUsageFilter)[] = ['userId', 'groupId'];
+const FolderRefreshContext = createContext<FolderRefreshValue>({
+  version: 0,
+  refresh: () => {},
+});
 
-export const CHART_PALETTE = [
-  '#0ea5a0',
-  '#3b82f6',
-  '#f59e0b',
-  '#8b5cf6',
-  '#ec4899',
-  '#10b981',
-  '#ef4444',
-  '#6366f1',
-  '#14b8a6',
-  '#f97316',
-  '#a855f7',
-  '#84cc16',
-];
+interface Props {
+  children: ReactNode;
+}
+
+export function FolderRefreshProvider({ children }: Props) {
+  const [version, setVersion] = useState(0);
+
+  const value: FolderRefreshValue = {
+    version,
+    refresh: () => setVersion((v) => v + 1),
+  };
+
+  return <FolderRefreshContext.Provider value={value}>{children}</FolderRefreshContext.Provider>;
+}
+
+export function useFolderRefresh(): FolderRefreshValue {
+  return useContext(FolderRefreshContext);
+}

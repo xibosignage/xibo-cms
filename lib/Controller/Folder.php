@@ -26,6 +26,7 @@ use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\FolderFactory;
+use Xibo\Factory\PermissionFactory;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -34,6 +35,7 @@ class Folder extends Base
 {
     public function __construct(
         private readonly FolderFactory $folderFactory,
+        private readonly PermissionFactory $permissionFactory,
     ) {
     }
 
@@ -212,6 +214,15 @@ class Folder extends Base
         $folder->parentId = $sanitizedParams->getString('parentId', ['default' => 1]);
 
         $folder->save();
+
+        // Folders have no owner, so grant the creating user's own group access to the folder
+        // they just created - otherwise they would not be able to view or manage it.
+        // Super admins can already see everything, so there is no need to add an explicit ACL.
+        if (!$this->getUser()->isSuperAdmin()) {
+            $this->permissionFactory
+                ->create($this->getUser()->groupId, 'Xibo\Entity\Folder', $folder->id, 1, 1, 1)
+                ->save();
+        }
 
         return $response->withStatus(200)->withJson([
             'message' => sprintf(__('Added %s'), $folder->text),

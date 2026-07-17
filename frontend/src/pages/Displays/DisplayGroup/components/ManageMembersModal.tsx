@@ -354,6 +354,7 @@ export default function ManageMembersModal({
             columns={displayColumns}
             searchRows={displaySearchRows}
             pageCount={displayPageCount}
+            rowCount={displaySearchData?.totalCount ?? 0}
             pagination={displayPagination}
             onPaginationChange={setDisplayPagination}
             sorting={displaySorting}
@@ -384,6 +385,7 @@ export default function ManageMembersModal({
             columns={groupColumns}
             searchRows={groupSearchRows}
             pageCount={groupPageCount}
+            rowCount={groupSearchData?.totalCount ?? 0}
             pagination={groupPagination}
             onPaginationChange={setGroupPagination}
             sorting={groupSorting}

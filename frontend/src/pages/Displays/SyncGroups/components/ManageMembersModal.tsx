@@ -212,6 +212,7 @@ export default function ManageMembersModal({
           columns={displayColumns}
           searchRows={displaySearchRows}
           pageCount={displayPageCount}
+          rowCount={displaySearchData?.totalCount ?? 0}
           pagination={displayPagination}
           onPaginationChange={setDisplayPagination}
           sorting={displaySorting}

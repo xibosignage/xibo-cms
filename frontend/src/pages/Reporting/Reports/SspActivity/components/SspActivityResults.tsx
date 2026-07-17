@@ -146,6 +146,7 @@ function ReportDataTable<T>({
       columns={columns}
       data={pageRows}
       pageCount={pageCount}
+      rowCount={rows.length}
       pagination={pagination}
       onPaginationChange={setPagination}
       sorting={sorting}

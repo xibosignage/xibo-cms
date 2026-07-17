@@ -21,7 +21,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { Search, Filter, FilterX, Plus } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -38,12 +38,14 @@ import { useCommandFilterOptions } from './hooks/useCommandFilterOptions';
 import { useCommandsData } from './hooks/useCommandsData';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import type { Command } from '@/types/command';
+import { countActiveFilters } from '@/utils/filters';
 
 export default function Commands() {
   const { t } = useTranslation();
@@ -213,6 +215,8 @@ export default function Commands() {
 
   const displaysTabs = useFilteredTabs('displays');
 
+  const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
+
   return (
     <>
       <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
@@ -251,15 +255,12 @@ export default function Commands() {
                   className="py-2 px-3 pl-10 block h-11.25 bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none disabled:bg-gray-200"
                 />
               </div>
-              <Button
-                leftIcon={!openFilter ? Filter : FilterX}
-                variant="secondary"
+              <FilterButton
+                isOpen={openFilter}
+                onToggle={() => setOpenFilter((prev) => !prev)}
+                activeCount={activeFilterCount}
                 disabled={!isHydrated}
-                onClick={() => setOpenFilter((prev) => !prev)}
-                removeTextOnMobile
-              >
-                {t('Filters')}
-              </Button>
+              />
             </div>
           </div>
 
@@ -295,6 +296,7 @@ export default function Commands() {
                 columns={columns}
                 data={commandList}
                 pageCount={pageCount}
+                rowCount={queryData?.totalCount || 0}
                 pagination={pagination}
                 onPaginationChange={setPagination}
                 sorting={sorting}

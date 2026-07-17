@@ -1,6 +1,6 @@
 import { type PaginationState, type Table } from '@tanstack/react-table';
 import { ChevronLeft, ChevronRight, ChevronUp, Check } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
 import { usePreline } from '@/hooks/usePreline';
@@ -58,8 +58,12 @@ export function DataTablePagination<TData>({
 
   usePreline();
 
+  const entries = table.getRowCount();
+  const start = entries === 0 ? 0 : pagination.pageIndex * pagination.pageSize + 1;
+  const end = Math.min((pagination.pageIndex + 1) * pagination.pageSize, entries);
+
   return (
-    <div className="flex gap-3 items-center data-table-pagination p-2 pt-0">
+    <div className="flex flex-wrap gap-3 items-center data-table-pagination p-2 pt-0">
       {/* Page size selector */}
       <div className="flex items-center gap-2 data-table-pagination-picker">
         <div className="hs-dropdown relative inline-flex [--placement:top-left]">
@@ -101,10 +105,24 @@ export function DataTablePagination<TData>({
         </div>
       </div>
 
-      <div className="border-t sm:border-t-0 h-5 sm:border-s border-gray-200 dark:border-neutral-700"></div>
+      <div className="h-5 border-s border-gray-200 dark:border-neutral-700"></div>
+
+      <div className="data-table-pagination-info text-gray-500 text-xs font-normal">
+        <Trans
+          i18nKey="{{start}} to {{end}} of {{entries}} entries"
+          values={{
+            start: start.toLocaleString(),
+            end: end.toLocaleString(),
+            entries: entries.toLocaleString(),
+          }}
+          components={{ strong: <strong /> }}
+        />
+      </div>
+
+      <div className="h-5 border-s border-gray-200 dark:border-neutral-700"></div>
 
       {/* Page navigation */}
-      <nav className="flex items-center gap-x-1 data-table-pagination-navigator">
+      <nav className="flex items-center gap-x-1 data-table-pagination-navigator w-full sm:w-auto sm:justify-start">
         <button
           type="button"
           className={BUTTON_BASE_STYLE}

@@ -1221,6 +1221,7 @@ export default function ScheduleEventModal({
                     columns={syncDisplayColumns}
                     data={syncDisplays}
                     pageCount={1}
+                    rowCount={syncDisplays.length}
                     pagination={{ pageIndex: 0, pageSize: syncDisplays.length || 10 }}
                     onPaginationChange={() => {}}
                     sorting={[]}

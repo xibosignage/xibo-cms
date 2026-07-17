@@ -36,6 +36,7 @@ import { useEffect, useState, useRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { twMerge } from 'tailwind-merge';
 
+import { useFolderRefresh } from '@/context/FolderRefreshContext';
 import { useUserContext } from '@/context/UserContext';
 import { useDebounce } from '@/hooks/useDebounce';
 import {
@@ -117,6 +118,7 @@ export default function FolderTreeList({
 }: FolderTreeListProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
+  const { version: folderRefreshVersion } = useFolderRefresh();
 
   const homeFolderId = user?.homeFolderId ?? 1;
 
@@ -161,7 +163,7 @@ export default function FolderTreeList({
 
     loadTree();
     return () => controller.abort();
-  }, [debouncedQuery, refreshTrigger]);
+  }, [debouncedQuery, refreshTrigger, folderRefreshVersion]);
 
   // Sync home folder into expandedIds once user context resolves
   useEffect(() => {

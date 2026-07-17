@@ -21,7 +21,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { Filter, FilterX, Plus, Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -38,6 +38,7 @@ import { useDisplayGroupData } from './hooks/useDisplayGroupData';
 import { useDisplayGroupFilterOptions } from './hooks/useDisplayGroupFilterOptions';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import FolderActionModals from '@/components/ui/FolderActionModals';
 import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
@@ -51,6 +52,7 @@ import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import type { DisplayGroup } from '@/types/displayGroup';
+import { countActiveFilters } from '@/utils/filters';
 import { hasFeature } from '@/utils/permissions';
 
 export default function DisplayGroupPage() {
@@ -279,6 +281,8 @@ export default function DisplayGroupPage() {
   const { filterOptions } = useDisplayGroupFilterOptions(t);
   const libraryTabs = useFilteredTabs('displays');
 
+  const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
+
   const bulkActions = getBulkActions({
     t,
     onDelete: () => {
@@ -360,15 +364,12 @@ export default function DisplayGroupPage() {
                 className="py-2 px-3 pl-10 block h-11.25 bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none disabled:bg-gray-200"
               />
             </div>
-            <Button
-              leftIcon={!openFilter ? Filter : FilterX}
-              variant="secondary"
+            <FilterButton
+              isOpen={openFilter}
+              onToggle={() => setOpenFilter((prev) => !prev)}
+              activeCount={activeFilterCount}
               disabled={!isHydrated}
-              onClick={() => setOpenFilter((prev) => !prev)}
-              removeTextOnMobile
-            >
-              {t('Filters')}
-            </Button>
+            />
           </div>
         </div>
 
@@ -405,6 +406,7 @@ export default function DisplayGroupPage() {
               columns={columns}
               data={displayGroupList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

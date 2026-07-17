@@ -20,7 +20,6 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
-import { Filter, FilterX } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -31,13 +30,14 @@ import ConnectorConfigModal from './components/ConnectorConfigModal';
 import { canvaImg } from './connectorThumbnails';
 import { connectorQueryKeys, useConnectorsData } from './hooks/useConnectorsData';
 
-import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import type { Connector } from '@/types/connector';
+import { countActiveFilters } from '@/utils/filters';
 
 type ActiveModal = { type: 'configure'; connector: Connector } | null;
 
@@ -66,6 +66,8 @@ export default function Connectors() {
   const tabs = useFilteredTabs('administration');
   const filterOptions = getFilterKeys(t);
 
+  const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
+
   function handleResetFilters() {
     setFilterInputs(INITIAL_FILTER_STATE);
   }
@@ -82,14 +84,11 @@ export default function Connectors() {
         </div>
 
         <div className="flex flex-col items-end">
-          <Button
-            leftIcon={!openFilter ? Filter : FilterX}
-            variant="secondary"
-            onClick={() => setOpenFilter((prev) => !prev)}
-            removeTextOnMobile
-          >
-            {t('Filters')}
-          </Button>
+          <FilterButton
+            isOpen={openFilter}
+            onToggle={() => setOpenFilter((prev) => !prev)}
+            activeCount={activeFilterCount}
+          />
         </div>
 
         <FilterInputs

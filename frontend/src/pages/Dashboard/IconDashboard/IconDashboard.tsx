@@ -93,7 +93,7 @@ export default function IconDashboard() {
 
   return (
     <div className="mx-auto w-full p-5">
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {visibleItems.map((item) => {
           const Icon = item.icon;
           const content = (

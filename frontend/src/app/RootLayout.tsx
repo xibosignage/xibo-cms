@@ -28,6 +28,7 @@ import HelpPane from '@/components/help/HelpPane';
 import SideBar from '@/components/layout/SideBar';
 import TopNav from '@/components/layout/TopNav';
 import { BrandingProvider } from '@/context/BrandingContext';
+import { FolderRefreshProvider } from '@/context/FolderRefreshContext';
 import { UserProvider } from '@/context/UserContext';
 import { usePreline } from '@/hooks/usePreline';
 import { UploadProgressDock } from '@/pages/Library/Media/components/UploadProgressDock';
@@ -46,56 +47,58 @@ export default function RootLayout() {
   return (
     <BrandingProvider branding={user?.branding}>
       <UserProvider initialUser={user}>
-        <div className="flex h-screen w-full overflow-hidden bg-gray-50 dark:bg-neutral-900">
-          {/* Desktop Sidebar Drawer */}
-          <div className="relative md:block hidden flex-none">
-            <aside
-              className={`h-full bg-xibo-blue-800 dark:bg-orange-300 transition-[width] duration-300 ease-in-out overflow-clip whitespace-nowrap will-change-[width]
+        <FolderRefreshProvider>
+          <div className="flex h-screen w-full overflow-hidden bg-gray-50 dark:bg-neutral-900">
+            {/* Desktop Sidebar Drawer */}
+            <div className="relative md:block hidden flex-none">
+              <aside
+                className={`h-full bg-xibo-blue-800 dark:bg-orange-300 transition-[width] duration-300 ease-in-out overflow-clip whitespace-nowrap will-change-[width]
             ${isCollapsed ? 'w-21' : 'w-60'}
           `}
-            >
-              <SideBar isCollapsed={isCollapsed} />
-            </aside>
-            {/* Toggle button */}
-            <button
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              className="absolute top-5 -right-3 z-10 md:flex hidden items-center justify-center w-6 h-6 rounded-lg bg-xibo-blue-800 dark:bg-orange-300 text-xibo-white dark:text-black transition-colors hover:bg-xibo-blue-700 dark:hover:bg-orange-400 cursor-pointer"
-            >
-              {isCollapsed ? <ChevronRightSquare size={16} /> : <ChevronLeftSquare size={16} />}
-            </button>
-          </div>
-          {/* Mobile drawer */}
-          <div
-            className={`
+              >
+                <SideBar isCollapsed={isCollapsed} />
+              </aside>
+              {/* Toggle button */}
+              <button
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                className="absolute top-5 -right-3 z-10 md:flex hidden items-center justify-center w-6 h-6 rounded-lg bg-xibo-blue-800 dark:bg-orange-300 text-xibo-white dark:text-black transition-colors hover:bg-xibo-blue-700 dark:hover:bg-orange-400 cursor-pointer"
+              >
+                {isCollapsed ? <ChevronRightSquare size={16} /> : <ChevronLeftSquare size={16} />}
+              </button>
+            </div>
+            {/* Mobile drawer */}
+            <div
+              className={`
           fixed inset-y-0 left-0 z-40 w-full
           bg-xibo-blue-800 dark:bg-orange-300
           transform transition-transform duration-300 ease-in-out
           md:hidden sm:px-8 px-0 overflow-visible
           ${openMobileDrawer ? 'translate-x-0' : '-translate-x-full'}
         `}
-          >
-            <SideBar
-              isCollapsed={false}
-              closeMobileDrawer={() => setOpenMobileDrawer(!openMobileDrawer)}
-            />
-          </div>
+            >
+              <SideBar
+                isCollapsed={false}
+                closeMobileDrawer={() => setOpenMobileDrawer(!openMobileDrawer)}
+              />
+            </div>
 
-          <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out">
-            <TopNav
-              pathName={pathname}
-              onToggleMobileDrawer={() => setOpenMobileDrawer(!openMobileDrawer)}
-            />
-            <main className="flex-1 flex flex-col min-h-0 bg-white overflow-auto dark:bg-black">
-              <Outlet />
-            </main>
-          </div>
+            <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out">
+              <TopNav
+                pathName={pathname}
+                onToggleMobileDrawer={() => setOpenMobileDrawer(!openMobileDrawer)}
+              />
+              <main className="flex-1 flex flex-col min-h-0 bg-white overflow-auto dark:bg-black">
+                <Outlet />
+              </main>
+            </div>
 
-          <SessionExpiredModal />
-          <NotificationInterruptCheck />
-          <UploadProgressDock />
-          <HelpPane />
-        </div>
+            <SessionExpiredModal />
+            <NotificationInterruptCheck />
+            <UploadProgressDock />
+            <HelpPane />
+          </div>
+        </FolderRefreshProvider>
       </UserProvider>
     </BrandingProvider>
   );

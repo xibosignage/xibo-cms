@@ -20,7 +20,7 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
-import { Filter, FilterX, Scissors } from 'lucide-react';
+import { Scissors } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -31,6 +31,7 @@ import { useLogsData } from './hooks/useLogsData';
 import { useLogsFilterOptions } from './hooks/useLogsFilterOptions';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
@@ -38,6 +39,7 @@ import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import { UserType } from '@/types/user';
+import { countActiveFilters } from '@/utils/filters';
 
 export default function Logs() {
   const { t } = useTranslation();
@@ -120,6 +122,8 @@ export default function Logs() {
   const advancedTabs = useFilteredTabs('advanced');
   const isSuperAdmin = user?.userTypeId === UserType.SuperAdmin;
 
+  const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
+
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
@@ -137,15 +141,12 @@ export default function Logs() {
               {t('Truncate')}
             </Button>
           )}
-          <Button
-            leftIcon={!openFilter ? Filter : FilterX}
-            variant="secondary"
+          <FilterButton
+            isOpen={openFilter}
+            onToggle={() => setOpenFilter((prev) => !prev)}
+            activeCount={activeFilterCount}
             disabled={!isHydrated}
-            onClick={() => setOpenFilter((prev) => !prev)}
-            removeTextOnMobile
-          >
-            {t('Filters')}
-          </Button>
+          />
         </div>
 
         <FilterInputs
@@ -181,6 +182,7 @@ export default function Logs() {
               columns={columns}
               data={logList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

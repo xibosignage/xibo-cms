@@ -348,6 +348,7 @@ export default function UsageReportModal({
                   data={slicePage(displays, displaysPagination)}
                   columns={displaysColumns}
                   pageCount={Math.ceil(displays.length / displaysPagination.pageSize)}
+                  rowCount={displays.length}
                   pagination={displaysPagination}
                   onPaginationChange={setDisplaysPagination}
                   sorting={displaysSorting}
@@ -371,6 +372,7 @@ export default function UsageReportModal({
                   data={slicePage(layouts, layoutsPagination)}
                   columns={layoutsColumns}
                   pageCount={Math.ceil(layouts.length / layoutsPagination.pageSize)}
+                  rowCount={layouts.length}
                   pagination={layoutsPagination}
                   onPaginationChange={setLayoutsPagination}
                   sorting={layoutsSorting}

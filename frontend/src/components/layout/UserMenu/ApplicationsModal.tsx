@@ -132,6 +132,7 @@ export default function ApplicationsModal({ isOpen = true, onClose }: Applicatio
             )}
             columns={columns}
             pageCount={Math.ceil(applications.length / pagination.pageSize)}
+            rowCount={applications.length}
             pagination={pagination}
             onPaginationChange={setPagination}
             enableSelection={false}
