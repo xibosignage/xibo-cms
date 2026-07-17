@@ -3203,14 +3203,15 @@ class Layout extends Base
             $widgetTransOutDurationDefault = $this->getConfig()->getSetting('DEFAULT_TRANSITION_DURATION');
         }
 
-        $widget->transitionIn = $widget->getOptionValue('transIn', $widgetTransInDefault);;
+        $widget->transitionIn = $widget->getOptionValue('transIn', $widgetTransInDefault);
         $widget->transitionOut = $widget->getOptionValue('transOut', $widgetTransOutDefault);
         $widget->transitionDurationIn = $widget->getOptionValue(
             'transInDuration',
             $widgetTransInDurationDefault
         );
         $widget->transitionDurationOut = $widget->getOptionValue(
-            'transOutDuration', $widgetTransOutDurationDefault
+            'transOutDuration',
+            $widgetTransOutDurationDefault
         );
     }
 

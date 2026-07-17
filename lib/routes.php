@@ -78,7 +78,7 @@ $app->post('/notification/attachment', ['\Xibo\Controller\Notification', 'addAtt
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['notification.add', 'notification.modify']))
     ->setName('notification.addattachment');
 
-$app->group('', function(RouteCollectorProxy $group) {
+$app->group('', function (RouteCollectorProxy $group) {
     $group->put('/notification/{id}', ['\Xibo\Controller\Notification', 'edit'])->setName('notification.edit');
     $group->delete('/notification/{id}', ['\Xibo\Controller\Notification', 'delete'])->setName('notification.delete');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['notification.modify']));
