@@ -25,6 +25,7 @@ namespace Xibo\Controller;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\FolderFactory;
+use Xibo\Factory\PermissionFactory;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -37,12 +38,19 @@ class Folder extends Base
     private $folderFactory;
 
     /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
      * Set common dependencies.
      * @param FolderFactory $folderFactory
+     * @param PermissionFactory $permissionFactory
      */
-    public function __construct(FolderFactory $folderFactory)
+    public function __construct(FolderFactory $folderFactory, PermissionFactory $permissionFactory)
     {
         $this->folderFactory = $folderFactory;
+        $this->permissionFactory = $permissionFactory;
     }
 
     /**
@@ -145,6 +153,12 @@ class Folder extends Base
             // Should we return information for a specific folder?
             $folder = $this->folderFactory->getById($folderId);
 
+            $folder = $this->folderFactory->getById($folderId, 0);
+
+            if (!$this->getUser()->checkViewable($folder)) {
+                throw new AccessDeniedException();
+            }
+
             $this->decorateWithButtons($folder);
             $this->folderFactory->decorateWithHomeFolderCount($folder);
             $this->folderFactory->decorateWithSharing($folder);
@@ -159,9 +173,9 @@ class Folder extends Base
             // do we show tree for current user
             // or a specified user?
             $homeFolderId = ($params->getInt('homeFolderId') !== null)
-                    ? $params->getInt('homeFolderId')
-                    : $this->getUser()->homeFolderId;
-            
+                ? $params->getInt('homeFolderId')
+                : $this->getUser()->homeFolderId;
+
             $this->buildTreeView($rootFolder, $homeFolderId);
             return $response->withJson([$rootFolder]);
         }
@@ -260,11 +274,31 @@ class Folder extends Base
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
+        $parentId = $sanitizedParams->getInt('parentId', ['default' => 1]);
+        $parentFolder = $this->folderFactory->getById($parentId, 0);
+
+        if (!$this->getUser()->checkViewable($parentFolder)
+            || ($parentFolder->isRoot() && !$this->getUser()->isSuperAdmin())
+        ) {
+            throw new AccessDeniedException();
+        }
+
         $folder = $this->folderFactory->createEmpty();
         $folder->text = $sanitizedParams->getString('text');
-        $folder->parentId = $sanitizedParams->getString('parentId', ['default' => 1]);
+        $folder->parentId = $parentId;
 
         $folder->save();
+
+        // Grant the creator full permissions on their new Folder.
+        $permission = $this->permissionFactory->create(
+            $this->getUser()->groupId,
+            'Xibo\Entity\Folder',
+            $folder->getId(),
+            1,
+            1,
+            1
+        );
+        $permission->save();
 
         // Return
         $this->getState()->hydrate([
