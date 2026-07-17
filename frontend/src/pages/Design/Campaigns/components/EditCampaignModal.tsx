@@ -76,6 +76,7 @@ export default function EditCampaignModal({
   const [activeTab, setActiveTab] = useState<Tab>('general');
   const [apiError, setApiError] = useState('');
   const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
 
   const [draft, setDraft] = useState<EditDraft>({
     name: '',
@@ -269,7 +270,7 @@ export default function EditCampaignModal({
         {
           label: isPending ? t('Saving…') : t('Save'),
           onClick: handleSave,
-          disabled: isPending,
+          disabled: isPending || hasTagPendingValue,
         },
       ]}
     >
@@ -322,6 +323,7 @@ export default function EditCampaignModal({
                 onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
                 inputValue={pendingTagInput}
                 onInputChange={setPendingTagInput}
+                onPendingValueChange={setHasTagPendingValue}
               />
 
               <Checkbox
@@ -407,6 +409,7 @@ export default function EditCampaignModal({
               columns={layoutColumns}
               searchRows={layoutRows}
               pageCount={layoutPageCount}
+              rowCount={layoutsData?.totalCount ?? 0}
               pagination={layoutPagination}
               onPaginationChange={setLayoutPagination}
               sorting={layoutSorting}

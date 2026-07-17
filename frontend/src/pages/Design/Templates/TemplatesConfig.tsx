@@ -26,7 +26,6 @@ import {
   CopyCheck,
   FolderInput,
   UserPlus2,
-  CalendarClock,
   Trash2,
   CloudUpload,
   PenTool,
@@ -66,7 +65,7 @@ export const TEMPLATE_INITIAL_FILTER_STATE: TemplatesFilterInput = {
   exactTags: false,
 };
 
-export type ModalType = BaseModalType | 'schedule' | 'publish' | 'discard' | 'export' | null;
+export type ModalType = BaseModalType | 'publish' | 'discard' | 'export' | null;
 
 export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<TemplatesFilterInput>[] => [
   {
@@ -108,7 +107,6 @@ export interface TemplatesActionsProps {
   exportTemplate?: (id: number) => void;
   openDetails?: (id: number) => void;
   openTemplate?: (id: number) => void;
-  onSchedule?: (template: Template) => void;
 }
 
 export const getTemplateColumn = (props: TemplatesActionsProps): ColumnDef<Template>[] => {
@@ -289,68 +287,69 @@ export const getTemplateItemActions = ({
   alterTemplate,
   discardTemplate,
   exportTemplate,
-  onSchedule,
 }: TemplatesActionsProps): ((template: Template) => ActionItem[]) => {
-  return (template: Template) => [
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => openAddEditModal(template),
-      isQuickAction: true,
-      variant: 'primary' as const,
-    },
+  return (template: Template) => {
+    const actions: ActionItem[] = [
+      {
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => openAddEditModal(template),
+        isQuickAction: true,
+        variant: 'primary' as const,
+      },
+      {
+        label: t('Alter Template'),
+        icon: PenTool,
+        onClick: () => alterTemplate && alterTemplate(template.layoutId),
+      },
+    ];
 
-    {
-      label: t('Alter Template'),
-      icon: PenTool,
-      onClick: () => alterTemplate && alterTemplate(template.layoutId),
-    },
-    {
-      label: t('Publish'),
-      icon: CloudUpload,
-      onClick: () => openPublishModal && openPublishModal(template.layoutId),
-    },
-    { isSeparator: true },
-    {
+    if (template.publishedStatus !== 'Published') {
+      actions.push({
+        label: t('Publish'),
+        icon: CloudUpload,
+        onClick: () => openPublishModal && openPublishModal(template.layoutId),
+      });
+      actions.push({
+        label: t('Discard'),
+        onClick: () => discardTemplate && discardTemplate(template.layoutId),
+      });
+    }
+
+    actions.push({ isSeparator: true });
+    actions.push({
       label: t('Edit'),
       icon: Edit,
       onClick: () => openAddEditModal(template),
-    },
-    {
+    });
+    actions.push({
       label: t('Make a Copy'),
       icon: CopyCheck,
       onClick: () => openCopyModal && openCopyModal(template.layoutId),
-    },
-    {
+    });
+    actions.push({
       label: t('Move'),
       icon: FolderInput,
       onClick: () => openMoveModal && openMoveModal(template),
-    },
-    {
+    });
+    actions.push({
       label: t('Share'),
       icon: UserPlus2,
       onClick: () => openShareModal && openShareModal(template.campaignId),
-    },
-    {
-      label: t('Schedule'),
-      icon: CalendarClock,
-      onClick: () => onSchedule && onSchedule(template),
-    },
-    { isSeparator: true },
-    {
-      label: t('Discard'),
-      onClick: () => discardTemplate && discardTemplate(template.layoutId),
-    },
-    {
+    });
+    actions.push({ isSeparator: true });
+    actions.push({
       label: t('Export'),
       onClick: () => exportTemplate && exportTemplate(template.layoutId),
-    },
-    { isSeparator: true },
-    {
+    });
+    actions.push({ isSeparator: true });
+    actions.push({
       label: t('Delete'),
       icon: Trash2,
       onClick: () => onDelete(template.layoutId),
       variant: 'danger' as const,
-    },
-  ];
+    });
+
+    return actions;
+  };
 };

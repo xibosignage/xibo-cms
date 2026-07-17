@@ -133,6 +133,7 @@ export default function Transitions() {
               columns={columns}
               data={transitionList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

@@ -51,6 +51,7 @@ export default function SaveAsTemplateModal({
   const [tags, setTags] = useState<Tag[]>(layout?.tags?.map((t) => ({ ...t })) ?? []);
   const [includeWidgets, setIncludeWidgets] = useState(false);
   const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formErrors, setFormErrors] = useState<{ name?: string }>({});
   const [apiError, setApiError] = useState<string | undefined>();
@@ -73,7 +74,7 @@ export default function SaveAsTemplateModal({
   }, [layout]);
 
   const handleSave = async () => {
-    if (!layout || isSaving) return;
+    if (!layout || isSaving || hasTagPendingValue) return;
 
     const schema = getTemplateSchema(t);
 
@@ -146,7 +147,7 @@ export default function SaveAsTemplateModal({
         {
           label: isSaving ? t('Saving…') : t('Save'),
           onClick: handleSave,
-          disabled: isSaving || !name.trim(),
+          disabled: isSaving || !name.trim() || hasTagPendingValue,
         },
       ]}
     >
@@ -187,6 +188,7 @@ export default function SaveAsTemplateModal({
             onChange={(tags) => setTags(tags)}
             inputValue={pendingTagInput}
             onInputChange={setPendingTagInput}
+            onPendingValueChange={setHasTagPendingValue}
           />
 
           <Checkbox

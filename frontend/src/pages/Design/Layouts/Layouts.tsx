@@ -21,7 +21,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { Filter, FilterX, Plus, Search, Upload } from 'lucide-react';
+import { Plus, Search, Upload } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
@@ -36,6 +36,7 @@ import { useLayoutData } from './hooks/useLayoutData';
 import { useLayoutFilterOptions } from './hooks/useLayoutFilterOptions';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import FolderSidebar from '@/components/ui/FolderSidebar';
@@ -50,6 +51,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import { fetchContextButtons } from '@/services/folderApi';
 import type { Layout } from '@/types/layout';
+import { countActiveFilters } from '@/utils/filters';
 import { hasFeature } from '@/utils/permissions';
 
 export default function Layouts() {
@@ -397,6 +399,12 @@ export default function Layouts() {
 
   const libraryTabs = useFilteredTabs('design');
 
+  const activeFilterCount = countActiveFilters(
+    filterInputs,
+    LAYOUT_INITIAL_FILTER_STATE,
+    filterOptions,
+  );
+
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
       <FolderSidebar
@@ -459,14 +467,11 @@ export default function Layouts() {
                 className="py-2 px-3 pl-10 block h-11.25 bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none"
               />
             </div>
-            <Button
-              leftIcon={!openFilter ? Filter : FilterX}
-              variant="secondary"
-              onClick={() => setOpenFilter((prev) => !prev)}
-              removeTextOnMobile
-            >
-              {t('Filters')}
-            </Button>
+            <FilterButton
+              isOpen={openFilter}
+              onToggle={() => setOpenFilter((prev) => !prev)}
+              activeCount={activeFilterCount}
+            />
           </div>
         </div>
 
@@ -499,6 +504,7 @@ export default function Layouts() {
               columns={columns}
               data={layoutList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

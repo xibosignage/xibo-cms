@@ -536,6 +536,7 @@ export default function EditDisplayModal({
   const [apiError, setApiError] = useState<string | undefined>();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({});
   const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
 
   const [draft, setDraft] = useState<EditDraft>({
     display: '',
@@ -1074,7 +1075,7 @@ export default function EditDisplayModal({
         {
           label: isPending ? t('Saving…') : t('Save'),
           onClick: handleSave,
-          disabled: isPending,
+          disabled: isPending || hasTagPendingValue,
         },
       ]}
     >
@@ -1226,6 +1227,7 @@ export default function EditDisplayModal({
                 onChange={(tags) => set('tags', tags)}
                 inputValue={pendingTagInput}
                 onInputChange={setPendingTagInput}
+                onPendingValueChange={setHasTagPendingValue}
               />
               <SelectDropdown
                 label={t('Default Layout')}

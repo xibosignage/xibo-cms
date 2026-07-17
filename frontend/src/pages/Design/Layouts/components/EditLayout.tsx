@@ -64,6 +64,7 @@ export default function EditLayout({ isOpen = true, onClose, data, onSave }: Edi
   const [formErrors, setFormErrors] = useState<LayoutFormErrors>({});
   const [apiError, setApiError] = useState<string | undefined>();
   const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
 
   const [draft, setDraft] = useState<LayoutDraft>(() => ({
     name: data.layout,
@@ -96,7 +97,7 @@ export default function EditLayout({ isOpen = true, onClose, data, onSave }: Edi
   };
 
   const handleSave = async () => {
-    if (isSaving) return;
+    if (isSaving || hasTagPendingValue) return;
 
     const layoutSchema = getLayoutSchema(t);
     const result = layoutSchema.safeParse(draft);
@@ -165,7 +166,7 @@ export default function EditLayout({ isOpen = true, onClose, data, onSave }: Edi
         {
           label: isSaving ? t('Saving…') : t('Save'),
           onClick: handleSave,
-          disabled: isSaving,
+          disabled: isSaving || hasTagPendingValue,
         },
       ]}
     >
@@ -205,6 +206,7 @@ export default function EditLayout({ isOpen = true, onClose, data, onSave }: Edi
             onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
             inputValue={pendingTagInput}
             onInputChange={setPendingTagInput}
+            onPendingValueChange={setHasTagPendingValue}
           />
 
           <TextInput

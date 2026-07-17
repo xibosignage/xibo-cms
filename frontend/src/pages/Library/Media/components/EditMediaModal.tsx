@@ -75,6 +75,7 @@ export default function EditMediaModal({
   const [formErrors, setFormErrors] = useState<MediaFormErrors>({});
   const [isSaving, setIsSaving] = useState(false);
   const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
 
   const clearError = (field: keyof MediaDraft) => {
     setFormErrors((prev) => ({
@@ -201,7 +202,7 @@ export default function EditMediaModal({
         {
           label: isSaving ? t('Saving…') : t('Save'),
           onClick: handleSave,
-          disabled: isSaving,
+          disabled: isSaving || hasTagPendingValue,
         },
       ]}
     >
@@ -242,6 +243,7 @@ export default function EditMediaModal({
             onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
             inputValue={pendingTagInput}
             onInputChange={setPendingTagInput}
+            onPendingValueChange={setHasTagPendingValue}
           />
 
           <div className="grid grid-cols-2 gap-2">

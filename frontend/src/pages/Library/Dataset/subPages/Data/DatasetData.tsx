@@ -22,7 +22,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { isAxiosError } from 'axios';
-import { Plus, Search, Slash, Table, Filter, FilterX } from 'lucide-react';
+import { Plus, Search, Slash, Table } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -34,6 +34,7 @@ import { DatasetDataModals } from './components/DatasetDataModals';
 import { useDatasetData } from './hooks/useDatasetData';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
@@ -46,6 +47,7 @@ import {
   getDatasetById,
   type DynamicRowData,
 } from '@/services/datasetApi';
+import { countActiveFilters } from '@/utils/filters';
 
 type DataModalType = 'edit' | 'delete' | 'copy' | null;
 
@@ -290,6 +292,8 @@ export default function DatasetData() {
 
   const libraryTabs = useFilteredTabs('library');
 
+  const activeFilterCount = countActiveFilters(filterInputs, {}, filterOptions);
+
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
@@ -353,14 +357,11 @@ export default function DatasetData() {
               />
             </div>
             {filterOptions.length > 0 && (
-              <Button
-                leftIcon={!openFilter ? Filter : FilterX}
-                variant="secondary"
-                onClick={() => setOpenFilter((prev) => !prev)}
-                removeTextOnMobile
-              >
-                {t('Filters')}
-              </Button>
+              <FilterButton
+                isOpen={openFilter}
+                onToggle={() => setOpenFilter((prev) => !prev)}
+                activeCount={activeFilterCount}
+              />
             )}
           </div>
         </div>
@@ -407,6 +408,7 @@ export default function DatasetData() {
               columns={tableColumns}
               data={rowData}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

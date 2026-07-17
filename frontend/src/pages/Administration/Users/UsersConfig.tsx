@@ -111,6 +111,7 @@ const getUserTypeLabel = (t: TFunction, userTypeId: number): string => {
 export interface UserActionsProps {
   t: TFunction;
   currentUserId?: number;
+  canSetHomeFolder: boolean;
   onEdit: (user: User) => void;
   onSetHomeFolder: (user: User) => void;
   onUserGroups: (user: User) => void;
@@ -121,6 +122,7 @@ export interface UserActionsProps {
 export const getUserItemActions = ({
   t,
   currentUserId,
+  canSetHomeFolder,
   onEdit,
   onSetHomeFolder,
   onUserGroups,
@@ -146,11 +148,15 @@ export const getUserItemActions = ({
         icon: Edit,
         onClick: () => onEdit(user),
       },
-      {
-        label: t('Set Home Folder'),
-        icon: Folder,
-        onClick: () => onSetHomeFolder(user),
-      },
+      ...(canSetHomeFolder
+        ? [
+            {
+              label: t('Set Home Folder'),
+              icon: Folder,
+              onClick: () => onSetHomeFolder(user),
+            },
+          ]
+        : []),
       {
         label: t('User Groups'),
         icon: Users,
@@ -321,16 +327,21 @@ export const getUserColumns = (props: UserActionsProps): ColumnDef<User>[] => {
 
 interface GetBulkActionsProps {
   t: TFunction;
+  canSetHomeFolder: boolean;
   onSetHomeFolder: () => void;
 }
 
 export const getBulkActions = ({
   t,
+  canSetHomeFolder,
   onSetHomeFolder,
-}: GetBulkActionsProps): DataTableBulkAction<User>[] => [
-  {
-    label: t('Set Home Folder'),
-    icon: Folder,
-    onClick: onSetHomeFolder,
-  },
-];
+}: GetBulkActionsProps): DataTableBulkAction<User>[] =>
+  canSetHomeFolder
+    ? [
+        {
+          label: t('Set Home Folder'),
+          icon: Folder,
+          onClick: onSetHomeFolder,
+        },
+      ]
+    : [];

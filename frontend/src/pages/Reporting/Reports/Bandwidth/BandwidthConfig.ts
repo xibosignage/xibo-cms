@@ -36,6 +36,8 @@ export const INITIAL_FILTER_STATE: BandwidthFilter = {
   displayId: null,
 };
 
+export const ACTIVE_FILTER_KEYS: (keyof BandwidthFilter)[] = ['fromDt', 'toDt', 'displayId'];
+
 export const FREQUENCY_OPTIONS = [
   { value: 'daily', label: 'Daily' },
   { value: 'monthly', label: 'Monthly' },

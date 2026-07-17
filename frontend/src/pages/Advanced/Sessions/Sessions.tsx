@@ -21,7 +21,6 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { Filter, FilterX } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -37,7 +36,7 @@ import { useSessionActions } from './hooks/useSessionActions';
 import { useSessionData } from './hooks/useSessionData';
 import { useSessionFilterOptions } from './hooks/useSessionFilterOptions';
 
-import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
@@ -45,6 +44,7 @@ import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import type { Session } from '@/types/session';
+import { countActiveFilters } from '@/utils/filters';
 
 export default function Sessions() {
   const { t } = useTranslation();
@@ -186,6 +186,8 @@ export default function Sessions() {
 
   const libraryTabs = useFilteredTabs('advanced');
 
+  const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
+
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
@@ -194,15 +196,12 @@ export default function Sessions() {
         </div>
 
         <div className="flex flex-col items-end">
-          <Button
-            leftIcon={!openFilter ? Filter : FilterX}
-            variant="secondary"
+          <FilterButton
+            isOpen={openFilter}
+            onToggle={() => setOpenFilter((prev) => !prev)}
+            activeCount={activeFilterCount}
             disabled={!isHydrated}
-            onClick={() => setOpenFilter((prev) => !prev)}
-            removeTextOnMobile
-          >
-            {t('Filters')}
-          </Button>
+          />
         </div>
 
         <FilterInputs
@@ -232,6 +231,7 @@ export default function Sessions() {
               columns={columns}
               data={sessionList}
               pageCount={pageCount}
+              rowCount={queryData?.totalCount || 0}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

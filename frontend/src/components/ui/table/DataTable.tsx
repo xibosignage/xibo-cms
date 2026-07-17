@@ -51,6 +51,7 @@ interface DataTableProps<TData, TValue> {
   enableSelection?: boolean;
   data: TData[];
   pageCount: number;
+  rowCount?: number;
   pagination: PaginationState;
   onPaginationChange: OnChangeFn<PaginationState>;
   sorting: SortingState;
@@ -104,6 +105,7 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   pageCount,
+  rowCount,
   pagination,
   onPaginationChange,
   sorting,
@@ -163,6 +165,7 @@ export function DataTable<TData, TValue>({
     data,
     columns: tableColumns,
     pageCount,
+    rowCount,
     state: {
       sorting,
       globalFilter,

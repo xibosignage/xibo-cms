@@ -244,6 +244,7 @@ export default function FolderInfoPanel({
           columns={usageColumns}
           data={sortedUsage}
           pageCount={Math.ceil(usage.length / pagination.pageSize)}
+          rowCount={usage.length}
           pagination={pagination}
           onPaginationChange={setPagination}
           sorting={sorting}

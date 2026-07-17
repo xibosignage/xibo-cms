@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { useQuery } from '@tanstack/react-query';
 import { FolderPlus, X } from 'lucide-react';
 import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -55,6 +56,7 @@ export default function FolderSidebar({
 }: FolderSidebarProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
+  const { canViewFolders } = usePermissions();
   const searchId = useId();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'Home' | 'Shared with me'>('Home');
@@ -75,6 +77,10 @@ export default function FolderSidebar({
 
     handleAction('create', { id: createTargetId } as Folder);
   };
+
+  if (!canViewFolders) {
+    return null;
+  }
 
   const handleAllItemsToggle = () => {
     if (selectedFolderId === null) {
