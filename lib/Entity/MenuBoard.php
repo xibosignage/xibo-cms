@@ -183,10 +183,6 @@ class MenuBoard implements \JsonSerializable
             'audit' => true
         ], $options);
 
-        if ($options['audit']) {
-            $this->getLog()->debug('Saving ' . $this);
-        }
-
         if ($options['validate']) {
             $this->validate();
         }
@@ -194,8 +190,17 @@ class MenuBoard implements \JsonSerializable
         if ($this->menuId == null || $this->menuId == 0) {
             $this->add();
             $this->loaded = true;
+
+            if ($options['audit']) {
+                $this->audit($this->menuId, 'Added');
+            }
         } else {
+            $changedProperties = $this->getChangedProperties();
             $this->update();
+
+            if ($options['audit'] && count($changedProperties) > 0) {
+                $this->audit($this->menuId, 'Saved', $changedProperties);
+            }
         }
 
         $this->setActive();
@@ -244,6 +249,22 @@ class MenuBoard implements \JsonSerializable
     {
         $this->getLog()->debug('MenuBoard ' . $this->menuId . ' wants to notify');
         $this->getDisplayNotifyService()->collectNow()->notifyByMenuBoardId($this->menuId);
+    }
+
+    /**
+     * Bump modifiedDt and notify displays without the validate/full-row save overhead of save().
+     * Use when a child category/product changes and this board's own fields are unchanged.
+     * @throws NotFoundException
+     */
+    public function touch(): void
+    {
+        $this->modifiedDt = Carbon::now()->format('U');
+        $this->getStore()->update(
+            'UPDATE `menu_board` SET modifiedDt = :modifiedDt WHERE menuId = :menuId',
+            ['menuId' => $this->menuId, 'modifiedDt' => $this->modifiedDt]
+        );
+        $this->setActive();
+        $this->notify();
     }
 
     private function add(): void
@@ -305,5 +326,11 @@ class MenuBoard implements \JsonSerializable
         }
 
         $this->getStore()->update('DELETE FROM `menu_board` WHERE menuId = :menuId', ['menuId' => $this->menuId]);
+
+        $this->audit($this->menuId, 'Deleted', [
+            'menuId' => $this->menuId,
+            'name' => $this->name,
+            'code' => $this->code,
+        ]);
     }
 }

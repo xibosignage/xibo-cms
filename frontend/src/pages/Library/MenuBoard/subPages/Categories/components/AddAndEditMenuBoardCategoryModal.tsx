@@ -67,7 +67,7 @@ const createDraftFromData = (data?: MenuBoardCategory | null): CategoryDraft => 
     name: data.name ?? '',
     description: data.description ?? '',
     code: data.code ?? '',
-    mediaId: data.mediaId != null ? Number(data.mediaId) : null,
+    mediaId: data.mediaId ? Number(data.mediaId) : null,
   };
 };
 

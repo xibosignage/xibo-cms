@@ -165,7 +165,8 @@ class ListenersMiddleware implements MiddlewareInterface
 
         // Media Delete Events
         $dispatcher->addListener(MediaDeleteEvent::$NAME, (new \Xibo\Listener\OnMediaDelete\MenuBoardListener(
-            $c->get('menuBoardCategoryFactory')
+            $c->get('menuBoardCategoryFactory'),
+            $c->get('menuBoardFactory')
         )));
 
         $dispatcher->addListener(MediaDeleteEvent::$NAME, (new \Xibo\Listener\OnMediaDelete\WidgetListener(
