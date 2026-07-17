@@ -63,6 +63,8 @@ const buildProps = (overrides: Partial<EventModalsProps> = {}): EventModalsProps
     isCloning: false,
     agendaDate: null,
     displayGroups: [],
+    displaySpecificGroupIds: [],
+    displayGroupIds: [],
     ...overrides.actions,
   },
   selection: {
