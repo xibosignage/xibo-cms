@@ -50,7 +50,6 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import { fetchContextButtons } from '@/services/folderApi';
 import type { Template } from '@/types/templates';
-import { hasFeature } from '@/utils/permissions';
 
 export default function Templates() {
   const { t } = useTranslation();
