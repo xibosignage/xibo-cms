@@ -33,6 +33,7 @@ import FolderTreeList from '@/components/ui/FolderTreeList';
 import TabNav from '@/components/ui/TabNav';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { type ActionType, useFolderActions } from '@/hooks/useFolderActions';
+import { useFolderCreatePermission } from '@/hooks/useFolderCreatePermission';
 import { fetchFolderById } from '@/services/folderApi';
 import { fetchUserPreference, saveUserPreference } from '@/services/userApi';
 import type { Folder } from '@/types/folder';
@@ -93,10 +94,12 @@ export default function Folders() {
     folderActions.openAction(action, folder);
   };
 
+  const createTargetId = selectedFolder?.id ?? rootFolderId;
+  const canCreateFolder = useFolderCreatePermission(createTargetId);
+
   const handleCreateFolder = () => {
-    const targetId = selectedFolder?.id ?? rootFolderId;
-    if (targetId == null) return;
-    handleAction('create', { id: targetId } as Folder);
+    if (createTargetId == null) return;
+    handleAction('create', { id: createTargetId } as Folder);
   };
 
   return (
@@ -129,14 +132,16 @@ export default function Folders() {
                       onChange={setSearchQuery}
                       placeholder={t('Search Folder')}
                     />
-                    <Button
-                      variant="tertiary"
-                      className="flex items-center justify-center w-full"
-                      leftIcon={FolderPlus}
-                      onClick={handleCreateFolder}
-                    >
-                      {t('New Folder')}
-                    </Button>
+                    {canCreateFolder && (
+                      <Button
+                        variant="tertiary"
+                        className="flex items-center justify-center w-full"
+                        leftIcon={FolderPlus}
+                        onClick={handleCreateFolder}
+                      >
+                        {t('New Folder')}
+                      </Button>
+                    )}
                   </>
                 }
               />

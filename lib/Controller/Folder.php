@@ -26,6 +26,7 @@ use OpenApi\Attributes as OA;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\FolderFactory;
+use Xibo\Factory\PermissionFactory;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -34,6 +35,7 @@ class Folder extends Base
 {
     public function __construct(
         private readonly FolderFactory $folderFactory,
+        private readonly PermissionFactory $permissionFactory,
     ) {
     }
 
@@ -101,7 +103,11 @@ class Folder extends Base
             return $response->withJson($folders);
         } elseif ($folderId !== null) {
             // Return information for a specific folder
-            $folder = $this->folderFactory->getById($folderId);
+            $folder = $this->folderFactory->getById($folderId, 0);
+
+            if (!$this->getUser()->checkViewable($folder)) {
+                throw new AccessDeniedException();
+            }
 
             $this->decorateWithButtons($folder);
             $this->folderFactory->decorateWithHomeFolderCount($folder);
@@ -207,11 +213,30 @@ class Folder extends Base
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
+        $parentId = $sanitizedParams->getInt('parentId', ['default' => 1]);
+        $parentFolder = $this->folderFactory->getById($parentId, 0);
+
+        if (!$this->getUser()->checkViewable($parentFolder)
+            || ($parentFolder->isRoot() && !$this->getUser()->isSuperAdmin())
+        ) {
+            throw new AccessDeniedException();
+        }
+
         $folder = $this->folderFactory->createEmpty();
         $folder->text = $sanitizedParams->getString('text');
-        $folder->parentId = $sanitizedParams->getString('parentId', ['default' => 1]);
+        $folder->parentId = $parentId;
 
         $folder->save();
+
+        // Grant the creator full permissions on their new Folder.
+        $this->permissionFactory->create(
+            $this->getUser()->groupId,
+            'Xibo\Entity\Folder',
+            $folder->id,
+            1,
+            1,
+            1
+        )->save();
 
         return $response->withStatus(200)->withJson([
             'message' => sprintf(__('Added %s'), $folder->text),

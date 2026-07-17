@@ -31,6 +31,7 @@ import Checkbox from './forms/Checkbox';
 
 import { useUserContext } from '@/context/UserContext';
 import type { ActionType } from '@/hooks/useFolderActions';
+import { useFolderCreatePermission } from '@/hooks/useFolderCreatePermission';
 import type { Folder } from '@/types/folder';
 
 interface FolderSidebarProps {
@@ -60,19 +61,19 @@ export default function FolderSidebar({
   const [rootFolderId, setRootFolderId] = useState<number | null>(null);
 
   const homeFolderId = user?.homeFolderId ?? null;
+  const createTargetId = activeTab === 'Home' && homeFolderId != null ? homeFolderId : rootFolderId;
+  const canCreateFolder = useFolderCreatePermission(createTargetId);
 
   const handleAction = (action: string, folder: Folder) => {
     onAction(action as ActionType, folder);
   };
 
   const handleCreateFolder = () => {
-    const targetId = activeTab === 'Home' && homeFolderId != null ? homeFolderId : rootFolderId;
-
-    if (targetId == null) {
+    if (createTargetId == null) {
       return;
     }
 
-    handleAction('create', { id: targetId } as Folder);
+    handleAction('create', { id: createTargetId } as Folder);
   };
 
   const handleAllItemsToggle = () => {
@@ -124,14 +125,16 @@ export default function FolderSidebar({
                     placeholder={t('Search Folder')}
                   />
 
-                  <Button
-                    variant="tertiary"
-                    className="flex items-center justify-center w-full"
-                    leftIcon={FolderPlus}
-                    onClick={handleCreateFolder}
-                  >
-                    {t('New Folder')}
-                  </Button>
+                  {canCreateFolder && (
+                    <Button
+                      variant="tertiary"
+                      className="flex items-center justify-center w-full"
+                      leftIcon={FolderPlus}
+                      onClick={handleCreateFolder}
+                    >
+                      {t('New Folder')}
+                    </Button>
+                  )}
 
                   <Checkbox
                     id="all-items-checkbox"
