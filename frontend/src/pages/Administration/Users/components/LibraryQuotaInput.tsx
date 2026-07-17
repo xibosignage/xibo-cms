@@ -99,11 +99,15 @@ export default function LibraryQuotaInput({ value, onChange, error }: LibraryQuo
 
   return (
     <div className="flex flex-col gap-1 w-full">
-      <label className="flex items-center justify-between text-sm font-semibold text-gray-500 leading-4.5">
+      <label
+        htmlFor="libraryQuota"
+        className="flex items-center justify-between text-sm font-semibold text-gray-500 leading-4.5"
+      >
         {t('Library Quota')}
       </label>
       <div className="flex items-center border border-gray-200 rounded-lg overflow-visible bg-white h-11.25 focus-within:border-xibo-blue-600 focus-within:ring-1 focus-within:ring-xibo-blue-600/25">
         <input
+          id="libraryQuota"
           type="number"
           value={inputValue}
           onChange={handleValueChange}
