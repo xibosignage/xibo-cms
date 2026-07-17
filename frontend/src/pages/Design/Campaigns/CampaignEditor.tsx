@@ -220,6 +220,7 @@ export default function CampaignEditor() {
   const [activeTab, setActiveTab] = useState<EditorTab>('general');
   const [draft, setDraft] = useState<GeneralDraft | null>(null);
   const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
   const [dateErrors, setDateErrors] = useState<{ startDt?: string; endDt?: string }>({});
 
   const [displayTargets, setDisplayTargets] = useState<DisplayGroupMultiSelectValue>({
@@ -625,6 +626,7 @@ export default function CampaignEditor() {
                   onChange={(tags) => setDraft((prev) => prev && { ...prev, tags })}
                   inputValue={pendingTagInput}
                   onInputChange={setPendingTagInput}
+                  onPendingValueChange={setHasTagPendingValue}
                 />
               </>
             )}
@@ -716,7 +718,11 @@ export default function CampaignEditor() {
         <Button variant="secondary" onClick={() => navigate('/design/campaign')}>
           {t('Back')}
         </Button>
-        <Button variant="primary" disabled={saveGeneral.isPending} onClick={handleSaveGeneral}>
+        <Button
+          variant="primary"
+          disabled={saveGeneral.isPending || hasTagPendingValue}
+          onClick={handleSaveGeneral}
+        >
           {saveGeneral.isPending ? t('Saving…') : t('Save')}
         </Button>
       </div>

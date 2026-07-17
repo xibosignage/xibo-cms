@@ -50,6 +50,7 @@ export default function CopyMediaModal({
   const [newName, setNewName] = useState('');
   const [newTags, setNewTags] = useState([] as Tag[]);
   const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
   const [error, setError] = useState<string | undefined>();
 
   useEffect(() => {
@@ -101,7 +102,7 @@ export default function CopyMediaModal({
         {
           label: isLoading ? t('Saving…') : t('Save'),
           onClick: handleSave,
-          disabled: isLoading,
+          disabled: isLoading || hasTagPendingValue,
         },
       ]}
     >
@@ -122,6 +123,7 @@ export default function CopyMediaModal({
           value={newTags}
           inputValue={pendingTagInput}
           onInputChange={setPendingTagInput}
+          onPendingValueChange={setHasTagPendingValue}
         />
       </div>
     </Modal>

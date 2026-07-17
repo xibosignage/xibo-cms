@@ -39,6 +39,7 @@ export default function ReplaceFileModal({
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const Icon = getMediaIcon(data.mediaType);
@@ -158,7 +159,7 @@ export default function ReplaceFileModal({
         {
           label: isSaving ? t('Saving…') : t('Save'),
           onClick: handleSave,
-          disabled: isSaving || !selectedFile,
+          disabled: isSaving || !selectedFile || hasTagPendingValue,
         },
       ]}
     >
@@ -264,6 +265,7 @@ export default function ReplaceFileModal({
             onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
             inputValue={pendingTagInput}
             onInputChange={setPendingTagInput}
+            onPendingValueChange={setHasTagPendingValue}
           />
           {/* Retired */}
           <div className="bg-gray-50 flex flex-col ">
