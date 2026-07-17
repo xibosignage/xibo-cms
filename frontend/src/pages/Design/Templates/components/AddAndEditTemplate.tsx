@@ -79,6 +79,7 @@ export default function AddAndEditTemplateModal({
   const [formErrors, setFormErrors] = useState<TemplateFormErrors>({});
   const [apiError, setApiError] = useState<string | undefined>();
   const [pendingTagInput, setPendingTagInput] = useState('');
+  const [hasTagPendingValue, setHasTagPendingValue] = useState(false);
   const [resolutions, setResolutions] = useState<Resolution[]>([]);
   const [loadingResolutions, setLoadingResolutions] = useState(false);
 
@@ -228,7 +229,7 @@ export default function AddAndEditTemplateModal({
         {
           label: isPending ? t('Saving…') : t('Save'),
           onClick: handleSave,
-          disabled: isPending,
+          disabled: isPending || hasTagPendingValue,
         },
       ]}
     >
@@ -272,6 +273,7 @@ export default function AddAndEditTemplateModal({
             onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
             inputValue={pendingTagInput}
             onInputChange={setPendingTagInput}
+            onPendingValueChange={setHasTagPendingValue}
           />
 
           {type === 'add' ? (
