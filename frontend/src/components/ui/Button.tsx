@@ -73,7 +73,14 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
       {LeftIcon && <LeftIcon className="shrink-0 size-4" aria-hidden="true" />}
 
       {showText && (
-        <span className={removeTextOnMobile ? 'hidden sm:inline' : undefined}>{children}</span>
+        <span
+          className={twMerge(
+            'inline-flex items-center gap-x-2',
+            removeTextOnMobile && 'hidden sm:inline-flex',
+          )}
+        >
+          {children}
+        </span>
       )}
 
       {RightIcon && <RightIcon className="shrink-0 size-4" aria-hidden="true" />}

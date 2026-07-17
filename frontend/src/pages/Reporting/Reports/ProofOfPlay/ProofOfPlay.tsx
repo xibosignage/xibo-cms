@@ -19,13 +19,13 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { ArrowLeft, Download, Filter, FilterX, Loader2, Plus } from 'lucide-react';
+import { ArrowLeft, Download, Loader2, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import type { ProofOfPlayFilter } from './ProofOfPlayConfig';
-import { INITIAL_FILTER_STATE } from './ProofOfPlayConfig';
+import { ACTIVE_FILTER_KEYS, INITIAL_FILTER_STATE } from './ProofOfPlayConfig';
 import AddScheduleModal from './components/AddScheduleModal';
 import ExportStatisticsModal from './components/ExportStatisticsModal';
 import ProofOfPlayFilters from './components/ProofOfPlayFilters';
@@ -33,10 +33,12 @@ import ProofOfPlayResults from './components/ProofOfPlayResults';
 import { useProofOfPlayData } from './hooks/useProofOfPlayData';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import TabNav from '@/components/ui/TabNav';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import ReportSelector from '@/pages/Reporting/Reports/shared/ReportSelector';
+import { countActiveFilters } from '@/utils/filters';
 
 export default function ProofOfPlay() {
   const { t } = useTranslation();
@@ -98,6 +100,12 @@ export default function ProofOfPlay() {
     setFilterInputs((prev) => ({ ...INITIAL_FILTER_STATE, ...prev, ...patch }));
   };
 
+  const activeFilterCount = countActiveFilters(
+    filterInputs,
+    INITIAL_FILTER_STATE,
+    ACTIVE_FILTER_KEYS,
+  );
+
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
@@ -114,15 +122,12 @@ export default function ProofOfPlay() {
             <Button variant="primary" leftIcon={Plus} onClick={() => setScheduleModalOpen(true)}>
               {t('Schedule')}
             </Button>
-            <Button
-              leftIcon={filtersOpen ? FilterX : Filter}
-              variant="secondary"
+            <FilterButton
+              isOpen={filtersOpen}
+              onToggle={() => setFiltersOpen((prev) => !prev)}
+              activeCount={activeFilterCount}
               disabled={!isHydrated}
-              onClick={() => setFiltersOpen((prev) => !prev)}
-              removeTextOnMobile
-            >
-              {t('Filters')}
-            </Button>
+            />
           </div>
         </div>
 

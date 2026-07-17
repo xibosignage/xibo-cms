@@ -47,6 +47,7 @@ export default function FolderPermissionTab({
       <div className="flex flex-col gap-1">
         <SelectFolder
           selectedId={draft.homeFolderId}
+          enforceViewPermission={false}
           onSelect={(folder) =>
             setDraft((prev) => ({
               ...prev,
@@ -96,6 +97,7 @@ export default function FolderPermissionTab({
                       next.delete(folderId);
                       setFolderPermissions(next);
                     }}
+                    aria-label={t('Remove {{name}}', { name: displayName })}
                     className="ml-0.5 text-blue-500 hover:text-blue-800"
                   >
                     <X size={12} />

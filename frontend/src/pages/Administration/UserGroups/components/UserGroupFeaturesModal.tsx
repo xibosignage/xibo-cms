@@ -261,6 +261,7 @@ export default function UserGroupFeaturesModal({
                       <div className="flex justify-center">
                         <input
                           type="checkbox"
+                          aria-label={t('Enable all in {{group}}', { group: label })}
                           checked={allEnabled}
                           ref={(el) => {
                             if (el) el.indeterminate = someEnabled;
@@ -284,6 +285,7 @@ export default function UserGroupFeaturesModal({
                           <div className="flex justify-center">
                             <input
                               type="checkbox"
+                              aria-label={t('Enable {{feature}}', { feature: feat.title })}
                               checked={enabledFeatures.has(feat.feature)}
                               onChange={() => toggleFeature(feat.feature)}
                               className="h-4 w-4 border-gray-300 rounded cursor-pointer text-blue-600 focus:ring-blue-500"

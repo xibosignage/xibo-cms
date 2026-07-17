@@ -23,10 +23,10 @@
 
 namespace Xibo\Entity;
 
-
 use Carbon\Carbon;
 use OpenApi\Attributes as OA;
 use Respect\Validation\Validator as v;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\PermissionFactory;
@@ -51,139 +51,143 @@ class DisplayGroup implements \JsonSerializable
     /**
      * @var int
      */
-    #[OA\Property(description: "The displayGroup Id")]
+    #[OA\Property(description: 'The displayGroup Id')]
     public $displayGroupId;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The displayGroup Name")]
+    #[OA\Property(description: 'The displayGroup Name')]
     public $displayGroup;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The displayGroup Description")]
+    #[OA\Property(description: 'The displayGroup Description')]
     public $description;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "A flag indicating whether this displayGroup is a single display displayGroup")]
+    #[OA\Property(description: 'A flag indicating whether this displayGroup is a single display displayGroup')]
     public $isDisplaySpecific = 0;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "A flag indicating whether this displayGroup is dynamic")]
+    #[OA\Property(description: 'A flag indicating whether this displayGroup is dynamic')]
     public $isDynamic = 0;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "Criteria for this dynamic group. A comma separated set of regular expressions to apply")]
+    #[OA\Property(
+        description: 'Criteria for this dynamic group. A comma separated set of regular expressions to apply'
+    )]
     public $dynamicCriteria;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "Which logical operator should be used when filtering by multiple dynamic criteria? OR|AND")]
+    #[OA\Property(
+        description: 'Which logical operator should be used when filtering by multiple dynamic criteria? OR|AND'
+    )]
     public $dynamicCriteriaLogicalOperator;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "Criteria for this dynamic group. A comma separated set of tags to apply")]
+    #[OA\Property(description: 'Criteria for this dynamic group. A comma separated set of tags to apply')]
     public $dynamicCriteriaTags;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "Flag indicating whether to filter by exact Tag match")]
+    #[OA\Property(description: 'Flag indicating whether to filter by exact Tag match')]
     public $dynamicCriteriaExactTags;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "Which logical operator should be used when filtering by multiple Tags? OR|AND")]
+    #[OA\Property(description: 'Which logical operator should be used when filtering by multiple Tags? OR|AND')]
     public $dynamicCriteriaTagsLogicalOperator;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The UserId who owns this display group")]
+    #[OA\Property(description: 'The UserId who owns this display group')]
     public $userId = 0;
 
     /**
      * @var TagLink[]
      */
-    #[OA\Property(description: "Tags associated with this Display Group, array of TagLink objects")]
+    #[OA\Property(description: 'Tags associated with this Display Group, array of TagLink objects')]
     public $tags = [];
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The display bandwidth limit")]
+    #[OA\Property(description: 'The display bandwidth limit')]
     public $bandwidthLimit;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "A comma separated list of groups/users with permissions to this DisplayGroup")]
+    #[OA\Property(description: 'A comma separated list of groups/users with permissions to this DisplayGroup')]
     public $groupsWithPermissions;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The datetime this entity was created")]
+    #[OA\Property(description: 'The datetime this entity was created')]
     public $createdDt;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "The datetime this entity was last modified")]
+    #[OA\Property(description: 'The datetime this entity was last modified')]
     public $modifiedDt;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The id of the Folder this Display Group belongs to")]
+    #[OA\Property(description: 'The id of the Folder this Display Group belongs to')]
     public $folderId;
 
     /**
      * @var int
      */
-    #[OA\Property(description: "The id of the Folder responsible for providing permissions for this Display Group")]
+    #[OA\Property(description: 'The id of the Folder responsible for providing permissions for this Display Group')]
     public $permissionsFolderId;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "Optional Reference 1")]
+    #[OA\Property(description: 'Optional Reference 1')]
     public $ref1;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "Optional Reference 2")]
+    #[OA\Property(description: 'Optional Reference 2')]
     public $ref2;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "Optional Reference 3")]
+    #[OA\Property(description: 'Optional Reference 3')]
     public $ref3;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "Optional Reference 4")]
+    #[OA\Property(description: 'Optional Reference 4')]
     public $ref4;
 
     /**
      * @var string
      */
-    #[OA\Property(description: "Optional Reference 5")]
+    #[OA\Property(description: 'Optional Reference 5')]
     public $ref5;
 
     // Child Items the Display Group is linked to
@@ -201,6 +205,16 @@ class DisplayGroup implements \JsonSerializable
 
     // Track original assignments
     private $originalDisplayGroups = [];
+
+    // Track assign/unassign deltas for audit logging
+    private $assignedDisplayIds = [];
+    private $unassignedDisplayIds = [];
+    private $assignedDisplayGroupIds = [];
+    private $unassignedDisplayGroupIds = [];
+    private $assignedMediaIds = [];
+    private $unassignedMediaIds = [];
+    private $assignedLayoutIds = [];
+    private $unassignedLayoutIds = [];
 
     /**
      * Is notify required during save?
@@ -224,30 +238,14 @@ class DisplayGroup implements \JsonSerializable
      */
     private $displayFactory;
 
-    /**
-     * @var DisplayGroupFactory
-     */
-    private $displayGroupFactory;
-
-    /**
-     * @var PermissionFactory
-     */
-    private $permissionFactory;
-
-    /**
-     * Entity constructor.
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
-     * @param DisplayGroupFactory $displayGroupFactory
-     * @param PermissionFactory $permissionFactory
-     */
-    public function __construct($store, $log, $dispatcher, $displayGroupFactory, $permissionFactory)
-    {
+    public function __construct(
+        StorageServiceInterface $store,
+        LogServiceInterface $log,
+        EventDispatcherInterface $dispatcher,
+        private readonly DisplayGroupFactory $displayGroupFactory,
+        private readonly PermissionFactory $permissionFactory
+    ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
-
-        $this->displayGroupFactory = $displayGroupFactory;
-        $this->permissionFactory = $permissionFactory;
     }
 
     public function setDisplayFactory(DisplayFactory $displayFactory)
@@ -269,12 +267,12 @@ class DisplayGroup implements \JsonSerializable
     /**
      * @return int
      */
-    public function getId()
+    public function getId(): int
     {
         return $this->displayGroupId;
     }
 
-    public function getPermissionFolderId()
+    public function getPermissionFolderId(): int
     {
         return $this->permissionsFolderId;
     }
@@ -282,7 +280,7 @@ class DisplayGroup implements \JsonSerializable
     /**
      * @return int
      */
-    public function getOwnerId()
+    public function getOwnerId(): int
     {
         return $this->userId;
     }
@@ -291,7 +289,7 @@ class DisplayGroup implements \JsonSerializable
      * Set the owner of this group
      * @param $userId
      */
-    public function setOwner($userId)
+    public function setOwner($userId): void
     {
         $this->userId = $userId;
     }
@@ -299,7 +297,7 @@ class DisplayGroup implements \JsonSerializable
     /**
      * @return bool
      */
-    public function canChangeOwner()
+    public function canChangeOwner(): bool
     {
         return $this->isDisplaySpecific == 0;
     }
@@ -309,7 +307,7 @@ class DisplayGroup implements \JsonSerializable
      *  If true will send a player action to collect immediately
      * @param bool|true $collectRequired
      */
-    public function setCollectRequired($collectRequired = true)
+    public function setCollectRequired($collectRequired = true): void
     {
         $this->collectRequired = $collectRequired;
     }
@@ -319,7 +317,7 @@ class DisplayGroup implements \JsonSerializable
      * @param Display $display
      * @throws NotFoundException
      */
-    public function setDisplaySpecificDisplay($display)
+    public function setDisplaySpecificDisplay($display): void
     {
         $this->load();
 
@@ -361,14 +359,14 @@ class DisplayGroup implements \JsonSerializable
      * Set the Media Status to Incomplete
      * @param int[] $displayIds
      */
-    public function notify($displayIds = [])
+    public function notify($displayIds = []): void
     {
         if ($this->allowNotify) {
-
             $notify = $this->displayFactory->getDisplayNotifyService();
 
-            if ($this->collectRequired)
+            if ($this->collectRequired) {
                 $notify->collectNow();
+            }
 
             if (count($displayIds) > 0) {
                 foreach ($displayIds as $displayId) {
@@ -385,7 +383,7 @@ class DisplayGroup implements \JsonSerializable
      * @param Display $display
      * @throws NotFoundException
      */
-    public function assignDisplay($display)
+    public function assignDisplay($display): void
     {
         $found = false;
         foreach ($this->displays as $existingDisplay) {
@@ -395,8 +393,10 @@ class DisplayGroup implements \JsonSerializable
             }
         }
 
-        if (!$found)
+        if (!$found) {
             $this->displays[] = $display;
+            $this->assignedDisplayIds[] = $display->displayId;
+        }
     }
 
     /**
@@ -404,12 +404,12 @@ class DisplayGroup implements \JsonSerializable
      * @param Display $display
      * @throws NotFoundException
      */
-    public function unassignDisplay($display)
+    public function unassignDisplay($display): void
     {
         // Changes made?
         $countBefore = count($this->displays);
 
-        $this->displays = array_udiff($this->displays, [$display], function($a, $b) {
+        $this->displays = array_udiff($this->displays, [$display], function ($a, $b) {
             /**
              * @var Display $a
              * @var Display $b
@@ -418,8 +418,10 @@ class DisplayGroup implements \JsonSerializable
         });
 
         // Notify if necessary
-        if ($countBefore !== count($this->displays))
+        if ($countBefore !== count($this->displays)) {
             $this->notifyRequired = true;
+            $this->unassignedDisplayIds[] = $display->displayId;
+        }
     }
 
     /**
@@ -427,10 +429,12 @@ class DisplayGroup implements \JsonSerializable
      * @param DisplayGroup $displayGroup
      * @throws NotFoundException
      */
-    public function assignDisplayGroup($displayGroup)
+    public function assignDisplayGroup($displayGroup): void
     {
-        if (!in_array($displayGroup, $this->displayGroups))
+        if (!in_array($displayGroup, $this->displayGroups)) {
             $this->displayGroups[] = $displayGroup;
+            $this->assignedDisplayGroupIds[] = $displayGroup->getId();
+        }
     }
 
     /**
@@ -438,12 +442,12 @@ class DisplayGroup implements \JsonSerializable
      * @param DisplayGroup $displayGroup
      * @throws NotFoundException
      */
-    public function unassignDisplayGroup($displayGroup)
+    public function unassignDisplayGroup($displayGroup): void
     {
         // Changes made?
         $countBefore = count($this->displayGroups);
 
-        $this->displayGroups = array_udiff($this->displayGroups, [$displayGroup], function($a, $b) {
+        $this->displayGroups = array_udiff($this->displayGroups, [$displayGroup], function ($a, $b) {
             /**
              * @var DisplayGroup $a
              * @var DisplayGroup $b
@@ -452,8 +456,10 @@ class DisplayGroup implements \JsonSerializable
         });
 
         // Notify if necessary
-        if ($countBefore !== count($this->displayGroups))
+        if ($countBefore !== count($this->displayGroups)) {
             $this->notifyRequired = true;
+            $this->unassignedDisplayGroupIds[] = $displayGroup->getId();
+        }
     }
 
     /**
@@ -461,10 +467,11 @@ class DisplayGroup implements \JsonSerializable
      * @param Media $media
      * @throws NotFoundException
      */
-    public function assignMedia($media)
+    public function assignMedia($media): void
     {
         if (!in_array($media, $this->media)) {
             $this->media[] = $media;
+            $this->assignedMediaIds[] = $media->mediaId;
 
             // We should notify
             $this->notifyRequired = true;
@@ -476,12 +483,12 @@ class DisplayGroup implements \JsonSerializable
      * @param Media $media
      * @throws NotFoundException
      */
-    public function unassignMedia($media)
+    public function unassignMedia($media): void
     {
         // Changes made?
         $countBefore = count($this->media);
 
-        $this->media = array_udiff($this->media, [$media], function($a, $b) {
+        $this->media = array_udiff($this->media, [$media], function ($a, $b) {
             /**
              * @var Media $a
              * @var Media $b
@@ -490,8 +497,10 @@ class DisplayGroup implements \JsonSerializable
         });
 
         // Notify if necessary
-        if ($countBefore !== count($this->media))
+        if ($countBefore !== count($this->media)) {
             $this->notifyRequired = true;
+            $this->unassignedMediaIds[] = $media->mediaId;
+        }
     }
 
     /**
@@ -499,10 +508,11 @@ class DisplayGroup implements \JsonSerializable
      * @param Layout $layout
      * @throws NotFoundException
      */
-    public function assignLayout($layout)
+    public function assignLayout($layout): void
     {
         if (!in_array($layout, $this->layouts)) {
             $this->layouts[] = $layout;
+            $this->assignedLayoutIds[] = $layout->layoutId;
 
             // We should notify
             $this->notifyRequired = true;
@@ -514,12 +524,12 @@ class DisplayGroup implements \JsonSerializable
      * @param Layout $layout
      * @throws NotFoundException
      */
-    public function unassignLayout($layout)
+    public function unassignLayout($layout): void
     {
         // Changes made?
         $countBefore = count($this->layouts);
 
-        $this->layouts = array_udiff($this->layouts, [$layout], function($a, $b) {
+        $this->layouts = array_udiff($this->layouts, [$layout], function ($a, $b) {
             /**
              * @var Layout $a
              * @var Layout $b
@@ -528,8 +538,10 @@ class DisplayGroup implements \JsonSerializable
         });
 
         // Notify if necessary
-        if ($countBefore !== count($this->layouts))
+        if ($countBefore !== count($this->layouts)) {
             $this->notifyRequired = true;
+            $this->unassignedLayoutIds[] = $layout->layoutId;
+        }
     }
 
     /**
@@ -537,7 +549,7 @@ class DisplayGroup implements \JsonSerializable
      * @param array $options
      * @throws NotFoundException
      */
-    public function load($options = [])
+    public function load($options = []): void
     {
         $options = array_merge([
             'loadTags' => true
@@ -563,29 +575,44 @@ class DisplayGroup implements \JsonSerializable
      * @throws DuplicateEntityException
      * @throws InvalidArgumentException
      */
-    public function validate()
+    public function validate(): void
     {
         if (!v::stringType()->notEmpty()->validate($this->displayGroup)) {
             throw new InvalidArgumentException(__('Please enter a display group name'), 'displayGroup');
         }
 
         if (!empty($this->description) && !v::stringType()->length(null, 254)->validate($this->description)) {
-            throw new InvalidArgumentException(__('Description can not be longer than 254 characters'), 'description');
+            throw new InvalidArgumentException(
+                __('Description can not be longer than 254 characters'),
+                'description'
+            );
         }
 
         if ($this->isDisplaySpecific == 0) {
             // Check the name
-            $result = $this->getStore()->select('SELECT DisplayGroup FROM displaygroup WHERE DisplayGroup = :displayGroup AND IsDisplaySpecific = 0 AND displayGroupId <> :displayGroupId', [
+            $result = $this->getStore()->select('
+                SELECT DisplayGroup
+                  FROM displaygroup
+                 WHERE DisplayGroup = :displayGroup
+                   AND IsDisplaySpecific = 0
+                   AND displayGroupId <> :displayGroupId
+            ', [
                 'displayGroup' => $this->displayGroup,
                 'displayGroupId' => (($this->displayGroupId == null) ? 0 : $this->displayGroupId)
             ]);
 
             if (count($result) > 0) {
-                throw new DuplicateEntityException(sprintf(__('You already own a display group called "%s". Please choose another name.'), $this->displayGroup));
+                throw new DuplicateEntityException(sprintf(
+                    __('You already own a display group called "%s". Please choose another name.'),
+                    $this->displayGroup
+                ));
             }
             // If we are dynamic, then make sure we have some criteria
             if ($this->isDynamic == 1 && ($this->dynamicCriteria == '' && $this->dynamicCriteriaTags == '')) {
-                throw new InvalidArgumentException(__('Dynamic Display Groups must have at least one Criteria specified.'), 'dynamicCriteria');
+                throw new InvalidArgumentException(
+                    __('Dynamic Display Groups must have at least one Criteria specified.'),
+                    'dynamicCriteria'
+                );
             }
         }
     }
@@ -595,7 +622,7 @@ class DisplayGroup implements \JsonSerializable
      * @param array $options
      * @throws GeneralException
      */
-    public function save($options = [])
+    public function save($options = []): void
     {
         $options = array_merge([
             'validate' => true,
@@ -618,22 +645,39 @@ class DisplayGroup implements \JsonSerializable
         if ($this->displayGroupId == null || $this->displayGroupId == 0) {
             $this->add();
             $this->loaded = true;
+            $this->audit($this->displayGroupId, 'Added');
         } else if ($options['saveGroup']) {
+            $changedProperties = $this->getChangedProperties();
             $this->edit($options);
+
+            if (count($changedProperties) > 0) {
+                $this->audit($this->displayGroupId, 'Saved', $changedProperties);
+            }
         }
 
         if ($options['saveTags']) {
             // Remove unwanted ones
             if (is_array($this->unlinkTags)) {
                 foreach ($this->unlinkTags as $tag) {
-                    $this->unlinkTagFromEntity('lktagdisplaygroup', 'displayGroupId', $this->displayGroupId, $tag->tagId);
+                    $this->unlinkTagFromEntity(
+                        'lktagdisplaygroup',
+                        'displayGroupId',
+                        $this->displayGroupId,
+                        $tag->tagId
+                    );
                 }
             }
 
             // Save the tags
             if (is_array($this->linkTags)) {
                 foreach ($this->linkTags as $tag) {
-                    $this->linkTagToEntity('lktagdisplaygroup', 'displayGroupId', $this->displayGroupId, $tag->tagId, $tag->value);
+                    $this->linkTagToEntity(
+                        'lktagdisplaygroup',
+                        'displayGroupId',
+                        $this->displayGroupId,
+                        $tag->tagId,
+                        $tag->value
+                    );
                 }
             }
         }
@@ -646,19 +690,62 @@ class DisplayGroup implements \JsonSerializable
                 $this->linkMedia();
                 $this->unlinkMedia();
 
+                if (count($this->assignedMediaIds) > 0) {
+                    $this->audit($this->displayGroupId, 'Media assigned', [
+                        'mediaIds' => implode(',', $this->assignedMediaIds),
+                    ]);
+                }
+                if (count($this->unassignedMediaIds) > 0) {
+                    $this->audit($this->displayGroupId, 'Media unassigned', [
+                        'mediaIds' => implode(',', $this->unassignedMediaIds),
+                    ]);
+                }
+
                 // Handle any changes in the layouts linked
                 $this->linkLayouts();
                 $this->unlinkLayouts();
+
+                if (count($this->assignedLayoutIds) > 0) {
+                    $this->audit($this->displayGroupId, 'Layouts assigned', [
+                        'layoutIds' => implode(',', $this->assignedLayoutIds),
+                    ]);
+                }
+                if (count($this->unassignedLayoutIds) > 0) {
+                    $this->audit($this->displayGroupId, 'Layouts unassigned', [
+                        'layoutIds' => implode(',', $this->unassignedLayoutIds),
+                    ]);
+                }
             }
 
             if ($options['manageDisplayLinks']) {
                 // Handle any changes in the displays linked
                 $this->manageDisplayLinks($options['manageDynamicDisplayLinks']);
 
+                if (count($this->assignedDisplayIds) > 0) {
+                    $this->audit($this->displayGroupId, 'Displays assigned', [
+                        'displayIds' => implode(',', $this->assignedDisplayIds),
+                    ]);
+                }
+                if (count($this->unassignedDisplayIds) > 0) {
+                    $this->audit($this->displayGroupId, 'Displays unassigned', [
+                        'displayIds' => implode(',', $this->unassignedDisplayIds),
+                    ]);
+                }
+
                 // Handle any group links
                 $this->manageDisplayGroupLinks();
-            }
 
+                if (count($this->assignedDisplayGroupIds) > 0) {
+                    $this->audit($this->displayGroupId, 'DisplayGroups assigned', [
+                        'displayGroupIds' => implode(',', $this->assignedDisplayGroupIds),
+                    ]);
+                }
+                if (count($this->unassignedDisplayGroupIds) > 0) {
+                    $this->audit($this->displayGroupId, 'DisplayGroups unassigned', [
+                        'displayGroupIds' => implode(',', $this->unassignedDisplayGroupIds),
+                    ]);
+                }
+            }
         } else if ($this->isDynamic == 1 && $options['manageDynamicDisplayLinks']) {
             $this->manageDisplayLinks();
         }
@@ -674,7 +761,7 @@ class DisplayGroup implements \JsonSerializable
      * @throws NotFoundException
      * @throws GeneralException
      */
-    public function delete()
+    public function delete(): void
     {
         // Load everything for the delete
         $this->load();
@@ -707,13 +794,21 @@ class DisplayGroup implements \JsonSerializable
         ]);
 
         // Delete the Group itself
-        $this->getStore()->update('DELETE FROM `displaygroup` WHERE DisplayGroupID = :displayGroupId', ['displayGroupId' => $this->displayGroupId]);
+        $this->getStore()->update(
+            'DELETE FROM `displaygroup` WHERE DisplayGroupID = :displayGroupId',
+            ['displayGroupId' => $this->displayGroupId]
+        );
+
+        $this->audit($this->displayGroupId, 'Deleted', [
+            'displayGroupId' => $this->displayGroupId,
+            'displayGroup' => $this->displayGroup,
+        ]);
     }
 
     /**
      * Remove any assignments
      */
-    public function removeAssignments()
+    public function removeAssignments(): void
     {
         $this->displays = [];
         $this->displayGroups = [];
@@ -726,19 +821,33 @@ class DisplayGroup implements \JsonSerializable
         $this->unlinkMedia();
 
         // Delete Notifications
-        // NB: notifications aren't modelled as child objects because there could be many thousands of notifications on each
-        // displaygroup. We consider the notification to be the parent here and it manages the assignments.
-        // This does mean that we might end up with an empty notification (not assigned to anything)
-        $this->getStore()->update('DELETE FROM `lknotificationdg` WHERE `displayGroupId` = :displayGroupId', ['displayGroupId' => $this->displayGroupId]);
+        // NB: notifications aren't modelled as child objects because there could be many thousands of
+        // notifications on each displaygroup. We consider the notification to be the parent here and it
+        // manages the assignments. This does mean that we might end up with an empty notification
+        // (not assigned to anything)
+        $this->getStore()->update(
+            'DELETE FROM `lknotificationdg` WHERE `displayGroupId` = :displayGroupId',
+            ['displayGroupId' => $this->displayGroupId]
+        );
     }
 
-    private function add()
+    private function add(): void
     {
         $time = Carbon::now()->format(DateFormatHelper::getSystemFormat());
 
         $this->displayGroupId = $this->getStore()->insert('
-          INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description, `isDynamic`, `dynamicCriteria`, `dynamicCriteriaLogicalOperator`, `dynamicCriteriaTags`, `dynamicCriteriaExactTags`, `dynamicCriteriaTagsLogicalOperator`, `userId`, `createdDt`, `modifiedDt`, `folderId`, `permissionsFolderId`, `ref1`, `ref2`, `ref3`, `ref4`, `ref5`)
-            VALUES (:displayGroup, :isDisplaySpecific, :description, :isDynamic, :dynamicCriteria, :dynamicCriteriaLogicalOperator, :dynamicCriteriaTags, :dynamicCriteriaExactTags, :dynamicCriteriaTagsLogicalOperator, :userId, :createdDt, :modifiedDt, :folderId, :permissionsFolderId, :ref1, :ref2, :ref3, :ref4, :ref5)
+          INSERT INTO displaygroup (
+              DisplayGroup, IsDisplaySpecific, Description, `isDynamic`, `dynamicCriteria`,
+              `dynamicCriteriaLogicalOperator`, `dynamicCriteriaTags`, `dynamicCriteriaExactTags`,
+              `dynamicCriteriaTagsLogicalOperator`, `userId`, `createdDt`, `modifiedDt`, `folderId`,
+              `permissionsFolderId`, `ref1`, `ref2`, `ref3`, `ref4`, `ref5`
+          )
+            VALUES (
+              :displayGroup, :isDisplaySpecific, :description, :isDynamic, :dynamicCriteria,
+              :dynamicCriteriaLogicalOperator, :dynamicCriteriaTags, :dynamicCriteriaExactTags,
+              :dynamicCriteriaTagsLogicalOperator, :userId, :createdDt, :modifiedDt, :folderId,
+              :permissionsFolderId, :ref1, :ref2, :ref3, :ref4, :ref5
+            )
         ', [
             'displayGroup' => $this->displayGroup,
             'isDisplaySpecific' => $this->isDisplaySpecific,
@@ -762,13 +871,16 @@ class DisplayGroup implements \JsonSerializable
         ]);
 
         // Insert my self link
-        $this->getStore()->insert('INSERT INTO `lkdgdg` (`parentId`, `childId`, `depth`) VALUES (:parentId, :childId, 0)', [
-            'parentId' => $this->displayGroupId,
-            'childId' => $this->displayGroupId
-        ]);
+        $this->getStore()->insert(
+            'INSERT INTO `lkdgdg` (`parentId`, `childId`, `depth`) VALUES (:parentId, :childId, 0)',
+            [
+                'parentId' => $this->displayGroupId,
+                'childId' => $this->displayGroupId
+            ]
+        );
     }
 
-    private function edit($options = [])
+    private function edit($options = []): void
     {
         $this->getLog()->debug(sprintf('Updating Display Group. %s, %d', $this->displayGroup, $this->displayGroupId));
 
@@ -823,16 +935,19 @@ class DisplayGroup implements \JsonSerializable
      * @var bool $manageDynamic
      * @throws NotFoundException
      */
-    private function manageDisplayLinks($manageDynamic = true)
+    private function manageDisplayLinks(bool $manageDynamic = true): void
     {
-        $this->getLog()->debug('Manage display links. Manage Dynamic = ' . $manageDynamic . ', Dynamic = ' . $this->isDynamic);
+        $this->getLog()->debug(
+            'Manage display links. Manage Dynamic = ' . $manageDynamic . ', Dynamic = ' . $this->isDynamic
+        );
         $difference = [];
 
         if ($this->isDynamic == 1 && $manageDynamic) {
-
             $this->getLog()->info('Managing Display Links for Dynamic Display Group ' . $this->displayGroup);
 
-            $originalDisplays = ($this->loaded) ? $this->displays : $this->displayFactory->getByDisplayGroupId($this->displayGroupId);
+            $originalDisplays = ($this->loaded)
+                ? $this->displays
+                : $this->displayFactory->getByDisplayGroupId($this->displayGroupId);
 
             // Update the linked displays based on the filter criteria
             // these displays must be permission checked based on the owner of the group NOT the logged in user
@@ -846,13 +961,24 @@ class DisplayGroup implements \JsonSerializable
                 'useRegexForName' => true
             ]);
 
-            $this->getLog()->debug(sprintf('There are %d original displays and %d displays that match the filter criteria now.', count($originalDisplays), count($this->displays)));
+            $this->getLog()->debug(sprintf(
+                'There are %d original displays and %d displays that match the filter criteria now.',
+                count($originalDisplays),
+                count($this->displays)
+            ));
 
             // Map our arrays to simple displayId lists
-            $displayIds = array_map(function ($element) { return $element->displayId; }, $this->displays);
-            $originalDisplayIds = array_map(function ($element) { return $element->displayId; }, $originalDisplays);
+            $displayIds = array_map(function ($element) {
+                return $element->displayId;
+            }, $this->displays);
+            $originalDisplayIds = array_map(function ($element) {
+                return $element->displayId;
+            }, $originalDisplays);
 
-            $difference = array_merge(array_diff($displayIds, $originalDisplayIds), array_diff($originalDisplayIds, $displayIds));
+            $difference = array_merge(
+                array_diff($displayIds, $originalDisplayIds),
+                array_diff($originalDisplayIds, $displayIds)
+            );
 
             // This is a dynamic display group
             // only manage the links that have changed
@@ -892,7 +1018,7 @@ class DisplayGroup implements \JsonSerializable
      * Manage display group links
      * @throws InvalidArgumentException
      */
-    private function manageDisplayGroupLinks()
+    private function manageDisplayGroupLinks(): void
     {
         $this->linkDisplayGroups();
         $this->unlinkDisplayGroups();
@@ -900,22 +1026,31 @@ class DisplayGroup implements \JsonSerializable
         // Check for circular references
         // this is a lazy last minute check as we can't really tell if there is a circular reference unless
         // we've inserted the records already.
-        if ($this->getStore()->exists('SELECT depth FROM `lkdgdg` WHERE parentId = :parentId AND childId = parentId AND depth > 0', ['parentId' => $this->displayGroupId]))
+        $circularReferenceExists = $this->getStore()->exists('
+            SELECT depth FROM `lkdgdg` WHERE parentId = :parentId AND childId = parentId AND depth > 0
+        ', ['parentId' => $this->displayGroupId]);
+
+        if ($circularReferenceExists) {
             throw new InvalidArgumentException(__('This assignment creates a circular reference'));
+        }
     }
 
-    private function linkDisplays()
+    private function linkDisplays(): void
     {
         foreach ($this->displays as $display) {
             /* @var Display $display */
-            $this->getStore()->update('INSERT INTO lkdisplaydg (DisplayGroupID, DisplayID) VALUES (:displayGroupId, :displayId) ON DUPLICATE KEY UPDATE DisplayID = DisplayID', [
+            $this->getStore()->update('
+                INSERT INTO lkdisplaydg (DisplayGroupID, DisplayID)
+                VALUES (:displayGroupId, :displayId)
+                ON DUPLICATE KEY UPDATE DisplayID = DisplayID
+            ', [
                 'displayGroupId' => $this->displayGroupId,
                 'displayId' => $display->displayId
             ]);
         }
     }
 
-    private function unlinkDisplays()
+    private function unlinkDisplays(): void
     {
         // Unlink any displays that are NOT in the collection
         $params = ['displayGroupId' => $this->displayGroupId];
@@ -939,9 +1074,9 @@ class DisplayGroup implements \JsonSerializable
      * Links the display groups that have been added to the OM
      * adding them to the closure table `lkdgdg`
      */
-    private function linkDisplayGroups()
+    private function linkDisplayGroups(): void
     {
-        $links = array_udiff($this->displayGroups, $this->originalDisplayGroups, function($a, $b) {
+        $links = array_udiff($this->displayGroups, $this->originalDisplayGroups, function ($a, $b) {
             /**
              * @var DisplayGroup $a
              * @var DisplayGroup $b
@@ -949,7 +1084,11 @@ class DisplayGroup implements \JsonSerializable
             return $a->getId() - $b->getId();
         });
 
-        $this->getLog()->debug('Linking %d display groups to Display Group %s', count($links), $this->displayGroup);
+        $this->getLog()->debug(sprintf(
+            'Linking %d display groups to Display Group %s',
+            count($links),
+            $this->displayGroup
+        ));
 
         foreach ($links as $displayGroup) {
             /* @var DisplayGroup $displayGroup */
@@ -969,9 +1108,9 @@ class DisplayGroup implements \JsonSerializable
      * Unlinks the display groups that have been removed from the OM
      * removing them from the closure table `lkdgdg`
      */
-    private function unlinkDisplayGroups()
+    private function unlinkDisplayGroups(): void
     {
-        $links = array_udiff($this->originalDisplayGroups, $this->displayGroups, function($a, $b) {
+        $links = array_udiff($this->originalDisplayGroups, $this->displayGroups, function ($a, $b) {
             /**
              * @var DisplayGroup $a
              * @var DisplayGroup $b
@@ -979,7 +1118,9 @@ class DisplayGroup implements \JsonSerializable
             return $a->getId() - $b->getId();
         });
 
-        $this->getLog()->debug('Unlinking ' . count($links) . ' display groups to Display Group ' . $this->displayGroup);
+        $this->getLog()->debug(
+            'Unlinking ' . count($links) . ' display groups to Display Group ' . $this->displayGroup
+        );
 
         foreach ($links as $displayGroup) {
             /* @var DisplayGroup $displayGroup */
@@ -1020,7 +1161,7 @@ class DisplayGroup implements \JsonSerializable
      * Unlinks all display groups
      * usually in preparation for a delete
      */
-    private function unlinkAllDisplayGroups()
+    private function unlinkAllDisplayGroups(): void
     {
         $this->getStore()->update('
             DELETE link
@@ -1035,18 +1176,22 @@ class DisplayGroup implements \JsonSerializable
         ]);
     }
 
-    private function linkMedia()
+    private function linkMedia(): void
     {
         foreach ($this->media as $media) {
             /* @var Media $media */
-            $this->getStore()->update('INSERT INTO `lkmediadisplaygroup` (mediaid, displaygroupid) VALUES (:mediaId, :displayGroupId) ON DUPLICATE KEY UPDATE mediaid = mediaid', [
+            $this->getStore()->update('
+                INSERT INTO `lkmediadisplaygroup` (mediaid, displaygroupid)
+                VALUES (:mediaId, :displayGroupId)
+                ON DUPLICATE KEY UPDATE mediaid = mediaid
+            ', [
                 'displayGroupId' => $this->displayGroupId,
                 'mediaId' => $media->mediaId
             ]);
         }
     }
 
-    private function unlinkMedia()
+    private function unlinkMedia(): void
     {
         // Unlink any media that is NOT in the collection
         $params = ['displayGroupId' => $this->displayGroupId];
@@ -1066,18 +1211,22 @@ class DisplayGroup implements \JsonSerializable
         $this->getStore()->update($sql, $params);
     }
 
-    private function linkLayouts()
+    private function linkLayouts(): void
     {
         foreach ($this->layouts as $layout) {
             /* @var Layout $media */
-            $this->getStore()->update('INSERT INTO `lklayoutdisplaygroup` (layoutid, displaygroupid) VALUES (:layoutId, :displayGroupId) ON DUPLICATE KEY UPDATE layoutid = layoutid', [
+            $this->getStore()->update('
+                INSERT INTO `lklayoutdisplaygroup` (layoutid, displaygroupid)
+                VALUES (:layoutId, :displayGroupId)
+                ON DUPLICATE KEY UPDATE layoutid = layoutid
+            ', [
                 'displayGroupId' => $this->displayGroupId,
                 'layoutId' => $layout->layoutId
             ]);
         }
     }
 
-    private function unlinkLayouts()
+    private function unlinkLayouts(): void
     {
         // Unlink any layout that is NOT in the collection
         $params = ['displayGroupId' => $this->displayGroupId];

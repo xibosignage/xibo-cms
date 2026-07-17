@@ -43,7 +43,14 @@ export default function SwitchRow({
         {description && <p className="text-sm text-gray-500 mt-0.5">{description}</p>}
       </div>
       <div className="shrink-0">
-        <Switch size="sm" checked={checked} onChange={onChange} hideOnOff disabled={disabled} />
+        <Switch
+          size="sm"
+          ariaLabel={title}
+          checked={checked}
+          onChange={onChange}
+          hideOnOff
+          disabled={disabled}
+        />
       </div>
     </div>
   );

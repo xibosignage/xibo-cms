@@ -31,15 +31,20 @@ import {
   useInteractions,
   FloatingPortal,
 } from '@floating-ui/react';
-import { ChevronDown, Loader2, X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { ChevronDown, FolderPlus, Loader2, X } from 'lucide-react';
 import { useEffect, useRef, useState, useId } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import Button from '../Button';
+import FolderActionModals from '../FolderActionModals';
 import FolderSearchInput from '../FolderSearchInput';
 import FolderTreeList, { type FolderAction } from '../FolderTreeList';
 
 import { useUserContext } from '@/context/UserContext';
-import { fetchFolderById } from '@/services/folderApi';
+import { useFolderActions } from '@/hooks/useFolderActions';
+import { usePermissions } from '@/hooks/usePermissions';
+import { fetchContextButtons, fetchFolderById } from '@/services/folderApi';
 import type { Folder } from '@/types/folder';
 
 interface SelectFolderProps {
@@ -49,6 +54,7 @@ interface SelectFolderProps {
   onSelect: (folder: { id: number; text: string } | null) => void;
   onAction?: (action: FolderAction, folder: Folder) => void;
   optional?: boolean;
+  enforceViewPermission?: boolean;
 }
 
 export default function SelectFolder({
@@ -58,9 +64,11 @@ export default function SelectFolder({
   onSelect,
   onAction,
   optional = false,
+  enforceViewPermission = true,
 }: SelectFolderProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
+  const { canViewFolders } = usePermissions();
 
   const homeFolderId = user?.homeFolderId ?? 1;
   const generatedId = useId();
@@ -74,6 +82,24 @@ export default function SelectFolder({
   homeFolderIdRef.current = homeFolderId;
   const [isResolvingName, setIsResolvingName] = useState(false);
   const [folderSearch, setFolderSearch] = useState('');
+
+  const folderActions = useFolderActions({
+    onSuccess: (target) => {
+      if (target) {
+        onSelect({ id: target.id, text: target.text });
+        setInitialName(target.text);
+        resolvedIdRef.current = target.id;
+        setIsOpen(false);
+      }
+    },
+  });
+
+  const { data: folderPerms } = useQuery({
+    queryKey: ['folderPermissions', homeFolderId],
+    queryFn: ({ signal }) => fetchContextButtons(homeFolderId, signal),
+    enabled: isOpen && homeFolderId != null,
+  });
+  const canCreate = folderPerms?.create ?? false;
 
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
@@ -180,6 +206,10 @@ export default function SelectFolder({
     };
   }, [selectedId, selectedText]);
 
+  if (enforceViewPermission && !canViewFolders) {
+    return null;
+  }
+
   const renderLabel = () => {
     if (isResolvingName) {
       return (
@@ -264,7 +294,7 @@ export default function SelectFolder({
                 onAction={onAction}
                 searchQuery={folderSearch}
                 customSlot={
-                  <div className="px-2 shrink-0">
+                  <div className="px-2 shrink-0 flex flex-col gap-2">
                     <FolderSearchInput
                       id={searchInputId}
                       value={folderSearch}
@@ -273,6 +303,20 @@ export default function SelectFolder({
                       placeholder={t('Search Folder')}
                       className="py-1"
                     />
+
+                    {canCreate && (
+                      <Button
+                        variant="tertiary"
+                        className="flex items-center justify-center w-full -outline-offset-4"
+                        leftIcon={FolderPlus}
+                        onClick={() => {
+                          setIsOpen(false);
+                          folderActions.openAction('create', { id: homeFolderId } as Folder);
+                        }}
+                      >
+                        {t('New Folder')}
+                      </Button>
+                    )}
                   </div>
                 }
               />
@@ -280,6 +324,8 @@ export default function SelectFolder({
           </div>
         )}
       </FloatingPortal>
+
+      <FolderActionModals folderActions={folderActions} />
     </div>
   );
 }

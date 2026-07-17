@@ -21,7 +21,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { Filter, FilterX, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -37,12 +37,14 @@ import { useNotificationActions } from './hooks/useNotificationActions';
 import { useNotificationData } from './hooks/useNotificationData';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { useUserContext } from '@/context/UserContext';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useTableState } from '@/hooks/useTableState';
 import type { Notification } from '@/types/notification';
+import { countActiveFilters } from '@/utils/filters';
 import { hasFeature } from '@/utils/permissions';
 
 export default function NotificationCentre() {
@@ -187,6 +189,12 @@ export default function NotificationCentre() {
 
   const filterOptions = getBaseFilterKeys(t);
 
+  const activeFilterCount = countActiveFilters(
+    filterInputs,
+    NOTIFICATION_INITIAL_FILTER_STATE,
+    filterOptions,
+  );
+
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
@@ -204,15 +212,12 @@ export default function NotificationCentre() {
                 {t('Add Notification')}
               </Button>
             )}
-            <Button
-              leftIcon={!openFilter ? Filter : FilterX}
-              variant="secondary"
+            <FilterButton
+              isOpen={openFilter}
+              onToggle={() => setOpenFilter((prev) => !prev)}
+              activeCount={activeFilterCount}
               disabled={!isHydrated}
-              onClick={() => setOpenFilter((prev) => !prev)}
-              removeTextOnMobile
-            >
-              {t('Filters')}
-            </Button>
+            />
           </div>
         </div>
 
@@ -258,6 +263,7 @@ export default function NotificationCentre() {
                 columns={columns}
                 data={notificationList}
                 pageCount={pageCount}
+                rowCount={queryData?.totalCount || 0}
                 pagination={pagination}
                 onPaginationChange={setPagination}
                 sorting={sorting}

@@ -104,6 +104,7 @@ export default function SetHomeFolderModal({ users, onClose, onSuccess }: SetHom
         <SelectFolder
           selectedId={selectedFolderId}
           selectedText={selectedFolderText}
+          enforceViewPermission={false}
           onSelect={(folder) => {
             setSelectedFolderId(folder?.id ?? 1);
             setSelectedFolderText(folder?.text ?? null);

@@ -480,6 +480,7 @@ export default function AddAndEditDisplayGroupModal({
                           columns={previewColumns}
                           data={previewRows}
                           pageCount={previewPageCount}
+                          rowCount={previewQueryData?.totalCount ?? 0}
                           pagination={previewPagination}
                           onPaginationChange={setPreviewPagination}
                           sorting={previewSorting}

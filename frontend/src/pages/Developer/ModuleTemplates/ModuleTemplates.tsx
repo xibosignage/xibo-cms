@@ -22,7 +22,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { isAxiosError } from 'axios';
-import { Filter, FilterX, Plus, Search, Upload } from 'lucide-react';
+import { Plus, Search, Upload } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -38,6 +38,7 @@ import { ModuleTemplateModals } from './components/ModuleTemplateModals';
 import { moduleTemplateQueryKeys, useModuleTemplatesData } from './hooks/useModuleTemplatesData';
 
 import Button from '@/components/ui/Button';
+import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import { notify } from '@/components/ui/Notification';
 import TabNav from '@/components/ui/TabNav';
@@ -49,6 +50,7 @@ import { useTableState } from '@/hooks/useTableState';
 import { fetchDataTypes, importModuleTemplateXml } from '@/services/moduleTemplatesApi';
 import type { ModuleTemplate } from '@/types/moduleTemplates';
 import { UserType } from '@/types/user';
+import { countActiveFilters } from '@/utils/filters';
 import { hasFeature } from '@/utils/permissions';
 
 export default function ModuleTemplates() {
@@ -258,6 +260,8 @@ export default function ModuleTemplates() {
 
   const filterOptions = getFilterKeys(t, dataTypeOptions);
 
+  const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
+
   return (
     <section className="flex h-full w-full min-h-0 relative outline-none overflow-hidden">
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
@@ -304,15 +308,12 @@ export default function ModuleTemplates() {
                   className="py-2 px-3 pl-10 block h-11.25 bg-gray-100 rounded-lg w-full border-gray-200 disabled:opacity-50 disabled:pointer-events-none disabled:bg-gray-200"
                 />
               </div>
-              <Button
-                leftIcon={!openFilter ? Filter : FilterX}
-                variant="secondary"
+              <FilterButton
+                isOpen={openFilter}
+                onToggle={() => setOpenFilter((prev) => !prev)}
+                activeCount={activeFilterCount}
                 disabled={!isHydrated}
-                onClick={() => setOpenFilter((prev) => !prev)}
-                removeTextOnMobile
-              >
-                {t('Filters')}
-              </Button>
+              />
             </div>
           </div>
 
@@ -347,6 +348,7 @@ export default function ModuleTemplates() {
               columns={columns}
               data={templateList}
               pageCount={pageCount}
+              rowCount={totalCount}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

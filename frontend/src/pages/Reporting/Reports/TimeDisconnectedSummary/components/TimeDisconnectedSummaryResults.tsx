@@ -184,6 +184,7 @@ export default function TimeDisconnectedSummaryResults({
             columns={columns}
             data={pageRows}
             pageCount={pageCount}
+            rowCount={rows.length}
             pagination={pagination}
             onPaginationChange={onPaginationChange}
             sorting={sorting}

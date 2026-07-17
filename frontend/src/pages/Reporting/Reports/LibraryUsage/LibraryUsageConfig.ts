@@ -29,6 +29,8 @@ export const INITIAL_FILTER_STATE: LibraryUsageFilter = {
   groupId: null,
 };
 
+export const ACTIVE_FILTER_KEYS: (keyof LibraryUsageFilter)[] = ['userId', 'groupId'];
+
 export const CHART_PALETTE = [
   '#0ea5a0',
   '#3b82f6',

@@ -453,6 +453,7 @@ export default function ShareModal({
               data={tableData}
               columns={columns}
               pageCount={Math.ceil(rowCount / pagination.pageSize)}
+              rowCount={rowCount}
               pagination={pagination}
               onPaginationChange={setPagination}
               sorting={sorting}

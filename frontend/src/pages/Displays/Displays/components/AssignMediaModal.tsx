@@ -213,6 +213,7 @@ export default function AssignMediaModal({ display, onClose, onSave }: AssignMed
           columns={columns}
           searchRows={searchRows}
           pageCount={pageCount}
+          rowCount={searchData?.totalCount ?? 0}
           pagination={pagination}
           onPaginationChange={setPagination}
           sorting={sorting}

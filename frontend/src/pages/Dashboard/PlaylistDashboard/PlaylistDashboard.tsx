@@ -114,7 +114,7 @@ export default function PlaylistDashboard() {
   };
 
   return (
-    <section className="flex flex-col mx-auto max-w-151 gap-5 p-5">
+    <section className="flex flex-col mx-0 sm:mx-auto max-w-151 min-w-100 gap-5 p-5">
       {/* Playlist Dropdown */}
       <div>
         <PlaylistDropdown value={selectedPlaylistId} onSelect={setSelectedPlaylistId} />
