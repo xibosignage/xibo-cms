@@ -341,7 +341,8 @@ class DataSetFactory extends BaseFactory
             'isRemote',
             'isRealTime',
             'owner',
-            'lastSync'
+            'lastSync',
+            'groupsWithPermissions'
         ];
 
         $sortOrder = $this->buildSortQuery(

@@ -484,6 +484,8 @@ class Controllers
                     $c->get('syncGroupFactory'),
                     $c->get('scheduleCriteriaFactory'),
                     $c->get('jwtService'),
+                    $c->get('mediaFactory'),
+                    $c->get('playlistFactory'),
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;

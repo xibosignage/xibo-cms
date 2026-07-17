@@ -543,7 +543,7 @@ class MediaFactory extends BaseFactory
         $sanitizedFilter = $this->getSanitizer($filterBy);
         $allowedColumns = [
             'mediaId', 'name', 'type', 'duration', 'fileSize', 'owner', 'sharing', 'released', 'fileName',
-            'enableStat', 'createdDt', 'modifiedDt', 'expires'
+            'enableStat', 'createdDt', 'modifiedDt', 'expires', 'groupsWithPermissions'
         ];
         $customColumns = [
             'revised'           => '`parentId`',

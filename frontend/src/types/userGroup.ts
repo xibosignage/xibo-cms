@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import type { User } from './user';
+import type { User, UserPermissions } from './user';
 
 export interface UserGroup {
   groupId: number;
@@ -45,4 +45,6 @@ export interface UserGroup {
   features?: string[];
 
   users?: User[];
+
+  userPermissions?: UserPermissions;
 }

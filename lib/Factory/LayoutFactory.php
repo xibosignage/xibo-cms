@@ -2182,7 +2182,7 @@ class LayoutFactory extends BaseFactory
 
         // Sorting
         $allowedColumns = ['layoutId', 'layout', 'publishedStatus', 'enableStat', 'duration', 'owner', 'modifiedDt',
-            'campaignId', 'displayOrder'
+            'campaignId', 'displayOrder', 'groupsWithPermissions'
         ];
         $customColumns = [
             'orientation' => 'CASE WHEN layout.`width` < layout.`height` THEN 1 ELSE 0 END',

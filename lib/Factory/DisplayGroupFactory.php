@@ -564,6 +564,7 @@ class DisplayGroupFactory extends BaseFactory
             'ref5',
             'createdDt',
             'modifiedDt',
+            'groupsWithPermissions',
         ];
 
         // Capture member sort direction before buildSortQuery strips the virtual column

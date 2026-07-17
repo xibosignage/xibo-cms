@@ -1475,6 +1475,7 @@ class Layout extends Base
                 'owner',
                 'modifiedDt',
                 'campaignId',
+                'groupsWithPermissions',
             ]
         )
     )]

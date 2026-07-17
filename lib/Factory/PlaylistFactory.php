@@ -186,7 +186,8 @@ class PlaylistFactory extends BaseFactory
     {
         $parsedFilter = $this->getSanitizer($filterBy);
         $allowedColumns = [
-            'playlistId', 'name', 'duration', 'owner', 'isDynamic', 'enableStat', 'createdDt', 'modifiedDt'
+            'playlistId', 'name', 'duration', 'owner', 'isDynamic', 'enableStat', 'createdDt', 'modifiedDt',
+            'groupsWithPermissions'
         ];
 
         $sortOrder = $this->buildSortQuery(

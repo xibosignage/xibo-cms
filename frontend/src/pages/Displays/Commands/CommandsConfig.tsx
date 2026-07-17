@@ -26,7 +26,7 @@ import { type ComponentProps } from 'react';
 
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
 import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
-import { TextCell, ActionsCell } from '@/components/ui/table/cells';
+import { TextCell, ActionsCell, getSharingColumn } from '@/components/ui/table/cells';
 import type { Command } from '@/types/command';
 import type { ActionItem, BaseModalType } from '@/types/table';
 
@@ -158,12 +158,7 @@ export const getCommandColumns = (props: CommandActionsProps): ColumnDef<Command
       size: 140,
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
-    {
-      accessorKey: 'groupsWithPermissions',
-      header: t('Sharing'),
-      size: 160,
-      cell: (info) => <TextCell>{info.getValue<string>() ?? ''}</TextCell>,
-    },
+    getSharingColumn<Command>(t),
     {
       id: 'tableActions',
       header: '',

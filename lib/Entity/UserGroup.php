@@ -39,7 +39,7 @@ use Xibo\Support\Exception\NotFoundException;
  * @package Xibo\Entity
  */
 #[OA\Schema(schema: 'UserGroup')]
-class UserGroup
+class UserGroup implements \JsonSerializable
 {
     use EntityTrait;
 

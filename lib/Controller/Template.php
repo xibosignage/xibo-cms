@@ -105,6 +105,7 @@ class Template extends Base
                 'publishedStatus',
                 'modifiedDt',
                 'orientation',
+                'groupsWithPermissions',
             ]
         )
     )]

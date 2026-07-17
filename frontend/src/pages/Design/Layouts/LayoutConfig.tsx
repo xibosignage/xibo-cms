@@ -51,6 +51,7 @@ import {
   MediaCell,
   TagsCell,
   DescriptionCell,
+  getSharingColumn,
 } from '@/components/ui/table/cells';
 import { getCommonFormOptions } from '@/config/commonForms';
 import { withPublicPath } from '@/config/publicPath';
@@ -538,16 +539,7 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
 
-    {
-      accessorKey: 'groupsWithPermissions',
-      header: t('Sharing'),
-      enableSorting: false,
-      size: 80,
-      cell: (info) => {
-        const groups = info.getValue<string>();
-        return <TextCell className="italic text-gray-500">{groups || t('Private')}</TextCell>;
-      },
-    },
+    getSharingColumn<Layout>(t),
 
     {
       id: 'valid',

@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { Search, Plus } from 'lucide-react';
 import { useState } from 'react';
@@ -52,9 +52,9 @@ import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import { exportDatasetCsv } from '@/services/datasetApi';
-import { fetchContextButtons } from '@/services/folderApi';
 import type { Dataset } from '@/types/dataset';
 import { countActiveFilters } from '@/utils/filters';
+import { hasFeature } from '@/utils/permissions';
 
 export default function Dataset() {
   const { t } = useTranslation();
@@ -130,11 +130,6 @@ export default function Dataset() {
   });
 
   const effectiveFolderId = selectedFolderId ?? homeFolderId;
-  const { data: folderPerms } = useQuery({
-    queryKey: ['folderPermissions', effectiveFolderId],
-    queryFn: () => fetchContextButtons(effectiveFolderId),
-    staleTime: 1000 * 60 * 5,
-  });
 
   const exportCsvMutation = useMutation({
     mutationFn: (datasetId: number) => exportDatasetCsv(datasetId),
@@ -153,7 +148,7 @@ export default function Dataset() {
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
   const datasetList = data ?? [];
-  const canAddToFolder = folderPerms?.create || false;
+  const canAddToFolder = hasFeature(user, 'dataset.add');
 
   const folderActions = useFolderActions({
     onSuccess: (targetFolder) => {

@@ -274,8 +274,11 @@ $app->group('', function (RouteCollectorProxy $group) {
 /**
  * Library
  */
-$app->get('/library', ['\Xibo\Controller\Library','grid'])->setName('library.search');
-$app->get('/library/{id:[0-9]+}', ['\Xibo\Controller\Library','searchById'])->setName('library.search.id');
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->get('/library', ['\Xibo\Controller\Library','grid'])->setName('library.search');
+    $group->get('/library/{id:[0-9]+}', ['\Xibo\Controller\Library','searchById'])->setName('library.search.id');
+})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['library.view']));
+
 $app->get('/library/{id}/isused', ['\Xibo\Controller\Library','isUsed'])->setName('library.isused');
 
 $app->group('', function (RouteCollectorProxy $group) {

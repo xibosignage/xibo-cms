@@ -27,7 +27,7 @@ import type { ComponentProps } from 'react';
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
 import type { SelectOption } from '@/components/ui/forms/SelectDropdown';
 import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
-import { ActionsCell, TextCell } from '@/components/ui/table/cells';
+import { ActionsCell, getSharingColumn, TextCell } from '@/components/ui/table/cells';
 import { withPublicPath } from '@/config/publicPath';
 import type { ModuleTemplate } from '@/types/moduleTemplates';
 import type { ActionItem } from '@/types/table';
@@ -245,12 +245,7 @@ export const getModuleTemplateColumns = (
       enableSorting: false,
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
-    {
-      accessorKey: 'groupsWithPermissions',
-      header: t('Sharing'),
-      size: 200,
-      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
-    },
+    getSharingColumn<ModuleTemplate>(t),
     {
       id: 'tableActions',
       header: '',

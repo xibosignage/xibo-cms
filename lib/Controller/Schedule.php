@@ -33,6 +33,8 @@ use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\MediaFactory;
+use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\ScheduleCriteriaFactory;
 use Xibo\Factory\ScheduleExclusionFactory;
 use Xibo\Factory\ScheduleFactory;
@@ -74,7 +76,9 @@ class Schedule extends Base
         private readonly ScheduleExclusionFactory $scheduleExclusionFactory,
         private readonly SyncGroupFactory $syncGroupFactory,
         private readonly ScheduleCriteriaFactory $scheduleCriteriaFactory,
-        private readonly JwtServiceInterface $jwtService
+        private readonly JwtServiceInterface $jwtService,
+        private readonly MediaFactory $mediaFactory,
+        private readonly PlaylistFactory $playlistFactory
     ) {
     }
 
@@ -726,6 +730,28 @@ class Schedule extends Base
                 );
             }
 
+            // Permission check for the media/playlist
+            $scheduleWithViewOnItem = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
+            $scheduledItem = ($type === 'media')
+                ? $this->mediaFactory->getById($id)
+                : $this->playlistFactory->getById($id);
+
+            // Only images and videos may be scheduled directly - other media types
+            // (audio, pdf, etc) have no meaningful full-screen presentation.
+            if ($type === 'media' && !in_array($scheduledItem->mediaType, ['image', 'video'], true)) {
+                throw new InvalidArgumentException(
+                    __('Only images and videos can be scheduled directly'),
+                    'mediaId'
+                );
+            }
+
+            if ($scheduleWithViewOnItem && !$this->getUser()->checkViewable($scheduledItem)) {
+                throw new AccessDeniedException(__('Access to this item denied'));
+            }
+            if (!$scheduleWithViewOnItem && !$this->getUser()->checkEditable($scheduledItem)) {
+                throw new AccessDeniedException(__('Access to this item denied'));
+            }
+
             $fsLayout = $this->layoutFactory->createFullScreenLayout(
                 $type,
                 $id,
@@ -1307,6 +1333,28 @@ class Schedule extends Base
                 throw new InvalidArgumentException(
                     sprintf('%sId is required when scheduling %s events.', ucfirst($type), $type)
                 );
+            }
+
+            // Permission check for the media/playlist
+            $scheduleWithViewOnItem = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
+            $scheduledItem = ($type === 'media')
+                ? $this->mediaFactory->getById($fsId)
+                : $this->playlistFactory->getById($fsId);
+
+            // Only images and videos may be scheduled directly - other media types
+            // (audio, pdf, etc) have no meaningful full-screen presentation.
+            if ($type === 'media' && !in_array($scheduledItem->mediaType, ['image', 'video'], true)) {
+                throw new InvalidArgumentException(
+                    __('Only images and videos can be scheduled directly'),
+                    'mediaId'
+                );
+            }
+
+            if ($scheduleWithViewOnItem && !$this->getUser()->checkViewable($scheduledItem)) {
+                throw new AccessDeniedException(__('Access to this item denied'));
+            }
+            if (!$scheduleWithViewOnItem && !$this->getUser()->checkEditable($scheduledItem)) {
+                throw new AccessDeniedException(__('Access to this item denied'));
             }
 
             // Create a full screen layout for this event

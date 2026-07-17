@@ -255,6 +255,7 @@ class DisplayGroup extends Base
                 'ref5',
                 'createdDt',
                 'modifiedDt',
+                'groupsWithPermissions',
             ]
         )
     )]
