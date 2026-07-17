@@ -355,7 +355,7 @@ class MenuBoardProduct extends Base
             }
         }
         $menuBoardProduct->productOptions = $menuBoardProduct->getOptions();
-        $menuBoard->save();
+        $menuBoard->touch();
 
         return $response
             ->withStatus(201)
@@ -472,7 +472,7 @@ class MenuBoardProduct extends Base
         }
         $menuBoardProduct->productOptions = $menuBoardProduct->getOptions();
         $menuBoardProduct->save();
-        $menuBoard->save();
+        $menuBoard->touch();
 
         return $response
             ->withStatus(200)
@@ -504,6 +504,7 @@ class MenuBoardProduct extends Base
         }
 
         $menuBoardProduct->delete();
+        $menuBoard->touch();
 
         return $response->withStatus(204);
     }

@@ -268,6 +268,7 @@ class MenuBoardCategory extends Base
             $params->getString('description'),
             $params->getString('code')
         );
+        $menuBoard->touch();
 
         return $response
             ->withStatus(201)
@@ -345,7 +346,7 @@ class MenuBoardCategory extends Base
             $sanitizedParams->getString('description')
         );
         $menuBoardCategory->save();
-        $menuBoard->save(['audit' => false]);
+        $menuBoard->touch();
 
         return $response
             ->withStatus(201)
@@ -406,11 +407,11 @@ class MenuBoardCategory extends Base
         $menuBoardCategory = $this->menuBoardCategoryFactory->getById($id);
 
         $menuBoardCategory->name = $sanitizedParams->getString('name');
-        $menuBoardCategory->mediaId = $sanitizedParams->getInt('mediaId');
+        $menuBoardCategory->mediaId = $sanitizedParams->getInt('mediaId') ?: null;
         $menuBoardCategory->code = $sanitizedParams->getString('code');
         $menuBoardCategory->description = $sanitizedParams->getString('description');
         $menuBoardCategory->save();
-        $menuBoard->save();
+        $menuBoard->touch();
 
         return $response
             ->withStatus(200)
@@ -442,6 +443,7 @@ class MenuBoardCategory extends Base
 
         $menuBoardCategory = $this->menuBoardCategoryFactory->getById($id);
         $menuBoardCategory->delete();
+        $menuBoard->touch();
 
         return $response->withStatus(204);
     }
