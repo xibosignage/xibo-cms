@@ -78,7 +78,7 @@ export default function NumberInput({
           onChange(0);
         }
       }}
-      placeholder={placeholder || t('Add text')}
+      placeholder={placeholder ?? t('Add text')}
       className={twMerge(
         'h-11.25 px-3 rounded-lg text-sm font-normal text-gray-800 placeholder:text-gray-500 border-gray-200',
         'hover:border-gray-400',

@@ -1572,8 +1572,9 @@ export default function ScheduleEventModal({
                     <NumberInput
                       name="layoutDuration"
                       label={t('Duration in loop')}
+                      placeholder=""
                       value={draft.layoutDuration}
-                      onChange={(num) => updateDraft('layoutDuration', num)}
+                      onChange={(num) => updateDraft('layoutDuration', num || undefined)}
                       helpText={t(
                         'Set how long this item should be shown each time it appears in the schedule. Leave blank to use the Media Duration set in the Library.',
                       )}
