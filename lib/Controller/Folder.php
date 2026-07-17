@@ -153,8 +153,6 @@ class Folder extends Base
             // Should we return information for a specific folder?
             $folder = $this->folderFactory->getById($folderId);
 
-            $folder = $this->folderFactory->getById($folderId, 0);
-
             if (!$this->getUser()->checkViewable($folder)) {
                 throw new AccessDeniedException();
             }
