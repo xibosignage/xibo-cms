@@ -78,7 +78,7 @@ export const SERVICE_CARDS: ServiceCard[] = [
         variant: 'link',
       },
     ],
-    videoLinks: [{ id: '9H8Ct00qkqs', title: 'What is a Display?' }],
+    videoLinks: [{ id: 'ZFpgArKZgU8', title: 'What is a Display?' }],
   },
   {
     serviceId: 'existing-content',
@@ -99,11 +99,11 @@ export const SERVICE_CARDS: ServiceCard[] = [
     ],
     videoLinks: [
       {
-        id: 'zVjruJtnbys',
+        id: 'YZTiNOGY8JQ',
         title: 'How to show an Image created outside of the CMS on Displays',
       },
       {
-        id: 'U6tQKfhDOp0',
+        id: 'MLJPmadsjeI',
         title: 'How to show a single video on Displays',
       },
     ],
@@ -124,7 +124,7 @@ export const SERVICE_CARDS: ServiceCard[] = [
         variant: 'link',
       },
     ],
-    videoLinks: [{ id: 'IHCaSsKwKq4', title: 'How to create a Playlist and show on Displays' }],
+    videoLinks: [{ id: '2yLj4C1-zhA', title: 'How to create a Playlist and show on Displays' }],
   },
   {
     serviceId: 'create-content',
@@ -142,7 +142,7 @@ export const SERVICE_CARDS: ServiceCard[] = [
         variant: 'link',
       },
     ],
-    videoLinks: [{ id: 'Sh-5b8OJycE', title: 'Layout Editor Overview' }],
+    videoLinks: [{ id: '4cB0YpLqYtc', title: 'Layout Editor Overview' }],
   },
   {
     serviceId: 'schedule',
@@ -161,7 +161,7 @@ export const SERVICE_CARDS: ServiceCard[] = [
       },
     ],
     videoLinks: [
-      { id: 'mHIzltOMUcI', title: 'Creating simple schedules to show content on Displays' },
+      { id: 'Aw-hFcs7mV4', title: 'Creating simple schedules to show content on Displays' },
     ],
   },
 ];
