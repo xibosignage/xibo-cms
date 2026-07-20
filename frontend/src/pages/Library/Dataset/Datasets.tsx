@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { Search, Plus } from 'lucide-react';
 import { useState } from 'react';
@@ -49,10 +49,10 @@ import { DataTable } from '@/components/ui/table/DataTable';
 import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
+import { useFolderCreatePermission } from '@/hooks/useFolderCreatePermission';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import { exportDatasetCsv } from '@/services/datasetApi';
-import { fetchContextButtons } from '@/services/folderApi';
 import type { Dataset } from '@/types/dataset';
 import { countActiveFilters } from '@/utils/filters';
 import { filterByPermission, hasFeature } from '@/utils/permissions';
@@ -131,11 +131,6 @@ export default function Dataset() {
   });
 
   const effectiveFolderId = selectedFolderId ?? homeFolderId;
-  const { data: folderPerms } = useQuery({
-    queryKey: ['folderPermissions', effectiveFolderId],
-    queryFn: () => fetchContextButtons(effectiveFolderId),
-    staleTime: 1000 * 60 * 5,
-  });
 
   const exportCsvMutation = useMutation({
     mutationFn: (datasetId: number) => exportDatasetCsv(datasetId),
@@ -154,10 +149,11 @@ export default function Dataset() {
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
   const datasetList = data ?? [];
-  const canAddToFolder = folderPerms?.create || false;
   const canAddDataset = hasFeature(user, 'dataset.add');
   const canModify = hasFeature(user, 'dataset.modify');
   const canRealTime = hasFeature(user, 'dataset.realtime');
+  const canCreateInFolder = useFolderCreatePermission(effectiveFolderId);
+  const canAddToFolder = canAddDataset && canCreateInFolder;
 
   const folderActions = useFolderActions({
     onSuccess: (targetFolder) => {

@@ -71,6 +71,8 @@ export default function Media() {
   const queryClient = useQueryClient();
   const canViewFolders = usePermissions()?.canViewFolders;
   const canSchedule = hasFeature(user, 'schedule.add');
+  const scheduleWithView = Number(user?.settings?.SCHEDULE_WITH_VIEW_PERMISSION) === 1;
+  const canViewUsageReport = hasFeature(user, 'schedule.view') || hasFeature(user, 'layout.view');
   const homeFolderId = user?.homeFolderId ?? 1;
   const location = useLocation();
   const layoutId = location.state?.layoutId;
@@ -350,7 +352,8 @@ export default function Media() {
     openReplaceModal: openReplaceFileModal,
     openScheduleModal: canSchedule ? openScheduleModal : undefined,
     openEnableStatsModal,
-    openUsageReportModal,
+    openUsageReportModal: canViewUsageReport ? openUsageReportModal : undefined,
+    scheduleWithView,
   });
 
   const getAllSelectedItems = (): Media[] => {
@@ -487,7 +490,8 @@ export default function Media() {
     openReplaceModal: openReplaceFileModal,
     openScheduleModal: canSchedule ? openScheduleModal : undefined,
     openEnableStatsModal,
-    openUsageReportModal,
+    openUsageReportModal: canViewUsageReport ? openUsageReportModal : undefined,
+    scheduleWithView,
   } as MediaActionsProps);
 
   const { filterOptions } = useMediaFilterOptions(t);

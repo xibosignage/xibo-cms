@@ -123,7 +123,7 @@ class Command extends Base
         required: false,
         schema: new OA\Schema(
             type: 'string',
-            enum: ['commandId', 'command', 'code', 'description']
+            enum: ['commandId', 'command', 'code', 'description', 'groupsWithPermissions']
         )
     )]
     #[OA\Parameter(

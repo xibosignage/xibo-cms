@@ -19,7 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQuery } from '@tanstack/react-query';
 import { FolderPlus, X } from 'lucide-react';
 import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -32,8 +31,8 @@ import Checkbox from './forms/Checkbox';
 
 import { useUserContext } from '@/context/UserContext';
 import type { ActionType } from '@/hooks/useFolderActions';
+import { useFolderCreatePermission } from '@/hooks/useFolderCreatePermission';
 import { usePermissions } from '@/hooks/usePermissions';
-import { fetchContextButtons } from '@/services/folderApi';
 import type { Folder } from '@/types/folder';
 
 interface FolderSidebarProps {
@@ -65,13 +64,7 @@ export default function FolderSidebar({
 
   const homeFolderId = user?.homeFolderId ?? null;
   const createTargetId = activeTab === 'Home' && homeFolderId != null ? homeFolderId : rootFolderId;
-
-  const { data: folderPerms } = useQuery({
-    queryKey: ['folderPermissions', createTargetId],
-    queryFn: ({ signal }) => fetchContextButtons(createTargetId as number, signal),
-    enabled: isOpen && createTargetId != null,
-  });
-  const canCreate = folderPerms?.create ?? false;
+  const canCreateFolder = useFolderCreatePermission(createTargetId);
 
   const handleAction = (action: string, folder: Folder) => {
     onAction(action as ActionType, folder);
@@ -138,10 +131,10 @@ export default function FolderSidebar({
                     placeholder={t('Search Folder')}
                   />
 
-                  {canCreate && (
+                  {canCreateFolder && (
                     <Button
                       variant="tertiary"
-                      className="flex items-center justify-center w-full -outline-offset-4"
+                      className="flex items-center justify-center w-full"
                       leftIcon={FolderPlus}
                       onClick={handleCreateFolder}
                     >

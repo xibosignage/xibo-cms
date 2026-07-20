@@ -103,7 +103,11 @@ class Folder extends Base
             return $response->withJson($folders);
         } elseif ($folderId !== null) {
             // Return information for a specific folder
-            $folder = $this->folderFactory->getById($folderId);
+            $folder = $this->folderFactory->getById($folderId, 0);
+
+            if (!$this->getUser()->checkViewable($folder)) {
+                throw new AccessDeniedException();
+            }
 
             $this->decorateWithButtons($folder);
             $this->folderFactory->decorateWithHomeFolderCount($folder);
@@ -209,9 +213,18 @@ class Folder extends Base
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
+        $parentId = $sanitizedParams->getInt('parentId', ['default' => 1]);
+        $parentFolder = $this->folderFactory->getById($parentId, 0);
+
+        if (!$this->getUser()->checkViewable($parentFolder)
+            || ($parentFolder->isRoot() && !$this->getUser()->isSuperAdmin())
+        ) {
+            throw new AccessDeniedException();
+        }
+
         $folder = $this->folderFactory->createEmpty();
         $folder->text = $sanitizedParams->getString('text');
-        $folder->parentId = $sanitizedParams->getString('parentId', ['default' => 1]);
+        $folder->parentId = $parentId;
 
         $folder->save();
 

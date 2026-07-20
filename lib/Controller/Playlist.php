@@ -236,6 +236,7 @@ class Playlist extends Base
                 'enableStat',
                 'createdDt',
                 'modifiedDt',
+                'groupsWithPermissions',
             ]
         )
     )]

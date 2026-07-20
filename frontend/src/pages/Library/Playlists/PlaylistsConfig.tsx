@@ -41,6 +41,7 @@ import {
   ActionsCell,
   TagsCell,
   CheckMarkCell,
+  getSharingColumn,
 } from '@/components/ui/table/cells';
 import { getCommonFormOptions } from '@/config/commonForms';
 import type { Playlist } from '@/types/playlist';
@@ -321,16 +322,7 @@ export const getPlaylistColumns = (props: PlaylistActionsProps): ColumnDef<Playl
       size: 150,
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
-    {
-      accessorKey: 'groupsWithPermissions',
-      enableSorting: false,
-      header: t('Sharing'),
-      size: 150,
-      cell: (info) => {
-        const groups = info.getValue() as string;
-        return <TextCell className="italic text-gray-500">{groups || t('Private')}</TextCell>;
-      },
-    },
+    getSharingColumn<Playlist>(t),
     {
       accessorKey: 'isDynamic',
       header: t('Dynamic'),

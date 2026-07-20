@@ -163,8 +163,6 @@ class MenuBoardCategory implements \JsonSerializable
             'validate' => true,
         ], $options);
 
-        $this->getLog()->debug('Saving ' . $this);
-
         if ($options['validate']) {
             $this->validate();
         }
@@ -172,8 +170,15 @@ class MenuBoardCategory implements \JsonSerializable
         if ($this->menuCategoryId == null || $this->menuCategoryId == 0) {
             $this->add();
             $this->loaded = true;
+            $this->audit($this->menuCategoryId, 'Added');
         } else {
+            $changedProperties = $this->getChangedProperties();
             $this->update();
+
+            if (count($changedProperties) > 0) {
+                $changedProperties['menuId'] = $this->menuId;
+                $this->audit($this->menuCategoryId, 'Saved', $changedProperties);
+            }
         }
     }
 
@@ -235,7 +240,7 @@ class MenuBoardCategory implements \JsonSerializable
         ', [
             'menuCategoryId' => $this->menuCategoryId,
             'name' => $this->name,
-            'mediaId' => $this->mediaId,
+            'mediaId' => $this->mediaId ?: null,
             'code' => $this->code,
             'description' => $this->description,
         ]);
@@ -257,5 +262,10 @@ class MenuBoardCategory implements \JsonSerializable
             'DELETE FROM `menu_category` WHERE menuCategoryId = :menuCategoryId',
             ['menuCategoryId' => $this->menuCategoryId]
         );
+
+        $this->audit($this->menuCategoryId, 'Deleted', [
+            'menuId' => $this->menuId,
+            'name' => $this->name,
+        ]);
     }
 }

@@ -1259,9 +1259,20 @@ class User implements \JsonSerializable, UserEntityInterface
         }
 
         // Group Admins
-        if ($this->userTypeId == 2 && count(array_intersect($this->groups, $this->userGroupFactory->getByUserId($object->getOwnerId()))))
+        if ($object->permissionsClass() === 'Xibo\Entity\UserGroup') {
+            // userGroup does not have an owner (getOwnerId() returns 0), we need to handle it in a
+            // different way - matching the equivalent branch in User::checkEditable().
+            if ($this->userTypeId == 2 && count(array_intersect($this->groups, [$object]))) {
+                // Group Admin and group object in the user's array of groups
+                return $this->permissionFactory->getFullPermissions();
+            }
+        } else if (
+            $this->userTypeId == 2
+            && count(array_intersect($this->groups, $this->userGroupFactory->getByUserId($object->getOwnerId())))
+        ) {
             // Group Admin and in the same group as the owner.
             return $this->permissionFactory->getFullPermissions();
+        }
 
         // Get the permissions for that entity
         $permissions = $this->loadPermissions($object->permissionsClass());

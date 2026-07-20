@@ -26,7 +26,7 @@ import { type ComponentProps } from 'react';
 
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
 import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
-import { TextCell, ActionsCell } from '@/components/ui/table/cells';
+import { TextCell, ActionsCell, getSharingColumn } from '@/components/ui/table/cells';
 import { getCommonFormOptions } from '@/config/commonForms';
 import type { MenuBoard } from '@/types/menuBoard';
 import type { ActionItem, BaseModalType } from '@/types/table';
@@ -196,16 +196,7 @@ export const getMenuBoardColumns = (props: MenuBoardActionsProps): ColumnDef<Men
       size: 150,
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
-    {
-      accessorKey: 'groupsWithPermissions',
-      enableSorting: false,
-      header: t('Sharing'),
-      size: 120,
-      cell: (info) => {
-        const groups = info.getValue() as string;
-        return <TextCell className="italic text-gray-500">{groups || t('Private')}</TextCell>;
-      },
-    },
+    getSharingColumn<MenuBoard>(t),
     {
       accessorKey: 'modifiedDt',
       header: t('Modified'),

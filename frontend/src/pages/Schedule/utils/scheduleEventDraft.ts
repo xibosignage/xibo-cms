@@ -69,7 +69,7 @@ export interface ScheduleEventDraft {
   relativeMinutes: number;
   relativeSeconds: number;
   name: string;
-  layoutDuration: number;
+  layoutDuration: number | undefined;
   resolutionId: string;
   backgroundColor: string;
   displayOrder: number;
@@ -388,7 +388,7 @@ export function createInitialDraft(
     relativeMinutes: 0,
     relativeSeconds: 0,
     name: '',
-    layoutDuration: 0,
+    layoutDuration: undefined,
     resolutionId: '',
     backgroundColor: '#000000',
     displayOrder: 0,
@@ -436,7 +436,7 @@ export function createDraftFromEvent(scheduleEvent: Event): ScheduleEventDraft {
     relativeMinutes: 0,
     relativeSeconds: 0,
     name: scheduleEvent.name ?? '',
-    layoutDuration: Number(scheduleEvent.layoutDuration ?? 0),
+    layoutDuration: scheduleEvent.layoutDuration ? Number(scheduleEvent.layoutDuration) : undefined,
     resolutionId: scheduleEvent.resolutionId ? String(scheduleEvent.resolutionId) : '',
     backgroundColor: scheduleEvent.backgroundColor ?? '#000000',
     displayOrder: Number(scheduleEvent.displayOrder ?? 0),

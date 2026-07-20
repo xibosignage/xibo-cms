@@ -121,28 +121,30 @@ export default function GeneralTab({
         />
       </div>
 
-      <TextInput
-        name="password"
-        label={isEdit ? t('New Password') : t('Password')}
-        placeholder="••••••••"
-        type={showPassword ? 'text' : 'password'}
-        value={draft.password}
-        onChange={(val) => setDraft((prev) => ({ ...prev, password: val }))}
-        error={formErrors.password}
-        optional={isEdit}
-        suffix={
-          <button
-            type="button"
-            onClick={() => setShowPassword((prev) => !prev)}
-            aria-label={showPassword ? t('Hide password') : t('Show password')}
-            className="px-3 text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-          </button>
-        }
-      />
+      {(isSuperAdmin || !isEdit) && (
+        <TextInput
+          name="password"
+          label={isEdit ? t('New Password') : t('Password')}
+          placeholder="••••••••"
+          type={showPassword ? 'text' : 'password'}
+          value={draft.password}
+          onChange={(val) => setDraft((prev) => ({ ...prev, password: val }))}
+          error={formErrors.password}
+          optional={isEdit}
+          suffix={
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              aria-label={showPassword ? t('Hide password') : t('Show password')}
+              className="px-3 text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          }
+        />
+      )}
 
-      {isEdit && (
+      {isSuperAdmin && isEdit && (
         <TextInput
           name="retypePassword"
           label={t('Retype New Password')}

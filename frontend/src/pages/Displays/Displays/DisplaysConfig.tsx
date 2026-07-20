@@ -56,6 +56,7 @@ import {
   StatusCell,
   TagsCell,
   MediaCell,
+  getSharingColumn,
 } from '@/components/ui/table/cells';
 import type { Display } from '@/types/display';
 import type { ActionItem, BaseModalType } from '@/types/table';
@@ -877,12 +878,7 @@ export const getDisplayColumns = (props: DisplayActionsProps): ColumnDef<Display
       accessorFn: (row) => row.teamViewerSerial ?? row.webkeySerial ?? '',
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
-    {
-      accessorKey: 'groupsWithPermissions',
-      header: t('Sharing'),
-      size: 150,
-      cell: (info) => <TextCell>{info.getValue<string | null>() ?? ''}</TextCell>,
-    },
+    getSharingColumn<Display>(t),
     {
       accessorKey: 'screenSize',
       header: t('Screen Size'),

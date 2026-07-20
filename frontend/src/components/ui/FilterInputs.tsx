@@ -225,10 +225,10 @@ export default function FilterInputs<T>({
     <div
       aria-hidden={!isOpen}
       className={`
-        transition-all duration-300 ease-in-out w-full
+        transition-all duration-300 ease-in-out w-full relative
         ${
           isOpen
-            ? 'max-h-150 opacity-100 visible mt-4 overflow-visible'
+            ? `opacity-100 visible mt-4 ${onApply ? 'max-h-100 sm:max-h-125 2xl:max-h-150 overflow-auto' : 'max-h-150 overflow-visible'}`
             : 'max-h-0 opacity-0 invisible mt-0 overflow-hidden'
         }
       `}
@@ -440,7 +440,7 @@ export default function FilterInputs<T>({
           })}
         </div>
         {onApply && (
-          <div className="flex justify-end">
+          <div className="flex justify-end sticky bottom-0 bg-slate-50 pt-2 pb-1">
             <Button variant="secondary" className="font-semibold h-11.25" onClick={onApply}>
               {t('Apply Filter')}
             </Button>

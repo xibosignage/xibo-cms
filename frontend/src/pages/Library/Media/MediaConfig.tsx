@@ -50,6 +50,7 @@ import {
   StatusCell,
   ActionsCell,
   TagsCell,
+  getSharingColumn,
 } from '@/components/ui/table/cells';
 import { getCommonFormOptions } from '@/config/commonForms';
 import type { Media } from '@/types/media';
@@ -266,6 +267,7 @@ export interface MediaActionsProps {
   openScheduleModal?: (row: Media) => void;
   openEnableStatsModal?: (id: number) => void;
   openUsageReportModal?: (id: number) => void;
+  scheduleWithView?: boolean;
 }
 
 export const getMediaItemActions = ({
@@ -281,6 +283,7 @@ export const getMediaItemActions = ({
   openScheduleModal,
   openEnableStatsModal,
   openUsageReportModal,
+  scheduleWithView,
 }: MediaActionsProps): ((media: Media) => ActionItem[]) => {
   return (media: Media) => {
     const actions: ActionItem[] = [];
@@ -322,7 +325,7 @@ export const getMediaItemActions = ({
       });
     }
 
-    if (copyMedia) {
+    if (canEdit && copyMedia) {
       actions.push({
         label: t('Make a Copy'),
         icon: CopyCheck,
@@ -352,7 +355,11 @@ export const getMediaItemActions = ({
       onClick: () => onDownload(media),
     });
 
-    if (openScheduleModal) {
+    const canScheduleMedia =
+      (media.mediaType === 'image' || media.mediaType === 'video') &&
+      (canEdit || (!!scheduleWithView && !!media.userPermissions?.view));
+
+    if (canScheduleMedia && openScheduleModal) {
       actions.push({
         label: t('Schedule'),
         icon: CalendarClock,
@@ -368,15 +375,23 @@ export const getMediaItemActions = ({
       });
     }
 
-    actions.push({ isSeparator: true });
-    actions.push({
-      label: t('Enable Stats Collection'),
-      onClick: () => openEnableStatsModal && openEnableStatsModal(media.mediaId),
-    });
-    actions.push({
-      label: t('Usage Report'),
-      onClick: () => openUsageReportModal && openUsageReportModal(media.mediaId),
-    });
+    if (canEdit || openUsageReportModal) {
+      actions.push({ isSeparator: true });
+    }
+
+    if (canEdit) {
+      actions.push({
+        label: t('Enable Stats Collection'),
+        onClick: () => openEnableStatsModal && openEnableStatsModal(media.mediaId),
+      });
+    }
+
+    if (openUsageReportModal) {
+      actions.push({
+        label: t('Usage Report'),
+        onClick: () => openUsageReportModal(media.mediaId),
+      });
+    }
 
     if (canDelete) {
       actions.push({ isSeparator: true });
@@ -521,16 +536,7 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
       size: 150,
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
-    {
-      accessorKey: 'groupsWithPermissions',
-      enableSorting: false,
-      header: t('Sharing'),
-      size: 150,
-      cell: (info) => {
-        const groups = info.getValue() as string;
-        return <TextCell className="italic text-gray-500">{groups || t('Private')}</TextCell>;
-      },
-    },
+    getSharingColumn<Media>(t),
     {
       accessorKey: 'revised',
       header: t('Revised'),
