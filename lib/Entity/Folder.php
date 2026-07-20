@@ -152,7 +152,7 @@ class Folder implements \JsonSerializable
 
     public function getChildren(): array
     {
-        return explode(',', $this->children);
+        return explode(',', $this->children ?? '');
     }
 
     /**
@@ -478,7 +478,7 @@ class Folder implements \JsonSerializable
         $newParentFolder = $this->folderFactory->getById($newParentFolderId, 0);
 
         // new parent folder that adopted this folder, adjust children
-        $newParentChildren = array_filter(explode(',', $newParentFolder->children));
+        $newParentChildren = array_filter(explode(',', $newParentFolder->children ?? ''));
         $newParentChildren[] = $this->id;
         $newParentUpdatedChildren = implode(',', array_filter($newParentChildren));
         $this->getStore()->update('UPDATE `folder` SET children = :children WHERE folderId = :folderId', [
@@ -487,7 +487,7 @@ class Folder implements \JsonSerializable
         ]);
 
         // old parent that gave this folder for adoption, adjust children
-        $oldParentChildren = array_filter(explode(',', $oldParentFolder->children));
+        $oldParentChildren = array_filter(explode(',', $oldParentFolder->children ?? ''));
         foreach ($oldParentChildren as $index => $child) {
             if ((int)$child === $this->id) {
                 unset($oldParentChildren[$index]);
