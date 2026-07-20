@@ -19,32 +19,23 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 import { fetchContextButtons } from '@/services/folderApi';
 
 /**
  * Whether the current user is allowed to create a sub-folder under the given folder,
  * per the backend's /folders/contextButtons/{folderId} decision (feature + sharing permission).
+ *
+ * Keyed on folderId so concurrent consumers of the same folder (e.g. the sidebar and the
+ * info panel both showing the currently selected folder) share a single cached request.
  */
 export function useFolderCreatePermission(folderId: number | null): boolean {
-  const [canCreate, setCanCreate] = useState(false);
+  const { data } = useQuery({
+    queryKey: ['folderPermissions', folderId],
+    queryFn: ({ signal }) => fetchContextButtons(folderId as number, signal),
+    enabled: folderId != null,
+  });
 
-  useEffect(() => {
-    if (folderId == null) {
-      setCanCreate(false);
-      return;
-    }
-
-    const controller = new AbortController();
-    setCanCreate(false);
-
-    fetchContextButtons(folderId, controller.signal)
-      .then((permissions) => setCanCreate(!!permissions.create))
-      .catch(() => setCanCreate(false));
-
-    return () => controller.abort();
-  }, [folderId]);
-
-  return canCreate;
+  return data?.create ?? false;
 }

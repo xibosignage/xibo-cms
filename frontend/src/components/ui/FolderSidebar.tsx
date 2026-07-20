@@ -19,7 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQuery } from '@tanstack/react-query';
 import { FolderPlus, X } from 'lucide-react';
 import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -33,6 +32,7 @@ import Checkbox from './forms/Checkbox';
 import { useUserContext } from '@/context/UserContext';
 import type { ActionType } from '@/hooks/useFolderActions';
 import { useFolderCreatePermission } from '@/hooks/useFolderCreatePermission';
+import { usePermissions } from '@/hooks/usePermissions';
 import type { Folder } from '@/types/folder';
 
 interface FolderSidebarProps {
