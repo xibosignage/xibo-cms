@@ -239,7 +239,7 @@ class MenuBoardFactory extends BaseFactory
             $params['modifiedDateTo'] = strtotime($sanitizedFilter->getDate('modifiedDateTo'));
         }
 
-        $allowedColumns = ['menuId', 'name', 'code', 'modifiedDt', 'owner', 'folderName'];
+        $allowedColumns = ['menuId', 'name', 'code', 'modifiedDt', 'owner', 'folderName', 'groupsWithPermissions'];
         $sortOrder = $this->buildSortQuery($sortOrder, $allowedColumns, [], ['name ASC']);
         $order = empty($sortOrder) ? '' : ' ORDER BY ' . implode(', ', $sortOrder);
 

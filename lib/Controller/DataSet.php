@@ -190,7 +190,8 @@ class DataSet extends Base
                 'isRealTime',
                 'owner',
                 'lastSync',
-                'dataLastModified'
+                'dataLastModified',
+                'groupsWithPermissions'
             ]
         )
     )]

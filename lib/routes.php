@@ -78,7 +78,7 @@ $app->post('/notification/attachment', ['\Xibo\Controller\Notification', 'addAtt
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['notification.add', 'notification.modify']))
     ->setName('notification.addattachment');
 
-$app->group('', function(RouteCollectorProxy $group) {
+$app->group('', function (RouteCollectorProxy $group) {
     $group->put('/notification/{id}', ['\Xibo\Controller\Notification', 'edit'])->setName('notification.edit');
     $group->delete('/notification/{id}', ['\Xibo\Controller\Notification', 'delete'])->setName('notification.delete');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['notification.modify']));
@@ -274,8 +274,11 @@ $app->group('', function (RouteCollectorProxy $group) {
 /**
  * Library
  */
-$app->get('/library', ['\Xibo\Controller\Library','grid'])->setName('library.search');
-$app->get('/library/{id:[0-9]+}', ['\Xibo\Controller\Library','searchById'])->setName('library.search.id');
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->get('/library', ['\Xibo\Controller\Library','grid'])->setName('library.search');
+    $group->get('/library/{id:[0-9]+}', ['\Xibo\Controller\Library','searchById'])->setName('library.search.id');
+})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['library.view']));
+
 $app->get('/library/{id}/isused', ['\Xibo\Controller\Library','isUsed'])->setName('library.isused');
 
 $app->group('', function (RouteCollectorProxy $group) {

@@ -24,6 +24,7 @@ export * from './DescriptionCell';
 export * from './CheckboxCell';
 export * from './CheckMarkCell';
 export * from './MediaCell';
+export * from './SharingCell';
 export * from './StatusCell';
 export * from './TagsCell';
 export * from './TextCell';

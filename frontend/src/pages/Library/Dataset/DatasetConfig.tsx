@@ -26,7 +26,12 @@ import { type ComponentProps } from 'react';
 
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
 import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
-import { TextCell, ActionsCell, CheckMarkCell } from '@/components/ui/table/cells';
+import {
+  TextCell,
+  ActionsCell,
+  CheckMarkCell,
+  getSharingColumn,
+} from '@/components/ui/table/cells';
 import { getCommonFormOptions } from '@/config/commonForms';
 import type { Dataset } from '@/types/dataset';
 import type { ActionItem, BaseModalType } from '@/types/table';
@@ -252,16 +257,7 @@ export const getDatasetColumns = (props: DatasetActionsProps): ColumnDef<Dataset
       size: 150,
       cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
     },
-    {
-      accessorKey: 'groupsWithPermissions',
-      enableSorting: false,
-      header: t('Sharing'),
-      size: 120,
-      cell: (info) => {
-        const groups = info.getValue() as string;
-        return <TextCell className="italic text-gray-500">{groups || t('Private')}</TextCell>;
-      },
-    },
+    getSharingColumn<Dataset>(t),
     {
       accessorKey: 'dataLastModified',
       header: t('Modified'),

@@ -36,7 +36,13 @@ import { type ComponentProps } from 'react';
 
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
 import type { DataTableBulkAction } from '@/components/ui/table/DataTableBulkActions';
-import { ActionsCell, CheckMarkCell, TagsCell, TextCell } from '@/components/ui/table/cells';
+import {
+  ActionsCell,
+  CheckMarkCell,
+  getSharingColumn,
+  TagsCell,
+  TextCell,
+} from '@/components/ui/table/cells';
 import type { DisplayGroup } from '@/types/displayGroup';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
@@ -352,12 +358,7 @@ export const getDisplayGroupColumns = (
         />
       ),
     },
-    {
-      accessorKey: 'groupsWithPermissions',
-      header: t('Sharing'),
-      size: 160,
-      cell: (info) => <TextCell>{info.getValue<string>()}</TextCell>,
-    },
+    getSharingColumn<DisplayGroup>(t),
     {
       accessorKey: 'ref1',
       header: t('Reference 1'),

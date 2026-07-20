@@ -313,7 +313,7 @@ class Library extends Base
         $media = $this->mediaFactory->getById($id);
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($media)) {
+        if (!$this->getUser()->checkEditable($media)) {
             throw new AccessDeniedException();
         }
 
@@ -487,7 +487,8 @@ class Library extends Base
                 'durationSeconds',
                 'fileSizeFormatted',
                 'mediaType',
-                'resolution'
+                'resolution',
+                'groupsWithPermissions'
             ]
         )
     )]
@@ -1922,7 +1923,7 @@ class Library extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($media)) {
+        if (!$this->getUser()->checkEditable($media)) {
             throw new AccessDeniedException();
         }
 

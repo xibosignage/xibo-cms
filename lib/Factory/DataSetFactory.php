@@ -341,7 +341,8 @@ class DataSetFactory extends BaseFactory
             'isRemote',
             'isRealTime',
             'owner',
-            'lastSync'
+            'lastSync',
+            'groupsWithPermissions'
         ];
 
         $sortOrder = $this->buildSortQuery(
@@ -356,8 +357,7 @@ class DataSetFactory extends BaseFactory
         $limit = '';
 
         // Paging
-        if (
-            $filterBy !== null
+        if ($filterBy !== null
             && $parsedFilter->getInt('start') !== null
             && $parsedFilter->getInt('length') !== null
         ) {

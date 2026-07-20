@@ -113,7 +113,7 @@ class MenuBoard extends Base
         required: false,
         schema: new OA\Schema(
             type: 'string',
-            enum: ['menuId', 'name', 'code', 'modifiedDt', 'owner', 'folderName']
+            enum: ['menuId', 'name', 'code', 'modifiedDt', 'owner', 'folderName', 'groupsWithPermissions']
         )
     )]
     #[OA\Parameter(

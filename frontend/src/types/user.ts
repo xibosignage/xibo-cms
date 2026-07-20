@@ -50,6 +50,13 @@ export enum UserType {
 
 export type UserFeatures = Record<string, boolean>;
 
+export interface UserPermissions {
+  view?: number;
+  edit?: number;
+  delete?: number;
+  modifyPermissions?: number;
+}
+
 export interface TranslateConfig {
   locale: string;
   jsLocale: string;
@@ -117,6 +124,7 @@ export interface User {
   homePage?: string;
   homeFolder?: string;
   isSuperAdmin?: boolean;
+  userPermissions?: UserPermissions;
 
   branding?: BrandingConfig;
   cloudHosting?: CloudHosting | null;

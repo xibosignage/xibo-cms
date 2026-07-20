@@ -42,14 +42,20 @@ import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
+import { UserType } from '@/types/user';
 import type { UserGroup } from '@/types/userGroup';
 import { countActiveFilters } from '@/utils/filters';
+import { hasFeature } from '@/utils/permissions';
 
 export default function UserGroups() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { user } = useUserContext();
+  const isSuperAdmin = user?.userTypeId === UserType.SuperAdmin;
+  const hasUsergroupModify = hasFeature(user, 'usergroup.modify');
 
   const {
     pagination,
@@ -164,6 +170,8 @@ export default function UserGroups() {
 
   const columns = getUserGroupColumns({
     t,
+    isSuperAdmin,
+    hasUsergroupModify,
     onEdit: (userGroup) => openModal('edit', userGroup),
     onCopy: (userGroup) => openModal('copy', userGroup),
     onMembers: (userGroup) => openModal('members', userGroup),

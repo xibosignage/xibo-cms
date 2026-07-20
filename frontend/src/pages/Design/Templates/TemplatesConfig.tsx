@@ -40,6 +40,7 @@ import {
   ActionsCell,
   MediaCell,
   TagsCell,
+  getSharingColumn,
 } from '@/components/ui/table/cells';
 import { withPublicPath } from '@/config/publicPath';
 import type { ActionItem, BaseModalType } from '@/types/table';
@@ -191,16 +192,7 @@ export const getTemplateColumn = (props: TemplatesActionsProps): ColumnDef<Templ
       enableSorting: true,
     },
 
-    {
-      accessorKey: 'groupsWithPermissions',
-      header: t('Sharing'),
-      enableSorting: false,
-      size: 80,
-      cell: (info) => {
-        const groups = info.getValue<string>();
-        return <TextCell className="italic text-gray-500">{groups || t('Private')}</TextCell>;
-      },
-    },
+    getSharingColumn<Template>(t),
 
     {
       accessorKey: 'modifiedDt',

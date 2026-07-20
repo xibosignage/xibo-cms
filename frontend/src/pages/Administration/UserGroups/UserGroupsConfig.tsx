@@ -60,6 +60,8 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<UserGroupFilte
 
 export interface UserGroupActionsProps {
   t: TFunction;
+  isSuperAdmin: boolean;
+  hasUsergroupModify: boolean;
   onEdit: (userGroup: UserGroup) => void;
   onCopy: (userGroup: UserGroup) => void;
   onMembers: (userGroup: UserGroup) => void;
@@ -69,51 +71,69 @@ export interface UserGroupActionsProps {
 
 export const getUserGroupItemActions = ({
   t,
+  isSuperAdmin,
+  hasUsergroupModify,
   onEdit,
   onCopy,
   onMembers,
   onFeatures,
   onDelete,
 }: UserGroupActionsProps): ((userGroup: UserGroup) => ActionItem[]) => {
-  return (userGroup: UserGroup) => [
-    // Quick action
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => onEdit(userGroup),
-      isQuickAction: true,
-      variant: 'primary' as const,
-    },
+  return (userGroup: UserGroup) => {
+    // Matches the backend: UserGroup::assignUser()/unassignUser() require the
+    // 'usergroup.modify' feature (route middleware) AND checkEditable($group) on this
+    // specific group, surfaced here as userGroup.userPermissions.edit.
+    const canManageMembers =
+      isSuperAdmin || (hasUsergroupModify && !!userGroup.userPermissions?.edit);
 
-    // Dropdown menu actions
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => onEdit(userGroup),
-    },
-    {
-      label: t('Copy'),
-      icon: Copy,
-      onClick: () => onCopy(userGroup),
-    },
-    {
-      label: t('Members'),
-      icon: Users,
-      onClick: () => onMembers(userGroup),
-    },
-    {
-      label: t('Features'),
-      icon: Settings,
-      onClick: () => onFeatures(userGroup),
-    },
-    { isSeparator: true },
-    {
-      label: t('Delete'),
-      icon: Trash2,
-      onClick: () => onDelete(userGroup),
-      variant: 'danger' as const,
-    },
-  ];
+    const actions: ActionItem[] = [
+      // Quick action
+      {
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => onEdit(userGroup),
+        isQuickAction: true,
+        variant: 'primary' as const,
+      },
+
+      // Dropdown menu actions
+      {
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => onEdit(userGroup),
+      },
+      {
+        label: t('Copy'),
+        icon: Copy,
+        onClick: () => onCopy(userGroup),
+      },
+    ];
+
+    if (canManageMembers) {
+      actions.push({
+        label: t('Members'),
+        icon: Users,
+        onClick: () => onMembers(userGroup),
+      });
+    }
+
+    actions.push(
+      {
+        label: t('Features'),
+        icon: Settings,
+        onClick: () => onFeatures(userGroup),
+      },
+      { isSeparator: true },
+      {
+        label: t('Delete'),
+        icon: Trash2,
+        onClick: () => onDelete(userGroup),
+        variant: 'danger' as const,
+      },
+    );
+
+    return actions;
+  };
 };
 
 export const getUserGroupColumns = (props: UserGroupActionsProps): ColumnDef<UserGroup>[] => {
