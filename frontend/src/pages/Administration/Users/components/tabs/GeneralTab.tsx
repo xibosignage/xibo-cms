@@ -144,7 +144,7 @@ export default function GeneralTab({
         />
       )}
 
-      {(isSuperAdmin && isEdit) && (
+      {isSuperAdmin && isEdit && (
         <TextInput
           name="retypePassword"
           label={t('Retype New Password')}

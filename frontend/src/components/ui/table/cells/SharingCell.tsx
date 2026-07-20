@@ -32,7 +32,7 @@ import {
 } from '@floating-ui/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
-import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 
 import Badge from '../../Badge';
 
@@ -109,7 +109,7 @@ function useVisibleCount(
 }
 
 export function SharingCell({ groups, privatePlaceholder = '' }: SharingCellProps) {
-  const entries = useMemo(() => parseGroups(groups), [groups]);
+  const entries = parseGroups(groups);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const pillRefs = useRef<(HTMLSpanElement | null)[]>([]);

@@ -37,6 +37,7 @@ use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\MediaServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -3268,6 +3269,25 @@ class LayoutFactory extends BaseFactory
         } else if ($type === 'playlist') {
             $playlist = $this->playlistFactory->getById($id);
             $playlist->load();
+        }
+
+        $scheduledItem = $type === 'media' ? $media : $playlist;
+        $scheduleWithViewOnItem = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
+        $isAllowed = $scheduleWithViewOnItem
+            ? $this->getUser()->checkViewable($scheduledItem)
+            : $this->getUser()->checkEditable($scheduledItem);
+
+        if (!$isAllowed) {
+            throw new AccessDeniedException(__('Access to this item denied'));
+        }
+
+        // Only images and videos may be scheduled directly - other media types
+        // (audio, pdf, etc) have no meaningful full-screen presentation.
+        if ($type === 'media' && !in_array($media->mediaType, ['image', 'video'], true)) {
+            throw new InvalidArgumentException(
+                __('Only images and videos can be scheduled directly'),
+                'mediaId'
+            );
         }
 
         if (empty($resolutionId)) {
