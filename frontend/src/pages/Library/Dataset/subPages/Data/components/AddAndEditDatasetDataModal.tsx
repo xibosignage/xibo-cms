@@ -215,6 +215,7 @@ export function AddAndEditDataModal({
                   value={String(currentValue || '')}
                   options={options}
                   helpText={col.tooltip}
+                  clearable
                   onSelect={(val) => {
                     updateDraft(col.dataSetColumnId, val);
                   }}

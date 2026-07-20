@@ -38,6 +38,7 @@ export type ActionItem =
       onClick?: () => void;
       variant?: 'default' | 'primary' | 'danger';
       isQuickAction?: boolean;
+      isNavigation?: boolean;
       rightIcon?: ElementType;
     };
 
