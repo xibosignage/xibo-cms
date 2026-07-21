@@ -69,6 +69,7 @@ import type {
   FetchAgendaEventsResponse,
 } from '@/services/eventApi';
 import type { Event } from '@/types/event';
+import { hasFeature } from '@/utils/permissions';
 
 interface AgendaModalProps {
   date: DateTimeType;
@@ -523,10 +524,11 @@ interface BreadcrumbPanelProps {
   row: SelectedRow;
   data: FetchAgendaEventsResponse;
   selectedGroupId: number;
+  canEdit: boolean;
   onEdit: (eventId: number) => void;
 }
 
-function BreadcrumbPanel({ row, data, selectedGroupId, onEdit }: BreadcrumbPanelProps) {
+function BreadcrumbPanel({ row, data, selectedGroupId, canEdit, onEdit }: BreadcrumbPanelProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -588,13 +590,17 @@ function BreadcrumbPanel({ row, data, selectedGroupId, onEdit }: BreadcrumbPanel
         </>
       )}
       {sep}
-      <button
-        type="button"
-        className="px-3 py-2 text-xibo-blue-600 cursor-pointer hover:underline"
-        onClick={() => onEdit(event.eventId)}
-      >
-        {t('Schedule')}
-      </button>
+      {canEdit && event.isEditable !== false ? (
+        <button
+          type="button"
+          className="px-3 py-2 text-xibo-blue-600 cursor-pointer hover:underline"
+          onClick={() => onEdit(event.eventId)}
+        >
+          {t('Schedule')}
+        </button>
+      ) : (
+        <span className="px-3 py-2">{t('Schedule')}</span>
+      )}
       {dgChain.map((name, i) => (
         <span key={`${i}-${name}`} className="flex items-center gap-0.5">
           {sep}
@@ -1200,6 +1206,7 @@ export function AgendaModal({ date, displayGroups, onClose }: AgendaModalProps) 
   const { formatDateTime } = useDateFormatter();
   const defaultLat = Number(user?.settings?.DEFAULT_LAT ?? DEFAULT_LAT_FALLBACK);
   const defaultLng = Number(user?.settings?.DEFAULT_LONG ?? DEFAULT_LNG_FALLBACK);
+  const canModifySchedule = hasFeature(user, 'schedule.modify');
 
   const queryClient = useQueryClient();
 
@@ -1353,6 +1360,7 @@ export function AgendaModal({ date, displayGroups, onClose }: AgendaModalProps) 
             row={selectedRow}
             data={data}
             selectedGroupId={selectedGroupId}
+            canEdit={canModifySchedule}
             onEdit={setEditEventId}
           />
         )}

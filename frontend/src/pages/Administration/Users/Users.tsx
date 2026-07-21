@@ -45,7 +45,7 @@ import { DataTable } from '@/components/ui/table/DataTable';
 import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
-import type { User } from '@/types/user';
+import { UserType, type User } from '@/types/user';
 import { countActiveFilters } from '@/utils/filters';
 import { hasFeature } from '@/utils/permissions';
 
@@ -175,11 +175,21 @@ export default function Users() {
   };
 
   const canSetHomeFolder = hasFeature(currentUser, 'folder.userHome');
+  const isSuperAdmin = currentUser?.userTypeId === UserType.SuperAdmin;
+  const isGroupAdmin = currentUser?.userTypeId === UserType.GroupAdmin;
+  const systemUserId =
+    currentUser?.settings?.SYSTEM_USER != null
+      ? Number(currentUser.settings.SYSTEM_USER)
+      : undefined;
 
   const columns = getUserColumns({
     t,
     currentUserId: currentUser?.userId,
+    canModify: hasFeature(currentUser, 'users.modify'),
     canSetHomeFolder,
+    isSuperAdmin,
+    isGroupAdmin,
+    systemUserId,
     onEdit: (user) => openModal('edit', user),
     onSetHomeFolder: (user) => openModal('setHomeFolder', user),
     onUserGroups: (user) => openModal('userGroups', user),
@@ -209,14 +219,16 @@ export default function Users() {
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Users" navigation={administrationTabs} />
           <div className="flex items-center gap-2 md:mb-0">
-            <Button
-              variant="primary"
-              className="font-semibold"
-              onClick={() => openModal('add')}
-              leftIcon={Plus}
-            >
-              {t('Add User')}
-            </Button>
+            {hasFeature(currentUser, 'users.add') && (
+              <Button
+                variant="primary"
+                className="font-semibold"
+                onClick={() => openModal('add')}
+                leftIcon={Plus}
+              >
+                {t('Add User')}
+              </Button>
+            )}
           </div>
         </div>
 

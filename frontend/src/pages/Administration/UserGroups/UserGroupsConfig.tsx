@@ -85,29 +85,34 @@ export const getUserGroupItemActions = ({
     // specific group, surfaced here as userGroup.userPermissions.edit.
     const canManageMembers =
       isSuperAdmin || (hasUsergroupModify && !!userGroup.userPermissions?.edit);
+    const canEdit = isSuperAdmin || (hasUsergroupModify && !!userGroup.userPermissions?.edit);
+    const canCopy = isSuperAdmin && hasUsergroupModify;
+    const canDelete = isSuperAdmin && hasUsergroupModify;
 
-    const actions: ActionItem[] = [
-      // Quick action
-      {
+    const actions: ActionItem[] = [];
+
+    if (canEdit) {
+      actions.push({
         label: t('Edit'),
         icon: Edit,
         onClick: () => onEdit(userGroup),
         isQuickAction: true,
         variant: 'primary' as const,
-      },
-
-      // Dropdown menu actions
-      {
+      });
+      actions.push({
         label: t('Edit'),
         icon: Edit,
         onClick: () => onEdit(userGroup),
-      },
-      {
+      });
+    }
+
+    if (canCopy) {
+      actions.push({
         label: t('Copy'),
         icon: Copy,
         onClick: () => onCopy(userGroup),
-      },
-    ];
+      });
+    }
 
     if (canManageMembers) {
       actions.push({
@@ -117,20 +122,25 @@ export const getUserGroupItemActions = ({
       });
     }
 
-    actions.push(
-      {
+    if (isSuperAdmin) {
+      actions.push({
         label: t('Features'),
         icon: Settings,
         onClick: () => onFeatures(userGroup),
-      },
-      { isSeparator: true },
-      {
-        label: t('Delete'),
-        icon: Trash2,
-        onClick: () => onDelete(userGroup),
-        variant: 'danger' as const,
-      },
-    );
+      });
+    }
+
+    if (canDelete) {
+      actions.push(
+        { isSeparator: true },
+        {
+          label: t('Delete'),
+          icon: Trash2,
+          onClick: () => onDelete(userGroup),
+          variant: 'danger' as const,
+        },
+      );
+    }
 
     return actions;
   };

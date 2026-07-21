@@ -30,12 +30,14 @@ import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
+import { useUserContext } from '@/context/UserContext';
 import { getTemplateSchema } from '@/schema/templates';
 import { fetchResolution } from '@/services/resolutionApi';
 import { createTemplate, updateTemplate } from '@/services/templatesApi';
 import type { Resolution } from '@/types/resolution';
 import type { Tag } from '@/types/tag';
 import type { Template } from '@/types/templates';
+import { hasFeature } from '@/utils/permissions';
 
 interface AddAndEditTemplateModalProps {
   type: 'add' | 'edit';
@@ -75,6 +77,7 @@ export default function AddAndEditTemplateModal({
   onSave,
 }: AddAndEditTemplateModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
   const [isPending, startTransition] = useTransition();
   const [formErrors, setFormErrors] = useState<TemplateFormErrors>({});
   const [apiError, setApiError] = useState<string | undefined>();
@@ -267,14 +270,17 @@ export default function AddAndEditTemplateModal({
             error={formErrors.description}
           />
 
-          <TagInput
-            value={draft.tags}
-            helpText={t('Tags separated by commas')}
-            onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
-            inputValue={pendingTagInput}
-            onInputChange={setPendingTagInput}
-            onPendingValueChange={setHasTagPendingValue}
-          />
+          {(hasFeature(user, 'tag.tagging') || (draft.tags?.length ?? 0) > 0) && (
+            <TagInput
+              value={draft.tags}
+              helpText={t('Tags separated by commas')}
+              onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
+              inputValue={pendingTagInput}
+              onInputChange={setPendingTagInput}
+              onPendingValueChange={setHasTagPendingValue}
+              disabled={!hasFeature(user, 'tag.tagging')}
+            />
+          )}
 
           {type === 'add' ? (
             <SelectDropdown

@@ -62,6 +62,10 @@ export default function DisplayGroupPage() {
   const { user } = useUserContext();
   const canViewFolders = usePermissions()?.canViewFolders;
   const canSchedule = hasFeature(user, 'schedule.add');
+  const canModify = hasFeature(user, 'displaygroup.modify');
+  const canTag = hasFeature(user, 'tag.tagging');
+  const canLimitedView = hasFeature(user, 'displaygroup.limitedView');
+  const scheduleWithView = Number(user?.settings?.SCHEDULE_WITH_VIEW_PERMISSION) === 1;
   const homeFolderId = user?.homeFolderId ?? 1;
 
   const {
@@ -219,6 +223,11 @@ export default function DisplayGroupPage() {
 
   const columns = getDisplayGroupColumns({
     t,
+    canModify,
+    canTag,
+    canUserShare: hasFeature(user, 'user.sharing'),
+    canLimitedView,
+    scheduleWithView,
     onDelete: (displayGroup) => {
       setItemsToDelete([displayGroup]);
       setDeleteError(null);
@@ -278,13 +287,15 @@ export default function DisplayGroupPage() {
     formatDateTime,
   });
 
-  const { filterOptions } = useDisplayGroupFilterOptions(t);
+  const { filterOptions } = useDisplayGroupFilterOptions(t, canTag);
   const libraryTabs = useFilteredTabs('displays');
 
   const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
 
   const bulkActions = getBulkActions({
     t,
+    canModify,
+    canLimitedView,
     onDelete: () => {
       const allItems = getAllSelectedItems();
       setItemsToDelete(allItems);
@@ -325,14 +336,16 @@ export default function DisplayGroupPage() {
       <div className="flex-1 flex flex-col min-h-0 min-w-0 px-5 pb-5">
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Display Groups" navigation={libraryTabs} />
-          <Button
-            leftIcon={Plus}
-            disabled={!isHydrated}
-            onClick={() => openModal('add')}
-            removeTextOnMobile
-          >
-            {t('Add Display Group')}
-          </Button>
+          {hasFeature(user, 'displaygroup.add') && (
+            <Button
+              leftIcon={Plus}
+              disabled={!isHydrated}
+              onClick={() => openModal('add')}
+              removeTextOnMobile
+            >
+              {t('Add Display Group')}
+            </Button>
+          )}
         </div>
 
         <div className="flex flex-col lg:flex-row justify-between items-center gap-4">

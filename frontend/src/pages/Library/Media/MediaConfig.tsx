@@ -104,6 +104,7 @@ export type ModalType =
   | 'schedule'
   | 'enableStats'
   | 'usageReport'
+  | 'tidy'
   | null;
 
 export const INITIAL_FILTER_STATE: MediaFilterInput = {
@@ -122,7 +123,10 @@ export const INITIAL_FILTER_STATE: MediaFilterInput = {
   exactTags: false,
 };
 
-export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<MediaFilterInput>[] => [
+export const getBaseFilterKeys = (
+  t: TFunction,
+  canTag = false,
+): FilterConfigItem<MediaFilterInput>[] => [
   {
     label: t('ID'),
     placeholder: ' ',
@@ -140,17 +144,21 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<MediaFilterInp
     showRegex: true,
     regexKey: 'useRegexForName',
   },
-  {
-    label: t('Tags'),
-    name: 'tags',
-    type: 'tags',
-    placeholder: ' ',
-    className: '',
-    showAndOr: true,
-    andOrKey: 'logicalOperator',
-    showExactTags: true,
-    exactTagsKey: 'exactTags',
-  },
+  ...(canTag
+    ? ([
+        {
+          label: t('Tags'),
+          name: 'tags',
+          type: 'tags',
+          placeholder: ' ',
+          className: '',
+          showAndOr: true,
+          andOrKey: 'logicalOperator',
+          showExactTags: true,
+          exactTagsKey: 'exactTags',
+        },
+      ] as FilterConfigItem<MediaFilterInput>[])
+    : []),
   {
     label: t('Owner'),
     name: 'ownerId',
@@ -254,6 +262,8 @@ export const getStatusTypeFromMediaType = (mediaType: string) => {
 
 export interface MediaActionsProps {
   t: TFunction;
+  canTag?: boolean;
+  canUserShare?: boolean;
   formatDateTime: (value: DateLike) => string;
   onPreview?: (row: Media) => void;
   onDelete: (id: number) => void;
@@ -268,10 +278,12 @@ export interface MediaActionsProps {
   openEnableStatsModal?: (id: number) => void;
   openUsageReportModal?: (id: number) => void;
   scheduleWithView?: boolean;
+  canModify?: boolean;
 }
 
 export const getMediaItemActions = ({
   t,
+  canUserShare = false,
   onDelete,
   onDownload,
   openEditModal,
@@ -284,6 +296,7 @@ export const getMediaItemActions = ({
   openEnableStatsModal,
   openUsageReportModal,
   scheduleWithView,
+  canModify = false,
 }: MediaActionsProps): ((media: Media) => ActionItem[]) => {
   return (media: Media) => {
     const actions: ActionItem[] = [];
@@ -292,7 +305,7 @@ export const getMediaItemActions = ({
     const canDelete = !!media.userPermissions?.delete;
     const canShare = !!media.userPermissions?.modifyPermissions;
 
-    if (canEdit) {
+    if (canEdit && canModify) {
       actions.push({
         label: t('Edit'),
         icon: Edit,
@@ -309,7 +322,7 @@ export const getMediaItemActions = ({
       isQuickAction: true,
     });
 
-    if (canEdit) {
+    if (canEdit && canModify) {
       actions.push({
         label: t('Edit'),
         icon: Edit,
@@ -317,7 +330,7 @@ export const getMediaItemActions = ({
       });
     }
 
-    if (canEdit) {
+    if (canEdit && canModify) {
       actions.push({
         label: t('Replace File'),
         icon: FileSymlink,
@@ -325,7 +338,7 @@ export const getMediaItemActions = ({
       });
     }
 
-    if (canEdit && copyMedia) {
+    if (canEdit && canModify && copyMedia) {
       actions.push({
         label: t('Make a Copy'),
         icon: CopyCheck,
@@ -333,7 +346,7 @@ export const getMediaItemActions = ({
       });
     }
 
-    if (canEdit && openMoveModal) {
+    if (canEdit && canModify && openMoveModal) {
       actions.push({
         label: t('Move'),
         icon: FolderInput,
@@ -341,7 +354,7 @@ export const getMediaItemActions = ({
       });
     }
 
-    if (canShare && openShareModal) {
+    if (canShare && canUserShare && canModify && openShareModal) {
       actions.push({
         label: t('Share'),
         icon: UserPlus2,
@@ -375,11 +388,11 @@ export const getMediaItemActions = ({
       });
     }
 
-    if (canEdit || openUsageReportModal) {
+    if ((canEdit && canModify) || openUsageReportModal) {
       actions.push({ isSeparator: true });
     }
 
-    if (canEdit) {
+    if (canEdit && canModify) {
       actions.push({
         label: t('Enable Stats Collection'),
         onClick: () => openEnableStatsModal && openEnableStatsModal(media.mediaId),
@@ -393,7 +406,7 @@ export const getMediaItemActions = ({
       });
     }
 
-    if (canDelete) {
+    if (canDelete && canModify) {
       actions.push({ isSeparator: true });
       actions.push({
         label: t('Delete'),
@@ -437,7 +450,7 @@ export const filterMediaByPermission = <T,>(
 };
 
 export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] => {
-  const { t, onPreview, formatDateTime } = props;
+  const { t, onPreview, formatDateTime, canTag = false } = props;
   const getActions = getMediaItemActions(props);
   return [
     {
@@ -476,20 +489,24 @@ export const getMediaColumns = (props: MediaActionsProps): ColumnDef<Media>[] =>
         return <StatusCell label={value} type={getStatusTypeFromMediaType(value)} />;
       },
     },
-    {
-      accessorKey: 'tags',
-      header: t('Tags'),
-      enableSorting: false,
-      size: 150,
-      cell: (info) => {
-        const tags = info.getValue<Tag[]>() || [];
-        const formattedTags = tags.map((tag) => ({
-          id: tag.tagId,
-          label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
-        }));
-        return <TagsCell tags={formattedTags} />;
-      },
-    },
+    ...(canTag
+      ? ([
+          {
+            accessorKey: 'tags',
+            header: t('Tags'),
+            enableSorting: false,
+            size: 150,
+            cell: (info) => {
+              const tags = info.getValue<Tag[]>() || [];
+              const formattedTags = tags.map((tag) => ({
+                id: tag.tagId,
+                label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
+              }));
+              return <TagsCell tags={formattedTags} />;
+            },
+          },
+        ] as ColumnDef<Media>[])
+      : []),
     {
       id: 'formattedDuration',
       accessorKey: 'duration',
@@ -618,6 +635,7 @@ interface GetBulkActionsProps {
   onMove?: () => void;
   onShare?: () => void;
   onDownload?: () => void;
+  canModify?: boolean;
 }
 
 export const getBulkActions = ({
@@ -626,10 +644,11 @@ export const getBulkActions = ({
   onMove,
   onShare,
   onDownload,
+  canModify = false,
 }: GetBulkActionsProps): DataTableBulkAction<Media>[] => {
   const actions: DataTableBulkAction<Media>[] = [];
 
-  if (onShare) {
+  if (onShare && canModify) {
     actions.push({
       label: t('Share'),
       icon: UserPlus2,
@@ -645,7 +664,7 @@ export const getBulkActions = ({
     });
   }
 
-  if (onMove) {
+  if (onMove && canModify) {
     actions.push({
       label: t('Move'),
       icon: FolderInput,
@@ -653,7 +672,7 @@ export const getBulkActions = ({
     });
   }
 
-  if (onDelete) {
+  if (onDelete && canModify) {
     actions.push({
       label: t('Delete Selected'),
       icon: Trash2,

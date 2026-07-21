@@ -77,6 +77,7 @@ export const getFilterKeys = (t: TFunction): FilterConfigItem<SyncGroupsFilterIn
 
 export interface SyncGroupActionsProps {
   t: TFunction;
+  canModify?: boolean;
   onDelete: (id: number) => void;
   openEditModal: (row: SyncGroup) => void;
   openMembersModal: (row: SyncGroup) => void;
@@ -85,39 +86,54 @@ export interface SyncGroupActionsProps {
 
 export const getSyncGroupItemActions = ({
   t,
+  canModify = false,
   onDelete,
   openEditModal,
   openMembersModal,
 }: SyncGroupActionsProps): ((syncGroup: SyncGroup) => ActionItem[]) => {
-  return (syncGroup: SyncGroup) => [
-    // Quick actions
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => openEditModal(syncGroup),
-      isQuickAction: true,
-      variant: 'primary' as const,
-    },
+  return (syncGroup: SyncGroup) => {
+    const canEdit = !!syncGroup.userPermissions?.edit;
 
-    // Dropdown menu actions
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => openEditModal(syncGroup),
-    },
-    {
-      label: t('Members'),
-      icon: Users,
-      onClick: () => openMembersModal(syncGroup),
-    },
-    { isSeparator: true },
-    {
-      label: t('Delete'),
-      icon: Trash2,
-      onClick: () => onDelete(syncGroup.syncGroupId),
-      variant: 'danger' as const,
-    },
-  ];
+    const actions: ActionItem[] = [];
+
+    if (canModify && canEdit) {
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => openEditModal(syncGroup),
+        isQuickAction: true,
+        variant: 'primary' as const,
+      });
+    }
+
+    if (canModify && canEdit) {
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => openEditModal(syncGroup),
+      });
+    }
+
+    if (canModify && canEdit) {
+      actions.push({
+        label: t('Members'),
+        icon: Users,
+        onClick: () => openMembersModal(syncGroup),
+      });
+    }
+
+    if (canModify && canEdit) {
+      actions.push({ isSeparator: true });
+      actions.push({
+        label: t('Delete'),
+        icon: Trash2,
+        onClick: () => onDelete(syncGroup.syncGroupId),
+        variant: 'danger' as const,
+      });
+    }
+
+    return actions;
+  };
 };
 
 export const getSyncGroupColumns = (props: SyncGroupActionsProps): ColumnDef<SyncGroup>[] => {

@@ -21,7 +21,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
-import { Search, Folder, Plus, Upload } from 'lucide-react';
+import { Search, Folder, Plus, Upload, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
@@ -62,7 +62,7 @@ import { useMediaFilterOptions } from '@/pages/Library/Media/hooks/useMediaFilte
 import { downloadMedia, downloadMediaAsZip } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
 import { countActiveFilters } from '@/utils/filters';
-import { hasFeature } from '@/utils/permissions';
+import { canSaveInFolder, hasFeature } from '@/utils/permissions';
 
 export default function Media() {
   const { t } = useTranslation();
@@ -73,6 +73,9 @@ export default function Media() {
   const canSchedule = hasFeature(user, 'schedule.add');
   const scheduleWithView = Number(user?.settings?.SCHEDULE_WITH_VIEW_PERMISSION) === 1;
   const canViewUsageReport = hasFeature(user, 'schedule.view') || hasFeature(user, 'layout.view');
+  const canModifyLibrary = hasFeature(user, 'library.modify');
+  const canTag = hasFeature(user, 'tag.tagging');
+  const tidyEnabled = user?.settings?.SETTING_LIBRARY_TIDY_ENABLED === '1';
   const homeFolderId = user?.homeFolderId ?? 1;
   const location = useLocation();
   const layoutId = location.state?.layoutId;
@@ -150,7 +153,9 @@ export default function Media() {
   const closeModal = () => setActiveModal(null);
 
   const targetUploadFolderId = canViewFolders ? (selectedFolderId ?? homeFolderId) : homeFolderId;
-  const canAddToFolder = targetUploadFolderId !== null;
+  const canAddMedia = hasFeature(user, 'library.add');
+  const canAddToFolder =
+    canAddMedia && canSaveInFolder(user, !!canViewFolders, targetUploadFolderId, homeFolderId);
   const targetUploadFolderName = selectedFolderId === null ? t('Root Folder') : selectedFolderName;
 
   const handleRefresh = () => {
@@ -256,10 +261,14 @@ export default function Media() {
     setDeleteError,
     isCloning,
     isUpdatingStats,
+    isTidying,
+    tidyError,
+    setTidyError,
     confirmDelete,
     handleConfirmClone,
     handleConfirmMove,
     handleConfirmEnableStats,
+    handleConfirmTidy,
   } = useMediaActions({
     t,
     handleRefresh,
@@ -329,6 +338,8 @@ export default function Media() {
 
   const columns = getMediaColumns({
     t,
+    canTag,
+    canUserShare: hasFeature(user, 'user.sharing'),
     formatDateTime,
     onPreview: handlePreviewClick,
     onDelete: handleDelete,
@@ -354,6 +365,7 @@ export default function Media() {
     openEnableStatsModal,
     openUsageReportModal: canViewUsageReport ? openUsageReportModal : undefined,
     scheduleWithView,
+    canModify: canModifyLibrary,
   });
 
   const getAllSelectedItems = (): Media[] => {
@@ -364,6 +376,7 @@ export default function Media() {
 
   const bulkActions = getBulkActions({
     t,
+    canModify: canModifyLibrary,
     onDelete: () => {
       const permittedItems = filterMediaByPermission(
         getAllSelectedItems(),
@@ -467,6 +480,7 @@ export default function Media() {
 
   const getMediaActions = getMediaItemActions({
     t,
+    canUserShare: hasFeature(user, 'user.sharing'),
     formatDateTime,
     onDelete: handleDelete,
     onDownload: handleDownload,
@@ -492,9 +506,10 @@ export default function Media() {
     openEnableStatsModal,
     openUsageReportModal: canViewUsageReport ? openUsageReportModal : undefined,
     scheduleWithView,
+    canModify: canModifyLibrary,
   } as MediaActionsProps);
 
-  const { filterOptions } = useMediaFilterOptions(t);
+  const { filterOptions } = useMediaFilterOptions(t, canTag);
 
   const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
 
@@ -549,7 +564,24 @@ export default function Media() {
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Media" navigation={libraryTabs} />
           <div className="flex items-center gap-2 md:mb-0">
-            <Button variant="primary" onClick={() => setAddModalOpen(true)} leftIcon={Plus}>
+            {tidyEnabled && canModifyLibrary && (
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setTidyError(null);
+                  openModal('tidy');
+                }}
+                leftIcon={Sparkles}
+              >
+                {t('Tidy Library')}
+              </Button>
+            )}
+            <Button
+              variant="primary"
+              onClick={() => setAddModalOpen(true)}
+              leftIcon={Plus}
+              disabled={!canAddToFolder || !isHydrated}
+            >
               {t('Add Media')}
             </Button>
           </div>
@@ -713,6 +745,8 @@ export default function Media() {
           isDeleting,
           isCloning,
           isUpdatingStats,
+          isTidying,
+          tidyError,
         }}
         selection={{
           selectedMedia,
@@ -728,6 +762,7 @@ export default function Media() {
           handleConfirmMove: (folderId) => handleConfirmMove(itemsToMove, folderId),
           handleConfirmEnableStats: (value) =>
             selectedMedia && handleConfirmEnableStats(selectedMedia, value),
+          handleConfirmTidy,
         }}
         upload={{
           isOpen: isAddModalOpen,
@@ -745,6 +780,11 @@ export default function Media() {
           selectedFolderId,
           setSelectedFolderId,
           canViewFolders,
+          canTag,
+          maxSize:
+            Number(user?.settings?.LIBRARY_SIZE_LIMIT_KB) > 0
+              ? Number(user?.settings?.LIBRARY_SIZE_LIMIT_KB) * 1024
+              : 2 * 1024 * 1024 * 1024,
         }}
         infoPanel={{
           isOpen: showInfoPanel,

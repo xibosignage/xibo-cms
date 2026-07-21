@@ -41,6 +41,22 @@ export const hasFeature = (user: User | null, featureKey: string): boolean => {
   return user.features?.[featureKey] === true;
 };
 
+export const canSaveInFolder = (
+  user: User | null,
+  canViewFolders: boolean,
+  effectiveFolderId: number,
+  homeFolderId: number,
+): boolean => {
+  const targetFolderId = canViewFolders ? effectiveFolderId : homeFolderId;
+
+  if (targetFolderId !== 1) {
+    return true;
+  }
+
+  const isSuperAdmin = !!user?.isSuperAdmin || user?.userTypeId === UserType.SuperAdmin;
+  return isSuperAdmin || user?.settings?.FOLDERS_ALLOW_SAVE_IN_ROOT === '1';
+};
+
 export const filterByPermission = <T>(
   items: T[],
   checkFn: (item: T) => boolean | number | undefined | null,

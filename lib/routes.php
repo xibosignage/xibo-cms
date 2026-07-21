@@ -520,7 +520,7 @@ $app->group('', function (RouteCollectorProxy $group) {
 $app->get('/stats', ['\Xibo\Controller\Stats','grid'])->setName('stats.search');
 
 $app->get('/stats/timeDisconnected', ['\Xibo\Controller\Stats', 'gridTimeDisconnected'])
-    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['display.reporting']))
+    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['displays.reporting']))
     ->setName('stats.timeDisconnected.search');
 
 $app->get('/stats/export', ['\Xibo\Controller\Stats','export'])

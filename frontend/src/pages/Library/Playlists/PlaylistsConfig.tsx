@@ -80,7 +80,10 @@ export const INITIAL_FILTER_STATE: PlaylistFilterInput = {
   exactTags: false,
 };
 
-export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<PlaylistFilterInput>[] => [
+export const getBaseFilterKeys = (
+  t: TFunction,
+  canTag = false,
+): FilterConfigItem<PlaylistFilterInput>[] => [
   {
     label: t('ID'),
     placeholder: ' ',
@@ -98,17 +101,21 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<PlaylistFilter
     showRegex: true,
     regexKey: 'useRegexForName',
   },
-  {
-    label: t('Tags'),
-    name: 'tags',
-    type: 'tags',
-    placeholder: ' ',
-    className: '',
-    showAndOr: true,
-    andOrKey: 'logicalOperator',
-    showExactTags: true,
-    exactTagsKey: 'exactTags',
-  },
+  ...(canTag
+    ? ([
+        {
+          label: t('Tags'),
+          name: 'tags',
+          type: 'tags',
+          placeholder: ' ',
+          className: '',
+          showAndOr: true,
+          andOrKey: 'logicalOperator',
+          showExactTags: true,
+          exactTagsKey: 'exactTags',
+        },
+      ] as FilterConfigItem<PlaylistFilterInput>[])
+    : []),
   {
     label: t('Owner'),
     name: 'userId',
@@ -138,6 +145,10 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<PlaylistFilter
 
 export interface PlaylistActionsProps {
   t: TFunction;
+  canModify?: boolean;
+  canTag?: boolean;
+  canUserShare?: boolean;
+  scheduleWithView?: boolean;
   formatDateTime: (value: DateLike) => string;
   onDelete: (id: number) => void;
   openAddEditModal: (row: Playlist) => void;
@@ -152,6 +163,9 @@ export interface PlaylistActionsProps {
 
 export const getPlaylistItemActions = ({
   t,
+  canModify = false,
+  canUserShare = false,
+  scheduleWithView = false,
   onDelete,
   openAddEditModal,
   openShareModal,
@@ -165,87 +179,113 @@ export const getPlaylistItemActions = ({
   return (playlist: Playlist) => {
     const isDynamic = Boolean(playlist.isDynamic);
 
-    return [
-      // Quick Actions
-      {
+    // Per-playlist permissions
+    const canEdit = !!playlist.userPermissions?.edit;
+    const canDelete = !!playlist.userPermissions?.delete;
+    const canShare = !!playlist.userPermissions?.modifyPermissions;
+
+    const actions: ActionItem[] = [];
+
+    // Quick Actions
+    if (canModify && canEdit) {
+      actions.push({
         label: t('Edit'),
         icon: Edit,
         onClick: () => openAddEditModal(playlist),
         isQuickAction: true,
         variant: 'primary' as const,
-      },
-      ...(!isDynamic
-        ? [
-            {
-              label: t('Timeline'),
-              icon: BarChartHorizontalBig,
-              onClick: () => openTimeline && openTimeline(playlist.playlistId),
-              isQuickAction: true,
-            },
-          ]
-        : []),
+      });
+    }
 
-      // Dropdown Menu Actions
-      {
+    if (canModify && canEdit && !isDynamic) {
+      actions.push({
+        label: t('Timeline'),
+        icon: BarChartHorizontalBig,
+        onClick: () => openTimeline && openTimeline(playlist.playlistId),
+        isQuickAction: true,
+      });
+    }
+
+    // Dropdown Menu Actions
+    if (canModify && canEdit) {
+      actions.push({
         label: t('Edit'),
         icon: Edit,
         onClick: () => openAddEditModal(playlist),
-      },
-      {
+      });
+    }
+
+    if (canModify && canEdit && copyPlaylist) {
+      actions.push({
         label: t('Make a Copy'),
         icon: CopyCheck,
-        onClick: () => copyPlaylist && copyPlaylist(playlist.playlistId),
-      },
-      {
+        onClick: () => copyPlaylist(playlist.playlistId),
+      });
+    }
+
+    if (canModify && canEdit && openMoveModal) {
+      actions.push({
         label: t('Move'),
         icon: FolderInput,
-        onClick: () => openMoveModal && openMoveModal(playlist),
-      },
-      {
+        onClick: () => openMoveModal(playlist),
+      });
+    }
+
+    if (canModify && canShare && canUserShare && openShareModal) {
+      actions.push({
         label: t('Share'),
         icon: UserPlus2,
-        onClick: () => openShareModal && openShareModal(playlist.playlistId),
-      },
-      ...(openScheduleModal
-        ? [
-            {
-              label: t('Schedule'),
-              icon: CalendarClock,
-              onClick: () => openScheduleModal(playlist),
-            },
-          ]
-        : []),
-      ...(!isDynamic
-        ? [
-            {
-              label: t('Timeline'),
-              icon: BarChartHorizontalBig,
-              onClick: () => openTimeline && openTimeline(playlist.playlistId),
-            },
-          ]
-        : []),
-      { isSeparator: true },
-      {
+        onClick: () => openShareModal(playlist.playlistId),
+      });
+    }
+
+    if (openScheduleModal && (canEdit || scheduleWithView)) {
+      actions.push({
+        label: t('Schedule'),
+        icon: CalendarClock,
+        onClick: () => openScheduleModal(playlist),
+      });
+    }
+
+    if (canModify && canEdit && !isDynamic) {
+      actions.push({
+        label: t('Timeline'),
+        icon: BarChartHorizontalBig,
+        onClick: () => openTimeline && openTimeline(playlist.playlistId),
+      });
+    }
+
+    if (canModify && canEdit && openEnableStatsModal) {
+      actions.push({ isSeparator: true });
+      actions.push({
         label: t('Enable Stats Collection'),
-        onClick: () => openEnableStatsModal && openEnableStatsModal(playlist.playlistId),
-      },
-      {
+        onClick: () => openEnableStatsModal(playlist.playlistId),
+      });
+    }
+
+    if (openUsageReportModal) {
+      actions.push({
         label: t('Usage Report'),
-        onClick: () => openUsageReportModal && openUsageReportModal(playlist.playlistId),
-      },
-      { isSeparator: true },
-      {
+        onClick: () => openUsageReportModal(playlist.playlistId),
+      });
+    }
+
+    if (canModify && canDelete) {
+      actions.push({ isSeparator: true });
+      actions.push({
         label: t('Delete'),
         icon: Trash2,
         onClick: () => onDelete(playlist.playlistId),
         variant: 'danger' as const,
-      },
-    ];
+      });
+    }
+
+    return actions;
   };
 };
 
 export const getPlaylistColumns = (props: PlaylistActionsProps): ColumnDef<Playlist>[] => {
-  const { t, formatDateTime } = props;
+  const { t, formatDateTime, canTag = false } = props;
   const getActions = getPlaylistItemActions(props);
   return [
     {
@@ -262,20 +302,24 @@ export const getPlaylistColumns = (props: PlaylistActionsProps): ColumnDef<Playl
       enableHiding: false,
       cell: (info) => <TextCell weight="bold">{info.getValue<string>()}</TextCell>,
     },
-    {
-      accessorKey: 'tags',
-      header: t('Tags'),
-      enableSorting: false,
-      size: 150,
-      cell: (info) => {
-        const tags = info.getValue<Tag[]>() || [];
-        const formattedTags = tags.map((tag) => ({
-          id: tag.tagId,
-          label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
-        }));
-        return <TagsCell tags={formattedTags} />;
-      },
-    },
+    ...(canTag
+      ? ([
+          {
+            accessorKey: 'tags',
+            header: t('Tags'),
+            enableSorting: false,
+            size: 150,
+            cell: (info) => {
+              const tags = info.getValue<Tag[]>() || [];
+              const formattedTags = tags.map((tag) => ({
+                id: tag.tagId,
+                label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
+              }));
+              return <TagsCell tags={formattedTags} />;
+            },
+          },
+        ] as ColumnDef<Playlist>[])
+      : []),
     {
       accessorKey: 'duration',
       header: t('Duration'),
@@ -374,6 +418,7 @@ export const getPlaylistColumns = (props: PlaylistActionsProps): ColumnDef<Playl
 
 interface GetBulkActionsProps {
   t: TFunction;
+  canModify?: boolean;
   onDelete: () => void;
   onMove?: () => void;
   onShare: () => void;
@@ -381,29 +426,36 @@ interface GetBulkActionsProps {
 
 export const getBulkActions = ({
   t,
+  canModify = false,
   onDelete,
   onMove,
   onShare,
 }: GetBulkActionsProps): DataTableBulkAction<Playlist>[] => {
-  return [
-    ...(onMove
-      ? [
-          {
-            label: t('Move'),
-            icon: FolderInput,
-            onClick: onMove,
-          },
-        ]
-      : []),
-    {
+  const actions: DataTableBulkAction<Playlist>[] = [];
+
+  if (canModify && onMove) {
+    actions.push({
+      label: t('Move'),
+      icon: FolderInput,
+      onClick: onMove,
+    });
+  }
+
+  if (canModify) {
+    actions.push({
       label: t('Share'),
       icon: UserPlus2,
       onClick: onShare,
-    },
-    {
+    });
+  }
+
+  if (canModify) {
+    actions.push({
       label: t('Delete Selected'),
       icon: Trash2,
       onClick: onDelete,
-    },
-  ];
+    });
+  }
+
+  return actions;
 };

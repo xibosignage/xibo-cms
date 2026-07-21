@@ -42,13 +42,16 @@ import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import type { Command } from '@/types/command';
 import { countActiveFilters } from '@/utils/filters';
+import { hasFeature } from '@/utils/permissions';
 
 export default function Commands() {
   const { t } = useTranslation();
+  const { user } = useUserContext();
   const queryClient = useQueryClient();
 
   const {
@@ -185,6 +188,8 @@ export default function Commands() {
 
   const columns = getCommandColumns({
     t,
+    canModify: hasFeature(user, 'command.modify'),
+    canUserShare: hasFeature(user, 'user.sharing'),
     onDelete: handleDelete,
     openEditModal,
     openShareModal,
@@ -224,15 +229,17 @@ export default function Commands() {
           <div className="flex flex-row justify-between py-4 items-center gap-4">
             <TabNav activeTab="Commands" navigation={displaysTabs} />
             <div className="flex items-center gap-2 md:mb-0">
-              <Button
-                variant="primary"
-                className="font-semibold"
-                disabled={!isHydrated}
-                onClick={openAddModal}
-                leftIcon={Plus}
-              >
-                {t('Add Command')}
-              </Button>
+              {hasFeature(user, 'command.add') && (
+                <Button
+                  variant="primary"
+                  className="font-semibold"
+                  disabled={!isHydrated}
+                  onClick={openAddModal}
+                  leftIcon={Plus}
+                >
+                  {t('Add Command')}
+                </Button>
+              )}
             </div>
           </div>
 

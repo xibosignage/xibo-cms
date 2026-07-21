@@ -49,6 +49,7 @@ import { fetchLayouts } from '@/services/layoutsApi';
 import type { Campaign, LayoutOnCampaign } from '@/types/campaign';
 import type { Tag } from '@/types/tag';
 import { formatDateTime } from '@/utils/date';
+import { hasFeature } from '@/utils/permissions';
 
 const DEFAULT_LAT_FALLBACK = 51.5;
 const DEFAULT_LNG_FALLBACK = -0.13;
@@ -618,16 +619,19 @@ export default function CampaignEditor() {
                   />
                 </div>
 
-                <TagInput
-                  value={draft.tags}
-                  helpText={t(
-                    'Tags for this Campaign - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below.',
-                  )}
-                  onChange={(tags) => setDraft((prev) => prev && { ...prev, tags })}
-                  inputValue={pendingTagInput}
-                  onInputChange={setPendingTagInput}
-                  onPendingValueChange={setHasTagPendingValue}
-                />
+                {(hasFeature(user, 'tag.tagging') || (draft.tags?.length ?? 0) > 0) && (
+                  <TagInput
+                    value={draft.tags}
+                    helpText={t(
+                      'Tags for this Campaign - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below.',
+                    )}
+                    onChange={(tags) => setDraft((prev) => prev && { ...prev, tags })}
+                    inputValue={pendingTagInput}
+                    onInputChange={setPendingTagInput}
+                    onPendingValueChange={setHasTagPendingValue}
+                    disabled={!hasFeature(user, 'tag.tagging')}
+                  />
+                )}
               </>
             )}
 

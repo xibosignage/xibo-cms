@@ -233,9 +233,11 @@ function DayDetailPanel({
           <p className="text-xs font-semibold text-gray-500">
             {events.length === 1 ? t('1 Event') : t('{{count}} Events', { count: events.length })}
           </p>
-          <Button variant="tertiary" onClick={() => onAgenda?.(day, events)}>
-            {t('Agenda')}
-          </Button>
+          {onAgenda && (
+            <Button variant="tertiary" onClick={() => onAgenda(day, events)}>
+              {t('Agenda')}
+            </Button>
+          )}
         </div>
         <ul className="flex flex-col gap-3 overflow-y-auto overflow-x-hidden flex-1 min-h-0">
           {events.map((event) => {
@@ -446,6 +448,22 @@ export function EventCalendar({
   const { user } = useUserContext();
   const timezone = user?.settings?.defaultTimezone ?? 'UTC';
 
+  const handleEditEvent = onEditEvent
+    ? (event: Event) => {
+        if (event.isEditable !== false) {
+          onEditEvent(event);
+        }
+      }
+    : undefined;
+
+  const handleDeleteEvent = onDeleteEvent
+    ? (event: Event) => {
+        if (event.isEditable !== false) {
+          onDeleteEvent(event);
+        }
+      }
+    : undefined;
+
   const currentDate = date ?? new Date();
   const currentMonth = DateTime.fromJSDate(currentDate, { zone: timezone });
   const weeks = buildMonthWeeks(currentDate, timezone);
@@ -637,7 +655,7 @@ export function EventCalendar({
                             <CalendarEventBadge
                               key={`${event.eventId}-${event.fromDt}`}
                               scheduleEvent={event}
-                              onEdit={onEditEvent}
+                              onEdit={event.isEditable !== false ? handleEditEvent : undefined}
                               onContextMenu={(ev, x, y) => setContextMenuEvent({ event: ev, x, y })}
                             />
                           ))}
@@ -674,7 +692,7 @@ export function EventCalendar({
             floatingStyles={floatingStyles}
             getFloatingProps={getFloatingProps}
             onClose={() => setSelectedCell(null)}
-            onEditEvent={onEditEvent}
+            onEditEvent={handleEditEvent}
             onContextMenu={(ev, x, y) => setContextMenuEvent({ event: ev, x, y })}
             onAgenda={onAgenda}
           />
@@ -690,7 +708,7 @@ export function EventCalendar({
             floatingStyles={ctxStyles}
             getFloatingProps={getCtxFloatingProps}
             onClose={() => setContextMenuEvent(null)}
-            onDelete={onDeleteEvent}
+            onDelete={contextMenuEvent.event.isEditable !== false ? handleDeleteEvent : undefined}
           />
         </FloatingPortal>
       )}

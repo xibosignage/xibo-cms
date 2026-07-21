@@ -111,7 +111,11 @@ const getUserTypeLabel = (t: TFunction, userTypeId: number): string => {
 export interface UserActionsProps {
   t: TFunction;
   currentUserId?: number;
+  canModify?: boolean;
   canSetHomeFolder: boolean;
+  isSuperAdmin: boolean;
+  isGroupAdmin: boolean;
+  systemUserId?: number;
   onEdit: (user: User) => void;
   onSetHomeFolder: (user: User) => void;
   onUserGroups: (user: User) => void;
@@ -122,7 +126,11 @@ export interface UserActionsProps {
 export const getUserItemActions = ({
   t,
   currentUserId,
+  canModify = false,
   canSetHomeFolder,
+  isSuperAdmin,
+  isGroupAdmin,
+  systemUserId,
   onEdit,
   onSetHomeFolder,
   onUserGroups,
@@ -131,45 +139,59 @@ export const getUserItemActions = ({
 }: UserActionsProps): ((user: User) => ActionItem[]) => {
   return (user: User) => {
     const isSelf = user.userId === currentUserId;
+    const isSystemUser = user.userId === systemUserId;
 
-    const actions: ActionItem[] = [
+    const actions: ActionItem[] = [];
+
+    if (canModify) {
       // Quick action
-      {
+      actions.push({
         label: t('Edit'),
         icon: Edit,
         onClick: () => onEdit(user),
         isQuickAction: true,
         variant: 'primary' as const,
-      },
+      });
 
       // Dropdown menu actions
-      {
+      actions.push({
         label: t('Edit'),
         icon: Edit,
         onClick: () => onEdit(user),
-      },
-      ...(canSetHomeFolder
-        ? [
-            {
-              label: t('Set Home Folder'),
-              icon: Folder,
-              onClick: () => onSetHomeFolder(user),
-            },
-          ]
-        : []),
-      {
+      });
+    }
+
+    if (canSetHomeFolder) {
+      actions.push({
+        label: t('Set Home Folder'),
+        icon: Folder,
+        onClick: () => onSetHomeFolder(user),
+      });
+    }
+
+    if (canModify) {
+      actions.push({
         label: t('User Groups'),
         icon: Users,
         onClick: () => onUserGroups(user),
-      },
-      {
+      });
+    }
+
+    if (isSuperAdmin) {
+      actions.push({
         label: t('Features'),
         icon: Settings,
         onClick: () => onFeatures(user),
-      },
-    ];
+      });
+    }
 
-    if (!isSelf) {
+    const canDelete =
+      canModify &&
+      !isSelf &&
+      !isSystemUser &&
+      ((isGroupAdmin && user.userTypeId === UserType.User) || isSuperAdmin);
+
+    if (canDelete) {
       actions.push({ isSeparator: true });
       actions.push({
         label: t('Delete'),

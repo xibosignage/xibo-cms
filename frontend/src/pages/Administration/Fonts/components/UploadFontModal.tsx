@@ -30,6 +30,7 @@ import { FONT_ACCEPTED_EXTENSIONS } from '../FontsConfig';
 
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/modals/Modal';
+import { useUserContext } from '@/context/UserContext';
 import { uploadFont } from '@/services/fontApi';
 import { formatFileSize } from '@/utils/formatters';
 
@@ -52,9 +53,13 @@ export default function UploadFontModal({
   onSuccess,
 }: UploadFontModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
   const [files, setFiles] = useState<UploadFileItem[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const isUploadingRef = useRef(false);
+
+  const librarySizeLimitKb = Number(user?.settings?.LIBRARY_SIZE_LIMIT_KB);
+  const maxUploadSize = librarySizeLimitKb > 0 ? librarySizeLimitKb * 1024 : 2 * 1024 * 1024 * 1024;
 
   const processUpload = async (allFiles: UploadFileItem[]) => {
     if (isUploadingRef.current) return;
@@ -101,6 +106,7 @@ export default function UploadFontModal({
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     accept: FONT_ACCEPTED_EXTENSIONS,
+    maxSize: maxUploadSize,
     noClick: true,
     onDrop: (acceptedFiles) => {
       const newItems: UploadFileItem[] = acceptedFiles.map((file) => ({

@@ -42,14 +42,17 @@ import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import type { Daypart } from '@/types/daypart';
 import { countActiveFilters } from '@/utils/filters';
+import { hasFeature } from '@/utils/permissions';
 
 export default function Daypart() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { user } = useUserContext();
 
   const {
     pagination,
@@ -179,6 +182,8 @@ export default function Daypart() {
 
   const columns = getDaypartColumns({
     t,
+    canModify: hasFeature(user, 'daypart.modify'),
+    canUserShare: hasFeature(user, 'user.sharing'),
     onDelete: handleDelete,
     openAddEditModal,
     openShareModal,
@@ -192,6 +197,8 @@ export default function Daypart() {
 
   const bulkActions = getBulkActions({
     t,
+    canModify: hasFeature(user, 'daypart.modify'),
+    canUserShare: hasFeature(user, 'user.sharing'),
     onDelete: () => {
       const allItems = getAllSelectedItems();
       setItemsToDelete(allItems);
@@ -217,15 +224,17 @@ export default function Daypart() {
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Dayparting" navigation={libraryTabs} />
           <div className="flex items-center gap-2 md:mb-0">
-            <Button
-              variant="primary"
-              className="font-semibold"
-              disabled={!isHydrated}
-              onClick={() => openAddEditModal(null)}
-              leftIcon={Plus}
-            >
-              {t('Add Daypart')}
-            </Button>
+            {hasFeature(user, 'daypart.add') && (
+              <Button
+                variant="primary"
+                className="font-semibold"
+                disabled={!isHydrated}
+                onClick={() => openAddEditModal(null)}
+                leftIcon={Plus}
+              >
+                {t('Add Daypart')}
+              </Button>
+            )}
           </div>
         </div>
 

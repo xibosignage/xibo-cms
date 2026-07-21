@@ -55,31 +55,45 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<ResolutionFilt
 
 export interface ResolutionActionsProps {
   t: TFunction;
+  canModify?: boolean;
   onDelete: (id: number) => void;
   openAddEditModal: (row: Resolution) => void;
 }
 
 export const getResolutionItemActions = ({
   t,
+  canModify = false,
   onDelete,
   openAddEditModal,
 }: ResolutionActionsProps): ((resolution: Resolution) => ActionItem[]) => {
-  return (resolution: Resolution) => [
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => openAddEditModal(resolution),
-      isQuickAction: true,
-      variant: 'primary' as const,
-    },
-    {
-      label: t('Delete'),
-      icon: Trash2,
-      onClick: () => onDelete(resolution.resolutionId),
-      isQuickAction: true,
-      variant: 'danger' as const,
-    },
-  ];
+  return (resolution: Resolution) => {
+    const canEdit = !!resolution.userPermissions?.edit;
+    const canDelete = !!resolution.userPermissions?.delete;
+
+    const actions: ActionItem[] = [];
+
+    if (canModify && canEdit) {
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => openAddEditModal(resolution),
+        isQuickAction: true,
+        variant: 'primary' as const,
+      });
+    }
+
+    if (canModify && canDelete) {
+      actions.push({
+        label: t('Delete'),
+        icon: Trash2,
+        onClick: () => onDelete(resolution.resolutionId),
+        isQuickAction: true,
+        variant: 'danger' as const,
+      });
+    }
+
+    return actions;
+  };
 };
 
 export const getResolutionColumns = (props: ResolutionActionsProps): ColumnDef<Resolution>[] => {
@@ -138,18 +152,24 @@ export const getResolutionColumns = (props: ResolutionActionsProps): ColumnDef<R
 
 interface GetBulkActionsProps {
   t: TFunction;
+  canModify?: boolean;
   onDelete: () => void;
 }
 
 export const getBulkActions = ({
   t,
+  canModify = false,
   onDelete,
 }: GetBulkActionsProps): DataTableBulkAction<Resolution>[] => {
-  return [
-    {
+  const actions: DataTableBulkAction<Resolution>[] = [];
+
+  if (canModify) {
+    actions.push({
       label: t('Delete Selected'),
       icon: Trash2,
       onClick: onDelete,
-    },
-  ];
+    });
+  }
+
+  return actions;
 };

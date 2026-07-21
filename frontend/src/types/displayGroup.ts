@@ -21,6 +21,13 @@
 
 import type { Tag } from '@/types/tag';
 
+export interface DisplayGroupPermissions {
+  view?: number;
+  edit?: number;
+  delete?: number;
+  modifyPermissions?: number;
+}
+
 export interface DisplayGroup {
   displayGroupId: number;
   displayGroup: string;
@@ -45,4 +52,5 @@ export interface DisplayGroup {
   ref3: string;
   ref4: string;
   ref5: string;
+  userPermissions?: DisplayGroupPermissions;
 }

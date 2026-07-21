@@ -29,9 +29,11 @@ import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
+import { useUserContext } from '@/context/UserContext';
 import { getCampaignSchema } from '@/schema/campaign';
 import { createCampaign } from '@/services/campaignApi';
 import type { Tag } from '@/types/tag';
+import { hasFeature } from '@/utils/permissions';
 
 interface AddCampaignModalProps {
   isOpen?: boolean;
@@ -75,6 +77,7 @@ export default function AddCampaignModal({
   onSuccess,
 }: AddCampaignModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
   const [isPending, startTransition] = useTransition();
 
   const [draft, setDraft] = useState<CampaignDraft>(() => ({
@@ -224,14 +227,17 @@ export default function AddCampaignModal({
           />
 
           {/* Tags */}
-          <TagInput
-            value={draft.tags}
-            helpText={t('Tags separated by commas')}
-            onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
-            inputValue={pendingTagInput}
-            onInputChange={setPendingTagInput}
-            onPendingValueChange={setHasTagPendingValue}
-          />
+          {(hasFeature(user, 'tag.tagging') || (draft.tags?.length ?? 0) > 0) && (
+            <TagInput
+              value={draft.tags}
+              helpText={t('Tags separated by commas')}
+              onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
+              inputValue={pendingTagInput}
+              onInputChange={setPendingTagInput}
+              onPendingValueChange={setHasTagPendingValue}
+              disabled={!hasFeature(user, 'tag.tagging')}
+            />
+          )}
 
           {draft.type === 'ad' ? (
             <>

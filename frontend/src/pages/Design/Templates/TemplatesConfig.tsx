@@ -68,7 +68,10 @@ export const TEMPLATE_INITIAL_FILTER_STATE: TemplatesFilterInput = {
 
 export type ModalType = BaseModalType | 'publish' | 'discard' | 'export' | null;
 
-export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<TemplatesFilterInput>[] => [
+export const getBaseFilterKeys = (
+  t: TFunction,
+  canTag = false,
+): FilterConfigItem<TemplatesFilterInput>[] => [
   {
     label: t('Name'),
     name: 'template',
@@ -80,21 +83,30 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<TemplatesFilte
     showRegex: true,
     regexKey: 'useRegexForName',
   },
-  {
-    label: t('Tags'),
-    name: 'tags',
-    type: 'tags',
-    placeholder: ' ',
-    className: '',
-    showAndOr: true,
-    andOrKey: 'logicalOperator',
-    showExactTags: true,
-    exactTagsKey: 'exactTags',
-  },
+  ...(canTag
+    ? ([
+        {
+          label: t('Tags'),
+          name: 'tags',
+          type: 'tags',
+          placeholder: ' ',
+          className: '',
+          showAndOr: true,
+          andOrKey: 'logicalOperator',
+          showExactTags: true,
+          exactTagsKey: 'exactTags',
+        },
+      ] as FilterConfigItem<TemplatesFilterInput>[])
+    : []),
 ];
 
 export interface TemplatesActionsProps {
   t: TFunction;
+  canModify?: boolean;
+  canUserShare?: boolean;
+  canExport?: boolean;
+  canViewFolders?: boolean;
+  canTag?: boolean;
   formatDateTime: (value: DateLike) => string;
   onPreview?: (row: Template) => void;
   onDelete: (id: number) => void;
@@ -111,7 +123,7 @@ export interface TemplatesActionsProps {
 }
 
 export const getTemplateColumn = (props: TemplatesActionsProps): ColumnDef<Template>[] => {
-  const { t, formatDateTime } = props;
+  const { t, formatDateTime, canTag = false } = props;
   const getActions = getTemplateItemActions(props);
 
   return [
@@ -154,20 +166,24 @@ export const getTemplateColumn = (props: TemplatesActionsProps): ColumnDef<Templ
       enableSorting: true,
     },
 
-    {
-      accessorKey: 'tags',
-      header: t('Tags'),
-      enableSorting: false,
-      size: 150,
-      cell: (info) => {
-        const tags = info.getValue<Tag[]>() || [];
-        const formattedTags = tags.map((tag) => ({
-          id: tag.tagId,
-          label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
-        }));
-        return <TagsCell tags={formattedTags} />;
-      },
-    },
+    ...(canTag
+      ? ([
+          {
+            accessorKey: 'tags',
+            header: t('Tags'),
+            enableSorting: false,
+            size: 150,
+            cell: (info) => {
+              const tags = info.getValue<Tag[]>() || [];
+              const formattedTags = tags.map((tag) => ({
+                id: tag.tagId,
+                label: tag.value ? `${tag.tag}|${tag.value}` : tag.tag,
+              }));
+              return <TagsCell tags={formattedTags} />;
+            },
+          },
+        ] as ColumnDef<Template>[])
+      : []),
 
     {
       accessorKey: 'description',
@@ -270,6 +286,10 @@ export const getBulkActions = ({
 
 export const getTemplateItemActions = ({
   t,
+  canModify = false,
+  canUserShare = false,
+  canExport = false,
+  canViewFolders = false,
   onDelete,
   openAddEditModal,
   openShareModal,
@@ -281,22 +301,34 @@ export const getTemplateItemActions = ({
   exportTemplate,
 }: TemplatesActionsProps): ((template: Template) => ActionItem[]) => {
   return (template: Template) => {
-    const actions: ActionItem[] = [
-      {
+    const canEdit = !!template.userPermissions?.edit;
+    const canDelete = !!template.userPermissions?.delete;
+    const canShare = !!template.userPermissions?.modifyPermissions;
+
+    const actions: ActionItem[] = [];
+
+    const addSeparator = () => {
+      if (actions.length > 0 && !actions[actions.length - 1]?.isSeparator) {
+        actions.push({ isSeparator: true });
+      }
+    };
+
+    if (canModify && canEdit) {
+      actions.push({
         label: t('Edit'),
         icon: Edit,
         onClick: () => openAddEditModal(template),
         isQuickAction: true,
         variant: 'primary' as const,
-      },
-      {
+      });
+      actions.push({
         label: t('Alter Template'),
         icon: PenTool,
         onClick: () => alterTemplate && alterTemplate(template.layoutId),
-      },
-    ];
+      });
+    }
 
-    if (template.publishedStatus !== 'Published') {
+    if (canModify && canEdit && template.publishedStatus !== 'Published') {
       actions.push({
         label: t('Publish'),
         icon: CloudUpload,
@@ -308,39 +340,52 @@ export const getTemplateItemActions = ({
       });
     }
 
-    actions.push({ isSeparator: true });
-    actions.push({
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => openAddEditModal(template),
-    });
-    actions.push({
-      label: t('Make a Copy'),
-      icon: CopyCheck,
-      onClick: () => openCopyModal && openCopyModal(template.layoutId),
-    });
-    actions.push({
-      label: t('Move'),
-      icon: FolderInput,
-      onClick: () => openMoveModal && openMoveModal(template),
-    });
-    actions.push({
-      label: t('Share'),
-      icon: UserPlus2,
-      onClick: () => openShareModal && openShareModal(template.campaignId),
-    });
-    actions.push({ isSeparator: true });
-    actions.push({
-      label: t('Export'),
-      onClick: () => exportTemplate && exportTemplate(template.layoutId),
-    });
-    actions.push({ isSeparator: true });
-    actions.push({
-      label: t('Delete'),
-      icon: Trash2,
-      onClick: () => onDelete(template.layoutId),
-      variant: 'danger' as const,
-    });
+    if (canModify && canEdit) {
+      addSeparator();
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => openAddEditModal(template),
+      });
+      actions.push({
+        label: t('Make a Copy'),
+        icon: CopyCheck,
+        onClick: () => openCopyModal && openCopyModal(template.layoutId),
+      });
+      if (canViewFolders) {
+        actions.push({
+          label: t('Move'),
+          icon: FolderInput,
+          onClick: () => openMoveModal && openMoveModal(template),
+        });
+      }
+    }
+
+    if (canModify && canShare && canUserShare) {
+      actions.push({
+        label: t('Share'),
+        icon: UserPlus2,
+        onClick: () => openShareModal && openShareModal(template.campaignId),
+      });
+    }
+
+    if (canExport) {
+      addSeparator();
+      actions.push({
+        label: t('Export'),
+        onClick: () => exportTemplate && exportTemplate(template.layoutId),
+      });
+    }
+
+    if (canModify && canDelete) {
+      addSeparator();
+      actions.push({
+        label: t('Delete'),
+        icon: Trash2,
+        onClick: () => onDelete(template.layoutId),
+        variant: 'danger' as const,
+      });
+    }
 
     return actions;
   };

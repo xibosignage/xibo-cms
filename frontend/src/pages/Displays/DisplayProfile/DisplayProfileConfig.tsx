@@ -78,6 +78,7 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayProfile
 
 export interface DisplayProfileActionsProps {
   t: TFunction;
+  canModify?: boolean;
   onDelete: (id: number) => void;
   openEditModal: (row: DisplayProfile) => void;
   openCopyModal: (row: DisplayProfile) => void;
@@ -85,39 +86,54 @@ export interface DisplayProfileActionsProps {
 
 export const getDisplayProfileItemActions = ({
   t,
+  canModify = false,
   onDelete,
   openEditModal,
   openCopyModal,
 }: DisplayProfileActionsProps): ((displayProfile: DisplayProfile) => ActionItem[]) => {
-  return (displayProfile: DisplayProfile) => [
-    // Quick actions
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => openEditModal(displayProfile),
-      isQuickAction: true,
-      variant: 'primary' as const,
-    },
+  return (displayProfile: DisplayProfile) => {
+    const canDelete = !!displayProfile.userPermissions?.delete;
 
-    // Dropdown menu actions
-    {
-      label: t('Edit'),
-      icon: Edit,
-      onClick: () => openEditModal(displayProfile),
-    },
-    {
-      label: t('Copy'),
-      icon: Copy,
-      onClick: () => openCopyModal(displayProfile),
-    },
-    { isSeparator: true },
-    {
-      label: t('Delete'),
-      icon: Trash2,
-      onClick: () => onDelete(displayProfile.displayProfileId),
-      variant: 'danger' as const,
-    },
-  ];
+    const actions: ActionItem[] = [];
+
+    if (canModify) {
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => openEditModal(displayProfile),
+        isQuickAction: true,
+        variant: 'primary' as const,
+      });
+    }
+
+    if (canModify) {
+      actions.push({
+        label: t('Edit'),
+        icon: Edit,
+        onClick: () => openEditModal(displayProfile),
+      });
+    }
+
+    if (canModify) {
+      actions.push({
+        label: t('Copy'),
+        icon: Copy,
+        onClick: () => openCopyModal(displayProfile),
+      });
+    }
+
+    if (canModify && canDelete) {
+      actions.push({ isSeparator: true });
+      actions.push({
+        label: t('Delete'),
+        icon: Trash2,
+        onClick: () => onDelete(displayProfile.displayProfileId),
+        variant: 'danger' as const,
+      });
+    }
+
+    return actions;
+  };
 };
 
 export const getDisplayProfileColumns = (
@@ -171,18 +187,24 @@ export const getDisplayProfileColumns = (
 
 interface GetBulkActionsProps {
   t: TFunction;
+  canModify?: boolean;
   onDelete: () => void;
 }
 
 export const getBulkActions = ({
   t,
+  canModify = false,
   onDelete,
 }: GetBulkActionsProps): DataTableBulkAction<DisplayProfile>[] => {
-  return [
-    {
+  const actions: DataTableBulkAction<DisplayProfile>[] = [];
+
+  if (canModify) {
+    actions.push({
       label: t('Delete Selected'),
       icon: Trash2,
       onClick: onDelete,
-    },
-  ];
+    });
+  }
+
+  return actions;
 };
