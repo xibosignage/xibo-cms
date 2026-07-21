@@ -56,19 +56,39 @@ function parseGroups(groups?: string | null) {
     .filter(Boolean);
 }
 
-// Measures each pill's natural (post-truncation-cap) width via a hidden layer,
-// then works out how many visible pills fit the current column width, leaving
-// room for the "+N" chip. Recomputes whenever the column is resized.
+interface VisibleCountState {
+  visibleCount: number;
+  // True when even the first pill doesn't fit the container on its own, but is
+  // shown anyway so the cell isn't left empty. That pill can't rely on the
+  // "+N" chip to reveal its full text (it isn't one of the hidden entries), so
+  // callers should fall back to truncating it in place.
+  firstEntryOverflows: boolean;
+}
+
+// Measures each pill's natural (untruncated) width via a hidden layer, then
+// works out how many visible pills fit the current column width, leaving room
+// for the "+N" chip. Recomputes whenever the column is resized.
+//
+// Depends on the raw `groups` string rather than a pre-parsed entries array:
+// `parseGroups` builds a new array every call, so an array dependency would
+// never be considered stable across renders and would re-run this effect (and
+// its setState) on every render, regardless of whether `groups` actually
+// changed. `groups` itself is a primitive and compares by value, so it's safe
+// to depend on directly with no memoization needed.
 function useVisibleCount(
-  entries: string[],
+  groups: string | null | undefined,
   containerRef: React.RefObject<HTMLDivElement | null>,
   pillRefs: React.RefObject<(HTMLSpanElement | null)[]>,
   plusRef: React.RefObject<HTMLSpanElement | null>,
-) {
-  const [visibleCount, setVisibleCount] = useState(entries.length > 0 ? 1 : 0);
+): VisibleCountState {
+  const [state, setState] = useState<VisibleCountState>(() => ({
+    visibleCount: parseGroups(groups).length > 0 ? 1 : 0,
+    firstEntryOverflows: false,
+  }));
 
   useLayoutEffect(() => {
     const container = containerRef.current;
+    const entries = parseGroups(groups);
 
     if (!container || entries.length === 0) {
       return;
@@ -80,22 +100,30 @@ function useVisibleCount(
 
       let used = 0;
       let count = 0;
+      let firstEntryOverflows = false;
 
       for (let i = 0; i < entries.length; i++) {
         const pillWidth = pillRefs.current[i]?.offsetWidth ?? 0;
         const isLastEntry = i === entries.length - 1;
         const nextUsed = used + (count > 0 ? GAP_PX : 0) + pillWidth;
         const reserve = isLastEntry ? 0 : GAP_PX + plusWidth;
+        const fits = nextUsed + reserve <= containerWidth;
 
-        if (count === 0 || nextUsed + reserve <= containerWidth) {
-          used = nextUsed;
-          count++;
-        } else {
+        if (count === 0) {
+          firstEntryOverflows = !fits;
+        } else if (!fits) {
           break;
         }
+
+        used = nextUsed;
+        count++;
       }
 
-      setVisibleCount(count);
+      setState((prev) =>
+        prev.visibleCount === count && prev.firstEntryOverflows === firstEntryOverflows
+          ? prev
+          : { visibleCount: count, firstEntryOverflows },
+      );
     };
 
     recompute();
@@ -103,9 +131,9 @@ function useVisibleCount(
     const observer = new ResizeObserver(recompute);
     observer.observe(container);
     return () => observer.disconnect();
-  }, [entries, containerRef, pillRefs, plusRef]);
+  }, [groups, containerRef, pillRefs, plusRef]);
 
-  return visibleCount;
+  return state;
 }
 
 export function SharingCell({ groups, privatePlaceholder = '' }: SharingCellProps) {
@@ -114,7 +142,12 @@ export function SharingCell({ groups, privatePlaceholder = '' }: SharingCellProp
   const containerRef = useRef<HTMLDivElement>(null);
   const pillRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const plusRef = useRef<HTMLSpanElement | null>(null);
-  const visibleCount = useVisibleCount(entries, containerRef, pillRefs, plusRef);
+  const { visibleCount, firstEntryOverflows } = useVisibleCount(
+    groups,
+    containerRef,
+    pillRefs,
+    plusRef,
+  );
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -135,8 +168,8 @@ export function SharingCell({ groups, privatePlaceholder = '' }: SharingCellProp
   }
 
   const visibleEntries = entries.slice(0, visibleCount);
-  const remainingEntries = entries.slice(visibleCount);
-  const remainingCount = remainingEntries.length;
+  const hiddenEntries = entries.slice(visibleCount);
+  const remainingCount = hiddenEntries.length;
 
   return (
     <div ref={containerRef} className="relative flex flex-wrap gap-1 items-center min-w-0">
@@ -152,7 +185,7 @@ export function SharingCell({ groups, privatePlaceholder = '' }: SharingCellProp
                 pillRefs.current[index] = el;
               }}
             >
-              <Badge type="info" variation="outline" className="max-w-[140px] truncate">
+              <Badge type="info" variation="outline">
                 {entry}
               </Badge>
             </span>
@@ -165,13 +198,25 @@ export function SharingCell({ groups, privatePlaceholder = '' }: SharingCellProp
         </div>
       </div>
 
-      {visibleEntries.map((entry, index) => (
-        <span key={`${index}-${entry}`} title={entry}>
-          <Badge type="info" variation="outline" className="max-w-[140px] truncate">
-            {entry}
-          </Badge>
-        </span>
-      ))}
+      {visibleEntries.map((entry, index) => {
+        if (firstEntryOverflows && index === 0) {
+          return (
+            <span key={`${index}-${entry}`} title={entry} className="min-w-0 max-w-full">
+              <Badge type="info" variation="outline" className="block max-w-full truncate">
+                {entry}
+              </Badge>
+            </span>
+          );
+        }
+
+        return (
+          <span key={`${index}-${entry}`}>
+            <Badge type="info" variation="outline">
+              {entry}
+            </Badge>
+          </span>
+        );
+      })}
 
       {remainingCount > 0 && (
         <>
@@ -200,8 +245,13 @@ export function SharingCell({ groups, privatePlaceholder = '' }: SharingCellProp
                 role="menu"
               >
                 <div className="flex flex-wrap gap-1">
-                  {remainingEntries.map((entry, index) => (
-                    <Badge key={`${index}-${entry}`} type="info" variation="outline">
+                  {hiddenEntries.map((entry, index) => (
+                    <Badge
+                      key={`${index}-${entry}`}
+                      type="info"
+                      variation="outline"
+                      className="max-w-full break-words"
+                    >
                       {entry}
                     </Badge>
                   ))}
