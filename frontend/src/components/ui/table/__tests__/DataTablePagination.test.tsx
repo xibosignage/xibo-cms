@@ -31,6 +31,7 @@ describe('DataTablePagination', () => {
       setPageIndex: mockSetPageIndex,
       setPageSize: mockSetPageSize,
       getPageCount: () => pageCount,
+      getRowCount: () => pageCount * pagination.pageSize,
       getState: () => ({ pagination }),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
