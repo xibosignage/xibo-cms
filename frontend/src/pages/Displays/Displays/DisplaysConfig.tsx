@@ -396,6 +396,7 @@ export interface DisplayActionsProps {
   canUserShare?: boolean;
   canLimitedView?: boolean;
   canCommandView?: boolean;
+  canDisplayGroupModify?: boolean;
   canViewLayout?: boolean;
   scheduleWithView?: boolean;
   isSuperAdmin?: boolean;
@@ -433,6 +434,7 @@ export const getDisplayItemActions = ({
   canUserShare = false,
   canLimitedView = false,
   canCommandView = false,
+  canDisplayGroupModify = false,
   canViewLayout = false,
   scheduleWithView = false,
   isSuperAdmin = false,
@@ -582,7 +584,7 @@ export const getDisplayItemActions = ({
       });
     }
 
-    if (canModify && canEdit) {
+    if (canDisplayGroupModify && canEdit) {
       actions.push({
         label: t('Trigger a web hook'),
         onClick: () => onTriggerWebhook(display),
@@ -596,7 +598,7 @@ export const getDisplayItemActions = ({
       });
     }
 
-    if (canModify || canCommandView) {
+    if (canDisplayGroupModify || canCommandView) {
       actions.push({
         label: t('Send Command'),
         onClick: () => onSendCommand(display),

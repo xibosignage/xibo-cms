@@ -266,7 +266,7 @@ export default function Templates() {
 
   const columns = getTemplateColumn({
     t,
-    canModify: hasFeature(user, 'template.modify'),
+    canModify: hasFeature(user, 'layout.modify'),
     canMoveToCampaignFolder,
     canUserShare: hasFeature(user, 'user.sharing'),
     canExport: hasFeature(user, 'layout.export'),
