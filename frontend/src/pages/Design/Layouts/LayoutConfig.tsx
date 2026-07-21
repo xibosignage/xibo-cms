@@ -54,7 +54,6 @@ import {
   getSharingColumn,
 } from '@/components/ui/table/cells';
 import { getCommonFormOptions } from '@/config/commonForms';
-import { withPublicPath } from '@/config/publicPath';
 import type { Layout } from '@/types/layout';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
@@ -468,7 +467,7 @@ export const getLayoutColumns = (props: LayoutActionsProps): ColumnDef<Layout>[]
 
         return (
           <MediaCell
-            thumb={row?.layoutId ? withPublicPath(`layout/thumbnail/${row.layoutId}`) : undefined}
+            thumb={row?.thumbnail || undefined}
             alt={row?.layout}
             mediaType="image"
             onPreview={() => props.onPreview && props.onPreview(row)}

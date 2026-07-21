@@ -32,6 +32,7 @@ export interface Template {
   backgroundColor: string;
   schemaVersion: number;
   code: string | null;
+  thumbnail?: string;
 
   publishedStatusId: number;
   publishedStatus: 'Draft' | 'Published' | 'Pending Approval';

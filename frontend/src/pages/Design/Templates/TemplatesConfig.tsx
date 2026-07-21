@@ -42,7 +42,6 @@ import {
   TagsCell,
   getSharingColumn,
 } from '@/components/ui/table/cells';
-import { withPublicPath } from '@/config/publicPath';
 import type { ActionItem, BaseModalType } from '@/types/table';
 import type { Tag } from '@/types/tag';
 import type { Template } from '@/types/templates';
@@ -137,7 +136,7 @@ export const getTemplateColumn = (props: TemplatesActionsProps): ColumnDef<Templ
 
         return (
           <MediaCell
-            thumb={row?.layoutId ? withPublicPath(`layout/thumbnail/${row.layoutId}`) : undefined}
+            thumb={row?.thumbnail || undefined}
             alt={row?.layout}
             mediaType="image"
             onPreview={() => props.onPreview && props.onPreview(row)}
