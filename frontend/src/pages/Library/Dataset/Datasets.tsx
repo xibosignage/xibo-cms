@@ -266,6 +266,10 @@ export default function Dataset() {
       navigate(path);
     },
     onExportCsv: (datasetId) => exportCsvMutation.mutate(datasetId),
+    onImportCsv: (datasetId) => {
+      setSelectedDatasetId(datasetId);
+      openModal('import');
+    },
   });
 
   const getAllSelectedItems = (): Dataset[] => {
