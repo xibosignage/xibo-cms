@@ -86,8 +86,8 @@ export const getUserGroupItemActions = ({
     const canManageMembers =
       isSuperAdmin || (hasUsergroupModify && !!userGroup.userPermissions?.edit);
     const canEdit = isSuperAdmin || (hasUsergroupModify && !!userGroup.userPermissions?.edit);
-    const canCopy = isSuperAdmin && hasUsergroupModify;
-    const canDelete = isSuperAdmin && hasUsergroupModify;
+    const canCopy = isSuperAdmin || (hasUsergroupModify && !!userGroup.userPermissions?.edit);
+    const canDelete = isSuperAdmin || (hasUsergroupModify && !!userGroup.userPermissions?.edit);
 
     const actions: ActionItem[] = [];
 

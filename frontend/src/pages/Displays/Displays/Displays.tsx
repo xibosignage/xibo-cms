@@ -68,6 +68,7 @@ export default function Displays() {
   const canModify = hasFeature(user, 'displays.modify');
   const canTag = hasFeature(user, 'tag.tagging');
   const canLimitedView = hasFeature(user, 'displays.limitedView');
+  const canCommandView = hasFeature(user, 'command.view');
   const canViewLayout = hasFeature(user, 'layout.view');
   const scheduleWithView = Number(user?.settings?.SCHEDULE_WITH_VIEW_PERMISSION) === 1;
   const isSuperAdmin = user?.userTypeId === 1;
@@ -316,6 +317,7 @@ export default function Displays() {
     canTag,
     canUserShare: hasFeature(user, 'user.sharing'),
     canLimitedView,
+    canCommandView,
     canViewLayout,
     scheduleWithView,
     isSuperAdmin,

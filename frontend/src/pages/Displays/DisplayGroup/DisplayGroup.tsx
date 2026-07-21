@@ -65,6 +65,7 @@ export default function DisplayGroupPage() {
   const canModify = hasFeature(user, 'displaygroup.modify');
   const canTag = hasFeature(user, 'tag.tagging');
   const canLimitedView = hasFeature(user, 'displaygroup.limitedView');
+  const canCommandView = hasFeature(user, 'command.view');
   const scheduleWithView = Number(user?.settings?.SCHEDULE_WITH_VIEW_PERMISSION) === 1;
   const homeFolderId = user?.homeFolderId ?? 1;
 
@@ -227,6 +228,7 @@ export default function DisplayGroupPage() {
     canTag,
     canUserShare: hasFeature(user, 'user.sharing'),
     canLimitedView,
+    canCommandView,
     scheduleWithView,
     onDelete: (displayGroup) => {
       setItemsToDelete([displayGroup]);

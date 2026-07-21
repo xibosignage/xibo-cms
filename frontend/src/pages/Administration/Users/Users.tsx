@@ -176,7 +176,6 @@ export default function Users() {
 
   const canSetHomeFolder = hasFeature(currentUser, 'folder.userHome');
   const isSuperAdmin = currentUser?.userTypeId === UserType.SuperAdmin;
-  const isGroupAdmin = currentUser?.userTypeId === UserType.GroupAdmin;
   const systemUserId =
     currentUser?.settings?.SYSTEM_USER != null
       ? Number(currentUser.settings.SYSTEM_USER)
@@ -188,7 +187,6 @@ export default function Users() {
     canModify: hasFeature(currentUser, 'users.modify'),
     canSetHomeFolder,
     isSuperAdmin,
-    isGroupAdmin,
     systemUserId,
     onEdit: (user) => openModal('edit', user),
     onSetHomeFolder: (user) => openModal('setHomeFolder', user),

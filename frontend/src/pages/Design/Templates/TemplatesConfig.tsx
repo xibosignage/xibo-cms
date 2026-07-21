@@ -103,6 +103,7 @@ export const getBaseFilterKeys = (
 export interface TemplatesActionsProps {
   t: TFunction;
   canModify?: boolean;
+  canMoveToCampaignFolder?: boolean;
   canUserShare?: boolean;
   canExport?: boolean;
   canViewFolders?: boolean;
@@ -287,6 +288,7 @@ export const getBulkActions = ({
 export const getTemplateItemActions = ({
   t,
   canModify = false,
+  canMoveToCampaignFolder = false,
   canUserShare = false,
   canExport = false,
   canViewFolders = false,
@@ -352,13 +354,15 @@ export const getTemplateItemActions = ({
         icon: CopyCheck,
         onClick: () => openCopyModal && openCopyModal(template.layoutId),
       });
-      if (canViewFolders) {
-        actions.push({
-          label: t('Move'),
-          icon: FolderInput,
-          onClick: () => openMoveModal && openMoveModal(template),
-        });
-      }
+    }
+
+    if (canMoveToCampaignFolder && canEdit && canViewFolders) {
+      addSeparator();
+      actions.push({
+        label: t('Move'),
+        icon: FolderInput,
+        onClick: () => openMoveModal && openMoveModal(template),
+      });
     }
 
     if (canModify && canShare && canUserShare) {

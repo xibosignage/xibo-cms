@@ -60,6 +60,7 @@ export default function Templates() {
   const { user } = useUserContext();
   const canViewFolders = usePermissions()?.canViewFolders;
   const canTag = hasFeature(user, 'tag.tagging');
+  const canMoveToCampaignFolder = hasFeature(user, 'campaign.modify');
   const homeFolderId = user?.homeFolderId ?? 1;
 
   const {
@@ -266,6 +267,7 @@ export default function Templates() {
   const columns = getTemplateColumn({
     t,
     canModify: hasFeature(user, 'template.modify'),
+    canMoveToCampaignFolder,
     canUserShare: hasFeature(user, 'user.sharing'),
     canExport: hasFeature(user, 'layout.export'),
     canViewFolders: hasFeature(user, 'folder.view'),

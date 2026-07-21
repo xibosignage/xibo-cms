@@ -114,7 +114,6 @@ export interface UserActionsProps {
   canModify?: boolean;
   canSetHomeFolder: boolean;
   isSuperAdmin: boolean;
-  isGroupAdmin: boolean;
   systemUserId?: number;
   onEdit: (user: User) => void;
   onSetHomeFolder: (user: User) => void;
@@ -129,7 +128,6 @@ export const getUserItemActions = ({
   canModify = false,
   canSetHomeFolder,
   isSuperAdmin,
-  isGroupAdmin,
   systemUserId,
   onEdit,
   onSetHomeFolder,
@@ -140,11 +138,12 @@ export const getUserItemActions = ({
   return (user: User) => {
     const isSelf = user.userId === currentUserId;
     const isSystemUser = user.userId === systemUserId;
+    const canEditRow = !!user.userPermissions?.edit;
+    const canDeleteRow = !!user.userPermissions?.delete;
 
     const actions: ActionItem[] = [];
 
-    if (canModify) {
-      // Quick action
+    if (canModify && canEditRow) {
       actions.push({
         label: t('Edit'),
         icon: Edit,
@@ -153,7 +152,6 @@ export const getUserItemActions = ({
         variant: 'primary' as const,
       });
 
-      // Dropdown menu actions
       actions.push({
         label: t('Edit'),
         icon: Edit,
@@ -169,7 +167,7 @@ export const getUserItemActions = ({
       });
     }
 
-    if (canModify) {
+    if (canModify && canEditRow) {
       actions.push({
         label: t('User Groups'),
         icon: Users,
@@ -185,11 +183,7 @@ export const getUserItemActions = ({
       });
     }
 
-    const canDelete =
-      canModify &&
-      !isSelf &&
-      !isSystemUser &&
-      ((isGroupAdmin && user.userTypeId === UserType.User) || isSuperAdmin);
+    const canDelete = canModify && canDeleteRow && !isSelf && !isSystemUser;
 
     if (canDelete) {
       actions.push({ isSeparator: true });

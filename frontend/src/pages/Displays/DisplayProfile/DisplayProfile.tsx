@@ -196,6 +196,8 @@ export default function DisplayProfile() {
   const columns = getDisplayProfileColumns({
     t,
     canModify: hasFeature(user, 'displayprofile.modify'),
+    currentUserId: user?.userId,
+    isSuperAdmin: user?.userTypeId === 1,
     onDelete: handleDelete,
     openEditModal: openAddEditModal,
     openCopyModal,

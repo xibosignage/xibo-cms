@@ -236,6 +236,7 @@ export const getBaseFilterKeys = (
 export interface LayoutActionsProps {
   t: TFunction;
   canModify?: boolean;
+  canMoveToCampaignFolder?: boolean;
   canUserShare?: boolean;
   canExport?: boolean;
   canViewPlaylist?: boolean;
@@ -272,6 +273,7 @@ export interface LayoutActionsProps {
 export const getLayoutItemActions = ({
   t,
   canModify = false,
+  canMoveToCampaignFolder = false,
   canUserShare = false,
   canExport = false,
   canViewPlaylist = false,
@@ -384,14 +386,6 @@ export const getLayoutItemActions = ({
         onClick: () => openEditModal(layout),
       });
 
-      if (openMoveModal) {
-        actions.push({
-          label: t('Move'),
-          icon: FolderInput,
-          onClick: () => openMoveModal(layout),
-        });
-      }
-
       if (copyLayout) {
         actions.push({
           label: t('Make a Copy'),
@@ -399,6 +393,14 @@ export const getLayoutItemActions = ({
           onClick: () => copyLayout(layout.layoutId),
         });
       }
+    }
+
+    if (canMoveToCampaignFolder && canEdit && openMoveModal) {
+      actions.push({
+        label: t('Move'),
+        icon: FolderInput,
+        onClick: () => openMoveModal(layout),
+      });
     }
 
     if (canModify && canShare && canUserShare && openShareModal && layout.campaignId) {

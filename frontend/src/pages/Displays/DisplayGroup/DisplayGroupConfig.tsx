@@ -150,6 +150,7 @@ export interface DisplayGroupActionsProps {
   canTag?: boolean;
   canUserShare?: boolean;
   canLimitedView?: boolean;
+  canCommandView?: boolean;
   scheduleWithView?: boolean;
   onDelete: (displayGroup: DisplayGroup) => void;
   openEditModal: (displayGroup: DisplayGroup) => void;
@@ -171,6 +172,7 @@ export const getDisplayGroupItemActions = ({
   canModify = false,
   canUserShare = false,
   canLimitedView = false,
+  canCommandView = false,
   scheduleWithView = false,
   onDelete,
   openEditModal,
@@ -191,6 +193,12 @@ export const getDisplayGroupItemActions = ({
     const canShare = !!displayGroup.userPermissions?.modifyPermissions;
 
     const actions: ActionItem[] = [];
+
+    const addSeparator = () => {
+      if (actions.length > 0 && !actions[actions.length - 1]?.isSeparator) {
+        actions.push({ isSeparator: true });
+      }
+    };
 
     if (canModify && canEdit) {
       actions.push({
@@ -264,19 +272,28 @@ export const getDisplayGroupItemActions = ({
       });
     }
 
-    if ((canModify && canEdit) || canLimitedView) {
-      actions.push({ isSeparator: true });
+    const canSendCommand = canModify || canCommandView;
+    const canCollectNow = (canModify && canEdit) || canLimitedView;
+
+    if (canSendCommand || canCollectNow) {
+      addSeparator();
+    }
+
+    if (canSendCommand) {
       actions.push({
         label: t('Send Command'),
         onClick: () => openSendCommandModal(displayGroup),
       });
+    }
+
+    if (canCollectNow) {
       actions.push({
         label: t('Collect Now'),
         onClick: () => collectNow(displayGroup),
       });
     }
 
-    if (canEdit && (canModify || canLimitedView)) {
+    if (canModify && canEdit) {
       actions.push({
         label: t('Trigger a web hook'),
         onClick: () => triggerWebhook(displayGroup),

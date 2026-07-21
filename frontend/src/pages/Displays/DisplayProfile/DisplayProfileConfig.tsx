@@ -79,6 +79,8 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DisplayProfile
 export interface DisplayProfileActionsProps {
   t: TFunction;
   canModify?: boolean;
+  currentUserId?: number;
+  isSuperAdmin?: boolean;
   onDelete: (id: number) => void;
   openEditModal: (row: DisplayProfile) => void;
   openCopyModal: (row: DisplayProfile) => void;
@@ -87,16 +89,18 @@ export interface DisplayProfileActionsProps {
 export const getDisplayProfileItemActions = ({
   t,
   canModify = false,
+  currentUserId,
+  isSuperAdmin = false,
   onDelete,
   openEditModal,
   openCopyModal,
 }: DisplayProfileActionsProps): ((displayProfile: DisplayProfile) => ActionItem[]) => {
   return (displayProfile: DisplayProfile) => {
-    const canDelete = !!displayProfile.userPermissions?.delete;
+    const isOwnerOrSuper = isSuperAdmin || displayProfile.userId === currentUserId;
 
     const actions: ActionItem[] = [];
 
-    if (canModify) {
+    if (canModify && isOwnerOrSuper) {
       actions.push({
         label: t('Edit'),
         icon: Edit,
@@ -106,7 +110,7 @@ export const getDisplayProfileItemActions = ({
       });
     }
 
-    if (canModify) {
+    if (canModify && isOwnerOrSuper) {
       actions.push({
         label: t('Edit'),
         icon: Edit,
@@ -114,7 +118,7 @@ export const getDisplayProfileItemActions = ({
       });
     }
 
-    if (canModify) {
+    if (canModify && isOwnerOrSuper) {
       actions.push({
         label: t('Copy'),
         icon: Copy,
@@ -122,7 +126,7 @@ export const getDisplayProfileItemActions = ({
       });
     }
 
-    if (canModify && canDelete) {
+    if (canModify && isOwnerOrSuper) {
       actions.push({ isSeparator: true });
       actions.push({
         label: t('Delete'),

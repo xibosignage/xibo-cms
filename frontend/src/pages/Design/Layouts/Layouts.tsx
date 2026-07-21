@@ -64,6 +64,7 @@ export default function Layouts() {
   const canViewCampaign = hasFeature(user, 'campaign.view');
   const canViewMedia = hasFeature(user, 'library.view');
   const canAssignCampaign = hasFeature(user, 'campaign.modify');
+  const canMoveToCampaignFolder = hasFeature(user, 'campaign.modify');
   const canSaveTemplate = hasFeature(user, 'template.modify');
   const canTag = hasFeature(user, 'tag.tagging');
   const importEnabled = user?.settings?.SETTING_IMPORT_ENABLED === '1';
@@ -328,6 +329,7 @@ export default function Layouts() {
   const columns = getLayoutColumns({
     t,
     canModify: hasFeature(user, 'layout.modify'),
+    canMoveToCampaignFolder,
     canUserShare: hasFeature(user, 'user.sharing'),
     canExport: hasFeature(user, 'layout.export'),
     canViewPlaylist,
