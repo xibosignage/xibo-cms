@@ -49,7 +49,6 @@ import { DataTable } from '@/components/ui/table/DataTable';
 import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
-import { useFolderCreatePermission } from '@/hooks/useFolderCreatePermission';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import { exportDatasetCsv } from '@/services/datasetApi';
@@ -152,8 +151,6 @@ export default function Dataset() {
   const canAddDataset = hasFeature(user, 'dataset.add');
   const canModify = hasFeature(user, 'dataset.modify');
   const canRealTime = hasFeature(user, 'dataset.realtime');
-  const canCreateInFolder = useFolderCreatePermission(effectiveFolderId);
-  const canAddToFolder = canAddDataset && canCreateInFolder;
 
   const folderActions = useFolderActions({
     onSuccess: (targetFolder) => {
@@ -354,7 +351,7 @@ export default function Dataset() {
               <Button
                 variant="primary"
                 className="font-semibold"
-                disabled={!canAddToFolder || !isHydrated}
+                disabled={!isHydrated}
                 onClick={() => openAddEditModal(null)}
                 leftIcon={Plus}
               >
