@@ -66,10 +66,7 @@ export function DatasetDataModals({
           datasetId={datasetId}
           columnsSchema={columnsSchema}
           rowData={selection.selectedData}
-          onSave={() => {
-            actions.closeModal();
-            actions.handleRefresh();
-          }}
+          onSave={actions.handleRefresh}
         />
       )}
 
