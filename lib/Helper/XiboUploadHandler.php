@@ -521,8 +521,12 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 // Assign the new widget to the playlist
                 $playlist->assignWidget($widget, $this->options['displayOrder'] ?? null);
 
-                // Save the playlist
-                $playlist->save();
+                // Save without re-saving existing widgets to avoid triggering
+                // validation on unrelated widgets (e.g. sub-playlists).
+                $playlist->save(['saveWidgets' => false]);
+
+                // Save just the new widget
+                $widget->save();
 
                 // Configure widgetId is response
                 $file->widgetId = $widget->widgetId;
