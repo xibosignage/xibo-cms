@@ -214,18 +214,16 @@ describe('Templates page - row actions', () => {
 
   // ---------------------------------------------------------------------------
   // Publish
-  // TDD: Publish should appear only for Draft templates and open a confirmation
+  // Publish appears only for Draft templates and opens a confirmation
   // dialog that calls confirmPublish on the hook.
-  //
-  // All tests use test.fails to document the unimplemented contract.
   // ---------------------------------------------------------------------------
   describe('Publish', () => {
     beforeEach(() => {
       mockFetchTemplates(SINGLE_DRAFT_TEMPLATE_ROWS);
     });
 
-    // When implemented: Publish must be absent for already-published templates.
-    test.fails('Publish action is absent for Published templates', async () => {
+    // Publish must be absent for already-published templates.
+    test('Publish action is absent for Published templates', async () => {
       mockFetchTemplates(SINGLE_TEMPLATE_ROWS);
       renderTemplatesPage();
       await screen.findByText(mockTemplate.layout);
@@ -274,18 +272,16 @@ describe('Templates page - row actions', () => {
 
   // ---------------------------------------------------------------------------
   // Discard
-  // TDD: Discard should appear only for Draft templates and open a confirmation
+  // Discard appears only for Draft templates and opens a confirmation
   // dialog that calls handleConfirmDiscard on the hook.
-  //
-  // All tests use test.fails to document the unimplemented contract.
   // ---------------------------------------------------------------------------
   describe('Discard', () => {
     beforeEach(() => {
       mockFetchTemplates(SINGLE_DRAFT_TEMPLATE_ROWS);
     });
 
-    // When implemented: Discard must be absent for already-published templates.
-    test.fails('Discard action is absent for Published templates', async () => {
+    // Discard must be absent for already-published templates.
+    test('Discard action is absent for Published templates', async () => {
       mockFetchTemplates(SINGLE_TEMPLATE_ROWS);
       renderTemplatesPage();
       await screen.findByText(mockTemplate.layout);
