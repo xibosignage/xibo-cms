@@ -119,13 +119,14 @@ export function DynamicSettingField({
   const { t } = useTranslation();
   const { playerType } = contextData;
 
-  if (meta.inputType === 'text') {
+  if (meta.inputType === 'text' || meta.inputType === 'email') {
     return (
       <TextInput
         name={meta.label}
         label={meta.label}
         helpText={meta.helpText}
         placeholder=" "
+        type={meta.inputType === 'email' ? 'email' : undefined}
         value={value ? String(value) : ''}
         onChange={onChange}
       />

@@ -38,6 +38,7 @@ export interface CommandOverrideDraft {
   baseCommandString: string;
   baseValidationString: string;
   baseCreateAlertOn: string;
+  hasDefaultCreateAlertOn: boolean;
   commandString: string;
   validationString: string;
   createAlertOn: string;
@@ -55,6 +56,7 @@ export function buildCommandDrafts(commands: DisplayProfileCommand[]): {
     baseCommandString: cmd.commandString ?? '',
     baseValidationString: cmd.validationString ?? '',
     baseCreateAlertOn: cmd.createAlertOn ?? 'never',
+    hasDefaultCreateAlertOn: !!cmd.createAlertOn,
     commandString: cmd.commandStringDisplayProfile ?? '',
     validationString: cmd.validationStringDisplayProfile ?? '',
     createAlertOn: cmd.createAlertOnDisplayProfile ?? '',
@@ -134,10 +136,20 @@ export default function CommandsTab({
             {isExpanded && (
               <div className="border-t border-gray-200 px-4 py-3 space-y-3">
                 {cmd.description && <p className="text-sm text-gray-400">{cmd.description}</p>}
+                {cmd.baseCommandString && (
+                  <p className="text-sm text-gray-400">
+                    {t('This Command has a default Command String.')}
+                  </p>
+                )}
                 <CommandBuilder
                   value={cmd.commandString}
                   onChange={(val) => updateDraft(cmd.commandId, 'commandString', val)}
                 />
+                {cmd.baseValidationString && (
+                  <p className="text-sm text-gray-400">
+                    {t('This Command has a default Valildation String.')}
+                  </p>
+                )}
                 <TextInput
                   name={`validationString_${cmd.commandId}`}
                   label={t('Validation String')}
@@ -146,6 +158,11 @@ export default function CommandsTab({
                   value={cmd.validationString}
                   onChange={(val) => updateDraft(cmd.commandId, 'validationString', val)}
                 />
+                {cmd.hasDefaultCreateAlertOn && (
+                  <p className="text-sm text-gray-400">
+                    {t('This Command has a default setting for creating alerts.')}
+                  </p>
+                )}
                 <SelectDropdown
                   label={t('Create Alert On')}
                   value={cmd.createAlertOn || cmd.baseCreateAlertOn || 'never'}

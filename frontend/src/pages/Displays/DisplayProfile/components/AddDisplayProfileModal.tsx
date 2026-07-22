@@ -125,7 +125,7 @@ export default function AddDisplayProfileModal({
         <TextInput
           name="name"
           label={t('Name')}
-          helpText={t('The Name of the Profile - (1 - 50 characters)')}
+          helpText={t('The Name for this Display Profile')}
           placeholder={t('Enter name')}
           value={draft.name}
           onChange={(name) => setDraft((prev) => ({ ...prev, name }))}
@@ -134,6 +134,7 @@ export default function AddDisplayProfileModal({
 
         <SelectDropdown
           label={t('Display Type')}
+          helpText={t('What type of display is this profile intended for?')}
           value={draft.type}
           options={getTypeOptions(t)}
           onSelect={(val) => setDraft((prev) => ({ ...prev, type: val as DisplayProfileType }))}

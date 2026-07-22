@@ -56,7 +56,12 @@ export function useDisplayProfileActions({
         itemsToDelete.map((item) => deleteDisplayProfile(item.displayProfileId)),
       );
 
-      const failed = results.filter((r) => r.status === 'rejected');
+      // A 404 means the item was already deleted (e.g. by another user/tab) — that's the
+      // outcome we wanted anyway, so treat it as success rather than a hard failure.
+      const failed = results.filter(
+        (r) =>
+          r.status === 'rejected' && !(isAxiosError(r.reason) && r.reason.response?.status === 404),
+      );
       if (failed.length > 0) {
         const firstRejected = failed[0] as PromiseRejectedResult;
         const reason = firstRejected.reason;

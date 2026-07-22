@@ -96,6 +96,52 @@ function getDayScopeOptions(t: TFunction) {
   ];
 }
 
+/** Expands a rule's day scope into the concrete set of weekdays it covers (0=Sun..6=Sat). */
+function expandHisenseDayScope(rule: HisenseTimerRule): Set<number> {
+  switch (rule.dayScope) {
+    case 2:
+      return new Set([0, 1, 2, 3, 4, 5, 6]);
+    case 3:
+      return new Set([1, 2, 3, 4, 5]);
+    case 4:
+      return new Set([1, 2, 3, 4, 5, 6]);
+    case 5:
+      return new Set([6, 0]);
+    case 6:
+      return new Set(rule.manualWeeks);
+    default:
+      return new Set();
+  }
+}
+
+/**
+ * Finds the first pair of same-type (power-on/power-on or power-off/power-off) rules whose
+ * day scopes overlap, and returns a description of the conflict, or null if there's none.
+ */
+export function findHisenseTimerOverlap(rules: HisenseTimerRule[], t: TFunction): string | null {
+  const active = rules.filter((r) => r.dayScope !== 0);
+  const groups: Array<[HisenseTimerRule[], string]> = [
+    [active.filter((r) => r.index < 3), t('Power On')],
+    [active.filter((r) => r.index >= 3), t('Power Off')],
+  ];
+
+  for (const [group, label] of groups) {
+    for (const [i, ruleA] of group.entries()) {
+      const daysA = expandHisenseDayScope(ruleA);
+      for (const ruleB of group.slice(i + 1)) {
+        const daysB = expandHisenseDayScope(ruleB);
+        const overlapDay = [...daysA].find((d) => daysB.has(d));
+        if (overlapDay !== undefined) {
+          const dayLabel = DAY_LABELS[overlapDay] ?? '';
+          return `${label}: ${t('two rules overlap on')} ${t(dayLabel)}.`;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
 export function HisenseTimersInput({
   rules,
   onChange,
@@ -435,7 +481,7 @@ export function HisenseFields({
       !['timers', 'picture-options', 'hisense-timers', 'hisense-picture-options'].includes(
         meta.inputType,
       ) &&
-      isFieldMetaEnabled(meta, settings),
+      isFieldMetaEnabled(meta, settings, bool),
   );
 
   if (fieldsForTab.length === 0) {
