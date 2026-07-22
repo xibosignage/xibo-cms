@@ -73,6 +73,9 @@ export default function EditMediaModal({
 }: EditMediaModalProps) {
   const { t } = useTranslation();
   const { user } = useUserContext();
+  const defaultUpdateInLayouts =
+    user?.settings?.LIBRARY_MEDIA_UPDATEINALL_CHECKB === '1' ||
+    user?.settings?.LIBRARY_MEDIA_UPDATEINALL_CHECKB === 'Checked';
   const [expiry, setExpiry] = useState<ExpiryValue>(expiresToExpiryValue(data.expires));
   const [apiError, setApiError] = useState<string | undefined>();
   const [formErrors, setFormErrors] = useState<MediaFormErrors>({});
@@ -97,7 +100,7 @@ export default function EditMediaModal({
     mediaNoExpiryDate: expiresToExpiryValue(data.expires),
     enableStat: data.enableStat,
     retired: data.retired,
-    updateInLayouts: user?.settings?.LIBRARY_MEDIA_UPDATEINALL_CHECKB === 'Checked',
+    updateInLayouts: defaultUpdateInLayouts,
   }));
 
   useEffect(() => {
@@ -116,9 +119,9 @@ export default function EditMediaModal({
       mediaNoExpiryDate: initialExpiry,
       enableStat: data.enableStat,
       retired: data.retired,
-      updateInLayouts: user?.settings?.LIBRARY_MEDIA_UPDATEINALL_CHECKB === 'Checked',
+      updateInLayouts: defaultUpdateInLayouts,
     });
-  }, [data]);
+  }, [data, defaultUpdateInLayouts]);
 
   const handleSave = async () => {
     if (isSaving) return;
