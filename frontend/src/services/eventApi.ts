@@ -396,6 +396,7 @@ export interface AgendaScheduleEvent {
   shareOfVoice?: number;
   isAlways?: number;
   geoLocation?: string;
+  isEditable?: boolean;
 }
 
 export interface FetchAgendaEventsRequest {

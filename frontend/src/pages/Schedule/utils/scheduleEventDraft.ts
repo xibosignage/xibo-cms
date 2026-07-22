@@ -109,18 +109,31 @@ export interface SelectOption {
 
 export const STEP_LABELS = ['Content', 'Displays', 'Time', 'Optional'] as const;
 
-export const getEventTypeOptions = (t: TFunction): SelectOption[] => [
-  { value: String(EventTypeId.Layout), label: t('Layout') },
-  { value: String(EventTypeId.Command), label: t('Command') },
-  { value: String(EventTypeId.Overlay), label: t('Overlay Layout') },
-  { value: String(EventTypeId.Interrupt), label: t('Interrupt Layout') },
-  { value: String(EventTypeId.Campaign), label: t('Campaign') },
-  { value: String(EventTypeId.Action), label: t('Action') },
-  { value: String(EventTypeId.Media), label: t('Media') },
-  { value: String(EventTypeId.Playlist), label: t('Playlist') },
-  { value: String(EventTypeId.Sync), label: t('Synchronised Event') },
-  { value: String(EventTypeId.DataConnector), label: t('Data Connector') },
-];
+export const getEventTypeOptions = (
+  t: TFunction,
+  features: { canSync?: boolean; canDataConnector?: boolean } = {},
+): SelectOption[] => {
+  const options: SelectOption[] = [
+    { value: String(EventTypeId.Layout), label: t('Layout') },
+    { value: String(EventTypeId.Command), label: t('Command') },
+    { value: String(EventTypeId.Overlay), label: t('Overlay Layout') },
+    { value: String(EventTypeId.Interrupt), label: t('Interrupt Layout') },
+    { value: String(EventTypeId.Campaign), label: t('Campaign') },
+    { value: String(EventTypeId.Action), label: t('Action') },
+    { value: String(EventTypeId.Media), label: t('Media') },
+    { value: String(EventTypeId.Playlist), label: t('Playlist') },
+  ];
+
+  if (features.canSync) {
+    options.push({ value: String(EventTypeId.Sync), label: t('Synchronised Event') });
+  }
+
+  if (features.canDataConnector) {
+    options.push({ value: String(EventTypeId.DataConnector), label: t('Data Connector') });
+  }
+
+  return options;
+};
 
 export const getConditionOptions = (t: TFunction): SelectOption[] => [
   { value: 'set', label: t('Is set') },

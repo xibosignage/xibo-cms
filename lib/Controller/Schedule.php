@@ -704,6 +704,11 @@ class Schedule extends Base
 
         // Fields only collected for data connector events
         if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$DATA_CONNECTOR_EVENT) {
+            if (!$this->getUser()->featureEnabled('schedule.dataConnector')) {
+                throw new AccessDeniedException(
+                    __('You do not have permission to schedule a Data Connector event')
+                );
+            }
             $schedule->dataSetId = $sanitizedParams->getInt('dataSetId', [
                 'throw' => function () {
                     new InvalidArgumentException(
@@ -1287,6 +1292,11 @@ class Schedule extends Base
 
         // Fields only collected for data connector events
         if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$DATA_CONNECTOR_EVENT) {
+            if (!$this->getUser()->featureEnabled('schedule.dataConnector')) {
+                throw new AccessDeniedException(
+                    __('You do not have permission to schedule a Data Connector event')
+                );
+            }
             $schedule->dataSetId = $sanitizedParams->getInt('dataSetId', [
                 'throw' => function () {
                     new InvalidArgumentException(

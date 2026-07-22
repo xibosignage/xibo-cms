@@ -48,6 +48,7 @@ import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagI
 import TextInput from '@/components/ui/forms/TextInput';
 import TimezoneSelect from '@/components/ui/forms/TimezoneSelect';
 import Modal from '@/components/ui/modals/Modal';
+import { useUserContext } from '@/context/UserContext';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useDebounce } from '@/hooks/useDebounce';
 import { DynamicSettingField } from '@/pages/Displays/DisplayProfile/components/fields/DynamicSettingField';
@@ -77,6 +78,7 @@ import type {
 import type { Layout } from '@/types/layout';
 import type { Tag } from '@/types/tag';
 import type { DateLike } from '@/utils/date';
+import { hasFeature } from '@/utils/permissions';
 
 type ActiveTab =
   | 'general'
@@ -516,6 +518,7 @@ export default function EditDisplayModal({
   onSave,
 }: EditDisplayModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
   const { formatDateTime } = useDateFormatter();
   const [isPending, startTransition] = useTransition();
 
@@ -1198,6 +1201,7 @@ export default function EditDisplayModal({
                 onChange={(v) => set('display', v)}
                 error={fieldErrors.display}
                 maxLength={50}
+                disabled={Number(user?.settings?.DISPLAY_LOCK_NAME_TO_DEVICENAME) === 1}
               />
               <TextInput
                 name="license"
@@ -1217,18 +1221,21 @@ export default function EditDisplayModal({
                 error={fieldErrors.description}
                 maxLength={254}
               />
-              <TagInput
-                label={t('Tags')}
-                helpText={t(
-                  'Tags for this Display - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below.',
-                )}
-                placeholder=" "
-                value={draft.tags}
-                onChange={(tags) => set('tags', tags)}
-                inputValue={pendingTagInput}
-                onInputChange={setPendingTagInput}
-                onPendingValueChange={setHasTagPendingValue}
-              />
+              {(hasFeature(user, 'tag.tagging') || (draft.tags?.length ?? 0) > 0) && (
+                <TagInput
+                  label={t('Tags')}
+                  helpText={t(
+                    'Tags for this Display - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below.',
+                  )}
+                  placeholder=" "
+                  value={draft.tags}
+                  onChange={(tags) => set('tags', tags)}
+                  inputValue={pendingTagInput}
+                  onInputChange={setPendingTagInput}
+                  onPendingValueChange={setHasTagPendingValue}
+                  disabled={!hasFeature(user, 'tag.tagging')}
+                />
+              )}
               <SelectDropdown
                 label={t('Default Layout')}
                 helpText={t(

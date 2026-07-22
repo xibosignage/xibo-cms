@@ -57,6 +57,7 @@ import { useTableState } from '@/hooks/useTableState';
 import { fetchUserPreference, saveUserPreference } from '@/services/userApi';
 import type { Event } from '@/types/event';
 import { countActiveFilters } from '@/utils/filters';
+import { hasFeature } from '@/utils/permissions';
 
 const DATE_RANGE_PREF_KEY = 'event_page_date_range';
 
@@ -66,6 +67,7 @@ export default function Events() {
   const { user } = useUserContext();
   const { formatDateTime } = useDateFormatter();
   const timezone = user?.settings?.defaultTimezone ?? 'UTC';
+  const canModifySchedule = hasFeature(user, 'schedule.modify');
 
   const {
     pagination,
@@ -286,6 +288,8 @@ export default function Events() {
     t,
     formatDateTime,
     timezone,
+    canModify: hasFeature(user, 'schedule.modify'),
+    canAdd: hasFeature(user, 'schedule.add'),
     onDelete: handleDelete,
     openAddEditModal,
     copyEvent: openCopyModal,
@@ -299,6 +303,7 @@ export default function Events() {
 
   const bulkActions = getBulkActions({
     t,
+    canModify: canModifySchedule,
     onDelete: () => {
       const allItems = getAllSelectedItems();
       setItemsToDelete(allItems);
@@ -341,15 +346,17 @@ export default function Events() {
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Events" navigation={libraryTabs} />
           <div className="flex items-center gap-2 md:mb-0">
-            <Button
-              variant="primary"
-              className="font-semibold"
-              disabled={!isHydrated}
-              onClick={() => openModal('schedule')}
-              leftIcon={Plus}
-            >
-              {t('Add Event')}
-            </Button>
+            {hasFeature(user, 'schedule.add') && (
+              <Button
+                variant="primary"
+                className="font-semibold"
+                disabled={!isHydrated}
+                onClick={() => openModal('schedule')}
+                leftIcon={Plus}
+              >
+                {t('Add Event')}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -438,13 +445,17 @@ export default function Events() {
                 date={calendarDate}
                 events={calendarEvents}
                 isLoading={isCalendarFetching}
-                onEditEvent={openAddEditModal}
-                onDeleteEvent={handleDeleteFromCalendar}
-                onAgenda={(day, events) => {
-                  setAgendaDate(day);
-                  setAgendaDayEvents(events);
-                  openModal('agenda');
-                }}
+                onEditEvent={canModifySchedule ? openAddEditModal : undefined}
+                onDeleteEvent={canModifySchedule ? handleDeleteFromCalendar : undefined}
+                onAgenda={
+                  hasFeature(user, 'schedule.agenda')
+                    ? (day, events) => {
+                        setAgendaDate(day);
+                        setAgendaDayEvents(events);
+                        openModal('agenda');
+                      }
+                    : undefined
+                }
               />
             </DataCalendar>
           ) : (

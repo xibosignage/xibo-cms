@@ -38,15 +38,18 @@ import FilterInputs from '@/components/ui/FilterInputs';
 import { notify } from '@/components/ui/Notification';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import { downloadFont } from '@/services/fontApi';
 import type { Font } from '@/types/font';
 import { countActiveFilters } from '@/utils/filters';
+import { hasFeature } from '@/utils/permissions';
 
 export default function Fonts() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { user } = useUserContext();
 
   const {
     pagination,
@@ -167,8 +170,11 @@ export default function Fonts() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
+  const canDeleteFont = hasFeature(user, 'font.delete');
+
   const columns = getFontColumns({
     t,
+    canDelete: canDeleteFont,
     onDelete: handleDelete,
     onDetails: handleDetails,
     onDownload: handleDownload,
@@ -180,15 +186,17 @@ export default function Fonts() {
       .filter((item): item is Font => !!item);
   };
 
-  const bulkActions = getBulkActions({
-    t,
-    onDelete: () => {
-      const allItems = getAllSelectedItems();
-      setItemsToDelete(allItems);
-      setDeleteError(null);
-      openModal('delete');
-    },
-  });
+  const bulkActions = canDeleteFont
+    ? getBulkActions({
+        t,
+        onDelete: () => {
+          const allItems = getAllSelectedItems();
+          setItemsToDelete(allItems);
+          setDeleteError(null);
+          openModal('delete');
+        },
+      })
+    : [];
 
   const { filterOptions } = useFontFilterOptions();
 
@@ -204,15 +212,17 @@ export default function Fonts() {
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Fonts" navigation={administrationTabs} />
           <div className="flex items-center gap-2 md:mb-0">
-            <Button
-              variant="primary"
-              className="font-semibold"
-              disabled={!isHydrated}
-              onClick={() => openModal('upload')}
-              leftIcon={Plus}
-            >
-              {t('Upload Font')}
-            </Button>
+            {hasFeature(user, 'font.add') && (
+              <Button
+                variant="primary"
+                className="font-semibold"
+                disabled={!isHydrated}
+                onClick={() => openModal('upload')}
+                leftIcon={Plus}
+              >
+                {t('Upload Font')}
+              </Button>
+            )}
           </div>
         </div>
 

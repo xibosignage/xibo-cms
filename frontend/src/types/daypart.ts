@@ -25,6 +25,13 @@ export interface DaypartException {
   end: string;
 }
 
+export interface DayPartPermissions {
+  view?: number;
+  edit?: number;
+  delete?: number;
+  modifyPermissions?: number;
+}
+
 export interface Daypart {
   dayPartId: number;
   name: string;
@@ -38,4 +45,5 @@ export interface Daypart {
   isCustom: number;
   adjustedStart: string | null;
   adjustedEnd: string | null;
+  userPermissions?: DayPartPermissions;
 }

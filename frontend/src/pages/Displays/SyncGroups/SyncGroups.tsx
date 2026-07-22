@@ -53,6 +53,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
 import type { SyncGroup } from '@/types/syncGroup';
 import { countActiveFilters } from '@/utils/filters';
+import { hasFeature } from '@/utils/permissions';
 
 export default function SyncGroups() {
   const { t } = useTranslation();
@@ -218,6 +219,7 @@ export default function SyncGroups() {
 
   const columns = getSyncGroupColumns({
     t,
+    canModify: hasFeature(user, 'display.syncModify'),
     onDelete: handleDelete,
     openEditModal,
     openMembersModal,
@@ -265,15 +267,17 @@ export default function SyncGroups() {
           <div className="flex flex-row justify-between py-4 items-center gap-4">
             <TabNav activeTab="Sync Groups" navigation={libraryTabs} />
             <div className="flex items-center gap-2 md:mb-0">
-              <Button
-                variant="primary"
-                className="font-semibold"
-                disabled={!isHydrated}
-                onClick={openAddModal}
-                leftIcon={Plus}
-              >
-                {t('Add Sync Group')}
-              </Button>
+              {hasFeature(user, 'display.syncAdd') && (
+                <Button
+                  variant="primary"
+                  className="font-semibold"
+                  disabled={!isHydrated}
+                  onClick={openAddModal}
+                  leftIcon={Plus}
+                >
+                  {t('Add Sync Group')}
+                </Button>
+              )}
             </div>
           </div>
 

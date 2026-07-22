@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { Plus, Search } from 'lucide-react';
 import { useState } from 'react';
@@ -50,9 +50,9 @@ import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
-import { fetchContextButtons } from '@/services/folderApi';
 import type { MenuBoard } from '@/types/menuBoard';
 import { countActiveFilters } from '@/utils/filters';
+import { canSaveInFolder, hasFeature } from '@/utils/permissions';
 
 export default function MenuBoards() {
   const { t } = useTranslation();
@@ -125,17 +125,14 @@ export default function MenuBoards() {
   });
 
   const effectiveFolderId = selectedFolderId ?? homeFolderId;
-  const { data: folderPerms } = useQuery({
-    queryKey: ['folderPermissions', effectiveFolderId],
-    queryFn: () => fetchContextButtons(effectiveFolderId),
-    staleTime: 1000 * 60 * 5,
-  });
 
   const data = queryData?.rows;
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
   const menuBoardList = data ?? [];
-  const canAddToFolder = folderPerms?.create || false;
+  const canAddToFolder =
+    hasFeature(user, 'menuBoard.add') &&
+    canSaveInFolder(user, !!canViewFolders, effectiveFolderId, homeFolderId);
 
   const folderActions = useFolderActions({
     onSuccess: (targetFolder) => {
@@ -226,6 +223,8 @@ export default function MenuBoards() {
 
   const columns = getMenuBoardColumns({
     t,
+    canModify: hasFeature(user, 'menuBoard.modify'),
+    canUserShare: hasFeature(user, 'user.sharing'),
     onDelete: handleDelete,
     openAddEditModal,
     openMoveModal: (menuBoard) => {
@@ -249,6 +248,7 @@ export default function MenuBoards() {
 
   const bulkActions = getBulkActions({
     t,
+    canModify: hasFeature(user, 'menuBoard.modify'),
     onDelete: () => {
       const allItems = getAllSelectedItems();
       setItemsToDelete(allItems);

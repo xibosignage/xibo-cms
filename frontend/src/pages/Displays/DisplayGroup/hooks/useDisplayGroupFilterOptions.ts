@@ -34,7 +34,7 @@ function toOptions(rows: { displayId: number; display: string }[]): FilterOption
   return rows.map((d) => ({ label: d.display, value: d.displayId.toString() }));
 }
 
-export function useDisplayGroupFilterOptions(t: TFunction) {
+export function useDisplayGroupFilterOptions(t: TFunction, canTag = false) {
   const [displayOptions, setDisplayOptions] = useState<FilterOption[]>([]);
   const [displayPage, setDisplayPage] = useState(0);
   const [hasMoreDisplays, setHasMoreDisplays] = useState(false);
@@ -141,7 +141,7 @@ export function useDisplayGroupFilterOptions(t: TFunction) {
       .finally(() => setIsLoadingMoreNestedDisplays(false));
   };
 
-  const filterOptions = getBaseFilterKeys(t).map((item) => {
+  const filterOptions = getBaseFilterKeys(t, canTag).map((item) => {
     if (item.name === 'displayIdDropdown') {
       return {
         ...item,

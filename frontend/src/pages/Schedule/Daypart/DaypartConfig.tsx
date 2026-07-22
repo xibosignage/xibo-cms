@@ -67,6 +67,8 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DaypartFilterI
 
 export interface DaypartActionsProps {
   t: TFunction;
+  canModify?: boolean;
+  canUserShare?: boolean;
   onDelete: (id: number) => void;
   openAddEditModal: (row: Daypart) => void;
   openShareModal: (id: number) => void;
@@ -74,15 +76,22 @@ export interface DaypartActionsProps {
 
 export const getDaypartItemActions = ({
   t,
+  canModify = false,
+  canUserShare = false,
   onDelete,
   openAddEditModal,
   openShareModal,
 }: DaypartActionsProps): ((daypart: Daypart) => ActionItem[]) => {
   return (daypart: Daypart) => {
     const isSpecial = daypart.isAlways === 1 || daypart.isCustom === 1;
+
+    const canEdit = !!daypart.userPermissions?.edit;
+    const canDelete = !!daypart.userPermissions?.delete;
+    const canShare = !!daypart.userPermissions?.modifyPermissions;
+
     const actions: ActionItem[] = [];
 
-    if (!isSpecial) {
+    if (!isSpecial && canModify && canEdit) {
       actions.push({
         label: t('Edit'),
         icon: Edit,
@@ -92,14 +101,16 @@ export const getDaypartItemActions = ({
       });
     }
 
-    actions.push({
-      label: t('Share'),
-      icon: UserPlus2,
-      onClick: () => openShareModal(daypart.dayPartId),
-      isQuickAction: false,
-    });
+    if (canModify && canShare && canUserShare) {
+      actions.push({
+        label: t('Share'),
+        icon: UserPlus2,
+        onClick: () => openShareModal(daypart.dayPartId),
+        isQuickAction: false,
+      });
+    }
 
-    if (!isSpecial) {
+    if (!isSpecial && canModify && canDelete) {
       actions.push({
         label: t('Delete'),
         icon: Trash2,
@@ -168,25 +179,36 @@ export const getDaypartColumns = (props: DaypartActionsProps): ColumnDef<Daypart
 
 interface GetBulkActionsProps {
   t: TFunction;
+  canModify?: boolean;
+  canUserShare?: boolean;
   onDelete: () => void;
   onShare: () => void;
 }
 
 export const getBulkActions = ({
   t,
+  canModify = false,
+  canUserShare = false,
   onDelete,
   onShare,
 }: GetBulkActionsProps): DataTableBulkAction<Daypart>[] => {
-  return [
-    {
+  const actions: DataTableBulkAction<Daypart>[] = [];
+
+  if (canModify && canUserShare) {
+    actions.push({
       label: t('Share Selected'),
       icon: UserPlus2,
       onClick: onShare,
-    },
-    {
+    });
+  }
+
+  if (canModify) {
+    actions.push({
       label: t('Delete Selected'),
       icon: Trash2,
       onClick: onDelete,
-    },
-  ];
+    });
+  }
+
+  return actions;
 };

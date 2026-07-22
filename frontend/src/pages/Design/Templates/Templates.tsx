@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { Search, Plus } from 'lucide-react';
 import { useState } from 'react';
@@ -49,9 +49,9 @@ import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
-import { fetchContextButtons } from '@/services/folderApi';
 import type { Template } from '@/types/templates';
 import { countActiveFilters } from '@/utils/filters';
+import { canSaveInFolder, hasFeature } from '@/utils/permissions';
 
 export default function Templates() {
   const { t } = useTranslation();
@@ -59,6 +59,8 @@ export default function Templates() {
   const queryClient = useQueryClient();
   const { user } = useUserContext();
   const canViewFolders = usePermissions()?.canViewFolders;
+  const canTag = hasFeature(user, 'tag.tagging');
+  const canMoveToCampaignFolder = hasFeature(user, 'campaign.modify');
   const homeFolderId = user?.homeFolderId ?? 1;
 
   const {
@@ -127,17 +129,14 @@ export default function Templates() {
   });
 
   const effectiveFolderId = selectedFolderId ?? homeFolderId;
-  const { data: folderPerms } = useQuery({
-    queryKey: ['folderPermissions', effectiveFolderId],
-    queryFn: () => fetchContextButtons(effectiveFolderId),
-    staleTime: 1000 * 60 * 5,
-  });
 
   const data = queryData?.rows;
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
   const templateList = data ?? [];
-  const canAddToFolder = folderPerms?.create || false;
+  const canAddToFolder =
+    hasFeature(user, 'template.add') &&
+    canSaveInFolder(user, !!canViewFolders, effectiveFolderId, homeFolderId);
 
   const folderActions = useFolderActions({
     onSuccess: (targetFolder) => {
@@ -267,6 +266,12 @@ export default function Templates() {
 
   const columns = getTemplateColumn({
     t,
+    canModify: hasFeature(user, 'layout.modify'),
+    canMoveToCampaignFolder,
+    canUserShare: hasFeature(user, 'user.sharing'),
+    canExport: hasFeature(user, 'layout.export'),
+    canViewFolders: hasFeature(user, 'folder.view'),
+    canTag,
     formatDateTime,
     onDelete: handleDelete,
     openAddEditModal,
@@ -313,7 +318,7 @@ export default function Templates() {
     },
   });
 
-  const { filterOptions } = useTemplateFilterOptions<TemplatesFilterInput>(t);
+  const { filterOptions } = useTemplateFilterOptions<TemplatesFilterInput>(t, canTag);
 
   const libraryTabs = useFilteredTabs('design');
 

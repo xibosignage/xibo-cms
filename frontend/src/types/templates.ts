@@ -62,7 +62,7 @@ export interface Template {
   modifiedDt: string;
   resolutionId: number;
 
-  userPermissions: UserPermission;
+  userPermissions?: UserPermission;
 
   tags: Tag[];
 }

@@ -42,14 +42,17 @@ import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import type { DisplayProfile } from '@/types/displayProfile';
 import { countActiveFilters } from '@/utils/filters';
+import { hasFeature } from '@/utils/permissions';
 
 export default function DisplayProfile() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { user } = useUserContext();
 
   const {
     pagination,
@@ -192,6 +195,9 @@ export default function DisplayProfile() {
 
   const columns = getDisplayProfileColumns({
     t,
+    canModify: hasFeature(user, 'displayprofile.modify'),
+    currentUserId: user?.userId,
+    isSuperAdmin: user?.userTypeId === 1,
     onDelete: handleDelete,
     openEditModal: openAddEditModal,
     openCopyModal,
@@ -205,6 +211,7 @@ export default function DisplayProfile() {
 
   const bulkActions = getBulkActions({
     t,
+    canModify: hasFeature(user, 'displayprofile.modify'),
     onDelete: () => {
       const allItems = getAllSelectedItems();
       setItemsToDelete(allItems);
@@ -225,15 +232,17 @@ export default function DisplayProfile() {
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Display Settings" navigation={libraryTabs} />
           <div className="flex items-center gap-2 md:mb-0">
-            <Button
-              variant="primary"
-              className="font-semibold"
-              disabled={!isHydrated}
-              onClick={openAddModal}
-              leftIcon={Plus}
-            >
-              {t('Add Display Profile')}
-            </Button>
+            {hasFeature(user, 'displayprofile.add') && (
+              <Button
+                variant="primary"
+                className="font-semibold"
+                disabled={!isHydrated}
+                onClick={openAddModal}
+                leftIcon={Plus}
+              >
+                {t('Add Display Profile')}
+              </Button>
+            )}
           </div>
         </div>
 

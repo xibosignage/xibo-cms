@@ -30,7 +30,7 @@ import type { FilterOption } from '@/types/filter';
 
 const PAGE_SIZE = 10;
 
-export function useMediaFilterOptions(t: TFunction) {
+export function useMediaFilterOptions(t: TFunction, canTag = false) {
   const [ownerOptions, setOwnerOptions] = useState<FilterOption[]>([]);
   const [ownerPage, setOwnerPage] = useState(0);
   const [hasMoreOwners, setHasMoreOwners] = useState(false);
@@ -139,7 +139,7 @@ export function useMediaFilterOptions(t: TFunction) {
       .finally(() => setIsLoadingMoreGroups(false));
   };
 
-  const filterOptions = getBaseFilterKeys(t).map((item) => {
+  const filterOptions = getBaseFilterKeys(t, canTag).map((item) => {
     if (item.name === 'ownerId') {
       return {
         ...item,

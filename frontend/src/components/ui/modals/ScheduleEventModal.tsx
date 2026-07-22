@@ -1124,7 +1124,10 @@ export default function ScheduleEventModal({
               <SelectDropdown
                 label={t('Event Type')}
                 value={draft.eventTypeId ? String(draft.eventTypeId) : ''}
-                options={getEventTypeOptions(t)}
+                options={getEventTypeOptions(t, {
+                  canSync: hasFeature(user, 'schedule.sync'),
+                  canDataConnector: hasFeature(user, 'schedule.dataConnector'),
+                })}
                 onSelect={(value) => {
                   const newType = Number(value) as EventTypeId;
                   setDraft((prev) => ({
@@ -1188,6 +1191,7 @@ export default function ScheduleEventModal({
               )}
 
               {!!draft.campaignId &&
+                (hasFeature(user, 'campaign.view') || hasFeature(user, 'layout.view')) &&
                 [
                   EventTypeId.Layout,
                   EventTypeId.Overlay,

@@ -78,6 +78,7 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<NotificationFi
 
 export interface NotificationActionsProps {
   t: TFunction;
+  canModify?: boolean;
   onDelete: (id: number) => void;
   onView: (row: Notification) => void;
   onEdit: (row: Notification) => void;
@@ -86,13 +87,14 @@ export interface NotificationActionsProps {
 
 export const getNotificationItemActions = ({
   t,
+  canModify = false,
   onDelete,
   onView,
   onEdit,
 }: NotificationActionsProps): ((notification: Notification) => ActionItem[]) => {
   return (notification: Notification) => {
-    const canEdit = notification.canEdit ?? false;
-    const canDelete = notification.canDelete ?? false;
+    const canEdit = canModify && (notification.canEdit ?? false);
+    const canDelete = canModify && (notification.canDelete ?? false);
     const actions: ActionItem[] = [];
 
     if (canEdit) {
