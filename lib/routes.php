@@ -451,6 +451,8 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/dataset/{id}/selectfolder', ['\Xibo\Controller\DataSet', 'selectFolder'])->setName('dataSet.selectfolder');
 
     $group->post('/dataset/copy/{id}', ['\Xibo\Controller\DataSet','copy'])->setName('dataSet.copy');
+    $group->post('/dataset/clearcache/{id}', ['\Xibo\Controller\DataSet','clearCache'])
+        ->setName('dataSet.clearcache');
     //$group->map(['HEAD'],'/dataset/import/{id}', ['\Xibo\Controller\DataSet','import');
     $group->post('/dataset/import/{id}', ['\Xibo\Controller\DataSet','import'])->setName('dataSet.import');
     $group->post('/dataset/importjson/{id}', ['\Xibo\Controller\DataSet','importJson'])->setName('dataSet.import.json');

@@ -29,6 +29,7 @@ interface CollectNowModalProps {
   onConfirm: () => void;
   isActionPending: boolean;
   actionError: string | null;
+  autoSubmitFormId?: string;
 }
 
 export default function CollectNowModal({
@@ -36,6 +37,7 @@ export default function CollectNowModal({
   onConfirm,
   isActionPending,
   actionError,
+  autoSubmitFormId,
 }: CollectNowModalProps) {
   const { t } = useTranslation();
 
@@ -45,6 +47,7 @@ export default function CollectNowModal({
       isOpen
       isPending={isActionPending}
       onClose={onClose}
+      autoSubmitFormId={autoSubmitFormId}
       error={actionError ?? undefined}
       actions={[
         { label: t('Cancel'), onClick: onClose, variant: 'secondary' },

@@ -48,7 +48,9 @@ import FolderSidebar from '@/components/ui/FolderSidebar';
 import TabNav from '@/components/ui/TabNav';
 import { DataMap } from '@/components/ui/table/DataMap';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
 import { useUserContext } from '@/context/UserContext';
+import { useAutoSubmit } from '@/hooks/useAutoSubmit';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
@@ -273,6 +275,8 @@ export default function Displays() {
     setRowSelection,
   });
 
+  const { guard } = useAutoSubmit();
+
   const openActionModal = (display: Display, modal: ModalType) => {
     setActionDisplay(display);
     setActionError(null);
@@ -315,11 +319,31 @@ export default function Displays() {
         }
       : undefined,
     openShareModal,
-    onAuthorise: (display) => openActionModal(display, 'authorise'),
+    onAuthorise: (display) =>
+      guard(
+        AUTO_SUBMIT_FORMS.displayAuthorise,
+        () => confirmAuthorise(display, { notifyOnError: true }),
+        () => openActionModal(display, 'authorise'),
+      ),
     onManage: (display) => openActionModal(display, 'manage'),
-    onCheckLicence: (display) => openActionModal(display, 'checkLicence'),
-    onRequestScreenShot: (display) => openActionModal(display, 'requestScreenShot'),
-    onCollectNow: (display) => openActionModal(display, 'collectNow'),
+    onCheckLicence: (display) =>
+      guard(
+        AUTO_SUBMIT_FORMS.displayLicenceCheck,
+        () => confirmCheckLicence(display, { notifyOnError: true }),
+        () => openActionModal(display, 'checkLicence'),
+      ),
+    onRequestScreenShot: (display) =>
+      guard(
+        AUTO_SUBMIT_FORMS.displayRequestScreenshot,
+        () => confirmRequestScreenShot(display, { notifyOnError: true }),
+        () => openActionModal(display, 'requestScreenShot'),
+      ),
+    onCollectNow: (display) =>
+      guard(
+        AUTO_SUBMIT_FORMS.displayGroupCollectNow,
+        () => confirmCollectNow(display, { notifyOnError: true }),
+        () => openActionModal(display, 'collectNow'),
+      ),
     onWakeOnLan: (display) => openActionModal(display, 'wakeOnLan'),
     onPurgeAll: (display) => openActionModal(display, 'purgeAll'),
     onTriggerWebhook: (display) => openActionModal(display, 'triggerWebhook'),

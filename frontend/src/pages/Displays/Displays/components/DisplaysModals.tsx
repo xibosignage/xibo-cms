@@ -49,6 +49,7 @@ import Modal from '@/components/ui/modals/Modal';
 import MoveModal from '@/components/ui/modals/MoveModal';
 import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
+import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
 import type { MoveCmsData } from '@/services/displaysApi';
 import type { Display, DisplayCommandTarget } from '@/types/display';
 
@@ -174,6 +175,7 @@ export function DisplayModals({ actions, selection, handlers }: DisplayModalsPro
           isOpen
           isPending={actions.isActionPending}
           onClose={actions.closeModal}
+          autoSubmitFormId={AUTO_SUBMIT_FORMS.displayAuthorise}
           actions={[
             { label: t('Cancel'), onClick: actions.closeModal, variant: 'secondary' },
             {
@@ -212,6 +214,7 @@ export function DisplayModals({ actions, selection, handlers }: DisplayModalsPro
           isOpen
           isPending={actions.isActionPending}
           onClose={actions.closeModal}
+          autoSubmitFormId={AUTO_SUBMIT_FORMS.displayLicenceCheck}
           actions={[
             { label: t('Cancel'), onClick: actions.closeModal, variant: 'secondary' },
             {
@@ -256,6 +259,7 @@ export function DisplayModals({ actions, selection, handlers }: DisplayModalsPro
           isOpen
           isPending={actions.isActionPending}
           onClose={actions.closeModal}
+          autoSubmitFormId={AUTO_SUBMIT_FORMS.displayRequestScreenshot}
           actions={[
             { label: t('Cancel'), onClick: actions.closeModal, variant: 'secondary' },
             {
@@ -304,6 +308,7 @@ export function DisplayModals({ actions, selection, handlers }: DisplayModalsPro
           onConfirm={() => handlers.confirmCollectNow(display)}
           isActionPending={actions.isActionPending}
           actionError={actions.actionError}
+          autoSubmitFormId={AUTO_SUBMIT_FORMS.displayGroupCollectNow}
         />
       )}
 

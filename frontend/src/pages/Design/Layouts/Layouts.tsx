@@ -42,7 +42,9 @@ import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import FolderSidebar from '@/components/ui/FolderSidebar';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
 import { useUserContext } from '@/context/UserContext';
+import { useAutoSubmit } from '@/hooks/useAutoSubmit';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
@@ -227,6 +229,9 @@ export default function Layouts() {
     handleOpenLayout,
     confirmPublish,
     handleCheckoutLayout,
+    isCheckingOut,
+    checkoutError,
+    setCheckoutError,
     isDiscarding,
     handleConfirmDiscard,
     handleConfirmAssign,
@@ -243,6 +248,8 @@ export default function Layouts() {
     setItemsToMove,
     timezone: user?.settings?.defaultTimezone ?? 'UTC',
   });
+
+  const { guard } = useAutoSubmit();
 
   const handleResetFilters = () => {
     setFilterInputs(LAYOUT_INITIAL_FILTER_STATE);
@@ -297,6 +304,12 @@ export default function Layouts() {
     openModal('discard');
   };
 
+  const openCheckoutModal = (layoutId: number) => {
+    setSelectedLayoutId(layoutId);
+    setCheckoutError(null);
+    openModal('checkout');
+  };
+
   const handleExportModal = (layoutId: number) => {
     setSelectedLayoutId(layoutId);
     openModal('export');
@@ -346,7 +359,11 @@ export default function Layouts() {
     },
     openPublish,
     checkoutLayout: (layoutId) => {
-      handleCheckoutLayout(layoutId);
+      guard(
+        AUTO_SUBMIT_FORMS.layoutCheckout,
+        () => handleCheckoutLayout(layoutId, { notifyOnError: true }),
+        () => openCheckoutModal(layoutId),
+      );
     },
     discardLayout: handleDiscardModal,
     assignModal: (layout) => {
@@ -540,6 +557,8 @@ export default function Layouts() {
           isDiscarding,
           isAssigning,
           isExporting,
+          isCheckingOut,
+          checkoutError,
         }}
         selection={{
           selectedLayout,
@@ -555,6 +574,7 @@ export default function Layouts() {
             handleConfirmClone(selectedLayout, name, description, copyMedia),
           handleConfirmMove: (folderId) => handleConfirmMove(itemsToMove, folderId),
           confirmPublish,
+          confirmCheckout: handleCheckoutLayout,
           confirmDiscard: handleConfirmDiscard,
           handleConfirmAssign,
           handleExportLayout,
