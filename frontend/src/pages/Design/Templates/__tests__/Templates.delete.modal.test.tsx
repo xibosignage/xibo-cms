@@ -177,14 +177,9 @@ describe('Templates page - delete modal', () => {
       renderTemplatesPage();
     });
 
-    // Wait for the row to render before querying checkboxes — the header's
-    // "select all" checkbox shares the same default "Select row" aria-label,
-    // so querying too early (before the row mounts) can grab the header
-    // checkbox instead, which toggles zero rows and never opens the toolbar.
-    await screen.findByText(mockTemplate.layout);
-    const checkboxes = screen.getAllByRole('checkbox', { name: /Select row/i });
+    const checkboxes = await screen.findAllByRole('checkbox', { name: /Select row/i });
     await act(async () => {
-      fireEvent.click(checkboxes[checkboxes.length - 1]!);
+      fireEvent.click(checkboxes[0]!);
     });
 
     await act(async () => {
