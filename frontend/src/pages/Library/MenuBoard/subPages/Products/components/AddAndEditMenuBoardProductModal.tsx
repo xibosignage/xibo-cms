@@ -25,6 +25,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Button from '@/components/ui/Button';
+import { notify } from '@/components/ui/Notification';
 import MediaInput from '@/components/ui/forms/MediaInput';
 import NumberInput from '@/components/ui/forms/NumberInput';
 import Switch from '@/components/ui/forms/Switch';
@@ -176,7 +177,7 @@ export default function AddAndEditMenuBoardProductModal({
     }));
   };
 
-  const handleSave = () => {
+  const submit = (keepOpen: boolean) => {
     const schema = getMenuBoardProductSchema(t);
     const payload = {
       ...draft,
@@ -215,6 +216,11 @@ export default function AddAndEditMenuBoardProductModal({
           await updateMenuBoardProduct(data.menuProductId, payload);
         } else {
           await createMenuBoardProduct(menuCategoryId, payload);
+          if (keepOpen) {
+            notify.success(t('Product added'));
+            onSave();
+            return;
+          }
         }
         onSave();
         onClose();
@@ -236,7 +242,21 @@ export default function AddAndEditMenuBoardProductModal({
       error={apiError}
       actions={[
         { label: t('Cancel'), onClick: onClose, variant: 'secondary', disabled: isPending },
-        { label: isPending ? t('Saving…') : t('Save'), onClick: handleSave, disabled: isPending },
+        ...(type === 'add'
+          ? [
+              {
+                label: t('Next'),
+                onClick: () => submit(true),
+                variant: 'secondary' as const,
+                disabled: isPending,
+              },
+            ]
+          : []),
+        {
+          label: isPending ? t('Saving…') : t('Save'),
+          onClick: () => submit(false),
+          disabled: isPending,
+        },
       ]}
     >
       <>
