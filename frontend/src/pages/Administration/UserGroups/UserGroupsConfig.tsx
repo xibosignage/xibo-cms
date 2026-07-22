@@ -83,15 +83,12 @@ export const getUserGroupItemActions = ({
     // Matches the backend: UserGroup::assignUser()/unassignUser() require the
     // 'usergroup.modify' feature (route middleware) AND checkEditable($group) on this
     // specific group, surfaced here as userGroup.userPermissions.edit.
-    const canManageMembers =
-      isSuperAdmin || (hasUsergroupModify && !!userGroup.userPermissions?.edit);
-    const canEdit = isSuperAdmin || (hasUsergroupModify && !!userGroup.userPermissions?.edit);
-    const canCopy = isSuperAdmin || (hasUsergroupModify && !!userGroup.userPermissions?.edit);
+    const canEditGroup = isSuperAdmin || (hasUsergroupModify && !!userGroup.userPermissions?.edit);
     const canDelete = isSuperAdmin && hasUsergroupModify;
 
     const actions: ActionItem[] = [];
 
-    if (canEdit) {
+    if (canEditGroup) {
       actions.push({
         label: t('Edit'),
         icon: Edit,
@@ -106,7 +103,7 @@ export const getUserGroupItemActions = ({
       });
     }
 
-    if (canCopy) {
+    if (canEditGroup) {
       actions.push({
         label: t('Copy'),
         icon: Copy,
@@ -114,7 +111,7 @@ export const getUserGroupItemActions = ({
       });
     }
 
-    if (canManageMembers) {
+    if (canEditGroup) {
       actions.push({
         label: t('Members'),
         icon: Users,
