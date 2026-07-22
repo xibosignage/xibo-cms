@@ -131,8 +131,12 @@ export const mockUser: User = {
 };
 
 // User without schedule permission — used to test Schedule action gating.
+// Must NOT be a super admin: hasFeature() short-circuits to true for super
+// admins regardless of the features map, which would defeat this fixture's
+// purpose of representing a user who genuinely lacks schedule.add.
 export const mockUserNoSchedule: User = {
   ...mockUser,
+  userTypeId: UserType.User,
   features: {
     'folder.view': true,
   },
@@ -150,8 +154,12 @@ export const mockUserWithAdCampaign: User = {
 
 // User with the ad.campaign feature explicitly disabled — reserved for future tests
 // covering the Type / Start Date / End Date columns being hidden.
+// Must NOT be a super admin: hasFeature() short-circuits to true for super
+// admins regardless of the features map, which would defeat this fixture's
+// purpose of representing a user who genuinely lacks ad.campaign.
 export const mockUserWithoutAdCampaign: User = {
   ...mockUser,
+  userTypeId: UserType.User,
   features: {
     ...mockUser.features,
     'ad.campaign': false,

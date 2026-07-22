@@ -23,6 +23,7 @@ import { isAxiosError } from 'axios';
 import { useEffect, useState, useTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { notify } from '@/components/ui/Notification';
 import MediaInput from '@/components/ui/forms/MediaInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
@@ -102,7 +103,7 @@ export default function AddAndEditMenuBoardCategoryModal({
     setFormErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
-  const handleSave = () => {
+  const submit = (keepOpen: boolean) => {
     const schema = getMenuBoardCategorySchema(t);
     const result = schema.safeParse(draft);
 
@@ -129,6 +130,11 @@ export default function AddAndEditMenuBoardCategoryModal({
           await updateMenuBoardCategory(data.menuCategoryId, draft);
         } else {
           await createMenuBoardCategory(menuId, draft);
+          if (keepOpen) {
+            notify.success(t('Category added'));
+            onSave();
+            return;
+          }
         }
         onSave();
         onClose();
@@ -149,7 +155,21 @@ export default function AddAndEditMenuBoardCategoryModal({
       error={apiError}
       actions={[
         { label: t('Cancel'), onClick: onClose, variant: 'secondary', disabled: isPending },
-        { label: isPending ? t('Saving…') : t('Save'), onClick: handleSave, disabled: isPending },
+        ...(type === 'add'
+          ? [
+              {
+                label: t('Next'),
+                onClick: () => submit(true),
+                variant: 'secondary' as const,
+                disabled: isPending,
+              },
+            ]
+          : []),
+        {
+          label: isPending ? t('Saving…') : t('Save'),
+          onClick: () => submit(false),
+          disabled: isPending,
+        },
       ]}
     >
       <div className="px-8 pb-8 space-y-4 pt-4">

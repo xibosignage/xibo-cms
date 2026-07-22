@@ -37,12 +37,14 @@ import {
 const mockFetchDataConnectorSource = vi.fn();
 const mockCreateDataset = vi.fn();
 const mockUpdateDataset = vi.fn();
+const mockFetchDataset = vi.fn().mockResolvedValue({ rows: [], totalCount: 0 });
 const mockUsePermissions = vi.fn(() => ({ canViewFolders: false }));
 
 vi.mock('@/services/datasetApi', () => ({
   fetchDataConnectorSource: (...args: unknown[]) => mockFetchDataConnectorSource(...args),
   createDataset: (...args: unknown[]) => mockCreateDataset(...args),
   updateDataset: (...args: unknown[]) => mockUpdateDataset(...args),
+  fetchDataset: (...args: unknown[]) => mockFetchDataset(...args),
   testRemoteDataset: vi.fn(),
 }));
 

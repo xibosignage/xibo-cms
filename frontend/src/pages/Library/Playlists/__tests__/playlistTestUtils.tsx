@@ -33,7 +33,7 @@ import { fetchPlaylist } from '@/services/playlistApi';
 import type { FetchPlaylistResponse } from '@/services/playlistApi';
 import { testQueryClient } from '@/setupTests';
 import type { Playlist } from '@/types/playlist';
-import type { User } from '@/types/user';
+import { UserType, type User } from '@/types/user';
 
 // -----------------------------------------------------------------------------
 // One realistic playlist row.
@@ -67,11 +67,14 @@ export const mockPlaylist: Playlist = {
 
 // -----------------------------------------------------------------------------
 // The default logged-in user for most Playlists page tests.
+// userTypeId must NOT be SuperAdmin: hasFeature() short-circuits to true for
+// super admins regardless of the features map, which would defeat tests that
+// rely on this fixture lacking schedule.add.
 // -----------------------------------------------------------------------------
 export const mockUser: User = {
   userId: 1,
   userName: 'TestUser',
-  userTypeId: 1,
+  userTypeId: UserType.User,
   groupId: 1,
   features: { 'folder.view': true },
   settings: {
