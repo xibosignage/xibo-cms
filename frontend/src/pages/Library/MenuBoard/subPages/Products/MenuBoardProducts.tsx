@@ -34,6 +34,7 @@ import {
   INITIAL_PRODUCT_FILTER_STATE,
   type MenuBoardProductFilterInput,
 } from './MenuBoardProductsConfig';
+import MenuBoardCategoryTabs from './components/MenuBoardCategoryTabs';
 import { MenuBoardProductModals } from './components/MenuBoardProductModals';
 import {
   MenuBoardProductQueryKeys,
@@ -368,6 +369,8 @@ export default function MenuBoardProducts() {
           options={filterOptions}
           onReset={handleResetFilters}
         />
+
+        <MenuBoardCategoryTabs menuId={menuId!} activeCategoryId={categoryId!} />
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-800 p-4" role="alert">
