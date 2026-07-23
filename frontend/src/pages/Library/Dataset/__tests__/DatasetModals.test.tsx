@@ -59,6 +59,7 @@ describe('DatasetModals', () => {
       deleteError: null,
       isDeleting: false,
       isCloning: false,
+      isClearingCache: false,
     },
     selection: {
       selectedDataset: null,
@@ -73,6 +74,7 @@ describe('DatasetModals', () => {
       confirmDelete: vi.fn(),
       handleConfirmClone: vi.fn(),
       handleConfirmMove: vi.fn(),
+      confirmClearCache: vi.fn(),
     },
     folderActions: {} as never,
   };
