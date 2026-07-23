@@ -23,7 +23,7 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-import { buildUser, mockCurrentUser, mockUser, SINGLE_USER } from './fixtures/user';
+import { buildUser, mockSuperAdmin, mockGroupAdmin, mockUser, SINGLE_USER } from './fixtures/user';
 import { renderUsersPage } from './helpers/renderUsersPage';
 import { mockFetchUsers } from './mocks/userApi';
 
@@ -132,13 +132,13 @@ describe('Users page — row actions (viewing another user)', () => {
   beforeEach(() => {
     testQueryClient.clear();
     vi.clearAllMocks();
-    // mockUser.userId (2) differs from mockCurrentUser.userId (1) — not self.
+    // mockUser.userId (2) differs from mockSuperAdmin.userId (1) — not self.
     mockFetchUsers(SINGLE_USER);
   });
 
   test('Delete is visible in the more-actions dropdown', async () => {
     const user = userEvent.setup();
-    renderUsersPage(mockCurrentUser);
+    renderUsersPage(mockSuperAdmin);
 
     await screen.findByText(mockUser.userName);
     await user.click(screen.getByRole('button', { name: /more actions/i }));
@@ -150,7 +150,7 @@ describe('Users page — row actions (viewing another user)', () => {
   });
 
   test('Edit quick action is visible', async () => {
-    renderUsersPage(mockCurrentUser);
+    renderUsersPage(mockSuperAdmin);
 
     await screen.findByText(mockUser.userName);
 
@@ -162,13 +162,13 @@ describe('Users page — row actions (viewing self)', () => {
   beforeEach(() => {
     testQueryClient.clear();
     vi.clearAllMocks();
-    const selfRow = buildUser({ userId: mockCurrentUser.userId, userName: 'admin' });
+    const selfRow = buildUser({ userId: mockSuperAdmin.userId, userName: 'admin' });
     mockFetchUsers({ rows: [selfRow], totalCount: 1 });
   });
 
   test('Delete is hidden in the more-actions dropdown', async () => {
     const user = userEvent.setup();
-    renderUsersPage(mockCurrentUser);
+    renderUsersPage(mockSuperAdmin);
 
     await screen.findByText('admin');
     await user.click(screen.getByRole('button', { name: /more actions/i }));
@@ -180,10 +180,38 @@ describe('Users page — row actions (viewing self)', () => {
   });
 
   test('Edit quick action is still visible', async () => {
-    renderUsersPage(mockCurrentUser);
+    renderUsersPage(mockSuperAdmin);
 
     await screen.findByText('admin');
 
     expect(screen.getByRole('button', { name: /^edit$/i })).toBeInTheDocument();
+  });
+});
+
+// The block above proves this for a Super Admin; this proves the same
+// "can't delete yourself" rule applies to any logged-in user, not just admins.
+describe('Users page — row actions (viewing self, non-superAdmin)', () => {
+  beforeEach(() => {
+    testQueryClient.clear();
+    vi.clearAllMocks();
+    const selfRow = buildUser({
+      userId: mockGroupAdmin.userId,
+      userName: 'groupadmin',
+      userTypeId: mockGroupAdmin.userTypeId,
+    });
+    mockFetchUsers({ rows: [selfRow], totalCount: 1 });
+  });
+
+  test('Delete is hidden in the more-actions dropdown for a non-superAdmin viewing their own row', async () => {
+    const user = userEvent.setup();
+    renderUsersPage(mockGroupAdmin);
+
+    await screen.findByText('groupadmin');
+    await user.click(screen.getByRole('button', { name: /more actions/i }));
+
+    // Anchor on a reliably-present action first to confirm the dropdown is open.
+    await screen.findByRole('button', { name: /^user groups$/i });
+
+    expect(screen.queryByRole('button', { name: /^delete$/i })).not.toBeInTheDocument();
   });
 });

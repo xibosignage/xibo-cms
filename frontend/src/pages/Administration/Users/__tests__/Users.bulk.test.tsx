@@ -81,9 +81,7 @@ describe('Users page - bulk Set Home Folder', () => {
   // feature added (it's not on by default) sees the button too.
   test('the bulk button is visible for a non-superAdmin user who has folder.userHome', async () => {
     const user = userEvent.setup();
-    renderUsersPage(
-      buildCurrentUser(mockGroupAdmin, { features: { 'folder.userHome': true } }),
-    );
+    renderUsersPage(buildCurrentUser(mockGroupAdmin, { features: { 'folder.userHome': true } }));
     await screen.findByText(mockUser.userName);
 
     const checkboxes = screen.getAllByRole('checkbox', { name: /select row/i });
