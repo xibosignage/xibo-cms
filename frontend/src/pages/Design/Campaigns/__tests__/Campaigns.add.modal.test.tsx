@@ -28,6 +28,9 @@ import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import AddCampaignModal from '../components/AddCampaignModal';
 
+import { mockUser } from './campaignTestUtils';
+
+import { UserProvider } from '@/context/UserContext';
 import { createCampaign } from '@/services/campaignApi';
 import { testQueryClient } from '@/setupTests';
 
@@ -69,12 +72,14 @@ const renderModal = ({
   testQueryClient.clear();
   return render(
     <QueryClientProvider client={testQueryClient}>
-      <AddCampaignModal
-        isOpen={isOpen}
-        onClose={onClose}
-        onSuccess={onSuccess}
-        defaultFolderId={defaultFolderId}
-      />
+      <UserProvider initialUser={mockUser}>
+        <AddCampaignModal
+          isOpen={isOpen}
+          onClose={onClose}
+          onSuccess={onSuccess}
+          defaultFolderId={defaultFolderId}
+        />
+      </UserProvider>
     </QueryClientProvider>,
   );
 };
@@ -117,12 +122,16 @@ describe('AddCampaignModal', () => {
     // Close then reopen.
     rerender(
       <QueryClientProvider client={testQueryClient}>
-        <AddCampaignModal isOpen={false} onClose={onClose} onSuccess={vi.fn()} />
+        <UserProvider initialUser={mockUser}>
+          <AddCampaignModal isOpen={false} onClose={onClose} onSuccess={vi.fn()} />
+        </UserProvider>
       </QueryClientProvider>,
     );
     rerender(
       <QueryClientProvider client={testQueryClient}>
-        <AddCampaignModal isOpen={true} onClose={onClose} onSuccess={vi.fn()} />
+        <UserProvider initialUser={mockUser}>
+          <AddCampaignModal isOpen={true} onClose={onClose} onSuccess={vi.fn()} />
+        </UserProvider>
       </QueryClientProvider>,
     );
 

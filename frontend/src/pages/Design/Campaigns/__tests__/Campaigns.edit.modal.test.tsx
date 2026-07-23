@@ -28,8 +28,9 @@ import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import EditCampaignModal from '../components/EditCampaignModal';
 
-import { mockCampaign, mockCampaignWithRefs, mockCycleCampaign } from './campaignTestUtils';
+import { mockCampaign, mockCampaignWithRefs, mockCycleCampaign, mockUser } from './campaignTestUtils';
 
+import { UserProvider } from '@/context/UserContext';
 import { updateCampaign } from '@/services/campaignApi';
 import { fetchLayouts } from '@/services/layoutsApi';
 import { testQueryClient } from '@/setupTests';
@@ -154,12 +155,14 @@ const renderEditModal = async ({
   await act(async () => {
     result = render(
       <QueryClientProvider client={testQueryClient}>
-        <EditCampaignModal
-          isOpen={isOpen}
-          campaign={campaign}
-          onClose={onClose}
-          onSuccess={onSuccess}
-        />
+        <UserProvider initialUser={mockUser}>
+          <EditCampaignModal
+            isOpen={isOpen}
+            campaign={campaign}
+            onClose={onClose}
+            onSuccess={onSuccess}
+          />
+        </UserProvider>
       </QueryClientProvider>,
     );
   });
