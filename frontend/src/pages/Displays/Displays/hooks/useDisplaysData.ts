@@ -28,6 +28,7 @@ import type { DisplayFilterInput } from '../DisplaysConfig';
 import type { FetchDisplaysRequest } from '@/services/displaysApi';
 import { fetchDisplays } from '@/services/displaysApi';
 import { resolveLastAccessed } from '@/utils/date';
+import { isValidRegex } from '@/utils/regex';
 
 export const displayQueryKeys = {
   all: ['display'] as const,
@@ -83,7 +84,21 @@ export const useDisplaysData = ({
         signal,
         ...(advancedFilters.displayId != null ? { displayId: advancedFilters.displayId } : {}),
         ...(advancedFilters.name ? { display: advancedFilters.name } : {}),
+        ...(advancedFilters.useRegexForName &&
+        advancedFilters.name &&
+        isValidRegex(advancedFilters.name)
+          ? { useRegexForName: 1 }
+          : {}),
+        ...(advancedFilters.logicalOperatorName
+          ? { logicalOperatorName: advancedFilters.logicalOperatorName }
+          : {}),
         ...(normalizedTags ? { tags: normalizedTags } : {}),
+        ...(advancedFilters.exactTags !== undefined
+          ? { exactTags: advancedFilters.exactTags ? 1 : 0 }
+          : {}),
+        ...(advancedFilters.logicalOperator
+          ? { logicalOperator: advancedFilters.logicalOperator }
+          : {}),
         ...(advancedFilters.mediaInventoryStatus
           ? { mediaInventoryStatus: advancedFilters.mediaInventoryStatus }
           : {}),

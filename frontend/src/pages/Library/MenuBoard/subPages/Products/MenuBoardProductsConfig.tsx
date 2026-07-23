@@ -34,6 +34,7 @@ import type { ActionItem } from '@/types/table';
 export interface MenuBoardProductFilterInput {
   menuProductId: string;
   name: string;
+  useRegexForName: boolean;
   code: string;
   availability: string;
 }
@@ -41,6 +42,7 @@ export interface MenuBoardProductFilterInput {
 export const INITIAL_PRODUCT_FILTER_STATE: MenuBoardProductFilterInput = {
   menuProductId: '',
   name: '',
+  useRegexForName: false,
   code: '',
   availability: '',
 };
@@ -59,6 +61,8 @@ export const getProductFilterKeys = (
     placeholder: t('Enter Name'),
     name: 'name',
     type: 'text',
+    showRegex: true,
+    regexKey: 'useRegexForName',
   },
   {
     label: t('Code'),
