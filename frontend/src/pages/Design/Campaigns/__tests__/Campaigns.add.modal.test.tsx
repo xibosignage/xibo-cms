@@ -30,6 +30,7 @@ import AddCampaignModal from '../components/AddCampaignModal';
 
 import { mockUser } from './campaignTestUtils';
 
+import type * as TagInputModule from '@/components/ui/forms/TagInput';
 import { UserProvider } from '@/context/UserContext';
 import { createCampaign } from '@/services/campaignApi';
 import { testQueryClient } from '@/setupTests';
@@ -48,7 +49,7 @@ vi.mock('@/services/folderApi', () => ({
 vi.mock('@/components/ui/modals/Modal');
 vi.mock('@/components/ui/forms/SelectFolder', () => ({ default: () => null }));
 vi.mock('@/components/ui/forms/TagInput', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/components/ui/forms/TagInput')>();
+  const actual = await importOriginal<typeof TagInputModule>();
   return { ...actual, default: () => null };
 });
 
