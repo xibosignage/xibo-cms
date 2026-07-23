@@ -21,6 +21,13 @@
 
 import type { Tag } from './tag';
 
+export interface PlaylistPermissions {
+  view?: number;
+  edit?: number;
+  delete?: number;
+  modifyPermissions?: number;
+}
+
 export interface Playlist {
   folderId: number;
   playlistId: number;
@@ -46,4 +53,5 @@ export interface Playlist {
   filterMediaTagsLogicalOperator?: 'OR' | 'AND';
   filterFolderId: number | null;
   maxNumberOfItems: number;
+  userPermissions?: PlaylistPermissions;
 }

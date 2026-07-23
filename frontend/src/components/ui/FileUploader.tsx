@@ -59,12 +59,14 @@ interface FileUploaderProps {
   maxSize?: number;
   onUrlUpload: (url: string) => void;
   disabled?: boolean;
+  canTag?: boolean;
 }
 
 interface RowProps {
   item: UploadItem;
   onRemove: () => void;
   onUpdate: (data: { name?: string; tags?: string; thumbnailBlob?: Blob }) => void;
+  canTag?: boolean;
 }
 
 const parseTagsFromString = (str: string | undefined): Tag[] => {
@@ -117,7 +119,7 @@ function formatFileSize(item: UploadItem, t: TFunction): string {
   return formatBytes(item.file.size, t);
 }
 
-function UploadItemRow({ item, onRemove, onUpdate }: RowProps) {
+function UploadItemRow({ item, onRemove, onUpdate, canTag = true }: RowProps) {
   const { t } = useTranslation();
   const [preview, setPreview] = useState<string | null>(null);
   const [localName, setLocalName] = useState(item.displayName ?? '');
@@ -283,9 +285,15 @@ function UploadItemRow({ item, onRemove, onUpdate }: RowProps) {
               />
             </div>
 
-            <div className="flex flex-col w-full md:w-70">
-              <TagInput value={tagObjects} onChange={handleTagsChange} disabled={isUploading} />
-            </div>
+            {canTag && (
+              <div className="flex flex-col w-full md:w-70">
+                <TagInput
+                  value={tagObjects}
+                  onChange={handleTagsChange}
+                  disabled={isUploading || !canTag}
+                />
+              </div>
+            )}
           </div>
         </div>
 
@@ -388,6 +396,7 @@ export function FileUploader({
   maxSize = 2 * 1024 * 1024 * 1024,
   onUrlUpload,
   disabled = false,
+  canTag = true,
 }: FileUploaderProps) {
   const { t } = useTranslation();
   const [urlInput, setUrlInput] = useState('');
@@ -569,6 +578,7 @@ export function FileUploader({
               item={item}
               onRemove={() => removeFile(item.id)}
               onUpdate={(data) => updateFileData(item.id, data)}
+              canTag={canTag}
             />
           ))}
         </div>

@@ -29,6 +29,7 @@ import EditMediaModal from './EditMediaModal';
 import EnableStatsMediaModal from './EnableStatsMediaModal';
 import { MediaInfoPanel } from './MediaInfoPanel';
 import ReplaceFileModal from './ReplaceFileModal';
+import TidyLibraryModal from './TidyLibraryModal';
 
 import { FileUploader } from '@/components/ui/FileUploader';
 import FolderActionModals from '@/components/ui/FolderActionModals';
@@ -54,6 +55,8 @@ interface MediaModalsProps {
     isDeleting: boolean;
     isCloning: boolean;
     isUpdatingStats: boolean;
+    isTidying: boolean;
+    tidyError: string | null;
   };
   selection: {
     selectedMedia: Media | null;
@@ -68,6 +71,7 @@ interface MediaModalsProps {
     handleConfirmClone: (newName: string, tags: Tag[]) => void;
     handleConfirmMove: (newFolderId: number) => void;
     handleConfirmEnableStats: (value: string) => void;
+    handleConfirmTidy: (options: { tidyGenericFiles: boolean }) => void;
   };
   upload: {
     isOpen: boolean;
@@ -85,6 +89,8 @@ interface MediaModalsProps {
     selectedFolderId: number | null;
     setSelectedFolderId: (id: number | null) => void;
     canViewFolders: boolean;
+    canTag: boolean;
+    maxSize: number;
   };
   infoPanel: {
     isOpen: boolean;
@@ -136,6 +142,15 @@ export function MediaModals({
           }
           isLoading={actions.isDeleting}
           error={actions.deleteError}
+        />
+      )}
+
+      {isModalOpen('tidy') && (
+        <TidyLibraryModal
+          onClose={actions.closeModal}
+          onConfirm={handlers.handleConfirmTidy}
+          isLoading={actions.isTidying}
+          error={actions.tidyError}
         />
       )}
 
@@ -246,8 +261,9 @@ export function MediaModals({
               clearQueue={upload.clearQueue}
               updateFileData={upload.updateFileData}
               isUploading={false}
-              maxSize={2 * 1024 * 1024 * 1024}
+              maxSize={upload.maxSize}
               disabled={!upload.canAdd}
+              canTag={upload.canTag}
               onUrlUpload={(url) => {
                 upload.onUrlAdd(url, upload.targetFolderId);
               }}

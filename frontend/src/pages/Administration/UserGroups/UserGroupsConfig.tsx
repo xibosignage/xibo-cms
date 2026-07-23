@@ -83,33 +83,35 @@ export const getUserGroupItemActions = ({
     // Matches the backend: UserGroup::assignUser()/unassignUser() require the
     // 'usergroup.modify' feature (route middleware) AND checkEditable($group) on this
     // specific group, surfaced here as userGroup.userPermissions.edit.
-    const canManageMembers =
-      isSuperAdmin || (hasUsergroupModify && !!userGroup.userPermissions?.edit);
+    const canEditGroup = isSuperAdmin || (hasUsergroupModify && !!userGroup.userPermissions?.edit);
+    const canDelete = isSuperAdmin && hasUsergroupModify;
 
-    const actions: ActionItem[] = [
-      // Quick action
-      {
+    const actions: ActionItem[] = [];
+
+    if (canEditGroup) {
+      actions.push({
         label: t('Edit'),
         icon: Edit,
         onClick: () => onEdit(userGroup),
         isQuickAction: true,
         variant: 'primary' as const,
-      },
-
-      // Dropdown menu actions
-      {
+      });
+      actions.push({
         label: t('Edit'),
         icon: Edit,
         onClick: () => onEdit(userGroup),
-      },
-      {
+      });
+    }
+
+    if (canEditGroup) {
+      actions.push({
         label: t('Copy'),
         icon: Copy,
         onClick: () => onCopy(userGroup),
-      },
-    ];
+      });
+    }
 
-    if (canManageMembers) {
+    if (canEditGroup) {
       actions.push({
         label: t('Members'),
         icon: Users,
@@ -117,20 +119,25 @@ export const getUserGroupItemActions = ({
       });
     }
 
-    actions.push(
-      {
+    if (isSuperAdmin) {
+      actions.push({
         label: t('Features'),
         icon: Settings,
         onClick: () => onFeatures(userGroup),
-      },
-      { isSeparator: true },
-      {
-        label: t('Delete'),
-        icon: Trash2,
-        onClick: () => onDelete(userGroup),
-        variant: 'danger' as const,
-      },
-    );
+      });
+    }
+
+    if (canDelete) {
+      actions.push(
+        { isSeparator: true },
+        {
+          label: t('Delete'),
+          icon: Trash2,
+          onClick: () => onDelete(userGroup),
+          variant: 'danger' as const,
+        },
+      );
+    }
 
     return actions;
   };

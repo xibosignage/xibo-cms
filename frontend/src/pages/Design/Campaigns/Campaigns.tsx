@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { Search, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -46,10 +46,9 @@ import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
-import { fetchContextButtons } from '@/services/folderApi';
 import type { Campaign } from '@/types/campaign';
 import { countActiveFilters } from '@/utils/filters';
-import { hasFeature } from '@/utils/permissions';
+import { canSaveInFolder, hasFeature } from '@/utils/permissions';
 
 export default function Campaigns() {
   const { t } = useTranslation();
@@ -59,6 +58,7 @@ export default function Campaigns() {
   const canViewFolders = usePermissions()?.canViewFolders;
   const canSchedule = hasFeature(user, 'schedule.add');
   const canAccessAdCampaign = hasFeature(user, 'ad.campaign');
+  const canTag = hasFeature(user, 'tag.tagging');
   const homeFolderId = user?.homeFolderId ?? 1;
 
   const location = useLocation();
@@ -158,17 +158,14 @@ export default function Campaigns() {
   });
 
   const effectiveFolderId = selectedFolderId ?? homeFolderId;
-  const { data: folderPerms } = useQuery({
-    queryKey: ['folderPermissions', effectiveFolderId],
-    queryFn: () => fetchContextButtons(effectiveFolderId),
-    staleTime: 1000 * 60 * 5,
-  });
 
   // Computed values
   const campaignList = queryData?.rows ?? [];
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
-  const canAddToFolder = folderPerms?.create || false;
+  const canAddToFolder =
+    hasFeature(user, 'campaign.add') &&
+    canSaveInFolder(user, !!canViewFolders, effectiveFolderId, homeFolderId);
 
   const folderActions = useFolderActions({
     onSuccess: (targetFolder) => {
@@ -282,6 +279,11 @@ export default function Campaigns() {
     t,
     formatDateTime,
     canAccessAdCampaign,
+    canModify: hasFeature(user, 'campaign.modify'),
+    canUserShare: hasFeature(user, 'user.sharing'),
+    canPreview: hasFeature(user, 'layout.view') || hasFeature(user, 'campaign.view'),
+    canViewFolders: hasFeature(user, 'folder.view'),
+    canTag,
     onDelete: handleDelete,
     openEditModal,
     openAdEditor,
@@ -319,7 +321,7 @@ export default function Campaigns() {
     },
   });
 
-  const { filterOptions } = useCampaignFilterOptions(t, { canAccessAdCampaign });
+  const { filterOptions } = useCampaignFilterOptions(t, { canAccessAdCampaign, canTag });
 
   const libraryTabs = useFilteredTabs('design');
 

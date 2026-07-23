@@ -56,7 +56,7 @@ import { useTableState } from '@/hooks/useTableState';
 import { exportDatasetCsv } from '@/services/datasetApi';
 import type { Dataset } from '@/types/dataset';
 import { countActiveFilters } from '@/utils/filters';
-import { filterByPermission, hasFeature } from '@/utils/permissions';
+import { canSaveInFolder, filterByPermission, hasFeature } from '@/utils/permissions';
 
 export default function Dataset() {
   const { t } = useTranslation();
@@ -153,6 +153,9 @@ export default function Dataset() {
   const canAddDataset = hasFeature(user, 'dataset.add');
   const canModify = hasFeature(user, 'dataset.modify');
   const canRealTime = hasFeature(user, 'dataset.realtime');
+  const canViewData = hasFeature(user, 'dataset.data');
+  const canAddToFolder =
+    canAddDataset && canSaveInFolder(user, !!canViewFolders, effectiveFolderId, homeFolderId);
 
   const folderActions = useFolderActions({
     onSuccess: (targetFolder) => {
@@ -257,6 +260,9 @@ export default function Dataset() {
   const columns = getDatasetColumns({
     t,
     canModify,
+    canViewData,
+    canRealTime,
+    canUserShare: hasFeature(user, 'user.sharing'),
     onDelete: handleDelete,
     openAddEditModal,
     openMoveModal: (dataset) => {
@@ -369,7 +375,7 @@ export default function Dataset() {
               <Button
                 variant="primary"
                 className="font-semibold"
-                disabled={!isHydrated}
+                disabled={!canAddToFolder || !isHydrated}
                 onClick={() => openAddEditModal(null)}
                 leftIcon={Plus}
               >

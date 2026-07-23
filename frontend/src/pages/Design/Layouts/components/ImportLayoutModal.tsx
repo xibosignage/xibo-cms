@@ -35,6 +35,7 @@ import { useUserContext } from '@/context/UserContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { importLayout, updateLayout } from '@/services/layoutsApi';
 import type { Tag } from '@/types/tag';
+import { hasFeature } from '@/utils/permissions';
 
 interface ImportLayoutModalProps {
   onClose: () => void;
@@ -93,6 +94,7 @@ function ImportItemRow({
   onUpdate: (data: { name?: string; tags?: string }) => void;
 }) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
   const [localName, setLocalName] = useState(item.name);
   const tagObjects = parseTagsFromString(item.tags);
 
@@ -146,9 +148,15 @@ function ImportItemRow({
             />
           </div>
 
-          <div className="flex flex-col w-full md:w-70">
-            <TagInput value={tagObjects} onChange={handleTagsChange} disabled={isUploading} />
-          </div>
+          {(hasFeature(user, 'tag.tagging') || (tagObjects?.length ?? 0) > 0) && (
+            <div className="flex flex-col w-full md:w-70">
+              <TagInput
+                value={tagObjects}
+                onChange={handleTagsChange}
+                disabled={isUploading || !hasFeature(user, 'tag.tagging')}
+              />
+            </div>
+          )}
         </div>
       </div>
 

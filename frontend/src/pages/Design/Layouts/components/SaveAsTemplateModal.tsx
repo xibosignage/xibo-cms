@@ -28,10 +28,12 @@ import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
+import { useUserContext } from '@/context/UserContext';
 import { getTemplateSchema } from '@/schema/templates';
 import { saveLayoutAsTemplate } from '@/services/layoutsApi';
 import type { Layout } from '@/types/layout';
 import type { Tag } from '@/types/tag';
+import { hasFeature } from '@/utils/permissions';
 
 interface SaveAsTemplateModalProps {
   isOpen?: boolean;
@@ -45,6 +47,7 @@ export default function SaveAsTemplateModal({
   onClose,
 }: SaveAsTemplateModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState(layout?.description ?? '');
@@ -182,14 +185,17 @@ export default function SaveAsTemplateModal({
             rows={3}
           />
 
-          <TagInput
-            value={tags}
-            helpText={t('Tags separated by commas. Use Tag|Value for tagged attributes.')}
-            onChange={(tags) => setTags(tags)}
-            inputValue={pendingTagInput}
-            onInputChange={setPendingTagInput}
-            onPendingValueChange={setHasTagPendingValue}
-          />
+          {(hasFeature(user, 'tag.tagging') || (tags?.length ?? 0) > 0) && (
+            <TagInput
+              value={tags}
+              helpText={t('Tags separated by commas. Use Tag|Value for tagged attributes.')}
+              onChange={(tags) => setTags(tags)}
+              inputValue={pendingTagInput}
+              onInputChange={setPendingTagInput}
+              onPendingValueChange={setHasTagPendingValue}
+              disabled={!hasFeature(user, 'tag.tagging')}
+            />
+          )}
 
           <Checkbox
             id="includeWidgets"

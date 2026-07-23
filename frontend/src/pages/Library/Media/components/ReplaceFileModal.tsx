@@ -9,9 +9,11 @@ import { notify } from '@/components/ui/Notification';
 import Checkbox from '@/components/ui/forms/Checkbox';
 import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
 import Modal from '@/components/ui/modals/Modal';
+import { useUserContext } from '@/context/UserContext';
 import { replaceMedia } from '@/services/mediaApi';
 import type { Media, MediaType } from '@/types/media';
 import type { Tag } from '@/types/tag';
+import { hasFeature } from '@/utils/permissions';
 
 interface ReplaceFileMedia {
   name: string;
@@ -35,6 +37,7 @@ export default function ReplaceFileModal({
   onSave,
 }: ReplaceFileModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
   const [isSaving, setIsSaving] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -44,12 +47,19 @@ export default function ReplaceFileModal({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const Icon = getMediaIcon(data.mediaType);
 
+  const defaultDeleteOldRevisions =
+    user?.settings?.LIBRARY_MEDIA_DELETEOLDVER_CHECKB === '1' ||
+    user?.settings?.LIBRARY_MEDIA_DELETEOLDVER_CHECKB === 'Checked';
+  const defaultUpdateInLayouts =
+    user?.settings?.LIBRARY_MEDIA_UPDATEINALL_CHECKB === '1' ||
+    user?.settings?.LIBRARY_MEDIA_UPDATEINALL_CHECKB === 'Checked';
+
   const [draft, setDraft] = useState<ReplaceFileMedia>(() => ({
     name: data.name,
     tags: data.tags.map((t) => ({ ...t })),
-    deleteOldRevisions: data.deleteOldRevisions,
+    deleteOldRevisions: defaultDeleteOldRevisions,
     oldMediaId: data.mediaId,
-    updateInLayouts: data.updateInLayouts,
+    updateInLayouts: defaultUpdateInLayouts,
   }));
 
   const previewUrl = selectedFile ? URL.createObjectURL(selectedFile) : data.thumbnail;
@@ -129,9 +139,9 @@ export default function ReplaceFileModal({
     setDraft({
       name: data.name,
       tags: data.tags.map((t) => ({ ...t })),
-      deleteOldRevisions: data.deleteOldRevisions,
+      deleteOldRevisions: defaultDeleteOldRevisions,
       oldMediaId: data.mediaId,
-      updateInLayouts: data.updateInLayouts,
+      updateInLayouts: defaultUpdateInLayouts,
     });
   }, [data]);
 
@@ -259,14 +269,17 @@ export default function ReplaceFileModal({
               onChange={(e) => setDraft((prev) => ({ ...prev, name: e.target.value }))}
             />
           </div>
-          <TagInput
-            value={draft.tags}
-            helpText={t('Tags (Comma-separated: Tag or Tag|Value)')}
-            onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
-            inputValue={pendingTagInput}
-            onInputChange={setPendingTagInput}
-            onPendingValueChange={setHasTagPendingValue}
-          />
+          {(hasFeature(user, 'tag.tagging') || (draft.tags?.length ?? 0) > 0) && (
+            <TagInput
+              value={draft.tags}
+              helpText={t('Tags (Comma-separated: Tag or Tag|Value)')}
+              onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
+              inputValue={pendingTagInput}
+              onInputChange={setPendingTagInput}
+              onPendingValueChange={setHasTagPendingValue}
+              disabled={!hasFeature(user, 'tag.tagging')}
+            />
+          )}
           {/* Retired */}
           <div className="bg-gray-50 flex flex-col ">
             <Checkbox

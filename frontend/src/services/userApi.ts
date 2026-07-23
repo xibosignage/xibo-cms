@@ -19,6 +19,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import axios from 'axios';
+
+import { withPublicPath } from '@/config/publicPath';
 import http from '@/lib/api';
 import type { User } from '@/types/user';
 
@@ -320,15 +323,33 @@ export async function assignUserGroups(
 
 // Homepages
 export interface Homepage {
-  name: string;
+  homepage: string;
   title: string;
   feature?: string;
+  description?: string;
 }
 
-export async function fetchHomepages(params: {
-  userTypeId?: number;
-  groupId?: number;
-}): Promise<Homepage[]> {
-  const response = await http.get('/user/form/homepages', { params });
-  return response.data;
+export async function fetchHomepages(
+  params: {
+    userId?: number;
+    userTypeId?: number;
+    groupId?: number;
+  },
+  signal?: AbortSignal,
+): Promise<Homepage[]> {
+  // This is a web route (served at the install root, not under the /json API
+  // prefix), so it must be called with the raw axios client + withPublicPath.
+  const response = await axios.get(withPublicPath('user/form/homepages'), {
+    params,
+    signal,
+    withCredentials: true,
+    // This web route only returns JSON for XHR requests (Base::isXhr); without
+    // this header the CMS renders a full HTML page and 500s.
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+  });
+
+  // Web grid routes wrap rows in a DataTables envelope ({ data: [...] });
+  // fall back to the payload itself in case it is already an array.
+  const payload = response.data;
+  return Array.isArray(payload) ? payload : (payload?.data ?? []);
 }

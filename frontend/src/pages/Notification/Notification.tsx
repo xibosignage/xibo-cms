@@ -165,6 +165,7 @@ export default function NotificationCentre() {
 
   const columns = getNotificationColumns({
     t,
+    canModify: hasFeature(user, 'notification.modify'),
     onDelete: handleDelete,
     onView: handleView,
     onEdit: handleEdit,

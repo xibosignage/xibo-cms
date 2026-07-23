@@ -22,6 +22,7 @@
 import { lazy, Suspense } from 'react';
 
 import { useUserContext } from '@/context/UserContext';
+import { hasFeature } from '@/utils/permissions';
 
 const StatusDashboard = lazy(() => import('./StatusDashboard/StatusDashboard'));
 const IconDashboard = lazy(() => import('./IconDashboard/IconDashboard'));
@@ -35,13 +36,13 @@ export default function DashboardRouter() {
   const Dashboard = (() => {
     switch (homePageId) {
       case 'statusdashboard.view':
-        return StatusDashboard;
+        return hasFeature(user, 'dashboard.status') ? StatusDashboard : IconDashboard;
       case 'icondashboard.view':
         return IconDashboard;
       case 'mediamanager.view':
-        return MediaDashboard;
+        return hasFeature(user, 'dashboard.media.manager') ? MediaDashboard : IconDashboard;
       case 'playlistdashboard.view':
-        return PlaylistDashboard;
+        return hasFeature(user, 'dashboard.playlist') ? PlaylistDashboard : IconDashboard;
       default:
         return IconDashboard;
     }

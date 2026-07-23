@@ -144,6 +144,7 @@ export function DataTable<TData, TValue>({
         <CheckboxCell
           checked={table.getIsAllPageRowsSelected()}
           onChange={(e) => table.toggleAllPageRowsSelected(!!e.target.checked)}
+          ariaLabel={t('Select all rows')}
         ></CheckboxCell>
       ),
       cell: ({ row }) => (

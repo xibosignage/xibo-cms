@@ -27,7 +27,7 @@ import { useState } from 'react';
 
 import { notify } from '@/components/ui/Notification';
 import { selectFolder } from '@/services/folderApi';
-import { cloneMedia, deleteMedia, updateMedia } from '@/services/mediaApi';
+import { cloneMedia, deleteMedia, tidyLibrary, updateMedia } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
 import type { Tag } from '@/types/tag';
 
@@ -50,6 +50,8 @@ export function useMediaActions({
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isCloning, setIsCloning] = useState(false);
   const [isUpdatingStats, setIsUpdatingStats] = useState(false);
+  const [isTidying, setIsTidying] = useState(false);
+  const [tidyError, setTidyError] = useState<string | null>(null);
 
   const confirmDelete = async (
     itemsToDelete: Media[],
@@ -162,6 +164,33 @@ export function useMediaActions({
     }
   };
 
+  const handleConfirmTidy = async (options: { tidyGenericFiles: boolean }) => {
+    if (isTidying) {
+      return;
+    }
+
+    try {
+      setIsTidying(true);
+      setTidyError(null);
+
+      const { countDeleted } = await tidyLibrary(options.tidyGenericFiles);
+
+      notify.success(
+        t('Library tidy complete. {{count}} item(s) removed.', { count: countDeleted }),
+      );
+      handleRefresh();
+      closeModal();
+    } catch (error) {
+      const message =
+        isAxiosError(error) && error.response?.data?.message
+          ? error.response.data.message
+          : t('Failed to tidy the library.');
+      setTidyError(message);
+    } finally {
+      setIsTidying(false);
+    }
+  };
+
   const handleConfirmEnableStats = async (media: Media, value: string) => {
     if (isUpdatingStats) {
       return;
@@ -193,9 +222,13 @@ export function useMediaActions({
     setDeleteError,
     isCloning,
     isUpdatingStats,
+    isTidying,
+    tidyError,
+    setTidyError,
     confirmDelete,
     handleConfirmClone,
     handleConfirmMove,
     handleConfirmEnableStats,
+    handleConfirmTidy,
   };
 }

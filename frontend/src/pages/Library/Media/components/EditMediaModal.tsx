@@ -34,12 +34,14 @@ import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagInput';
 import TextInput from '@/components/ui/forms/TextInput';
 import { getCommonFormOptions } from '@/config/commonForms';
+import { useUserContext } from '@/context/UserContext';
 import { getMediaSchema } from '@/schema/media';
 import { updateMedia } from '@/services/mediaApi';
 import type { Media } from '@/types/media';
 import type { Tag } from '@/types/tag';
 import type { ExpiryValue } from '@/utils/date';
 import { expiresToExpiryValue, expiryToDateTime } from '@/utils/date';
+import { hasFeature } from '@/utils/permissions';
 
 interface EditMediaModalProps {
   isOpen?: boolean;
@@ -70,6 +72,7 @@ export default function EditMediaModal({
   onSave,
 }: EditMediaModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
   const [expiry, setExpiry] = useState<ExpiryValue>(expiresToExpiryValue(data.expires));
   const [apiError, setApiError] = useState<string | undefined>();
   const [formErrors, setFormErrors] = useState<MediaFormErrors>({});
@@ -94,7 +97,7 @@ export default function EditMediaModal({
     mediaNoExpiryDate: expiresToExpiryValue(data.expires),
     enableStat: data.enableStat,
     retired: data.retired,
-    updateInLayouts: data.updateInLayouts,
+    updateInLayouts: user?.settings?.LIBRARY_MEDIA_UPDATEINALL_CHECKB === 'Checked',
   }));
 
   useEffect(() => {
@@ -113,7 +116,7 @@ export default function EditMediaModal({
       mediaNoExpiryDate: initialExpiry,
       enableStat: data.enableStat,
       retired: data.retired,
-      updateInLayouts: data.updateInLayouts,
+      updateInLayouts: user?.settings?.LIBRARY_MEDIA_UPDATEINALL_CHECKB === 'Checked',
     });
   }, [data]);
 
@@ -237,14 +240,17 @@ export default function EditMediaModal({
           />
 
           {/* Tags */}
-          <TagInput
-            value={draft.tags}
-            helpText={t('Tags separated by commas. Use Tag|Value for tagged attributes.')}
-            onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
-            inputValue={pendingTagInput}
-            onInputChange={setPendingTagInput}
-            onPendingValueChange={setHasTagPendingValue}
-          />
+          {(hasFeature(user, 'tag.tagging') || (draft.tags?.length ?? 0) > 0) && (
+            <TagInput
+              value={draft.tags}
+              helpText={t('Tags separated by commas. Use Tag|Value for tagged attributes.')}
+              onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
+              inputValue={pendingTagInput}
+              onInputChange={setPendingTagInput}
+              onPendingValueChange={setHasTagPendingValue}
+              disabled={!hasFeature(user, 'tag.tagging')}
+            />
+          )}
 
           <div className="grid grid-cols-2 gap-2">
             {/* Orientation */}

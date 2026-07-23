@@ -162,6 +162,8 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<EventFilterInp
 export interface EventActionsProps {
   t: TFunction;
   timezone: string;
+  canModify?: boolean;
+  canAdd?: boolean;
   formatDateTime?: (value: DateLike) => string;
   onDelete: (id: number) => void;
   openAddEditModal: (row: Event) => void;
@@ -170,43 +172,60 @@ export interface EventActionsProps {
 
 export const getEventItemActions = ({
   t,
+  canModify = false,
+  canAdd = false,
   onDelete,
   openAddEditModal,
   copyEvent,
 }: EventActionsProps): ((scheduleEvent: Event) => ActionItem[]) => {
   return (scheduleEvent: Event) => {
-    const actions: ActionItem[] = [
-      {
+    const actions: ActionItem[] = [];
+    const isEditable = scheduleEvent.isEditable !== false;
+
+    if (canModify && isEditable) {
+      actions.push({
         label: t('Edit'),
         icon: Edit,
         onClick: () => openAddEditModal(scheduleEvent),
         isQuickAction: true,
         variant: 'primary' as const,
-      },
-      {
+      });
+    }
+
+    if (canAdd && isEditable) {
+      actions.push({
         label: t('Make a Copy'),
         icon: CopyCheck,
         isQuickAction: true,
         onClick: () => copyEvent && copyEvent(scheduleEvent.eventId),
-      },
-      {
+      });
+    }
+
+    if (canModify && isEditable) {
+      actions.push({
         label: t('Edit'),
         icon: Edit,
         onClick: () => openAddEditModal(scheduleEvent),
         variant: 'primary' as const,
-      },
-      {
+      });
+    }
+
+    if (canAdd && isEditable) {
+      actions.push({
         label: t('Make a Copy'),
         icon: CopyCheck,
         onClick: () => copyEvent && copyEvent(scheduleEvent.eventId),
-      },
-      {
+      });
+    }
+
+    if (canModify && isEditable) {
+      actions.push({
         label: t('Delete'),
         icon: Trash2,
         onClick: () => onDelete(scheduleEvent.eventId),
         variant: 'danger' as const,
-      },
-    ];
+      });
+    }
 
     return actions;
   };
@@ -548,18 +567,24 @@ export const getEventColumns = (props: EventActionsProps): ColumnDef<Event>[] =>
 
 interface GetBulkActionsProps {
   t: TFunction;
+  canModify?: boolean;
   onDelete: () => void;
 }
 
 export const getBulkActions = ({
   t,
+  canModify = false,
   onDelete,
 }: GetBulkActionsProps): DataTableBulkAction<Event>[] => {
-  return [
-    {
+  const actions: DataTableBulkAction<Event>[] = [];
+
+  if (canModify) {
+    actions.push({
       label: t('Delete Selected'),
       icon: Trash2,
       onClick: onDelete,
-    },
-  ];
+    });
+  }
+
+  return actions;
 };
