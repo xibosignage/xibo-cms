@@ -250,12 +250,12 @@ export default function Dashboard() {
         <div className="rounded-lg flex flex-col border border-gray-200 bg-slate-50 p-5 space-y-8">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-semibold text-gray-800">{t('Bandwidth Usage')}</h3>
-            <a
-              href={withPublicPath('report/form/bandwidth')}
+            <Link
+              to="/reporting/bandwidth"
               className="flex items-center gap-1 text-sm text-xibo-blue-600 hover:underline"
             >
               {t('View Full Report')} <ArrowRight className="h-3.5 w-3.5" />
-            </a>
+            </Link>
           </div>
           {isLoading ? (
             <div className="flex flex-col items-center justify-center h-full">
