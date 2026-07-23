@@ -67,7 +67,11 @@ import type { DateLike } from '@/utils/date';
 export interface DisplayFilterInput {
   displayId?: number | null;
   name?: string;
+  logicalOperatorName?: 'OR' | 'AND';
+  useRegexForName?: boolean;
   tags?: Tag[];
+  logicalOperator?: 'OR' | 'AND';
+  exactTags?: boolean;
   mediaInventoryStatus: string | null;
   loggedIn: string | null;
   authorised: string | null;
@@ -120,7 +124,11 @@ export type ModalType =
 export const INITIAL_FILTER_STATE: DisplayFilterInput = {
   displayId: null,
   name: '',
+  logicalOperatorName: 'OR',
+  useRegexForName: false,
   tags: [],
+  logicalOperator: 'OR',
+  exactTags: false,
   mediaInventoryStatus: null,
   loggedIn: null,
   authorised: null,
@@ -248,6 +256,10 @@ export const getBaseFilterKeys = (
     type: 'text',
     className: '',
     placeholder: ' ',
+    showAndOr: true,
+    andOrKey: 'logicalOperatorName',
+    showRegex: true,
+    regexKey: 'useRegexForName',
   },
   ...(canTag
     ? ([
@@ -257,6 +269,10 @@ export const getBaseFilterKeys = (
           type: 'tags',
           placeholder: ' ',
           className: '',
+          showAndOr: true,
+          andOrKey: 'logicalOperator',
+          showExactTags: true,
+          exactTagsKey: 'exactTags',
         },
       ] as FilterConfigItem<DisplayFilterInput>[])
     : []),

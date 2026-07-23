@@ -117,7 +117,7 @@ export default function DatePicker({
   });
   const [period, setPeriod] = useState<'AM' | 'PM'>(() => {
     if (!value?.date) {
-      return 'PM';
+      return 'AM';
     }
     const h = timeZone
       ? DateTime.fromJSDate(value.date, { zone: timeZone }).hour
