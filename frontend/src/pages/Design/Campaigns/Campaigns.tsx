@@ -136,6 +136,7 @@ export default function Campaigns() {
 
   const [itemsToDelete, setItemsToDelete] = useState<Campaign[]>([]);
   const [itemsToMove, setItemsToMove] = useState<Campaign[]>([]);
+  const [bulkItems, setBulkItems] = useState<Campaign[]>([]);
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
   const [selectedCampaignId, setSelectedCampaignId] = useState<number | null>(null);
 
@@ -319,6 +320,12 @@ export default function Campaigns() {
       setShareEntityIds(ids);
       openModal('share');
     },
+    onEditTags: canTag
+      ? () => {
+          setBulkItems(getAllSelectedItems());
+          openModal('editTagsMultiple');
+        }
+      : undefined,
   });
 
   const { filterOptions } = useCampaignFilterOptions(t, { canAccessAdCampaign, canTag });
@@ -459,6 +466,7 @@ export default function Campaigns() {
           itemsToDelete,
           existingNames,
           itemsToMove,
+          bulkItems,
           shareEntityIds,
           setShareEntityIds,
         }}

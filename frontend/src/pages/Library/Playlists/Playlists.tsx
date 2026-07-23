@@ -131,6 +131,7 @@ export default function Playlist() {
 
   const [itemsToDelete, setItemsToDelete] = useState<Playlist[]>([]);
   const [itemsToMove, setItemsToMove] = useState<Playlist[]>([]);
+  const [bulkItems, setBulkItems] = useState<Playlist[]>([]);
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<number | null>(null);
   const [timelinePlaylistId, setTimelinePlaylistId] = useState<number | null>(null);
@@ -327,6 +328,16 @@ export default function Playlist() {
       setShareEntityIds(ids);
       openModal('share');
     },
+    onEditTags: canTag
+      ? () => {
+          setBulkItems(getAllSelectedItems());
+          openModal('editTagsMultiple');
+        }
+      : undefined,
+    onEnableStats: () => {
+      setBulkItems(getAllSelectedItems());
+      openModal('enableStatsMultiple');
+    },
   });
 
   const { filterOptions } = usePlaylistFilterOptions(t, canTag);
@@ -466,6 +477,7 @@ export default function Playlist() {
           defaultFolderId: effectiveFolderId,
           itemsToDelete,
           itemsToMove,
+          bulkItems,
           existingNames,
           shareEntityIds,
           setShareEntityIds,

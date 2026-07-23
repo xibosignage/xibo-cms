@@ -106,6 +106,7 @@ export default function Templates() {
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
 
+  const [bulkItems, setBulkItems] = useState<Template[]>([]);
   const [itemsToDelete, setItemsToDelete] = useState<Template[]>([]);
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
@@ -316,6 +317,12 @@ export default function Templates() {
       setShareEntityIds(ids);
       openModal('share');
     },
+    onEditTags: canTag
+      ? () => {
+          setBulkItems(getAllSelectedItems());
+          openModal('editTagsMultiple');
+        }
+      : undefined,
   });
 
   const { filterOptions } = useTemplateFilterOptions<TemplatesFilterInput>(t, canTag);
@@ -470,6 +477,7 @@ export default function Templates() {
           shareEntityIds,
           setShareEntityIds,
           itemsToMove,
+          bulkItems,
         }}
         handlers={{
           confirmDelete,

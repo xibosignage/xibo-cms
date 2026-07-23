@@ -35,14 +35,18 @@ import SaveAsTemplateModal from './SaveAsTemplateModal';
 
 import FolderActionModals from '@/components/ui/FolderActionModals';
 import type { PublishValue } from '@/components/ui/forms/PublishDateSelect';
+import EditTagsMultipleModal from '@/components/ui/modals/EditTagsMultipleModal';
+import EnableStatsMultipleModal from '@/components/ui/modals/EnableStatsMultipleModal';
 import MoveModal from '@/components/ui/modals/MoveModal';
 import PublishModal from '@/components/ui/modals/PublishModal';
 import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
 import type { useFolderActions } from '@/hooks/useFolderActions';
+import { setLayoutEnableStat } from '@/services/layoutsApi';
 import { EventTypeId } from '@/types/event';
 import type { Layout } from '@/types/layout';
 import type { User } from '@/types/user';
+import { mergeEntityTags } from '@/utils/tags';
 
 interface LayoutModalsProps {
   actions: {
@@ -64,6 +68,7 @@ interface LayoutModalsProps {
     shareEntityIds: number | number[] | null;
     setShareEntityIds: React.Dispatch<React.SetStateAction<number | number[] | null>>;
     existingNames: string[];
+    bulkItems: Layout[];
   };
   handlers: {
     confirmDelete: (items: Layout[]) => void;
@@ -102,6 +107,9 @@ export function LayoutModals({
   const { t } = useTranslation();
 
   const isModalOpen = (name: string) => actions.activeModal === name;
+
+  const bulkIds = selection.bulkItems.map((item) => item.layoutId);
+  const bulkExistingTags = mergeEntityTags(selection.bulkItems);
 
   return (
     <>
@@ -231,6 +239,31 @@ export function LayoutModals({
       {isModalOpen('enableStats') && selection.selectedLayout && (
         <EnableStatsLayoutModal
           layout={selection.selectedLayout}
+          onClose={actions.closeModal}
+          onSuccess={() => actions.handleRefresh()}
+        />
+      )}
+
+      {isModalOpen('editTagsMultiple') && (
+        <EditTagsMultipleModal
+          targetType="layout"
+          ids={bulkIds}
+          existingTags={bulkExistingTags}
+          onClose={actions.closeModal}
+          onSuccess={() => {
+            actions.closeModal();
+            actions.handleRefresh();
+          }}
+        />
+      )}
+
+      {isModalOpen('enableStatsMultiple') && (
+        <EnableStatsMultipleModal
+          ids={bulkIds}
+          entityLabel={t('layouts')}
+          setEnableStat={(id, enableStat) =>
+            setLayoutEnableStat(id, enableStat === true || enableStat === 'On')
+          }
           onClose={actions.closeModal}
           onSuccess={() => actions.handleRefresh()}
         />

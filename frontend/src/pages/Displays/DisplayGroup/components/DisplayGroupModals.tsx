@@ -26,6 +26,7 @@ import CopyDisplayGroupModal from './CopyDisplayGroupModal';
 import DeleteDisplayGroupModal from './DeleteDisplayGroupModal';
 import ManageMembersModal from './ManageMembersModal';
 
+import EditTagsMultipleModal from '@/components/ui/modals/EditTagsMultipleModal';
 import MoveModal from '@/components/ui/modals/MoveModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
 import type { CopyDisplayGroupFormData } from '@/pages/Displays/DisplayGroup/hooks/useDisplayGroupActions';
@@ -36,6 +37,7 @@ import SendCommandModal from '@/pages/Displays/Displays/components/SendCommandMo
 import TriggerWebhookModal from '@/pages/Displays/Displays/components/TriggerWebhookModal';
 import type { DisplayCommandTarget } from '@/types/display';
 import type { DisplayGroup } from '@/types/displayGroup';
+import { mergeEntityTags } from '@/utils/tags';
 
 interface DisplayGroupModalsProps {
   actions: {
@@ -217,6 +219,19 @@ export function DisplayGroupModals({ actions, selection, handlers }: DisplayGrou
           }}
           isActionPending={actions.isActionPending}
           actionError={actions.actionError}
+        />
+      )}
+
+      {isModalOpen('editTagsMultiple') && (
+        <EditTagsMultipleModal
+          targetType="displayGroup"
+          ids={handlers.getAllSelectedItems().map((dg) => dg.displayGroupId)}
+          existingTags={mergeEntityTags(handlers.getAllSelectedItems())}
+          onClose={actions.closeModal}
+          onSuccess={() => {
+            actions.closeModal();
+            actions.handleRefresh();
+          }}
         />
       )}
 

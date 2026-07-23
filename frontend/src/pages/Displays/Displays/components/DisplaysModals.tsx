@@ -45,12 +45,14 @@ import SetDefaultLayoutModal from './SetDefaultLayoutModal';
 import TransferCmsModal from './TransferCmsModal';
 import TriggerWebhookModal from './TriggerWebhookModal';
 
+import EditTagsMultipleModal from '@/components/ui/modals/EditTagsMultipleModal';
 import Modal from '@/components/ui/modals/Modal';
 import MoveModal from '@/components/ui/modals/MoveModal';
 import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
 import type { MoveCmsData } from '@/services/displaysApi';
 import type { Display, DisplayCommandTarget } from '@/types/display';
+import { mergeEntityTags } from '@/utils/tags';
 
 interface DisplayModalsProps {
   actions: {
@@ -634,6 +636,19 @@ export function DisplayModals({ actions, selection, handlers }: DisplayModalsPro
           onConfirm={(data) => handlers.confirmBulkMoveCms(bulkItems, data)}
           isActionPending={actions.isActionPending}
           actionError={actions.actionError}
+        />
+      )}
+
+      {isModalOpen('editTagsMultiple') && (
+        <EditTagsMultipleModal
+          targetType="display"
+          ids={bulkItems.map((item) => item.displayId)}
+          existingTags={mergeEntityTags(bulkItems)}
+          onClose={actions.closeModal}
+          onSuccess={() => {
+            actions.closeModal();
+            actions.handleRefresh();
+          }}
         />
       )}
 

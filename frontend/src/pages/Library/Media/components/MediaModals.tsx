@@ -34,6 +34,8 @@ import TidyLibraryModal from './TidyLibraryModal';
 import { FileUploader } from '@/components/ui/FileUploader';
 import FolderActionModals from '@/components/ui/FolderActionModals';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
+import EditTagsMultipleModal from '@/components/ui/modals/EditTagsMultipleModal';
+import EnableStatsMultipleModal from '@/components/ui/modals/EnableStatsMultipleModal';
 import Modal from '@/components/ui/modals/Modal';
 import MoveModal from '@/components/ui/modals/MoveModal';
 import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
@@ -41,10 +43,12 @@ import ShareModal from '@/components/ui/modals/ShareModal';
 import UsageReportModal from '@/components/ui/modals/UsageReportModal';
 import type { useFolderActions } from '@/hooks/useFolderActions';
 import type { UploadItem } from '@/hooks/useUploadQueue';
+import { setMediaEnableStat } from '@/services/mediaApi';
 import { EventTypeId } from '@/types/event';
 import type { Media } from '@/types/media';
 import type { Tag } from '@/types/tag';
 import type { User } from '@/types/user';
+import { mergeEntityTags } from '@/utils/tags';
 
 interface MediaModalsProps {
   actions: {
@@ -62,6 +66,7 @@ interface MediaModalsProps {
     selectedMedia: Media | null;
     itemsToDelete: Media[];
     itemsToMove: Media[];
+    bulkItems: Media[];
     existingNames: string[];
     shareEntityIds: number | number[] | null;
     setShareEntityIds: React.Dispatch<React.SetStateAction<number | number[] | null>>;
@@ -183,6 +188,30 @@ export function MediaModals({
           }}
           entityType="media"
           entityId={selection.shareEntityIds ?? (selection.selectedMedia?.mediaId || null)}
+        />
+      )}
+
+      {isModalOpen('editTagsMultiple') && (
+        <EditTagsMultipleModal
+          targetType="media"
+          ids={selection.bulkItems.map((item) => item.mediaId)}
+          existingTags={mergeEntityTags(selection.bulkItems)}
+          onClose={actions.closeModal}
+          onSuccess={() => {
+            actions.closeModal();
+            actions.handleRefresh();
+          }}
+        />
+      )}
+
+      {isModalOpen('enableStatsMultiple') && (
+        <EnableStatsMultipleModal
+          ids={selection.bulkItems.map((item) => item.mediaId)}
+          entityLabel={t('media items')}
+          mode="inherit"
+          setEnableStat={(id, enableStat) => setMediaEnableStat(id, String(enableStat))}
+          onClose={actions.closeModal}
+          onSuccess={() => actions.handleRefresh()}
         />
       )}
 

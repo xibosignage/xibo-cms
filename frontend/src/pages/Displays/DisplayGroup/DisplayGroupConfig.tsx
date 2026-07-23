@@ -27,6 +27,7 @@ import {
   Edit,
   Folder,
   Terminal,
+  Tags,
   Trash2,
   UserPlus2,
   Users,
@@ -60,6 +61,7 @@ export type ModalType =
   | 'triggerWebhook'
   | 'bulkSendCommand'
   | 'bulkTriggerWebhook'
+  | 'editTagsMultiple'
   | null;
 
 export interface DisplayGroupFilterInput {
@@ -323,6 +325,7 @@ interface GetBulkActionsProps {
   onBulkSendCommand: () => void;
   onBulkTriggerWebhook: () => void;
   onBulkShare: () => void;
+  onEditTags?: () => void;
 }
 
 export const getBulkActions = ({
@@ -334,6 +337,7 @@ export const getBulkActions = ({
   onBulkSendCommand,
   onBulkTriggerWebhook,
   onBulkShare,
+  onEditTags,
 }: GetBulkActionsProps): DataTableBulkAction<DisplayGroup>[] => {
   const actions: DataTableBulkAction<DisplayGroup>[] = [];
 
@@ -363,6 +367,14 @@ export const getBulkActions = ({
       label: t('Share'),
       icon: UserPlus2,
       onClick: onBulkShare,
+    });
+  }
+
+  if (canModify && onEditTags) {
+    actions.push({
+      label: t('Edit Tags'),
+      icon: Tags,
+      onClick: onEditTags,
     });
   }
 

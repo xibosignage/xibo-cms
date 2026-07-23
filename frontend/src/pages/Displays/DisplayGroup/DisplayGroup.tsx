@@ -323,6 +323,11 @@ export default function DisplayGroupPage() {
       setShareEntityIds(ids);
       openModal('share');
     },
+    onEditTags: canTag
+      ? () => {
+          openModal('editTagsMultiple');
+        }
+      : undefined,
   });
 
   return (
