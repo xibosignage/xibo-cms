@@ -221,6 +221,20 @@ class Playlist extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
+        name: 'modifiedDateFrom',
+        description: 'Filter by modified date, greater than or equal',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
+        name: 'modifiedDateTo',
+        description: 'Filter by modified date, less than or equal',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Parameter(
         name: 'sortBy',
         description: 'Specifies which field the results are sorted by. Used together with sortDir',
         in: 'query',
@@ -1764,6 +1778,8 @@ class Playlist extends Base
             'layoutId' => $sanitizedParams->getInt('layoutId'),
             'logicalOperator' => $sanitizedParams->getString('logicalOperator'),
             'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
+            'modifiedDateFrom' => $sanitizedParams->getDate('modifiedDateFrom'),
+            'modifiedDateTo' => $sanitizedParams->getDate('modifiedDateTo'),
         ], $sanitizedParams);
     }
 
