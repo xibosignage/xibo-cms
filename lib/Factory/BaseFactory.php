@@ -577,8 +577,8 @@ class BaseFactory
         $conditions = [];
 
         foreach ($terms as $term) {
-            if (preg_match('/^[a-zA-Z]+$/', $term) && strlen($term) >= 4) {
-                $fulltextTerms[] = $term;
+            if (preg_match('/^[a-zA-Z]+$/', $term) && strlen($term) >= 3) {
+                $fulltextTerms[] = $this->sanitizeBooleanModeTerm($term);
             } else {
                 $fallbackTerms[] = $term;
             }
@@ -626,5 +626,17 @@ class BaseFactory
         }
 
         return !empty($conditions) ? ' AND (' . implode(' OR ', $conditions) . ')' : '';
+    }
+
+    /**
+     * Strip MySQL boolean-mode operator characters from a term before it is placed into an
+     * AGAINST (... IN BOOLEAN MODE) search string, so a literal term can never be reinterpreted
+     * as an operator (e.g. a leading/embedded "-" excluding a token instead of matching it).
+     * @param string $term
+     * @return string
+     */
+    private function sanitizeBooleanModeTerm(string $term): string
+    {
+        return str_replace(['+', '-', '<', '>', '(', ')', '~', '*', '"', '@'], '', $term);
     }
 }
