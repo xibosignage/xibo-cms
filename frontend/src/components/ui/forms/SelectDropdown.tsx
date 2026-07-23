@@ -174,11 +174,19 @@ export default function SelectDropdown({
     }
 
     const el = sentinelRef.current;
+    let requested = false;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting && !isLoadingMoreRef.current) {
-          onLoadMoreRef.current?.();
+        if (!entries[0]?.isIntersecting || isLoadingMoreRef.current) {
+          requested = false;
+          return;
         }
+
+        if (requested) {
+          return;
+        }
+        requested = true;
+        onLoadMoreRef.current?.();
       },
       { threshold: 0.1, root: scrollContainerRef.current },
     );
