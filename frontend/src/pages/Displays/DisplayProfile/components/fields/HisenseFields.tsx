@@ -22,7 +22,7 @@
 import type { TFunction } from 'i18next';
 import { Minus, Plus } from 'lucide-react';
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 import { DynamicSettingField } from './DynamicSettingField';
 import type { PicturePropertyDef } from './LgSsspFields';
@@ -118,7 +118,10 @@ function expandHisenseDayScope(rule: HisenseTimerRule): Set<number> {
  * Finds the first pair of same-type (power-on/power-on or power-off/power-off) rules whose
  * day scopes overlap, and returns a description of the conflict, or null if there's none.
  */
-export function findHisenseTimerOverlap(rules: HisenseTimerRule[], t: TFunction): string | null {
+export function findHisenseTimerOverlap(
+  rules: HisenseTimerRule[],
+  t: TFunction,
+): React.ReactNode | null {
   const active = rules.filter((r) => r.dayScope !== 0);
   const groups: Array<[HisenseTimerRule[], string]> = [
     [active.filter((r) => r.index < 3), t('Power On')],
@@ -133,7 +136,13 @@ export function findHisenseTimerOverlap(rules: HisenseTimerRule[], t: TFunction)
         const overlapDay = [...daysA].find((d) => daysB.has(d));
         if (overlapDay !== undefined) {
           const dayLabel = DAY_LABELS[overlapDay] ?? '';
-          return `${label}: ${t('two rules overlap on')} ${t(dayLabel)}.`;
+          return (
+            <Trans
+              i18nKey="{{label}}: two rules overlap on <strong>{{day}}</strong>."
+              values={{ label, day: t(dayLabel) }}
+              components={{ strong: <strong /> }}
+            />
+          );
         }
       }
     }

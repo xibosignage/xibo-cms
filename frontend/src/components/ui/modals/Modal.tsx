@@ -53,7 +53,7 @@ interface ModalProps {
   contentClassName?: string;
   scrollable?: boolean;
   isPending?: boolean;
-  error?: string;
+  error?: React.ReactNode;
   variant?: 'standard' | 'tabbed' | 'confirmation';
   showCloseButton?: boolean;
 }

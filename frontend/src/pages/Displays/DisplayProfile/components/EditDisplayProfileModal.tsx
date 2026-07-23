@@ -121,7 +121,7 @@ export default function EditDisplayProfileModal({
   const [isPending, startTransition] = useTransition();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>('general');
-  const [apiError, setApiError] = useState<string | undefined>();
+  const [apiError, setApiError] = useState<React.ReactNode | undefined>();
   const [nameError, setNameError] = useState<string | undefined>();
 
   const [draft, setDraft] = useState<EditDraft>({ name: '', isDefault: 0, config: {} });

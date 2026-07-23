@@ -147,7 +147,7 @@ export default function CommandsTab({
                 />
                 {cmd.baseValidationString && (
                   <p className="text-sm text-gray-400">
-                    {t('This Command has a default Valildation String.')}
+                    {t('This Command has a default Validation String.')}
                   </p>
                 )}
                 <TextInput
