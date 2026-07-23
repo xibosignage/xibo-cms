@@ -27,19 +27,18 @@ import { CALENDAR_DATE } from '../helpers/buildCalendarEvents';
 import { renderCalendar } from '../helpers/renderCalendar';
 
 import { testQueryClient } from '@/setupTests';
+import { buildCurrentUser, PERSONAS } from '@/testUtils/personas';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
 vi.mock('@/context/UserContext', () => ({
   useUserContext: () => ({
-    user: {
+    user: buildCurrentUser(PERSONAS.superAdmin, {
       userId: 1,
       userName: 'TestUser',
-      userTypeId: 1,
       groupId: 1,
-      features: {},
       settings: { defaultTimezone: 'UTC' },
-    },
+    }),
     isAuthenticated: true,
     logout: vi.fn(),
     updateUser: vi.fn(),

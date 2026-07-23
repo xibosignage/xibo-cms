@@ -20,23 +20,20 @@
  */
 
 import type { FetchUsersResponse } from '@/services/userApi';
+import { buildCurrentUser, PERSONAS } from '@/testUtils/personas';
 import type { Folder } from '@/types/folder';
 import type { User } from '@/types/user';
 import { UserType } from '@/types/user';
 import type { UserGroup } from '@/types/userGroup';
 
-// -----------------------------------------------------------------------------
-// Factory that produces a row-level User with safe minimal defaults.
-// Only fields used in assertions carry meaningful values — everything else
-// is set to the zero value for its type so the component renders without errors.
+// Factory for a row-level User with safe minimal defaults; unused fields are
+// just zero-valued. userId: 2 differs from mockSuperAdmin's id (1) so
+// Delete is visible by default (isSelf === false).
 //
-// userId: 2 — deliberately differs from mockCurrentUser's id (1) so the
-//   Delete row action is visible by default (isSelf === false)
-// userName: 'jbloggs' — asserted in render, filter, and modal tests
-// userTypeId: UserType.User — drives the "User Type" column label
-// groupId: 2 — used by UserGroupsModal / FeaturesModal fetches
-// homeFolderId: 1 — required by SetHomeFolderModal / FolderPermissionTab
-// -----------------------------------------------------------------------------
+// userPermissions defaults to full access — mirrors PermissionFactory::
+// getFullPermissions() in lib/Factory/PermissionFactory.php, i.e. what the
+// server sends for a row the logged-in user (e.g. Super Admin) can fully
+// manage. Tests proving a row is NOT editable/deletable must override this.
 export const buildUser = (overrides: Partial<User> = {}): User => ({
   userId: 2,
   userName: 'jbloggs',
@@ -62,6 +59,7 @@ export const buildUser = (overrides: Partial<User> = {}): User => ({
   newUserWizard: 0,
   features: {},
   groups: [],
+  userPermissions: { view: 1, edit: 1, delete: 1, modifyPermissions: 1 },
   ...overrides,
 });
 
@@ -70,32 +68,32 @@ export const mockUser = buildUser();
 export const SINGLE_USER: FetchUsersResponse = { rows: [mockUser], totalCount: 1 };
 export const EMPTY_USER_TABLE: FetchUsersResponse = { rows: [], totalCount: 0 };
 
-// The default logged-in user for Users page tests. superAdmin + folder.view
-// so the Folder Permission and Notifications tabs are visible in
-// AddEditUserModal by default.
-export const mockCurrentUser: User = {
+// Shared display settings, passed explicitly since settings aren't part of
+// a persona.
+const usersSuiteSettings = {
+  defaultTimezone: 'UTC',
+  defaultLanguage: 'en',
+  DATE_FORMAT_JS: 'DD/MM/YYYY',
+  TIME_FORMAT_JS: 'HH:mm',
+};
+
+// The default logged-in user for Users page tests — a Super Admin, so the
+// Folder Permission and Notifications tabs show up in AddEditUserModal.
+export const mockSuperAdmin: User = buildCurrentUser(PERSONAS.superAdmin, {
   userId: 1,
   userName: 'admin',
-  userTypeId: UserType.SuperAdmin,
   groupId: 1,
-  features: { 'folder.view': true },
-  settings: {
-    defaultTimezone: 'UTC',
-    defaultLanguage: 'en',
-    DATE_FORMAT_JS: 'DD/MM/YYYY',
-    TIME_FORMAT_JS: 'HH:mm',
-  },
-};
+  settings: usersSuiteSettings,
+});
 
 // Non-superAdmin logged-in user — Notifications tab hidden, isSuperAdmin-gated
 // update fields absent from payloads, "Delete all content" checkbox shown.
-export const mockNonAdminCurrentUser: User = {
-  ...mockCurrentUser,
+export const mockGroupAdmin: User = buildCurrentUser(PERSONAS.groupAdmin, {
   userId: 3,
   userName: 'groupadmin',
-  userTypeId: UserType.GroupAdmin,
-  features: {},
-};
+  groupId: 1,
+  settings: usersSuiteSettings,
+});
 
 export const mockUserGroup: UserGroup = {
   groupId: 2,

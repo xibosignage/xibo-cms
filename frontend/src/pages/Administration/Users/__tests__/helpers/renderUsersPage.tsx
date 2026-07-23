@@ -24,7 +24,7 @@ import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 import Users from '../../Users';
-import { mockCurrentUser, queryKeys } from '../fixtures/user';
+import { mockSuperAdmin, queryKeys } from '../fixtures/user';
 
 import { UserProvider } from '@/context/UserContext';
 import { testQueryClient } from '@/setupTests';
@@ -33,7 +33,7 @@ import type { User } from '@/types/user';
 // Renders the full Users page inside all required context providers.
 // Pre-seeds the userPref cache so useTableState hydrates immediately.
 // Call testQueryClient.clear() and vi.clearAllMocks() in beforeEach before using this helper.
-export const renderUsersPage = (user: User = mockCurrentUser) => {
+export const renderUsersPage = (user: User = mockSuperAdmin) => {
   testQueryClient.setQueryData(queryKeys.usersPage, null);
   return render(
     <QueryClientProvider client={testQueryClient}>
