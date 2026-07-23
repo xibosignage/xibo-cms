@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import type { TFunction } from 'i18next';
 import { describe, test, expect } from 'vitest';
 
 import { PERSONAS } from '../index';
@@ -31,7 +32,7 @@ import { getFeatureDefinitions } from '@/pages/Administration/Users/config/featu
 // should (that's a judgment call whenever a new feature ships).
 // =============================================================================
 
-const t = ((key: string) => key) as unknown as import('i18next').TFunction;
+const t = ((key: string) => key) as unknown as TFunction;
 
 // Known, already-reported gap: the backend emits `dataset.dataConnector`,
 // the frontend catalog expects `dataset.realtime`. Not a persona error —
@@ -42,10 +43,13 @@ const KNOWN_GAPS = new Set(['dataset.dataConnector']);
 describe('PERSONAS integrity', () => {
   const knownFeatures = new Set(getFeatureDefinitions(t).map((f) => f.feature));
 
-  test.each(Object.entries(PERSONAS))('%s: every feature key is real and known', (_name, persona) => {
-    for (const key of Object.keys(persona.features)) {
-      if (KNOWN_GAPS.has(key)) continue;
-      expect(knownFeatures.has(key)).toBe(true);
-    }
-  });
+  test.each(Object.entries(PERSONAS))(
+    '%s: every feature key is real and known',
+    (_name, persona) => {
+      for (const key of Object.keys(persona.features)) {
+        if (KNOWN_GAPS.has(key)) continue;
+        expect(knownFeatures.has(key)).toBe(true);
+      }
+    },
+  );
 });

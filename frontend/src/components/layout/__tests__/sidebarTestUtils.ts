@@ -26,13 +26,13 @@ import { MemoryRouter } from 'react-router-dom';
 import SidebarMenu from '../SideBar';
 
 import { UserProvider } from '@/context/UserContext';
+import groupAdminData from '@/testUtils/personas/data/group_admin.json';
 import superAdminData from '@/testUtils/personas/data/super_admin.json';
+import regularUserData from '@/testUtils/personas/data/user.json';
 import contentManagerData from '@/testUtils/personas/data/user_content_manager.json';
 import displayManagerData from '@/testUtils/personas/data/user_display_manager.json';
-import groupAdminData from '@/testUtils/personas/data/group_admin.json';
 import playlistManagerData from '@/testUtils/personas/data/user_playlist_manager.json';
 import scheduleManagerData from '@/testUtils/personas/data/user_schedule_manager.json';
-import regularUserData from '@/testUtils/personas/data/user.json';
 import { UserType } from '@/types/user';
 import type { User, UserFeatures } from '@/types/user';
 
