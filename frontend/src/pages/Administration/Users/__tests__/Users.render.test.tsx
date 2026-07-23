@@ -26,7 +26,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import Users from '../Users';
 
-import { mockUser, mockCurrentUser, SINGLE_USER, EMPTY_USER_TABLE } from './fixtures/user';
+import { mockUser, mockSuperAdmin, SINGLE_USER, EMPTY_USER_TABLE } from './fixtures/user';
 import { renderUsersPage } from './helpers/renderUsersPage';
 import { mockFetchUsers } from './mocks/userApi';
 
@@ -66,7 +66,7 @@ vi.mock('@/components/ui/modals/Modal');
 const renderWithPendingPrefs = () =>
   render(
     <QueryClientProvider client={testQueryClient}>
-      <UserProvider initialUser={mockCurrentUser}>
+      <UserProvider initialUser={mockSuperAdmin}>
         <MemoryRouter>
           <Users />
         </MemoryRouter>
