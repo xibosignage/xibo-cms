@@ -143,12 +143,13 @@ class MenuBoardProduct extends Base
     private function getMenuBoardProductFilters(SanitizerInterface $params, int $categoryId): array
     {
         return $this->gridRenderFilter([
-            'menuProductId'  => $params->getInt('menuProductId'),
-            'menuCategoryId' => $categoryId,
-            'name'           => $params->getString('name'),
-            'code'           => $params->getString('code'),
-            'keyword'        => $params->getString('keyword'),
-            'availability'   => $params->getInt('availability'),
+            'menuProductId'   => $params->getInt('menuProductId'),
+            'menuCategoryId'  => $categoryId,
+            'name'            => $params->getString('name'),
+            'useRegexForName' => $params->getCheckbox('useRegexForName'),
+            'code'            => $params->getString('code'),
+            'keyword'         => $params->getString('keyword'),
+            'availability'    => $params->getInt('availability'),
         ], $params);
     }
 
