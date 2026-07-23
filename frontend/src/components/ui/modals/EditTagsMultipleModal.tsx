@@ -55,10 +55,12 @@ export default function EditTagsMultipleModal({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
 
-  const removeCandidates = existingTags.filter((tag) => !removeTags.some((r) => r.tag === tag.tag));
+  const sameTag = (a: Tag, b: Tag) => a.tag === b.tag && (a.value ?? '') === (b.value ?? '');
+
+  const removeCandidates = existingTags.filter((tag) => !removeTags.some((r) => sameTag(r, tag)));
 
   const handleAddToRemove = (tag: Tag) => {
-    if (removeTags.some((r) => r.tag === tag.tag)) {
+    if (removeTags.some((r) => sameTag(r, tag))) {
       return;
     }
     setRemoveTags((prev) => [...prev, tag]);
