@@ -148,10 +148,11 @@ class MenuBoardCategory extends Base
     {
         return $this->gridRenderFilter([
             'menuId'         => $menuId,
-            'menuCategoryId' => $params->getInt('menuCategoryId'),
-            'name'           => $params->getString('name'),
-            'code'           => $params->getString('code'),
-            'keyword'        => $params->getString('keyword'),
+            'menuCategoryId'  => $params->getInt('menuCategoryId'),
+            'name'            => $params->getString('name'),
+            'useRegexForName' => $params->getCheckbox('useRegexForName'),
+            'code'            => $params->getString('code'),
+            'keyword'         => $params->getString('keyword'),
         ], $params);
     }
 

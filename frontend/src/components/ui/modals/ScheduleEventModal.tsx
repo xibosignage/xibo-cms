@@ -164,6 +164,8 @@ export default function ScheduleEventModal({
     layoutCode: { totalCount: 0, isLoading: false, isLoadingMore: false },
   });
 
+  const loadingMoreRef = useRef<Record<string, boolean>>({});
+
   const [alwaysDayPartId, setAlwaysDayPartId] = useState<string>('');
   const [customDayPartId, setCustomDayPartId] = useState<string>('');
 
@@ -507,13 +509,20 @@ export default function ScheduleEventModal({
     fetchFn: () => Promise<SelectOption[]>,
     setOptions: React.Dispatch<React.SetStateAction<SelectOption[]>>,
   ) => {
-    if (pagination[key].isLoadingMore) return;
+    if (loadingMoreRef.current[key]) {
+      return;
+    }
+    loadingMoreRef.current[key] = true;
     setPagination((prev) => ({ ...prev, [key]: { ...prev[key], isLoadingMore: true } }));
     fetchFn()
       .then((newOptions) => {
-        setOptions((prev) => [...prev, ...newOptions]);
+        setOptions((prev) => {
+          const seen = new Set(prev.map((o) => o.value));
+          return [...prev, ...newOptions.filter((o) => !seen.has(o.value))];
+        });
       })
       .finally(() => {
+        loadingMoreRef.current[key] = false;
         setPagination((prev) => ({ ...prev, [key]: { ...prev[key], isLoadingMore: false } }));
       });
   };
