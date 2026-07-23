@@ -42,14 +42,17 @@ import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { useUserContext } from '@/context/UserContext';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import type { Resolution } from '@/types/resolution';
 import { countActiveFilters } from '@/utils/filters';
+import { hasFeature } from '@/utils/permissions';
 
 export default function Resolution() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { user } = useUserContext();
 
   const {
     pagination,
@@ -184,6 +187,7 @@ export default function Resolution() {
 
   const columns = getResolutionColumns({
     t,
+    canModify: hasFeature(user, 'resolution.modify'),
     onDelete: handleDelete,
     openAddEditModal,
   });
@@ -196,6 +200,7 @@ export default function Resolution() {
 
   const bulkActions = getBulkActions({
     t,
+    canModify: hasFeature(user, 'resolution.modify'),
     onDelete: () => {
       const allItems = getAllSelectedItems();
       setItemsToDelete(allItems);
@@ -216,15 +221,17 @@ export default function Resolution() {
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Resolutions" navigation={libraryTabs} />
           <div className="flex items-center gap-2 md:mb-0">
-            <Button
-              variant="primary"
-              className="font-semibold"
-              disabled={!isHydrated}
-              onClick={() => openAddEditModal(null)}
-              leftIcon={Plus}
-            >
-              {t('Add Resolution')}
-            </Button>
+            {hasFeature(user, 'resolution.add') && (
+              <Button
+                variant="primary"
+                className="font-semibold"
+                disabled={!isHydrated}
+                onClick={() => openAddEditModal(null)}
+                leftIcon={Plus}
+              >
+                {t('Add Resolution')}
+              </Button>
+            )}
           </div>
         </div>
 

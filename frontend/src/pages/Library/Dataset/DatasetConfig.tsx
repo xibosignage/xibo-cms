@@ -100,6 +100,9 @@ export const getBaseFilterKeys = (t: TFunction): FilterConfigItem<DatasetFilterI
 export interface DatasetActionsProps {
   t: TFunction;
   canModify?: boolean;
+  canViewData?: boolean;
+  canRealTime?: boolean;
+  canUserShare?: boolean;
   onDelete: (id: number) => void;
   openAddEditModal: (row: Dataset) => void;
   openShareModal?: (id: number) => void;
@@ -113,6 +116,9 @@ export interface DatasetActionsProps {
 export const getDatasetItemActions = ({
   t,
   canModify = false,
+  canViewData = false,
+  canRealTime = false,
+  canUserShare = false,
   onDelete,
   openAddEditModal,
   openShareModal,
@@ -166,7 +172,7 @@ export const getDatasetItemActions = ({
       });
     }
 
-    if (canShare && openShareModal) {
+    if (canShare && canUserShare && canModify && openShareModal) {
       actions.push({
         label: t('Share'),
         icon: UserPlus2,
@@ -190,18 +196,20 @@ export const getDatasetItemActions = ({
       });
     }
 
-    const navigationActions: ActionItem[] = [
-      {
+    const navigationActions: ActionItem[] = [];
+
+    if (canViewData && canEdit) {
+      navigationActions.push({
         label: t('View Data'),
         isNavigation: true,
         onClick: () => {
           onNavigate(`/library/datasets/${dataset.dataSetId}/data`);
         },
-      },
-    ];
+      });
+    }
 
     // Columns, RSS and Data Connector grids live behind the dataset.modify feature
-    if (canModify) {
+    if (canModify && canEdit) {
       navigationActions.push({
         label: t('View Columns'),
         isNavigation: true,
@@ -216,13 +224,14 @@ export const getDatasetItemActions = ({
           onNavigate(`/library/datasets/${dataset.dataSetId}/rss`);
         },
       });
-      if (dataset.isRealTime) {
-        navigationActions.push({
-          label: t('View Data Connector'),
-          isNavigation: true,
-          onClick: () => onNavigate(`/library/datasets/${dataset.dataSetId}/dataconnector`),
-        });
-      }
+    }
+
+    if (canModify && canRealTime && canEdit && dataset.isRealTime) {
+      navigationActions.push({
+        label: t('View Data Connector'),
+        isNavigation: true,
+        onClick: () => onNavigate(`/library/datasets/${dataset.dataSetId}/dataconnector`),
+      });
     }
 
     if (actions.length > 0) {
@@ -230,7 +239,7 @@ export const getDatasetItemActions = ({
     }
     actions.push(...navigationActions);
 
-    if (canModify && canDelete) {
+    if (canModify && canDelete && !dataset.isLookup && (!dataset.isRealTime || canRealTime)) {
       actions.push({ isSeparator: true });
       actions.push({
         label: t('Delete'),

@@ -520,7 +520,7 @@ $app->group('', function (RouteCollectorProxy $group) {
 $app->get('/stats', ['\Xibo\Controller\Stats','grid'])->setName('stats.search');
 
 $app->get('/stats/timeDisconnected', ['\Xibo\Controller\Stats', 'gridTimeDisconnected'])
-    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['display.reporting']))
+    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['displays.reporting']))
     ->setName('stats.timeDisconnected.search');
 
 $app->get('/stats/export', ['\Xibo\Controller\Stats','export'])
@@ -847,20 +847,32 @@ $app->get('/fonts/{id}', ['\Xibo\Controller\Font', 'searchById'])->setName('font
 $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/fonts/details/{id}', ['\Xibo\Controller\Font', 'getFontLibDetails'])->setName('font.details');
     $group->get('/fonts/download/{id}', ['\Xibo\Controller\Font', 'download'])->setName('font.download');
-    $group->post('/fonts', ['\Xibo\Controller\Font','add'])->setName('font.add');
-    $group->delete('/fonts/{id}/delete', ['\Xibo\Controller\Font','delete'])->setName('font.delete');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['font.view']));
+
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->post('/fonts', ['\Xibo\Controller\Font','add'])->setName('font.add');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['font.add']));
+
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->delete('/fonts/{id}/delete', ['\Xibo\Controller\Font','delete'])->setName('font.delete');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['font.delete']));
 
 $app->get('/syncgroups', ['\Xibo\Controller\SyncGroup', 'grid'])->setName('syncgroup.search');
 $app->get('/syncgroup/{id}', ['\Xibo\Controller\SyncGroup', 'searchById'])->setName('syncgroup.search.id');
 $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/syncgroup/{id}/displays', ['\Xibo\Controller\SyncGroup', 'fetchDisplays'])
         ->setName('syncgroup.fetch.displays');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['display.syncView']));
+
+$app->group('', function (RouteCollectorProxy $group) {
     $group->post('/syncgroup/add', ['\Xibo\Controller\SyncGroup', 'add'])->setName('syncgroup.add');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['display.syncAdd']));
+
+$app->group('', function (RouteCollectorProxy $group) {
     $group->post('/syncgroup/{id}/members', ['\Xibo\Controller\SyncGroup', 'members'])->setName('syncgroup.members');
     $group->put('/syncgroup/{id}/edit', ['\Xibo\Controller\SyncGroup', 'edit'])->setName('syncgroup.edit');
     $group->delete('/syncgroup/{id}/delete', ['\Xibo\Controller\SyncGroup', 'delete'])->setName('syncgroup.delete');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['display.syncView']));
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['display.syncModify']));
 
 $app->group('', function (RouteCollectorProxy $group) {
     $group->post('/schedule/sync/add', ['\Xibo\Controller\Schedule', 'syncAdd'])->setName('schedule.add.sync');

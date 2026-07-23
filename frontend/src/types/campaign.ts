@@ -36,6 +36,13 @@ export interface LayoutOnCampaign {
   dayPart: string | null;
 }
 
+export interface CampaignPermissions {
+  view?: number;
+  edit?: number;
+  delete?: number;
+  modifyPermissions?: number;
+}
+
 export interface Campaign {
   campaignId: number;
   ownerId: number;
@@ -84,4 +91,6 @@ export interface Campaign {
   retired: number;
 
   layouts?: LayoutOnCampaign[];
+
+  userPermissions?: CampaignPermissions;
 }

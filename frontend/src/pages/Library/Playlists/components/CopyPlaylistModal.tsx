@@ -25,6 +25,7 @@ import { useTranslation } from 'react-i18next';
 import Checkbox from '@/components/ui/forms/Checkbox';
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
+import { useUserContext } from '@/context/UserContext';
 import type { Playlist } from '@/types/playlist';
 import { incrementName } from '@/utils/stringUtils';
 
@@ -46,18 +47,23 @@ export default function CopyPlaylistModal({
   existingNames,
 }: CopyPlaylistModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
+  const defaultCopyMedia =
+    user?.settings?.LAYOUT_COPY_MEDIA_CHECKB === '1' ||
+    user?.settings?.LAYOUT_COPY_MEDIA_CHECKB === 'Checked';
+
   const [newName, setNewName] = useState('');
-  const [copyMediaFiles, setCopyMediaFiles] = useState(false);
+  const [copyMediaFiles, setCopyMediaFiles] = useState(defaultCopyMedia);
   const [error, setError] = useState<string | undefined>();
 
   useEffect(() => {
     if (playlist && isOpen) {
       setNewName(incrementName(playlist.name));
-      setCopyMediaFiles(false);
+      setCopyMediaFiles(defaultCopyMedia);
     }
 
     setError(undefined);
-  }, [playlist, isOpen]);
+  }, [playlist, isOpen, defaultCopyMedia]);
 
   const handleSave = () => {
     const trimmed = newName.trim();

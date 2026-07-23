@@ -32,6 +32,7 @@ import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
 import { DataTable } from '@/components/ui/table/DataTable';
 import { CheckMarkCell, TagsCell, TextCell } from '@/components/ui/table/cells';
+import { useUserContext } from '@/context/UserContext';
 import { useDebounce } from '@/hooks/useDebounce';
 import { getDisplayGroupSchema } from '@/schema/displayGroup';
 import { createDisplayGroup, updateDisplayGroup } from '@/services/displayGroupApi';
@@ -39,6 +40,7 @@ import { fetchDisplays } from '@/services/displaysApi';
 import type { Display } from '@/types/display';
 import type { DisplayGroup } from '@/types/displayGroup';
 import type { Tag } from '@/types/tag';
+import { hasFeature } from '@/utils/permissions';
 
 interface AddAndEditDisplayGroupModalProps {
   type: 'add' | 'edit';
@@ -114,6 +116,7 @@ export default function AddAndEditDisplayGroupModal({
   onSave,
 }: AddAndEditDisplayGroupModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
   const [isPending, startTransition] = useTransition();
   const [activeTab, setActiveTab] = useState<'general' | 'reference'>('general');
   const [draft, setDraft] = useState<DraftState>(() => {
@@ -387,14 +390,17 @@ export default function AddAndEditDisplayGroupModal({
             />
 
             {/* Tags */}
-            <TagInput
-              value={draft.tags}
-              helpText={t('Tags (Comma-separated: Tag or Tag|Value)')}
-              onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
-              inputValue={pendingTagInput}
-              onInputChange={setPendingTagInput}
-              onPendingValueChange={setHasTagPendingValue}
-            />
+            {(hasFeature(user, 'tag.tagging') || (draft.tags?.length ?? 0) > 0) && (
+              <TagInput
+                value={draft.tags}
+                helpText={t('Tags (Comma-separated: Tag or Tag|Value)')}
+                onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
+                inputValue={pendingTagInput}
+                onInputChange={setPendingTagInput}
+                onPendingValueChange={setHasTagPendingValue}
+                disabled={!hasFeature(user, 'tag.tagging')}
+              />
+            )}
 
             {/* Dynamic Group */}
             <div className="p-3 flex flex-col gap-3 bg-slate-50 rounded-lg">

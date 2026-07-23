@@ -65,6 +65,14 @@ export default function Displays() {
   const queryClient = useQueryClient();
   const canViewFolders = usePermissions()?.canViewFolders;
   const canSchedule = hasFeature(user, 'schedule.add');
+  const canModify = hasFeature(user, 'displays.modify');
+  const canTag = hasFeature(user, 'tag.tagging');
+  const canLimitedView = hasFeature(user, 'displays.limitedView');
+  const canCommandView = hasFeature(user, 'command.view');
+  const canDisplayGroupModify = hasFeature(user, 'displaygroup.modify');
+  const canViewLayout = hasFeature(user, 'layout.view');
+  const scheduleWithView = Number(user?.settings?.SCHEDULE_WITH_VIEW_PERMISSION) === 1;
+  const isSuperAdmin = user?.userTypeId === 1;
   const homeFolderId = user?.homeFolderId ?? 1;
 
   const {
@@ -306,6 +314,15 @@ export default function Displays() {
 
   const columns = getDisplayColumns({
     t,
+    canModify,
+    canTag,
+    canUserShare: hasFeature(user, 'user.sharing'),
+    canLimitedView,
+    canCommandView,
+    canDisplayGroupModify,
+    canViewLayout,
+    scheduleWithView,
+    isSuperAdmin,
     onDelete: handleDelete,
     openEditModal,
     openMoveModal: canViewFolders
@@ -381,7 +398,7 @@ export default function Displays() {
     onBulkMoveCms: () => openBulkModal('bulkMoveCms'),
   });
 
-  const { filterOptions } = useDisplaysFilterOptions(t);
+  const { filterOptions } = useDisplaysFilterOptions(t, canTag);
   const libraryTabs = useFilteredTabs('displays');
 
   const activeFilterCount = countActiveFilters(filterInputs, INITIAL_FILTER_STATE, filterOptions);
@@ -403,15 +420,17 @@ export default function Displays() {
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Displays" navigation={libraryTabs} />
           <div className="flex items-center gap-2 md:mb-0">
-            <Button
-              variant="primary"
-              className="font-semibold"
-              disabled={!isHydrated}
-              onClick={() => openModal('add')}
-              leftIcon={Plus}
-            >
-              {t('Add Display')}
-            </Button>
+            {hasFeature(user, 'displays.add') && (
+              <Button
+                variant="primary"
+                className="font-semibold"
+                disabled={!isHydrated}
+                onClick={() => openModal('add')}
+                leftIcon={Plus}
+              >
+                {t('Add Display')}
+              </Button>
+            )}
           </div>
         </div>
 

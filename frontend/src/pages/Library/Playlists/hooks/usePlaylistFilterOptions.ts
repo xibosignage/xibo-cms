@@ -31,7 +31,7 @@ import type { FilterOption } from '@/types/filter';
 
 const PAGE_SIZE = 10;
 
-export function usePlaylistFilterOptions(t: TFunction) {
+export function usePlaylistFilterOptions(t: TFunction, canTag = false) {
   const [ownerOptions, setOwnerOptions] = useState<FilterOption[]>([]);
   const [ownerPage, setOwnerPage] = useState(0);
   const [hasMoreOwners, setHasMoreOwners] = useState(false);
@@ -140,7 +140,7 @@ export function usePlaylistFilterOptions(t: TFunction) {
       .finally(() => setIsLoadingMoreGroups(false));
   };
 
-  const filterOptions = getBaseFilterKeys(t).map((item) => {
+  const filterOptions = getBaseFilterKeys(t, canTag).map((item) => {
     if (item.name === 'userId') {
       return {
         ...item,

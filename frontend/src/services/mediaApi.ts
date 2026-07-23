@@ -386,6 +386,21 @@ export async function deleteMedia(
   });
 }
 
+export async function tidyLibrary(tidyGenericFiles = false): Promise<{ countDeleted: number }> {
+  const body = new URLSearchParams();
+  body.append('tidyGenericFiles', tidyGenericFiles ? '1' : '0');
+
+  const response = await http.delete('/library/tidy', {
+    data: body,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+  });
+
+  return response.data;
+}
+
 export interface ReplaceMediaRequest {
   file: File;
   oldMediaId: number;

@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import type { RowSelectionState } from '@tanstack/react-table';
 import { Plus, Search, Upload } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -49,10 +49,9 @@ import { useFolderActions } from '@/hooks/useFolderActions';
 import { useOwner } from '@/hooks/useOwner';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useTableState } from '@/hooks/useTableState';
-import { fetchContextButtons } from '@/services/folderApi';
 import type { Layout } from '@/types/layout';
 import { countActiveFilters } from '@/utils/filters';
-import { hasFeature } from '@/utils/permissions';
+import { canSaveInFolder, hasFeature } from '@/utils/permissions';
 
 export default function Layouts() {
   const { t } = useTranslation();
@@ -61,6 +60,14 @@ export default function Layouts() {
   const { user } = useUserContext();
   const canViewFolders = usePermissions()?.canViewFolders;
   const canSchedule = hasFeature(user, 'schedule.add');
+  const canViewPlaylist = hasFeature(user, 'playlist.view');
+  const canViewCampaign = hasFeature(user, 'campaign.view');
+  const canViewMedia = hasFeature(user, 'library.view');
+  const canAssignCampaign = hasFeature(user, 'campaign.modify');
+  const canMoveToCampaignFolder = hasFeature(user, 'campaign.modify');
+  const canSaveTemplate = hasFeature(user, 'template.modify');
+  const canTag = hasFeature(user, 'tag.tagging');
+  const importEnabled = user?.settings?.SETTING_IMPORT_ENABLED === '1';
   const homeFolderId = user?.homeFolderId ?? 1;
 
   const {
@@ -150,17 +157,14 @@ export default function Layouts() {
   });
 
   const effectiveFolderId = selectedFolderId ?? homeFolderId;
-  const { data: folderPerms } = useQuery({
-    queryKey: ['folderPermissions', effectiveFolderId],
-    queryFn: () => fetchContextButtons(effectiveFolderId),
-    staleTime: 1000 * 60 * 5,
-  });
 
   const data = queryData?.rows;
   const pageCount = Math.ceil((queryData?.totalCount || 0) / pagination.pageSize);
   const error = isError && queryError instanceof Error ? queryError.message : '';
   const layoutList = data ?? [];
-  const canAddToFolder = folderPerms?.create || false;
+  const canAddToFolder =
+    hasFeature(user, 'layout.add') &&
+    canSaveInFolder(user, !!canViewFolders, effectiveFolderId, homeFolderId);
 
   const folderActions = useFolderActions({
     onSuccess: (targetFolder) => {
@@ -324,6 +328,16 @@ export default function Layouts() {
 
   const columns = getLayoutColumns({
     t,
+    canModify: hasFeature(user, 'layout.modify'),
+    canMoveToCampaignFolder,
+    canUserShare: hasFeature(user, 'user.sharing'),
+    canExport: hasFeature(user, 'layout.export'),
+    canViewPlaylist,
+    canViewCampaign,
+    canViewMedia,
+    canAssignCampaign,
+    canSaveTemplate,
+    canTag,
     formatDateTime,
     onDelete: handleDelete,
     openEditModal,
@@ -395,7 +409,7 @@ export default function Layouts() {
     },
   });
 
-  const { filterOptions } = useLayoutFilterOptions(t);
+  const { filterOptions } = useLayoutFilterOptions(t, canTag);
 
   const libraryTabs = useFilteredTabs('design');
 
@@ -419,14 +433,16 @@ export default function Layouts() {
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="Layouts" navigation={libraryTabs} />
           <div className="flex items-center gap-2 md:mb-0">
-            <Button
-              variant="secondary"
-              onClick={() => openModal('import')}
-              disabled={!canAddToFolder || !isHydrated}
-              leftIcon={Upload}
-            >
-              {t('Import')}
-            </Button>
+            {importEnabled && (
+              <Button
+                variant="secondary"
+                onClick={() => openModal('import')}
+                disabled={!canAddToFolder || !isHydrated}
+                leftIcon={Upload}
+              >
+                {t('Import')}
+              </Button>
+            )}
             <Button
               variant="primary"
               className="font-semibold"

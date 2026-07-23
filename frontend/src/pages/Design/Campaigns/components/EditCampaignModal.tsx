@@ -33,12 +33,14 @@ import TagInput, { collectTags, serializeTags } from '@/components/ui/forms/TagI
 import TextInput from '@/components/ui/forms/TextInput';
 import Modal from '@/components/ui/modals/Modal';
 import { CheckMarkCell, TextCell } from '@/components/ui/table/cells';
+import { useUserContext } from '@/context/UserContext';
 import { useDebounce } from '@/hooks/useDebounce';
 import { updateCampaign } from '@/services/campaignApi';
 import { fetchLayouts } from '@/services/layoutsApi';
 import type { Campaign } from '@/types/campaign';
 import type { Layout } from '@/types/layout';
 import type { Tag } from '@/types/tag';
+import { hasFeature } from '@/utils/permissions';
 
 interface EditCampaignModalProps {
   isOpen?: boolean;
@@ -72,6 +74,7 @@ export default function EditCampaignModal({
   onSuccess,
 }: EditCampaignModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
   const [isPending, startTransition] = useTransition();
   const [activeTab, setActiveTab] = useState<Tab>('general');
   const [apiError, setApiError] = useState('');
@@ -317,14 +320,17 @@ export default function EditCampaignModal({
                 onChange={(val) => setDraft((prev) => ({ ...prev, name: val }))}
               />
 
-              <TagInput
-                value={draft.tags}
-                helpText={t('Tags for this Campaign — comma-separated Tag or Tag|Value format.')}
-                onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
-                inputValue={pendingTagInput}
-                onInputChange={setPendingTagInput}
-                onPendingValueChange={setHasTagPendingValue}
-              />
+              {(hasFeature(user, 'tag.tagging') || (draft.tags?.length ?? 0) > 0) && (
+                <TagInput
+                  value={draft.tags}
+                  helpText={t('Tags for this Campaign — comma-separated Tag or Tag|Value format.')}
+                  onChange={(tags) => setDraft((prev) => ({ ...prev, tags }))}
+                  inputValue={pendingTagInput}
+                  onInputChange={setPendingTagInput}
+                  onPendingValueChange={setHasTagPendingValue}
+                  disabled={!hasFeature(user, 'tag.tagging')}
+                />
+              )}
 
               <Checkbox
                 id="cyclePlayback"

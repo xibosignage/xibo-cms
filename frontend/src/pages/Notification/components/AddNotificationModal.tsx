@@ -254,7 +254,7 @@ function TiptapToolbar({ editor }: { editor: ReturnType<typeof useEditor> }) {
     <div className="relative flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-gray-200 bg-gray-50 rounded-t-lg">
       {/* Special chars popover */}
       {showSpecialChars && (
-        <div className="absolute bottom-full left-0 mb-1 z-50 flex flex-wrap max-w-[200px] bg-white border border-gray-200 rounded shadow p-1">
+        <div className="absolute bottom-full left-0 mb-1 z-50 flex flex-wrap max-w-50 bg-white border border-gray-200 rounded shadow p-1">
           {SPECIAL_CHARS.map((char) => (
             <button
               key={char}
@@ -339,7 +339,7 @@ function TiptapToolbar({ editor }: { editor: ReturnType<typeof useEditor> }) {
               .run();
           }
         }}
-        className={twMerge(selectClass, 'min-w-[102px]')}
+        className={twMerge(selectClass, 'min-w-25.5')}
       >
         <option value="0">{t('Paragraph')}</option>
         <option value="1">{t('Heading 1')}</option>

@@ -42,6 +42,7 @@ import ProfileEditModal from './ProfileEditModal';
 
 import { useUserContext } from '@/context/UserContext';
 import { useDismissOnIframeFocus } from '@/hooks/useDismissOnIframeFocus';
+import { hasFeature } from '@/utils/permissions';
 
 // Expand the modal types
 type ActiveModal = 'preferences' | 'applications' | 'profile' | 'about' | null;
@@ -127,13 +128,15 @@ export default function UserMenu() {
                 </span>
                 <span className="text-sm text-gray-500 truncate w-50">{user?.email}</span>
               </div>
-              <button
-                onClick={() => openModal('profile')}
-                className="rounded-md p-1 h-6 w-6 text-gray-500 cursor-pointer transition hover:bg-gray-200 hover:text-gray-700"
-                title={t('Edit Profile')}
-              >
-                <PenLine size={16} />
-              </button>
+              {hasFeature(user, 'user.profile') && (
+                <button
+                  onClick={() => openModal('profile')}
+                  className="rounded-md p-1 h-6 w-6 text-gray-500 cursor-pointer transition hover:bg-gray-200 hover:text-gray-700"
+                  title={t('Edit Profile')}
+                >
+                  <PenLine size={16} />
+                </button>
+              )}
             </div>
 
             {/* Menu Items */}
@@ -182,7 +185,9 @@ export default function UserMenu() {
       {/* Modals */}
       {activeModal === 'preferences' && <PreferencesModal onClose={() => setActiveModal(null)} />}
 
-      {activeModal === 'profile' && <ProfileEditModal onClose={() => setActiveModal(null)} />}
+      {activeModal === 'profile' && hasFeature(user, 'user.profile') && (
+        <ProfileEditModal onClose={() => setActiveModal(null)} />
+      )}
 
       {activeModal === 'applications' && <ApplicationsModal onClose={() => setActiveModal(null)} />}
 
