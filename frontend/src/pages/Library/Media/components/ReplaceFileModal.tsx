@@ -143,7 +143,7 @@ export default function ReplaceFileModal({
       oldMediaId: data.mediaId,
       updateInLayouts: defaultUpdateInLayouts,
     });
-  }, [data]);
+  }, [data, defaultDeleteOldRevisions, defaultUpdateInLayouts]);
 
   useEffect(() => {
     if (!selectedFile) return;

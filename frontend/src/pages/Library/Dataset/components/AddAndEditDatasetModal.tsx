@@ -33,6 +33,7 @@ import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import type { SelectOption } from '@/components/ui/forms/SelectDropdown';
 import SelectFolder from '@/components/ui/forms/SelectFolder';
 import TextInput from '@/components/ui/forms/TextInput';
+import { useUserContext } from '@/context/UserContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { getDatasetSchema } from '@/schema/dataset';
 import type { UpdateDatasetRequest } from '@/services/datasetApi';
@@ -68,6 +69,7 @@ type DatasetFormErrors = {
   code?: string;
   uri?: string;
   username?: string;
+  rowLimit?: string;
 };
 
 const DEFAULT_DRAFT: UpdateDatasetRequest = {
@@ -150,6 +152,8 @@ export default function AddAndEditDatasetModal({
   onSave,
 }: AddAndEditDatasetModalProps) {
   const { t } = useTranslation();
+  const { user } = useUserContext();
+  const datasetHardRowLimit = Number(user?.settings?.DATASET_HARD_ROW_LIMIT) || 0;
   const [isPending, startTransition] = useTransition();
   const [apiError, setApiError] = useState<string | undefined>();
   const [formErrors, setFormErrors] = useState<DatasetFormErrors>({});
@@ -240,7 +244,7 @@ export default function AddAndEditDatasetModal({
   }, [data, isOpen, defaultFolderId]);
 
   const handleSave = () => {
-    const schema = getDatasetSchema(t);
+    const schema = getDatasetSchema(t, datasetHardRowLimit);
     const result = schema.safeParse(draft);
 
     if (!result.success) {
@@ -252,12 +256,15 @@ export default function AddAndEditDatasetModal({
         code: fieldErrors.code?.[0],
         uri: fieldErrors.uri?.[0],
         username: fieldErrors.username?.[0],
+        rowLimit: fieldErrors.rowLimit?.[0],
       });
 
       if (fieldErrors.dataSet || fieldErrors.description || fieldErrors.code) {
         setActiveTab('general');
       } else if (draft.isRemote && (fieldErrors.uri || fieldErrors.username)) {
         setActiveTab(fieldErrors.uri ? 'remote' : 'auth');
+      } else if (draft.isRemote && fieldErrors.rowLimit) {
+        setActiveTab('advanced');
       }
       setApiError(t('Please fix the highlighted errors before saving.'));
       return;
@@ -799,6 +806,8 @@ export default function AddAndEditDatasetModal({
                 )}
                 value={draft.rowLimit}
                 onChange={(num) => updateDraft('rowLimit', num)}
+                max={datasetHardRowLimit || undefined}
+                error={formErrors.rowLimit}
               />
 
               <SelectDropdown

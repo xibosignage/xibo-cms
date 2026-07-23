@@ -75,6 +75,8 @@ interface PlaylistDraft {
   maxNumberOfItems: number;
 }
 
+const FALLBACK_MAX_NUMBER_OF_ITEMS = 30;
+
 const DEFAULT_DRAFT: PlaylistDraft = {
   name: '',
   folderId: null,
@@ -87,7 +89,7 @@ const DEFAULT_DRAFT: PlaylistDraft = {
   exactTags: false,
   logicalOperator: 'OR',
   filterFolderId: null,
-  maxNumberOfItems: 0,
+  maxNumberOfItems: FALLBACK_MAX_NUMBER_OF_ITEMS,
 };
 
 type PlaylistFormErrors = Partial<Record<keyof PlaylistDraft, string>>;
@@ -212,7 +214,7 @@ export default function AddAndEditPlaylistModal({
 
   const handleSave = () => {
     startTransition(async () => {
-      const schema = getPlaylistSchema(t);
+      const schema = getPlaylistSchema(t, maxNumberOfItemsLimit);
       const result = schema.safeParse(draft);
 
       if (!result.success) {
