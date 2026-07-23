@@ -77,6 +77,7 @@ export default function EditorHost({
   const pollRef = useRef<number | null>(null);
   const lastIdRef = useRef(id);
   const [loading, setLoading] = useState(true);
+  const [fullscreen, setFullscreen] = useState(false);
 
   const exit = () => leaveEditor(navigate, returnPath, onExit);
 
@@ -88,6 +89,10 @@ export default function EditorHost({
 
       if (event.data?.type === 'xibo:editor-exit') {
         leaveEditor(navigate, returnPath, onExit);
+      }
+
+      if (event.data?.type === 'xibo:editor-fullscreen') {
+        setFullscreen(Boolean(event.data.fullscreen));
       }
     };
 
@@ -177,7 +182,7 @@ export default function EditorHost({
         </div>
       )}
 
-      {!loading && showChrome && <EditorChrome />}
+      {!loading && showChrome && !fullscreen && <EditorChrome />}
 
       <iframe
         ref={iframeRef}
