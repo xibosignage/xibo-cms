@@ -51,6 +51,8 @@ interface SelectFolderProps {
   selectedId?: number | null;
   selectedText?: string | null;
   placeholder?: string;
+  label?: string;
+  helpText?: string;
   onSelect: (folder: { id: number; text: string } | null) => void;
   onAction?: (action: FolderAction, folder: Folder) => void;
   optional?: boolean;
@@ -61,6 +63,8 @@ export default function SelectFolder({
   selectedId,
   selectedText,
   placeholder,
+  label,
+  helpText,
   onSelect,
   onAction,
   optional = false,
@@ -234,7 +238,7 @@ export default function SelectFolder({
   return (
     <div className="relative">
       <label className="flex items-center justify-between text-sm font-semibold text-gray-500 mb-1">
-        <span>{t('Select folder location')}</span>
+        <span>{label ?? t('Select folder location')}</span>
         {optional && <span className="text-xs font-normal text-gray-500">{t('Optional')}</span>}
       </label>
 
@@ -324,6 +328,8 @@ export default function SelectFolder({
           </div>
         )}
       </FloatingPortal>
+
+      {helpText && <p className="text-xs text-gray-400 mt-1 whitespace-pre-line">{helpText}</p>}
 
       <FolderActionModals folderActions={folderActions} />
     </div>

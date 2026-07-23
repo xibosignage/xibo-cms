@@ -155,7 +155,7 @@ export default function UsersTab({
           {isVisible('SYSTEM_USER') && (
             <SelectDropdown
               label={t('System User')}
-              helpText={t('The system User for this CMS.')}
+              helpText={t('The system User for this CMS')}
               value={formValues.SYSTEM_USER ?? ''}
               initialLabel={relatedEntities.systemUser?.userName}
               options={userOptions.options}
@@ -173,7 +173,7 @@ export default function UsersTab({
           {isVisible('DEFAULT_USERGROUP') && (
             <SelectDropdown
               label={t('Default User Group')}
-              helpText={t('The default User Group for new Users.')}
+              helpText={t('The default User Group for new Users')}
               value={formValues.DEFAULT_USERGROUP ?? ''}
               initialLabel={relatedEntities.defaultUserGroup?.group}
               options={userGroupOptions.options}
@@ -246,9 +246,9 @@ export default function UsersTab({
         {isVisible('TWOFACTOR_ISSUER') && (
           <TextInput
             name="TWOFACTOR_ISSUER"
-            label={t('Issuer name')}
+            label={t('Two Factor Issuer')}
             helpText={t(
-              'Name that should appear as Issuer when two factor authorisation is enabled.',
+              'Name that should appear as Issuer when two factor authorisation is enabled',
             )}
             value={formValues.TWOFACTOR_ISSUER ?? ''}
             onChange={(v) => updateField('TWOFACTOR_ISSUER', v)}
