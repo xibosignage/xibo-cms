@@ -64,6 +64,11 @@ export default function CopyDisplayProfileModal({
       return;
     }
 
+    if (trimmed.length > 50) {
+      setError(t('Name must be 50 characters or less'));
+      return;
+    }
+
     const nameExists = existingNames.some((name) => name.toLowerCase() === trimmed.toLowerCase());
 
     if (nameExists) {
@@ -103,9 +108,10 @@ export default function CopyDisplayProfileModal({
         <TextInput
           name="newName"
           value={newName}
-          label={t('New name')}
+          label={t('Name')}
           helpText={t('The Name for the copy (1 - 50 characters)')}
           error={error}
+          maxLength={50}
           onChange={(val) => {
             setNewName(val);
             if (error) {
