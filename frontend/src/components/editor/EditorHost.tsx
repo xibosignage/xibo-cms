@@ -34,6 +34,7 @@ interface EditorHostProps {
   stayPathPrefix: string;
   returnPath?: string;
   onExit?: () => void;
+  onEditorNavigate?: (newId: string) => void;
   title: string;
   forwardQuery?: string;
   readySelector?: string;
@@ -64,6 +65,7 @@ export default function EditorHost({
   stayPathPrefix,
   returnPath,
   onExit,
+  onEditorNavigate,
   title,
   forwardQuery,
   readySelector,
@@ -73,6 +75,7 @@ export default function EditorHost({
   const navigate = useNavigate();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const pollRef = useRef<number | null>(null);
+  const lastIdRef = useRef(id);
   const [loading, setLoading] = useState(true);
 
   const exit = () => leaveEditor(navigate, returnPath, onExit);
@@ -111,9 +114,18 @@ export default function EditorHost({
       // The iframe loads the legacy editor under the install root (e.g. /cms/layout/designer/5),
       // so compare against the rootUri-prefixed prefix — otherwise we'd wrongly detect a
       // navigation-away and exit on alias installs.
-      if (path && !path.startsWith(withPublicPath(stayPathPrefix))) {
+      const prefix = withPublicPath(stayPathPrefix);
+      if (path && !path.startsWith(prefix)) {
         exit();
         return;
+      }
+
+      if (path) {
+        const newId = path.slice(prefix.length).replace(/^\//, '').split('/')[0];
+        if (newId && newId !== lastIdRef.current) {
+          lastIdRef.current = newId;
+          onEditorNavigate?.(newId);
+        }
       }
     } catch {
       // Ignore
