@@ -185,6 +185,7 @@ export interface FetchMenuBoardCategoriesRequest {
   sortDir?: string;
   menuCategoryId?: number;
   name?: string;
+  useRegexForName?: number;
   code?: string;
   modifiedDateFrom?: string;
   modifiedDateTo?: string;
@@ -321,6 +322,7 @@ export interface FetchMenuBoardProductsRequest {
   sortDir?: string;
   menuProductId?: number;
   name?: string;
+  useRegexForName?: number;
   code?: string;
   availability?: number;
   signal?: AbortSignal;

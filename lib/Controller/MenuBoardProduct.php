@@ -139,6 +139,7 @@ class MenuBoardProduct extends Base
             'menuProductId'  => $params->getInt('menuProductId'),
             'menuCategoryId' => $categoryId,
             'name'           => $params->getString('name'),
+            'useRegexForName' => $params->getCheckbox('useRegexForName'),
             'code'           => $params->getString('code'),
             'availability'   => $params->getInt('availability'),
         ], $params);

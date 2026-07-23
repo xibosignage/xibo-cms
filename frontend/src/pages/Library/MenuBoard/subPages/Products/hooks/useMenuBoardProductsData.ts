@@ -26,6 +26,7 @@ import type { AxiosError } from 'axios';
 import type { MenuBoardProductFilterInput } from '../MenuBoardProductsConfig';
 
 import { fetchMenuBoardProducts } from '@/services/menuBoardApi';
+import { isValidRegex } from '@/utils/regex';
 
 export const MenuBoardProductQueryKeys = {
   all: ['menuBoardProduct'] as const,
@@ -65,7 +66,7 @@ export const useMenuBoardProductsData = ({
       const startOffset = pagination.pageIndex * pagination.pageSize;
       const sortBy = sorting?.[0]?.id;
       const sortDir = sorting?.[0]?.desc ? 'desc' : 'asc';
-      const { menuProductId, name, code, availability } = advancedFilters;
+      const { menuProductId, name, useRegexForName, code, availability } = advancedFilters;
 
       return fetchMenuBoardProducts(menuCategoryId, {
         start: startOffset,
@@ -75,6 +76,7 @@ export const useMenuBoardProductsData = ({
         signal,
         menuProductId: menuProductId ? Number(menuProductId) : undefined,
         name: name || filter || undefined,
+        ...(useRegexForName && name && isValidRegex(name) ? { useRegexForName: 1 } : {}),
         code: code || undefined,
         availability: availability !== '' ? Number(availability) : undefined,
       });

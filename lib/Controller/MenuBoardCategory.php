@@ -143,6 +143,7 @@ class MenuBoardCategory extends Base
             'menuId'         => $menuId,
             'menuCategoryId' => $params->getInt('menuCategoryId'),
             'name'           => $params->getString('name'),
+            'useRegexForName' => $params->getCheckbox('useRegexForName'),
             'code'           => $params->getString('code'),
         ], $params);
     }
