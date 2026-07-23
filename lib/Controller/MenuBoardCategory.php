@@ -78,13 +78,6 @@ class MenuBoardCategory extends Base
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by keyword (searches name)',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'sortBy',
         description: 'Specifies which field the results are sorted by. Used together with sortDir',
         in: 'query',
@@ -151,7 +144,6 @@ class MenuBoardCategory extends Base
             'menuCategoryId' => $params->getInt('menuCategoryId'),
             'name'           => $params->getString('name'),
             'code'           => $params->getString('code'),
-            'keyword'        => $params->getString('keyword'),
         ], $params);
     }
 

@@ -86,13 +86,6 @@ class Template extends Base
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by template name, ID, or description',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'sortBy',
         description: 'Specifies which field the results are sorted by. Used together with sortDir',
         in: 'query',
@@ -635,7 +628,6 @@ class Template extends Base
     {
         return $this->gridRenderFilter([
             'excludeTemplates' => 0,
-            'keyword' => $sanitizedQueryParams->getString('keyword'),
             'tags' => $sanitizedQueryParams->getString('tags'),
             'layoutId' => $sanitizedQueryParams->getInt('templateId'),
             'layout' => $sanitizedQueryParams->getString('template'),

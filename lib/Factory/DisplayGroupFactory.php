@@ -527,16 +527,6 @@ class DisplayGroupFactory extends BaseFactory
             $params['folderId'] = $parsedBody->getInt('folderId');
         }
 
-        if ($parsedBody->getString('keyword') != null) {
-            // Fulltext search
-            $body .= $this->buildSearchQuery(
-                $parsedBody->getString('keyword'),
-                $params,
-                ['displaygroup.displayGroup', 'displaygroup.dynamicCriteria', 'displaygroup.dynamicCriteriaTags'],
-                ['displaygroup.displayGroupId']
-            );
-        }
-
         // View Permissions
         $this->viewPermissionSql(
             'Xibo\Entity\DisplayGroup',

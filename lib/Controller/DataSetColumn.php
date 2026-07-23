@@ -104,7 +104,7 @@ class DataSetColumn extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
-        name: 'keyword',
+        name: 'heading',
         description: 'Filter by column heading, list content, or tooltip',
         in: 'query',
         required: false,
@@ -692,7 +692,7 @@ class DataSetColumn extends Base
         return $this->gridRenderFilter([
             'dataSetId' => $id,
             'dataSetColumnId' => $parsedRequestParams->getInt('dataSetColumnId'),
-            'keyword' => $parsedRequestParams->getString('keyword')
+            'heading' => $parsedRequestParams->getString('heading'),
         ], $parsedRequestParams);
     }
 }

@@ -25,7 +25,7 @@ import type { Resolution } from '@/types/resolution';
 export interface FetchResolutionRequest {
   start: number;
   length: number;
-  keyword?: string;
+  resolution?: string;
   enabled?: boolean;
   sortBy?: string;
   sortDir?: string;

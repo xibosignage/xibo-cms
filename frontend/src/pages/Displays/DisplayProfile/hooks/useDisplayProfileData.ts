@@ -72,12 +72,11 @@ export const useDisplayProfileData = ({
       const request: FetchDisplayProfileRequest = {
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
-        ...(advancedFilters.displayProfile
-          ? { displayProfile: advancedFilters.displayProfile }
+        ...(advancedFilters.displayProfile || filter
+          ? { displayProfile: advancedFilters.displayProfile || filter }
           : {}),
         ...(advancedFilters.type
           ? { type: advancedFilters.type as FetchDisplayProfileRequest['type'] }

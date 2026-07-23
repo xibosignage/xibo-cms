@@ -66,10 +66,9 @@ export const useCommandsData = ({
       return fetchCommands({
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter || undefined,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
-        ...(advancedFilters.name ? { command: advancedFilters.name } : {}),
+        ...(advancedFilters.name || filter ? { command: advancedFilters.name || filter } : {}),
         ...(advancedFilters.code ? { code: advancedFilters.code } : {}),
         ...(advancedFilters.logicalOperatorName
           ? { logicalOperatorName: advancedFilters.logicalOperatorName }

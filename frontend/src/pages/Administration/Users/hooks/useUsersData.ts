@@ -68,13 +68,15 @@ export const useUsersData = ({
       const request: FetchUsersRequest = {
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter || undefined,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
         ...Object.fromEntries(
           Object.entries(advancedFilters).filter(([, v]) => v !== null && v !== ''),
         ),
+        ...((advancedFilters.userName || filter) && {
+          userName: advancedFilters.userName || filter,
+        }),
       };
 
       return fetchUsers(request);

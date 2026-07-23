@@ -82,7 +82,7 @@ export default function AssignMediaModal({ display, onClose, onSave }: AssignMed
       fetchMedia({
         start: pagination.pageIndex * pagination.pageSize,
         length: pagination.pageSize,
-        keyword: debouncedName || undefined,
+        media: debouncedName || undefined,
         type: typeFilter || undefined,
         sortBy: sorting[0]?.id,
         sortDir: sorting[0] ? (sorting[0].desc ? 'desc' : 'asc') : undefined,

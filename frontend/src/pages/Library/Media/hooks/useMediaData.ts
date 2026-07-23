@@ -80,11 +80,11 @@ export const useMediaData = ({
       const request: FetchMediaRequest = {
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
         ...restFilters,
+        ...((restFilters.media || filter) && { media: restFilters.media || filter }),
         ...(mediaId != null ? { mediaId } : {}),
         ...(layoutId != null ? { layoutId } : {}),
         ...(normalizedTags ? { tags: normalizedTags } : {}),

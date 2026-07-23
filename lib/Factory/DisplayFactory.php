@@ -432,16 +432,6 @@ class DisplayFactory extends BaseFactory
             $params['displayId'] = $parsedBody->getInt('displayId');
         }
 
-        if ($parsedBody->getString('keyword') != null) {
-            // Fulltext search
-            $body .= $this->buildSearchQuery(
-                $parsedBody->getString('keyword'),
-                $params,
-                ['display.display'],
-                ['display.displayId']
-            );
-        }
-
         // Display Profile
         if ($parsedBody->getInt('displayProfileId') !== null) {
             if ($parsedBody->getInt('displayProfileId') == -1) {

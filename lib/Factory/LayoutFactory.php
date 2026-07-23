@@ -2711,16 +2711,6 @@ class LayoutFactory extends BaseFactory
             $params['type'] = $parsedFilter->getString('campaignType');
         }
 
-        if ($parsedFilter->getString('keyword') != null) {
-            // Fulltext search
-            $body .= $this->buildSearchQuery(
-                $parsedFilter->getString('keyword'),
-                $params,
-                ['layout.layout', 'layout.description'],
-                ['layout.layoutId', 'campaign.campaignId'],
-            );
-        }
-
         // Logged in user view permissions
         $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'campaign.campaignId', 'layout.userId', $filterBy, 'campaign.permissionsFolderId');
 

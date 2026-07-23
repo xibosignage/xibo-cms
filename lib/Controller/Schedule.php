@@ -1693,13 +1693,6 @@ class Schedule extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by Schedule Name or ID',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'fromDt',
         description: 'From Date in Y-m-d H:i:s format',
         in: 'query',

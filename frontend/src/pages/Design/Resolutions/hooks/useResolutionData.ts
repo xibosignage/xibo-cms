@@ -73,7 +73,7 @@ export const useResolutionData = ({
       const request: FetchResolutionRequest = {
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter,
+        resolution: filter || undefined,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,

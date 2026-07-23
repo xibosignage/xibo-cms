@@ -72,12 +72,11 @@ export const useSyncGroupData = ({
       return fetchSyncGroups({
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter || undefined,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         ...(typeof folderId === 'number' ? { folderId } : {}),
         ...(advancedFilters.syncGroupId ? { syncGroupId: advancedFilters.syncGroupId } : {}),
-        ...(advancedFilters.name ? { name: advancedFilters.name } : {}),
+        ...(advancedFilters.name || filter ? { name: advancedFilters.name || filter } : {}),
         ...(advancedFilters.leadDisplayId ? { leadDisplayId: advancedFilters.leadDisplayId } : {}),
         ...(useRegexForName && advancedFilters.name && isValidRegex(advancedFilters.name)
           ? { useRegexForName: 1 }

@@ -68,9 +68,8 @@ export const useModuleTemplatesData = ({
 
       const request: FetchModuleTemplatesRequest = {
         id: advancedFilters.id ?? null,
-        templateId: advancedFilters.templateId || undefined,
+        templateId: advancedFilters.templateId || filter || undefined,
         dataType: advancedFilters.dataType || undefined,
-        keyword: filter || undefined,
         start,
         length: pagination.pageSize,
         sortBy,

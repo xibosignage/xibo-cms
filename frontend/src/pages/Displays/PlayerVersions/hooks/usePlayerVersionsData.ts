@@ -68,7 +68,7 @@ export const usePlayerVersionData = ({
       return fetchPlayerVersions({
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter,
+        playerShowVersion: filter || undefined,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,

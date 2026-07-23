@@ -76,11 +76,10 @@ export const useMenuBoardData = ({
       const request: FetchMenuBoardRequest = {
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
-        name: name || undefined,
+        name: name || filter || undefined,
         menuId: menuId ? Number(menuId) : undefined,
         userId: userId ? Number(userId) : undefined,
         code: code || undefined,

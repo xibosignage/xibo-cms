@@ -174,16 +174,6 @@ class ReportScheduleFactory extends BaseFactory
             $params['isActive'] = $sanitizedFilter->getInt('isActive');
         }
 
-        // fulltext
-        if ($sanitizedFilter->getString('keyword') != null) {
-            $body .= $this->buildSearchQuery(
-                $sanitizedFilter->getString('keyword'),
-                $params,
-                ['reportschedule.name'],
-                ['reportschedule.reportScheduleId']
-            );
-        }
-
         // View Permissions
         if ($this->getUser()->userTypeId != 1) {
             $this->viewPermissionSql(

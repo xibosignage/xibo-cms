@@ -140,13 +140,6 @@ class Campaign extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by campaign name or ID',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'sortBy',
         description: 'Specifies which field the results are sorted by. Used together with sortDir',
         in: 'query',
@@ -1166,7 +1159,6 @@ class Campaign extends Base
             'logicalOperator' => $parsedParams->getString('logicalOperator'),
             'logicalOperatorName' => $parsedParams->getString('logicalOperatorName'),
             'excludeMedia' => $parsedParams->getInt('excludeMedia'),
-            'keyword' => $parsedParams->getString('keyword')
         ], $parsedParams);
     }
 

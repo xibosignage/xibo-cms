@@ -386,7 +386,7 @@ export default function EditDisplayProfileModal({
       playerType: playerVersionType,
       start: 0,
       length: PAGE_SIZE,
-      keyword: playerVersionSearch || undefined,
+      playerShowVersion: playerVersionSearch || undefined,
     })
       .then((res) => {
         if (cancelled) {
@@ -437,7 +437,7 @@ export default function EditDisplayProfileModal({
       playerType: playerVersionType,
       start: playerVersionsPageRef.current * PAGE_SIZE,
       length: PAGE_SIZE,
-      keyword: playerVersionSearch || undefined,
+      playerShowVersion: playerVersionSearch || undefined,
     })
       .then((res) => {
         setPlayerVersions((prev) => [...prev, ...res.rows]);

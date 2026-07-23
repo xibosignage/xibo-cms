@@ -266,16 +266,6 @@ class UserFactory extends BaseFactory
             $params['userId'] = $parsedFilter->getInt('userId');
         }
 
-        if ($parsedFilter->getString('keyword') != null) {
-            // Fulltext search
-            $body .= $this->buildSearchQuery(
-                $parsedFilter->getString('keyword'),
-                $params,
-                ['user.userName', 'user.firstName', 'user.lastName', 'user.email'],
-                ['user.userId'],
-            );
-        }
-
         // Groups Provided
         $groups = $parsedFilter->getIntArray('groupIds');
 

@@ -25,7 +25,6 @@ import type { Playlist } from '@/types/playlist';
 export interface FetchPlaylistRequest {
   start: number;
   length: number;
-  keyword?: string;
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;

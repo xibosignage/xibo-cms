@@ -70,12 +70,11 @@ export const useMenuBoardProductsData = ({
       return fetchMenuBoardProducts(menuCategoryId, {
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
         menuProductId: menuProductId ? Number(menuProductId) : undefined,
-        name: name || undefined,
+        name: name || filter || undefined,
         code: code || undefined,
         availability: availability !== '' ? Number(availability) : undefined,
       });

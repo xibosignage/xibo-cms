@@ -165,13 +165,6 @@ class Playlist extends Base
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by Playlist name or ID',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'userId',
         description: 'Filter by user Id',
         in: 'query',
@@ -1765,7 +1758,6 @@ class Playlist extends Base
         return $this->gridRenderFilter([
             'name' => $sanitizedParams->getString('name'),
             'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
-            'keyword' => $sanitizedParams->getString('keyword'),
             'userId' => $sanitizedParams->getInt('userId'),
             'tags' => $sanitizedParams->getString('tags'),
             'exactTags' => $sanitizedParams->getCheckbox('exactTags'),

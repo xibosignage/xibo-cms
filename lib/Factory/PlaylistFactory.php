@@ -376,16 +376,6 @@ class PlaylistFactory extends BaseFactory
             $params['exact'] = $parsedFilter->getString('playlistExact');
         }
 
-        if ($parsedFilter->getString('keyword') != null) {
-            // Fulltext search
-            $body .= $this->buildSearchQuery(
-                $parsedFilter->getString('keyword'),
-                $params,
-                ['playlist.name'],
-                ['playlist.playlistId']
-            );
-        }
-
         // Not PlaylistId
         if ($parsedFilter->getInt('notPlaylistId', ['default' => 0]) != 0) {
             $body .= ' AND playlist.playlistId <> :notPlaylistId ';

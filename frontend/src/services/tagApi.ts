@@ -26,7 +26,6 @@ export interface FetchTagsRequest {
   start?: number;
   length?: number;
   tagId?: number;
-  keyword?: string;
   tag?: string;
   useRegexForName?: boolean;
   logicalOperatorName?: 'AND' | 'OR';

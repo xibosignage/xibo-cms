@@ -70,7 +70,7 @@ export const useMenuBoardCategoriesData = ({
       return fetchMenuBoardCategories(menuId, {
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter,
+        name: filter || undefined,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,

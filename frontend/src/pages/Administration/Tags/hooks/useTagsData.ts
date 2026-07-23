@@ -77,9 +77,8 @@ export const useTagsData = ({
       const request: FetchTagsRequest = {
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter || undefined,
         tagId: advancedFilters.tagId ?? undefined,
-        tag: advancedFilters.tag || undefined,
+        tag: advancedFilters.tag || filter || undefined,
         logicalOperatorName: advancedFilters.logicalOperatorName ?? undefined,
         useRegexForName: advancedFilters.useRegexForName ?? undefined,
         allTags,

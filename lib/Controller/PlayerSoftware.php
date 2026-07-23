@@ -92,13 +92,6 @@ class PlayerSoftware extends Base
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Keyword search ( playerShowVersion, versionId )',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'sortBy',
         description: 'Specifies which field the results are sorted by. Used together with sortDir',
         in: 'query',
@@ -162,7 +155,6 @@ class PlayerSoftware extends Base
             'versionId'         => $params->getInt('versionId'),
             'useRegexForName'   => $params->getCheckbox('useRegexForName'),
             'playerShowVersion' => $params->getString('playerShowVersion'),
-            'keyword'           => $params->getString('keyword'),
         ];
     }
 

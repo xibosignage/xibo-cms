@@ -32,7 +32,7 @@ export interface FetchPlayerSoftwareRequest {
   start?: number;
   length?: number;
   playerType?: string;
-  keyword?: string;
+  playerShowVersion?: string;
 }
 
 export interface FetchPlayerSoftwareResponse {

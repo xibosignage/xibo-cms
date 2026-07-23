@@ -87,11 +87,11 @@ export const usePlaylistData = ({
       const request: FetchPlaylistRequest = {
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
         ...restFilters,
+        ...((restFilters.name || filter) && { name: restFilters.name || filter }),
         ...(normalizedTags ? { tags: normalizedTags } : {}),
         ...resolveLastModified(lastModified),
         ...(useRegexForName && restFilters.name && isValidRegex(restFilters.name)

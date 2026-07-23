@@ -26,7 +26,6 @@ import ZipWorker from '@/workers/zipWorker?worker';
 export interface FetchMediaRequest {
   start: number;
   length: number;
-  keyword?: string;
   media?: string;
   sortBy?: string;
   sortDir?: string;

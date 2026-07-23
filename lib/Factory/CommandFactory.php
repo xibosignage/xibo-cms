@@ -186,15 +186,6 @@ class CommandFactory extends BaseFactory
             $params['userId'] = $sanitizedFilter->getInt('userId');
         }
 
-        if ($sanitizedFilter->getString('keyword') != null) {
-            $body .= $this->buildSearchQuery(
-                $sanitizedFilter->getString('keyword'),
-                $params,
-                ['command.command'],
-                ['command.commandId']
-            );
-        }
-
         $this->viewPermissionSql(
             'Xibo\Entity\Command',
             $body,

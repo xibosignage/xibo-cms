@@ -103,7 +103,7 @@ export default function ManageMembersModal({
       fetchDisplays({
         start: displayPagination.pageIndex * displayPagination.pageSize,
         length: displayPagination.pageSize,
-        keyword: debouncedDisplayKeyword || undefined,
+        display: debouncedDisplayKeyword || undefined,
         sortBy: displaySorting[0]?.id,
         sortDir: displaySorting[0] ? (displaySorting[0].desc ? 'desc' : 'asc') : undefined,
         signal,

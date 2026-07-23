@@ -49,7 +49,7 @@ export function useDatasetColumnsData({
       fetchDatasetColumns(datasetId, {
         start: pagination.pageIndex * pagination.pageSize,
         length: pagination.pageSize,
-        keyword: filter,
+        heading: filter || undefined,
         sortBy,
         sortDir,
         signal,

@@ -75,13 +75,6 @@ class Tag extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by Tag name and options',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'tag',
         description: 'Filter by partial Tag',
         in: 'query',
@@ -699,7 +692,6 @@ class Tag extends Base
     {
         return $this->gridRenderFilter([
             'tagId' => $sanitizedQueryParams->getInt('tagId'),
-            'keyword' => $sanitizedQueryParams->getString('keyword'),
             'tag' => $sanitizedQueryParams->getString('tag'),
             'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
             'isSystem' => $sanitizedQueryParams->getCheckbox('isSystem'),

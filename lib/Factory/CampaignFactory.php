@@ -418,16 +418,6 @@ class CampaignFactory extends BaseFactory
             $body .= ' AND `campaign`.type != \'media\' ';
         }
 
-        if ($sanitizedFilter->getString('keyword') != null) {
-            // Fulltext search
-            $body .= $this->buildSearchQuery(
-                $sanitizedFilter->getString('keyword'),
-                $params,
-                ['campaign.campaign'],
-                ['campaign.campaignId']
-            );
-        }
-
         // Sorting?
         $allowedColumns = [
             'campaignId',
