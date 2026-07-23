@@ -24,9 +24,9 @@ import userEvent from '@testing-library/user-event';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import {
-  mockCurrentUser,
+  mockSuperAdmin,
   mockFolderTree,
-  mockNonAdminCurrentUser,
+  mockGroupAdmin,
   mockUser,
   mockUserGroup,
 } from '../../../fixtures/user';
@@ -34,6 +34,7 @@ import { renderAddEditUserModal } from '../helpers/renderAddEditUserModal';
 
 import { fetchFolderTree } from '@/services/folderApi';
 import { fetchGroupFolderPermissions } from '@/services/permissionsApi';
+import { fetchHomepages } from '@/services/userApi';
 import { fetchUserGroups } from '@/services/userGroupApi';
 
 // =============================================================================
@@ -60,6 +61,7 @@ describe('AddEditUserModal - General tab', () => {
     vi.mocked(fetchFolderTree).mockResolvedValue(mockFolderTree);
     vi.mocked(fetchGroupFolderPermissions).mockResolvedValue(new Map());
     vi.mocked(fetchUserGroups).mockResolvedValue({ rows: [mockUserGroup], totalCount: 1 });
+    vi.mocked(fetchHomepages).mockResolvedValue([]);
   });
 
   test('add mode: Username, Email, and Password fields are empty', async () => {
@@ -107,13 +109,13 @@ describe('AddEditUserModal - General tab', () => {
   });
 
   test('User Type dropdown is shown for a super admin', async () => {
-    renderAddEditUserModal({ mode: 'add', currentUser: mockCurrentUser });
+    renderAddEditUserModal({ mode: 'add', currentUser: mockSuperAdmin });
 
     await screen.findByRole('combobox', { name: /^user type$/i });
   });
 
   test('User Type dropdown is hidden for a non-superAdmin', async () => {
-    renderAddEditUserModal({ mode: 'add', currentUser: mockNonAdminCurrentUser });
+    renderAddEditUserModal({ mode: 'add', currentUser: mockGroupAdmin });
     await screen.findByRole('textbox', { name: /^username$/i });
 
     expect(screen.queryByRole('combobox', { name: /^user type$/i })).not.toBeInTheDocument();

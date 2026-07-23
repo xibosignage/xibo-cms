@@ -24,9 +24,9 @@ import userEvent from '@testing-library/user-event';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import {
-  mockCurrentUser,
+  mockSuperAdmin,
   mockFolderTree,
-  mockNonAdminCurrentUser,
+  mockGroupAdmin,
   mockUser,
   mockUserGroup,
 } from '../../fixtures/user';
@@ -35,7 +35,7 @@ import { renderAddEditUserModal } from './helpers/renderAddEditUserModal';
 
 import { fetchFolderTree } from '@/services/folderApi';
 import { fetchGroupFolderPermissions, saveMultiPermissions } from '@/services/permissionsApi';
-import { createUser, updateUser } from '@/services/userApi';
+import { createUser, fetchHomepages, updateUser } from '@/services/userApi';
 import { fetchUserGroups } from '@/services/userGroupApi';
 
 // =============================================================================
@@ -83,32 +83,35 @@ describe('AddEditUserModal', () => {
     vi.mocked(fetchGroupFolderPermissions).mockResolvedValue(new Map());
     vi.mocked(saveMultiPermissions).mockResolvedValue(undefined);
     vi.mocked(fetchUserGroups).mockResolvedValue({ rows: [mockUserGroup], totalCount: 1 });
+    vi.mocked(fetchHomepages).mockResolvedValue([
+      { homepage: 'icondashboard.view', title: 'Icon Dashboard' },
+    ]);
   });
 
   // ---------------------------------------------------------------------------
   // Tab visibility
   // ---------------------------------------------------------------------------
   test('Folder Permission tab is shown when the current user has folder.view', async () => {
-    renderAddEditUserModal({ mode: 'add', currentUser: mockCurrentUser });
+    renderAddEditUserModal({ mode: 'add', currentUser: mockSuperAdmin });
 
     await screen.findByRole('tab', { name: /folder permission/i });
   });
 
   test('Folder Permission tab is hidden without folder.view', async () => {
-    renderAddEditUserModal({ mode: 'add', currentUser: { ...mockCurrentUser, features: {} } });
+    renderAddEditUserModal({ mode: 'add', currentUser: { ...mockSuperAdmin, features: {} } });
 
     await screen.findByRole('tab', { name: /^general$/i });
     expect(screen.queryByRole('tab', { name: /folder permission/i })).not.toBeInTheDocument();
   });
 
   test('Notifications tab is shown only for a super admin', async () => {
-    renderAddEditUserModal({ mode: 'add', currentUser: mockCurrentUser });
+    renderAddEditUserModal({ mode: 'add', currentUser: mockSuperAdmin });
 
     await screen.findByRole('tab', { name: /notifications/i });
   });
 
   test('Notifications tab is hidden for a non-superAdmin', async () => {
-    renderAddEditUserModal({ mode: 'add', currentUser: mockNonAdminCurrentUser });
+    renderAddEditUserModal({ mode: 'add', currentUser: mockGroupAdmin });
 
     await screen.findByRole('tab', { name: /^general$/i });
     expect(screen.queryByRole('tab', { name: /notifications/i })).not.toBeInTheDocument();
@@ -151,6 +154,10 @@ describe('AddEditUserModal', () => {
       rows: [{ ...mockUserGroup, features: ['dashboard.status'] }],
       totalCount: 1,
     });
+    vi.mocked(fetchHomepages).mockResolvedValue([
+      { homepage: 'icondashboard.view', title: 'Icon Dashboard' },
+      { homepage: 'statusdashboard.view', title: 'Status Dashboard', feature: 'dashboard.status' },
+    ]);
 
     renderAddEditUserModal({ mode: 'add' });
     await screen.findByRole('textbox', { name: /^username$/i });
@@ -188,6 +195,21 @@ describe('AddEditUserModal', () => {
     await user.click(screen.getByRole('button', { name: /create user/i }));
 
     expect(await screen.findByText(/valid email/i)).toBeInTheDocument();
+    expect(createUser).not.toHaveBeenCalled();
+  });
+
+  test('saving without a Homepage shows "Homepage is required" and does not call createUser', async () => {
+    const user = userEvent.setup();
+    renderAddEditUserModal({ mode: 'add' });
+    await screen.findByRole('textbox', { name: /^username$/i });
+
+    await user.type(screen.getByRole('textbox', { name: /^username$/i }), 'newuser');
+    await user.type(screen.getByLabelText(/^password$/i), 'Password1!');
+    await selectDropdownOption(user, /initial user group/i, new RegExp(mockUserGroup.group, 'i'));
+
+    await user.click(screen.getByRole('button', { name: /create user/i }));
+
+    expect(await screen.findByText(/homepage is required/i)).toBeInTheDocument();
     expect(createUser).not.toHaveBeenCalled();
   });
 
@@ -337,7 +359,7 @@ describe('AddEditUserModal', () => {
     const user = userEvent.setup();
     vi.mocked(updateUser).mockResolvedValue(mockUser);
 
-    renderAddEditUserModal({ mode: 'edit', user: mockUser, currentUser: mockNonAdminCurrentUser });
+    renderAddEditUserModal({ mode: 'edit', user: mockUser, currentUser: mockGroupAdmin });
     await screen.findByRole('textbox', { name: /^username$/i });
 
     await user.click(screen.getByRole('button', { name: /^save$/i }));
