@@ -23,11 +23,12 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-import { buildUser, mockNonAdminCurrentUser, mockUser } from './fixtures/user';
+import { buildUser, mockGroupAdmin, mockUser } from './fixtures/user';
 import { renderUsersPage } from './helpers/renderUsersPage';
 import { mockFetchUsers } from './mocks/userApi';
 
 import { testQueryClient } from '@/setupTests';
+import { buildCurrentUser } from '@/testUtils/personas';
 
 // =============================================================================
 // Module mocks
@@ -76,9 +77,13 @@ describe('Users page - bulk Set Home Folder', () => {
     expect(await screen.findByRole('button', { name: /set home folder/i })).toBeEnabled();
   });
 
-  test('the bulk button is visible for a non-superAdmin user (no permission gate)', async () => {
+  // Proves the gate is by feature, not rank: a non-super-admin with the
+  // feature added (it's not on by default) sees the button too.
+  test('the bulk button is visible for a non-superAdmin user who has folder.userHome', async () => {
     const user = userEvent.setup();
-    renderUsersPage(mockNonAdminCurrentUser);
+    renderUsersPage(
+      buildCurrentUser(mockGroupAdmin, { features: { 'folder.userHome': true } }),
+    );
     await screen.findByText(mockUser.userName);
 
     const checkboxes = screen.getAllByRole('checkbox', { name: /select row/i });
@@ -96,9 +101,8 @@ describe('Users page - bulk Set Home Folder', () => {
     renderUsersPage();
     await screen.findByText(mockUser.userName);
 
-    const checkboxes = screen.getAllByRole('checkbox', { name: /select row/i });
-    await user.click(checkboxes[0]!);
-    await user.click(checkboxes[1]!);
+    await user.click(screen.getAllByRole('checkbox', { name: /select row/i })[0]!);
+    await user.click(screen.getAllByRole('checkbox', { name: /select row/i })[1]!);
 
     await user.click(await screen.findByRole('button', { name: /set home folder/i }));
 
