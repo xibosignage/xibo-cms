@@ -378,8 +378,9 @@ class PlayerSoftware extends Base
             $playerSoftware->md5 = md5_file($filePath);
             $playerSoftware->decorateRecord();
 
-            if (!empty($file->name)) {
-                $playerSoftware->playerShowVersion = $file->name;
+            $name = $this->getSanitizer($request->getParams())->getString('name');
+            if (!empty($name)) {
+                $playerSoftware->playerShowVersion = $name;
             }
 
             $playerSoftware->save();
