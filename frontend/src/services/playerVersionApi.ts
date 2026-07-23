@@ -87,7 +87,7 @@ export async function updatePlayerVersion(
   params.append('code', String(data.code));
   params.append('playerShowVersion', data.playerShowVersion);
 
-    const response = await http.put(`/playersoftware/${versionId}`, params.toString(), {
+  const response = await http.put(`/playersoftware/${versionId}`, params.toString(), {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
       'X-Requested-With': 'XMLHttpRequest',
