@@ -123,6 +123,10 @@ export default function DisplaysTab({
         )}
         {isVisible('DISPLAY_DEFAULT_FOLDER') && (
           <SelectFolder
+            label={t('Default Folder for new Displays')}
+            helpText={t(
+              'Set default folder for new Displays, by default the Root folder will be used',
+            )}
             selectedId={Number(formValues.DISPLAY_DEFAULT_FOLDER) || null}
             onSelect={(folder) =>
               updateField('DISPLAY_DEFAULT_FOLDER', folder ? String(folder.id) : '')
@@ -158,8 +162,9 @@ export default function DisplaysTab({
           {isVisible('XMR_ADDRESS') && (
             <TextInput
               name="XMR_ADDRESS"
-              label={t('Private Address')}
-              helpText={t('Enter the private address for XMR.')}
+              label={t('XMR Private Address')}
+              required
+              helpText={t('Please enter the private address for XMR.')}
               value={formValues.XMR_ADDRESS ?? ''}
               onChange={(v) => updateField('XMR_ADDRESS', v)}
               disabled={!isEditable('XMR_ADDRESS')}
@@ -169,9 +174,9 @@ export default function DisplaysTab({
           {isVisible('XMR_WS_ADDRESS') && (
             <TextInput
               name="XMR_WS_ADDRESS"
-              label={t('WebSocket Address')}
+              label={t('XMR WebSocket Address')}
               helpText={t(
-                'Enter the WebSocket address for XMR. Leaving this empty will mean the Player app connects to /xmr',
+                'Please enter the WebSocket address for XMR. Leaving this empty will mean the Player app connects to /xmr',
               )}
               value={formValues.XMR_WS_ADDRESS ?? ''}
               onChange={(v) => updateField('XMR_WS_ADDRESS', v)}
@@ -182,8 +187,8 @@ export default function DisplaysTab({
           {isVisible('XMR_PUB_ADDRESS') && (
             <TextInput
               name="XMR_PUB_ADDRESS"
-              label={t('Public Address')}
-              helpText={t('Enter the public address for XMR.')}
+              label={t('XMR Public Address')}
+              helpText={t('Please enter the public address for XMR.')}
               value={formValues.XMR_PUB_ADDRESS ?? ''}
               onChange={(v) => updateField('XMR_PUB_ADDRESS', v)}
               disabled={!isEditable('XMR_PUB_ADDRESS')}
@@ -197,6 +202,7 @@ export default function DisplaysTab({
             <TextInput
               name="DEFAULT_LAT"
               label={t('Default Latitude')}
+              required
               helpText={t('The Latitude to apply for any Geo aware Previews')}
               value={formValues.DEFAULT_LAT ?? ''}
               onChange={(v) => updateField('DEFAULT_LAT', v)}
@@ -207,6 +213,7 @@ export default function DisplaysTab({
             <TextInput
               name="DEFAULT_LONG"
               label={t('Default Longitude')}
+              required
               helpText={t('The longitude to apply for any Geo aware Previews')}
               value={formValues.DEFAULT_LONG ?? ''}
               onChange={(v) => updateField('DEFAULT_LONG', v)}

@@ -37,13 +37,13 @@ export default function TroubleshootingTab({
 
   return (
     <div className="flex flex-col gap-3">
-      <SettingsSection title={t('Widget Colour Coding in Playlist Editor')}>
+      <SettingsSection title={t('Logging')}>
         <div className="flex items-start justify-between space-x-4">
           {isVisible('RESTING_LOG_LEVEL') && (
             <SelectDropdown
               label={t('Resting Log Level')}
               helpText={t(
-                'Set the level of the resting log level. The CMS will revert to this log level after an elevated period ends. In production systems Error is recommended.',
+                'Set the level of the resting log level. The CMS will revert to this log level after an elevated period ends. In production systems "error" is recommended.',
               )}
               value={formValues.RESTING_LOG_LEVEL ?? ''}
               options={[
@@ -60,7 +60,7 @@ export default function TroubleshootingTab({
             <SelectDropdown
               label={t('Log Level')}
               helpText={t(
-                'Set the level of logging the CMS should record. In production systems Error is recommended.',
+                'Set the level of logging the CMS should record. In production systems "error" is recommended.',
               )}
               value={formValues.audit ?? ''}
               options={[
@@ -98,7 +98,7 @@ export default function TroubleshootingTab({
           <SelectDropdown
             label={t('Server Mode')}
             helpText={t(
-              'This should only be set if you want to display the maximum allowed error messaging through the user interface. Useful for capturing critical php errors and environment issues.',
+              'This should only be set if you want to display the maximum allowed error messaging through the user interface.\nUseful for capturing critical php errors and environment issues.',
             )}
             value={formValues.SERVER_MODE ?? ''}
             options={[

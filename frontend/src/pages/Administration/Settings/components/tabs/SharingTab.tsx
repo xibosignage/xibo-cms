@@ -53,9 +53,9 @@ export default function SharingTab({
       <SettingsSection title={t('Scheduling Permissions')}>
         {isVisible('SCHEDULE_WITH_VIEW_PERMISSION') && (
           <SwitchRow
-            title={t('Schedule with view sharing')}
+            title={t('Schedule with view sharing?')}
             description={t(
-              'Users with "View" sharing access on a display can schedule content to it.',
+              'Should users with View sharing on displays be allowed to schedule to them?',
             )}
             checked={formValues.SCHEDULE_WITH_VIEW_PERMISSION === '1'}
             onChange={(v) => updateField('SCHEDULE_WITH_VIEW_PERMISSION', v ? '1' : '0')}
@@ -64,9 +64,9 @@ export default function SharingTab({
         )}
         {isVisible('SCHEDULE_SHOW_LAYOUT_NAME') && (
           <SwitchRow
-            title={t('Show event Layout regardless of User permission')}
+            title={t('Show event Layout regardless of User permission?')}
             description={t(
-              "Display the layout for existing scheduled events even if the current user doesn't have view access.",
+              'If checked then the Schedule will show the Layout for existing events even if the logged in User does not have permission to see that Layout.',
             )}
             checked={formValues.SCHEDULE_SHOW_LAYOUT_NAME === '1'}
             onChange={(v) => updateField('SCHEDULE_SHOW_LAYOUT_NAME', v ? '1' : '0')}
@@ -75,26 +75,6 @@ export default function SharingTab({
         )}
       </SettingsSection>
       <SettingsSection title={t('Content Organisation')}>
-        {isVisible('TRANSITION_CONFIG_LOCKED_CHECKB') && (
-          <SwitchRow
-            title={t('Lock transition configuration')}
-            description={t('Allow modifications to the transition configuration.')}
-            checked={formValues.TRANSITION_CONFIG_LOCKED_CHECKB === '1'}
-            onChange={(v) => updateField('TRANSITION_CONFIG_LOCKED_CHECKB', v ? '1' : '0')}
-            disabled={!isEditable('TRANSITION_CONFIG_LOCKED_CHECKB')}
-          />
-        )}
-        {isVisible('FOLDERS_ALLOW_SAVE_IN_ROOT') && (
-          <SwitchRow
-            title={t('Allow saving to the Root Folder')}
-            description={t(
-              'Users can store content at the top level. Disable to require folder organisation.',
-            )}
-            checked={formValues.FOLDERS_ALLOW_SAVE_IN_ROOT === '1'}
-            onChange={(v) => updateField('FOLDERS_ALLOW_SAVE_IN_ROOT', v ? '1' : '0')}
-            disabled={!isEditable('FOLDERS_ALLOW_SAVE_IN_ROOT')}
-          />
-        )}
         {isVisible('TASK_CONFIG_LOCKED_CHECKB') && (
           <SwitchRow
             title={t('Lock Task Config')}
@@ -102,6 +82,26 @@ export default function SharingTab({
             checked={formValues.TASK_CONFIG_LOCKED_CHECKB === '1'}
             onChange={(v) => updateField('TASK_CONFIG_LOCKED_CHECKB', v ? '1' : '0')}
             disabled={!isEditable('TASK_CONFIG_LOCKED_CHECKB')}
+          />
+        )}
+        {isVisible('TRANSITION_CONFIG_LOCKED_CHECKB') && (
+          <SwitchRow
+            title={t('Is the Transition config locked?')}
+            description={t('Allow modifications to the transition configuration?')}
+            checked={formValues.TRANSITION_CONFIG_LOCKED_CHECKB === '1'}
+            onChange={(v) => updateField('TRANSITION_CONFIG_LOCKED_CHECKB', v ? '1' : '0')}
+            disabled={!isEditable('TRANSITION_CONFIG_LOCKED_CHECKB')}
+          />
+        )}
+        {isVisible('FOLDERS_ALLOW_SAVE_IN_ROOT') && (
+          <SwitchRow
+            title={t('Allow saving in the root folder?')}
+            description={t(
+              'Users can use the top level folder to store content. Disable to force the use of folders.',
+            )}
+            checked={formValues.FOLDERS_ALLOW_SAVE_IN_ROOT === '1'}
+            onChange={(v) => updateField('FOLDERS_ALLOW_SAVE_IN_ROOT', v ? '1' : '0')}
+            disabled={!isEditable('FOLDERS_ALLOW_SAVE_IN_ROOT')}
           />
         )}
       </SettingsSection>
