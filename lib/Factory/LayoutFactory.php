@@ -3353,13 +3353,28 @@ class LayoutFactory extends BaseFactory
             return $existingFullscreenLayout;
         }
 
+        // Build the Layout name/description from the media/playlist name. This name is not length
+        // validated upstream (Playlist names in particular have no max length), but the layout,
+        // description and region name columns are all varchar(254), so we need to truncate here
+        // to avoid an "unexpected" SQL error - save() below skips validation.
+        $sourceName = ($type === 'media' ? $media->name : $playlist->name);
+        $sourceId = ($type === 'media' ? $media->mediaId : $playlist->playlistId);
+
+        $namePrefix = $type . '_';
+        $nameSuffix = '_' . $sourceId;
+        // Leave enough room for the "-<region count>" suffix appended to the region name later.
+        $maxNameLength = 254 - strlen($namePrefix) - strlen($nameSuffix) - 10;
+        $layoutName = $namePrefix . mb_substr($sourceName, 0, max($maxNameLength, 1)) . $nameSuffix;
+
+        $descriptionPrefix = 'Full Screen Layout created from ';
+        $maxDescriptionNameLength = 254 - strlen($descriptionPrefix);
+        $description = $descriptionPrefix . mb_substr($sourceName, 0, max($maxDescriptionNameLength, 1));
+
         $layout = $this->createFromResolution(
             $resolutionId,
             $this->getUser()->userId,
-            $type . '_' .
-            ($type === 'media' ? $media->name : $playlist->name) .
-            '_' . ($type === 'media' ? $media->mediaId : $playlist->playlistId),
-            'Full Screen Layout created from ' . ($type === 'media' ? $media->name : $playlist->name),
+            $layoutName,
+            $description,
             '',
             null,
             false
