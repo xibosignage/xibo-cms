@@ -72,7 +72,7 @@ describe('Resolutions Page - Render, Search, and Pagination', () => {
     // Wait for debounce and refetch
     await waitFor(() => {
       expect(fetchResolution).toHaveBeenCalledWith(
-        expect.objectContaining({ keyword: '4K', start: 0 }),
+        expect.objectContaining({ resolution: '4K', start: 0 }),
       );
     });
   });
