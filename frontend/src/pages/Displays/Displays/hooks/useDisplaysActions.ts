@@ -126,7 +126,11 @@ export function useDisplaysActions({
     }
   };
 
-  const runAction = async (fn: () => Promise<unknown>, errorMessage: string) => {
+  const runAction = async (
+    fn: () => Promise<unknown>,
+    errorMessage: string,
+    options?: { notifyOnError?: boolean },
+  ) => {
     try {
       setIsActionPending(true);
       await fn();
@@ -138,26 +142,41 @@ export function useDisplaysActions({
         isAxiosError(error) && error.response?.data?.message
           ? error.response.data.message
           : errorMessage;
-      setActionError(message);
+
+      // On the auto-submit path there is no dialog to host the inline error, so surface a toast.
+      if (options?.notifyOnError) {
+        notify.error(message);
+      } else {
+        setActionError(message);
+      }
     } finally {
       setIsActionPending(false);
     }
   };
 
-  const confirmAuthorise = (display: Display) =>
+  const confirmAuthorise = (display: Display, options?: { notifyOnError?: boolean }) =>
     runAction(
       () => toggleDisplayAuthorised(display.displayId),
       t('Failed to toggle authorisation.'),
+      options,
     );
 
-  const confirmCheckLicence = (display: Display) =>
-    runAction(() => checkLicence(display.displayId), t('Failed to check licence.'));
+  const confirmCheckLicence = (display: Display, options?: { notifyOnError?: boolean }) =>
+    runAction(() => checkLicence(display.displayId), t('Failed to check licence.'), options);
 
-  const confirmRequestScreenShot = (display: Display) =>
-    runAction(() => requestScreenShot(display.displayId), t('Failed to request screenshot.'));
+  const confirmRequestScreenShot = (display: Display, options?: { notifyOnError?: boolean }) =>
+    runAction(
+      () => requestScreenShot(display.displayId),
+      t('Failed to request screenshot.'),
+      options,
+    );
 
-  const confirmCollectNow = (display: Display) =>
-    runAction(() => collectNow(display.displayGroupId), t('Failed to trigger collection.'));
+  const confirmCollectNow = (display: Display, options?: { notifyOnError?: boolean }) =>
+    runAction(
+      () => collectNow(display.displayGroupId),
+      t('Failed to trigger collection.'),
+      options,
+    );
 
   const confirmWakeOnLan = (display: Display) =>
     runAction(() => wakeOnLan(display.displayId), t('Failed to send Wake on LAN.'));

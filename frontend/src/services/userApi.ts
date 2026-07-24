@@ -71,7 +71,7 @@ export async function fetchUsers(
 
 export interface SavePreferenceParams {
   option: string;
-  value: Record<string, unknown>;
+  value: unknown;
 }
 
 export async function saveUserPreference({ option, value }: SavePreferenceParams): Promise<void> {
@@ -131,6 +131,23 @@ export async function fetchUserPreference<T = Record<string, unknown>>(
   }
 
   return null;
+}
+
+export function autoSubmitPrefKey(formId: string): string {
+  return `autoSubmit.${formId}`;
+}
+
+export function autoSubmitPrefQueryKey(formId: string): [string, string] {
+  return ['userPref', autoSubmitPrefKey(formId)];
+}
+
+export async function fetchAutoSubmitPreference(formId: string): Promise<boolean> {
+  const value = await fetchUserPreference<boolean>(autoSubmitPrefKey(formId));
+  return value === true;
+}
+
+export async function saveAutoSubmitPreference(formId: string, value: boolean): Promise<void> {
+  await saveUserPreference({ option: autoSubmitPrefKey(formId), value });
 }
 
 // 2FA

@@ -36,6 +36,8 @@ import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
+import { useAutoSubmit } from '@/hooks/useAutoSubmit';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
 import type { Module } from '@/types/module';
@@ -44,6 +46,7 @@ import { countActiveFilters } from '@/utils/filters';
 export default function Modules() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { guard } = useAutoSubmit();
 
   const {
     pagination,
@@ -126,11 +129,16 @@ export default function Modules() {
     openModal('configure');
   };
 
-  const handleClearCache = (module: Module) => {
-    setSelectedModule(module);
-    setClearError(null);
-    openModal('clearCache');
-  };
+  const handleClearCache = (module: Module) =>
+    guard(
+      AUTO_SUBMIT_FORMS.moduleClearCache,
+      () => confirmClearCache(module.moduleId, { notifyOnError: true }),
+      () => {
+        setSelectedModule(module);
+        setClearError(null);
+        openModal('clearCache');
+      },
+    );
 
   const handleResetFilters = () => {
     setFilterInputs(INITIAL_FILTER_STATE);

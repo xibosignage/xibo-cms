@@ -66,6 +66,8 @@ export function useLayoutActions({
   const [isDiscarding, setIsDiscarding] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
@@ -190,18 +192,34 @@ export function useLayoutActions({
     navigate(`/design/layout/${layoutId}/editor`);
   };
 
-  const handleCheckoutLayout = async (layoutId: number) => {
+  const handleCheckoutLayout = async (layoutId: number, options?: { notifyOnError?: boolean }) => {
+    if (isCheckingOut) {
+      return;
+    }
+
     notify.info(t('Preparing layout for editing...'));
 
     try {
+      setIsCheckingOut(true);
+
       await checkoutLayout(layoutId);
 
       notify.success(t('Layout checked out successfully'));
 
+      closeModal();
       navigate(`/design/layout/${layoutId}/editor`);
     } catch (error) {
       console.error(error);
-      notify.error(t('Failed to checkout layout'));
+      const message =
+        (isAxiosError(error) && error.response?.data?.message) || t('Failed to checkout layout');
+
+      if (options?.notifyOnError) {
+        notify.error(message);
+      } else {
+        setCheckoutError(message);
+      }
+    } finally {
+      setIsCheckingOut(false);
     }
   };
 
@@ -343,6 +361,9 @@ export function useLayoutActions({
     handleOpenLayout,
     confirmPublish,
     handleCheckoutLayout,
+    isCheckingOut,
+    checkoutError,
+    setCheckoutError,
     isDiscarding,
     handleConfirmDiscard,
     handleConfirmAssign,

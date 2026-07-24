@@ -22,6 +22,7 @@
 import { useTranslation } from 'react-i18next';
 
 import AssignCampaignModal from './AssignCampaignModal';
+import CheckoutLayoutModal from './CheckoutLayoutModal';
 import CopyLayoutModal from './CopyLayoutModal';
 import DeleteLayoutModal from './DeleteLayoutModal';
 import DiscardLayoutModal from './DiscardLayoutModal';
@@ -39,6 +40,7 @@ import MoveModal from '@/components/ui/modals/MoveModal';
 import PublishModal from '@/components/ui/modals/PublishModal';
 import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
+import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
 import type { useFolderActions } from '@/hooks/useFolderActions';
 import { EventTypeId } from '@/types/event';
 import type { Layout } from '@/types/layout';
@@ -56,6 +58,8 @@ interface LayoutModalsProps {
     isDiscarding: boolean;
     isAssigning: boolean;
     isExporting: boolean;
+    isCheckingOut: boolean;
+    checkoutError: string | null;
   };
   selection: {
     selectedLayout: Layout | null;
@@ -70,6 +74,7 @@ interface LayoutModalsProps {
     handleConfirmClone: (newName: string, description: string, copyMedia: boolean) => void;
     handleConfirmMove: (newFolderId: number) => void;
     confirmPublish: (itemId: number, value: PublishValue) => void;
+    confirmCheckout: (layoutId: number) => void;
     confirmDiscard: (layoutId: number) => void;
     handleConfirmAssign: (campaignId: number, layoutId: number) => void;
     handleExportLayout: (
@@ -181,6 +186,17 @@ export function LayoutModals({
           }
           layoutName={selection.selectedLayout?.layout}
           isLoading={actions.isDiscarding}
+        />
+      )}
+      {isModalOpen('checkout') && selection.selectedLayout && (
+        <CheckoutLayoutModal
+          onClose={actions.closeModal}
+          onConfirm={() =>
+            selection.selectedLayout && handlers.confirmCheckout(selection.selectedLayout.layoutId)
+          }
+          isActionPending={actions.isCheckingOut}
+          actionError={actions.checkoutError}
+          autoSubmitFormId={AUTO_SUBMIT_FORMS.layoutCheckout}
         />
       )}
       {isModalOpen('campaign') && (

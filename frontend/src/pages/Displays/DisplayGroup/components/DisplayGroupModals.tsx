@@ -28,6 +28,7 @@ import ManageMembersModal from './ManageMembersModal';
 
 import MoveModal from '@/components/ui/modals/MoveModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
+import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
 import type { CopyDisplayGroupFormData } from '@/pages/Displays/DisplayGroup/hooks/useDisplayGroupActions';
 import AssignLayoutModal from '@/pages/Displays/Displays/components/AssignLayoutModal';
 import AssignMediaModal from '@/pages/Displays/Displays/components/AssignMediaModal';
@@ -156,6 +157,7 @@ export function DisplayGroupModals({ actions, selection, handlers }: DisplayGrou
           onConfirm={handlers.confirmCollectNow}
           isActionPending={actions.isActionPending}
           actionError={actions.actionError}
+          autoSubmitFormId={AUTO_SUBMIT_FORMS.displayGroupCollectNow}
         />
       )}
 

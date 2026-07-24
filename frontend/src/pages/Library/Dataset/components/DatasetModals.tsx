@@ -22,6 +22,7 @@
 import { useTranslation } from 'react-i18next';
 
 import AddAndEditDatasetModal from './AddAndEditDatasetModal';
+import ClearDatasetCacheModal from './ClearDatasetCacheModal';
 import CopyDatasetModal from './CopyDatasetModal';
 import DeleteDatasetModal from './DeleteDatasetModal';
 import ImportDatasetCsvModal from './ImportDatasetCsvModal';
@@ -29,6 +30,7 @@ import ImportDatasetCsvModal from './ImportDatasetCsvModal';
 import FolderActionModals from '@/components/ui/FolderActionModals';
 import MoveModal from '@/components/ui/modals/MoveModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
+import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
 import type { useFolderActions } from '@/hooks/useFolderActions';
 import type { Dataset } from '@/types/dataset';
 
@@ -40,6 +42,7 @@ interface DatasetModalsProps {
     deleteError: string | null;
     isDeleting: boolean;
     isCloning: boolean;
+    isClearingCache: boolean;
   };
   selection: {
     selectedDataset: Dataset | null;
@@ -60,6 +63,7 @@ interface DatasetModalsProps {
       copyRows: boolean,
     ) => void;
     handleConfirmMove: (folderId: number) => void;
+    confirmClearCache: () => void;
   };
   folderActions: ReturnType<typeof useFolderActions>;
   canUseRealTime?: boolean;
@@ -148,6 +152,15 @@ export function DatasetModals({
           onSuccess={() => {
             actions.handleRefresh();
           }}
+        />
+      )}
+
+      {isModalOpen('clearCache') && selection.selectedDataset && (
+        <ClearDatasetCacheModal
+          onClose={actions.closeModal}
+          onConfirm={handlers.confirmClearCache}
+          isActionPending={actions.isClearingCache}
+          autoSubmitFormId={AUTO_SUBMIT_FORMS.dataSetClearCache}
         />
       )}
     </>

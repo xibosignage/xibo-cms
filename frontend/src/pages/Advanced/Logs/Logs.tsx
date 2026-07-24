@@ -20,6 +20,7 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
+import { isAxiosError } from 'axios';
 import { Scissors } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -33,11 +34,15 @@ import { useLogsFilterOptions } from './hooks/useLogsFilterOptions';
 import Button from '@/components/ui/Button';
 import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
+import { notify } from '@/components/ui/Notification';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
 import { useUserContext } from '@/context/UserContext';
+import { useAutoSubmit } from '@/hooks/useAutoSubmit';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
+import { truncateLogs } from '@/services/logApi';
 import { UserType } from '@/types/user';
 import { countActiveFilters } from '@/utils/filters';
 
@@ -45,6 +50,7 @@ export default function Logs() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { user } = useUserContext();
+  const { guard } = useAutoSubmit();
 
   const {
     pagination,
@@ -111,6 +117,26 @@ export default function Logs() {
     }
   };
 
+  const handleAutoSubmitTruncate = async () => {
+    try {
+      await truncateLogs();
+      handleRefresh();
+      notify.success(t('Logs truncated'));
+    } catch (err) {
+      const message =
+        isAxiosError(err) && err.response?.data?.message
+          ? err.response.data.message
+          : t('Failed to truncate logs. Please try again.');
+      notify.error(message);
+    }
+  };
+
+  const handleTruncateClick = () => {
+    guard(AUTO_SUBMIT_FORMS.logTruncate, handleAutoSubmitTruncate, () =>
+      setActiveModal('truncate'),
+    );
+  };
+
   const handleResetFilters = () => {
     setFilterInputs(INITIAL_FILTER_STATE);
     setSubmittedFilter(null);
@@ -133,11 +159,7 @@ export default function Logs() {
 
         <div className="flex flex-row justify-end gap-2">
           {isSuperAdmin && (
-            <Button
-              leftIcon={Scissors}
-              variant="primary"
-              onClick={() => setActiveModal('truncate')}
-            >
+            <Button leftIcon={Scissors} variant="primary" onClick={handleTruncateClick}>
               {t('Truncate')}
             </Button>
           )}
