@@ -200,13 +200,17 @@ class ResolutionFactory extends BaseFactory
         }
 
         if ($parsedFilter->getString('resolution') != null) {
-            $body .= ' AND resolution = :resolution ';
-            $params['resolution'] = $parsedFilter->getString('resolution');
-        }
-
-        if ($parsedFilter->getString('partialResolution') != null) {
-            $body .= ' AND resolution LIKE :partialResolution ';
-            $params['partialResolution'] = '%' . $parsedFilter->getString('partialResolution') . '%';
+            $terms = explode(',', $parsedFilter->getString('resolution'));
+            $logicalOperator = $parsedFilter->getString('logicalOperatorName', ['default' => 'OR']);
+            $this->nameFilter(
+                'resolution',
+                'resolution',
+                $terms,
+                $body,
+                $params,
+                ($parsedFilter->getCheckbox('useRegexForName') == 1),
+                $logicalOperator
+            );
         }
 
         if ($parsedFilter->getDouble('width') !== null) {
@@ -240,16 +244,6 @@ class ResolutionFactory extends BaseFactory
         if ($parsedFilter->getInt('userId') !== null) {
             $body .= ' AND `resolution`.userId = :userId ';
             $params['userId'] = $parsedFilter->getInt('userId');
-        }
-
-        if ($parsedFilter->getString('keyword') != null) {
-            // Fulltext search
-            $body .= $this->buildSearchQuery(
-                $parsedFilter->getString('keyword'),
-                $params,
-                ['resolution.resolution'],
-                ['resolution.resolutionId', 'resolution.intended_height', 'resolution.intended_width'],
-            );
         }
 
         // Sorting?

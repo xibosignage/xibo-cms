@@ -164,7 +164,7 @@ export default function EditCampaignModal({
       fetchLayouts({
         start: layoutPagination.pageIndex * layoutPagination.pageSize,
         length: layoutPagination.pageSize,
-        keyword: debouncedKeyword || undefined,
+        layout: debouncedKeyword || undefined,
         sortBy: layoutSortBy,
         sortDir: layoutSortDir,
       }),

@@ -139,14 +139,9 @@ class DataSetColumnFactory extends BaseFactory
             $params['remoteField'] = $sanitizedFilter->getInt('remoteField');
         }
 
-        if ($sanitizedFilter->getString('keyword') != null) {
-            // Fulltext search
-            $body .= $this->buildSearchQuery(
-                $sanitizedFilter->getString('keyword'),
-                $params,
-                ['datasetcolumn.heading', 'datasetcolumn.listcontent', 'datasetcolumn.tooltip'],
-                ['datasetcolumn.dataSetColumnId']
-            );
+        if ($sanitizedFilter->getString('heading') != null) {
+            $body .= ' AND datasetcolumn.heading LIKE :heading ';
+            $params['heading'] = '%' . $sanitizedFilter->getString('heading') . '%';
         }
 
         // Sorting?

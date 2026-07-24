@@ -29,7 +29,6 @@ import type { MenuBoardProduct } from '@/types/menuBoardProduct';
 export interface FetchMenuBoardRequest {
   start: number;
   length: number;
-  keyword?: string;
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;
@@ -182,7 +181,6 @@ export async function selectMenuBoardFolder(
 export interface FetchMenuBoardCategoriesRequest {
   start?: number;
   length?: number;
-  keyword?: string;
   sortBy?: string;
   sortDir?: string;
   menuCategoryId?: number;
@@ -320,7 +318,6 @@ export async function copyMenuBoardCategory({
 export interface FetchMenuBoardProductsRequest {
   start?: number;
   length?: number;
-  keyword?: string;
   sortBy?: string;
   sortDir?: string;
   menuProductId?: number;

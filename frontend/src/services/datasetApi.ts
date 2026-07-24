@@ -39,7 +39,6 @@ export type DynamicRowData = Record<string | number, DatasetRowValue>;
 export interface FetchDatasetRequest {
   start: number;
   length: number;
-  keyword?: string;
   dataSet?: string;
   sortBy?: string;
   sortDir?: string;
@@ -344,7 +343,7 @@ export async function testRemoteDataset(payload: UpdateDatasetRequest) {
 export interface FetchDatasetColumnsRequest {
   start: number;
   length: number;
-  keyword?: string;
+  heading?: string;
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;
@@ -546,7 +545,7 @@ export async function deleteDatasetRow(
 export interface FetchDatasetRssRequest {
   start?: number;
   length?: number;
-  keyword?: string;
+  title?: string;
   sortBy?: string;
   sortDir?: string;
   useRegexForName?: boolean;

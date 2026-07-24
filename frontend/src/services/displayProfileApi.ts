@@ -25,7 +25,6 @@ import type { DisplayProfile, DisplayProfileType } from '@/types/displayProfile'
 export interface FetchDisplayProfileRequest {
   start: number;
   length: number;
-  keyword?: string;
   displayProfile?: string;
   type?: DisplayProfileType;
   embed?: string;

@@ -169,13 +169,6 @@ class DataSet extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by dataset name, ID, code, or description',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'sortBy',
         description: 'Specifies which field the results are sorted by. Used together with sortDir',
         in: 'query',
@@ -1564,7 +1557,6 @@ class DataSet extends Base
             'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
             'modifiedDateFrom' => $sanitizedParams->getDate('modifiedDateFrom'),
             'modifiedDateTo' => $sanitizedParams->getDate('modifiedDateTo'),
-            'keyword' => $sanitizedParams->getString('keyword')
         ], $sanitizedParams);
     }
 

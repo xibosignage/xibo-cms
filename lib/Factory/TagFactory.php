@@ -244,16 +244,6 @@ class TagFactory extends BaseFactory
             $params['tagId'] = $sanitizedFilter->getInt('tagId');
         }
 
-        if ($sanitizedFilter->getString('keyword') != null) {
-            // Fulltext search
-            $body .= $this->buildSearchQuery(
-                $sanitizedFilter->getString('keyword'),
-                $params,
-                ['tag.tag', 'tag.options'],
-                ['tag.tagId'],
-            );
-        }
-
         if ($sanitizedFilter->getInt('notTagId', ['default' => 0]) != 0) {
             $body .= ' AND tag.tagId <> :notTagId ';
             $params['notTagId'] = $sanitizedFilter->getInt('notTagId');

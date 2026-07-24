@@ -27,7 +27,6 @@ export interface FetchCampaignRequest {
   length?: number;
 
   name?: string;
-  keyword?: string;
   sortBy?: string;
   sortDir?: string;
 

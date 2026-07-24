@@ -25,7 +25,6 @@ import type { Daypart } from '@/types/daypart';
 export interface FetchDaypartRequest {
   start: number;
   length: number;
-  keyword?: string;
   name?: string;
   isRetired?: number | null;
   sortBy?: string;

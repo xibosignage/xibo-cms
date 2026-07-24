@@ -394,7 +394,6 @@ class SavedReport extends Base
             'reportName' => $sanitizedQueryParams->getString('reportName'),
             'onlyMyReport' => $sanitizedQueryParams->getCheckbox('onlyMyReport'),
             'logicalOperatorName' => $sanitizedQueryParams->getString('logicalOperatorName'),
-            'keyword' => $sanitizedQueryParams->getString('keyword'),
         ], $sanitizedQueryParams);
     }
 

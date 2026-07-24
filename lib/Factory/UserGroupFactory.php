@@ -301,16 +301,6 @@ class UserGroupFactory extends BaseFactory
             $params['groupId'] = $parsedFilter->getInt('groupId');
         }
 
-        if ($parsedFilter->getString('keyword') != null) {
-            // Fulltext search
-            $body .= $this->buildSearchQuery(
-                $parsedFilter->getString('keyword'),
-                $params,
-                ['group.group', 'group.description'],
-                ['group.groupId'],
-            );
-        }
-
         // Filter by Group Name
         if ($parsedFilter->getString('group') != null) {
             $terms = explode(',', $parsedFilter->getString('group'));

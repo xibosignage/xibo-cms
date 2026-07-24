@@ -70,7 +70,7 @@ export default function AssignLayoutModal({ display, onClose, onSave }: AssignLa
       fetchLayouts({
         start: pagination.pageIndex * pagination.pageSize,
         length: pagination.pageSize,
-        keyword: debouncedName || undefined,
+        layout: debouncedName || undefined,
         retired: 0,
         sortBy: sorting[0]?.id,
         sortDir: sorting[0] ? (sorting[0].desc ? 'desc' : 'asc') : undefined,

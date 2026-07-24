@@ -75,7 +75,7 @@ export default function ManageGroupMembershipModal({
       fetchDisplayGroups({
         start: pagination.pageIndex * pagination.pageSize,
         length: pagination.pageSize,
-        keyword: debouncedKeyword || undefined,
+        displayGroup: debouncedKeyword || undefined,
         isDisplaySpecific: 0,
         sortBy: sorting[0]?.id,
         sortDir: sorting[0] ? (sorting[0].desc ? 'desc' : 'asc') : undefined,

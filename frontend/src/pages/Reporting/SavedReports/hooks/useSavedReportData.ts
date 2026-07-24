@@ -73,12 +73,8 @@ export const useSavedReportData = ({
         signal,
       };
 
-      if (filter) {
-        request.keyword = filter;
-      }
-
-      if (advancedFilters.saveAs) {
-        request.saveAs = advancedFilters.saveAs;
+      if (advancedFilters.saveAs || filter) {
+        request.saveAs = advancedFilters.saveAs || filter;
       }
 
       if (advancedFilters.saveAs && advancedFilters.logicalOperatorName) {

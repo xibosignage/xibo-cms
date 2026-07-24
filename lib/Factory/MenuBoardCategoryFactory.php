@@ -200,15 +200,6 @@ class MenuBoardCategoryFactory extends BaseFactory
             $params['code'] = '%' . $sanitizedFilter->getString('code') . '%';
         }
 
-        if ($sanitizedFilter->getString('keyword') != null) {
-            $body .= $this->buildSearchQuery(
-                $sanitizedFilter->getString('keyword'),
-                $params,
-                ['menu_category.name'],
-                ['menu_category.menuCategoryId']
-            );
-        }
-
         if ($sanitizedFilter->getInt('mediaId') !== null) {
             $body .= ' AND `menu_category`.mediaId = :mediaId ';
             $params['mediaId'] = $sanitizedFilter->getInt('mediaId');
@@ -334,15 +325,6 @@ class MenuBoardCategoryFactory extends BaseFactory
         if ($sanitizedFilter->getString('code') != '') {
             $body.= ' AND `menu_product`.`code` LIKE :code ';
             $params['code'] = '%' . $sanitizedFilter->getString('code') . '%';
-        }
-
-        if ($sanitizedFilter->getString('keyword') != null) {
-            $body .= $this->buildSearchQuery(
-                $sanitizedFilter->getString('keyword'),
-                $params,
-                ['menu_product.name'],
-                ['menu_product.menuProductId']
-            );
         }
 
         $allowedColumns = ['menuProductId', 'name', 'price', 'displayOrder', 'availability'];

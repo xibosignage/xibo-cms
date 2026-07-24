@@ -98,13 +98,6 @@ class Font extends Base
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by Font name or ID',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'sortBy',
         description: 'Specifies which field the results are sorted by. Used together with sortDir',
         in: 'query',
@@ -604,7 +597,6 @@ class Font extends Base
         return $this->gridRenderFilter([
             'id' => $parsedQueryParams->getInt('id'),
             'name' => $parsedQueryParams->getString('name'),
-            'keyword' => $parsedQueryParams->getString('keyword'),
         ], $parsedQueryParams);
     }
 }

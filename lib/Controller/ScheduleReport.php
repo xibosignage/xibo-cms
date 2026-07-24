@@ -372,7 +372,6 @@ class ScheduleReport extends Base
             'reportName' => $params->getString('reportName'),
             'onlyMySchedules' => $params->getCheckbox('onlyMySchedules'),
             'logicalOperatorName' => $params->getString('logicalOperatorName'),
-            'keyword' => $params->getString('keyword'),
         ], $params);
     }
 

@@ -383,7 +383,6 @@ class Display extends Base
     {
         return [
             'displayId' => $parsedQueryParams->getInt('displayId'),
-            'keyword' => $parsedQueryParams->getString('keyword'),
             'display' => $parsedQueryParams->getString('display'),
             'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
             'macAddress' => $parsedQueryParams->getString('macAddress'),
@@ -430,13 +429,6 @@ class Display extends Base
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'integer')
-    )]
-    #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by Display Name, ID',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
         name: 'displayGroupId',

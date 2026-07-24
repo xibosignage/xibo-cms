@@ -153,7 +153,7 @@ export default function ManageMembersModal({
       fetchDisplays({
         start: displayPagination.pageIndex * displayPagination.pageSize,
         length: displayPagination.pageSize,
-        keyword: debouncedDisplayKeyword || undefined,
+        display: debouncedDisplayKeyword || undefined,
         sortBy: displaySorting[0]?.id,
         sortDir: displaySorting[0] ? (displaySorting[0].desc ? 'desc' : 'asc') : undefined,
         signal,
@@ -175,7 +175,7 @@ export default function ManageMembersModal({
       fetchDisplayGroups({
         start: groupPagination.pageIndex * groupPagination.pageSize,
         length: groupPagination.pageSize,
-        keyword: debouncedGroupKeyword || undefined,
+        displayGroup: debouncedGroupKeyword || undefined,
         isDisplaySpecific: 0,
         sortBy: groupSorting[0]?.id,
         sortDir: groupSorting[0] ? (groupSorting[0].desc ? 'desc' : 'asc') : undefined,

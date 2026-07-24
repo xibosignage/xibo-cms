@@ -136,7 +136,7 @@ describe('Users page - search and filters', () => {
 
     await waitFor(
       () => {
-        expect(fetchUsers).toHaveBeenCalledWith(expect.objectContaining({ keyword: 'jbloggs' }));
+        expect(fetchUsers).toHaveBeenCalledWith(expect.objectContaining({ userName: 'jbloggs' }));
       },
       { timeout: 2000 },
     );
@@ -152,7 +152,7 @@ describe('Users page - search and filters', () => {
     await waitFor(
       () => {
         expect(fetchUsers).toHaveBeenCalledWith(
-          expect.objectContaining({ keyword: 'jbloggs', start: 0 }),
+          expect.objectContaining({ userName: 'jbloggs', start: 0 }),
         );
       },
       { timeout: 2000 },
@@ -168,7 +168,7 @@ describe('Users page - search and filters', () => {
     await user.type(search, 'jbloggs');
     await waitFor(
       () => {
-        expect(fetchUsers).toHaveBeenCalledWith(expect.objectContaining({ keyword: 'jbloggs' }));
+        expect(fetchUsers).toHaveBeenCalledWith(expect.objectContaining({ userName: 'jbloggs' }));
       },
       { timeout: 2000 },
     );
@@ -176,7 +176,9 @@ describe('Users page - search and filters', () => {
     await user.clear(search);
     await waitFor(
       () => {
-        expect(fetchUsers).toHaveBeenCalledWith(expect.objectContaining({ keyword: undefined }));
+        expect(fetchUsers).toHaveBeenCalledWith(
+          expect.not.objectContaining({ userName: expect.anything() }),
+        );
       },
       { timeout: 2000 },
     );

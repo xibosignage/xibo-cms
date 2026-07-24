@@ -26,7 +26,6 @@ import type { Template } from '@/types/templates';
 export interface FetchLayoutRequest {
   start: number;
   length: number;
-  keyword?: string;
   layout?: string;
   retired?: number | string;
   sortBy?: string;

@@ -72,8 +72,7 @@ export const useDaypartData = ({
       const request: FetchDaypartRequest = {
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter,
-        name: advancedFilters.name ?? undefined,
+        name: advancedFilters.name || filter || undefined,
         isRetired: advancedFilters.retired ?? undefined,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,

@@ -120,7 +120,7 @@ describe('Sync Groups page - filters', () => {
 
     await waitFor(
       () => {
-        expect(fetchSyncGroups).toHaveBeenCalledWith(expect.objectContaining({ keyword: 'Alpha' }));
+        expect(fetchSyncGroups).toHaveBeenCalledWith(expect.objectContaining({ name: 'Alpha' }));
       },
       { timeout: 2000 },
     );
@@ -136,7 +136,7 @@ describe('Sync Groups page - filters', () => {
     await waitFor(
       () => {
         expect(fetchSyncGroups).toHaveBeenCalledWith(
-          expect.objectContaining({ start: 0, keyword: 'screen' }),
+          expect.objectContaining({ start: 0, name: 'screen' }),
         );
       },
       { timeout: 2000 },
@@ -147,7 +147,7 @@ describe('Sync Groups page - filters', () => {
     const user = userEvent.setup();
     // Conditional mock: unfiltered returns the row, 'Alpha' returns empty.
     vi.mocked(fetchSyncGroups).mockImplementation(async (opts) =>
-      opts?.keyword === 'Alpha' ? EMPTY_SYNC_GROUP_TABLE : SINGLE_SYNC_GROUP,
+      opts?.name === 'Alpha' ? EMPTY_SYNC_GROUP_TABLE : SINGLE_SYNC_GROUP,
     );
 
     renderSyncGroupsPage();

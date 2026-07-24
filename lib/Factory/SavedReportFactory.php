@@ -226,15 +226,6 @@ class SavedReportFactory extends BaseFactory
             $params['currentUserId'] = $this->getUser()->userId;
         }
 
-        if ($sanitizedFilter->getString('keyword') != null) {
-            $body .= $this->buildSearchQuery(
-                $sanitizedFilter->getString('keyword'),
-                $params,
-                ['saved_report.saveAs'],
-                ['saved_report.savedReportId']
-            );
-        }
-
         // View Permissions
         $this->viewPermissionSql(
             'Xibo\Entity\SavedReport',

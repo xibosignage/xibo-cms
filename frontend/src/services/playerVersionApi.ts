@@ -25,7 +25,7 @@ import type { PlayerVersion } from '@/types/playerVersion';
 export interface FetchPlayerVersionsRequest {
   start: number;
   length: number;
-  keyword?: string;
+  playerShowVersion?: string;
   playerType?: string;
   playerVersion?: string;
   playerCode?: number;

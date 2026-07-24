@@ -495,16 +495,6 @@ class DisplayProfileFactory extends BaseFactory
             $params['userId'] = $parsedFilter->getInt('userId');
         }
 
-        if ($parsedFilter->getString('keyword') != null) {
-            // Fulltext search
-            $body .= $this->buildSearchQuery(
-                $parsedFilter->getString('keyword'),
-                $params,
-                ['displayprofile.name', 'displayprofile.type'],
-                ['displayprofile.displayProfileId']
-            );
-        }
-
         // Sorting
         $allowedColumns = [
             'displayProfileId',

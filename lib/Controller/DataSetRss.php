@@ -91,8 +91,8 @@ class DataSetRss extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by RSS title, ID, or author',
+        name: 'title',
+        description: 'Filter by RSS title',
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'string')
@@ -837,8 +837,8 @@ class DataSetRss extends Base
     {
         return $this->gridRenderFilter([
             'dataSetId' => $id,
+            'title' => $sanitizedParams->getString('title'),
             'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
-            'keyword' => $sanitizedParams->getString('keyword'),
         ], $sanitizedParams);
     }
 }

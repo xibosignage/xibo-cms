@@ -1453,13 +1453,6 @@ class Layout extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by layout name, description, layout ID, or campaign ID',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'sortBy',
         description: 'Specifies which field the results are sorted by. Used together with sortDir',
         in: 'query',
@@ -3030,7 +3023,6 @@ class Layout extends Base
     {
         return $this->gridRenderFilter([
             'layout' => $parsedQueryParams->getString('layout'),
-            'keyword' => $parsedQueryParams->getString('keyword'),
             'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
             'userId' => $parsedQueryParams->getInt('userId'),
             'retired' => $parsedQueryParams->getInt('retired'),

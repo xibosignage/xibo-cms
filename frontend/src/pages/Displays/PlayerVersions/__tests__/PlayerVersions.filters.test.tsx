@@ -161,7 +161,7 @@ describe('Player Versions page - filters', () => {
     await waitFor(
       () => {
         expect(fetchPlayerVersions).toHaveBeenCalledWith(
-          expect.objectContaining({ keyword: 'Alpha' }),
+          expect.objectContaining({ playerShowVersion: 'Alpha' }),
         );
       },
       { timeout: 2000 },
@@ -178,7 +178,7 @@ describe('Player Versions page - filters', () => {
     await waitFor(
       () => {
         expect(fetchPlayerVersions).toHaveBeenCalledWith(
-          expect.objectContaining({ start: 0, keyword: 'screen' }),
+          expect.objectContaining({ start: 0, playerShowVersion: 'screen' }),
         );
       },
       { timeout: 2000 },
@@ -189,7 +189,7 @@ describe('Player Versions page - filters', () => {
     const user = userEvent.setup();
     // Conditional mock: unfiltered returns the row, 'Alpha' returns empty.
     vi.mocked(fetchPlayerVersions).mockImplementation(async (opts) =>
-      opts?.keyword === 'Alpha' ? EMPTY_PLAYER_VERSION_TABLE : SINGLE_PLAYER_VERSION,
+      opts?.playerShowVersion === 'Alpha' ? EMPTY_PLAYER_VERSION_TABLE : SINGLE_PLAYER_VERSION,
     );
 
     renderPlayerVersionsPage();

@@ -58,7 +58,7 @@ export function useDisplaysFilterOptions(t: TFunction, canTag = false) {
       start: 0,
       length: PAGE_SIZE,
       isDisplaySpecific: 0,
-      keyword: debouncedGroupSearch || undefined,
+      displayGroup: debouncedGroupSearch || undefined,
     })
       .then((res) => {
         if (ignore) {
@@ -89,7 +89,7 @@ export function useDisplaysFilterOptions(t: TFunction, canTag = false) {
     fetchDisplayProfile({
       start: 0,
       length: PAGE_SIZE,
-      keyword: debouncedProfileSearch || undefined,
+      displayProfile: debouncedProfileSearch || undefined,
     })
       .then((res) => {
         if (ignore) {
@@ -119,7 +119,7 @@ export function useDisplaysFilterOptions(t: TFunction, canTag = false) {
       start: nextPage * PAGE_SIZE,
       length: PAGE_SIZE,
       isDisplaySpecific: 0,
-      keyword: debouncedGroupSearch || undefined,
+      displayGroup: debouncedGroupSearch || undefined,
     })
       .then((res) => {
         setGroupOptions((prev) => [
@@ -140,7 +140,7 @@ export function useDisplaysFilterOptions(t: TFunction, canTag = false) {
     fetchDisplayProfile({
       start: nextPage * PAGE_SIZE,
       length: PAGE_SIZE,
-      keyword: debouncedProfileSearch || undefined,
+      displayProfile: debouncedProfileSearch || undefined,
     })
       .then((res) => {
         setProfileOptions((prev) => [

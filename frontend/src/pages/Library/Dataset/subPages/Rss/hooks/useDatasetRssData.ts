@@ -49,7 +49,7 @@ export function useDatasetRssData({
       fetchDatasetRss(datasetId, {
         start: pagination.pageIndex * pagination.pageSize,
         length: pagination.pageSize,
-        keyword: filter,
+        title: filter || undefined,
         sortBy,
         sortDir,
         signal,
