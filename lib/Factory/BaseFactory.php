@@ -552,5 +552,4 @@ class BaseFactory
 
         return $order;
     }
-
 }
