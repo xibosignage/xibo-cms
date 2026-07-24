@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import { withPublicPath } from '@/config/publicPath';
 import http from '@/lib/api';
 import type { Media } from '@/types/media';
 import ZipWorker from '@/workers/zipWorker?worker';
@@ -278,6 +279,10 @@ export async function setMediaEnableStat(
   await http.put(`/library/setenablestat/${mediaId}`, params.toString(), {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   });
+}
+
+export function getMediaStreamUrl(mediaId: number | string): string {
+  return withPublicPath(`json/library/download/${mediaId}?stream=1`);
 }
 
 export async function fetchMediaBlob(mediaId: number | string): Promise<Blob> {

@@ -1261,6 +1261,14 @@ class Library extends Base
         required: true,
         schema: new OA\Schema(type: 'string')
     )]
+    #[OA\Parameter(
+        name: 'stream',
+        description: 'Serve video/audio media with its real content type for inline streaming '
+            . 'playback, rather than as an attachment download',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer')
+    )]
     #[OA\Response(
         response: 200,
         description: 'successful operation',
@@ -1360,10 +1368,39 @@ class Library extends Base
                 throw new AccessDeniedException();
             }
 
-            $response = $downloader->download($media, $request, $response, null, $params->getString('attachment'));
+            // Streaming playback (e.g. the React Media Previewer) wants the real content type so
+            // the browser can play it inline, instead of a forced octet-stream/attachment download.
+            if ($params->getCheckbox('stream') == 1 && in_array($module->type, ['video', 'audio'], true)) {
+                $response = $downloader->download($media, $request, $response, $this->getStreamableMimeType($media));
+            } else {
+                $response = $downloader->download(
+                    $media,
+                    $request,
+                    $response,
+                    null,
+                    $params->getString('attachment')
+                );
+            }
         }
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Resolve the Media's real mime type for inline streaming, falling back to null (the
+     * generic octet-stream/attachment behaviour) if the stored file's extension isn't recognised -
+     * validExtensions on the video/audio modules is admin-editable free text, so this can't be
+     * assumed to always resolve.
+     * @param \Xibo\Entity\Media $media
+     * @return string|null
+     */
+    private function getStreamableMimeType(Media $media): ?string
+    {
+        try {
+            return $media->getMimeType();
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     #[OA\Get(
