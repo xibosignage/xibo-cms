@@ -94,7 +94,9 @@ const renderWithNoFolderView = () => {
   testQueryClient.setQueryData(['userPref', 'playlist_page'], null);
   return render(
     <QueryClientProvider client={testQueryClient}>
-      <UserProvider initialUser={{ ...mockUser, features: {} }}>
+      <UserProvider
+        initialUser={{ ...mockUser, features: { ...mockUser.features, 'folder.view': false } }}
+      >
         <MemoryRouter>
           <Playlists />
         </MemoryRouter>

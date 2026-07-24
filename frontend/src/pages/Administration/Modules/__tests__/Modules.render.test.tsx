@@ -185,9 +185,11 @@ describe('Modules page - render', () => {
     renderModulesPage();
     await screen.findByText('Image');
 
+    // This query excludes the header's "select all" checkbox (its
+    // accessible name is "Select all rows", which doesn't match /select
+    // row/i), so it's one checkbox per row — MULTIPLE_MODULES has 2 rows.
     const checkboxes = screen.getAllByRole('checkbox', { name: /select row/i });
-    // select-all header toggle + one per row
-    expect(checkboxes.length).toBeGreaterThanOrEqual(3);
+    expect(checkboxes.length).toBe(2);
 
     await user.click(checkboxes[0]!);
 

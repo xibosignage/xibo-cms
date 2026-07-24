@@ -32,8 +32,9 @@ import { UserProvider } from '@/context/UserContext';
 import { fetchPlaylist } from '@/services/playlistApi';
 import type { FetchPlaylistResponse } from '@/services/playlistApi';
 import { testQueryClient } from '@/setupTests';
+import { buildCurrentUser, PERSONAS } from '@/testUtils/personas';
 import type { Playlist } from '@/types/playlist';
-import { UserType, type User } from '@/types/user';
+import type { User } from '@/types/user';
 
 // -----------------------------------------------------------------------------
 // One realistic playlist row.
@@ -67,24 +68,31 @@ export const mockPlaylist: Playlist = {
 };
 
 // -----------------------------------------------------------------------------
-// The default logged-in user for most Playlists page tests.
-// userTypeId must NOT be SuperAdmin: hasFeature() short-circuits to true for
-// super admins regardless of the features map, which would defeat tests that
-// rely on this fixture lacking schedule.add.
+// The default logged-in user for most Playlists page tests — sourced from
+// the shared PERSONAS registry (rank 3, "User") rather than hand-typed.
+// Overrides preserve existing test intent:
+//   folder.view: true  — PERSONAS.user has this false by default.
+//   schedule.add: false — PERSONAS.user has this true; several tests rely on
+//     this fixture lacking schedule.add. Must also stay off SuperAdmin rank:
+//     hasFeature() short-circuits to true for super admins regardless of the
+//     features map, which would defeat those same tests.
+//   homeFolderId: 2 — canSaveInFolder() blocks saving to the root folder (id
+//     1) for anyone who isn't a Super Admin, so a non-root home folder is
+//     required for this non-admin fixture to pass "Add" gating at all.
 // -----------------------------------------------------------------------------
-export const mockUser: User = {
+export const mockUser: User = buildCurrentUser(PERSONAS.user, {
   userId: 1,
   userName: 'TestUser',
-  userTypeId: UserType.User,
   groupId: 1,
-  features: { 'folder.view': true, 'playlist.modify': true, 'user.sharing': true },
+  homeFolderId: 2,
+  features: { 'folder.view': true, 'schedule.add': false },
   settings: {
     defaultTimezone: 'UTC',
     defaultLanguage: 'en',
     DATE_FORMAT_JS: 'DD/MM/YYYY',
     TIME_FORMAT_JS: 'HH:mm',
   },
-};
+});
 
 // -----------------------------------------------------------------------------
 // usePlaylistData return shapes

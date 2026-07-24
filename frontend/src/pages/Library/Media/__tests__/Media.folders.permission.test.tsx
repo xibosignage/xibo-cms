@@ -168,9 +168,10 @@ describe('Media page – folder permissions', () => {
   describe('inconsistent results when moving items from different folders', () => {
     // -------------------------------------------------------------------------
     // Both files should move successfully even if one is already in the target
-    // folder. Known bug: the extra API call fails and the UI shows a partial error.
+    // folder — the already-in-destination item is skipped rather than sent as
+    // a second API call.
     // -------------------------------------------------------------------------
-    test.fails('all selected items are moved when they come from different folders', async () => {
+    test('all selected items are moved when they come from different folders', async () => {
       vi.mocked(fetchFolderTree).mockResolvedValue([mockDesignFolder]);
       // Item 1 moves successfully. Item 2 is already in Design so the server rejects it.
       vi.mocked(selectFolder)
