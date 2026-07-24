@@ -135,6 +135,7 @@ export default function Layouts() {
 
   const [itemsToDelete, setItemsToDelete] = useState<Layout[]>([]);
   const [itemsToMove, setItemsToMove] = useState<Layout[]>([]);
+  const [bulkItems, setBulkItems] = useState<Layout[]>([]);
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
   const [selectedLayoutId, setSelectedLayoutId] = useState<number | null>(null);
   const [previewItem, setPreviewItem] = useState<Layout | null>(null);
@@ -424,6 +425,18 @@ export default function Layouts() {
       setShareEntityIds(ids);
       openModal('share');
     },
+    onEditTags: canTag
+      ? () => {
+          setBulkItems(getAllSelectedItems());
+          openModal('editTagsMultiple');
+        }
+      : undefined,
+    onEnableStats: hasFeature(user, 'layout.modify')
+      ? () => {
+          setBulkItems(getAllSelectedItems());
+          openModal('enableStatsMultiple');
+        }
+      : undefined,
   });
 
   const { filterOptions } = useLayoutFilterOptions(t, canTag);
@@ -583,6 +596,7 @@ export default function Layouts() {
           setShareEntityIds,
           itemsToDelete,
           existingNames,
+          bulkItems,
         }}
         handlers={{
           confirmDelete,

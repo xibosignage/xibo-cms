@@ -30,6 +30,8 @@ import {
   FolderInput,
   Trash2,
   UserPlus2,
+  Tags,
+  BarChart3,
 } from 'lucide-react';
 import { type ComponentProps } from 'react';
 
@@ -64,7 +66,14 @@ export interface PlaylistFilterInput {
   exactTags?: boolean;
 }
 
-export type ModalType = BaseModalType | 'schedule' | 'enableStats' | 'usageReport' | null;
+export type ModalType =
+  | BaseModalType
+  | 'schedule'
+  | 'enableStats'
+  | 'enableStatsMultiple'
+  | 'editTagsMultiple'
+  | 'usageReport'
+  | null;
 
 export const INITIAL_FILTER_STATE: PlaylistFilterInput = {
   playlistId: null,
@@ -422,6 +431,8 @@ interface GetBulkActionsProps {
   onDelete: () => void;
   onMove?: () => void;
   onShare: () => void;
+  onEditTags?: () => void;
+  onEnableStats?: () => void;
 }
 
 export const getBulkActions = ({
@@ -430,6 +441,8 @@ export const getBulkActions = ({
   onDelete,
   onMove,
   onShare,
+  onEditTags,
+  onEnableStats,
 }: GetBulkActionsProps): DataTableBulkAction<Playlist>[] => {
   const actions: DataTableBulkAction<Playlist>[] = [];
 
@@ -446,6 +459,22 @@ export const getBulkActions = ({
       label: t('Share'),
       icon: UserPlus2,
       onClick: onShare,
+    });
+  }
+
+  if (canModify && onEditTags) {
+    actions.push({
+      label: t('Edit Tags'),
+      icon: Tags,
+      onClick: onEditTags,
+    });
+  }
+
+  if (canModify && onEnableStats) {
+    actions.push({
+      label: t('Enable Stats Collection'),
+      icon: BarChart3,
+      onClick: onEnableStats,
     });
   }
 

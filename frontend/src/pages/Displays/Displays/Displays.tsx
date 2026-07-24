@@ -420,6 +420,7 @@ export default function Displays() {
     onSetBandwidth: () => openBulkModal('setBandwidth'),
     onBulkSendCommand: () => openBulkModal('bulkSendCommand'),
     onBulkMoveCms: () => openBulkModal('bulkMoveCms'),
+    onEditTags: canTag ? () => openBulkModal('editTagsMultiple') : undefined,
   });
 
   const { filterOptions } = useDisplaysFilterOptions(t, canTag);

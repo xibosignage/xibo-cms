@@ -123,6 +123,18 @@ export async function updateLayout(
   return data;
 }
 
+export async function setLayoutEnableStat(
+  layoutId: number | string,
+  enableStat: boolean,
+): Promise<void> {
+  const params = new URLSearchParams();
+  params.append('enableStat', enableStat ? '1' : '0');
+
+  await http.put(`/layout/setenablestat/${layoutId}`, params.toString(), {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+}
+
 export async function deleteLayout(layoutId: number | string): Promise<void> {
   await http.delete(`/layout/${layoutId}`, {
     headers: { 'X-Requested-With': 'XMLHttpRequest' },

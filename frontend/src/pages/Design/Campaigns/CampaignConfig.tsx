@@ -21,7 +21,16 @@
 
 import type { ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
-import { Edit, CopyCheck, FolderInput, UserPlus2, CalendarClock, Trash2, Eye } from 'lucide-react';
+import {
+  Edit,
+  CopyCheck,
+  FolderInput,
+  UserPlus2,
+  CalendarClock,
+  Trash2,
+  Eye,
+  Tags,
+} from 'lucide-react';
 import type { ComponentProps } from 'react';
 
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
@@ -144,7 +153,7 @@ export const getCampaignFilterKeys = (
   },
 ];
 
-export type ModalType = BaseModalType | 'schedule' | null;
+export type ModalType = BaseModalType | 'schedule' | 'editTagsMultiple' | null;
 
 interface CampaignActionsProps {
   t: TFunction;
@@ -521,6 +530,7 @@ interface GetBulkActionsProps {
   onDelete: () => void;
   onMove: () => void;
   onShare: () => void;
+  onEditTags?: () => void;
 }
 
 export const getBulkActions = ({
@@ -528,6 +538,7 @@ export const getBulkActions = ({
   onDelete,
   onMove,
   onShare,
+  onEditTags,
 }: GetBulkActionsProps): DataTableBulkAction<Campaign>[] => {
   return [
     {
@@ -540,6 +551,15 @@ export const getBulkActions = ({
       icon: UserPlus2,
       onClick: onShare,
     },
+    ...(onEditTags
+      ? [
+          {
+            label: t('Edit Tags'),
+            icon: Tags,
+            onClick: onEditTags,
+          },
+        ]
+      : []),
     {
       label: t('Delete Selected'),
       icon: Trash2,

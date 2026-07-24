@@ -27,6 +27,7 @@ import {
   FolderInput,
   UserPlus2,
   Trash2,
+  Tags,
   CloudUpload,
   PenTool,
 } from 'lucide-react';
@@ -65,7 +66,13 @@ export const TEMPLATE_INITIAL_FILTER_STATE: TemplatesFilterInput = {
   exactTags: false,
 };
 
-export type ModalType = BaseModalType | 'publish' | 'discard' | 'export' | null;
+export type ModalType =
+  | BaseModalType
+  | 'publish'
+  | 'discard'
+  | 'export'
+  | 'editTagsMultiple'
+  | null;
 
 export const getBaseFilterKeys = (
   t: TFunction,
@@ -253,6 +260,7 @@ interface GetBulkActionsProps {
   onDelete: () => void;
   onMove?: () => void;
   onShare: () => void;
+  onEditTags?: () => void;
 }
 
 export const getBulkActions = ({
@@ -260,6 +268,7 @@ export const getBulkActions = ({
   onDelete,
   onMove,
   onShare,
+  onEditTags,
 }: GetBulkActionsProps): DataTableBulkAction<Template>[] => {
   return [
     ...(onMove
@@ -276,6 +285,15 @@ export const getBulkActions = ({
       icon: UserPlus2,
       onClick: onShare,
     },
+    ...(onEditTags
+      ? [
+          {
+            label: t('Edit Tags'),
+            icon: Tags,
+            onClick: onEditTags,
+          },
+        ]
+      : []),
     {
       label: t('Delete Selected'),
       icon: Trash2,
