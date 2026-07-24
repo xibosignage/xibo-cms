@@ -205,14 +205,16 @@ export default function UserGroups() {
         <div className="flex flex-row justify-between py-4 items-center gap-4">
           <TabNav activeTab="User Groups" navigation={administrationTabs} />
           <div className="flex items-center gap-2 md:mb-0">
-            <Button
-              variant="primary"
-              className="font-semibold"
-              onClick={() => openModal('add')}
-              leftIcon={Plus}
-            >
-              {t('Add User Group')}
-            </Button>
+            {isSuperAdmin && (
+              <Button
+                variant="primary"
+                className="font-semibold"
+                onClick={() => openModal('add')}
+                leftIcon={Plus}
+              >
+                {t('Add User Group')}
+              </Button>
+            )}
           </div>
         </div>
 
