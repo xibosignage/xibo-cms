@@ -76,11 +76,11 @@ export const useDatasetData = ({
       const request: FetchDatasetRequest = {
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
         ...restFilters,
+        ...((restFilters.dataSet || filter) && { dataSet: restFilters.dataSet || filter }),
         ...resolveLastModified(lastModified),
         ...(useRegexForName && advancedFilters.dataSet && isValidRegex(advancedFilters.dataSet)
           ? { useRegexForName: 1 }

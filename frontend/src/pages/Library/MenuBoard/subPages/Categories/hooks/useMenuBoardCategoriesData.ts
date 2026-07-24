@@ -71,12 +71,11 @@ export const useMenuBoardCategoriesData = ({
       return fetchMenuBoardCategories(menuId, {
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
         menuCategoryId: menuCategoryId ? Number(menuCategoryId) : undefined,
-        name: name || undefined,
+        name: name || filter || undefined,
         ...(useRegexForName && name && isValidRegex(name) ? { useRegexForName: 1 } : {}),
         code: code || undefined,
       });

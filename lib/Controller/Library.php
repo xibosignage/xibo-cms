@@ -357,13 +357,6 @@ class Library extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by Media Name, ID, or original filename',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'media',
         description: 'Filter by Media Name',
         in: 'query',
@@ -2541,7 +2534,6 @@ class Library extends Base
     {
         return ($this->gridRenderFilter([
             'mediaId' => $parsedQueryParams->getInt('mediaId'),
-            'keyword' => $parsedQueryParams->getString('keyword'),
             'name' => $parsedQueryParams->getString('media'),
             'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
             'nameExact' => $parsedQueryParams->getString('nameExact'),

@@ -57,13 +57,12 @@ export const useCampaignData = ({
       const request: FetchCampaignRequest = {
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter || undefined,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
         folderId: folderId ?? undefined,
 
-        ...(advancedFilters.name && { name: advancedFilters.name }),
+        ...((advancedFilters.name || filter) && { name: advancedFilters.name || filter }),
 
         ...(advancedFilters.type && { type: advancedFilters.type }),
 

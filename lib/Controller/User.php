@@ -203,13 +203,6 @@ class User extends Base
         schema: new OA\Schema(type: 'integer')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by User name, email, first and last name',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'userName',
         description: 'Filter by User Name',
         in: 'query',
@@ -2253,7 +2246,6 @@ class User extends Base
     {
         return $this->gridRenderFilter([
             'userId' => $sanitizedParams->getInt('userId'),
-            'keyword' => $sanitizedParams->getString('keyword'),
             'userTypeId' => $sanitizedParams->getInt('userTypeId'),
             'userName' => $sanitizedParams->getString('userName'),
             'firstName' => $sanitizedParams->getString('firstName'),

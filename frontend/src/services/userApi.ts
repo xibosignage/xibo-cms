@@ -34,7 +34,6 @@ export interface FetchUsersRequest {
   start: number;
   length: number;
   userId?: number;
-  keyword?: string;
   userName?: string;
   userTypeId?: number;
   firstName?: string;

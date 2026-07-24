@@ -97,12 +97,11 @@ export const useLayoutData = ({
       const request: FetchLayoutRequest = {
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter || undefined,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
         ...(campaignId != null ? { campaignId } : {}),
-        ...(name ? { layout: name } : {}),
+        ...(name || filter ? { layout: name || filter } : {}),
         ...(normalizedTags ? { tags: normalizedTags } : {}),
         ...(code ? { codeLike: code } : {}),
         ...(ownerId ? { userId: ownerId } : {}),

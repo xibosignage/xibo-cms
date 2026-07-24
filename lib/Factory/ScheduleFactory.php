@@ -410,16 +410,6 @@ class ScheduleFactory extends BaseFactory
             $params['eventId'] = $parsedFilter->getInt('eventId');
         }
 
-        if ($parsedFilter->getString('keyword') != null) {
-            // Fulltext search
-            $body .= $this->buildSearchQuery(
-                $parsedFilter->getString('keyword'),
-                $params,
-                ['schedule.name'],
-                ['schedule.eventId']
-            );
-        }
-
         if ($parsedFilter->getInt('eventTypeId') !== null) {
             $body .= ' AND `schedule`.eventTypeId = :eventTypeId ';
             $params['eventTypeId'] = $parsedFilter->getInt('eventTypeId');

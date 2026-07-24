@@ -74,12 +74,8 @@ export const useReportScheduleData = ({
         signal,
       };
 
-      if (filter) {
-        request.keyword = filter;
-      }
-
-      if (advancedFilters.name) {
-        request.name = advancedFilters.name;
+      if (advancedFilters.name || filter) {
+        request.name = advancedFilters.name || filter;
       }
 
       if (advancedFilters.name && advancedFilters.logicalOperatorName) {

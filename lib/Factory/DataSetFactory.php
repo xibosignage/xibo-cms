@@ -312,16 +312,6 @@ class DataSetFactory extends BaseFactory
             $params['modifiedDateTo'] = strtotime($parsedFilter->getDate('modifiedDateTo'));
         }
 
-        if ($parsedFilter->getString('keyword') != null) {
-            // Fulltext search
-            $body .= $this->buildSearchQuery(
-                $parsedFilter->getString('keyword'),
-                $params,
-                ['dataset.dataSet', 'dataset.description', 'dataset.code'],
-                ['dataset.dataSetId']
-            );
-        }
-
         // View Permissions
         $this->viewPermissionSql(
             'Xibo\Entity\DataSet',

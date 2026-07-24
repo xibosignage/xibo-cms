@@ -204,15 +204,6 @@ class SyncGroupFactory extends BaseFactory
             $params['leadDisplayId'] = $parsedBody->getInt('leadDisplayId');
         }
 
-        if ($parsedBody->getString('keyword') != null) {
-            $body .= $this->buildSearchQuery(
-                $parsedBody->getString('keyword'),
-                $params,
-                ['syncgroup.name'],
-                ['syncgroup.syncGroupId']
-            );
-        }
-
         // View Permissions
         $this->viewPermissionSql(
             'Xibo\Entity\SyncGroup',

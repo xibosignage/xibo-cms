@@ -342,16 +342,6 @@ class ModuleTemplateFactory extends BaseFactory
             );
         }
 
-        if ($filter->getString('keyword') != null) {
-            // Fulltext search
-            $body .= $this->buildSearchQuery(
-                $filter->getString('keyword'),
-                $params,
-                ['module_templates.templateId'],
-                ['module_templates.id']
-            );
-        }
-
         // Sorting?
         $allowedColumns = [
             'id',

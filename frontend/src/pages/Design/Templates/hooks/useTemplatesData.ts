@@ -83,11 +83,11 @@ export const useTemplateData = ({
       const request: FetchTemplateRequest = {
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter || undefined,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
         ...restFilters,
+        ...((restFilters.template || filter) && { template: restFilters.template || filter }),
         ...(normalizedTags ? { tags: normalizedTags } : {}),
         ...(useRegexForName && restFilters.template && isValidRegex(restFilters.template)
           ? { useRegexForName: 1 }

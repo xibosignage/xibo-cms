@@ -80,13 +80,6 @@ class MenuBoardProduct extends Base
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by keyword (searches name)',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'sortBy',
         description: 'Specifies which field the results are sorted by. Used together with sortDir',
         in: 'query',
@@ -143,13 +136,12 @@ class MenuBoardProduct extends Base
     private function getMenuBoardProductFilters(SanitizerInterface $params, int $categoryId): array
     {
         return $this->gridRenderFilter([
-            'menuProductId'   => $params->getInt('menuProductId'),
-            'menuCategoryId'  => $categoryId,
-            'name'            => $params->getString('name'),
+            'menuProductId'  => $params->getInt('menuProductId'),
+            'menuCategoryId' => $categoryId,
+            'name'           => $params->getString('name'),
             'useRegexForName' => $params->getCheckbox('useRegexForName'),
-            'code'            => $params->getString('code'),
-            'keyword'         => $params->getString('keyword'),
-            'availability'    => $params->getInt('availability'),
+            'code'           => $params->getString('code'),
+            'availability'   => $params->getInt('availability'),
         ], $params);
     }
 

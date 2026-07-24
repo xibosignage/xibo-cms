@@ -79,7 +79,7 @@ export default function ManageMembersModal({
       fetchUsers({
         start: pagination.pageIndex * pagination.pageSize,
         length: pagination.pageSize,
-        keyword: debouncedKeyword || undefined,
+        userName: debouncedKeyword || undefined,
         sortBy: sorting[0]?.id,
         sortDir: sorting[0] ? (sorting[0].desc ? 'desc' : 'asc') : undefined,
         signal,

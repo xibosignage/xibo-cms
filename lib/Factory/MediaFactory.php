@@ -707,16 +707,6 @@ class MediaFactory extends BaseFactory
             ';
         }
 
-        if ($sanitizedFilter->getString('keyword') != null) {
-            // Fulltext search
-            $body .= $this->buildSearchQuery(
-                $sanitizedFilter->getString('keyword'),
-                $params,
-                ['media.name', 'media.originalFileName', 'media.storedAs'],
-                ['media.mediaId']
-            );
-        }
-
         if ($sanitizedFilter->getString('name') != null) {
             $terms = explode(',', $sanitizedFilter->getString('name'));
             $logicalOperator = $sanitizedFilter->getString('logicalOperatorName', ['default' => 'OR']);

@@ -78,12 +78,11 @@ export const useDisplaysData = ({
       const request: FetchDisplaysRequest = {
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
         ...(advancedFilters.displayId != null ? { displayId: advancedFilters.displayId } : {}),
-        ...(advancedFilters.name ? { display: advancedFilters.name } : {}),
+        ...(advancedFilters.name || filter ? { display: advancedFilters.name || filter } : {}),
         ...(advancedFilters.useRegexForName &&
         advancedFilters.name &&
         isValidRegex(advancedFilters.name)

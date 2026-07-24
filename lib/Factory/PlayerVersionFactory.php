@@ -178,15 +178,6 @@ class PlayerVersionFactory extends BaseFactory
             );
         }
 
-        if ($sanitizedFilter->getString('keyword') != null) {
-            $body .= $this->buildSearchQuery(
-                $sanitizedFilter->getString('keyword'),
-                $params,
-                ['player_software.playerShowVersion'],
-                ['player_software.versionId'],
-            );
-        }
-
         // Sorting?
         $order = empty($sortOrder) ? '' : ' ORDER BY ' . implode(', ', $sortOrder);
 

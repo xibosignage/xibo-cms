@@ -167,16 +167,6 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
             );
         }
 
-        // Fulltext search
-        if ($sanitizedFilter->getString('keyword') != null) {
-            $body .= $this->buildSearchQuery(
-                $sanitizedFilter->getString('keyword'),
-                $params,
-                ['oauth_clients.name'],
-                ['oauth_clients.id']
-            );
-        }
-
         // Sorting?
         $allowedColumns = [
             'name',

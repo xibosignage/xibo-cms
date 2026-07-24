@@ -89,12 +89,11 @@ export const useDisplayGroupData = ({
       const request: FetchDisplayGroupRequest = {
         start: startOffset,
         length: pagination.pageSize,
-        keyword: filter || undefined,
         sortBy,
         sortDir: sorting.length ? sortDir : undefined,
         signal,
         ...(folderId != null ? { folderId } : {}),
-        ...(displayGroup ? { displayGroup } : {}),
+        ...(displayGroup || filter ? { displayGroup: displayGroup || filter } : {}),
         ...(displayGroupId != null ? { displayGroupId } : {}),
         ...(displayIdDropdown != null ? { displayId: displayIdDropdown } : {}),
         ...(nestedDisplayId != null ? { nestedDisplayId } : {}),

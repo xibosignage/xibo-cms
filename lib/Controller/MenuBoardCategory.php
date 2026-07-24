@@ -78,13 +78,6 @@ class MenuBoardCategory extends Base
         schema: new OA\Schema(type: 'string')
     )]
     #[OA\Parameter(
-        name: 'keyword',
-        description: 'Filter by keyword (searches name)',
-        in: 'query',
-        required: false,
-        schema: new OA\Schema(type: 'string')
-    )]
-    #[OA\Parameter(
         name: 'sortBy',
         description: 'Specifies which field the results are sorted by. Used together with sortDir',
         in: 'query',
@@ -148,11 +141,10 @@ class MenuBoardCategory extends Base
     {
         return $this->gridRenderFilter([
             'menuId'         => $menuId,
-            'menuCategoryId'  => $params->getInt('menuCategoryId'),
-            'name'            => $params->getString('name'),
+            'menuCategoryId' => $params->getInt('menuCategoryId'),
+            'name'           => $params->getString('name'),
             'useRegexForName' => $params->getCheckbox('useRegexForName'),
-            'code'            => $params->getString('code'),
-            'keyword'         => $params->getString('keyword'),
+            'code'           => $params->getString('code'),
         ], $params);
     }
 

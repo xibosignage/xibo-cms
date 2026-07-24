@@ -35,7 +35,6 @@ export interface FetchSavedReportsRequest {
   length?: number;
   sortBy?: string;
   sortDir?: string;
-  keyword?: string;
   saveAs?: string;
   useRegexForName?: number;
   logicalOperatorName?: 'OR' | 'AND';
