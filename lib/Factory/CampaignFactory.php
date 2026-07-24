@@ -521,7 +521,8 @@ class CampaignFactory extends BaseFactory
             }
 
             $results = $this->getStore()->select(
-                'SELECT COUNT(DISTINCT campaign.campaignId) AS total ' . $body, $params
+                'SELECT COUNT(DISTINCT campaign.campaignId) AS total ' . $body,
+                $params
             );
             $this->_countLast = intval($results[0]['total']);
         }
