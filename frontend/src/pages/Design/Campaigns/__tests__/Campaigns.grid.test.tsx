@@ -37,10 +37,8 @@ import {
   mockAdCampaign,
   mockCampaign,
   mockCampaignData,
+  mockContentManager,
   mockUser,
-  mockUserNoSchedule,
-  mockUserWithAdCampaign,
-  mockUserWithoutAdCampaign,
 } from './campaignTestUtils';
 
 import { UserProvider } from '@/context/UserContext';
@@ -204,7 +202,7 @@ describe('Campaigns page - grid rendering', () => {
   test('renders "Layout List" for a campaign with type "list"', async () => {
     mockCampaignData(SINGLE_CAMPAIGN);
     await act(async () => {
-      renderPage(mockUserWithAdCampaign);
+      renderPage(mockUser);
     });
     expect(await screen.findByText('Layout List')).toBeInTheDocument();
   });
@@ -212,7 +210,7 @@ describe('Campaigns page - grid rendering', () => {
   test('renders "Ad Campaign" for a campaign with type "ad"', async () => {
     mockCampaignData(SINGLE_AD_CAMPAIGN);
     await act(async () => {
-      renderPage(mockUserWithAdCampaign);
+      renderPage(mockUser);
     });
     expect(await screen.findByText('Ad Campaign')).toBeInTheDocument();
   });
@@ -220,7 +218,7 @@ describe('Campaigns page - grid rendering', () => {
   test('hides the Type column when the user lacks the ad.campaign feature', async () => {
     mockCampaignData(SINGLE_AD_CAMPAIGN);
     await act(async () => {
-      renderPage(mockUserWithoutAdCampaign);
+      renderPage(mockContentManager);
     });
     await screen.findByText(mockAdCampaign.campaign);
     expect(screen.queryByText('Ad Campaign')).not.toBeInTheDocument();
@@ -266,7 +264,7 @@ describe('Campaigns page - grid rendering', () => {
   test('renders a formatted date string when startDt is a non-zero Unix timestamp', async () => {
     mockCampaignData(SINGLE_AD_CAMPAIGN);
     await act(async () => {
-      renderWithAllColumns(mockUserWithAdCampaign);
+      renderWithAllColumns(mockUser);
     });
     const formatted = formatCmsDateTime(new Date(mockAdCampaign.startDt * 1000), {
       format: 'DD/MM/YYYY',
@@ -381,18 +379,22 @@ describe('Campaigns page - grid rendering', () => {
     expect(await screen.findByRole('button', { name: 'Schedule' })).toBeInTheDocument();
   });
 
-  test('clicking Schedule when canSchedule is false opens no modal', async () => {
+  // Content Manager has campaign.modify/campaign.view (so Edit, Preview,
+  // Make a Copy, Move, and Delete still render) but lacks schedule.add, so
+  // onSchedule is undefined and getCampaignItemActions never pushes the
+  // Schedule item — it's the only thing missing from an otherwise normal
+  // action list. DataTableRowActions is stubbed above to render every action
+  // as a flat, always-visible button, so no click is needed to reveal them.
+  // See bugs-found/campaigns-schedule-action-hidden-not-disabled.md.
+  test('Schedule action is absent for a user lacking schedule.add, other actions remain', async () => {
     mockCampaignData(SINGLE_CAMPAIGN);
     await act(async () => {
-      renderPage(mockUserNoSchedule);
+      renderPage(mockContentManager);
     });
 
     await screen.findByText(mockCampaign.campaign);
-    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
 
-    const scheduleBtn = await screen.findByRole('button', { name: 'Schedule' });
-    fireEvent.click(scheduleBtn);
-
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Move' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Schedule' })).not.toBeInTheDocument();
   });
 });

@@ -22,15 +22,16 @@
 import { createElement } from 'react';
 import type { ReactNode } from 'react';
 
-export const useTranslation = () => ({
-  t: (key: string, opts?: Record<string, unknown>) => {
-    if (!opts) {
-      return key;
-    }
-    return key.replace(/\{\{(\w+)\}\}/g, (_, k) => String(opts[k] ?? ''));
-  },
-  i18n: { changeLanguage: () => Promise.resolve() },
-});
+const t = (key: string, opts?: Record<string, unknown>) => {
+  if (!opts) {
+    return key;
+  }
+  return key.replace(/\{\{(\w+)\}\}/g, (_, k) => String(opts[k] ?? ''));
+};
+
+const i18n = { changeLanguage: () => Promise.resolve() };
+
+export const useTranslation = () => ({ t, i18n });
 
 export const Trans = ({
   i18nKey = '',

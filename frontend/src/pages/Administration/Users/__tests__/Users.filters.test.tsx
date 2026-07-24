@@ -23,7 +23,7 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-import { mockUser, SINGLE_USER } from './fixtures/user';
+import { mockSuperAdmin, mockUser, SINGLE_USER } from './fixtures/user';
 import { renderUsersPage } from './helpers/renderUsersPage';
 import { mockFetchUsers } from './mocks/userApi';
 
@@ -182,6 +182,15 @@ describe('Users page - search and filters', () => {
     );
   });
 
+  // The search box must start empty on a fresh page load — it should never
+  // pre-fill with the logged-in user's own username.
+  test('the search box is empty on a fresh mount and does not auto-populate with the logged-in username', async () => {
+    renderUsersPage(mockSuperAdmin);
+    await waitForPageReady();
+
+    expect(screen.getByPlaceholderText('Search user...')).toHaveValue('');
+  });
+
   test('entering a Username filter updates the query and resets to page 1', async () => {
     const user = userEvent.setup();
     renderUsersPage();
@@ -314,4 +323,22 @@ describe('Users page - search and filters', () => {
 
     expect(screen.getByRole('textbox', { name: /^username$/i })).toBeInTheDocument();
   }, 20_000);
+
+  // Reset must clear the top search box too, not just the filter panel.
+  test('Reset also clears the top search box', async () => {
+    const user = userEvent.setup();
+    renderUsersPage();
+    await waitForPageReady();
+
+    const search = screen.getByPlaceholderText('Search user...');
+    await user.type(search, 'jbloggs');
+    await waitFor(() => expect(search).toHaveValue('jbloggs'));
+
+    await user.click(screen.getByRole('button', { name: /filters/i }));
+    await screen.findByRole('textbox', { name: /^username$/i });
+
+    await user.click(screen.getByRole('button', { name: /reset/i }));
+
+    expect(search).toHaveValue('');
+  });
 });

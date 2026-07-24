@@ -62,11 +62,14 @@ const openDeleteModal = async () => {
 };
 
 // Selects the first `rowCount` rows and opens the bulk confirmation modal.
+// Re-queries the checkboxes on every iteration rather than reusing one
+// snapshot array — clicking a row checkbox re-renders the table, and a
+// stale reference to an earlier render's node can end up clicking nothing.
 const openBulkDeleteModal = async (rowCount: number) => {
   await screen.findByText(mockDisplayProfile.name);
 
-  const checkboxes = screen.getAllByRole('checkbox', { name: /Select row/i });
   for (let i = 0; i < rowCount; i++) {
+    const checkboxes = screen.getAllByRole('checkbox', { name: /Select row/i });
     fireEvent.click(checkboxes[i]!);
   }
 

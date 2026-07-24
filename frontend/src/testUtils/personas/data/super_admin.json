@@ -71,6 +71,8 @@
     "displayprofile.modify": true,
     "playersoftware.view": true,
     "command.view": true,
+    "command.add": true,
+    "command.modify": true,
     "display.syncView": true,
     "display.syncAdd": true,
     "display.syncModify": true,

@@ -25,15 +25,14 @@ import { MemoryRouter } from 'react-router-dom';
 
 import SidebarMenu from '../SideBar';
 
-import superAdminData from './__fixtures__/xibo_admin.json';
-import contentManagerData from './__fixtures__/xibo_content_manager.json';
-import displayManagerData from './__fixtures__/xibo_display_manager.json';
-import groupAdminData from './__fixtures__/xibo_group_admin.json';
-import playlistManagerData from './__fixtures__/xibo_playlist_manager.json';
-import scheduleManagerData from './__fixtures__/xibo_schedule_manager.json';
-import regularUserData from './__fixtures__/xibo_user.json';
-
 import { UserProvider } from '@/context/UserContext';
+import groupAdminData from '@/testUtils/personas/data/group_admin.json';
+import superAdminData from '@/testUtils/personas/data/super_admin.json';
+import regularUserData from '@/testUtils/personas/data/user.json';
+import contentManagerData from '@/testUtils/personas/data/user_content_manager.json';
+import displayManagerData from '@/testUtils/personas/data/user_display_manager.json';
+import playlistManagerData from '@/testUtils/personas/data/user_playlist_manager.json';
+import scheduleManagerData from '@/testUtils/personas/data/user_schedule_manager.json';
 import { UserType } from '@/types/user';
 import type { User, UserFeatures } from '@/types/user';
 

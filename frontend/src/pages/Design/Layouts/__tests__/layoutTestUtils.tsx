@@ -32,6 +32,7 @@ import { UserProvider } from '@/context/UserContext';
 import { fetchLayouts, updateLayout } from '@/services/layoutsApi';
 import type { FetchLayoutResponse } from '@/services/layoutsApi';
 import { testQueryClient } from '@/setupTests';
+import { buildCurrentUser, PERSONAS } from '@/testUtils/personas';
 import type { Layout } from '@/types/layout';
 import type { User } from '@/types/user';
 
@@ -80,21 +81,31 @@ export const SINGLE_DRAFT_LAYOUT: FetchLayoutResponse = {
 };
 
 // -----------------------------------------------------------------------------
-// The default logged-in user for most Layouts page tests.
+// The default logged-in user for most Layouts page tests — sourced from the
+// shared PERSONAS registry rather than hand-typed. Super Admin, so every
+// hasFeature() check passes via its bypass regardless of the features map.
 // -----------------------------------------------------------------------------
-export const mockUser: User = {
+export const mockUser: User = buildCurrentUser(PERSONAS.superAdmin, {
   userId: 1,
   userName: 'TestUser',
-  userTypeId: 1,
   groupId: 1,
-  features: { 'folder.view': true },
   settings: {
     defaultTimezone: 'UTC',
     defaultLanguage: 'en',
     DATE_FORMAT_JS: 'DD/MM/YYYY',
     TIME_FORMAT_JS: 'HH:mm',
   },
-};
+});
+
+// -----------------------------------------------------------------------------
+// Display Manager persona — real backend capture has no layout.add /
+// layout.modify features (see PERSONAS integrity data), so this is the
+// persona used to prove the Add Layout button and Edit row action are
+// correctly gated off for a user without layout permissions.
+// -----------------------------------------------------------------------------
+export const mockDisplayManagerUser: User = buildCurrentUser(PERSONAS.displayManager, {
+  settings: mockUser.settings,
+});
 
 // -----------------------------------------------------------------------------
 // useLayoutData return shapes
@@ -186,11 +197,11 @@ export const openEditModal = async () => {
 // -----------------------------------------------------------------------------
 // Render wrapper - provides all required context providers.
 // -----------------------------------------------------------------------------
-export const renderLayoutsPage = () => {
+export const renderLayoutsPage = (user: User = mockUser) => {
   testQueryClient.setQueryData(['userPref', 'layout_page'], null);
   return render(
     <QueryClientProvider client={testQueryClient}>
-      <UserProvider initialUser={mockUser}>
+      <UserProvider initialUser={user}>
         <MemoryRouter>
           <Layouts />
         </MemoryRouter>

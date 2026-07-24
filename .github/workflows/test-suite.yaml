@@ -218,6 +218,7 @@ jobs:
       - name: Run Vitest with coverage
         if: env.with_coverage == 'true'
         working-directory: frontend
+        timeout-minutes: 30
         env:
           TEST_PATTERN: ${{ env.test_pattern }}
         run: |
@@ -227,6 +228,7 @@ jobs:
       - name: Run Vitest without coverage
         if: env.with_coverage == 'false'
         working-directory: frontend
+        timeout-minutes: 30
         env:
           TEST_PATTERN: ${{ env.test_pattern }}
         run: |

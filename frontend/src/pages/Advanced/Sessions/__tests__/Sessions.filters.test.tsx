@@ -7,10 +7,6 @@ import { renderWithProviders, mockSessionsList } from './Setup';
 
 import { useTableState } from '@/hooks/useTableState';
 
-// FilterInputs imports t directly from i18next (not via useTranslation). Mock it so
-// the Reset button renders with accessible text instead of an empty string.
-vi.mock('i18next', () => ({ t: (key: string) => key }));
-
 vi.mock('@/context/UserContext', () => ({
   useUserContext: vi.fn(() => ({ user: null })),
 }));

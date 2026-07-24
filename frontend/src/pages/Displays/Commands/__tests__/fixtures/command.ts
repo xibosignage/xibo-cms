@@ -20,6 +20,7 @@
  */
 
 import type { FetchCommandsResponse } from '@/services/commandApi';
+import { buildCurrentUser, PERSONAS } from '@/testUtils/personas';
 import type { Command } from '@/types/command';
 import type { User } from '@/types/user';
 
@@ -34,6 +35,7 @@ export const buildCommand = (overrides: Partial<Command> = {}): Command => ({
   availableOn: null,
   createAlertOn: 'never',
   groupsWithPermissions: null,
+  userPermissions: { view: 1, edit: 1, delete: 1, modifyPermissions: 1 },
   ...overrides,
 });
 
@@ -58,19 +60,20 @@ export const MULTIPLE_COMMANDS: FetchCommandsResponse = {
   totalCount: 2,
 };
 
-export const mockUser: User = {
+// Sourced from the shared PERSONAS registry rather than hand-typed. Super
+// Admin, so every hasFeature() check passes via its bypass regardless of
+// the features map.
+export const mockUser: User = buildCurrentUser(PERSONAS.superAdmin, {
   userId: 1,
   userName: 'TestUser',
-  userTypeId: 1,
   groupId: 1,
-  features: { 'command.view': true },
   settings: {
     defaultTimezone: 'UTC',
     defaultLanguage: 'en',
     DATE_FORMAT_JS: 'DD/MM/YYYY',
     TIME_FORMAT_JS: 'HH:mm',
   },
-};
+});
 
 export const queryKeys = {
   commandsPage: ['userPref', 'command_page'] as const,

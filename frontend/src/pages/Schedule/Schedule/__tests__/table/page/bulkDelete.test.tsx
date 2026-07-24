@@ -115,9 +115,10 @@ describe('Events page - bulk delete', () => {
     await screen.findByText('Morning Promo');
     const checkboxes = screen.getAllByRole('checkbox', { name: /Select row/i });
     await act(async () => {
-      // The first checkbox in the list is the "select all" one in the
-      // table header. The second one is the first event row.
-      fireEvent.click(checkboxes[1]!);
+      // This query excludes the header's "select all" checkbox (its
+      // accessible name is "Select all rows", which doesn't match /Select
+      // row/i), so checkboxes[0] is the first event row's own checkbox.
+      fireEvent.click(checkboxes[0]!);
     });
 
     // The toolbar's "Delete Selected" button is an icon button - we look
@@ -138,12 +139,11 @@ describe('Events page - bulk delete', () => {
     });
 
     await screen.findByText('Morning Promo');
-    const checkboxes = screen.getAllByRole('checkbox', { name: /Select row/i });
-    // The first checkbox is the "select all" one in the table header -
-    // clicking it ticks every row on the current page in one go (both
-    // events in this test).
+    // The header "select all" checkbox is a separate checkbox from the
+    // per-row ones - clicking it ticks every row on the current page in
+    // one go (both events in this test).
     await act(async () => {
-      fireEvent.click(checkboxes[0]!);
+      fireEvent.click(screen.getByRole('checkbox', { name: /select all rows/i }));
     });
 
     await act(async () => {
@@ -165,11 +165,10 @@ describe('Events page - bulk delete', () => {
     });
 
     await screen.findByText('Morning Promo');
-    const checkboxes = screen.getAllByRole('checkbox', { name: /Select row/i });
     // Click the "select all" header checkbox so both events get ticked
     // in one go.
     await act(async () => {
-      fireEvent.click(checkboxes[0]!);
+      fireEvent.click(screen.getByRole('checkbox', { name: /select all rows/i }));
     });
     await act(async () => {
       fireEvent.click(await screen.findByTitle('Delete Selected'));
