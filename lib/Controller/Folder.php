@@ -177,6 +177,8 @@ class Folder extends Base
             }
         }
 
+        usort($childrenDetails, fn ($a, $b) => strcasecmp($a->text, $b->text));
+
         $folder->children = $childrenDetails;
     }
 
