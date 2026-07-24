@@ -1456,6 +1456,9 @@ class Schedule extends Base
             $syncGroup = $this->syncGroupFactory->getById($schedule->syncGroupId);
             $syncGroup->validateForSchedule($sanitizedParams);
             $schedule->updateSyncLinks($syncGroup, $sanitizedParams);
+        } elseif ($oldSchedule->isSyncEvent()) {
+            // Event type changed away from Synchronised Event - clean up now-stale schedule_sync rows
+            $schedule->deleteSyncLinks();
         }
 
         // Get form reminders

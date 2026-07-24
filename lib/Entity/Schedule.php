@@ -995,11 +995,7 @@ class Schedule implements \JsonSerializable
             'eventId' => $this->eventId,
         ]);
 
-        if ($this->eventTypeId === self::$SYNC_EVENT) {
-            $this->getStore()->update('DELETE FROM `schedule_sync` WHERE eventId = :eventId', [
-                'eventId' => $this->eventId
-            ]);
-        }
+        $this->deleteSyncLinks();
 
         // Delete the event itself
         $this->getStore()->update('DELETE FROM `schedule` WHERE eventId = :eventId', ['eventId' => $this->eventId]);
@@ -2187,5 +2183,16 @@ class Schedule implements \JsonSerializable
                 'layoutId' => $sanitizer->getInt('layoutId_' . $display->displayId)
             ]);
         }
+    }
+
+    /**
+     * Remove this event's schedule_sync rows (used when deleting, or when an event is edited away from Sync type)
+     * @return void
+     */
+    public function deleteSyncLinks(): void
+    {
+        $this->getStore()->update('DELETE FROM `schedule_sync` WHERE eventId = :eventId', [
+            'eventId' => $this->eventId,
+        ]);
     }
 }
