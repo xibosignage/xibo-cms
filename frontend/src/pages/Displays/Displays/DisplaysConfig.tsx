@@ -44,6 +44,7 @@ import {
   FileX,
   Forward,
   UserPlus2,
+  Tags,
 } from 'lucide-react';
 import { type ComponentProps } from 'react';
 
@@ -118,6 +119,7 @@ export type ModalType =
   | 'bulkDefaultLayout'
   | 'bulkSendCommand'
   | 'bulkMoveCms'
+  | 'editTagsMultiple'
   | 'schedule'
   | null;
 
@@ -1125,6 +1127,7 @@ interface GetBulkActionsProps {
   onSetBandwidth?: () => void;
   onBulkSendCommand?: () => void;
   onBulkMoveCms?: () => void;
+  onEditTags?: () => void;
 }
 
 export const getBulkActions = ({
@@ -1141,6 +1144,7 @@ export const getBulkActions = ({
   onSetBandwidth,
   onBulkSendCommand,
   onBulkMoveCms,
+  onEditTags,
 }: GetBulkActionsProps): DataTableBulkAction<Display>[] => {
   return [
     {
@@ -1188,6 +1192,15 @@ export const getBulkActions = ({
             label: t('Share'),
             icon: UserPlus2,
             onClick: onShare,
+          },
+        ]
+      : []),
+    ...(onEditTags
+      ? [
+          {
+            label: t('Edit Tags'),
+            icon: Tags,
+            onClick: onEditTags,
           },
         ]
       : []),

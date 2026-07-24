@@ -21,7 +21,16 @@
 
 import type { ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
-import { CopyCheck, Edit, FileDown, FileUp, FolderInput, Trash2, UserPlus2 } from 'lucide-react';
+import {
+  CopyCheck,
+  Edit,
+  Eraser,
+  FileDown,
+  FileUp,
+  FolderInput,
+  Trash2,
+  UserPlus2,
+} from 'lucide-react';
 import { type ComponentProps } from 'react';
 
 import type { FilterConfigItem } from '@/components/ui/FilterInputs';
@@ -46,7 +55,7 @@ export interface DatasetFilterInput {
   useRegexForName?: boolean;
 }
 
-export type ModalType = BaseModalType | null;
+export type ModalType = BaseModalType | 'clearCache' | null;
 
 export const INITIAL_FILTER_STATE: DatasetFilterInput = {
   dataSet: '',
@@ -111,6 +120,7 @@ export interface DatasetActionsProps {
   onNavigate: (path: string) => void;
   onExportCsv?: (id: number) => void;
   onImportCsv?: (id: number) => void;
+  onClearCache?: (row: Dataset) => void;
 }
 
 export const getDatasetItemActions = ({
@@ -127,6 +137,7 @@ export const getDatasetItemActions = ({
   onNavigate,
   onExportCsv,
   onImportCsv,
+  onClearCache,
 }: DatasetActionsProps): ((dataset: Dataset) => ActionItem[]) => {
   return (dataset: Dataset) => {
     // Per-dataset share permissions
@@ -193,6 +204,14 @@ export const getDatasetItemActions = ({
         label: t('Export CSV'),
         icon: FileDown,
         onClick: () => onExportCsv(dataset.dataSetId),
+      });
+    }
+
+    if (canModify && canEdit && dataset.isRemote && onClearCache) {
+      actions.push({
+        label: t('Clear Cache'),
+        icon: Eraser,
+        onClick: () => onClearCache(dataset),
       });
     }
 

@@ -70,7 +70,7 @@ export default function Checkbox({
           classNameInput,
         )}
       />
-      <div className={twMerge('flex flex-col', label ? 'ms-3' : '')}>
+      <div className={twMerge('flex flex-col', label ? 'ms-3' : 'ms-1')}>
         <span className="text-sm font-semibold">{title}</span>
         <label
           htmlFor={id}

@@ -71,6 +71,8 @@
     "displayprofile.modify": false,
     "playersoftware.view": false,
     "command.view": false,
+    "command.add": false,
+    "command.modify": false,
     "display.syncView": false,
     "display.syncAdd": false,
     "display.syncModify": false,

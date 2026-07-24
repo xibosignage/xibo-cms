@@ -268,6 +268,18 @@ export async function updateMedia(
   return response.data;
 }
 
+export async function setMediaEnableStat(
+  mediaId: number | string,
+  enableStat: string,
+): Promise<void> {
+  const params = new URLSearchParams();
+  params.append('enableStat', enableStat);
+
+  await http.put(`/library/setenablestat/${mediaId}`, params.toString(), {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+}
+
 export async function fetchMediaBlob(mediaId: number | string): Promise<Blob> {
   const response = await http.get(`/library/download/${mediaId}`, {
     responseType: 'blob',

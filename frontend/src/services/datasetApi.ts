@@ -225,6 +225,14 @@ export async function cloneDataset({
   return response.data;
 }
 
+export async function clearDatasetCache(datasetId: number): Promise<void> {
+  await http.post(`/dataset/clearcache/${datasetId}`, null, {
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+  });
+}
+
 export type DeleteDatasetOptions = {
   deleteData?: boolean;
 };

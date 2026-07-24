@@ -96,7 +96,7 @@ vi.mock('../../components/TransferCmsModal', () => ({
 const selectRow = async (user: UserEvent) => {
   await screen.findByText(mockDisplay.display);
   const checkboxes = screen.getAllByRole('checkbox', { name: /select row/i });
-  await user.click(checkboxes[1]!);
+  await user.click(checkboxes[0]!);
 };
 
 // =============================================================================

@@ -146,6 +146,7 @@ export default function Media() {
 
   const [itemsToDelete, setItemsToDelete] = useState<Media[]>([]);
   const [itemsToMove, setItemsToMove] = useState<Media[]>([]);
+  const [bulkItems, setBulkItems] = useState<Media[]>([]);
   const [shareEntityIds, setShareEntityIds] = useState<number | number[] | null>(null);
   const [selectedMediaId, setSelectedMediaId] = useState<number | null>(null);
 
@@ -476,6 +477,26 @@ export default function Media() {
         notify.error(t('An error occurred while zipping the files.'));
       }
     },
+    onEditTags: canTag
+      ? () => {
+          const permittedItems = getAllSelectedItems().filter((item) => item.userPermissions.edit);
+          if (permittedItems.length === 0) {
+            notify.warning(t('You do not have permission to edit any of the selected items.'));
+            return;
+          }
+          setBulkItems(permittedItems);
+          openModal('editTagsMultiple');
+        }
+      : undefined,
+    onEnableStats: () => {
+      const permittedItems = getAllSelectedItems().filter((item) => item.userPermissions.edit);
+      if (permittedItems.length === 0) {
+        notify.warning(t('You do not have permission to edit any of the selected items.'));
+        return;
+      }
+      setBulkItems(permittedItems);
+      openModal('enableStatsMultiple');
+    },
   });
 
   const getMediaActions = getMediaItemActions({
@@ -752,6 +773,7 @@ export default function Media() {
           selectedMedia,
           itemsToDelete,
           itemsToMove,
+          bulkItems,
           existingNames,
           shareEntityIds,
           setShareEntityIds,

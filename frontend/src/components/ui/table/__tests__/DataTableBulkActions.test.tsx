@@ -56,27 +56,27 @@ describe('DataTableBulkActions', () => {
 
   it('calls onClearSelection when the X button is clicked', () => {
     render(<DataTableBulkActions {...defaultProps} />);
-    const clearBtn = screen.getByTitle('Clear selection');
+    const clearBtn = screen.getByRole('button', { name: /clear selection/i });
     fireEvent.click(clearBtn);
     expect(defaultProps.onClearSelection).toHaveBeenCalled();
   });
 
   it('renders only actions that have an onClick handler', () => {
     render(<DataTableBulkActions {...defaultProps} />);
-    expect(screen.getByTitle('Delete')).toBeInTheDocument();
-    expect(screen.getByTitle('Export')).toBeInTheDocument();
-    expect(screen.queryByTitle('No Handler')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Export' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'No Handler' })).not.toBeInTheDocument();
   });
 
   it('triggers the action with selected rows when clicked', () => {
     render(<DataTableBulkActions {...defaultProps} />);
-    fireEvent.click(screen.getByTitle('Export'));
+    fireEvent.click(screen.getByRole('button', { name: 'Export' }));
     expect(mockActions[1]?.onClick).toHaveBeenCalledWith(defaultProps.selectedRows);
   });
 
   it('applies red styling to danger-type actions', () => {
     render(<DataTableBulkActions {...defaultProps} />);
-    const deleteBtn = screen.getByTitle('Delete');
+    const deleteBtn = screen.getByRole('button', { name: 'Delete' });
     expect(deleteBtn).toHaveClass('text-red-600');
   });
 });

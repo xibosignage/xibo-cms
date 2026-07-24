@@ -38,6 +38,8 @@ import {
   ArrowRight,
   Info,
   Eye,
+  Tags,
+  BarChart3,
 } from 'lucide-react';
 import type { ComponentProps } from 'react';
 
@@ -107,12 +109,15 @@ export type ModalType =
   | 'replace'
   | 'publish'
   | 'discard'
+  | 'checkout'
   | 'campaign'
   | 'export'
   | 'import'
   | 'template'
   | 'retire'
   | 'enableStats'
+  | 'enableStatsMultiple'
+  | 'editTagsMultiple'
   | 'schedule'
   | null;
 
@@ -656,6 +661,8 @@ interface GetBulkActionsProps {
   onDelete: () => void;
   onMove?: () => void;
   onShare: () => void;
+  onEditTags?: () => void;
+  onEnableStats?: () => void;
 }
 
 export const getBulkActions = ({
@@ -663,6 +670,8 @@ export const getBulkActions = ({
   onDelete,
   onMove,
   onShare,
+  onEditTags,
+  onEnableStats,
 }: GetBulkActionsProps): DataTableBulkAction<Layout>[] => {
   return [
     ...(onMove
@@ -671,6 +680,24 @@ export const getBulkActions = ({
             label: t('Move'),
             icon: FolderInput,
             onClick: onMove,
+          },
+        ]
+      : []),
+    ...(onEditTags
+      ? [
+          {
+            label: t('Edit Tags'),
+            icon: Tags,
+            onClick: onEditTags,
+          },
+        ]
+      : []),
+    ...(onEnableStats
+      ? [
+          {
+            label: t('Enable Stats Collection'),
+            icon: BarChart3,
+            onClick: onEnableStats,
           },
         ]
       : []),

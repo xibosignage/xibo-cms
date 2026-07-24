@@ -99,6 +99,25 @@ export async function deleteTag(id: number): Promise<void> {
   await http.delete(`/tag/${id}`);
 }
 
+export interface EditMultipleTagsPayload {
+  targetType: string;
+  ids: Array<number | string>;
+  addTags?: string;
+  removeTags?: string;
+}
+
+export async function editMultipleTags(payload: EditMultipleTagsPayload): Promise<void> {
+  const params = new URLSearchParams();
+  params.append('targetType', payload.targetType);
+  params.append('targetIds', payload.ids.join(','));
+  params.append('addTags', payload.addTags ?? '');
+  params.append('removeTags', payload.removeTags ?? '');
+
+  await http.put(`/tag/${payload.targetType}/multi`, params.toString(), {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+}
+
 export async function fetchTagUsage(
   id: number,
   signal?: AbortSignal,

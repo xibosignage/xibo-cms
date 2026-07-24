@@ -23,7 +23,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react';
 
 import AddEditUserModal from '../../../../components/AddEditUserModal';
-import { mockCurrentUser } from '../../../fixtures/user';
+import { mockSuperAdmin } from '../../../fixtures/user';
 
 import { UserProvider } from '@/context/UserContext';
 import { testQueryClient } from '@/setupTests';
@@ -43,7 +43,7 @@ interface RenderAddEditUserModalOptions {
 export const renderAddEditUserModal = ({
   mode,
   user = null,
-  currentUser = mockCurrentUser,
+  currentUser = mockSuperAdmin,
   onClose = () => {},
   onSuccess = () => {},
 }: RenderAddEditUserModalOptions) => {

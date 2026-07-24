@@ -12,6 +12,7 @@ import { useEventData } from '../../hooks/useEventData';
 
 import { UserProvider } from '@/context/UserContext';
 import { testQueryClient } from '@/setupTests';
+import { buildCurrentUser, PERSONAS } from '@/testUtils/personas';
 import type { User } from '@/types/user';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
@@ -43,19 +44,17 @@ vi.mock('../../components/EventModals', () => ({
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
-const mockUser: User = {
+const mockUser: User = buildCurrentUser(PERSONAS.superAdmin, {
   userId: 1,
   userName: 'TestUser',
-  userTypeId: 1,
   groupId: 1,
-  features: {},
   settings: {
     defaultTimezone: 'UTC',
     defaultLanguage: 'en',
     DATE_FORMAT_JS: 'DD/MM/YYYY',
     TIME_FORMAT_JS: 'HH:mm',
   },
-};
+});
 
 const EMPTY_EVENT_TABLE = {
   data: { rows: [], totalCount: 0 },

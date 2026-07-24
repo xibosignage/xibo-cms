@@ -38,6 +38,8 @@ import FilterButton from '@/components/ui/FilterButton';
 import FilterInputs from '@/components/ui/FilterInputs';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
+import { useAutoSubmit } from '@/hooks/useAutoSubmit';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useTableState } from '@/hooks/useTableState';
@@ -78,9 +80,12 @@ export default function Tasks() {
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
   const [itemsToDelete, setItemsToDelete] = useState<Task[]>([]);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [taskToRun, setTaskToRun] = useState<Task | null>(null);
 
   const openModal = (name: ModalType) => setActiveModal(name);
   const closeModal = () => setActiveModal(null);
+
+  const { guard } = useAutoSubmit();
 
   const {
     data: queryData,
@@ -126,7 +131,16 @@ export default function Tasks() {
     queryClient.invalidateQueries({ queryKey: taskQueryKeys.all });
   };
 
-  const { isDeleting, deleteError, setDeleteError, confirmDelete, runNow } = useTasksActions({
+  const {
+    isDeleting,
+    deleteError,
+    setDeleteError,
+    confirmDelete,
+    isRunning,
+    runError,
+    setRunError,
+    runNow,
+  } = useTasksActions({
     t,
     handleRefresh,
     closeModal,
@@ -150,7 +164,15 @@ export default function Tasks() {
   };
 
   const handleRunNow = (task: Task) => {
-    runNow(task);
+    guard(
+      AUTO_SUBMIT_FORMS.taskRunNow,
+      () => runNow(task, { notifyOnError: true }),
+      () => {
+        setTaskToRun(task);
+        setRunError(null);
+        openModal('runNow');
+      },
+    );
   };
 
   const handleResetFilters = () => {
@@ -293,6 +315,10 @@ export default function Tasks() {
         deleteError={deleteError}
         isDeleting={isDeleting}
         confirmDelete={confirmDelete}
+        taskToRun={taskToRun}
+        runError={runError}
+        isRunning={isRunning}
+        onConfirmRunNow={() => taskToRun && runNow(taskToRun)}
       />
     </section>
   );

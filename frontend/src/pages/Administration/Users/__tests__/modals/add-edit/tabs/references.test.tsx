@@ -28,6 +28,7 @@ import { renderAddEditUserModal } from '../helpers/renderAddEditUserModal';
 
 import { fetchFolderTree } from '@/services/folderApi';
 import { fetchGroupFolderPermissions } from '@/services/permissionsApi';
+import { fetchHomepages } from '@/services/userApi';
 import { fetchUserGroups } from '@/services/userGroupApi';
 
 // =============================================================================
@@ -64,6 +65,7 @@ describe('AddEditUserModal - References tab', () => {
     vi.mocked(fetchFolderTree).mockResolvedValue(mockFolderTree);
     vi.mocked(fetchGroupFolderPermissions).mockResolvedValue(new Map());
     vi.mocked(fetchUserGroups).mockResolvedValue({ rows: [mockUserGroup], totalCount: 1 });
+    vi.mocked(fetchHomepages).mockResolvedValue([]);
   });
 
   test('edit mode pre-fills Phone Number and Reference 1-5 from the user', async () => {

@@ -233,6 +233,18 @@ export async function clonePlaylist({
   return response.data;
 }
 
+export async function setPlaylistEnableStat(
+  playlistId: number | string,
+  enableStat: string,
+): Promise<void> {
+  const params = new URLSearchParams();
+  params.append('enableStat', enableStat);
+
+  await http.put(`/playlist/setenablestat/${playlistId}`, params.toString(), {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+}
+
 export async function deletePlaylist(playlistId: number | string): Promise<void> {
   await http.delete(`/playlist/${playlistId}`, {
     headers: { 'X-Requested-With': 'XMLHttpRequest' },

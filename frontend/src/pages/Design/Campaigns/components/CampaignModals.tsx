@@ -27,12 +27,14 @@ import DeleteCampaignModal from './DeleteCampaignModal';
 import EditCampaignModal from './EditCampaignModal';
 
 import FolderActionModals from '@/components/ui/FolderActionModals';
+import EditTagsMultipleModal from '@/components/ui/modals/EditTagsMultipleModal';
 import MoveModal from '@/components/ui/modals/MoveModal';
 import ScheduleEventModal from '@/components/ui/modals/ScheduleEventModal';
 import ShareModal from '@/components/ui/modals/ShareModal';
 import type { useFolderActions } from '@/hooks/useFolderActions';
 import type { Campaign } from '@/types/campaign';
 import { EventTypeId } from '@/types/event';
+import { mergeEntityTags } from '@/utils/tags';
 
 interface CampaignModalsProps {
   actions: {
@@ -48,6 +50,7 @@ interface CampaignModalsProps {
     defaultFolderId?: number;
     itemsToDelete: Campaign[];
     itemsToMove: Campaign[];
+    bulkItems: Campaign[];
     existingNames: string[];
     shareEntityIds: number | number[] | null;
     setShareEntityIds: React.Dispatch<React.SetStateAction<number | number[] | null>>;
@@ -141,6 +144,20 @@ export function CampaignModals({
           onConfirm={handlers.handleConfirmMove}
           items={selection.itemsToMove}
           entityLabel={t('Campaigns')}
+        />
+      )}
+
+      {/* Edit Tags (bulk) */}
+      {isModalOpen('editTagsMultiple') && (
+        <EditTagsMultipleModal
+          targetType="campaign"
+          ids={selection.bulkItems.map((item) => item.campaignId)}
+          existingTags={mergeEntityTags(selection.bulkItems)}
+          onClose={actions.closeModal}
+          onSuccess={() => {
+            actions.closeModal();
+            actions.handleRefresh();
+          }}
         />
       )}
 

@@ -67,9 +67,7 @@ const openRowDeleteModal = async (user: UserEvent) => {
 };
 
 const selectAllRows = async (user: UserEvent) => {
-  // The first checkbox is the column header's "select all" toggle.
-  const checkboxes = screen.getAllByRole('checkbox', { name: /select row/i });
-  await user.click(checkboxes[0]!);
+  await user.click(screen.getByRole('checkbox', { name: /select all rows/i }));
 };
 
 // =============================================================================

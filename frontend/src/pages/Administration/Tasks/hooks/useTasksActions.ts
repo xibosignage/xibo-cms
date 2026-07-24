@@ -45,6 +45,9 @@ export function useTasksActions({
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  const [isRunning, setIsRunning] = useState(false);
+  const [runError, setRunError] = useState<string | null>(null);
+
   const confirmDelete = async (itemsToDelete: Task[]) => {
     if (itemsToDelete.length === 0 || isDeleting) {
       return;
@@ -78,13 +81,30 @@ export function useTasksActions({
     }
   };
 
-  const runNow = async (task: Task) => {
+  const runNow = async (task: Task, options?: { notifyOnError?: boolean }) => {
+    if (isRunning) {
+      return;
+    }
+
     try {
+      setIsRunning(true);
       await runTaskNow(task.taskId);
       notify.success(t('Task run started'));
       handleRefresh();
-    } catch {
-      notify.error(t('Failed to run task'));
+      closeModal();
+    } catch (error) {
+      const message =
+        isAxiosError(error) && error.response?.data?.message
+          ? error.response.data.message
+          : t('Failed to run task');
+
+      if (options?.notifyOnError) {
+        notify.error(message);
+      } else {
+        setRunError(message);
+      }
+    } finally {
+      setIsRunning(false);
     }
   };
 
@@ -93,6 +113,9 @@ export function useTasksActions({
     deleteError,
     setDeleteError,
     confirmDelete,
+    isRunning,
+    runError,
+    setRunError,
     runNow,
   };
 }

@@ -41,8 +41,8 @@ export default function MaintenanceTab({
       <SettingsSection title={t('Task Runner')}>
         {isVisible('MAINTENANCE_ENABLED') && (
           <SelectDropdown
-            label={t('Maintenance Mode')}
-            helpText={t('Set to "Protected" to secure the script behind a secret key.')}
+            label={t('Enable Maintenance?')}
+            helpText={t('Allow the maintenance script to run if it is called?')}
             value={formValues.MAINTENANCE_ENABLED ?? ''}
             options={[
               { value: 'Off', label: t('Off') },
@@ -56,8 +56,8 @@ export default function MaintenanceTab({
       <SettingsSection title={t('Email Alerts')}>
         {isVisible('MAINTENANCE_EMAIL_ALERTS') && (
           <SwitchRow
-            title={t('Enable email alerts')}
-            description={t('Global switch for email alerts to be sent.')}
+            title={t('Enable Email Alerts?')}
+            description={t('Global switch for email alerts to be sent')}
             checked={formValues.MAINTENANCE_EMAIL_ALERTS === '1'}
             onChange={(v) => updateField('MAINTENANCE_EMAIL_ALERTS', v ? '1' : '0')}
             disabled={!isEditable('MAINTENANCE_EMAIL_ALERTS')}
@@ -77,9 +77,9 @@ export default function MaintenanceTab({
         {isVisible('MAINTENANCE_ALERT_TOUT') && (
           <NumberInput
             name="MAINTENANCE_ALERT_TOUT"
-            label={t('Max Display Timeout (minutes)')}
+            label={t('Max Display Timeout')}
             helpText={t(
-              'Amount of time a Player can remain disconnected before triggering an offline alert. Can be customized per display.',
+              'How long in minutes after the last time a Player connects should we send an alert? Can be overridden on a per Player basis.',
             )}
             value={Number(formValues.MAINTENANCE_ALERT_TOUT) || 0}
             onChange={(v) => updateField('MAINTENANCE_ALERT_TOUT', String(v))}
@@ -92,8 +92,10 @@ export default function MaintenanceTab({
           {isVisible('MAINTENANCE_LOG_MAXAGE') && (
             <NumberInput
               name="MAINTENANCE_LOG_MAXAGE"
-              label={t('Max Log Age (days)')}
-              helpText={t('0 = keep indefinitely.')}
+              label={t('Max Log Age')}
+              helpText={t(
+                'Maximum age for log entries in days. Set to 0 to keep logs indefinitely.',
+              )}
               value={Number(formValues.MAINTENANCE_LOG_MAXAGE) || 0}
               onChange={(v) => updateField('MAINTENANCE_LOG_MAXAGE', String(v))}
               disabled={!isEditable('MAINTENANCE_LOG_MAXAGE')}
@@ -102,8 +104,10 @@ export default function MaintenanceTab({
           {isVisible('MAINTENANCE_STAT_MAXAGE') && (
             <NumberInput
               name="MAINTENANCE_STAT_MAXAGE"
-              label={t('Max Statistics Age (days)')}
-              helpText={t('0 = keep indefinitely.')}
+              label={t('Max Statistics Age')}
+              helpText={t(
+                'Maximum age for statistics entries in days. Entries older than this will not be processed and existing entries will be removed. Set to 0 to keep statistics indefinitely.',
+              )}
               value={Number(formValues.MAINTENANCE_STAT_MAXAGE) || 0}
               onChange={(v) => updateField('MAINTENANCE_STAT_MAXAGE', String(v))}
               disabled={!isEditable('MAINTENANCE_STAT_MAXAGE')}

@@ -26,6 +26,7 @@ import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
 
+import { UserProvider } from '@/context/UserContext';
 import type { DatasetDataConnectorSource } from '@/services/datasetApi';
 import type { Dataset } from '@/types/dataset';
 
@@ -52,7 +53,9 @@ export function renderWithProviders(ui: ReactElement, { route = '/' } = {}) {
 
   return render(
     <QueryClientProvider client={testQueryClient}>
-      <MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>
+      <UserProvider initialUser={null}>
+        <MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>
+      </UserProvider>
     </QueryClientProvider>,
   );
 }

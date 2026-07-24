@@ -21,7 +21,7 @@
 
 // =============================================================================
 // Test type: Component unit test
-// Mocks: folderApi, UserContext, react-i18next
+// Mocks: folderApi, UserContext
 // Tests: tab visibility, home folder icon, search debounce, context menu share
 // =============================================================================
 

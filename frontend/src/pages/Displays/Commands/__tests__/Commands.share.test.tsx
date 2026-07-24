@@ -70,8 +70,7 @@ const openMoreActions = async (user: UserEvent) => {
 };
 
 const selectAllRows = async (user: UserEvent) => {
-  const checkboxes = screen.getAllByRole('checkbox', { name: /select row/i });
-  await user.click(checkboxes[0]!);
+  await user.click(screen.getByRole('checkbox', { name: /select all rows/i }));
 };
 
 // =============================================================================

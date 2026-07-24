@@ -32,8 +32,8 @@ import { UserProvider } from '@/context/UserContext';
 import { fetchCampaigns } from '@/services/campaignApi';
 import type { FetchCampaignResponse } from '@/services/campaignApi';
 import { testQueryClient } from '@/setupTests';
+import { buildCurrentUser, PERSONAS } from '@/testUtils/personas';
 import type { Campaign } from '@/types/campaign';
-import { UserType } from '@/types/user';
 import type { User } from '@/types/user';
 
 // -----------------------------------------------------------------------------
@@ -73,6 +73,7 @@ export const mockCampaign: Campaign = {
   modifiedByName: 'TestUser',
   displayGroupIds: [],
   retired: 0,
+  userPermissions: { view: 1, edit: 1, delete: 1, modifyPermissions: 1 },
 };
 
 // Ad campaign — has targetType/target, non-zero startDt/endDt.
@@ -110,61 +111,34 @@ export const mockCampaignWithRefs: Campaign = {
 };
 
 // -----------------------------------------------------------------------------
-// Mock user fixtures
+// Mock user fixtures — sourced from the shared PERSONAS registry rather than
+// hand-typed, so permissions reflect real captured accounts.
 // -----------------------------------------------------------------------------
-export const mockUser: User = {
+const campaignsSuiteSettings = {
+  defaultTimezone: 'UTC',
+  defaultLanguage: 'en',
+  DATE_FORMAT_JS: 'DD/MM/YYYY',
+  TIME_FORMAT_JS: 'HH:mm',
+};
+
+// Default viewer for most Campaigns tests — Super Admin, so every feature
+// check passes via hasFeature()'s bypass regardless of the features map.
+export const mockUser: User = buildCurrentUser(PERSONAS.superAdmin, {
   userId: 1,
   userName: 'TestUser',
-  userTypeId: UserType.SuperAdmin,
   groupId: 1,
   homeFolderId: 1,
-  features: {
-    'folder.view': true,
-    'schedule.add': true,
-  },
-  settings: {
-    defaultTimezone: 'UTC',
-    defaultLanguage: 'en',
-    DATE_FORMAT_JS: 'DD/MM/YYYY',
-    TIME_FORMAT_JS: 'HH:mm',
-  },
-};
+  settings: campaignsSuiteSettings,
+});
 
-// User without schedule permission — used to test Schedule action gating.
-// Must NOT be a super admin: hasFeature() short-circuits to true for super
-// admins regardless of the features map, which would defeat this fixture's
-// purpose of representing a user who genuinely lacks schedule.add.
-export const mockUserNoSchedule: User = {
-  ...mockUser,
-  userTypeId: UserType.User,
-  features: {
-    'folder.view': true,
-  },
-};
-
-// User with the ad.campaign feature enabled — used for Type / Start Date / End Date
-// column tests, which are only rendered when canAccessAdCampaign is true.
-export const mockUserWithAdCampaign: User = {
-  ...mockUser,
-  features: {
-    ...mockUser.features,
-    'ad.campaign': true,
-  },
-};
-
-// User with the ad.campaign feature explicitly disabled — reserved for future tests
-// covering the Type / Start Date / End Date columns being hidden.
-// Must NOT be a super admin: hasFeature() short-circuits to true for super
-// admins regardless of the features map, which would defeat this fixture's
-// purpose of representing a user who genuinely lacks ad.campaign.
-export const mockUserWithoutAdCampaign: User = {
-  ...mockUser,
-  userTypeId: UserType.User,
-  features: {
-    ...mockUser.features,
-    'ad.campaign': false,
-  },
-};
+// Content Manager — a real persona that has campaign.modify/campaign.view
+// (so Edit/Preview/Copy/Move/Delete still render) but lacks schedule.add
+// and ad.campaign (so Schedule is absent from "More actions", and the
+// Type/Start Date/End Date columns stay hidden). Used for every test that
+// needs a realistic *restricted*, non-Super-Admin viewer in this suite.
+export const mockContentManager: User = buildCurrentUser(PERSONAS.contentManager, {
+  settings: campaignsSuiteSettings,
+});
 
 // -----------------------------------------------------------------------------
 // Table data fixtures

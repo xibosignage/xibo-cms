@@ -24,9 +24,9 @@ import userEvent from '@testing-library/user-event';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import {
-  mockCurrentUser,
+  mockSuperAdmin,
   mockFolderTree,
-  mockNonAdminCurrentUser,
+  mockGroupAdmin,
   mockUser,
   mockUserGroup,
 } from '../../../fixtures/user';
@@ -34,6 +34,7 @@ import { renderAddEditUserModal } from '../helpers/renderAddEditUserModal';
 
 import { fetchFolderTree } from '@/services/folderApi';
 import { fetchGroupFolderPermissions } from '@/services/permissionsApi';
+import { fetchHomepages } from '@/services/userApi';
 import { fetchUserGroups } from '@/services/userGroupApi';
 
 // =============================================================================
@@ -70,6 +71,7 @@ describe('AddEditUserModal - Options tab', () => {
     vi.mocked(fetchFolderTree).mockResolvedValue(mockFolderTree);
     vi.mocked(fetchGroupFolderPermissions).mockResolvedValue(new Map());
     vi.mocked(fetchUserGroups).mockResolvedValue({ rows: [mockUserGroup], totalCount: 1 });
+    vi.mocked(fetchHomepages).mockResolvedValue([]);
   });
 
   test("Hide User Guide and Force Password Change reflect the draft's values", async () => {
@@ -81,7 +83,7 @@ describe('AddEditUserModal - Options tab', () => {
         newUserWizard: 0,
         isPasswordChangeRequired: 1,
       },
-      currentUser: mockCurrentUser,
+      currentUser: mockSuperAdmin,
     });
     await openOptionsTab(user);
 
@@ -100,7 +102,7 @@ describe('AddEditUserModal - Options tab', () => {
   // there is nothing to pre-fill from. This is intentional, not a bug.
   test('Hide Navigation always starts unchecked in edit mode', async () => {
     const user = userEvent.setup();
-    renderAddEditUserModal({ mode: 'edit', user: mockUser, currentUser: mockCurrentUser });
+    renderAddEditUserModal({ mode: 'edit', user: mockUser, currentUser: mockSuperAdmin });
     await openOptionsTab(user);
 
     expect(screen.getByRole('switch', { name: /hide navigation/i })).toHaveAttribute(
@@ -111,7 +113,7 @@ describe('AddEditUserModal - Options tab', () => {
 
   test('Disable Two Factor switch is shown only in edit mode for a super admin', async () => {
     const user = userEvent.setup();
-    renderAddEditUserModal({ mode: 'edit', user: mockUser, currentUser: mockCurrentUser });
+    renderAddEditUserModal({ mode: 'edit', user: mockUser, currentUser: mockSuperAdmin });
     await openOptionsTab(user);
 
     expect(
@@ -121,7 +123,7 @@ describe('AddEditUserModal - Options tab', () => {
 
   test('Disable Two Factor switch is hidden in add mode', async () => {
     const user = userEvent.setup();
-    renderAddEditUserModal({ mode: 'add', currentUser: mockCurrentUser });
+    renderAddEditUserModal({ mode: 'add', currentUser: mockSuperAdmin });
     await screen.findByRole('textbox', { name: /^username$/i });
     await user.click(screen.getByRole('tab', { name: /^options$/i }));
     await screen.findByRole('switch', { name: /hide navigation/i });
@@ -133,7 +135,7 @@ describe('AddEditUserModal - Options tab', () => {
 
   test('Disable Two Factor switch is hidden for a non-superAdmin', async () => {
     const user = userEvent.setup();
-    renderAddEditUserModal({ mode: 'edit', user: mockUser, currentUser: mockNonAdminCurrentUser });
+    renderAddEditUserModal({ mode: 'edit', user: mockUser, currentUser: mockGroupAdmin });
     await openOptionsTab(user);
 
     expect(
@@ -146,7 +148,7 @@ describe('AddEditUserModal - Options tab', () => {
     renderAddEditUserModal({
       mode: 'edit',
       user: { ...mockUser, isPasswordChangeRequired: 0 },
-      currentUser: mockCurrentUser,
+      currentUser: mockSuperAdmin,
     });
     await openOptionsTab(user);
 

@@ -63,6 +63,7 @@ export const mockPlaylist: Playlist = {
   filterMediaTagsLogicalOperator: 'OR',
   filterFolderId: null,
   maxNumberOfItems: 0,
+  userPermissions: { view: 1, edit: 1, delete: 1, modifyPermissions: 1 },
 };
 
 // -----------------------------------------------------------------------------
@@ -76,7 +77,7 @@ export const mockUser: User = {
   userName: 'TestUser',
   userTypeId: UserType.User,
   groupId: 1,
-  features: { 'folder.view': true },
+  features: { 'folder.view': true, 'playlist.modify': true, 'user.sharing': true },
   settings: {
     defaultTimezone: 'UTC',
     defaultLanguage: 'en',

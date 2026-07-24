@@ -74,7 +74,7 @@ describe('Delete User', () => {
   beforeEach(() => {
     testQueryClient.clear();
     vi.clearAllMocks();
-    // mockUser.userId (2) differs from mockCurrentUser.userId (1) — not self,
+    // mockUser.userId (2) differs from mockSuperAdmin.userId (1) — not self,
     // so the Delete row action is visible.
     mockFetchUsers(SINGLE_USER);
   });

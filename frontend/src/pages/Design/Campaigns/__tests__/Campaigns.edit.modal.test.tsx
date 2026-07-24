@@ -28,8 +28,15 @@ import { vi, beforeEach, describe, test, expect } from 'vitest';
 
 import EditCampaignModal from '../components/EditCampaignModal';
 
-import { mockCampaign, mockCampaignWithRefs, mockCycleCampaign } from './campaignTestUtils';
+import {
+  mockCampaign,
+  mockCampaignWithRefs,
+  mockCycleCampaign,
+  mockUser,
+} from './campaignTestUtils';
 
+import type * as TagInputModule from '@/components/ui/forms/TagInput';
+import { UserProvider } from '@/context/UserContext';
 import { updateCampaign } from '@/services/campaignApi';
 import { fetchLayouts } from '@/services/layoutsApi';
 import { testQueryClient } from '@/setupTests';
@@ -53,7 +60,7 @@ vi.mock('@/hooks/useDebounce');
 vi.mock('@/components/ui/modals/Modal');
 vi.mock('@/components/ui/forms/SelectFolder', () => ({ default: () => null }));
 vi.mock('@/components/ui/forms/TagInput', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/components/ui/forms/TagInput')>();
+  const actual = await importOriginal<typeof TagInputModule>();
   return { ...actual, default: () => null };
 });
 
@@ -154,12 +161,14 @@ const renderEditModal = async ({
   await act(async () => {
     result = render(
       <QueryClientProvider client={testQueryClient}>
-        <EditCampaignModal
-          isOpen={isOpen}
-          campaign={campaign}
-          onClose={onClose}
-          onSuccess={onSuccess}
-        />
+        <UserProvider initialUser={mockUser}>
+          <EditCampaignModal
+            isOpen={isOpen}
+            campaign={campaign}
+            onClose={onClose}
+            onSuccess={onSuccess}
+          />
+        </UserProvider>
       </QueryClientProvider>,
     );
   });

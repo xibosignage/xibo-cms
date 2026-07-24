@@ -38,9 +38,18 @@ interface SpotRowProps {
   uploadState?: SpotUploadState;
   onSelectFile: (spotIndex: number, file: File) => void;
   onDeleteWidget: (widgetId: number) => void;
+  onPreview?: (widget: SpotWidget) => void;
 }
 
-function SpotThumbnail({ widget, blobUrl }: { widget?: SpotWidget; blobUrl?: string }) {
+function SpotThumbnail({
+  widget,
+  blobUrl,
+  onPreview,
+}: {
+  widget?: SpotWidget;
+  blobUrl?: string;
+  onPreview?: () => void;
+}) {
   const [loaded, setLoaded] = useState(false);
 
   const thumbnailSrc =
@@ -49,8 +58,10 @@ function SpotThumbnail({ widget, blobUrl }: { widget?: SpotWidget; blobUrl?: str
       ? withPublicPath(`library/thumbnail/${widget.mediaIds[0]}`)
       : null);
 
+  const isPreviewable = onPreview && widget && widget.mediaIds.length > 0;
+
   if (thumbnailSrc) {
-    return (
+    const img = (
       <div className="relative h-16 w-16 shrink-0 rounded">
         {!loaded && <div className="absolute inset-0 animate-pulse rounded bg-gray-300" />}
         <img
@@ -61,14 +72,48 @@ function SpotThumbnail({ widget, blobUrl }: { widget?: SpotWidget; blobUrl?: str
         />
       </div>
     );
+
+    if (isPreviewable) {
+      return (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onPreview();
+          }}
+          className="cursor-pointer rounded hover:ring-2 hover:ring-xibo-blue-600"
+        >
+          {img}
+        </button>
+      );
+    }
+
+    return img;
   }
 
   const Icon = widget?.type === 'subplaylist' ? ListOrdered : getMediaIcon(widget?.type ?? '');
-  return (
+  const iconDiv = (
     <div className="flex h-16 w-16 items-center justify-center rounded bg-gray-400">
       <Icon className="size-6 text-gray-500" />
     </div>
   );
+
+  if (isPreviewable) {
+    return (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onPreview();
+        }}
+        className="cursor-pointer rounded hover:ring-2 hover:ring-xibo-blue-600"
+      >
+        {iconDiv}
+      </button>
+    );
+  }
+
+  return iconDiv;
 }
 
 export default function SpotRow({
@@ -77,6 +122,7 @@ export default function SpotRow({
   uploadState,
   onSelectFile,
   onDeleteWidget,
+  onPreview,
 }: SpotRowProps) {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -84,6 +130,9 @@ export default function SpotRow({
 
   const isUploading = uploadState?.status === 'uploading';
   const isLocked = widget?.type === 'subplaylist';
+
+  const previewHandler =
+    onPreview && widget && widget.mediaIds.length > 0 ? () => onPreview(widget) : undefined;
 
   const acceptType = (() => {
     if (!widget) return undefined;
@@ -133,7 +182,7 @@ export default function SpotRow({
       return (
         <>
           <div className="shrink-0">
-            <SpotThumbnail widget={widget} />
+            <SpotThumbnail widget={widget} onPreview={previewHandler} />
           </div>
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <span className="truncate text-sm font-semibold text-gray-600" aria-label={widget.name}>
@@ -153,7 +202,11 @@ export default function SpotRow({
       return (
         <>
           <div className="shrink-0">
-            <SpotThumbnail widget={widget} blobUrl={uploadState?.blobUrl} />
+            <SpotThumbnail
+              widget={widget}
+              blobUrl={uploadState?.blobUrl}
+              onPreview={previewHandler}
+            />
           </div>
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             {uploadState ? (

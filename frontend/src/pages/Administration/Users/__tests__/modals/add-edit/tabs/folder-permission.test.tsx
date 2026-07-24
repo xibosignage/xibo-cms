@@ -28,6 +28,7 @@ import { renderAddEditUserModal } from '../helpers/renderAddEditUserModal';
 
 import { fetchFolderById, fetchFolderTree } from '@/services/folderApi';
 import { fetchGroupFolderPermissions } from '@/services/permissionsApi';
+import { fetchHomepages } from '@/services/userApi';
 import { fetchUserGroups } from '@/services/userGroupApi';
 
 // =============================================================================
@@ -67,6 +68,7 @@ describe('AddEditUserModal - Folder Permission tab', () => {
     vi.mocked(fetchFolderById).mockResolvedValue({ ...mockFolderTree[0]!, text: 'Root' });
     vi.mocked(fetchGroupFolderPermissions).mockResolvedValue(new Map());
     vi.mocked(fetchUserGroups).mockResolvedValue({ rows: [mockUserGroup], totalCount: 1 });
+    vi.mocked(fetchHomepages).mockResolvedValue([]);
   });
 
   test("the home folder selector shows the draft's currently selected folder", async () => {

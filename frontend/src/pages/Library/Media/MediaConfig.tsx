@@ -37,6 +37,8 @@ import {
   Info,
   Trash2,
   FileSymlink,
+  Tags,
+  BarChart3,
 } from 'lucide-react';
 import { type ComponentProps } from 'react';
 
@@ -103,6 +105,8 @@ export type ModalType =
   | 'replace'
   | 'schedule'
   | 'enableStats'
+  | 'enableStatsMultiple'
+  | 'editTagsMultiple'
   | 'usageReport'
   | 'tidy'
   | null;
@@ -635,6 +639,8 @@ interface GetBulkActionsProps {
   onMove?: () => void;
   onShare?: () => void;
   onDownload?: () => void;
+  onEditTags?: () => void;
+  onEnableStats?: () => void;
   canModify?: boolean;
 }
 
@@ -644,6 +650,8 @@ export const getBulkActions = ({
   onMove,
   onShare,
   onDownload,
+  onEditTags,
+  onEnableStats,
   canModify = false,
 }: GetBulkActionsProps): DataTableBulkAction<Media>[] => {
   const actions: DataTableBulkAction<Media>[] = [];
@@ -653,6 +661,22 @@ export const getBulkActions = ({
       label: t('Share'),
       icon: UserPlus2,
       onClick: onShare,
+    });
+  }
+
+  if (onEditTags && canModify) {
+    actions.push({
+      label: t('Edit Tags'),
+      icon: Tags,
+      onClick: onEditTags,
+    });
+  }
+
+  if (onEnableStats && canModify) {
+    actions.push({
+      label: t('Enable Stats Collection'),
+      icon: BarChart3,
+      onClick: onEnableStats,
     });
   }
 
