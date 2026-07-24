@@ -108,7 +108,7 @@ export default function CopyDisplayProfileModal({
         <TextInput
           name="newName"
           value={newName}
-          label={t('Name')}
+          label={t('New name')}
           helpText={t('The Name for the copy (1 - 50 characters)')}
           error={error}
           maxLength={50}

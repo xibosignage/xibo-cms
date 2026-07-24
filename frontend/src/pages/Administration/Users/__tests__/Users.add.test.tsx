@@ -28,6 +28,7 @@ import { renderUsersPage } from './helpers/renderUsersPage';
 import { mockFetchUsers } from './mocks/userApi';
 import { mockFetchUserGroupById, mockFetchUserGroups } from './mocks/userGroupApi';
 
+import { fetchHomepages } from '@/services/userApi';
 import { testQueryClient } from '@/setupTests';
 
 // =============================================================================
@@ -71,6 +72,7 @@ describe('Users page - modal wiring', () => {
       isEveryone: 0,
       features: [],
     });
+    vi.mocked(fetchHomepages).mockResolvedValue([]);
   });
 
   test('clicking "Add User" opens the Add User modal', async () => {

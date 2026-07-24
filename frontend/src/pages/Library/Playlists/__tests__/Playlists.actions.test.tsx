@@ -202,4 +202,203 @@ describe('Playlists page - row actions', () => {
 
     expect(await screen.findByRole('dialog', { name: 'Share Playlist' })).toBeInTheDocument();
   });
+
+  // ---------------------------------------------------------------------------
+  // Gating parity checks against release44 (see bugs-found/playlist-bugs/).
+  // Each of these pins one specific gate so a future regression on that gate
+  // alone fails here, rather than only being caught by a broad manual audit.
+  // ---------------------------------------------------------------------------
+
+  test('Edit, Make a Copy, Move, Timeline, and Enable Stats Collection are all absent when the user lacks edit permission on the row', async () => {
+    mockFetchPlaylists({
+      rows: [{ ...mockPlaylist, userPermissions: { ...mockPlaylist.userPermissions, edit: 0 } }],
+      totalCount: 1,
+    });
+    renderPlaylistsPage();
+
+    await screen.findByText(mockPlaylist.name);
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+
+    // Anchor on an action that doesn't depend on edit permission, to confirm
+    // the dropdown is open before asserting the others are missing.
+    await screen.findByRole('button', { name: 'Delete' });
+    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Make a Copy' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Move' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Timeline' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Enable Stats Collection' }),
+    ).not.toBeInTheDocument();
+  });
+
+  test('Timeline is absent for a Dynamic playlist even when the user has edit permission', async () => {
+    mockFetchPlaylists({
+      rows: [{ ...mockPlaylist, isDynamic: true }],
+      totalCount: 1,
+    });
+    renderPlaylistsPage();
+
+    await screen.findByText(mockPlaylist.name);
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+
+    await screen.findAllByRole('button', { name: 'Edit' });
+    expect(screen.queryByRole('button', { name: 'Timeline' })).not.toBeInTheDocument();
+  });
+
+  // Known bug — the bulk Move button is correctly gated on the Folders
+  // feature, but this per-row one isn't. See
+  // bugs-found/playlist-bugs/permission-gating/playlist-move-row-action-not-folder-view-gated.md.
+  // Kept as test.fails (not test.skip) so a real fix surfaces here immediately.
+  test.fails(
+    'Move is absent from the row dropdown for a user lacking the Folders feature',
+    async () => {
+      testQueryClient.setQueryData(['userPref', 'playlist_page'], null);
+      render(
+        <QueryClientProvider client={testQueryClient}>
+          <UserProvider
+            initialUser={{ ...mockUser, features: { ...mockUser.features, 'folder.view': false } }}
+          >
+            <MemoryRouter>
+              <Playlists />
+            </MemoryRouter>
+          </UserProvider>
+        </QueryClientProvider>,
+      );
+
+      await screen.findByText(mockPlaylist.name);
+      fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+
+      await screen.findAllByRole('button', { name: 'Edit' });
+      expect(screen.queryByRole('button', { name: 'Move' })).not.toBeInTheDocument();
+    },
+  );
+
+  test('Delete is absent when the user lacks delete permission on the row', async () => {
+    mockFetchPlaylists({
+      rows: [{ ...mockPlaylist, userPermissions: { ...mockPlaylist.userPermissions, delete: 0 } }],
+      totalCount: 1,
+    });
+    renderPlaylistsPage();
+
+    await screen.findByText(mockPlaylist.name);
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+
+    await screen.findAllByRole('button', { name: 'Edit' });
+    expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+  });
+
+  test('Share is absent when the user lacks modifyPermissions on the row', async () => {
+    mockFetchPlaylists({
+      rows: [
+        {
+          ...mockPlaylist,
+          userPermissions: { ...mockPlaylist.userPermissions, modifyPermissions: 0 },
+        },
+      ],
+      totalCount: 1,
+    });
+    renderPlaylistsPage();
+
+    await screen.findByText(mockPlaylist.name);
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+
+    await screen.findAllByRole('button', { name: 'Edit' });
+    expect(screen.queryByRole('button', { name: 'Share' })).not.toBeInTheDocument();
+  });
+
+  test('Share is absent when the user lacks the user.sharing feature, even with modifyPermissions on the row', async () => {
+    testQueryClient.setQueryData(['userPref', 'playlist_page'], null);
+    render(
+      <QueryClientProvider client={testQueryClient}>
+        <UserProvider
+          initialUser={{ ...mockUser, features: { ...mockUser.features, 'user.sharing': false } }}
+        >
+          <MemoryRouter>
+            <Playlists />
+          </MemoryRouter>
+        </UserProvider>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText(mockPlaylist.name);
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+
+    await screen.findAllByRole('button', { name: 'Edit' });
+    expect(screen.queryByRole('button', { name: 'Share' })).not.toBeInTheDocument();
+  });
+
+  test('Schedule appears when the user lacks edit permission but SCHEDULE_WITH_VIEW_PERMISSION is on', async () => {
+    mockFetchPlaylists({
+      rows: [{ ...mockPlaylist, userPermissions: { ...mockPlaylist.userPermissions, edit: 0 } }],
+      totalCount: 1,
+    });
+    testQueryClient.setQueryData(['userPref', 'playlist_page'], null);
+    render(
+      <QueryClientProvider client={testQueryClient}>
+        <UserProvider
+          initialUser={{
+            ...mockUser,
+            features: { ...mockUser.features, 'schedule.add': true },
+            settings: { ...mockUser.settings, SCHEDULE_WITH_VIEW_PERMISSION: '1' },
+          }}
+        >
+          <MemoryRouter>
+            <Playlists />
+          </MemoryRouter>
+        </UserProvider>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText(mockPlaylist.name);
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+
+    expect(await screen.findByRole('button', { name: 'Schedule' })).toBeInTheDocument();
+  });
+
+  test('Usage Report is absent when the user lacks both schedule.view and layout.view features', async () => {
+    testQueryClient.setQueryData(['userPref', 'playlist_page'], null);
+    render(
+      <QueryClientProvider client={testQueryClient}>
+        <UserProvider
+          initialUser={{
+            ...mockUser,
+            features: { ...mockUser.features, 'schedule.view': false, 'layout.view': false },
+          }}
+        >
+          <MemoryRouter>
+            <Playlists />
+          </MemoryRouter>
+        </UserProvider>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText(mockPlaylist.name);
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+
+    await screen.findAllByRole('button', { name: 'Edit' });
+    expect(screen.queryByRole('button', { name: 'Usage Report' })).not.toBeInTheDocument();
+  });
+
+  test('Usage Report appears when the user has layout.view even without schedule.view', async () => {
+    testQueryClient.setQueryData(['userPref', 'playlist_page'], null);
+    render(
+      <QueryClientProvider client={testQueryClient}>
+        <UserProvider
+          initialUser={{
+            ...mockUser,
+            features: { ...mockUser.features, 'schedule.view': false, 'layout.view': true },
+          }}
+        >
+          <MemoryRouter>
+            <Playlists />
+          </MemoryRouter>
+        </UserProvider>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText(mockPlaylist.name);
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+
+    expect(await screen.findByRole('button', { name: 'Usage Report' })).toBeInTheDocument();
+  });
 });
