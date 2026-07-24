@@ -87,6 +87,7 @@ export function usePlaylistDashboardActions(queryClient: QueryClient, playlistId
 
   const startUpload = async (spotIndex: number, file: File, widget?: SpotWidget) => {
     if (playlistId === null) return;
+    if (widget?.type === 'subplaylist') return;
 
     const blobUrl = file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined;
 

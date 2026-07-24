@@ -38,7 +38,6 @@ import LibraryUsageChart from './components/LibraryUsageChart';
 import { useDashboardStats } from './hooks/useDashboardStats';
 
 import { DataTable } from '@/components/ui/table/DataTable';
-import { withPublicPath } from '@/config/publicPath';
 import { INITIAL_FILTER_STATE } from '@/pages/Displays/Displays/DisplaysConfig';
 import { useDisplaysData } from '@/pages/Displays/Displays/hooks/useDisplaysData';
 import type { Display } from '@/types/display';

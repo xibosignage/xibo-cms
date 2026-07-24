@@ -109,6 +109,7 @@ export type ModalType =
   | 'replace'
   | 'publish'
   | 'discard'
+  | 'checkout'
   | 'campaign'
   | 'export'
   | 'import'

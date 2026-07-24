@@ -45,7 +45,9 @@ import FolderBreadcrumb from '@/components/ui/FolderBreadCrumb';
 import FolderSidebar from '@/components/ui/FolderSidebar';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
 import { useUserContext } from '@/context/UserContext';
+import { useAutoSubmit } from '@/hooks/useAutoSubmit';
 import { useDateFormatter } from '@/hooks/useDateFormatter';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
@@ -193,6 +195,8 @@ export default function DisplayGroupPage() {
     setRowSelection,
   });
 
+  const { guard } = useAutoSubmit();
+
   const getRowId = (row: DisplayGroup) => row.displayGroupId.toString();
 
   const handleRowSelectionChange = (
@@ -279,7 +283,11 @@ export default function DisplayGroupPage() {
     collectNow: (displayGroup) => {
       setSelectedDisplayGroup(displayGroup);
       setActionError(null);
-      openModal('collectNow');
+      guard(
+        AUTO_SUBMIT_FORMS.displayGroupCollectNow,
+        () => confirmCollectNow(displayGroup.displayGroupId, { notifyOnError: true }),
+        () => openModal('collectNow'),
+      );
     },
     triggerWebhook: (displayGroup) => {
       setSelectedDisplayGroup(displayGroup);

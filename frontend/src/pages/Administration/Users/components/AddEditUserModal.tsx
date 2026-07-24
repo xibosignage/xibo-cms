@@ -410,6 +410,7 @@ export default function AddEditUserModal({
           if (value?.[0]) mapped[key as keyof UserFormErrors] = value[0];
         });
         setFormErrors(mapped);
+        setApiError(t('Please fix the highlighted errors before saving.'));
         if (
           mapped.userName ||
           mapped.email ||
@@ -432,6 +433,7 @@ export default function AddEditUserModal({
         if (isEdit && user) {
           if (draft.password && draft.password !== draft.retypePassword) {
             setFormErrors({ retypePassword: t('Passwords do not match') });
+            setApiError(t('Please fix the highlighted errors before saving.'));
             setActiveTab('general');
             return;
           }

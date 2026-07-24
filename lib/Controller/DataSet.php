@@ -1431,7 +1431,7 @@ class DataSet extends Base
     }
 
     /**
-     * Clear cache for remote dataSet, only available via web interface
+     * Clear cache for remote dataSet
      *
      * @param Request $request
      * @param Response $response

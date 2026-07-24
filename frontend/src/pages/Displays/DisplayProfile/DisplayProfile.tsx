@@ -140,7 +140,11 @@ export default function DisplayProfile() {
 
   const selectedDisplayProfile =
     displayProfileList.find((m) => m.displayProfileId === selectedDisplayProfileId) ?? null;
-  const existingNames = displayProfileList.map((m) => m.name);
+  // Scoped to the copied profile's type — a Display Profile name only needs to be
+  // unique within its own type (matches the backend's name+type duplicate check).
+  const existingNames = displayProfileList
+    .filter((m) => m.type === selectedDisplayProfile?.type)
+    .map((m) => m.name);
 
   const getRowId = (row: DisplayProfile) => {
     return row.displayProfileId.toString();

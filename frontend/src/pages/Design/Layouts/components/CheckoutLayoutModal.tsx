@@ -19,76 +19,58 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { Trash2Icon } from 'lucide-react';
+import { SquarePen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import Modal from '@/components/ui/modals/Modal';
-import type { Module } from '@/types/module';
 
-interface ClearCacheModuleModalProps {
-  isOpen?: boolean;
-  module: Module;
+interface CheckoutLayoutModalProps {
   onClose: () => void;
   onConfirm: () => void;
-  error?: string | null;
-  isLoading?: boolean;
+  isActionPending: boolean;
+  actionError: string | null;
   autoSubmitFormId?: string;
 }
 
-export default function ClearCacheModuleModal({
-  isOpen = true,
-  module,
+export default function CheckoutLayoutModal({
   onClose,
   onConfirm,
-  error,
-  isLoading,
+  isActionPending,
+  actionError,
   autoSubmitFormId,
-}: ClearCacheModuleModalProps) {
+}: CheckoutLayoutModalProps) {
   const { t } = useTranslation();
 
   return (
     <Modal
       variant="confirmation"
-      isOpen={isOpen}
-      isPending={isLoading}
+      isOpen
+      isPending={isActionPending}
       onClose={onClose}
       autoSubmitFormId={autoSubmitFormId}
+      error={actionError ?? undefined}
       actions={[
+        { label: t('Cancel'), onClick: onClose, variant: 'secondary' },
         {
-          label: t('Cancel'),
-          onClick: onClose,
-          variant: 'secondary',
-        },
-        {
-          label: isLoading ? t('Clearing…') : t('Clear Cache'),
+          label: isActionPending ? t('Checking out…') : t('Checkout'),
           onClick: onConfirm,
-          disabled: isLoading,
+          disabled: isActionPending,
         },
       ]}
       size="md"
     >
       <div className="flex flex-col p-5 gap-3">
-        <div>
-          <div className="flex justify-center mb-4">
-            <div className="bg-red-100 w-15.5 h-15.5 text-red-800 border-red-50 border-[7px] rounded-full p-3">
-              <Trash2Icon size={26} />
-            </div>
+        <div className="flex justify-center mb-2">
+          <div className="bg-blue-100 w-15.5 h-15.5 text-blue-800 border-blue-50 border-[7px] rounded-full p-3">
+            <SquarePen size={26} />
           </div>
-          <h2 className="text-center text-lg font-semibold mb-2 text-red-800">
-            {t('Clear Cache?')}
-          </h2>
         </div>
+        <h2 className="text-center text-lg font-semibold mb-1">{t('Checkout Layout')}</h2>
         <p className="text-center text-gray-500">
-          {t('Clear the cache for {{name}}. This process is not reversible.', {
-            name: module.name,
-          })}
+          {t(
+            'Are you sure you want to checkout this Layout? It will be put in a Draft state so you can make edits.',
+          )}
         </p>
-
-        {error && (
-          <div className="mt-2 text-center">
-            <p className="text-sm font-medium text-red-600">{error}</p>
-          </div>
-        )}
       </div>
     </Modal>
   );

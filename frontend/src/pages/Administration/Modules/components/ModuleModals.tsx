@@ -24,6 +24,7 @@ import type { ModalType } from '../ModulesConfig';
 import ClearCacheModuleModal from './ClearCacheModuleModal';
 import ConfigureModuleModal from './ConfigureModuleModal';
 
+import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
 import type { UpdateModuleSettingsRequest } from '@/services/moduleApi';
 import type { Module } from '@/types/module';
 
@@ -70,6 +71,7 @@ export function ModuleModals({ actions, selection, handlers }: ModuleModalsProps
           onConfirm={() => handlers.confirmClearCache(selection.selectedModule!.moduleId)}
           error={actions.clearError}
           isLoading={actions.isClearing}
+          autoSubmitFormId={AUTO_SUBMIT_FORMS.moduleClearCache}
         />
       )}
     </>

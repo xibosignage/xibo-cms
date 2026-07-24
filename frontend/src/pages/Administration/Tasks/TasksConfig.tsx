@@ -39,7 +39,7 @@ export interface TaskFilterInput {
   useRegexForName: boolean | null;
 }
 
-export type ModalType = BaseModalType;
+export type ModalType = BaseModalType | 'runNow';
 
 export const INITIAL_FILTER_STATE: TaskFilterInput = {
   name: null,

@@ -26,6 +26,7 @@ namespace Xibo\Factory;
 use Carbon\Carbon;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\User;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -502,6 +503,19 @@ class PlaylistFactory extends BaseFactory
         if ($parsedFilter->getInt('folderId') !== null) {
             $body .= ' AND `playlist`.folderId = :folderId ';
             $params['folderId'] = $parsedFilter->getInt('folderId');
+        }
+
+        // Modified Date range
+        if ($parsedFilter->getDate('modifiedDateFrom') != null) {
+            $body .= ' AND `playlist`.modifiedDt >= :modifiedDateFrom ';
+            $params['modifiedDateFrom'] = $parsedFilter->getDate('modifiedDateFrom')
+                ->format(DateFormatHelper::getSystemFormat());
+        }
+
+        if ($parsedFilter->getDate('modifiedDateTo') != null) {
+            $body .= ' AND `playlist`.modifiedDt <= :modifiedDateTo ';
+            $params['modifiedDateTo'] = $parsedFilter->getDate('modifiedDateTo')
+                ->format(DateFormatHelper::getSystemFormat());
         }
 
         // Logged in user view permissions

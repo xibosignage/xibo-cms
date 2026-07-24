@@ -23,7 +23,9 @@ import type { ModalType } from '../TasksConfig';
 
 import AddEditTaskModal from './AddEditTaskModal';
 import DeleteTaskModal from './DeleteTaskModal';
+import RunTaskNowModal from './RunTaskNowModal';
 
+import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
 import type { Task } from '@/types/task';
 
 export interface TaskModalsProps {
@@ -35,6 +37,10 @@ export interface TaskModalsProps {
   deleteError: string | null;
   isDeleting: boolean;
   confirmDelete: (items: Task[]) => void;
+  taskToRun: Task | null;
+  runError: string | null;
+  isRunning: boolean;
+  onConfirmRunNow: () => void;
 }
 
 export function TaskModals({
@@ -46,6 +52,10 @@ export function TaskModals({
   deleteError,
   isDeleting,
   confirmDelete,
+  taskToRun,
+  runError,
+  isRunning,
+  onConfirmRunNow,
 }: TaskModalsProps) {
   const isModalOpen = (name: ModalType) => activeModal === name;
 
@@ -70,6 +80,16 @@ export function TaskModals({
           taskName={itemsToDelete.length === 1 ? itemsToDelete[0]?.name : undefined}
           error={deleteError}
           isLoading={isDeleting}
+        />
+      )}
+
+      {isModalOpen('runNow') && taskToRun && (
+        <RunTaskNowModal
+          onClose={closeModal}
+          onConfirm={onConfirmRunNow}
+          isActionPending={isRunning}
+          actionError={runError}
+          autoSubmitFormId={AUTO_SUBMIT_FORMS.taskRunNow}
         />
       )}
     </>

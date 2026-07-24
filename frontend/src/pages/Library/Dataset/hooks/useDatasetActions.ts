@@ -26,7 +26,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { useState } from 'react';
 
 import { notify } from '@/components/ui/Notification';
-import { cloneDataset, deleteDataset } from '@/services/datasetApi';
+import { clearDatasetCache, cloneDataset, deleteDataset } from '@/services/datasetApi';
 import { selectFolder } from '@/services/folderApi';
 import type { Dataset } from '@/types/dataset';
 
@@ -48,6 +48,30 @@ export function useDatasetActions({
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isCloning, setIsCloning] = useState(false);
+  const [isClearingCache, setIsClearingCache] = useState(false);
+
+  const confirmClearCache = async (dataset: Dataset | null) => {
+    if (!dataset) {
+      return;
+    }
+
+    try {
+      setIsClearingCache(true);
+      await clearDatasetCache(dataset.dataSetId);
+      notify.success(t('Cache cleared for {{name}}', { name: dataset.dataSet }));
+      handleRefresh();
+      closeModal();
+    } catch (error) {
+      console.error('Clear dataset cache failed', error);
+      const message =
+        isAxiosError(error) && error.response?.data?.message
+          ? error.response.data.message
+          : t('Failed to clear the cache.');
+      notify.error(message);
+    } finally {
+      setIsClearingCache(false);
+    }
+  };
 
   const confirmDelete = async (itemsToDelete: Dataset[], options: { deleteData: boolean }) => {
     if (itemsToDelete.length === 0 || isDeleting) {
@@ -164,7 +188,9 @@ export function useDatasetActions({
     deleteError,
     setDeleteError,
     isCloning,
+    isClearingCache,
     confirmDelete,
+    confirmClearCache,
     handleConfirmClone,
     handleConfirmMove,
   };

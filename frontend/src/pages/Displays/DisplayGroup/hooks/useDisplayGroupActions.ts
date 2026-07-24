@@ -59,7 +59,11 @@ export function useDisplayGroupActions({
   const [isActionPending, setIsActionPending] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const runAction = async (fn: () => Promise<unknown>, errorMessage: string) => {
+  const runAction = async (
+    fn: () => Promise<unknown>,
+    errorMessage: string,
+    options?: { notifyOnError?: boolean },
+  ) => {
     try {
       setIsActionPending(true);
       setActionError(null);
@@ -72,7 +76,13 @@ export function useDisplayGroupActions({
         isAxiosError(error) && error.response?.data?.message
           ? error.response.data.message
           : errorMessage;
-      setActionError(message);
+
+      // On the auto-submit path there is no dialog to host the inline error, so surface a toast.
+      if (options?.notifyOnError) {
+        notify.error(message);
+      } else {
+        setActionError(message);
+      }
     } finally {
       setIsActionPending(false);
     }
@@ -198,8 +208,8 @@ export function useDisplayGroupActions({
     }
   };
 
-  const confirmCollectNow = (displayGroupId: number) =>
-    runAction(() => collectNow(displayGroupId), t('Failed to send collection request.'));
+  const confirmCollectNow = (displayGroupId: number, options?: { notifyOnError?: boolean }) =>
+    runAction(() => collectNow(displayGroupId), t('Failed to send collection request.'), options);
 
   const confirmSendCommand = (displayGroupId: number, commandId: number) =>
     runAction(() => sendCommand(displayGroupId, commandId), t('Failed to send command.'));

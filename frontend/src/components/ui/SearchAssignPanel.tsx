@@ -174,9 +174,24 @@ export function SearchAssignPanel<TItem>({
     size: 20,
     enableSorting: false,
     cell: ({ row }) => {
-      const assignedIndex = allowMultiple
-        ? -1
-        : assignedItems.findIndex((item) => getItemId(item) === getItemId(row.original));
+      const itemId = getItemId(row.original);
+
+      if (allowMultiple) {
+        return (
+          <div className="flex items-center justify-center">
+            <button
+              type="button"
+              onClick={() => onAddItem(row.original)}
+              className="w-5 h-5 rounded-full flex items-center justify-center transition-colors cursor-pointer text-xibo-blue-600 hover:text-xibo-blue-80 hover:bg-xibo-blue-50"
+              title={t('Add')}
+            >
+              <PlusCircle size={20} />
+            </button>
+          </div>
+        );
+      }
+
+      const assignedIndex = assignedItems.findIndex((item) => getItemId(item) === itemId);
       const isAssigned = assignedIndex !== -1;
       return (
         <div className="flex justify-center">

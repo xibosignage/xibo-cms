@@ -29,6 +29,7 @@ import { buildCommandDrafts } from './CommandsTab';
 import { AndroidFields } from './fields/AndroidFields';
 import { ChromeOsFields } from './fields/ChromeOsFields';
 import {
+  findHisenseTimerOverlap,
   getHisensePictureSliderIndex,
   HISENSE_PICTURE_KEYS,
   HisenseFields,
@@ -120,7 +121,7 @@ export default function EditDisplayProfileModal({
   const [isPending, startTransition] = useTransition();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>('general');
-  const [apiError, setApiError] = useState<string | undefined>();
+  const [apiError, setApiError] = useState<React.ReactNode | undefined>();
   const [nameError, setNameError] = useState<string | undefined>();
 
   const [draft, setDraft] = useState<EditDraft>({ name: '', isDefault: 0, config: {} });
@@ -481,6 +482,14 @@ export default function EditDisplayProfileModal({
       const checkboxFields = CHECKBOX_FIELDS_BY_TYPE[data.type] ?? new Set();
       const isLgSsspType = data.type === 'lg' || data.type === 'sssp';
       const isHisenseType = data.type === 'hisense';
+
+      if (isHisenseType) {
+        const overlapError = findHisenseTimerOverlap(hisenseTimerRules, t);
+        if (overlapError) {
+          setApiError(overlapError);
+          return;
+        }
+      }
       const skipKeys =
         isLgSsspType || isHisenseType
           ? new Set([
@@ -582,11 +591,7 @@ export default function EditDisplayProfileModal({
   const hasLocationTab =
     data?.type === 'android' || data?.type === 'windows' || data?.type === 'linux' || isHisense;
   const hasTroubleshootingTab =
-    data?.type === 'android' ||
-    data?.type === 'windows' ||
-    data?.type === 'linux' ||
-    isLgSssp ||
-    isHisense;
+    data?.type === 'android' || data?.type === 'windows' || data?.type === 'linux' || isHisense;
   const hasTimersTab = isLgSssp || isHisense;
   const hasPictureOptionsTab = isLgSssp || isHisense;
   const hasLockSettingsTab = isLgSssp;

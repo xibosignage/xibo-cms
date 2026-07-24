@@ -46,7 +46,9 @@ import FolderSidebar from '@/components/ui/FolderSidebar';
 import { notify } from '@/components/ui/Notification';
 import TabNav from '@/components/ui/TabNav';
 import { DataTable } from '@/components/ui/table/DataTable';
+import { AUTO_SUBMIT_FORMS } from '@/constants/autoSubmitForms';
 import { useUserContext } from '@/context/UserContext';
+import { useAutoSubmit } from '@/hooks/useAutoSubmit';
 import { useFilteredTabs } from '@/hooks/useFilteredTabs';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -209,7 +211,9 @@ export default function Dataset() {
     deleteError,
     setDeleteError,
     isCloning,
+    isClearingCache,
     confirmDelete,
+    confirmClearCache,
     handleConfirmClone,
     handleConfirmMove,
   } = useDatasetActions({
@@ -219,6 +223,8 @@ export default function Dataset() {
     setRowSelection,
     setItemsToMove,
   });
+
+  const { guard } = useAutoSubmit();
 
   const handleDelete = (id: number) => {
     const dataset = datasetList.find((m) => m.dataSetId === id);
@@ -275,6 +281,14 @@ export default function Dataset() {
     onImportCsv: (datasetId) => {
       setSelectedDatasetId(datasetId);
       openModal('import');
+    },
+    onClearCache: (dataset) => {
+      setSelectedDatasetId(dataset.dataSetId);
+      guard(
+        AUTO_SUBMIT_FORMS.dataSetClearCache,
+        () => confirmClearCache(dataset),
+        () => openModal('clearCache'),
+      );
     },
   });
 
@@ -468,6 +482,7 @@ export default function Dataset() {
           deleteError,
           isDeleting,
           isCloning,
+          isClearingCache,
         }}
         selection={{
           selectedDataset,
@@ -486,6 +501,7 @@ export default function Dataset() {
           handleConfirmMove: (folderId) => {
             handleConfirmMove(itemsToMove, folderId);
           },
+          confirmClearCache: () => confirmClearCache(selectedDataset),
         }}
         folderActions={folderActions}
         canUseRealTime={canRealTime}

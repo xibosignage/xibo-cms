@@ -203,6 +203,7 @@ export default function Campaigns() {
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['campaign'] });
+    queryClient.invalidateQueries({ queryKey: ['layouts', 'campaign'] });
   };
 
   const handleFolderChange = (folder: { id: number | null; text: string | '' }) => {
