@@ -140,11 +140,7 @@ class DataSetColumnFactory extends BaseFactory
         }
 
         if ($sanitizedFilter->getString('heading') != null) {
-            $body .= ' AND (
-                datasetcolumn.heading LIKE :heading OR
-                datasetcolumn.listcontent LIKE :heading OR
-                datasetcolumn.tooltip LIKE :heading
-            ) ';
+            $body .= ' AND datasetcolumn.heading LIKE :heading ';
             $params['heading'] = '%' . $sanitizedFilter->getString('heading') . '%';
         }
 

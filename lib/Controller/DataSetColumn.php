@@ -28,7 +28,6 @@ use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Interfaces\PoolInterface;
-use Xibo\Event\DataConnectorSourceRequestEvent;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetColumnTypeFactory;
 use Xibo\Factory\DataSetFactory;
@@ -105,7 +104,7 @@ class DataSetColumn extends Base
     )]
     #[OA\Parameter(
         name: 'heading',
-        description: 'Filter by column heading, list content, or tooltip',
+        description: 'Filter by column heading',
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'string')
