@@ -80,6 +80,10 @@ import { fetchLayouts, fetchLayoutCodes } from '@/services/layoutsApi';
 import { fetchMedia } from '@/services/mediaApi';
 import { fetchPlaylist } from '@/services/playlistApi';
 import { fetchResolution } from '@/services/resolutionApi';
+import {
+  fetchScheduleCriteria,
+  type ScheduleCriteriaResponse,
+} from '@/services/scheduleCriteriaApi';
 import { fetchSyncGroups, fetchSyncGroupDisplays } from '@/services/syncGroupApi';
 import type { Daypart } from '@/types/daypart';
 import { EventTypeId, type Event } from '@/types/event';
@@ -156,6 +160,7 @@ export default function ScheduleEventModal({
   const [resolutionOptions, setResolutionOptions] = useState<SelectOption[]>([]);
   const [layoutCodeOptions, setLayoutCodeOptions] = useState<SelectOption[]>([]);
   const [commandOptions, setCommandOptions] = useState<SelectOption[]>([]);
+  const [scheduleCriteria, setScheduleCriteria] = useState<ScheduleCriteriaResponse | null>(null);
 
   const [pagination, setPagination] = useState({
     content: { totalCount: 0, isLoading: false, isLoadingMore: false },
@@ -278,6 +283,13 @@ export default function ScheduleEventModal({
         : currentStep === timeStepIndex
           ? isTimeStepValid
           : true;
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    fetchScheduleCriteria().then(setScheduleCriteria);
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -1879,13 +1891,19 @@ export default function ScheduleEventModal({
                     {/* Criteria rows */}
                     {draft.criteria.map((criterion, index) => {
                       const isCustomType = criterion.type === 'custom' || !criterion.type;
-                      const metricOptions = getCriteriaMetricOptions(criterion.type, t);
+                      const metricOptions = getCriteriaMetricOptions(
+                        criterion.type,
+                        t,
+                        scheduleCriteria,
+                      );
                       const metricConfig = getCriteriaMetricConfig(
                         criterion.type,
                         criterion.metric,
                         t,
+                        scheduleCriteria,
                       );
-                      const conditionOptions = metricConfig?.conditions ?? getConditionOptions(t);
+                      const conditionOptions =
+                        metricConfig?.conditions ?? getConditionOptions(t, scheduleCriteria);
                       const valueOptions = metricConfig?.values;
                       const valueInputType = metricConfig?.inputType ?? 'text';
 
@@ -1896,16 +1914,22 @@ export default function ScheduleEventModal({
                         >
                           <SelectDropdown
                             value={criterion.type}
-                            options={getCriteriaTypeOptions(t)}
+                            options={getCriteriaTypeOptions(t, scheduleCriteria)}
                             onSelect={(value) => {
                               setDraft((prev) => {
                                 const isCustom = value === 'custom';
                                 const firstMetricId = isCustom
                                   ? ''
-                                  : (getCriteriaMetricOptions(value, t)[0]?.value ?? '');
+                                  : (getCriteriaMetricOptions(value, t, scheduleCriteria)[0]
+                                      ?.value ?? '');
                                 const firstMetric = isCustom
                                   ? null
-                                  : getCriteriaMetricConfig(value, firstMetricId, t);
+                                  : getCriteriaMetricConfig(
+                                      value,
+                                      firstMetricId,
+                                      t,
+                                      scheduleCriteria,
+                                    );
                                 const criteria = prev.criteria.map((c, i) =>
                                   i === index
                                     ? {
@@ -1941,6 +1965,7 @@ export default function ScheduleEventModal({
                                     criterion.type,
                                     value,
                                     t,
+                                    scheduleCriteria,
                                   );
                                   const criteria = prev.criteria.map((c, i) =>
                                     i === index
