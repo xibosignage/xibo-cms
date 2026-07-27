@@ -76,7 +76,7 @@ class PixabayConnector implements ConnectorInterface
 
     public function getThumbnail(): string
     {
-        return '';
+        return 'dist/assets/connectors/pixabay.png';
     }
 
     public function getFilters(): array
@@ -251,8 +251,8 @@ class PixabayConnector implements ConnectorInterface
             $providerDetails = new ProviderDetails();
             $providerDetails->id = 'pixabay';
             $providerDetails->link = 'https://pixabay.com';
-            $providerDetails->logoUrl = '';
-            $providerDetails->iconUrl = '';
+            $providerDetails->logoUrl = 'dist/assets/connectors/pixabay_logo.svg';
+            $providerDetails->iconUrl = 'dist/assets/connectors/pixabay_logo_square.svg';
             $providerDetails->backgroundColor = '';
             $providerDetails->filters = $this->getFilters();
 
@@ -340,8 +340,8 @@ class PixabayConnector implements ConnectorInterface
         $providerDetails = new ProviderDetails();
         $providerDetails->id = 'pixabay';
         $providerDetails->link = 'https://pixabay.com';
-        $providerDetails->logoUrl = '';
-        $providerDetails->iconUrl = '';
+        $providerDetails->logoUrl = 'dist/assets/connectors/pixabay_logo.svg';
+        $providerDetails->iconUrl = 'dist/assets/connectors/pixabay_logo_square.svg';
         $providerDetails->backgroundColor = '';
         $providerDetails->mediaTypes = ['image', 'video'];
         $providerDetails->filters = $this->getFilters();
