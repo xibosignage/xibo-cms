@@ -219,7 +219,12 @@ export const getTaskColumns = (props: TaskActionsProps): ColumnDef<Task>[] => {
     {
       accessorKey: 'lastRunStatus',
       header: t('Last Status'),
-      cell: ({ row }) => <CheckMarkCell active={row.original.lastRunStatus === STATUS_SUCCESS} />,
+      cell: ({ row }) => (
+        <CheckMarkCell
+          active={row.original.lastRunStatus === STATUS_SUCCESS}
+          title={row.original.lastRunMessage}
+        />
+      ),
     },
     {
       accessorKey: 'lastRunDuration',
