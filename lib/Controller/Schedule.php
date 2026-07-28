@@ -28,6 +28,7 @@ use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\ScheduleReminder;
+use Xibo\Event\ScheduleCriteriaRequestEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
@@ -1850,6 +1851,26 @@ class Schedule extends Base
             ->withStatus(200)
             ->withHeader('X-Total-Count', $this->scheduleFactory->countLast())
             ->withJson($events);
+    }
+
+    /**
+     * Get the available Schedule criteria types/metrics, built dynamically from whichever
+     * Connectors are registered to respond to ScheduleCriteriaRequestEvent.
+     * @param Request $request
+     * @param Response $response
+     * @return Response|ResponseInterface
+     */
+    public function getCriteria(Request $request, Response $response): Response|ResponseInterface
+    {
+        $event = new ScheduleCriteriaRequestEvent();
+        $this->getDispatcher()->dispatch($event, ScheduleCriteriaRequestEvent::$NAME);
+
+        $criteria = $event->getCriteria();
+        $defaultCondition = $event->getCriteriaDefaultCondition();
+
+        return $response
+            ->withStatus(200)
+            ->withJson(array_merge(['types' => []], $criteria, ['defaultCondition' => $defaultCondition]));
     }
 
     /**

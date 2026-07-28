@@ -21,6 +21,7 @@
 
 import type { TFunction } from 'i18next';
 
+import type { ScheduleCriteriaResponse } from '@/services/scheduleCriteriaApi';
 import {
   EventTypeId,
   ReminderType,
@@ -135,23 +136,53 @@ export const getEventTypeOptions = (
   return options;
 };
 
-export const getConditionOptions = (t: TFunction): SelectOption[] => [
-  { value: 'set', label: t('Is set') },
-  { value: 'lt', label: t('Less than') },
-  { value: 'lte', label: t('Less than or equal to') },
-  { value: 'eq', label: t('Equal to') },
-  { value: 'neq', label: t('Not equal to') },
-  { value: 'gte', label: t('Greater than or equal to') },
-  { value: 'gt', label: t('Greater than') },
-  { value: 'contains', label: t('Contains') },
-  { value: 'ncontains', label: t('Not contains') },
+// Fallback used only until the connector-aware /schedule/criteria fetch resolves.
+const FALLBACK_DEFAULT_CONDITIONS = [
+  { id: 'set', name: 'Is set' },
+  { id: 'lt', name: 'Less than' },
+  { id: 'lte', name: 'Less than or equal to' },
+  { id: 'eq', name: 'Equal to' },
+  { id: 'neq', name: 'Not equal to' },
+  { id: 'gte', name: 'Greater than or equal to' },
+  { id: 'gt', name: 'Greater than' },
+  { id: 'contains', name: 'Contains' },
+  { id: 'ncontains', name: 'Not contains' },
 ];
 
-export const getCriteriaTypeOptions = (t: TFunction): SelectOption[] => [
-  { value: 'custom', label: t('Custom') },
-  { value: 'weather', label: t('Weather') },
-  { value: 'emergency_alert', label: t('Emergency Alerts') },
-];
+export const getConditionOptions = (
+  t: TFunction,
+  criteria?: ScheduleCriteriaResponse | null,
+): SelectOption[] => {
+  const conditions =
+    criteria?.defaultCondition && criteria.defaultCondition.length > 0
+      ? criteria.defaultCondition
+      : FALLBACK_DEFAULT_CONDITIONS;
+
+  return conditions.map((c) => ({ value: c.id, label: t(c.name) }));
+};
+
+export const getCriteriaTypeOptions = (
+  t: TFunction,
+  criteria?: ScheduleCriteriaResponse | null,
+): SelectOption[] => {
+  const custom = { value: 'custom', label: t('Custom') };
+
+  // Not yet fetched - use the fallback until the connector-aware /schedule/criteria fetch resolves.
+  if (criteria == null) {
+    return [
+      custom,
+      { value: 'weather', label: t('Weather') },
+      { value: 'emergency_alert', label: t('Emergency Alerts') },
+    ];
+  }
+
+  // Fetched: no Connectors registered any types, so only Custom is available.
+  if (criteria.types.length === 0) {
+    return [custom];
+  }
+
+  return [custom, ...criteria.types.map((type) => ({ value: type.id, label: t(type.name) }))];
+};
 
 const getNumberConditions = (t: TFunction): SelectOption[] => [
   { value: 'lt', label: t('Less than') },
@@ -169,7 +200,7 @@ export interface CriteriaMetricConfig {
   id: string;
   label: string;
   conditions: SelectOption[];
-  inputType: 'text' | 'number' | 'dropdown';
+  inputType: 'text' | 'number' | 'dropdown' | 'date';
   values?: SelectOption[];
 }
 
@@ -177,7 +208,8 @@ export interface CriteriaTypeConfig {
   metrics: CriteriaMetricConfig[];
 }
 
-export function getCriteriaTypeMetrics(t: TFunction): Record<string, CriteriaTypeConfig> {
+// Fallback used only until the connector-aware /schedule/criteria fetch resolves.
+function getFallbackCriteriaTypeMetrics(t: TFunction): Record<string, CriteriaTypeConfig> {
   return {
     weather: {
       metrics: [
@@ -305,8 +337,42 @@ export function getCriteriaTypeMetrics(t: TFunction): Record<string, CriteriaTyp
   };
 }
 
-export function getCriteriaMetricOptions(type: string, t: TFunction): SelectOption[] {
-  const config = getCriteriaTypeMetrics(t)[type];
+export function getCriteriaTypeMetrics(
+  t: TFunction,
+  criteria?: ScheduleCriteriaResponse | null,
+): Record<string, CriteriaTypeConfig> {
+  // Not yet fetched - use the fallback until the connector-aware /schedule/criteria fetch resolves.
+  if (criteria == null) {
+    return getFallbackCriteriaTypeMetrics(t);
+  }
+
+  // Fetched: no Connectors registered any types, so there are no metrics to map.
+  if (criteria.types.length === 0) {
+    return {};
+  }
+
+  const result: Record<string, CriteriaTypeConfig> = {};
+  for (const type of criteria.types) {
+    result[type.id] = {
+      metrics: type.metrics.map((metric) => ({
+        id: metric.id,
+        label: t(metric.name),
+        conditions: metric.conditions.map((c) => ({ value: c.id, label: t(c.name) })),
+        inputType: metric.values?.inputType ?? 'text',
+        values: metric.values?.values.map((v) => ({ value: v.id, label: t(v.title) })),
+      })),
+    };
+  }
+
+  return result;
+}
+
+export function getCriteriaMetricOptions(
+  type: string,
+  t: TFunction,
+  criteria?: ScheduleCriteriaResponse | null,
+): SelectOption[] {
+  const config = getCriteriaTypeMetrics(t, criteria)[type];
   if (!config) return [];
   return config.metrics.map((m) => ({ value: m.id, label: m.label }));
 }
@@ -315,8 +381,9 @@ export function getCriteriaMetricConfig(
   type: string,
   metricId: string,
   t: TFunction,
+  criteria?: ScheduleCriteriaResponse | null,
 ): CriteriaMetricConfig | null {
-  const config = getCriteriaTypeMetrics(t)[type];
+  const config = getCriteriaTypeMetrics(t, criteria)[type];
   if (!config) return null;
   return config.metrics.find((m) => m.id === metricId) ?? null;
 }
