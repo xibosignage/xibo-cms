@@ -292,6 +292,7 @@ export default function Tasks() {
               globalFilter={globalFilter}
               onGlobalFilterChange={setGlobalFilter}
               loading={isFetching}
+              enableSelection={bulkActions.length > 0}
               rowSelection={rowSelection}
               onRowSelectionChange={handleRowSelectionChange}
               onRefresh={handleRefresh}
