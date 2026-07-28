@@ -26,7 +26,6 @@ import { useTranslation } from 'react-i18next';
 import type { SettingsTabProps } from '../../SettingsConfig';
 import SettingsSection from '../SettingsSection';
 
-import SelectDropdown from '@/components/ui/forms/SelectDropdown';
 import TextInput from '@/components/ui/forms/TextInput';
 
 export default function ConfigurationTab({
@@ -92,20 +91,6 @@ export default function ConfigurationTab({
             />
             {phoneticKey && <p className="text-sm italic text-gray-500">{phoneticKey}</p>}
           </>
-        )}
-        {isVisible('NAVIGATION_MENU_POSITION') && (
-          <SelectDropdown
-            label={t('Navigation Menu')}
-            helpText={t(
-              'Select where the Navigation Menu should be positioned by default. Users can set an alternate view in their Preferences under their User Profile.',
-            )}
-            value={formValues.NAVIGATION_MENU_POSITION ?? 'vertical'}
-            onSelect={(v) => updateField('NAVIGATION_MENU_POSITION', v)}
-            options={[
-              { value: 'horizontal', label: t('Horizontal along the top') },
-              { value: 'vertical', label: t('Vertically on the left') },
-            ]}
-          />
         )}
       </SettingsSection>
     </div>
