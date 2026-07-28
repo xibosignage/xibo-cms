@@ -41,8 +41,6 @@ $app->post('/tfa', ['\Xibo\Controller\Login' , 'twoFactorAuthValidate'])->setNam
  */
 $app->get('/schedule', ['\Xibo\Controller\Schedule','grid'])->setName('schedule.search');
 
-$app->get('/schedule/criteria', ['\Xibo\Controller\Schedule','getCriteria'])->setName('schedule.criteria');
-
 $app->get('/schedule/{id}/events', ['\Xibo\Controller\Schedule','eventList'])->setName('schedule.events');
 $app->get('/schedule/{id:[0-9]+}', ['\Xibo\Controller\Schedule','searchById'])
     ->add(new FeatureAuth($app->getContainer(), ['schedule.view']))

@@ -167,16 +167,21 @@ export const getCriteriaTypeOptions = (
 ): SelectOption[] => {
   const custom = { value: 'custom', label: t('Custom') };
 
-  if (criteria?.types && criteria.types.length > 0) {
-    return [custom, ...criteria.types.map((type) => ({ value: type.id, label: t(type.name) }))];
+  // Not yet fetched - use the fallback until the connector-aware /schedule/criteria fetch resolves.
+  if (criteria == null) {
+    return [
+      custom,
+      { value: 'weather', label: t('Weather') },
+      { value: 'emergency_alert', label: t('Emergency Alerts') },
+    ];
   }
 
-  // Fallback used only until the connector-aware /schedule/criteria fetch resolves.
-  return [
-    custom,
-    { value: 'weather', label: t('Weather') },
-    { value: 'emergency_alert', label: t('Emergency Alerts') },
-  ];
+  // Fetched: no Connectors registered any types, so only Custom is available.
+  if (criteria.types.length === 0) {
+    return [custom];
+  }
+
+  return [custom, ...criteria.types.map((type) => ({ value: type.id, label: t(type.name) }))];
 };
 
 const getNumberConditions = (t: TFunction): SelectOption[] => [
@@ -336,8 +341,14 @@ export function getCriteriaTypeMetrics(
   t: TFunction,
   criteria?: ScheduleCriteriaResponse | null,
 ): Record<string, CriteriaTypeConfig> {
-  if (!criteria?.types || criteria.types.length === 0) {
+  // Not yet fetched - use the fallback until the connector-aware /schedule/criteria fetch resolves.
+  if (criteria == null) {
     return getFallbackCriteriaTypeMetrics(t);
+  }
+
+  // Fetched: no Connectors registered any types, so there are no metrics to map.
+  if (criteria.types.length === 0) {
+    return {};
   }
 
   const result: Record<string, CriteriaTypeConfig> = {};
