@@ -109,6 +109,7 @@ export default function AddAndEditTemplateModal({
         const res = await fetchResolution({
           start: 0,
           length: 100,
+          enabled: 1,
         });
 
         setResolutions(res.rows);

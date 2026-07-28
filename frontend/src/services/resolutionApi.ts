@@ -26,7 +26,7 @@ export interface FetchResolutionRequest {
   start: number;
   length: number;
   resolution?: string;
-  enabled?: boolean;
+  enabled?: number;
   sortBy?: string;
   sortDir?: string;
   signal?: AbortSignal;
