@@ -179,7 +179,7 @@ export const RESOURCE_CARDS: ResourceCard[] = [
       { labelKey: 'Admin', url: 'https://docs.xibosignage.com/', superAdminOnly: true },
       {
         labelKey: 'Developer',
-        url: 'https://docs.xibosignage.com/',
+        url: 'https://docs.xibosignage.com/developer',
         superAdminOnly: true,
       },
     ],
