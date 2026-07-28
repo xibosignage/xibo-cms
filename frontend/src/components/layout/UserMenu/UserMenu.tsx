@@ -40,7 +40,9 @@ import ApplicationsModal from './ApplicationsModal';
 import PreferencesModal from './PreferencesModal';
 import ProfileEditModal from './ProfileEditModal';
 
+import Badge from '@/components/ui/Badge';
 import { useUserContext } from '@/context/UserContext';
+import { useClock } from '@/hooks/useClock';
 import { useDismissOnIframeFocus } from '@/hooks/useDismissOnIframeFocus';
 import { hasFeature } from '@/utils/permissions';
 
@@ -62,6 +64,7 @@ export default function UserMenu() {
 
   const [isOpen, setIsOpen] = useState(false);
   const [activeModal, setActiveModal] = useState<ActiveModal>(null);
+  const clock = useClock();
 
   const { refs, floatingStyles, context } = useFloating({
     open: isOpen,
@@ -127,6 +130,11 @@ export default function UserMenu() {
                   {displayName}
                 </span>
                 <span className="text-sm text-gray-500 truncate w-50">{user?.email}</span>
+                {clock && (
+                  <Badge type="neutral" variation="outline" className="bg-transparent self-start">
+                    {clock}
+                  </Badge>
+                )}
               </div>
               {hasFeature(user, 'user.profile') && (
                 <button
