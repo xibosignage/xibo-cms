@@ -35,7 +35,6 @@ use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
-use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\MediaService;
 use Xibo\Storage\StorageServiceInterface;
@@ -256,7 +255,7 @@ class StatusDashboard extends Base
 
             $data['libraryLimitSet'] = ($libraryLimit > 0);
             $data['libraryLimit'] = (round((double)$libraryLimit / (pow(1024, $base)), 2)) . ' ' . $suffixes[$base];
-            $data['librarySize'] = ByteFormatter::format($totalSize, 1);
+            $data['librarySize'] = round((double)$totalSize / (pow(1024, $base)), 1) . ' ' . $suffixes[$base];
             $data['librarySuffix'] = $suffixes[$base];
             $data['libraryWidgetLabels'] = json_encode($libraryLabels);
             $data['libraryWidgetData'] = json_encode($libraryUsage);
