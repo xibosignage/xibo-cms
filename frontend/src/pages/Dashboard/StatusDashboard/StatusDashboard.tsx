@@ -190,7 +190,7 @@ export default function Dashboard() {
       {/* Top Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
         <StatCard icon={display} value={displayCount} label={t('Active Displays')} />
-        <StatCard icon={server} value={librarySize} label={t('Remaining Storage')} />
+        <StatCard icon={server} value={librarySize} label={t('Library Size')} />
         <StatCard icon={users} value={userCount} label={t('Active Users')} />
       </div>
 
