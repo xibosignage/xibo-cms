@@ -412,6 +412,16 @@ export function FileUploader({
     if (event && 'stopPropagation' in event) {
       event.stopPropagation();
     }
+
+    fileRejections.forEach((rejection) => {
+      const isTooLarge = rejection.errors.some((error) => error.code === 'file-too-large');
+      notify.error(
+        isTooLarge
+          ? t('{{name}} is too large to upload', { name: rejection.file.name })
+          : t('{{name}} is not a supported file type', { name: rejection.file.name }),
+      );
+    });
+
     addFiles(acceptedFiles);
   };
 
