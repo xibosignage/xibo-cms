@@ -73,29 +73,7 @@ class CsrfGuard implements Middleware
     {
         $container = $this->app->getContainer();
 
-        // Do we have a token already?
-        $token = $_SESSION[$this->key] ?? null;
-
-        if ($token === null) {
-            $token = bin2hex(random_bytes(20));
-            $_SESSION[$this->key] = $token;
-
-            // Set the XSRF-TOKEN cookie
-            // This cookie is NOT HttpOnly so the SPA can read it.
-            // cookie is only set when generated
-            setcookie(
-                'XSRF-TOKEN',
-                $_SESSION[$this->key],
-                [
-                    'expires' => 0,
-                    'path' => '/',
-                    'domain' => '',
-                    'secure' => HttpsDetect::isHttps(),
-                    'httponly' => false,
-                    'samesite' => 'Lax',
-                ]
-            );
-        }
+        $token = self::issueToken($this->key);
 
         // Validate the CSRF token.
         if (in_array($request->getMethod(), ['POST', 'PUT', 'DELETE'])) {
@@ -134,12 +112,58 @@ class CsrfGuard implements Middleware
             }
         }
 
-        // Assign CSRF token key and value to view.
+        // Assign the CSRF token to the view.
         // This is used when the backend outputs HTML (such as the login form)
-        $container->get('view')->offsetSet('csrfKey', $this->key);
         $container->get('view')->offsetSet('csrfToken', $token);
 
         // Call next middleware.
         return $handler->handle($request);
+    }
+
+    /**
+     * Get (generating if necessary) the current session's CSRF token, and (re-)issue the
+     * XSRF-TOKEN cookie for it.
+     *
+     * Re-issuing on every call (not just when the token is first generated) means a browser
+     * whose cookie is missing or stale relative to the session's token self-heals on its very
+     * next request, rather than being stuck until the session itself expires. This matters for
+     * long-lived, DB-backed sessions that can carry a csrfToken value from before this cookie
+     * mechanism existed (e.g. a session created pre-upgrade), which would otherwise never
+     * receive the cookie for the rest of its life since regenerateSessionId()/logout preserve
+     * $_SESSION contents.
+     *
+     * Also called directly by render paths that run outside the middleware stack (see
+     * Handlers::webErrorHandler()'s UpgradePendingException branch) so those pages don't bake a
+     * stale/blank token into the CSRF meta tag. The caller must ensure the session is already
+     * started before calling this (true for every normal request, since State::setState() does
+     * that ahead of routing/CsrfGuard).
+     *
+     * @param string $key Session key the token is stored under.
+     * @return string
+     */
+    public static function issueToken(string $key = 'csrfToken'): string
+    {
+        $token = $_SESSION[$key] ?? null;
+
+        if ($token === null) {
+            $token = bin2hex(random_bytes(20));
+            $_SESSION[$key] = $token;
+        }
+
+        // This cookie is NOT HttpOnly so the SPA can read it.
+        setcookie(
+            'XSRF-TOKEN',
+            $token,
+            [
+                'expires' => 0,
+                'path' => '/',
+                'domain' => '',
+                'secure' => HttpsDetect::isHttps(),
+                'httponly' => false,
+                'samesite' => 'Lax',
+            ]
+        );
+
+        return $token;
     }
 }

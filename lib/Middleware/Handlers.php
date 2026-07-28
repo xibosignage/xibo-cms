@@ -207,6 +207,11 @@ class Handlers
                             $rootUri = $configService->rootUri();
                             $appJsUrl = \Xibo\Helper\ViteManifest::getJsUrl('index.html', $rootUri);
                             return $twig->render($response, 'app-spa.twig', array_merge($viewParams, [
+                                // No session exists at this point (routing failed before State/CsrfGuard
+                                // ever ran), so there's no real token to issue. Left blank deliberately:
+                                // the main React app never reads this meta tag (its API calls go through
+                                // normal routes, where CsrfGuard::issueToken() runs as usual), it's kept
+                                // only for parity with the login shell's markup.
                                 'csrfToken'      => '',
                                 'appJsUrl'       => $appJsUrl,
                                 'appCssUrls'     => \Xibo\Helper\ViteManifest::getCssUrls('index.html', $rootUri),
@@ -287,7 +292,13 @@ class Handlers
                                 ],
                             ];
                             $upgradeParams = array_merge($viewParams, [
-                                'csrfToken'       => '',
+                                // Unlike the app-spa.twig fallback above, State::setState() has already
+                                // started the session by the time UpgradePendingException is thrown
+                                // (State.php throws it after calling setState()), so a real token is
+                                // available here. Issuing it properly (rather than hardcoding blank)
+                                // matters because login/api.ts reads this meta tag for the login/tfa
+                                // requests fired from this exact page.
+                                'csrfToken'       => CsrfGuard::issueToken(),
                                 'loginConfigJson' => json_encode(
                                     $upgradeConfig,
                                     JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
