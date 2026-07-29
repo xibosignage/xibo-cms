@@ -95,6 +95,7 @@ class ContainerFactory
                 // Replace out all of the entrypoints to get back to the root
                 $basePath = str_replace('/api/authorize', '', $basePath);
                 $basePath = str_replace('/api', '', $basePath);
+                $basePath = str_replace('/json', '', $basePath);
                 $basePath = str_replace('/maintenance', '', $basePath);
                 $basePath = str_replace('/preview', '', $basePath);
 
