@@ -734,18 +734,6 @@ class Settings extends Base
             );
         }
 
-        if ($this->getConfig()->isSettingEditable('SETTING_IMPORT_ENABLED')) {
-            $this->handleChangedSettings(
-                'SETTING_IMPORT_ENABLED',
-                $sanitizedParams->getCheckbox('SETTING_IMPORT_ENABLED'),
-                $changedSettings
-            );
-            $this->getConfig()->changeSetting(
-                'SETTING_IMPORT_ENABLED',
-                $sanitizedParams->getCheckbox('SETTING_IMPORT_ENABLED')
-            );
-        }
-
         if ($this->getConfig()->isSettingEditable('SETTING_LIBRARY_TIDY_ENABLED')) {
             $this->handleChangedSettings(
                 'SETTING_LIBRARY_TIDY_ENABLED',
