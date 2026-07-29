@@ -85,7 +85,7 @@ export const getDynamicDataColumns = (
         }
 
         if (col.dataTypeId === 6) {
-          return <TextCell className="italic text-gray-500">{t('<HTML Content>')}</TextCell>;
+          return <TextCell className="italic text-gray-500">{t('HTML Content')}</TextCell>;
         }
 
         return <TextCell>{String(value)}</TextCell>;

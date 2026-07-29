@@ -233,10 +233,5 @@ foreach (json_decode($jsonReact, true) as $key => $value) {
     $content .= 'echo __(\''.addslashes(trim($key)).'\');' . PHP_EOL;
 }
 
-$jsonReactNotes = file_get_contents(PROJECT_ROOT . '/frontend/public/locale/translations/en/Note.json');
-foreach (json_decode($jsonReactNotes, true) as $key => $value) {
-    $content .= 'echo __(\''.addslashes(trim($value)).'\');' . PHP_EOL;
-}
-
 file_put_contents($file, $content);
 echo 'reacttranslate.file created and data written successfully.';

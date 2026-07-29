@@ -25,6 +25,7 @@ export default defineConfig({
   locales: ['en'],
   extract: {
     keySeparator: false,
+    nsSeparator: false,
     input: 'src/**/*.{js,jsx,ts,tsx}',
     extractFromComments: false,
     output: 'public/locale/translations/{{language}}/{{namespace}}.json',
