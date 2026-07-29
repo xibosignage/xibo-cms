@@ -220,7 +220,7 @@ foreach ($moduleTemplates as $moduleTemplate) {
 }
 
 file_put_contents($file, $content);
-echo 'moduletranslate.file created and data written successfully.';
+echo 'moduletranslate.file created and data written successfully.' . PHP_EOL;
 
 // Create a file for translations from React app.
 $file = PROJECT_ROOT. '/locale/reacttranslate.php';
@@ -234,4 +234,4 @@ foreach (json_decode($jsonReact, true) as $key => $value) {
 }
 
 file_put_contents($file, $content);
-echo 'reacttranslate.file created and data written successfully.';
+echo 'reacttranslate.file created and data written successfully.' . PHP_EOL;
