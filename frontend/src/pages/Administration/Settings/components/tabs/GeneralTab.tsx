@@ -125,14 +125,6 @@ export default function GeneralTab({
           />
         )}
 
-        {isVisible('SETTING_IMPORT_ENABLED') && (
-          <SwitchRow
-            title={t('Allow Import?')}
-            checked={formValues.SETTING_IMPORT_ENABLED === '1'}
-            onChange={(v) => updateField('SETTING_IMPORT_ENABLED', v ? '1' : '0')}
-            disabled={!isEditable('SETTING_IMPORT_ENABLED')}
-          />
-        )}
         {isVisible('SETTING_LIBRARY_TIDY_ENABLED') && (
           <SwitchRow
             title={t('Enable Library Tidy?')}

@@ -69,7 +69,7 @@ export default function Layouts() {
   const canMoveToCampaignFolder = hasFeature(user, 'campaign.modify');
   const canSaveTemplate = hasFeature(user, 'template.modify');
   const canTag = hasFeature(user, 'tag.tagging');
-  const importEnabled = user?.settings?.SETTING_IMPORT_ENABLED === '1';
+  const importEnabled = hasFeature(user, 'layout.add');
   const homeFolderId = user?.homeFolderId ?? 1;
 
   const {

@@ -68,7 +68,7 @@
     <body>
         <div class="container">
             <div class="{% block contentClass %}form-signin text-center{% endblock %}">
-                {% block header %}<p><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="{{ theme.rootUri() }}brand/{{ brandLogoFile }}" alt="Logo"></a></p>{% endblock %}
+                {% block header %}<p><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="/brand/{{ brandLogoFile }}" alt="Logo"></a></p>{% endblock %}
 
                 {% block content %}{% endblock %}
             </div>
