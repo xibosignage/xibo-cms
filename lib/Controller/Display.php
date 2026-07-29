@@ -1799,10 +1799,7 @@ class Display extends Base
         } catch (\Exception $e) {
             $this->getLog()->debug($e->getMessage());
             throw new InvalidArgumentException(
-                __(
-                    'The code provided does not match.
-                     Please double-check the code shown on the device you are trying to connect.'
-                ),
+                __('The code provided does not match. Please double-check the code shown on the device you are trying to connect.'),//phpcs:ignore
                 'user_code'
             );
         }

@@ -262,8 +262,7 @@ class ScheduleReport extends Base
             $reportSchedule->delete();
         } catch (\RuntimeException $e) {
             throw new InvalidArgumentException(
-                __('Report schedule cannot be deleted.
-                 Please ensure there are no saved reports against the schedule.'),
+                __('Report schedule cannot be deleted. Please ensure there are no saved reports against the schedule.'),//phpcs:ignore
                 'reportScheduleId'
             );
         }
