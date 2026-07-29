@@ -94,12 +94,10 @@ class PlaylistFactory extends BaseFactory
 
         if (count($playlists) <= 0) {
             $this->getLog()->error(
-                'Region ' . $regionId . ' does not have a Playlist associated,
-                 please try to set a new owner in Permissions.'
+                'Region ' . $regionId . ' does not have a Playlist associated, please try to set a new owner in Permissions.'//phpcs:ignore
             );
             throw new NotFoundException(
-                __('One of the Regions on this Layout does not have a Playlist,
-                 please contact your administrator.')
+                __('One of the Regions on this Layout does not have a Playlist, please contact your administrator.')//phpcs:ignore
             );
         }
 

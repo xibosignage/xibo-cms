@@ -264,8 +264,7 @@ class SavedReport extends Base
 
         if ($rowCount > 5000) {
             throw new GeneralException(
-                __('This report contains %d rows and is too large to export as PDF. Maximum is 5,000 rows. 
-                Please narrow the date range and try again.', $rowCount)
+                __('This report contains %d rows and is too large to export as PDF. Maximum is 5,000 rows. Please narrow the date range and try again.', $rowCount)//phpcs:ignore
             );
         }
 

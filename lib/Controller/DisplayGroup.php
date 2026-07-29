@@ -1274,8 +1274,7 @@ class DisplayGroup extends Base
             $media = $this->mediaFactory->getById($mediaId);
 
             if (!$this->getUser()->checkViewable($media)) {
-                throw new AccessDeniedException(__('You have selected media that you no longer have 
-                    permission to use. Please reload the form.'));
+                throw new AccessDeniedException(__('You have selected media that you no longer have permission to use. Please reload the form.'));//phpcs:ignore
             }
 
             $displayGroup->assignMedia($media);
@@ -1289,8 +1288,7 @@ class DisplayGroup extends Base
             $media = $this->mediaFactory->getById($mediaId);
 
             if (!$this->getUser()->checkViewable($media)) {
-                throw new AccessDeniedException(__('You have selected media that you no longer have 
-                    permission to use. Please reload the form.'));
+                throw new AccessDeniedException(__('You have selected media that you no longer have permission to use. Please reload the form.'));//phpcs:ignore
             }
 
             $displayGroup->unassignMedia($media);
@@ -1455,8 +1453,7 @@ class DisplayGroup extends Base
             $layout = $this->layoutFactory->getById($layoutId);
 
             if (!$this->getUser()->checkViewable($layout)) {
-                throw new AccessDeniedException(__('You have selected a layout that you no longer 
-                    have permission to use. Please reload the form.'));
+                throw new AccessDeniedException(__('You have selected a layout that you no longer have permission to use. Please reload the form.'));//phpcs:ignore
             }
 
             $displayGroup->assignLayout($layout);
@@ -1468,8 +1465,7 @@ class DisplayGroup extends Base
             $layout = $this->layoutFactory->getById($layoutId);
 
             if (!$this->getUser()->checkViewable($layout)) {
-                throw new AccessDeniedException(__('You have selected a layout that you no longer 
-                    have permission to use. Please reload the form.'));
+                throw new AccessDeniedException(__('You have selected a layout that you no longer have permission to use. Please reload the form.'));//phpcs:ignore
             }
 
             $displayGroup->unassignLayout($layout);

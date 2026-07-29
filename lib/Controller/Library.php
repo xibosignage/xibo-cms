@@ -915,8 +915,7 @@ class Library extends Base
             $playlist = $this->playlistFactory->getById($parsedBody->getInt('playlistId'));
 
             if ($playlist->isDynamic === 1) {
-                throw new InvalidArgumentException(__('This Playlist is dynamically managed so cannot accept 
-                    manual assignments.'), 'isDynamic');
+                throw new InvalidArgumentException(__('This Playlist is dynamically managed so cannot accept manual assignments.'), 'isDynamic');//phpcs:ignore
             }
         }
 
