@@ -496,6 +496,11 @@ class Controllers
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
+            '\Xibo\Controller\Spa' => function (ContainerInterface $c) {
+                $controller = new \Xibo\Controller\Spa();
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
+            },
             '\Xibo\Controller\Settings' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Settings(
                     $c->get('layoutFactory'),
