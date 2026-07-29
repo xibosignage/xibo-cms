@@ -180,50 +180,9 @@ class Handlers
                         'message' => __('Sorry we could not find that page.')
                     ], 404);
                 } else {
-                    // No server route matched. If this is a genuine navigation request, serve the
-                    // React SPA shell (HTTP 200) and let React Router resolve the route client-side.
-                    // Guard: only GET requests that accept HTML, and never asset/API paths — a missing
-                    // hashed asset or an unknown API call must still return a real 404, not the shell.
-                    $relativePath = '/' . ltrim(
-                        Str::replaceFirst($configService->rootUri(), '', $request->getUri()->getPath()),
-                        '/'
-                    );
-                    $assetOrApiPrefixes = ['/app/', '/json', '/api', '/preview', '/pwa', '/authorize'];
-                    $assetOrApiPrefixes[] = '/swagger.json';
-                    $isAssetOrApi = false;
-                    foreach ($assetOrApiPrefixes as $prefix) {
-                        if (str_starts_with($relativePath, $prefix)) {
-                            $isAssetOrApi = true;
-                            break;
-                        }
-                    }
-
-                    if ($request->getMethod() === 'GET'
-                        && str_contains($request->getHeaderLine('Accept'), 'text/html')
-                        && !$isAssetOrApi
-                    ) {
-                        try {
-                            // Throws if the manifest is present but the entry is missing (assets not built).
-                            $rootUri = $configService->rootUri();
-                            $appJsUrl = \Xibo\Helper\ViteManifest::getJsUrl('index.html', $rootUri);
-                            return $twig->render($response, 'app-spa.twig', array_merge($viewParams, [
-                                // No session exists at this point (routing failed before State/CsrfGuard
-                                // ever ran), so there's no real token to issue. Left blank deliberately:
-                                // the main React app never reads this meta tag (its API calls go through
-                                // normal routes, where CsrfGuard::issueToken() runs as usual), it's kept
-                                // only for parity with the login shell's markup.
-                                'csrfToken'      => '',
-                                'appJsUrl'       => $appJsUrl,
-                                'appCssUrls'     => \Xibo\Helper\ViteManifest::getCssUrls('index.html', $rootUri),
-                                'assetBase'      => \Xibo\Helper\ViteManifest::getAssetBase($rootUri),
-                                'viteClientUrl'  => \Xibo\Helper\ViteManifest::getClientUrl(),
-                                'viteRefreshUrl' => \Xibo\Helper\ViteManifest::getRefreshUrl(),
-                            ]))->withStatus(200);
-                        } catch (\Throwable) {
-                            // Assets not built or render failed — fall through to the not-found page.
-                        }
-                    }
-
+                    // No server route matched - a genuine 404. React SPA pages are served by
+                    // explicit routes registered in lib/routes-spa.php (Xibo\Controller\Spa),
+                    // which run through the normal middleware stack, so they never reach here.
                     try {
                         return $twig->render($response, 'not-found.twig', $viewParams)->withStatus(404);
                     } catch (\Exception) {
@@ -292,7 +251,9 @@ class Handlers
                                 ],
                             ];
                             $upgradeParams = array_merge($viewParams, [
-                                // Unlike the app-spa.twig fallback above, State::setState() has already
+                                // This render runs outside the normal middleware stack (routing
+                                // failed before CsrfGuard could run), so unlike a normal request we
+                                // have to issue the token ourselves. State::setState() has already
                                 // started the session by the time UpgradePendingException is thrown
                                 // (State.php throws it after calling setState()), so a real token is
                                 // available here. Issuing it properly (rather than hardcoding blank)

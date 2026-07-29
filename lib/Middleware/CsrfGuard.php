@@ -94,11 +94,15 @@ class CsrfGuard implements Middleware
                 $userToken = $request->getHeaderLine('X-XSRF-TOKEN');
 
                 if ($userToken == '') {
-                    // Not in the header, check in params instead
+                    // Not in the header, check in params instead. This is the fallback used by
+                    // the OAuth2 consent screen (AuthorizeApplication.tsx), the only remaining
+                    // non-AJAX form POST that relies on it - don't remove as dead code.
                     $parsedBody = $request->getParsedBody();
-                    foreach ($parsedBody as $param => $value) {
-                        if ($param == $this->key) {
-                            $userToken = $value;
+                    if (is_array($parsedBody)) {
+                        foreach ($parsedBody as $param => $value) {
+                            if ($param == $this->key) {
+                                $userToken = $value;
+                            }
                         }
                     }
                 }
@@ -122,15 +126,23 @@ class CsrfGuard implements Middleware
 
     /**
      * Get (generating if necessary) the current session's CSRF token, and (re-)issue the
-     * XSRF-TOKEN cookie for it.
+     * XSRF-TOKEN cookie for it if the browser's copy doesn't already match.
      *
-     * Re-issuing on every call (not just when the token is first generated) means a browser
-     * whose cookie is missing or stale relative to the session's token self-heals on its very
-     * next request, rather than being stuck until the session itself expires. This matters for
-     * long-lived, DB-backed sessions that can carry a csrfToken value from before this cookie
-     * mechanism existed (e.g. a session created pre-upgrade), which would otherwise never
-     * receive the cookie for the rest of its life since regenerateSessionId()/logout preserve
-     * $_SESSION contents.
+     * Re-issuing whenever the cookie differs from the session token (rather than only when the
+     * token is first generated) means a browser whose cookie is missing or stale self-heals on
+     * its very next request, rather than being stuck until the session itself expires. This
+     * matters for long-lived, DB-backed sessions that can carry a csrfToken value from before
+     * this cookie mechanism existed (e.g. a session created pre-upgrade), which would otherwise
+     * never receive the cookie for the rest of its life since regenerateSessionId()/logout
+     * preserve $_SESSION contents. Guarding on the comparison (rather than writing
+     * unconditionally) avoids a Set-Cookie header on every request once the cookie is in sync -
+     * including thumbnail/download GETs that never need it re-sent.
+     *
+     * Note: $_COOKIE reflects what the browser sent with this request, not what this request may
+     * have already set - two issueToken() calls in the same request would still both write.
+     * Not reachable today (one call site per request). Also value-only: a cookie needing changed
+     * attributes (e.g. the secure flag flipping when an install moves to HTTPS) won't be
+     * re-issued until the token itself changes.
      *
      * Also called directly by render paths that run outside the middleware stack (see
      * Handlers::webErrorHandler()'s UpgradePendingException branch) so those pages don't bake a
@@ -150,19 +162,21 @@ class CsrfGuard implements Middleware
             $_SESSION[$key] = $token;
         }
 
-        // This cookie is NOT HttpOnly so the SPA can read it.
-        setcookie(
-            'XSRF-TOKEN',
-            $token,
-            [
-                'expires' => 0,
-                'path' => '/',
-                'domain' => '',
-                'secure' => HttpsDetect::isHttps(),
-                'httponly' => false,
-                'samesite' => 'Lax',
-            ]
-        );
+        if (($_COOKIE['XSRF-TOKEN'] ?? null) !== $token) {
+            // This cookie is NOT HttpOnly so the SPA can read it.
+            setcookie(
+                'XSRF-TOKEN',
+                $token,
+                [
+                    'expires' => 0,
+                    'path' => '/',
+                    'domain' => '',
+                    'secure' => HttpsDetect::isHttps(),
+                    'httponly' => false,
+                    'samesite' => 'Lax',
+                ]
+            );
+        }
 
         return $token;
     }
